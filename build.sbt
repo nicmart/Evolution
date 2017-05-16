@@ -1,12 +1,14 @@
 import Dependencies._
 
-lazy val root = (project in file(".")).
+lazy val commonSettings = List(
+    organization := "nicmart",
+    scalaVersion := "2.12.1",
+    version      := "0.1.0-SNAPSHOT"
+)
+
+lazy val core = (project in file("core")).
   settings(
-    inThisBuild(List(
-      organization := "com.example",
-      scalaVersion := "2.12.1",
-      version      := "0.1.0-SNAPSHOT"
-    )),
+    inThisBuild(commonSettings),
     name := "Evolution",
     libraryDependencies ++= Seq(
         scalaTest % Test,
