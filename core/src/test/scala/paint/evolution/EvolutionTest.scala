@@ -79,7 +79,7 @@ class EvolutionTest extends PaintEvolutionSpec {
 
         "accumulate perturbations" in {
             // An evolution of perturbations s + x
-            val perturbations = int map[Int => Int] { n => m: Int => m + n }
+            val perturbations = int.map[Int => Int] { n => m: Int => m + n }
 
             // p0 = 0 + x, int0 = 1, p1 = 2 + x, int1 = 3, p2 = 4 + x, int2 = 5
             // we expect accumulated perturbations 0 + x, 2 + x, 6 + x
