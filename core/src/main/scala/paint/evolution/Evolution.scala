@@ -115,6 +115,9 @@ object Evolution {
 
     def cycle[A](as: List[A]): Evolution[A] = prepend(as)(cycle(as))
 
+    def transition[A](from: A)(f: A => A): Evolution[A] =
+        pure(from).scan(from)((z, _) => f(z))
+
     def flatten[A](evas: Evolution[List[A]]): Evolution[A] =
         evas.flatBest((as, evas2) => prepend(as)(flatten(evas2)))
 

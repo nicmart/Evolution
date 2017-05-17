@@ -14,4 +14,7 @@ object Semigroup {
         as.foldRight(f){ (start, ev) =>
             ev.scan(start)((z, a) => implicitly[Semigroup[A]].combine(z, a))
         }
+
+    def translate[A: Semigroup](ev1: Evolution[A], ev2: Evolution[A]): Evolution[A] =
+        ev1.compose(ev2)((a1, a2) => implicitly[Semigroup[A]].combine(a1, a2))
 }

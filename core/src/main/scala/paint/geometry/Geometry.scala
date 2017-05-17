@@ -7,54 +7,45 @@ import cats.kernel.Monoid
   */
 object Geometry
 {
-    case class Point(x: Int, y: Int) {
+    case class Point(x: Double, y: Double) {
         def +(other: Point) = Point(x + other.x, y + other.y)
         def -(other: Point) = Point(x - other.x, y - other.y)
-        def *(d: Double) = Point((x * d).toInt, (y * d).toInt)
-        def *(d: Int) = Point(x * d, y * d)
-        def /(d: Double) = Point((x / d).toInt, (y / d).toInt)
-        def /(d: Int) = Point(x / d, y / d)
-    }
-
-    case class DoublePoint(x: Double, y: Double) {
-        def +(other: DoublePoint) = DoublePoint(x + other.x, y + other.y)
-        def -(other: DoublePoint) = DoublePoint(x - other.x, y - other.y)
-        def *(d: Double) = DoublePoint(x * d, y * d)
-        def /(d: Double) = DoublePoint(x / d, y / d)
+        def *(d: Double) = Point(x * d, y * d)
+        def /(d: Double) = Point(x / d, y / d)
         def rotate(angle: Double) = {
             val (cos, sin) = (Math.cos(angle), Math.sin(angle))
-            DoublePoint(
+            Point(
                 cos * x - sin * y,
                 sin * x + cos * y
             )
         }
         def norm(): Double = Math.sqrt(x * x + y * y)
-        def distance(other: DoublePoint): Double = (this - other).norm()
-        def versor(): Option[DoublePoint] = {
+        def distance(other: Point): Double = (this - other).norm()
+        def versor(): Option[Point] = {
             val normValue = norm()
             if (normValue > 0) Some(this / normValue) else None
         }
-        def rounded(): DoublePoint = DoublePoint(x.toInt + 0.5, y.toInt + 0.5)
+        def rounded(): Point = Point(x.toInt + 0.5, y.toInt + 0.5)
     }
 
-    object DoublePoint {
-        val zero = DoublePoint(0, 0)
+    object Point {
+        val zero = Point(0, 0)
 
         def polar(radius: Double, angle: Double) = {
             val positiveRadius = Math.abs(radius)
-            DoublePoint(
+            Point(
                 positiveRadius * Math.cos(angle),
                 positiveRadius * Math.sin(angle)
             )
         }
 
-        implicit val pointMonoid = new Monoid[DoublePoint] {
-            override def empty: DoublePoint = zero
-            override def combine(x: DoublePoint, y: DoublePoint): DoublePoint = x + y
+        implicit val pointMonoid = new Monoid[Point] {
+            override def empty: Point = zero
+            override def combine(x: Point, y: Point): Point = x + y
         }
     }
 
 
 
-    type PlaneTransformation = DoublePoint => DoublePoint
+    type PlaneTransformation = Point => Point
 }

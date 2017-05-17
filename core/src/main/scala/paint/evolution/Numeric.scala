@@ -16,4 +16,6 @@ object Numeric {
 
     def ball(radius: Double): Evolution[Double] =
         double.map(d => radius * (d * 2 - 1))
+
+
 }

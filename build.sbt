@@ -14,7 +14,7 @@ lazy val core = crossProject.
         name := "test", // default name would be p1
         libraryDependencies ++= Seq(
             scalaTest % Test,
-            "org.typelevel" %% "cats" % "0.9.0"
+            "org.typelevel" %%% "cats" % "0.9.0"
         )
     ).
     jvmSettings(
