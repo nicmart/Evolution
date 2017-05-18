@@ -95,5 +95,32 @@ class EvolutionTest extends PaintEvolutionSpec {
         }
     }
 
+    "filter" must {
+        "mantain only the values that satisfy the condition" in {
 
+            assertValues(
+                int.filter(_ % 2 == 0),
+                List(
+                    0,
+                    2,
+                    4,
+                    6,
+                    8
+                )
+            )
+        }
+    }
+
+    "sliding" must {
+        "return a sliding evolution" in {
+            assertValues(
+                int.slidingPairs,
+                List(
+                    (0, 1),
+                    (1, 2),
+                    (2, 3)
+                )
+            )
+        }
+    }
 }

@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import paint.evolution.Evolution._
-import paint.evolution.Semigroup._
+import paint.evolution.SemigroupEvolution._
 import paint.evolution.Numeric._
 import paint.evolution.PointEvolution._
 import paint.evolution.Evolution
@@ -48,5 +48,28 @@ object EvolutionPortfolio {
         centeredIn(Point(1000, 500)) {
             integrate(cartesian(ball(1), ball(1)))(Point.zero)
         }.map(List(_))
+    }
+
+    def ringEvo: Evolution[List[Point]] = {
+        centeredIn(Point(1000, 500)) {
+            //integrate(cartesian(complement(), complement()).map(_ * 0.5))(Point.zero)
+            ring(200, normal.map( _ * 20))
+        }.map(List(_))
+    }
+
+    def brownianSpeedRing: Evolution[List[Point]] = {
+        centeredIn(Point(1000, 500)) {
+            integrate(ring(2))(Point.zero)
+        }.map(List(_))
+    }
+
+    def accelerationRing: Evolution[List[Point]] = {
+        centeredIn(Point(1000, 500)) {
+            integrateMulti(ring(0.00001))(List(Point.zero, Point.zero))
+        }.map(List(_))
+    }
+
+    def current: Evolution[List[Point]] = {
+        accelerationRing
     }
 }

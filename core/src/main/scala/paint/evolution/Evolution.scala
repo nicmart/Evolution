@@ -10,24 +10,17 @@ import scala.util.Random
   */
 case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
 
-    def flatBest[B](f: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
+    def flatMapNext[B](f: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
         Evolution { rng =>
             val (rng2, a, eva2) = run(rng)
             f(a, eva2).run(rng2)
         }
 
     def mapEv[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
-        flatBest { (a, eva2) =>
+        flatMapNext { (a, eva2) =>
             val (b, evb) = f(a, eva2)
-            evb.prepend(List(b))
+            b :: evb
         }
-
-//    def mapEv[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
-//    Evolution { rng =>
-//        val (rng2, a, eva2) = run(rng)
-//        val (b, evb2) = f(a, eva2)
-//        (rng2, b, evb2)
-//    }
 
     def mapEv[B](f: A => B, g: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
         mapEv((a, eva) => (f(a), g(a, eva)))
@@ -47,14 +40,14 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
 //            val (rng3, p, ps2) = perturbations.run(rng2)
 //            (rng3, p(a), eva2.map(p).perturbate(ps2))
 //        }
-        perturbations.flatBest((p, perts2) => map(p).mapNext(_.perturbate(perts2)))
+        perturbations.flatMapNext((p, perts2) => map(p).mapNext(_.perturbate(perts2)))
 
     def next(nextEv: Evolution[A]): Evolution[A] =
         mapNext(_ => nextEv)
 
 
     def flatMap[B](f: A => Evolution[B]): Evolution[B] =
-        flatBest((a, eva2) => f(a).mapNext(_ => eva2.flatMap(f)))
+        flatMapNext((a, eva2) => f(a).mapNext(_ => eva2.flatMap(f)))
 
     def scan[Z](z: Z)(f: (Z, A) => Z): Evolution[Z] =
         mapEv(f(z, _), (a, eva) => eva.scan(f(z, a))(f))
@@ -85,6 +78,21 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
         val (rng2, a, ev2) = run(from)
         a #:: ev2.unfold(rng2)
     }
+
+    def filter(predicate: A => Boolean): Evolution[A] =
+        flatMapNext { (a, eva2) =>
+            if (predicate(a)) eva2.filter(predicate).prepend(List(a))
+            else eva2.filter(predicate)
+        }
+
+    def ::(value: A): Evolution[A] = prepend(List(value))
+
+    def slidingPairs: Evolution[(A, A)] =
+        flatMapNext { (a1, eva2) =>
+            eva2.flatMapNext { (a2, _) =>
+                (a1, a2) :: (a2 :: eva2).slidingPairs
+            }
+        }
 }
 
 object Evolution {
@@ -92,11 +100,7 @@ object Evolution {
         Evolution { (_, value , pure(value)) }
 
     def map2[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
-        Evolution { rng =>
-            val (rng2, a, eva2) = eva.run(rng)
-            val (rng3, b, evb2) = evb.run(rng2)
-            (rng3, f(a, b), map2(f)(eva2, evb2))
-        }
+        eva.flatMap(a => evb.map(b => f(a, b)))
 
     def traverse[A, B](as: List[A])(f: A => Evolution[B]): Evolution[List[B]] =
         as.foldRight[Evolution[List[B]]](pure(List())) { (a, evb) =>
@@ -119,7 +123,7 @@ object Evolution {
         pure(from).scan(from)((z, _) => f(z))
 
     def flatten[A](evas: Evolution[List[A]]): Evolution[A] =
-        evas.flatBest((as, evas2) => prepend(as)(flatten(evas2)))
+        evas.flatMapNext((as, evas2) => prepend(as)(flatten(evas2)))
 
     def sample[A](eva: Evolution[A], n: Int = 10, rng: Option[RNG] = None): List[A] =
         eva.unfold(rng.getOrElse(SimpleRNG(Random.nextLong()))).take(n).toList

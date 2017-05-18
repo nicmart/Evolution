@@ -2,7 +2,7 @@ package paint.evolution
 
 import paint.geometry.Geometry.Point
 import paint.evolution.Numeric._
-import paint.evolution.Semigroup._
+import paint.evolution.SemigroupEvolution._
 import paint.evolution.Evolution._
 
 /**
@@ -32,4 +32,26 @@ object PointEvolution {
 
     def centeredIn(center: Point)(ev: Evolution[Point]): Evolution[Point] =
         ev.map(p => p + center)
+
+    def complementOf(ev: Evolution[Point], radius: Double): Evolution[Point] =
+        ev map { point =>
+            point.versor().getOrElse(Point.zero) * radius - point
+        }
+
+    def translateRadial(ev: Evolution[Point], radius: Double): Evolution[Point] =
+        ev map { point =>
+            point.versor().getOrElse(Point.zero) * radius + point
+        }
+
+    def ring(radius: Double, size: Evolution[Double]): Evolution[Point] =
+        polar(
+            size.map(_ + radius),
+            double.map(_ * 2 * Math.PI)
+        )
+
+    def ring(radius: Double): Evolution[Point] =
+        polar(
+            pure(radius),
+            double.map(_ * 2 * Math.PI)
+        )
 }

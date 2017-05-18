@@ -33,20 +33,18 @@ object App {
 
         val canvasSize = Point(htmlCanvas.width, htmlCanvas.height)
 
-        var state: RNG = SimpleRNG(Random.nextLong())
+        val state: RNG = SimpleRNG(Random.nextLong())
         //var state: RNG = SequenceRNG(0)
-        var drawing: Evolution[CanvasRenderingContext2D => Unit] =
-            drawPointsEvolution(1, EvolutionPortfolio.list)
+        var drawingStream: Stream[CanvasRenderingContext2D => Unit] =
+            drawPointsEvolution(1, EvolutionPortfolio.current).unfold(state)
 
         val iterations = 200
 
         def draw(t: Double): Unit = {
 
             for (i <- 1 to iterations) {
-                val (nextState, drw, nextDrawing) = drawing.run(state)
-                drw(ctx)
-                drawing = nextDrawing
-                state = nextState
+                drawingStream.head.apply(ctx)
+                drawingStream = drawingStream.tail
             }
 
             window.requestAnimationFrame(draw)
