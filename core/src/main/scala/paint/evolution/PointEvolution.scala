@@ -58,6 +58,13 @@ object PointEvolution {
             double.map(_ * 2 * Math.PI)
         )
 
+    def regularPolygon(edges: Int, radius: Double = 1): Evolution[Point] = {
+        val start = Point(0, radius)
+        val points = (0 until edges).map( 2 * Math.PI * _ / edges).map(start.rotate).toList
+        cycle(points)
+    }
+
+
     def grid(w: Double, h: Double, x: Int, y: Int): Evolution[Point] = {
         val xEv = cycle((0 to x).toList).map(w * _ / x)
         val yEv = cycle((0 to y).toList).map(h * _ / y)

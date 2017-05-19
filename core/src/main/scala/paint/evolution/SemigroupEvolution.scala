@@ -15,6 +15,23 @@ object SemigroupEvolution {
             ev.scan(start)((z, a) => implicitly[Semigroup[A]].combine(z, a))
         }
 
+    def solveIntegral[A: Semigroup](equation: Evolution[A => A])(start: A): Evolution[A] = {
+        val semiGroup = implicitly[Semigroup[A]]
+        equation.flatMapNext { (f, eq2) =>
+            start :: solveIntegral(eq2)(semiGroup.combine(f(start), start))
+        }
+    }
+
+    def solveIntegral2[A: Semigroup](equation: Evolution[(A, A) => A])(x0: A, v0: A): Evolution[A] = {
+        val semiGroup = implicitly[Semigroup[A]]
+        equation.flatMapNext { (f, eq2) =>
+            val acc = f(x0, v0)
+            val v1 = semiGroup.combine(acc, v0)
+            val x1 = semiGroup.combine(v1, x0)
+            x0 :: solveIntegral2(eq2)(x1, v1)
+        }
+    }
+
     def integrateConditional[A: Semigroup](f: Evolution[A])(start: A)(p: A => Boolean): Evolution[A] = {
         val semigroup = implicitly[Semigroup[A]]
         val predicate: A => Boolean = x => !p(semigroup.combine(start, x))

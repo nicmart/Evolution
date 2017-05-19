@@ -1,5 +1,6 @@
 package paint.evolution
 
+import paint.evolution.Evolution.sequence
 import paint.random.{RNG, SimpleRNG}
 
 import scala.collection.immutable.{Queue, Stream}
@@ -9,7 +10,6 @@ import scala.util.Random
   * Created by Nicolò Martini on 12/05/2017.
   */
 case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
-
     def flatMapNext[B](f: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
         Evolution { rng =>
             val (rng2, a, eva2) = run(rng)
@@ -91,12 +91,15 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
             else a :: next
         }
 
-    def appendAfter(k: Int, after: Evolution[A]): Evolution[A] = k match {
+    def appendAfter(k: Int, after: => Evolution[A]): Evolution[A] = k match {
         case _ if k <= 0 => after
         case _ => flatMapNext { (a, eva2) =>
             a :: eva2.appendAfter(k - 1, after)
         }
     }
+
+    def restartEvery(k: Int): Evolution[A] =
+        appendAfter(k, this.restartEvery(k))
 
     def replaceEvery[B](k: Int, f: A => Evolution[B]): Evolution[B] =
         flatMapNext { (a, eva2) =>
@@ -111,6 +114,19 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
                 (a1, a2) :: (a2 :: eva2).slidingPairs
             }
         }
+
+    def grouped(i: Int, from: Int = 0): Evolution[List[A]] = i match {
+        case _ if i <= 0 => this.map(List(_))
+        case _ if from >= i => List() :: grouped(i)
+        case _ => flatMapNext { (a1, eva2) =>
+            eva2.grouped(i, from + 1).flatMapNext { (as, evas2) =>
+                (a1 :: as) :: evas2
+            }
+        }
+    }
+
+    def parallel[B](generator: A => Evolution[B], n: Int): Evolution[List[B]] =
+        grouped(n).flatMapNext { (points, _) => sequence(points.map(generator)) }
 }
 
 object Evolution {

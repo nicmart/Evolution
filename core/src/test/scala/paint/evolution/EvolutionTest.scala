@@ -133,6 +133,19 @@ class EvolutionTest extends PaintEvolutionSpec {
         }
     }
 
+    "grouped" must {
+        "group elements by the provided argument" in {
+            assertValues(
+                int.grouped(3),
+                List(
+                    List(0, 1, 2),
+                    List(3, 4, 5),
+                    List(6, 7, 8)
+                )
+            )
+        }
+    }
+
     "append after" must {
         "append a second evolution after k generations" in {
             assertValues(

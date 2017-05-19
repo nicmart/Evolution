@@ -85,12 +85,54 @@ object EvolutionPortfolio {
         val w = 25
         val h = 10
         grid(canvasSize.x, canvasSize.y, w, h)
-            .replaceEvery(500, integrate(ball2D(2)))
+            .replaceEvery(100, point => integrateMulti(ball2D(0.06))(List(point, Point.zero)))
+            .map(List(_))
+    }
+
+    def gridParallelEvo(canvasSize: Point): Evolution[List[Point]] = {
+        val w = 50
+        val h = 20
+        grid(canvasSize.x, canvasSize.y, w, h)
+            .parallel(integrate(ring(1)), (w + 1) * (h + 1))
+    }
+
+    def regularPolygonEvo(canvasSize: Point): Evolution[List[Point]] = {
+        val edges = 40
+        centeredIn(canvasSize / 2)(regularPolygon(edges, 500)).parallel(
+            integrate(ring(1)),
+            edges
+        )
+    }
+
+    def nonParallelRegularPolygonEvo(canvasSize: Point): Evolution[List[Point]] = {
+        val edges = 40
+        centeredIn(canvasSize / 2)(regularPolygon(edges, 500))
+            .parallel(
+                point => integrateMulti(ball2D(0.06))(List(point, Point.zero)),
+                edges
+            ).restartEvery(100)
+    }
+
+    def solveIntegralEvo(canvasSize: Point): Evolution[List[Point]] = {
+        val accelerationEq: (Point, Point) => Point = (x, v) => Point(0, -0.0000001 * x.y)
+        val accelerationEvo = pure(accelerationEq)
+        val accelerationEvo2 = accelerationEvo.compose(cartesian(pure(0), ball(0.0001))) {
+            (eq, noise: Point) => {
+                (x: Point, v: Point) => {
+                    val acc = eq(x, v)
+                    noise  + acc
+                }
+            }
+        }
+
+        translate[Point](
+            uniformLinear(Point(0, canvasSize.y / 2), Point(0.01, 0)),
+            solveIntegral2[Point](accelerationEvo2)(Point(0, 0), Point.zero)
+        )
             .map(List(_))
     }
 
     def current(canvasSize: Point): Evolution[List[Point]] = {
-        gridEvo(canvasSize)
-        //brownian.map(List(_))
+        solveIntegralEvo(canvasSize)
     }
 }
