@@ -10,6 +10,7 @@ object Geometry
     case class Point(x: Double, y: Double) {
         def +(other: Point) = Point(x + other.x, y + other.y)
         def -(other: Point) = Point(x - other.x, y - other.y)
+        def unary_-(): Point = Point(-x, -y)
         def *(d: Double) = Point(x * d, y * d)
         def /(d: Double) = Point(x / d, y / d)
         def rotate(angle: Double) = {
@@ -26,6 +27,10 @@ object Geometry
             if (normValue > 0) Some(this / normValue) else None
         }
         def rounded(): Point = Point(x.toInt + 0.5, y.toInt + 0.5)
+
+        def inRectangle(topLeft: Point, bottomRight: Point): Boolean = {
+            topLeft.x <= x && topLeft.y <= y && bottomRight.x >= x && bottomRight.y >= y
+        }
     }
 
     object Point {

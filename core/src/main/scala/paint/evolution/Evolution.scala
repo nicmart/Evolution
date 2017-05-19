@@ -85,6 +85,24 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
             else eva2.filter(predicate)
         }
 
+    def dropWhile(predicate: A => Boolean): Evolution[A] =
+        flatMapNext { (a, next) =>
+            if (predicate(a)) next.dropWhile(predicate)
+            else a :: next
+        }
+
+    def appendAfter(k: Int, after: Evolution[A]): Evolution[A] = k match {
+        case _ if k <= 0 => after
+        case _ => flatMapNext { (a, eva2) =>
+            a :: eva2.appendAfter(k - 1, after)
+        }
+    }
+
+    def replaceEvery[B](k: Int, f: A => Evolution[B]): Evolution[B] =
+        flatMapNext { (a, eva2) =>
+            f(a).appendAfter(k, eva2.replaceEvery(k, f))
+        }
+
     def ::(value: A): Evolution[A] = prepend(List(value))
 
     def slidingPairs: Evolution[(A, A)] =
@@ -100,7 +118,11 @@ object Evolution {
         Evolution { (_, value , pure(value)) }
 
     def map2[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
-        eva.flatMap(a => evb.map(b => f(a, b)))
+        eva.flatMapNext { (a, eva2) =>
+            evb.flatMapNext { (b, evb2) =>
+                f(a, b) :: map2(f)(eva2, evb2)
+            }
+        }
 
     def traverse[A, B](as: List[A])(f: A => Evolution[B]): Evolution[List[B]] =
         as.foldRight[Evolution[List[B]]](pure(List())) { (a, evb) =>
@@ -120,7 +142,7 @@ object Evolution {
     def cycle[A](as: List[A]): Evolution[A] = prepend(as)(cycle(as))
 
     def transition[A](from: A)(f: A => A): Evolution[A] =
-        pure(from).scan(from)((z, _) => f(z))
+        prepend(List(from))(transition(f(from))(f))
 
     def flatten[A](evas: Evolution[List[A]]): Evolution[A] =
         evas.flatMapNext((as, evas2) => prepend(as)(flatten(evas2)))

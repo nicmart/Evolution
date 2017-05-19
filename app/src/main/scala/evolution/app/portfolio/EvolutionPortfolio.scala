@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import paint.evolution.Evolution._
 import paint.evolution.SemigroupEvolution._
 import paint.evolution.Numeric._
-import paint.evolution.PointEvolution._
+import paint.evolution.PointEvolution.{uniformRadial, _}
 import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import cats.implicits._
@@ -69,7 +69,28 @@ object EvolutionPortfolio {
         }.map(List(_))
     }
 
-    def current: Evolution[List[Point]] = {
-        accelerationRing
+    def integrateCond(canvasSize: Point): Evolution[List[Point]] = {
+        centeredIn(canvasSize / 2) {
+            integrateConditional(ring(2))(Point.zero)(_.inRectangle(-canvasSize / 2, canvasSize / 2))
+        }.map(List(_))
+    }
+
+    def randomRing(canvasSize: Point): Evolution[List[Point]] = {
+        centeredIn(canvasSize / 2) {
+            ring(300).replaceEvery(1000, integrate(ring(1)))
+        }.map(List(_))
+    }
+
+    def gridEvo(canvasSize: Point): Evolution[List[Point]] = {
+        val w = 25
+        val h = 10
+        grid(canvasSize.x, canvasSize.y, w, h)
+            .replaceEvery(500, integrate(ball2D(2)))
+            .map(List(_))
+    }
+
+    def current(canvasSize: Point): Evolution[List[Point]] = {
+        gridEvo(canvasSize)
+        //brownian.map(List(_))
     }
 }

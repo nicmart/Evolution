@@ -43,6 +43,9 @@ object PointEvolution {
             point.versor().getOrElse(Point.zero) * radius + point
         }
 
+    def ball2D(radius: Double): Evolution[Point] =
+        cartesian(ball(radius), ball(radius))
+
     def ring(radius: Double, size: Evolution[Double]): Evolution[Point] =
         polar(
             size.map(_ + radius),
@@ -54,4 +57,10 @@ object PointEvolution {
             pure(radius),
             double.map(_ * 2 * Math.PI)
         )
+
+    def grid(w: Double, h: Double, x: Int, y: Int): Evolution[Point] = {
+        val xEv = cycle((0 to x).toList).map(w * _ / x)
+        val yEv = cycle((0 to y).toList).map(h * _ / y)
+        yEv.replaceEvery[Point](x + 1, y => xEv.map(Point(_, y)))
+    }
 }

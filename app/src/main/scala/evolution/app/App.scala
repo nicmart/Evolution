@@ -36,9 +36,9 @@ object App {
         val state: RNG = SimpleRNG(Random.nextLong())
         //var state: RNG = SequenceRNG(0)
         var drawingStream: Stream[CanvasRenderingContext2D => Unit] =
-            drawPointsEvolution(1, EvolutionPortfolio.current).unfold(state)
+            drawPointsEvolution(1, EvolutionPortfolio.current(canvasSize)).unfold(state)
 
-        val iterations = 200
+        val iterations = 100
 
         def draw(t: Double): Unit = {
 
