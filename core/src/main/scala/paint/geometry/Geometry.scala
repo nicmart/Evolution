@@ -44,6 +44,11 @@ object Geometry
             )
         }
 
+        def sequence(n: Int, from: Point, to: Point): List[Point] = {
+            val step = (to - from) / n
+            (0 to n).toList.map(from + step * _)
+        }
+
         implicit val pointMonoid = new Monoid[Point] {
             override def empty: Point = zero
             override def combine(x: Point, y: Point): Point = x + y

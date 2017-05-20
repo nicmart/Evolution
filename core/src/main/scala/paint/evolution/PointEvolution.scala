@@ -64,10 +64,18 @@ object PointEvolution {
         cycle(points)
     }
 
-
     def grid(w: Double, h: Double, x: Int, y: Int): Evolution[Point] = {
         val xEv = cycle((0 to x).toList).map(w * _ / x)
         val yEv = cycle((0 to y).toList).map(h * _ / y)
         yEv.replaceEvery[Point](x + 1, y => xEv.map(Point(_, y)))
+    }
+
+    def independentSpeed(speed: Evolution[Point]): Evolution[Point => Point] =
+        speed.map(x => _)
+
+    def boundedBrownian(radius: Double, doubleEvo: Evolution[Double]): Evolution[Point] = {
+        val speed = cartesian(doubleEvo, doubleEvo)
+        def predicate(position: Point, speed: Point): Boolean = position.norm() <= radius
+        solveIntegral(independentSpeed(speed), predicate)(Point.zero)
     }
 }

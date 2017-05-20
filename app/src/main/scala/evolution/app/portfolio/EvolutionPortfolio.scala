@@ -114,25 +114,55 @@ object EvolutionPortfolio {
     }
 
     def solveIntegralEvo(canvasSize: Point): Evolution[List[Point]] = {
-        val accelerationEq: (Point, Point) => Point = (x, v) => Point(0, -0.0000001 * x.y)
+        val accelerationEq: (Point, Point) => Point = (x, v) => Point(0, -0.00005 * x.y) - v * 0.0004
         val accelerationEvo = pure(accelerationEq)
-        val accelerationEvo2 = accelerationEvo.compose(cartesian(pure(0), ball(0.0001))) {
+        val accelerationEvo2 = accelerationEvo.compose(cartesian(pure(0), ball(0.003))) {
             (eq, noise: Point) => {
                 (x: Point, v: Point) => {
                     val acc = eq(x, v)
-                    noise  + acc
+                    acc + noise
                 }
             }
         }
 
-        translate[Point](
-            uniformLinear(Point(0, canvasSize.y / 2), Point(0.01, 0)),
-            solveIntegral2[Point](accelerationEvo2)(Point(0, 0), Point.zero)
+        def vibration(from: Point) = translate(
+            uniformLinear(from, Point(0.1, 0)),
+            solveIntegral2[Point](accelerationEvo2)(Point.zero, Point.zero)
         )
-            .map(List(_))
+
+        sequence(
+            Point.sequence(40, Point.zero, canvasSize.copy(x = 0)).map(vibration)
+        )
+    }
+
+    def boundedBrownianEvo(canvasSize: Point): Evolution[List[Point]] = {
+        centeredIn(canvasSize / 2) {
+            translate(
+                uniformRadial(Point(0, 300), 0.0001),
+                boundedBrownian(15, ball(1))
+            )
+        }.map(List(_))
+    }
+
+    def boundedBrownianLines(canvasSize: Point): Evolution[List[Point]] = {
+        def pointEvo(from: Point): Evolution[Point] =
+            translate(
+                uniformLinear(from, Point(0.02, 0)),
+                boundedBrownian(25, ball(1))
+            )
+
+        sequence(
+            Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
+        )
+    }
+
+    def slowedDownBrownian(canvasSize: Point): Evolution[List[Point]] = {
+        centeredIn(canvasSize / 2) {
+            integrate(ring(1).slowDown(10))(Point.zero)
+        }.map(List(_))
     }
 
     def current(canvasSize: Point): Evolution[List[Point]] = {
-        solveIntegralEvo(canvasSize)
+        slowedDownBrownian(canvasSize)
     }
 }

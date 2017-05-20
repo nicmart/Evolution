@@ -2,6 +2,7 @@ package paint.evolution
 
 import cats.data.NonEmptyList
 import cats.kernel.{Group, Semigroup}
+import cats.syntax.semigroup._
 
 /**
   * Created by Nicolò Martini on 15/05/2017.
@@ -12,13 +13,27 @@ object SemigroupEvolution {
 
     def integrateMulti[A: Semigroup](f: Evolution[A])(as: List[A]): Evolution[A] =
         as.foldRight(f){ (start, ev) =>
-            ev.scan(start)((z, a) => implicitly[Semigroup[A]].combine(z, a))
+            ev.scan(start)((z, a) => z |+| a)
         }
 
     def solveIntegral[A: Semigroup](equation: Evolution[A => A])(start: A): Evolution[A] = {
-        val semiGroup = implicitly[Semigroup[A]]
         equation.flatMapNext { (f, eq2) =>
-            start :: solveIntegral(eq2)(semiGroup.combine(f(start), start))
+            start :: solveIntegral(eq2)(f(start) |+| start)
+        }
+    }
+
+    def solveIntegral[A: Semigroup](
+        equation: Evolution[A => A],
+        predicate: (A, A) => Boolean
+    )(start: A): Evolution[A] = {
+        equation.flatMapNext { (f, eq2) =>
+            val v = f(start)
+            val next = start |+| v
+            if (predicate(next, v)) {
+                start :: solveIntegral(eq2, predicate)(f(start) |+| start)
+            } else {
+                solveIntegral(eq2, predicate)(start)
+            }
         }
     }
 
