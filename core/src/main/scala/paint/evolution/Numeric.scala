@@ -11,6 +11,23 @@ object Numeric {
         (rng2, i, int)
     }
 
+    val nonNegative: Evolution[Int] =
+        int flatMapNext { (n, int2) =>
+            n match {
+                case Int.MinValue => nonNegative
+                case _ if n < 0 => -n :: nonNegative
+                case _ => n :: nonNegative
+            }
+        }
+
+    def nonNegativeLessThan(n: Int): Evolution[Int] =
+        nonNegative flatMapNext { (i, nonNeg2) =>
+            val mod = i % n
+            if (i + (n-1) - mod >= 0)
+                i :: nonNegativeLessThan(n)
+            else nonNegativeLessThan(n)
+        }
+
     val double: Evolution[Double] =
         int.map { n =>
             (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
@@ -32,4 +49,8 @@ object Numeric {
         ev.map { d =>
             math.signum(d) * (radius - math.abs(d))
         }
+
+    def choice[A](as: IndexedSeq[A]): Evolution[A] =
+        nonNegativeLessThan(as.length).map(as.apply)
+
 }

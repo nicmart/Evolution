@@ -157,12 +157,24 @@ object EvolutionPortfolio {
     }
 
     def slowedDownBrownian(canvasSize: Point): Evolution[List[Point]] = {
-        centeredIn(canvasSize / 2) {
-            integrate(ring(1).slowDown(10))(Point.zero)
-        }.map(List(_))
+        def pointEvo(from: Point): Evolution[Point] =
+            translate(
+                uniformLinear(from, Point(0.1, 0)),
+                boundedBrownian(25, ball(1).slowDown(10))
+            )
+
+        sequence(
+            Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
+        )
+    }
+
+    def randomPointEvo(canvasSize: Point): Evolution[List[Point]] = {
+        inRectangle(canvasSize)
+            .replaceEvery[Point](200, point => solve(independentSpeed(ring(2).slowDown(5)))(point))
+            .map(List(_))
     }
 
     def current(canvasSize: Point): Evolution[List[Point]] = {
-        slowedDownBrownian(canvasSize)
+        randomPointEvo(canvasSize)
     }
 }

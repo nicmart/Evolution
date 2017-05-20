@@ -38,7 +38,7 @@ object App {
         var drawingStream: Stream[CanvasRenderingContext2D => Unit] =
             drawPointsEvolution(1, EvolutionPortfolio.current(canvasSize)).unfold(state)
 
-        val iterations = 10
+        val iterations = 100
 
         def draw(t: Double): Unit = {
 

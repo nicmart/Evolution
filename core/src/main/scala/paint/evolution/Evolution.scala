@@ -17,9 +17,10 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
         }
 
     def mapEv[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
-        flatMapNext { (a, eva2) =>
+        Evolution { rng =>
+            val (rng2, a, eva2) = run(rng)
             val (b, evb) = f(a, eva2)
-            b :: evb
+            (rng2, b, evb)
         }
 
     def mapEv[B](f: A => B, g: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
@@ -35,11 +36,6 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
         Evolution.map2(f)(this, evb)
 
     def perturbate(perturbations: Evolution[A => A]): Evolution[A] =
-//        Evolution { rng =>
-//            val (rng2, a, eva2) = run(rng)
-//            val (rng3, p, ps2) = perturbations.run(rng2)
-//            (rng3, p(a), eva2.map(p).perturbate(ps2))
-//        }
         perturbations.flatMapNext((p, perts2) => map(p).mapNext(_.perturbate(perts2)))
 
     def next(nextEv: Evolution[A]): Evolution[A] =
@@ -159,6 +155,11 @@ object Evolution {
 
     def transition[A](from: A)(f: A => A): Evolution[A] =
         prepend(List(from))(transition(f(from))(f))
+
+    def transitionEvo[A](from: A)(evf: Evolution[A => A]): Evolution[A] =
+        evf flatMapNext { (f, evf2) =>
+            from :: transitionEvo(f(from))(evf2)
+        }
 
     def flatten[A](evas: Evolution[List[A]]): Evolution[A] =
         evas.flatMapNext((as, evas2) => prepend(as)(flatten(evas2)))

@@ -3,6 +3,7 @@ package paint.evolution
 import cats.data.NonEmptyList
 import cats.kernel.{Group, Semigroup}
 import cats.syntax.semigroup._
+import Evolution._
 
 /**
   * Created by Nicolò Martini on 15/05/2017.
@@ -16,10 +17,8 @@ object SemigroupEvolution {
             ev.scan(start)((z, a) => z |+| a)
         }
 
-    def solveIntegral[A: Semigroup](equation: Evolution[A => A])(start: A): Evolution[A] = {
-        equation.flatMapNext { (f, eq2) =>
-            start :: solveIntegral(eq2)(f(start) |+| start)
-        }
+    def solve[A: Semigroup](equation: Evolution[A => A])(start: A): Evolution[A] = {
+        transitionEvo(start)(equation.map(eq => (x: A) => eq(x) |+| x))
     }
 
     def solveIntegral[A: Semigroup](
@@ -37,12 +36,26 @@ object SemigroupEvolution {
         }
     }
 
+    def solveIntegralTest[A: Semigroup](
+        equation: Evolution[A => A],
+        predicate: (A, A) => Boolean
+    )(start: A): Evolution[A] = {
+        equation.flatMapNext { (f, eq2) =>
+            val v = f(start)
+            val next = start |+| v
+            if (predicate(next, v)) {
+                start :: solveIntegral(eq2, predicate)(f(start) |+| start)
+            } else {
+                solveIntegral(eq2, predicate)(start)
+            }
+        }
+    }
+
     def solveIntegral2[A: Semigroup](equation: Evolution[(A, A) => A])(x0: A, v0: A): Evolution[A] = {
-        val semiGroup = implicitly[Semigroup[A]]
         equation.flatMapNext { (f, eq2) =>
             val acc = f(x0, v0)
-            val v1 = semiGroup.combine(acc, v0)
-            val x1 = semiGroup.combine(v1, x0)
+            val v1 = acc |+| v0
+            val x1 = v1 |+| x0
             x0 :: solveIntegral2(eq2)(x1, v1)
         }
     }

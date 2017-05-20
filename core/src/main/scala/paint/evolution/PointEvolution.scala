@@ -70,6 +70,13 @@ object PointEvolution {
         yEv.replaceEvery[Point](x + 1, y => xEv.map(Point(_, y)))
     }
 
+    def inRectangle(bottomRight: Point, topLeft: Point = Point.zero): Evolution[Point] = {
+        cartesian(
+            ball(bottomRight.x - topLeft.x),
+            ball(bottomRight.y - topLeft.y)
+        )
+    }
+
     def independentSpeed(speed: Evolution[Point]): Evolution[Point => Point] =
         speed.map(x => _)
 
