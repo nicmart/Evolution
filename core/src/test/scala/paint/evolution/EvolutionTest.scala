@@ -2,7 +2,7 @@ package paint.evolution
 
 import org.scalatest.{FlatSpec, Matchers, WordSpec}
 import Evolution._
-import Numeric._
+import NumericEvolutions._
 import org.scalatest._
 import paint.random.SequenceRNG
 

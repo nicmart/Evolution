@@ -8,7 +8,7 @@ import Evolution._
 /**
   * Created by Nicolò Martini on 15/05/2017.
   */
-object SemigroupEvolution {
+object SemigroupEvolutions {
     def integrate[A: Semigroup](v: Evolution[A])(start: A): Evolution[A] =
         integrateMulti(v)(List(start))
 
@@ -36,26 +36,12 @@ object SemigroupEvolution {
         }
     }
 
-    def solveIntegralTest[A: Semigroup](
-        equation: Evolution[A => A],
-        predicate: (A, A) => Boolean
-    )(start: A): Evolution[A] = {
-        equation.flatMapNext { (f, eq2) =>
-            val v = f(start)
-            val next = start |+| v
-            if (predicate(next, v)) {
-                start :: solveIntegral(eq2, predicate)(f(start) |+| start)
-            } else {
-                solveIntegral(eq2, predicate)(start)
-            }
-        }
-    }
-
     def solveIntegral2[A: Semigroup](equation: Evolution[(A, A) => A])(x0: A, v0: A): Evolution[A] = {
         equation.flatMapNext { (f, eq2) =>
             val acc = f(x0, v0)
             val v1 = acc |+| v0
             val x1 = v1 |+| x0
+            // val x1 = f(x0, v0) + v0 + x0
             x0 :: solveIntegral2(eq2)(x1, v1)
         }
     }
@@ -72,5 +58,5 @@ object SemigroupEvolution {
         f.slidingPairs.map{ case (a1, a2) => implicitly[Group[A]].remove(a1, a2) }
 
     def translate[A: Semigroup](ev1: Evolution[A], ev2: Evolution[A]): Evolution[A] =
-        ev1.compose(ev2)(implicitly[Semigroup[A]].combine)
+        ev1.map2(ev2)(implicitly[Semigroup[A]].combine)
 }

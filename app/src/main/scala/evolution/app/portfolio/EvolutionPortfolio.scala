@@ -1,13 +1,14 @@
 package evolution.app.portfolio
 
 import paint.evolution.Evolution._
-import paint.evolution.SemigroupEvolution._
-import paint.evolution.Numeric._
-import paint.evolution.PointEvolution.{uniformRadial, _}
+import paint.evolution.SemigroupEvolutions._
+import paint.evolution.NumericEvolutions._
+import paint.evolution.PointEvolutions.{uniformRadial, _}
 import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import cats.implicits._
 import paint.geometry.Geometry.Point.pointMonoid
+import paint.evolution.motion.{AccelerationEvolution, MotionEvolutions}
 
 /**
   * Created by Nicolò Martini on 17/05/2017.
@@ -113,10 +114,10 @@ object EvolutionPortfolio {
             ).restartEvery(100)
     }
 
-    def solveIntegralEvo(canvasSize: Point): Evolution[List[Point]] = {
+    def solveIntegralEvo(canvasSize: Point): Evolution[Point] = {
         val accelerationEq: (Point, Point) => Point = (x, v) => Point(0, -0.00005 * x.y) - v * 0.0004
-        val accelerationEvo = pure(accelerationEq)
-        val accelerationEvo2 = accelerationEvo.compose(cartesian(pure(0), ball(0.003))) {
+        val accelerationEvo: AccelerationEvolution[Point] = pure(accelerationEq)
+        val accelerationEvo2: AccelerationEvolution[Point] = accelerationEvo.map2(cartesian(pure(0), ball(0.0025))) {
             (eq, noise: Point) => {
                 (x: Point, v: Point) => {
                     val acc = eq(x, v)
@@ -127,12 +128,12 @@ object EvolutionPortfolio {
 
         def vibration(from: Point) = translate(
             uniformLinear(from, Point(0.1, 0)),
-            solveIntegral2[Point](accelerationEvo2)(Point.zero, Point.zero)
+            MotionEvolutions.solve2[Point](Point.zero, Point.zero)(accelerationEvo2)
         )
 
-        sequence(
+        flatten(sequence(
             Point.sequence(40, Point.zero, canvasSize.copy(x = 0)).map(vibration)
-        )
+        ))
     }
 
     def boundedBrownianEvo(canvasSize: Point): Evolution[List[Point]] = {
@@ -144,37 +145,36 @@ object EvolutionPortfolio {
         }.map(List(_))
     }
 
-    def boundedBrownianLines(canvasSize: Point): Evolution[List[Point]] = {
+    def boundedBrownianLines(canvasSize: Point): Evolution[Point] = {
         def pointEvo(from: Point): Evolution[Point] =
             translate(
                 uniformLinear(from, Point(0.02, 0)),
                 boundedBrownian(25, ball(1))
             )
 
-        sequence(
+        flatten(sequence(
             Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
-        )
+        ))
     }
 
-    def slowedDownBrownian(canvasSize: Point): Evolution[List[Point]] = {
+    def slowedDownBrownian(canvasSize: Point): Evolution[Point] = {
         def pointEvo(from: Point): Evolution[Point] =
             translate(
                 uniformLinear(from, Point(0.1, 0)),
                 boundedBrownian(25, ball(1).slowDown(10))
             )
 
-        sequence(
+        flatten(sequence(
             Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
-        )
+        ))
     }
 
-    def randomPointEvo(canvasSize: Point): Evolution[List[Point]] = {
+    def randomPointEvo(canvasSize: Point): Evolution[Point] = {
         inRectangle(canvasSize)
             .replaceEvery[Point](200, point => solve(independentSpeed(ring(2).slowDown(5)))(point))
-            .map(List(_))
     }
 
-    def current(canvasSize: Point): Evolution[List[Point]] = {
-        randomPointEvo(canvasSize)
+    def current(canvasSize: Point): Evolution[Point] = {
+        boundedBrownianLines(canvasSize)
     }
 }

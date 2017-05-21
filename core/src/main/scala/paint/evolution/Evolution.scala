@@ -16,37 +16,38 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
             f(a, eva2).run(rng2)
         }
 
-    def mapEv[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
+    def mapNext[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
         Evolution { rng =>
             val (rng2, a, eva2) = run(rng)
             val (b, evb) = f(a, eva2)
             (rng2, b, evb)
         }
 
-    def mapEv[B](f: A => B, g: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
-        mapEv((a, eva) => (f(a), g(a, eva)))
-
     def map[B](f: A => B): Evolution[B] =
-        mapEv(f, (_, eva) => eva.map(f))
+        mapNext((a, eva2) => (f(a), eva2.map(f)))
 
-    def mapNext(f: Evolution[A] => Evolution[A]): Evolution[A] =
-        mapEv((a, eva2) => (a, f(eva2)))
+    def mapOnlyNext(f: Evolution[A] => Evolution[A]): Evolution[A] =
+        mapNext((a, eva2) => (a, f(eva2)))
 
-    def compose[B, C](evb: Evolution[B])(f: (A, B) => C): Evolution[C] =
+    def map2[B, C](evb: Evolution[B])(f: (A, B) => C): Evolution[C] =
         Evolution.map2(f)(this, evb)
 
+    def map2Next[B, C](evb: Evolution[B])(f: (A, Evolution[A], B, Evolution[B]) => Evolution[C]): Evolution[C] =
+        Evolution.map2Next(this, evb)(f)
+
     def perturbate(perturbations: Evolution[A => A]): Evolution[A] =
-        perturbations.flatMapNext((p, perts2) => map(p).mapNext(_.perturbate(perts2)))
+        perturbations.flatMapNext((p, perts2) => map(p).mapOnlyNext(_.perturbate(perts2)))
 
     def next(nextEv: Evolution[A]): Evolution[A] =
-        mapNext(_ => nextEv)
-
+        mapOnlyNext(_ => nextEv)
 
     def flatMap[B](f: A => Evolution[B]): Evolution[B] =
-        flatMapNext((a, eva2) => f(a).mapNext(_ => eva2.flatMap(f)))
+        flatMapNext((a, eva2) => f(a).mapOnlyNext(_ => eva2.flatMap(f)))
 
     def scan[Z](z: Z)(f: (Z, A) => Z): Evolution[Z] =
-        mapEv(f(z, _), (a, eva) => eva.scan(f(z, a))(f))
+        mapNext { (a, eva2) =>
+            (z, eva2.scan(f(z, a))(f))
+        }
 
     def prepend(as: List[A]): Evolution[A] =
         Evolution.prepend(as)(this)
@@ -62,13 +63,18 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
     }
 
     def zip[B](evb: Evolution[B]): Evolution[(A, B)] =
-        compose(evb)((_, _))
+        map2(evb)((_, _))
 
     def speedUp(skip: Int): Evolution[A] =
-        mapNext(_.drop(skip).speedUp(skip))
+        mapOnlyNext(_.drop(skip).speedUp(skip))
 
     def slowDown(times: Int): Evolution[A] =
         Evolution.flatten(map(List.fill(times)(_)))
+
+    def slowDown(times: Evolution[Int]): Evolution[A] =
+        map2Next(times){ (a, eva2, n, times2) =>
+            Evolution.prepend(List.fill(n)(a))(eva2.slowDown(times2))
+        }
 
     def unfold(from: RNG): Stream[A] = {
         val (rng2, a, ev2) = run(from)
@@ -129,16 +135,22 @@ object Evolution {
     def pure[A](value: A): Evolution[A] =
         Evolution { (_, value , pure(value)) }
 
-    def map2[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
-        eva.flatMapNext { (a, eva2) =>
-            evb.flatMapNext { (b, evb2) =>
-                f(a, b) :: map2(f)(eva2, evb2)
+    def map2Next[A, B, C]
+        (eva: Evolution[A], evb: Evolution[B])
+        (f: (A, Evolution[A], B, Evolution[B]) => Evolution[C]): Evolution[C] = {
+            eva.flatMapNext { (a, eva2) =>
+                evb.flatMapNext { (b, evb2) =>
+                    f(a, eva2, b, evb2)
+                }
             }
-        }
+    }
+
+    def map2[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
+        map2Next(eva, evb)((a, eva2, b, evb2) => f(a, b) :: map2(f)(eva2, evb2))
 
     def traverse[A, B](as: List[A])(f: A => Evolution[B]): Evolution[List[B]] =
         as.foldRight[Evolution[List[B]]](pure(List())) { (a, evb) =>
-            f(a).compose(evb)(_ :: _)
+            f(a).map2(evb)(_ :: _)
         }
 
     def sequence[A](evolutions: List[Evolution[A]]): Evolution[List[A]] =

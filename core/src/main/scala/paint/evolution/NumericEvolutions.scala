@@ -5,7 +5,7 @@ import java.lang.StrictMath
 /**
   * Created by Nicolò Martini on 15/05/2017.
   */
-object Numeric {
+object NumericEvolutions {
     val int: Evolution[Int] = Evolution { rng =>
         val (i, rng2) = rng.nextInt
         (rng2, i, int)
@@ -33,12 +33,18 @@ object Numeric {
             (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
         }
 
+    def doubleRange(from: Double, to: Double): Evolution[Double] =
+        double.map(d => (to - from) * d + from)
+
+    def intRange(from: Int, to: Int): Evolution[Int] =
+        doubleRange(from, to).map(_.toInt)
+
     def ball(radius: Double): Evolution[Double] =
         double.map(d => radius * (d * 2 - 1))
 
     def normal: Evolution[Double] =
         ball(1)
-            .compose(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
+            .map2(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
             .filter { case (_, _, s) => s > 0 && s < 1 }
             .map { case (v1, _, s) =>
                 val multiplier = math.sqrt(-2 * math.log(s) / s)

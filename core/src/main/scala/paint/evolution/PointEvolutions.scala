@@ -1,19 +1,20 @@
 package paint.evolution
 
 import paint.geometry.Geometry.Point
-import paint.evolution.Numeric._
-import paint.evolution.SemigroupEvolution._
+import paint.evolution.NumericEvolutions._
+import paint.evolution.SemigroupEvolutions._
 import paint.evolution.Evolution._
+import paint.evolution.motion.MotionEvolutions
 
 /**
   * Created by Nicolò Martini on 15/05/2017.
   */
-object PointEvolution {
+object PointEvolutions {
     def cartesian(x: Evolution[Double], y: Evolution[Double]): Evolution[Point] =
-        x.compose(y)(Point.apply)
+        x.map2(y)(Point.apply)
 
     def polar(norm: Evolution[Double], angle: Evolution[Double]): Evolution[Point] =
-        norm.compose(angle)(Point.polar)
+        norm.map2(angle)(Point.polar)
 
     def radial(angle: Evolution[Double])(start: Point): Evolution[Point] =
         angle.scan(start)(_.rotate(_))
@@ -22,7 +23,7 @@ object PointEvolution {
         point.perturbate(angle.map(a => (p: Point) => p.rotate(a)))
 
     def relative(centre: Evolution[Point], point: Evolution[Point]): Evolution[Point] =
-        centre.compose(point)(_ + _)
+        centre.map2(point)(_ + _)
 
     def uniformLinear(from: Point, speed: Point): Evolution[Point] =
         integrate(pure(speed))(from)
@@ -83,6 +84,6 @@ object PointEvolution {
     def boundedBrownian(radius: Double, doubleEvo: Evolution[Double]): Evolution[Point] = {
         val speed = cartesian(doubleEvo, doubleEvo)
         def predicate(position: Point, speed: Point): Boolean = position.norm() <= radius
-        solveIntegral(independentSpeed(speed), predicate)(Point.zero)
+        MotionEvolutions.solveIndependent(Point.zero)(speed, predicate)
     }
 }
