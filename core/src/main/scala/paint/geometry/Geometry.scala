@@ -1,6 +1,8 @@
 package paint.geometry
 
 import cats.kernel.Monoid
+import paint.evolution.Evolution
+import paint.evolution.Evolution.cycle
 
 /**
   * Created by nic on 26/11/2016.
@@ -41,6 +43,18 @@ object Geometry
             Point(
                 positiveRadius * Math.cos(angle),
                 positiveRadius * Math.sin(angle)
+            )
+        }
+
+        def regularPolygon(edges: Int, radius: Double = 1): IndexedSeq[Point] = {
+            val start = Point(0, radius)
+            (0 until edges).map( 2 * Math.PI * _ / edges).map(start.rotate).toIndexedSeq
+        }
+
+        def distanceFromRectangle(p: Point, topLeft: Point, bottomRight: Point): Double = {
+            Math.sqrt(
+                Math.pow(List(0, topLeft.x - p.x, p.x - bottomRight.x).max, 2) +
+                Math.pow(List(0, topLeft.y - p.y, p.y - bottomRight.y).max, 2)
             )
         }
 

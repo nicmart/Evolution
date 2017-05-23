@@ -57,6 +57,6 @@ object NumericEvolutions {
         }
 
     def choice[A](as: IndexedSeq[A]): Evolution[A] =
-        nonNegativeLessThan(as.length).map(as.apply)
+        int.map(i => as.apply(Math.abs(i) % as.length))
 
 }

@@ -50,7 +50,7 @@ object MotionEvolutions {
             val acc1 = accEq(a0, v0)
             val v1 = acc1 |+| v0
             val a1 = a0 |+| v1
-            if (p(a1, v1, acc1)) a0 :: solve2(a0 |+| v1, v1)(evacc2, p)
+            if (p(a1, v1, acc1)) a0 :: solve2(a1, v1)(evacc2, p)
             else solve2(a0, v0)(evacc2, p)
         }
 

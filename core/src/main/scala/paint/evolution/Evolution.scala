@@ -100,6 +100,19 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
         }
     }
 
+    def flatMapNextAfter(k: Int, f: (A, Evolution[A]) => Evolution[A]): Evolution[A] =
+        flatMapNext { (a, eva2) => k match {
+            case _ if k <= 0 => f(a, eva2)
+            case _ => flatMapNext { (a, eva2) =>
+                a :: eva2.flatMapNextAfter(k - 1, f)
+            }
+        }}
+
+    def flatMapNextEvery(k: Int, f: (A, Evolution[A]) => Evolution[A]): Evolution[A] =
+        flatMapNext { (a, eva2) =>
+            flatMapNextAfter(k, (a, eva3) => f(a, eva3).flatMapNextEvery(k, f))
+        }
+
     def restartEvery(k: Int): Evolution[A] =
         appendAfter(k, this.restartEvery(k))
 

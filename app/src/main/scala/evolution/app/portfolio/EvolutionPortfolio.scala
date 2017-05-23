@@ -8,13 +8,13 @@ import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import cats.implicits._
 import paint.geometry.Geometry.Point.pointMonoid
-import paint.evolution.motion.{AccelerationEvolution, MotionEvolutions}
+import paint.evolution.motion._
 
 /**
   * Created by Nicolò Martini on 17/05/2017.
   */
 object EvolutionPortfolio {
-    def brownian: Evolution[Point] = {
+    def brownianEvo: Evolution[Point] = {
         val start = Point(1000, 500)
         //integrate(cartesian(ball(1), ball(1)))(DoublePoint(500, 500))
 
@@ -58,10 +58,11 @@ object EvolutionPortfolio {
         }.map(List(_))
     }
 
-    def brownianSpeedRing: Evolution[List[Point]] = {
-        centeredIn(Point(1000, 500)) {
-            integrate(ring(2))(Point.zero)
-        }.map(List(_))
+    def brownianSpeedRing(canvasSize: Point): Evolution[Point] = {
+        MotionEvolutions.solveIndependent(canvasSize / 2)(
+            ball2D(2),
+            (p, _) => p.inRectangle(Point.zero, canvasSize)
+        )
     }
 
     def accelerationRing: Evolution[List[Point]] = {
@@ -169,12 +170,91 @@ object EvolutionPortfolio {
         ))
     }
 
+    def randomlySlowedDownBrownian(canvasSize: Point): Evolution[Point] = {
+        MotionEvolutions.solveIndependent(canvasSize / 2)(
+            ball2D(1).slowDown(double.map[Int](d => if(d < 0.0001) 200 else 1)),
+            (x, _) => x.inRectangle(Point.zero, canvasSize)
+        )
+    }
+
     def randomPointEvo(canvasSize: Point): Evolution[Point] = {
         inRectangle(canvasSize)
             .replaceEvery[Point](200, point => solve(independentSpeed(ring(2).slowDown(5)))(point))
     }
 
+    def drops(canvasSize: Point): Evolution[Point] = {
+        val acc = Point(0, 0.003)
+        val friction = 0.02
+        val threshold = 0.1
+        val randomForces = double.flatMap { p =>
+            if (p < 0.01) ring(0.1) else pure(Point.zero)
+        }
+
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = randomForces map { randomAcc =>
+            (position, velocity) =>
+                if((randomAcc + velocity + acc).norm() < threshold) -velocity
+                else randomAcc + acc - velocity * friction
+        }
+
+//        pure { (position, velocity) =>
+//            Point(0, acc) - velocity * friction
+//        }
+
+        def pointEvo(from: Point): Evolution[Point] = {
+            MotionEvolutions.solve2(from, Point.zero)(accelerationEvolution)
+        }
+
+        flatten(sequence(
+            Point.sequence(80, Point.zero, canvasSize.copy(y = 0)).map(pointEvo)
+        ))
+    }
+
+    def randomAccWithFriction(canvasSize: Point): Evolution[Point] = {
+        //val acc = 0.0004
+        val acc = 0.0001
+        val friction = 0.00008
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
+            (position, velocity) =>
+                randomAcc - velocity * friction
+        }
+
+        MotionEvolutions.solve2(canvasSize / 2, Point.zero)(
+            accelerationEvolution,
+            (x, v, a) =>
+                Point.distanceFromRectangle(x + v, Point.zero, canvasSize)
+                    <= Point.distanceFromRectangle(x + v -a, Point.zero, canvasSize)
+        )
+    }
+
+    def brownianStraight(canvasSize: Point): Evolution[Point] = {
+        rotate(
+            canvasSize / 2,
+            0,
+            MotionEvolutions.solveIndependent(canvasSize / 2)(
+                choice(Point.regularPolygon(4)).map2(choice(IndexedSeq(1, 2, 3, 4))) { (point, k) =>
+                    point * k
+                }.slowDown(10),
+                (p, _) => true// p.inRectangle(Point.zero, canvasSize)
+            )
+        )
+    }
+
+    def duplication(canvasSize: Point): Evolution[Point] = {
+        flatten(
+            MotionEvolutions.solveIndependent(canvasSize/2)(ball2D(1)).map(List(_))
+                .flatMapNextEvery(
+                    100000,
+                    (points, pointsEvo) => {
+                        println(points.length)
+                        pointsEvo.map2(pointsEvo)(_ ::: _)
+                    }
+                )
+        )
+    }
+
     def current(canvasSize: Point): Evolution[Point] = {
-        boundedBrownianLines(canvasSize)
+        //brownianSpeedRing(canvasSize)
+        //randomAccWithFriction(canvasSize)
+        duplication(canvasSize)
     }
 }

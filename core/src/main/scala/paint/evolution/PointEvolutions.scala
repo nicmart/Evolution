@@ -71,15 +71,22 @@ object PointEvolutions {
         yEv.replaceEvery[Point](x + 1, y => xEv.map(Point(_, y)))
     }
 
+    def rotate(center: Point, angle: Double, ev: Evolution[Point]): Evolution[Point] =
+        ev.map(p => (p - center).rotate(angle) + center)
+
     def inRectangle(bottomRight: Point, topLeft: Point = Point.zero): Evolution[Point] = {
         cartesian(
-            ball(bottomRight.x - topLeft.x),
-            ball(bottomRight.y - topLeft.y)
+            double.map(_ * (bottomRight.x - topLeft.x)),
+            double.map(_ * (bottomRight.y - topLeft.y))
         )
     }
 
     def independentSpeed(speed: Evolution[Point]): Evolution[Point => Point] =
         speed.map(x => _)
+
+    def brownian(pointEvo: Evolution[Point]): Evolution[Point] = {
+        MotionEvolutions.solveIndependent(Point.zero)(pointEvo)
+    }
 
     def boundedBrownian(radius: Double, doubleEvo: Evolution[Double]): Evolution[Point] = {
         val speed = cartesian(doubleEvo, doubleEvo)
