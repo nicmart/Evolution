@@ -9,7 +9,7 @@ import paint.evolution.Evolution.cycle
   */
 object Geometry
 {
-    case class Point(x: Double, y: Double) {
+    final case class Point(x: Double, y: Double) {
         def +(other: Point) = Point(x + other.x, y + other.y)
         def -(other: Point) = Point(x - other.x, y - other.y)
         def unary_-(): Point = Point(-x, -y)

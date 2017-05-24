@@ -40,7 +40,7 @@ object CanvasEvolution {
         //context.lineWidth = size
         //context.strokeStyle = "white"
         context.beginPath()
-        context.lineTo(point.x, point.y)
+        context.lineTo(point.x.toInt, point.y.toInt)
         context.stroke()
     }
 }

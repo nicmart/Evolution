@@ -268,9 +268,9 @@ object EvolutionPortfolio {
     }
 
     def current(canvasSize: Point): Evolution[Point] = {
-        //brownianSpeedRing(canvasSize)
+        brownianSpeedRing(canvasSize)
         //singlePoint(canvasSize)
-        waves(canvasSize)
+        //waves(canvasSize)
         //randomAccWithFriction(canvasSize)
         //duplication(canvasSize)
     }

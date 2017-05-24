@@ -9,7 +9,7 @@ import scala.util.Random
 /**
   * Created by Nicolò Martini on 12/05/2017.
   */
-case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
+final case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
     def flatMapNext[B](f: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
         Evolution { rng =>
             val (rng2, a, eva2) = run(rng)
