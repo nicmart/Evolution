@@ -11,6 +11,8 @@ package object motion {
     type Velocity[A] = A
     type Acceleration[A] = A
 
+    type PhaseSpace[A] = (Position[A], Velocity[A])
+
     type VelocityLaw[A] = Position[A] => Velocity[A]
     type AccelerationLaw[A] = (Position[A], Velocity[A]) => Acceleration[A]
     type SimpleAccelerationLaw[A] = Position[A] => Acceleration[A]

@@ -9,6 +9,7 @@ import paint.geometry.Geometry.Point
 import cats.implicits._
 import paint.geometry.Geometry.Point.pointMonoid
 import paint.evolution.motion._
+import paint.evolution.implicits._
 
 /**
   * Created by Nicolò Martini on 17/05/2017.
@@ -62,7 +63,7 @@ object EvolutionPortfolio {
         MotionEvolutions.solveIndependent(canvasSize / 2)(
             ball2D(2),
             (p, _) => p.inRectangle(Point.zero, canvasSize)
-        )
+        ).positional
     }
 
     def accelerationRing: Evolution[List[Point]] = {
@@ -115,7 +116,7 @@ object EvolutionPortfolio {
             ).restartEvery(100)
     }
 
-    def solveIntegralEvo(canvasSize: Point): Evolution[Point] = {
+    def waves(canvasSize: Point): Evolution[Point] = {
         val accelerationEq: (Point, Point) => Point = (x, v) => Point(0, -0.00005 * x.y) - v * 0.0004
         val accelerationEvo: AccelerationEvolution[Point] = pure(accelerationEq)
         val accelerationEvo2: AccelerationEvolution[Point] = accelerationEvo.map2(cartesian(pure(0), ball(0.0025))) {
@@ -129,7 +130,7 @@ object EvolutionPortfolio {
 
         def vibration(from: Point) = translate(
             uniformLinear(from, Point(0.1, 0)),
-            MotionEvolutions.solve2[Point](Point.zero, Point.zero)(accelerationEvo2)
+            MotionEvolutions.solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
         )
 
         flatten(sequence(
@@ -174,7 +175,7 @@ object EvolutionPortfolio {
         MotionEvolutions.solveIndependent(canvasSize / 2)(
             ball2D(1).slowDown(double.map[Int](d => if(d < 0.0001) 200 else 1)),
             (x, _) => x.inRectangle(Point.zero, canvasSize)
-        )
+        ).positional
     }
 
     def randomPointEvo(canvasSize: Point): Evolution[Point] = {
@@ -201,7 +202,7 @@ object EvolutionPortfolio {
 //        }
 
         def pointEvo(from: Point): Evolution[Point] = {
-            MotionEvolutions.solve2(from, Point.zero)(accelerationEvolution)
+            MotionEvolutions.solve2(from, Point.zero)(accelerationEvolution).positional
         }
 
         flatten(sequence(
@@ -211,8 +212,8 @@ object EvolutionPortfolio {
 
     def randomAccWithFriction(canvasSize: Point): Evolution[Point] = {
         //val acc = 0.0004
-        val acc = 0.0001
-        val friction = 0.00008
+        val acc = 0.001
+        val friction = 0.0008
         def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
             (position, velocity) =>
                 randomAcc - velocity * friction
@@ -223,7 +224,7 @@ object EvolutionPortfolio {
             (x, v, a) =>
                 Point.distanceFromRectangle(x + v, Point.zero, canvasSize)
                     <= Point.distanceFromRectangle(x + v -a, Point.zero, canvasSize)
-        )
+        ).positional
     }
 
     def brownianStraight(canvasSize: Point): Evolution[Point] = {
@@ -235,26 +236,42 @@ object EvolutionPortfolio {
                     point * k
                 }.slowDown(10),
                 (p, _) => true// p.inRectangle(Point.zero, canvasSize)
-            )
+            ).positional
         )
     }
 
     def duplication(canvasSize: Point): Evolution[Point] = {
+        val acc = 0.001
+        val friction = 0.0004
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
+            (position, velocity) =>
+                randomAcc - velocity * friction
+        }
+
+        def pointEvo(from: Point): Evolution[Point] = {
+            MotionEvolutions.solve2(from, Point.zero)(accelerationEvolution).positional
+        }
+
         flatten(
-            MotionEvolutions.solveIndependent(canvasSize/2)(ball2D(1)).map(List(_))
-                .flatMapNextEvery(
-                    100000,
-                    (points, pointsEvo) => {
-                        println(points.length)
-                        pointsEvo.map2(pointsEvo)(_ ::: _)
-                    }
-                )
+            pure(List(canvasSize/2)).flatMapNextEvery(
+                10000,
+                (points, _) => {
+                    val newPoints = points.sortBy( point => (canvasSize / 2 - point).norm() ).take(points.length / 10 + 1)
+                    sequence((newPoints ::: points).map(pointEvo))
+                }
+            )
         )
+    }
+
+    def singlePoint(canvasSize: Point): Evolution[Point] = {
+        pure(canvasSize/2)
     }
 
     def current(canvasSize: Point): Evolution[Point] = {
         //brownianSpeedRing(canvasSize)
+        //singlePoint(canvasSize)
+        waves(canvasSize)
         //randomAccWithFriction(canvasSize)
-        duplication(canvasSize)
+        //duplication(canvasSize)
     }
 }

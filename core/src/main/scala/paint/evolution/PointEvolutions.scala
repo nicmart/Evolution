@@ -5,6 +5,7 @@ import paint.evolution.NumericEvolutions._
 import paint.evolution.SemigroupEvolutions._
 import paint.evolution.Evolution._
 import paint.evolution.motion.MotionEvolutions
+import paint.evolution.implicits._
 
 /**
   * Created by Nicolò Martini on 15/05/2017.
@@ -85,12 +86,12 @@ object PointEvolutions {
         speed.map(x => _)
 
     def brownian(pointEvo: Evolution[Point]): Evolution[Point] = {
-        MotionEvolutions.solveIndependent(Point.zero)(pointEvo)
+        MotionEvolutions.solveIndependent(Point.zero)(pointEvo).positional
     }
 
     def boundedBrownian(radius: Double, doubleEvo: Evolution[Double]): Evolution[Point] = {
         val speed = cartesian(doubleEvo, doubleEvo)
         def predicate(position: Point, speed: Point): Boolean = position.norm() <= radius
-        MotionEvolutions.solveIndependent(Point.zero)(speed, predicate)
+        MotionEvolutions.solveIndependent(Point.zero)(speed, predicate).positional
     }
 }

@@ -8,6 +8,10 @@ import paint.geometry.Geometry.Point
   * Created by Nicolò Martini on 17/05/2017.
   */
 object CanvasEvolution {
+    var drawedPoints: Long = 0
+    var lastDebugTime: Double = scala.scalajs.js.Date.now()
+    var interval = 1000
+
     def drawPointEvolution(size: Double, pointEv: Evolution[Point]): Evolution[CanvasRenderingContext2D => Unit] =
         pointEv.map { point =>
             { context =>
@@ -26,8 +30,15 @@ object CanvasEvolution {
     }
 
     private def drawPoint(point: Point, size: Double, context: CanvasRenderingContext2D): Unit = {
-        context.lineWidth = size
-        context.strokeStyle = "white"
+        drawedPoints += 1
+        val now = scala.scalajs.js.Date.now()
+        if (now - lastDebugTime > interval) {
+            lastDebugTime = now
+            println(s"Points: ${drawedPoints}")
+            drawedPoints = 0
+        }
+        //context.lineWidth = size
+        //context.strokeStyle = "white"
         context.beginPath()
         context.lineTo(point.x, point.y)
         context.stroke()

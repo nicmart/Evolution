@@ -46,9 +46,13 @@ object Geometry
             )
         }
 
+        def pointsOnArc(n: Int, start: Point, angle: Double): IndexedSeq[Point] = {
+            (0.0 until n * angle by angle).map(start.rotate(_))
+        }
+
         def regularPolygon(edges: Int, radius: Double = 1): IndexedSeq[Point] = {
             val start = Point(0, radius)
-            (0 until edges).map( 2 * Math.PI * _ / edges).map(start.rotate).toIndexedSeq
+            pointsOnArc(edges, start, 2 * Math.PI / edges)
         }
 
         def distanceFromRectangle(p: Point, topLeft: Point, bottomRight: Point): Double = {

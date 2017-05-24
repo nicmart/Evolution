@@ -121,7 +121,7 @@ case class Evolution[A](run: RNG => (RNG, A, Evolution[A])) {
             f(a).appendAfter(k, eva2.replaceEvery(k, f))
         }
 
-    def ::(value: A): Evolution[A] = prepend(List(value))
+        def ::(value: A): Evolution[A] = prepend(List(value))
 
     def slidingPairs: Evolution[(A, A)] =
         flatMapNext { (a1, eva2) =>
