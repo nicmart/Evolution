@@ -12,10 +12,10 @@ import paint.evolution.implicits._
   */
 object PointEvolutions {
     def cartesian(x: Evolution[Double], y: Evolution[Double]): Evolution[Point] =
-        x.map2(y)(Point.apply)
+        x.zipWith(y)(Point.apply)
 
     def polar(norm: Evolution[Double], angle: Evolution[Double]): Evolution[Point] =
-        norm.map2(angle)(Point.polar)
+        norm.zipWith(angle)(Point.polar)
 
     def radial(angle: Evolution[Double])(start: Point): Evolution[Point] =
         angle.scan(start)(_.rotate(_))
@@ -24,29 +24,30 @@ object PointEvolutions {
         point.perturbate(angle.map(a => (p: Point) => p.rotate(a)))
 
     def relative(centre: Evolution[Point], point: Evolution[Point]): Evolution[Point] =
-        centre.map2(point)(_ + _)
+        centre.zipWith(point)(_ + _)
 
     def uniformLinear(from: Point, speed: Point): Evolution[Point] =
-        integrate(pure(speed))(from)
+        MotionEvolutions.solveIndependent(from)(constant(speed)).positional
 
     def uniformRadial(from: Point, radialSpeed: Double): Evolution[Point] =
-        transition(from)(_.rotate(radialSpeed))
+        MotionEvolutions.solveStatic(from)(_.rotate(radialSpeed)).positional
 
     def centeredIn(center: Point)(ev: Evolution[Point]): Evolution[Point] =
         ev.map(p => p + center)
 
-    def complementOf(ev: Evolution[Point], radius: Double): Evolution[Point] =
-        ev map { point =>
-            point.versor().getOrElse(Point.zero) * radius - point
-        }
-
-    def translateRadial(ev: Evolution[Point], radius: Double): Evolution[Point] =
-        ev map { point =>
-            point.versor().getOrElse(Point.zero) * radius + point
-        }
-
     def ball2D(radius: Double): Evolution[Point] =
         cartesian(ball(radius), ball(radius))
+
+    def segment(p1: Point, p2: Point, speed: Double, lambda: Double = 0): Evolution[Point] = {
+        val norm = (p2 - p1).norm()
+        if (lambda > 1) empty
+        else {
+            val nextLambda = lambda + speed / norm
+            pure(p1 * lambda + p2 * (1 - lambda)).append(segment(p1, p2, speed, nextLambda))
+        }
+    }
+
+
 
     def ring(radius: Double, size: Evolution[Double]): Evolution[Point] =
         polar(
@@ -56,7 +57,7 @@ object PointEvolutions {
 
     def ring(radius: Double): Evolution[Point] =
         polar(
-            pure(radius),
+            constant(radius),
             double.map(_ * 2 * Math.PI)
         )
 
@@ -80,13 +81,6 @@ object PointEvolutions {
             double.map(_ * (bottomRight.x - topLeft.x)),
             double.map(_ * (bottomRight.y - topLeft.y))
         )
-    }
-
-    def independentSpeed(speed: Evolution[Point]): Evolution[Point => Point] =
-        speed.map(x => _)
-
-    def brownian(pointEvo: Evolution[Point]): Evolution[Point] = {
-        MotionEvolutions.solveIndependent(Point.zero)(pointEvo).positional
     }
 
     def boundedBrownian(radius: Double, doubleEvo: Evolution[Double]): Evolution[Point] = {

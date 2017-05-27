@@ -2,7 +2,6 @@ package paint.evolution.motion
 
 import cats.kernel.Semigroup
 import paint.evolution.Evolution
-import paint.evolution.Evolution.transitionEvo
 import cats.syntax.semigroup._
 
 /**

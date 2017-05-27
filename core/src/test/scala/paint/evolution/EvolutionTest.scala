@@ -65,12 +65,12 @@ class EvolutionTest extends PaintEvolutionSpec {
         }
     }
 
-    "map2" must {
-        "be the same evolution generatedd by flatMap" in {
+    "zipWith" must {
+        "zip values of two evolutions" in {
             val f: (Int, Int) => Int = (n, m) => n + 2 * m
-            assertEquivalent(
-                map2(f)(int, int),
-                int.flatMap(n => int.map(m => f(n, m)))
+            assertValues(
+                list(List(0, 1)).zipWith(list(List(0, 2, 3)))(f),
+                List(0, 5)
             )
         }
     }
@@ -153,7 +153,6 @@ class EvolutionTest extends PaintEvolutionSpec {
                 List(
                     0,
                     1,
-                    10,
                     10
                 )
             )
@@ -163,7 +162,7 @@ class EvolutionTest extends PaintEvolutionSpec {
     "replace every" must {
         "generate a new evolution" in {
             assertValues(
-                int.replaceEvery(2, n => pure(n)),
+                int.replaceEvery(2, n => constant(n)),
                 List(
                     0,
                     0,

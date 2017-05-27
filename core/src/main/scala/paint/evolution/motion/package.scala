@@ -31,19 +31,19 @@ package object motion {
         = eq.map(simpleToAcceleration(_))
 
     def staticVelocity[A](velocityLaw: VelocityLaw[A]): VelocityEvolution[A] =
-        Evolution.pure(velocityLaw)
+        Evolution.constant(velocityLaw)
 
     def independentStaticVelocity[A](velocity: Velocity[A]): VelocityEvolution[A] =
-        Evolution.pure(_ => velocity)
+        Evolution.constant(_ => velocity)
 
     def independentVelocity[A](velocity: Evolution[Velocity[A]]): VelocityEvolution[A] =
         velocity.map(v => _ => v)
 
     def staticAcceleration[A](accelerationLaw: AccelerationLaw[A]): AccelerationEvolution[A] =
-        Evolution.pure(accelerationLaw)
+        Evolution.constant(accelerationLaw)
 
     def independentStaticAcceleration[A](acceleration: Acceleration[A]): AccelerationEvolution[A] =
-        Evolution.pure((_, _) => acceleration)
+        Evolution.constant((_, _) => acceleration)
 
     def independentAcceleration[A](acceleration: Evolution[Acceleration[A]]): AccelerationEvolution[A] =
         acceleration.map(acc => (_, _) => acc)

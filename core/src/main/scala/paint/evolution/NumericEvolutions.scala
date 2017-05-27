@@ -8,7 +8,7 @@ import java.lang.StrictMath
 object NumericEvolutions {
     val int: Evolution[Int] = Evolution { rng =>
         val (i, rng2) = rng.nextInt
-        (rng2, i, int)
+        (rng2, Some(i, int))
     }
 
     val nonNegative: Evolution[Int] =
@@ -44,7 +44,7 @@ object NumericEvolutions {
 
     def normal: Evolution[Double] =
         ball(1)
-            .map2(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
+            .zipWith(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
             .filter { case (_, _, s) => s > 0 && s < 1 }
             .map { case (v1, _, s) =>
                 val multiplier = math.sqrt(-2 * math.log(s) / s)
