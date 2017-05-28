@@ -1,6 +1,6 @@
 package paint.geometry
 
-import cats.kernel.Monoid
+import cats.kernel.{Group, Monoid}
 import paint.evolution.Evolution
 import paint.evolution.Evolution.cycle
 
@@ -67,9 +67,22 @@ object Geometry
             (0 to n).toList.map(from + step * _)
         }
 
-        implicit val pointMonoid = new Monoid[Point] {
+        def grid(topLeft: Point, bottomRight: Point, w: Int, h: Int): List[Point] = {
+            val xStep = (bottomRight.x - topLeft.x) / w
+            val yStep = (bottomRight.y - topLeft.y) / h
+            val points = for {
+                i <- 0 to w
+                x = topLeft.x + i * xStep
+                j <- 0 to h
+                y = topLeft.y + j * yStep
+            } yield Point(x, y)
+            points.toList
+        }
+
+        implicit val pointGroup = new Group[Point] {
             override def empty: Point = zero
             override def combine(x: Point, y: Point): Point = x + y
+            override def inverse(point: Point): Point = -point
         }
     }
 

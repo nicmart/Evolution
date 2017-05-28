@@ -1,6 +1,8 @@
 package paint.evolution
 
-import cats.kernel.Semigroup
+import cats.kernel.{Group, Semigroup}
+import cats.syntax.group._
+
 import scala.language.implicitConversions
 
 /**
@@ -13,10 +15,12 @@ package object motion {
 
     type PhaseSpace[A] = (Position[A], Velocity[A])
 
+    type PositionLaw[A] = Position[A] => Position[A]
     type VelocityLaw[A] = Position[A] => Velocity[A]
     type AccelerationLaw[A] = (Position[A], Velocity[A]) => Acceleration[A]
     type SimpleAccelerationLaw[A] = Position[A] => Acceleration[A]
 
+    type PositionEvolution[A] = Evolution[PositionLaw[A]]
     type VelocityEvolution[A] = Evolution[VelocityLaw[A]]
     type AccelerationEvolution[A] = Evolution[AccelerationLaw[A]]
     type SimpleAccelerationEvolution[A] = Evolution[SimpleAccelerationLaw[A]]
@@ -29,6 +33,18 @@ package object motion {
 
     def simpleToAccelerationEvolution[A](eq: SimpleAccelerationEvolution[A]): AccelerationEvolution[A]
         = eq.map(simpleToAcceleration(_))
+
+    def positionToVelocityEvolution[A: Group](posEv: PositionEvolution[A]): VelocityEvolution[A] =
+        posEv.map(positionLaw => p => positionLaw(p) |-| p)
+
+    def staticPosition[A](positionLaw: PositionLaw[A]): PositionEvolution[A] =
+        Evolution.constant(positionLaw)
+
+    def independentStaticPosition[A](position: Position[A]): PositionEvolution[A] =
+        Evolution.constant(_ => position)
+
+    def independentPosition[A](position: Evolution[Position[A]]): PositionEvolution[A] =
+        position.map(p => _ => p)
 
     def staticVelocity[A](velocityLaw: VelocityLaw[A]): VelocityEvolution[A] =
         Evolution.constant(velocityLaw)

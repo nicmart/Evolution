@@ -1,6 +1,6 @@
 package paint.evolution
 
-import paint.evolution.Evolution.{sequence, sequenceParallel}
+import paint.evolution.Evolution._
 import paint.random.{RNG, SimpleRNG}
 
 import scala.collection.immutable.{Queue, Stream}
@@ -38,6 +38,12 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
         }
     // Non-primitives
 
+    def flatMap[B](f: A => Evolution[B]): Evolution[B] =
+        flatMapNext((a, eva2) => f(a).append(eva2.flatMap(f)))
+
+    def flatten[B](implicit ev: A =:= Evolution[B]): Evolution[B] =
+        flatMap(identity[A])
+
     def map[B](f: A => B): Evolution[B] =
         mapNext((a, eva2) => (f(a), eva2.map(f)))
 
@@ -53,15 +59,6 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
     def zipNext[B, C](evb: Evolution[B])(f: (A, Evolution[A], B, Evolution[B]) => Evolution[C]): Evolution[C] =
         Evolution.zipNext(this, evb)(f)
 
-    def perturbate(perturbations: Evolution[A => A]): Evolution[A] =
-        perturbations.flatMapNext((p, perts2) => map(p).mapOnlyNext(_.perturbate(perts2)))
-
-    def next(nextEv: Evolution[A]): Evolution[A] =
-        mapOnlyNext(_ => nextEv)
-
-    def flatMap[B](f: A => Evolution[B]): Evolution[B] =
-        flatMapNext((a, eva2) => f(a).append(eva2.flatMap(f)))
-
     def scan[Z](z: Z)(f: (Z, A) => Z): Evolution[Z] =
         mapNext { (a, eva2) =>
             (z, eva2.scan(f(z, a))(f))
@@ -71,10 +68,10 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
         Evolution.prepend(as)(this)
 
     def first: Evolution[A] =
-        flatMapNext { (a, _) => Evolution.pure(a) }
+        flatMapNext { (a, _) => pure(a) }
 
     def tail: Evolution[A] =
-        flatMapNext { (a, eva2) =>
+        flatMapNext { (_, eva2) =>
             eva2
         }
 
@@ -84,7 +81,7 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
     }
 
     def take(n: Int): Evolution[A] = n match {
-        case _ if n <= 0 => Evolution.empty
+        case _ if n <= 0 => empty
         case _ => flatMapNext { (a, eva2) =>
             a :: eva2.take(n - 1)
         }
@@ -97,11 +94,11 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
         mapOnlyNext(_.drop(skip).speedUp(skip))
 
     def slowDown(times: Int): Evolution[A] =
-        flatMap { a => Evolution.list(List.fill(times)(a)) }
+        flatMap { a => list(List.fill(times)(a)) }
 
     def slowDown(times: Evolution[Int]): Evolution[A] =
         zipNext(times){ (a, eva2, n, times2) =>
-            Evolution.prepend(List.fill(n)(a))(eva2.slowDown(times2))
+            list(List.fill(n)(a)).append(eva2.slowDown(times2))
         }
 
     def unfold(from: RNG): Stream[A] = {
@@ -124,12 +121,8 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
             else a :: next
         }
 
-    def appendAfter(k: Int, after: => Evolution[A]): Evolution[A] = k match {
-        case _ if k <= 0 => after
-        case _ => flatMapNext { (a, eva2) =>
-            a :: eva2.appendAfter(k - 1, after)
-        }
-    }
+    def appendAfter(k: Int, after: => Evolution[A]): Evolution[A] =
+        take(k).append(after)
 
     def flatMapNextAfter(k: Int, f: (A, Evolution[A]) => Evolution[A]): Evolution[A] =
         flatMapNext { (a, eva2) => k match {
@@ -144,16 +137,11 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
             flatMapNextAfter(k, (a, eva3) => f(a, eva3).flatMapNextEvery(k, f))
         }
 
-    def restartEvery(k: Int): Evolution[A] =
-        appendAfter(k, this.restartEvery(k))
-
-    def replaceEvery[B](k: Int, f: A => Evolution[B]): Evolution[B] =
-        flatMapNext { (a, eva2) =>
-            f(a).appendAfter(k, eva2.replaceEvery(k, f))
-        }
-
     def ::(value: A): Evolution[A] =
-        Evolution.pure(value).append(this)
+        pure(value).append(this)
+
+    def flattenList[B](implicit ev: A <:< List[B]): Evolution[B] =
+        flatMap(a => list(a))
 
     def slidingPairs: Evolution[(A, A)] =
         flatMapNext { (a1, eva2) =>
@@ -172,8 +160,8 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
         }
     }
 
-    def cyclic: Evolution[A] =
-        append(cyclic)
+    def infinite: Evolution[A] =
+        append(infinite)
 
     def parallel[B](generator: A => Evolution[B], n: Int): Evolution[List[B]] =
         grouped(n).flatMapNext { (points, _) => sequenceParallel(points.map(generator)) }
@@ -198,7 +186,7 @@ object Evolution {
     def prepend[A](as: List[A])(eva: => Evolution[A]): Evolution[A] =
         list(as).append(eva)
 
-    def constant[A](value: A): Evolution[A] = pure(value).cyclic
+    def constant[A](value: A): Evolution[A] = pure(value).infinite
 
     def zipNext[A, B, C]
         (eva: Evolution[A], evb: Evolution[B])
@@ -232,13 +220,7 @@ object Evolution {
     def sequenceParallel[A](evolutions: List[Evolution[A]]): Evolution[List[A]] =
         traverseParallel(evolutions)(ev => ev)
 
-    def cycle[A](as: List[A]): Evolution[A] = list(as).cyclic
-
-    def transition[A](from: A)(f: A => A): Evolution[A] =
-        prepend(List(from))(transition(f(from))(f))
-
-    def flatten[A](evas: Evolution[List[A]]): Evolution[A] =
-        evas flatMap { list }
+    def cycle[A](as: List[A]): Evolution[A] = list(as).infinite
 
     def sample[A](eva: Evolution[A], n: Int = 10, rng: Option[RNG] = None): List[A] =
         eva.unfold(rng.getOrElse(SimpleRNG(Random.nextLong()))).take(n).toList

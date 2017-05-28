@@ -75,26 +75,6 @@ class EvolutionTest extends PaintEvolutionSpec {
         }
     }
 
-    "perturbate" must {
-
-        "accumulate perturbations" in {
-            // An evolution of perturbations s + x
-            val perturbations = int.map[Int => Int] { n => m: Int => m + n }
-
-            // p0 = 0 + x, int0 = 1, p1 = 2 + x, int1 = 3, p2 = 4 + x, int2 = 5
-            // we expect accumulated perturbations 0 + x, 2 + x, 6 + x
-            // obtaining 1, 5, 11
-            assertValues(
-                int.perturbate(perturbations),
-                List(
-                    1,
-                    5,
-                    11
-                )
-            )
-        }
-    }
-
     "filter" must {
         "mantain only the values that satisfy the condition" in {
 
@@ -154,22 +134,6 @@ class EvolutionTest extends PaintEvolutionSpec {
                     0,
                     1,
                     10
-                )
-            )
-        }
-    }
-
-    "replace every" must {
-        "generate a new evolution" in {
-            assertValues(
-                int.replaceEvery(2, n => constant(n)),
-                List(
-                    0,
-                    0,
-                    1,
-                    1,
-                    2,
-                    2
                 )
             )
         }

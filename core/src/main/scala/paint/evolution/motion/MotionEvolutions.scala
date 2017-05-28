@@ -1,13 +1,40 @@
 package paint.evolution.motion
 
-import cats.kernel.Semigroup
+import cats.kernel.{Group, Semigroup}
 import paint.evolution.Evolution
 import cats.syntax.semigroup._
+//import cats.syntax.group._
 
 /**
   * Created by Nicolò Martini on 21/05/2017.
   */
 object MotionEvolutions {
+    def solve0[A: Group](a0: Position[A])(
+        position: PositionEvolution[A],
+        p: FirstOrderPredicate[A] = trueFirstOrderPredicate[A]
+    ): Evolution[PhaseSpace[A]] =
+        solve(a0)(positionToVelocityEvolution(position), p)
+
+    def solve0Static[A: Group](a0: Position[A])(
+        positionLaw: PositionLaw[A],
+        p: FirstOrderPredicate[A] = trueFirstOrderPredicate[A]
+    ): Evolution[PhaseSpace[A]] =
+        solve(a0)(positionToVelocityEvolution(staticPosition(positionLaw)), p)
+
+    def solve0IndependentStatic[A: Group](a0: Position[A])(
+        position: Position[A],
+        p: FirstOrderPredicate[A] = trueFirstOrderPredicate[A]
+    ): Evolution[PhaseSpace[A]] = {
+        solve[A](a0)(positionToVelocityEvolution(independentStaticPosition(position)), p)
+    }
+
+    def solve0Independent[A: Group](a0: Position[A])(
+        position: Evolution[Position[A]],
+        p: FirstOrderPredicate[A] = trueFirstOrderPredicate[A]
+    ): Evolution[PhaseSpace[A]] = {
+        solve[A](a0)(positionToVelocityEvolution(independentPosition(position)), p)
+    }
+
     def solve[A: Semigroup](a0: Position[A])(
         velocity: VelocityEvolution[A],
         p: FirstOrderPredicate[A] = trueFirstOrderPredicate[A]

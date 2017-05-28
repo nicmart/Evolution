@@ -17,20 +17,11 @@ object PointEvolutions {
     def polar(norm: Evolution[Double], angle: Evolution[Double]): Evolution[Point] =
         norm.zipWith(angle)(Point.polar)
 
-    def radial(angle: Evolution[Double])(start: Point): Evolution[Point] =
-        angle.scan(start)(_.rotate(_))
-
-    def radial(angle: Evolution[Double])(point: Evolution[Point]): Evolution[Point] =
-        point.perturbate(angle.map(a => (p: Point) => p.rotate(a)))
-
-    def relative(centre: Evolution[Point], point: Evolution[Point]): Evolution[Point] =
-        centre.zipWith(point)(_ + _)
-
     def uniformLinear(from: Point, speed: Point): Evolution[Point] =
         MotionEvolutions.solveIndependent(from)(constant(speed)).positional
 
     def uniformRadial(from: Point, radialSpeed: Double): Evolution[Point] =
-        MotionEvolutions.solveStatic(from)(_.rotate(radialSpeed)).positional
+        MotionEvolutions.solve0Static(from)(_.rotate(radialSpeed)).positional
 
     def centeredIn(center: Point)(ev: Evolution[Point]): Evolution[Point] =
         ev.map(p => p + center)
@@ -65,12 +56,6 @@ object PointEvolutions {
         val start = Point(0, radius)
         val points = (0 until edges).map( 2 * Math.PI * _ / edges).map(start.rotate).toList
         cycle(points)
-    }
-
-    def grid(w: Double, h: Double, x: Int, y: Int): Evolution[Point] = {
-        val xEv = cycle((0 to x).toList).map(w * _ / x)
-        val yEv = cycle((0 to y).toList).map(h * _ / y)
-        yEv.replaceEvery[Point](x + 1, y => xEv.map(Point(_, y)))
     }
 
     def rotate(center: Point, angle: Double, ev: Evolution[Point]): Evolution[Point] =
