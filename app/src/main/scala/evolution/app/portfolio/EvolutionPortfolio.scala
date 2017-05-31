@@ -278,6 +278,95 @@ object EvolutionPortfolio {
         }
     }
 
+    def circularSegments(canvasSize: Point): Evolution[Point] = {
+        val omega = 0.003
+        val k = 0.001 / omega
+        val noiseStrength = .05 / omega
+        val noise = solveIndependent[Double](100)(ball(noiseStrength)).positional
+
+        centeredIn(canvasSize / 2) {
+            solve0Static(Point(300, 0))(_.rotate(omega)).take((2 * Math.PI / omega).toInt + 1).zipWith(noise) {
+                case ((position, velocity), d) =>
+                    val rotatedVel = velocity.rotate(Math.PI / 2)
+                    segment(position - rotatedVel * (k + d), position + rotatedVel * (k + d), 1)
+            }.flatten
+        }
+    }
+
+    def horizontalSegments(canvasSize: Point): Evolution[Point] = {
+        val amplitudeAcc = 0.0002
+        val speed = 3
+        val segmentSpeed = 1
+        val k = 0
+        val friction = .06
+        val noiseK = .1
+
+        val accelerationEv: AccelerationEvolution[Double] = ball(1) map { d =>
+            (position, velocity) => noiseK * d - friction * velocity - k * position
+        }
+
+        val amplitudes = solve2(10, 0.0)(accelerationEv).positional.map(d => Point(0, d))
+
+        def vibration(from: Point): Evolution[Point] = uniformLinear(from, Point(speed, 0)).zipWith(amplitudes) { (p, amplitude) =>
+            segment(p - amplitude, p + amplitude, segmentSpeed)
+        }.flatten
+
+        sequenceParallel(
+            Point.sequence(30, Point.zero, canvasSize.copy(x = 0)).map(vibration)
+        ).flattenList
+    }
+
+    def dependentLines(canvasSize: Point): Evolution[Point] = {
+        val gap = Point(0, 3)
+        val x = solveIndependentStatic(0.0)(.5).positional
+        val y = solve2(0.0, 0.0)(double.map( _ * .02).map {
+            d => (pos, vel) =>
+                if (pos < 10 && pos >= 0) d
+                else {
+                    - Math.signum(pos) * Math.abs(d)
+                }
+        }).positional
+        val point = cartesian(x, y)
+
+        def doubleLine(points: Evolution[List[Point]]): Evolution[List[Point]] =
+            points.zipWith(point) { (ps, p3) => Point(ps.head.x, ps.head.y + p3.y) + gap :: ps }
+
+        def multiLine(n: Int): Evolution[List[Point]] =
+            n match {
+                case _ if n <= 1 => point.map(List(_))
+                case _ => doubleLine(multiLine(n - 1))
+            }
+
+        centeredIn(Point(0, 400)) {
+            multiLine(100).flattenList
+        }
+    }
+
+    def bouncing(canvasSize: Point): Evolution[Point] = {
+        val ground = canvasSize.y - 100
+        val g = .000001
+        val elasticity = .000001
+        val friction = .0001
+        val horizontalSpeed = 0.003
+
+        val gravityField: AccelerationEvolution[Double] =  constant {
+            (_, _) => g
+        }
+
+        val floor: AccelerationEvolution[Double] = constant {
+            (y, vel) =>
+                if (y > ground) (ground - y) * elasticity + g - friction * vel
+                else 0
+        }
+
+        val law = gravityField + floor
+
+        val xEv = solve2IndependentStatic(0.0, horizontalSpeed)(0).positional
+        val yEv = solve2(0.0, 0.0) { law }.positional
+
+        cartesian(xEv, yEv)
+    }
+
     def current(canvasSize: Point): Evolution[Point] = {
         curlyRing(canvasSize)
         //brownianSpeedRing(canvasSize)
@@ -300,5 +389,9 @@ object EvolutionPortfolio {
 //        randomAccWithFriction(canvasSize)
 //        tinySegments(canvasSize)
 //        randomPointEvo(canvasSize)
+//        circularSegments(canvasSize)
+//        horizontalSegments(canvasSize)
+        dependentLines(canvasSize)
+        bouncing(canvasSize)
     }
 }
