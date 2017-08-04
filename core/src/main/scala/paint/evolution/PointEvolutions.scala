@@ -26,8 +26,11 @@ object PointEvolutions {
     def centeredIn(center: Point)(ev: Evolution[Point]): Evolution[Point] =
         ev.map(p => p + center)
 
-    def ball2D(radius: Double): Evolution[Point] =
+    def rectangle2D(radius: Double): Evolution[Point] =
         cartesian(ball(radius), ball(radius))
+
+    def ball2D(radius: Double): Evolution[Point] =
+        polar(doubleRange(0, radius), double.map(_ * 2 * Math.PI))
 
     def segment(p1: Point, p2: Point, speed: Double, lambda: Double = 0): Evolution[Point] = {
         val norm = (p2 - p1).norm()

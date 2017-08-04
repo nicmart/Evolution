@@ -1,12 +1,10 @@
 package evolution.app
 
-import evolution.app.App.initializeCanvas
 import evolution.app.conf.Conf
 
 import scala.scalajs.js.annotation.JSExport
 import org.scalajs.dom
 import org.scalajs.dom._
-import org.scalajs.dom.ext.KeyCode
 import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import paint.random.{RNG, SequenceRNG, SimpleRNG}

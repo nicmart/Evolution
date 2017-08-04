@@ -44,25 +44,49 @@ object EvolutionPortfolio {
         }
     }
 
-    def brownianSpeedRing(canvasSize: CanvasSize): Evolution[Point] = {
+    def randomPoint(canvasSize: CanvasSize): Evolution[Point] = {
+      centeredIn(canvasSize / 2) {
+        ball2D(500)
+      }
+    }
+
+    def brownian(canvasSize: CanvasSize): Evolution[Point] = {
         solveIndependent(canvasSize / 2)(
-            ball2D(2),
-            (p, _) => p.inRectangle(Point.zero, canvasSize)
+            rectangle2D(2)
         ).positional
+    }
+
+    def brownianInCanvas(canvasSize: CanvasSize): Evolution[Point] = {
+      solveIndependent(canvasSize / 2)(
+        rectangle2D(2),
+        (p, _) => p.inRectangle(Point.zero, canvasSize)
+      ).positional
+    }
+
+    def brownianWithRandomJumps(canvasSize: CanvasSize): Evolution[Point] = {
+      val jumpProbability = 0.0001
+      MotionEvolutions.solveIndependent(canvasSize / 2)(
+        rectangle2D(1).slowDown(double.map[Int](d => if(d < jumpProbability) 200 else 1)),
+        (x, _) => x.inRectangle(Point.zero, canvasSize)
+      ).positional
+    }
+
+    def brownianStraight(canvasSize: CanvasSize): Evolution[Point] = {
+      rotate(
+        canvasSize / 2,
+        0,
+        MotionEvolutions.solveIndependent(canvasSize / 2)(
+          choice(Point.regularPolygon(4)).zipWith(choice(IndexedSeq(1, 2, 3, 4))) { (point, k) =>
+            point * k
+          }.slowDown(10),
+          (p, _) => true// p.inRectangle(Point.zero, canvasSize)
+        ).positional
+      )
     }
 
     def accelerationRing(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             solve2Independent(Point.zero, Point.zero)(ring(0.00001)).positional
-        }
-    }
-
-    def brownianInCanvas(canvasSize: CanvasSize): Evolution[Point] = {
-        def predicate: FirstOrderPredicate[Point] =
-            (pos, _) => pos.inRectangle(-canvasSize / 2, canvasSize / 2)
-
-        centeredIn(canvasSize / 2) {
-            solveIndependent(Point.zero)(ring(2), predicate).positional
         }
     }
 
@@ -80,7 +104,7 @@ object EvolutionPortfolio {
 
         list {
             Point.grid(Point.zero, canvasSize, w, h).map { point =>
-                solve2Independent(point, Point.zero)(ball2D(0.06)).positional.take(200)
+                solve2Independent(point, Point.zero)(rectangle2D(0.06)).positional.take(200)
             }
         }.flatten[Point].infinite
     }
@@ -108,7 +132,7 @@ object EvolutionPortfolio {
         val edges = 40
         centeredIn(canvasSize / 2)(regularPolygon(edges, 500))
             .parallel(
-                point => solve2Independent(point, Point.zero)(ball2D(0.06)).positional,
+                point => solve2Independent(point, Point.zero)(rectangle2D(0.06)).positional,
                 edges
             ).take(100).infinite.flattenList
     }
@@ -142,37 +166,6 @@ object EvolutionPortfolio {
         centeredIn(canvasSize / 2) {
             uniformRadial(Point(0, 300), 0.0001)
         }
-    }
-
-    def boundedBrownianLines(canvasSize: CanvasSize): Evolution[Point] = {
-        def pointEvo(from: Point): Evolution[Point] =
-            translate(
-                uniformLinear(from, Point(0.02, 0)),
-                boundedBrownian(25, ball(1))
-            )
-
-        sequence(
-            Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
-        ).flattenList
-    }
-
-    def slowedDownBrownian(canvasSize: CanvasSize): Evolution[Point] = {
-        def pointEvo(from: Point): Evolution[Point] =
-            translate(
-                uniformLinear(from, Point(0.1, 0)),
-                boundedBrownian(25, ball(1).slowDown(10))
-            )
-
-        sequence(
-            Point.sequence(20, Point.zero, canvasSize.copy(x = 0)).map(pointEvo)
-        ).flattenList
-    }
-
-    def randomlySlowedDownBrownian(canvasSize: CanvasSize): Evolution[Point] = {
-        MotionEvolutions.solveIndependent(canvasSize / 2)(
-            ball2D(1).slowDown(double.map[Int](d => if(d < 0.0001) 200 else 1)),
-            (x, _) => x.inRectangle(Point.zero, canvasSize)
-        ).positional
     }
 
     def randomPointEvo(canvasSize: CanvasSize): Evolution[Point] = {
@@ -210,7 +203,7 @@ object EvolutionPortfolio {
         //val acc = 0.0004
         val acc = 0.001
         val friction = 0.0008
-        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = rectangle2D(acc) map { randomAcc =>
             (position, velocity) =>
                 randomAcc - velocity * friction
         }
@@ -223,23 +216,10 @@ object EvolutionPortfolio {
         ).positional
     }
 
-    def brownianStraight(canvasSize: CanvasSize): Evolution[Point] = {
-        rotate(
-            canvasSize / 2,
-            0,
-            MotionEvolutions.solveIndependent(canvasSize / 2)(
-                choice(Point.regularPolygon(4)).zipWith(choice(IndexedSeq(1, 2, 3, 4))) { (point, k) =>
-                    point * k
-                }.slowDown(10),
-                (p, _) => true// p.inRectangle(Point.zero, canvasSize)
-            ).positional
-        )
-    }
-
     def duplication(canvasSize: CanvasSize): Evolution[Point] = {
         val acc = 0.001
         val friction = 0.0004
-        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = rectangle2D(acc) map { randomAcc =>
             (position, velocity) =>
                 randomAcc - velocity * friction
         }
@@ -265,7 +245,7 @@ object EvolutionPortfolio {
         //val acc = 0.0004
         val acc = 0.1
         val friction = 0.00001
-        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
+        def accelerationEvolution: Evolution[AccelerationLaw[Point]] = rectangle2D(acc) map { randomAcc =>
             (position, velocity) =>
                 randomAcc - velocity * friction
         }
@@ -371,55 +351,30 @@ object EvolutionPortfolio {
 
     def drawingList: DrawingList[Point] = {
         DrawingList.empty[Point]
-          .withDrawing(Drawing("brownian speed ring", brownianSpeedRing), select = true)
-          .withDrawing(Drawing("drops", drops))
           .withDrawing(Drawing("single point", singlePoint))
+          .withDrawing(Drawing("random point", randomPoint))
+          .withDrawing(Drawing("brownian", brownian), select = true)
+          .withDrawing(Drawing("brownian in canvas", brownianInCanvas))
+          .withDrawing(Drawing("brownian with random jumps", brownianWithRandomJumps))
+          .withDrawing(Drawing("brownian straight", brownianStraight))
+          .withDrawing(Drawing("tiny segments", tinySegments))
+          .withDrawing(Drawing("drops", drops))
           .withDrawing(Drawing("random acceleration with friction", randomAccWithFriction))
+          .withDrawing(Drawing("waves", waves))
+          .withDrawing(Drawing("lines starting from a grid", linesStartingFromAGrid))
+          .withDrawing(Drawing("random point evolution", randomPointEvo))
+          .withDrawing(Drawing("circular segments", circularSegments))
           .withDrawing(Drawing("duplication", duplication))
           .withDrawing(Drawing("ring evolution", ringEvo))
           .withDrawing(Drawing("acceleration ring", accelerationRing))
-          .withDrawing(Drawing("brownian in canvas", brownianInCanvas))
           .withDrawing(Drawing("brownian starting on ring", brownianStartingOnRing))
-          .withDrawing(Drawing("lines starting from a grid", linesStartingFromAGrid))
           .withDrawing(Drawing("grid parallel evolution", gridParallelEvo))
           .withDrawing(Drawing("regular polygon evolution", regularPolygonEvo))
           .withDrawing(Drawing("non parallel regular polygon evolution", nonParallelRegularPolygonEvo))
-          .withDrawing(Drawing("waves", waves))
           .withDrawing(Drawing("circle", circle))
-          .withDrawing(Drawing("random acceleration with friction", randomAccWithFriction))
-          .withDrawing(Drawing("tiny segments", tinySegments))
-          .withDrawing(Drawing("random point evolution", randomPointEvo))
-          .withDrawing(Drawing("circular segments", circularSegments))
           .withDrawing(Drawing("horizontal segments", horizontalSegments))
           .withDrawing(Drawing("dependent lines", dependentLines))
           .withDrawing(Drawing("bouncing", bouncing))
-    }
-
-    def current(canvasSize: CanvasSize): Evolution[Point] = {
-        curlyRing(canvasSize)
-//        brownianSpeedRing(canvasSize)
-//        drops(canvasSize)
-        //singlePoint(canvasSize)
-        //randomAccWithFriction(canvasSize)
-        //duplication(canvasSize)
-//        ringEvo(canvasSize)
-//        brownianSpeedRing(canvasSize)
-//        accelerationRing(canvasSize)
-//        brownianInCanvas(canvasSize)
-//        brownianStartingOnRing(canvasSize)
-//        linesStartingFromAGrid(canvasSize)
-//        gridParallelEvo(canvasSize)
-//        regularPolygonEvo(canvasSize)
-//        nonParallelRegularPolygonEvo(canvasSize)
-//        waves(canvasSize)
-//        boundedBrownianEvo(canvasSize)
-//        duplication(canvasSize)
-//        randomAccWithFriction(canvasSize)
-//        tinySegments(canvasSize)
-//        randomPointEvo(canvasSize)
-//        circularSegments(canvasSize)
-//        horizontalSegments(canvasSize)
-//        dependentLines(canvasSize)
-//        bouncing(canvasSize)
+          .withDrawing(Drawing("curly ring", curlyRing))
     }
 }
