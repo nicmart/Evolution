@@ -3,9 +3,11 @@ package evolution.app.model
 import evolution.app.canvas.CanvasSize
 import paint.evolution.Evolution
 
+import scala.collection.immutable.ListMap
+
 final case class Drawing[T](name: String, evolution: CanvasSize => Evolution[T])
 
-final case class DrawingList[T] private (drawings: Map[String, Drawing[T]], selected: Option[Drawing[T]]) {
+final case class DrawingList[T] private (drawings: ListMap[String, Drawing[T]], selected: Option[Drawing[T]]) {
   def withDrawing(drawing: Drawing[T], select: Boolean = false): DrawingList[T] = {
     val newSelected = if (select) Some(drawing) else selected
     DrawingList(drawings.updated(drawing.name, drawing), newSelected)
@@ -21,5 +23,5 @@ final case class DrawingList[T] private (drawings: Map[String, Drawing[T]], sele
 }
 
 object DrawingList {
-  def empty[T]: DrawingList[T] = DrawingList(Map.empty, None)
+  def empty[T]: DrawingList[T] = DrawingList(ListMap.empty, None)
 }

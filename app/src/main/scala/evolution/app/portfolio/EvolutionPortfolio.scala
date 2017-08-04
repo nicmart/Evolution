@@ -138,7 +138,7 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def boundedBrownianEvo(canvasSize: CanvasSize): Evolution[Point] = {
+    def circle(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             uniformRadial(Point(0, 300), 0.0001)
         }
@@ -371,8 +371,28 @@ object EvolutionPortfolio {
 
     def drawingList: DrawingList[Point] = {
         DrawingList.empty[Point]
-          .withDrawing(Drawing("brownian speed ring", brownianSpeedRing))
+          .withDrawing(Drawing("brownian speed ring", brownianSpeedRing), select = true)
           .withDrawing(Drawing("drops", drops))
+          .withDrawing(Drawing("single point", singlePoint))
+          .withDrawing(Drawing("random acceleration with friction", randomAccWithFriction))
+          .withDrawing(Drawing("duplication", duplication))
+          .withDrawing(Drawing("ring evolution", ringEvo))
+          .withDrawing(Drawing("acceleration ring", accelerationRing))
+          .withDrawing(Drawing("brownian in canvas", brownianInCanvas))
+          .withDrawing(Drawing("brownian starting on ring", brownianStartingOnRing))
+          .withDrawing(Drawing("lines starting from a grid", linesStartingFromAGrid))
+          .withDrawing(Drawing("grid parallel evolution", gridParallelEvo))
+          .withDrawing(Drawing("regular polygon evolution", regularPolygonEvo))
+          .withDrawing(Drawing("non parallel regular polygon evolution", nonParallelRegularPolygonEvo))
+          .withDrawing(Drawing("waves", waves))
+          .withDrawing(Drawing("circle", circle))
+          .withDrawing(Drawing("random acceleration with friction", randomAccWithFriction))
+          .withDrawing(Drawing("tiny segments", tinySegments))
+          .withDrawing(Drawing("random point evolution", randomPointEvo))
+          .withDrawing(Drawing("circular segments", circularSegments))
+          .withDrawing(Drawing("horizontal segments", horizontalSegments))
+          .withDrawing(Drawing("dependent lines", dependentLines))
+          .withDrawing(Drawing("bouncing", bouncing))
     }
 
     def current(canvasSize: CanvasSize): Evolution[Point] = {
