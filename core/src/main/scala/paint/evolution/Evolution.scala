@@ -36,8 +36,8 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
                 case Some((a, eva2)) => (rng2, Some(a, eva2.append(other)))
             }
         }
-    // Non-primitives
 
+    // Non-primitives
     def flatMap[B](f: A => Evolution[B]): Evolution[B] =
         flatMapNext((a, eva2) => f(a).append(eva2.flatMap(f)))
 

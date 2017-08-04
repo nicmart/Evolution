@@ -7,6 +7,8 @@ import paint.evolution.PointEvolutions.{uniformRadial, _}
 import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import cats.implicits._
+import evolution.app.canvas.CanvasSize
+import evolution.app.model.{Drawing, DrawingList}
 import paint.geometry.Geometry.Point.pointGroup
 import paint.evolution.motion.MotionEvolutions._
 import paint.evolution.motion._
@@ -16,7 +18,7 @@ import paint.evolution.implicits._
   * Created by Nicolò Martini on 17/05/2017.
   */
 object EvolutionPortfolio {
-    def curlyRing(canvasSize: Point): Evolution[Point] = {
+    def curlyRing(canvasSize: CanvasSize): Evolution[Point] = {
         val start = canvasSize / 2
 
         centeredIn(start) {
@@ -35,27 +37,27 @@ object EvolutionPortfolio {
         //cartesian(ball(5), ball(5))
     }
 
-    def ringEvo(canvasSize: Point): Evolution[Point] = {
+    def ringEvo(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             //integrate(cartesian(complement(), complement()).map(_ * 0.5))(Point.zero)
             ring(200, normal.map( _ * 20))
         }
     }
 
-    def brownianSpeedRing(canvasSize: Point): Evolution[Point] = {
+    def brownianSpeedRing(canvasSize: CanvasSize): Evolution[Point] = {
         solveIndependent(canvasSize / 2)(
             ball2D(2),
             (p, _) => p.inRectangle(Point.zero, canvasSize)
         ).positional
     }
 
-    def accelerationRing(canvasSize: Point): Evolution[Point] = {
+    def accelerationRing(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             solve2Independent(Point.zero, Point.zero)(ring(0.00001)).positional
         }
     }
 
-    def brownianInCanvas(canvasSize: Point): Evolution[Point] = {
+    def brownianInCanvas(canvasSize: CanvasSize): Evolution[Point] = {
         def predicate: FirstOrderPredicate[Point] =
             (pos, _) => pos.inRectangle(-canvasSize / 2, canvasSize / 2)
 
@@ -64,13 +66,13 @@ object EvolutionPortfolio {
         }
     }
 
-    def brownianStartingOnRing(canvasSize: Point): Evolution[Point] = {
+    def brownianStartingOnRing(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             ring(300).flatMap(p => solveIndependent(p)(ring(1)).take(1000)).positional
         }
     }
 
-    def linesStartingFromAGrid(canvasSize: Point): Evolution[Point] = {
+    def linesStartingFromAGrid(canvasSize: CanvasSize): Evolution[Point] = {
         val w = 25
         val h = 10
 
@@ -83,7 +85,7 @@ object EvolutionPortfolio {
         }.flatten[Point].infinite
     }
 
-    def gridParallelEvo(canvasSize: Point): Evolution[Point] = {
+    def gridParallelEvo(canvasSize: CanvasSize): Evolution[Point] = {
         val w = 10
         val h = 10
 
@@ -94,7 +96,7 @@ object EvolutionPortfolio {
         }.flattenList
     }
 
-    def regularPolygonEvo(canvasSize: Point): Evolution[Point] = {
+    def regularPolygonEvo(canvasSize: CanvasSize): Evolution[Point] = {
         val edges = 40
         centeredIn(canvasSize / 2)(regularPolygon(edges, 500)).parallel(
             solveIndependent(_)(ring(1)).positional,
@@ -102,7 +104,7 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def nonParallelRegularPolygonEvo(canvasSize: Point): Evolution[Point] = {
+    def nonParallelRegularPolygonEvo(canvasSize: CanvasSize): Evolution[Point] = {
         val edges = 40
         centeredIn(canvasSize / 2)(regularPolygon(edges, 500))
             .parallel(
@@ -111,7 +113,7 @@ object EvolutionPortfolio {
             ).take(100).infinite.flattenList
     }
 
-    def waves(canvasSize: Point): Evolution[Point] = {
+    def waves(canvasSize: CanvasSize): Evolution[Point] = {
         val k = 0.00005
         val friction = 0.0004
         val speed = 0.1
@@ -136,13 +138,13 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def boundedBrownianEvo(canvasSize: Point): Evolution[Point] = {
+    def boundedBrownianEvo(canvasSize: CanvasSize): Evolution[Point] = {
         centeredIn(canvasSize / 2) {
             uniformRadial(Point(0, 300), 0.0001)
         }
     }
 
-    def boundedBrownianLines(canvasSize: Point): Evolution[Point] = {
+    def boundedBrownianLines(canvasSize: CanvasSize): Evolution[Point] = {
         def pointEvo(from: Point): Evolution[Point] =
             translate(
                 uniformLinear(from, Point(0.02, 0)),
@@ -154,7 +156,7 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def slowedDownBrownian(canvasSize: Point): Evolution[Point] = {
+    def slowedDownBrownian(canvasSize: CanvasSize): Evolution[Point] = {
         def pointEvo(from: Point): Evolution[Point] =
             translate(
                 uniformLinear(from, Point(0.1, 0)),
@@ -166,20 +168,20 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def randomlySlowedDownBrownian(canvasSize: Point): Evolution[Point] = {
+    def randomlySlowedDownBrownian(canvasSize: CanvasSize): Evolution[Point] = {
         MotionEvolutions.solveIndependent(canvasSize / 2)(
             ball2D(1).slowDown(double.map[Int](d => if(d < 0.0001) 200 else 1)),
             (x, _) => x.inRectangle(Point.zero, canvasSize)
         ).positional
     }
 
-    def randomPointEvo(canvasSize: Point): Evolution[Point] = {
+    def randomPointEvo(canvasSize: CanvasSize): Evolution[Point] = {
         inRectangle(canvasSize).flatMap { point =>
             solveIndependent(point)(ring(2).slowDown(5)).positional.take(200)
         }
     }
 
-    def drops(canvasSize: Point): Evolution[Point] = {
+    def drops(canvasSize: CanvasSize): Evolution[Point] = {
         val acc = Point(0, 0.003)
         val friction = 0.02
         val threshold = 0.1
@@ -204,7 +206,7 @@ object EvolutionPortfolio {
         evo
     }
 
-    def randomAccWithFriction(canvasSize: Point): Evolution[Point] = {
+    def randomAccWithFriction(canvasSize: CanvasSize): Evolution[Point] = {
         //val acc = 0.0004
         val acc = 0.001
         val friction = 0.0008
@@ -221,7 +223,7 @@ object EvolutionPortfolio {
         ).positional
     }
 
-    def brownianStraight(canvasSize: Point): Evolution[Point] = {
+    def brownianStraight(canvasSize: CanvasSize): Evolution[Point] = {
         rotate(
             canvasSize / 2,
             0,
@@ -234,7 +236,7 @@ object EvolutionPortfolio {
         )
     }
 
-    def duplication(canvasSize: Point): Evolution[Point] = {
+    def duplication(canvasSize: CanvasSize): Evolution[Point] = {
         val acc = 0.001
         val friction = 0.0004
         def accelerationEvolution: Evolution[AccelerationLaw[Point]] = ball2D(acc) map { randomAcc =>
@@ -255,11 +257,11 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def singlePoint(canvasSize: Point): Evolution[Point] = {
+    def singlePoint(canvasSize: CanvasSize): Evolution[Point] = {
         constant(canvasSize/2)
     }
 
-    def tinySegments(canvasSize: Point): Evolution[Point] = {
+    def tinySegments(canvasSize: CanvasSize): Evolution[Point] = {
         //val acc = 0.0004
         val acc = 0.1
         val friction = 0.00001
@@ -278,7 +280,7 @@ object EvolutionPortfolio {
         }
     }
 
-    def circularSegments(canvasSize: Point): Evolution[Point] = {
+    def circularSegments(canvasSize: CanvasSize): Evolution[Point] = {
         val omega = 0.003
         val k = 0.001 / omega
         val noiseStrength = .05 / omega
@@ -293,7 +295,7 @@ object EvolutionPortfolio {
         }
     }
 
-    def horizontalSegments(canvasSize: Point): Evolution[Point] = {
+    def horizontalSegments(canvasSize: CanvasSize): Evolution[Point] = {
         val amplitudeAcc = 0.0002
         val speed = 3
         val segmentSpeed = 1
@@ -316,7 +318,7 @@ object EvolutionPortfolio {
         ).flattenList
     }
 
-    def dependentLines(canvasSize: Point): Evolution[Point] = {
+    def dependentLines(canvasSize: CanvasSize): Evolution[Point] = {
         val gap = Point(0, 3)
         val x = solveIndependentStatic(0.0)(.5).positional
         val y = solve2(0.0, 0.0)(double.map( _ * .02).map {
@@ -342,7 +344,7 @@ object EvolutionPortfolio {
         }
     }
 
-    def bouncing(canvasSize: Point): Evolution[Point] = {
+    def bouncing(canvasSize: CanvasSize): Evolution[Point] = {
         val ground = canvasSize.y - 100
         val g = .000001
         val elasticity = .000001
@@ -367,10 +369,16 @@ object EvolutionPortfolio {
         cartesian(xEv, yEv)
     }
 
-    def current(canvasSize: Point): Evolution[Point] = {
+    def drawingList: DrawingList[Point] = {
+        DrawingList.empty[Point]
+          .withDrawing(Drawing("brownian speed ring", brownianSpeedRing))
+          .withDrawing(Drawing("drops", drops))
+    }
+
+    def current(canvasSize: CanvasSize): Evolution[Point] = {
         curlyRing(canvasSize)
-        //brownianSpeedRing(canvasSize)
-        //drops(canvasSize)
+//        brownianSpeedRing(canvasSize)
+//        drops(canvasSize)
         //singlePoint(canvasSize)
         //randomAccWithFriction(canvasSize)
         //duplication(canvasSize)
@@ -391,7 +399,7 @@ object EvolutionPortfolio {
 //        randomPointEvo(canvasSize)
 //        circularSegments(canvasSize)
 //        horizontalSegments(canvasSize)
-        dependentLines(canvasSize)
-        bouncing(canvasSize)
+//        dependentLines(canvasSize)
+//        bouncing(canvasSize)
     }
 }
