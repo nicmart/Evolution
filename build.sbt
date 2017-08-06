@@ -32,16 +32,19 @@ lazy val jsApp = project.
         version      := "0.1.0-SNAPSHOT",
         libraryDependencies ++= Seq(
             "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+            "com.github.japgolly.scalajs-react" %%% "core" % "1.1.0",
+            "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
             "com.lihaoyi" %%% "scalatags" % "0.6.2"
-        )
+        ),
+
+        jsDependencies ++= Seq(
+            "org.webjars.bower" % "react" % "15.3.2" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+            "org.webjars.bower" % "react" % "15.3.2" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
+            "org.webjars.bower" % "react" % "15.3.2" / "react-dom-server.js" minified  "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer"
+        ),
+        scalaJSUseMainModuleInitializer := true
     )
 
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
-
-//lazy val p2 = crossProject.crossType(CrossType.Pure).dependsOn(p1 % "test")
-//
-//// Needed, so sbt finds the projects
-//lazy val p2JVM = p2.jvm
-//lazy val p2JS = p2.js
