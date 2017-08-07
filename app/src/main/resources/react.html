@@ -8,49 +8,14 @@
 </head>
 
 <body style="margin: 0px">
+    <div id="entrypoint"></div>
 
-<nav class="navbar is-transparent">
-    <div class="navbar-brand">
-        <a class="navbar-item" href="http://bulma.io">
-            <h1 class="title is-4">Evolution</h1>
-        </a>
+    <div>
+        <canvas style="display: block" id="canvas" width="255" height="255"/>
     </div>
 
-    <div id="navMenuExample" class="navbar-menu">
-        <div class="navbar-start">
-        </div>
-
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <button class="button" id="restart">Restart</button>
-            </div>
-            <div class="navbar-item">
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label">Drawing</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field is-narrow">
-                            <div class="control">
-                                <div class="select is-fullwidth">
-                                    <div id="drawing">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<div>
-    <canvas style="display: block" id="canvas" width="255" height="255"/>
-</div>
-
-<script type="text/javascript" src="/app/target/scala-2.12/jsapp-jsdeps.js"></script>
-<script type="text/javascript" src="/app/target/scala-2.12/jsapp-fastopt.js"></script>
-<script type="text/javascript" src="/workbench.js"></script>
+    <script type="text/javascript" src="/app/target/scala-2.12/jsapp-jsdeps.js"></script>
+    <script type="text/javascript" src="/app/target/scala-2.12/jsapp-fastopt.js"></script>
+    <script type="text/javascript" src="/workbench.js"></script>
 </body>
 </html>

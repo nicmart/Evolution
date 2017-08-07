@@ -1,6 +1,6 @@
 package evolution.app
 
-import evolution.app.react.component.DrawingListComponent
+import evolution.app.react.component.{DrawingListComponent, NavbarComponent}
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterConfigDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
@@ -18,12 +18,12 @@ object ReactApp {
         import dsl._
 
         (emptyRule
-            | staticRoute(root, Home) ~> render(DrawingListComponent.component())
+            | staticRoute(root, Home) ~> render(NavbarComponent.component())
         ).notFound(redirectToPage(Home)(Redirect.Replace))
     }
 
     def main(args: Array[String]): Unit = {
         val router = Router(baseUrl, routerConfig)
-        router().renderIntoDOM(dom.document.getElementById("drawing"))
+        router().renderIntoDOM(dom.document.getElementById("entrypoint"))
     }
 }

@@ -9,30 +9,39 @@ import japgolly.scalajs.react._
 
 object DrawingListComponent {
     type State = DrawingList[Point]
-    class Backend(bs: BackendScope[Unit, State]) {
+    case class Props(onSelect: Drawing[Point] => Unit)
+
+    class Backend(bs: BackendScope[Props, State]) {
         def render(drawingList: State): VdomElement = {
-            import japgolly.scalajs.react.vdom.all._
+            import japgolly.scalajs.react.vdom.html_<^._
             val options = drawingList.drawings.values.map { drawing =>
-                option(drawing.name)
+                <.option(drawing.name)
             }
             val dropdown =
-                select(
+                <.select(
                     options.toSeq: _*
-                ).apply(onChange ==> onNewSelection(drawingList))
+                ).apply(^.onChange ==> onNewSelection(drawingList))
 
             drawingList.selected match {
                 case None => dropdown
-                case Some(drawing) => dropdown(value := drawing.name)
+                case Some(drawing) => dropdown(^.value := drawing.name)
             }
         }
 
         def onNewSelection(drawingList: State)(e: ReactEventFromInput): Callback = {
             val selected = e.target.value
-            bs.setState(drawingList.withSelected(selected))
+            val updateState = bs.modState(_.withSelected(selected))
+            for {
+                _ <- updateState
+                state <- bs.state
+                props <- bs.props
+            } yield {
+                props.onSelect(state.drawing(selected).get)
+            }
         }
     }
 
-    val component = ScalaComponent.builder[Unit]("Example")
+    val component = ScalaComponent.builder[Props]("Example")
         .initialState(EvolutionPortfolio.drawingList)
         .renderBackend[Backend]
         .build
