@@ -1,17 +1,16 @@
 package evolution.app.react.component
 
 import evolution.app.portfolio.EvolutionPortfolio
-import evolution.app.react.component.DrawingListComponent.{Backend, State}
 import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 object NavbarComponent {
-    type State = Unit
+    case class Props(drawingDropDrown: VdomElement)
 
-    class Backend(bs: BackendScope[Unit, State]) {
-        def render(state: State): VdomElement = {
+    class Backend(bs: BackendScope[Props, Unit]) {
+        def render(props: Props): VdomElement = {
             <.nav(^.className := "navbar is-transparent",
                 <.div(^.className := "navbar-brand",
                     <.a(^.className := "navbar-item",
@@ -35,9 +34,7 @@ object NavbarComponent {
                                     <.div(^.className := "field is-narrow",
                                         <.div(^.className := "control",
                                             <.div(^.className := "select is-fullwidth",
-                                                DrawingListComponent.component(
-                                                    DrawingListComponent.Props(println(_))
-                                                )
+                                                props.drawingDropDrown
                                             )
                                         )
                                     )
@@ -50,8 +47,7 @@ object NavbarComponent {
         }
     }
 
-    val component = ScalaComponent.builder[Unit]("Example")
-        .initialState(())
+    val component = ScalaComponent.builder[Props]("Example")
         .renderBackend[Backend]
         .build
 }

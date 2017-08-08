@@ -8,19 +8,22 @@ import paint.geometry.Geometry.Point
 import japgolly.scalajs.react._
 
 object DrawingListComponent {
-    type State = DrawingList[Point]
-    case class Props(onSelect: Drawing[Point] => Unit)
+    case class Props(
+        drawingList: DrawingList[Point],
+        onSelect: Drawing[Point] => Callback
+    )
 
-    class Backend(bs: BackendScope[Props, State]) {
-        def render(drawingList: State): VdomElement = {
+    class Backend(bs: BackendScope[Props, Unit]) {
+        def render(props: Props): VdomElement = {
             import japgolly.scalajs.react.vdom.html_<^._
+            val drawingList = props.drawingList
             val options = drawingList.drawings.values.map { drawing =>
                 <.option(drawing.name)
             }
             val dropdown =
                 <.select(
                     options.toSeq: _*
-                ).apply(^.onChange ==> onNewSelection(drawingList))
+                ).apply(^.onChange ==> onNewSelection(props))
 
             drawingList.selected match {
                 case None => dropdown
@@ -28,21 +31,11 @@ object DrawingListComponent {
             }
         }
 
-        def onNewSelection(drawingList: State)(e: ReactEventFromInput): Callback = {
-            val selected = e.target.value
-            val updateState = bs.modState(_.withSelected(selected))
-            for {
-                _ <- updateState
-                state <- bs.state
-                props <- bs.props
-            } yield {
-                props.onSelect(state.drawing(selected).get)
-            }
-        }
+        def onNewSelection(props: Props)(e: ReactEventFromInput): Callback =
+            props.onSelect(props.drawingList.drawing(e.target.value).get)
     }
 
     val component = ScalaComponent.builder[Props]("Example")
-        .initialState(EvolutionPortfolio.drawingList)
         .renderBackend[Backend]
         .build
 }
