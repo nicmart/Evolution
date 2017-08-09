@@ -9,6 +9,7 @@ import japgolly.scalajs.react._
 
 object DrawingListComponent {
     case class Props(
+        currentDrawing: Drawing[Point],
         drawingList: DrawingList[Point],
         onSelect: Drawing[Point] => Callback
     )
@@ -20,15 +21,11 @@ object DrawingListComponent {
             val options = drawingList.drawings.values.map { drawing =>
                 <.option(drawing.name)
             }
-            val dropdown =
-                <.select(
-                    options.toSeq: _*
-                ).apply(^.onChange ==> onNewSelection(props))
-
-            drawingList.selected match {
-                case None => dropdown
-                case Some(drawing) => dropdown(^.value := drawing.name)
-            }
+            <.select(
+                options.toTagMod,
+                ^.onChange ==> onNewSelection(props),
+                ^.value := props.currentDrawing.name
+            )
         }
 
         def onNewSelection(props: Props)(e: ReactEventFromInput): Callback =

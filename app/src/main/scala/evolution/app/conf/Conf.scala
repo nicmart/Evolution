@@ -8,7 +8,6 @@ import org.scalajs.dom
   */
 object Conf {
     lazy val canvasInitializer: CanvasInitializer =
-        FullWindowCanvasInitializer(dom.document, dom.window) andThen
         ColorCanvasInitializer("black")
 
     lazy val drawings = ???

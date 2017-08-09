@@ -51,33 +51,3 @@ object NavbarComponent {
         .renderBackend[Backend]
         .build
 }
-
-/*
-<nav class="navbar is-transparent">
-    <div id="navMenuExample" class="navbar-menu">
-        <div class="navbar-start">
-        </div>
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label">Drawing</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field is-narrow">
-                            <div class="control">
-                                <div class="select is-fullwidth">
-                                    <div id="drawing">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-
-
- */

@@ -48,7 +48,7 @@ object App {
       htmlCanvas: dom.html.Canvas,
       evolutionFactory: CanvasSize => Evolution[Point]
     ): Unit = {
-        Conf.canvasInitializer.initialise(htmlCanvas)
+        Conf.canvasInitializer.apply(htmlCanvas)
         val ctx = htmlCanvas.getContext("2d")
             .asInstanceOf[dom.CanvasRenderingContext2D]
 
