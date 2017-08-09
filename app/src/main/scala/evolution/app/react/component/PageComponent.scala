@@ -18,6 +18,7 @@ import scala.util.Random
 
 object PageComponent {
     case class State(
+        canvasInitializer: dom.html.Canvas => Unit,
         drawer: EvolutionDrawer,
         currentDrawing: Drawing[Point],
         drawingList: DrawingList[Point],
@@ -27,10 +28,7 @@ object PageComponent {
         def evolution: Evolution[Point] = currentDrawing.evolution(size)
     }
 
-    class Backend(
-        bs: BackendScope[Unit, State],
-        canvasInitializer: dom.html.Canvas => Unit
-    ) {
+    class Backend(bs: BackendScope[Unit, State]) {
         // Create a mutable reference
         private val refToCanvas =
             ScalaComponent.mutableRefTo(CanvasComponent.component)
@@ -47,7 +45,7 @@ object PageComponent {
                     )
                 )),
                 CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
-                    canvasInitializer,
+                    state.canvasInitializer,
                     state.currentDrawing,
                     state.drawer,
                     state.size
@@ -61,6 +59,7 @@ object PageComponent {
     }
 
     val initialState = State(
+        Conf.canvasInitializer,
         EvolutionDrawer(
             SimpleRNG(Random.nextLong()),
             1000
@@ -72,8 +71,7 @@ object PageComponent {
 
     val component = ScalaComponent.builder[Unit]("Page")
         .initialState(initialState)
-        .backend(new Backend(_, Conf.canvasInitializer))
-        .renderBackend
+        .renderBackend[Backend]
         .build
 
     private def windowSize(window: Window) = {
