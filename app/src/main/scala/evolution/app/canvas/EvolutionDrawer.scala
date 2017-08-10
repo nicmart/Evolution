@@ -9,7 +9,7 @@ import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import paint.random.RNG
 
-case class EvolutionDrawer(rng: RNG, iterations: Int) {
+case class EvolutionDrawer(rng: RNG, iterations: Int, strokeSize: Int) {
 
     def animationCallback(canvas: Canvas, evolution: Evolution[Point]): Unit => Unit = {
         val initialStream = drawingStream(evolution)
@@ -29,7 +29,7 @@ case class EvolutionDrawer(rng: RNG, iterations: Int) {
     }
 
     def drawingStream(evolution: Evolution[Point]): Stream[CanvasRenderingContext2D => Unit] =
-        drawPointEvolution(1, evolution).unfold(rng)
+        drawPointEvolution(strokeSize, evolution).unfold(rng)
 
     private def drawPointEvolution(size: Double, pointEv: Evolution[Point]): Evolution[CanvasRenderingContext2D => Unit] =
         pointEv.map { point =>
@@ -39,6 +39,7 @@ case class EvolutionDrawer(rng: RNG, iterations: Int) {
     }
 
     private def drawPoint(point: Point, size: Double, context: CanvasRenderingContext2D): Unit = {
+        context.lineWidth = size
         context.beginPath()
         context.lineTo(point.x.toInt, point.y.toInt)
         context.stroke()

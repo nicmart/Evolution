@@ -26,6 +26,7 @@ object PageComponent {
         canvasVersion: Int = 0
     ) {
         def evolution: Evolution[Point] = currentDrawing.evolution(size)
+        def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
     }
 
     class Backend(bs: BackendScope[Unit, State]) {
@@ -42,6 +43,16 @@ object PageComponent {
                             state.drawingList,
                             onDrawingSelected
                         )
+                    ),
+                    List(
+                        NumericInputComponent.component(NumericInputComponent.Props(
+                            state.drawer.iterations,
+                            onIterationsChanged
+                        )),
+                        NumericInputComponent.component(NumericInputComponent.Props(
+                            state.drawer.strokeSize,
+                            onSizeChanged
+                        ))
                     )
                 )),
                 CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
@@ -53,8 +64,25 @@ object PageComponent {
             )
         }
 
+        def onIterationsChanged(value: Int): Callback = {
+            bs.modState { state => state
+                .copy(drawer = state.drawer.copy(iterations = value))
+                .increaseVersion
+            }
+        }
+
+        def onSizeChanged(value: Int): Callback = {
+            bs.modState { state => state
+                .copy(drawer = state.drawer.copy(strokeSize = value))
+                .increaseVersion
+            }
+        }
+
         def onDrawingSelected(drawing: Drawing[Point]): Callback = {
-            bs.modState { state => state.copy(currentDrawing = drawing, canvasVersion = state.canvasVersion + 1)}
+            bs.modState { state => state
+                .copy(currentDrawing = drawing, canvasVersion = state.canvasVersion + 1)
+                .increaseVersion
+            }
         }
     }
 
@@ -62,7 +90,8 @@ object PageComponent {
         Conf.canvasInitializer,
         EvolutionDrawer(
             SimpleRNG(Random.nextLong()),
-            1000
+            1000,
+            1
         ),
         EvolutionPortfolio.drawingList.drawing("brownian").get,
         EvolutionPortfolio.drawingList,
