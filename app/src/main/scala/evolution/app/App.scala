@@ -12,7 +12,7 @@ import paint.random.{RNG, SequenceRNG, SimpleRNG}
 import scala.util.Random
 import evolution.app.canvas.CanvasEvolution._
 import evolution.app.canvas.CanvasSize
-import evolution.app.model.Drawing
+import evolution.app.model.legacy.Drawing
 import evolution.app.portfolio.EvolutionPortfolio
 import org.scalajs.dom.html.{Button, Canvas, Select}
 

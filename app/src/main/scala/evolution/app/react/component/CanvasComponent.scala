@@ -1,7 +1,7 @@
 package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
-import evolution.app.model.Drawing
+import evolution.app.model.legacy.Drawing
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement

@@ -1,6 +1,6 @@
 package evolution.app.react.component
 
-import evolution.app.model.{Drawing, DrawingList}
+import evolution.app.model.legacy.{Drawing, DrawingList}
 import evolution.app.portfolio.EvolutionPortfolio
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement

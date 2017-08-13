@@ -8,7 +8,7 @@ import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import cats.implicits._
 import evolution.app.canvas.CanvasSize
-import evolution.app.model.{Drawing, DrawingList}
+import evolution.app.model.legacy.{Drawing, DrawingList}
 import paint.geometry.Geometry.Point.pointGroup
 import paint.evolution.motion.MotionEvolutions._
 import paint.evolution.motion._

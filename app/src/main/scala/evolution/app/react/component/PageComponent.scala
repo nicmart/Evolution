@@ -2,7 +2,7 @@ package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
-import evolution.app.model.{Drawing, DrawingList}
+import evolution.app.model.legacy.{Drawing, DrawingList}
 import evolution.app.portfolio.EvolutionPortfolio
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope

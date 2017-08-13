@@ -1,27 +1,40 @@
 package evolution.app.model
 
-import evolution.app.canvas.CanvasSize
 import paint.evolution.Evolution
+import paint.evolution.generator.EvolutionGenerator
 
-import scala.collection.immutable.ListMap
+sealed trait Drawing[T] {
+    type Context
+    val name: String
+    val generator: EvolutionGenerator.Aux[T, Context]
+    val context: Context
 
-final case class Drawing[T](name: String, evolution: CanvasSize => Evolution[T])
-
-final case class DrawingList[T] private (drawings: ListMap[String, Drawing[T]], selected: Option[Drawing[T]]) {
-  def withDrawing(drawing: Drawing[T], select: Boolean = false): DrawingList[T] = {
-    val newSelected = if (select) Some(drawing) else selected
-    DrawingList(drawings.updated(drawing.name, drawing), newSelected)
-  }
-
-  def withSelected(drawingName: String): DrawingList[T] = {
-    val newSelected: Option[Drawing[T]] = drawing(drawingName).fold(selected)(drawing => Some(drawing))
-    DrawingList(drawings, newSelected)
-  }
-
-  def drawing(name: String): Option[Drawing[T]] =
-    drawings.get(name)
+    def evolution: Evolution[T] = generator.evolution(context)
+    def withContext(ctx: Context): Drawing.Aux[T, Context] =
+        Drawing(name, generator, ctx)
 }
 
-object DrawingList {
-  def empty[T]: DrawingList[T] = DrawingList(ListMap.empty, None)
+object Drawing {
+    type Aux[T, C] = Drawing[T] { type Context = C }
+    def apply[T, C](_name: String, _generator: EvolutionGenerator.Aux[T, C], _context: C): Aux[T, C] = new Drawing[T] {
+        type Context = C
+        val name = _name
+        val generator = _generator
+        val context = _context
+    }
+}
+
+case class DrawingList[T](drawings: List[Drawing[T]]) {
+    def drawing(name: String): Option[Drawing[T]] =
+        drawings.dropWhile(_.name != name).headOption
+}
+
+case class DrawingContext[T](
+    list: DrawingList[T],
+    current: Drawing[T]
+) {
+    def select(drawingName: String): DrawingContext[T] = {
+        val newCurrent = list.drawing(drawingName).getOrElse(current)
+        copy(current = newCurrent)
+    }
 }
