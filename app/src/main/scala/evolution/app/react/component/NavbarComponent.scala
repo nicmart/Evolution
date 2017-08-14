@@ -9,7 +9,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 object NavbarComponent {
     case class Props(
         drawingDropDrown: VdomElement,
-        otherElements: List[VdomElement]
+        elements: List[VdomElement]
     )
 
     class Backend(bs: BackendScope[Props, Unit]) {
@@ -25,7 +25,7 @@ object NavbarComponent {
                 <.div(^.id := "navMenuExample", ^.className := "navbar-menu",
                     <.div(^.className := "navbar-start"),
                     <.div(^.className := "navbar-end",
-                        props.otherElements.map { element =>
+                        props.elements.map { element =>
                             <.div(^.className := "navbar-item",
                                 element
                             )

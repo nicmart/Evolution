@@ -2,8 +2,8 @@ package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
-import evolution.app.model.legacy.{Drawing, DrawingList}
-import evolution.app.portfolio.EvolutionPortfolio
+import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
+import evolution.app.portfolio.{EvolutionGeneratorPortfolio, EvolutionPortfolio}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -20,13 +20,16 @@ object PageComponent {
     case class State(
         canvasInitializer: dom.html.Canvas => Unit,
         drawer: EvolutionDrawer,
-        currentDrawing: Drawing[Point],
-        drawingList: DrawingList[Point],
+        selection: DrawingListWithSelection[Point],
         size: Point,
         canvasVersion: Int = 0
     ) {
-        def evolution: Evolution[Point] = currentDrawing.evolution(size)
+        def evolution: Evolution[Point] = currentDrawing.evolution
         def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
+        def currentDrawing: Drawing[Point] = selection.current
+        def drawingList: DrawingList[Point] = selection.list
+        def updateSeed: State =
+            copy(drawer = drawer.copy(rng = SimpleRNG(Random.nextLong())))
     }
 
     class Backend(bs: BackendScope[Unit, State]) {
@@ -39,20 +42,20 @@ object PageComponent {
                 NavbarComponent.component(NavbarComponent.Props(
                     DrawingListComponent.component(
                         DrawingListComponent.Props(
-                            state.currentDrawing,
-                            state.drawingList,
-                            onDrawingSelected
+                            state.selection,
+                            onDrawingChange
                         )
                     ),
                     List(
-                        NumericInputComponent.component(NumericInputComponent.Props(
-                            state.drawer.iterations,
-                            onIterationsChanged
-                        )),
-                        NumericInputComponent.component(NumericInputComponent.Props(
-                            state.drawer.strokeSize,
-                            onSizeChanged
-                        ))
+//                        NumericInputComponent.component(NumericInputComponent.Props(
+//                            state.drawer.iterations,
+//                            onIterationsChanged
+//                        )),
+//                        NumericInputComponent.component(NumericInputComponent.Props(
+//                            state.drawer.strokeSize,
+//                            onSizeChanged
+//                        ))
+                        state.selection.current.contextElement(onDrawingChange)
                     )
                 )),
                 CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
@@ -78,10 +81,11 @@ object PageComponent {
             }
         }
 
-        def onDrawingSelected(drawing: Drawing[Point]): Callback = {
+        def onDrawingChange(drawing: Drawing[Point]): Callback = {
             bs.modState { state => state
-                .copy(currentDrawing = drawing, canvasVersion = state.canvasVersion + 1)
+                .copy(selection = state.selection.copy(current = drawing))
                 .increaseVersion
+                .updateSeed
             }
         }
     }
@@ -93,8 +97,7 @@ object PageComponent {
             1000,
             1
         ),
-        EvolutionPortfolio.drawingList.drawing("brownian").get,
-        EvolutionPortfolio.drawingList,
+        EvolutionGeneratorPortfolio.listWithSelection,
         windowSize(dom.window)
     )
 

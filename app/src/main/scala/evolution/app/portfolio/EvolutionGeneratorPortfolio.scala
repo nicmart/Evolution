@@ -1,7 +1,8 @@
 package evolution.app.portfolio
 
 import evolution.app.canvas.CanvasSize
-import evolution.app.model.{Drawing, DrawingContext, DrawingList}
+import evolution.app.model.{Drawing, DrawingListWithSelection, DrawingList}
+import evolution.app.react.component.instances.BrownianComponent
 import paint.evolution.Evolution
 import paint.evolution.PointEvolutions.rectangle2D
 import paint.evolution.generator.EvolutionGenerator
@@ -24,20 +25,19 @@ object EvolutionGeneratorPortfolio {
                 ).positional
             }
 
-        Drawing(
+        val drawing = Drawing(
             "brownian",
             generator,
-            Context(Point(200, 200), 2)
+            BrownianComponent,
+            Context(Point(900, 600), 2)
         )
-
-        val defaultContext: generator.Context = Context(Point(200, 200), 2)
     }
 
-    def drawingContext: DrawingContext[Point] =
-        DrawingContext(
+    def listWithSelection: DrawingListWithSelection[Point] =
+        DrawingListWithSelection(
             DrawingList(List(
-                Drawing("brownian", brownian.generator, brownian.defaultContext)
+                brownian.drawing
             )),
-            Drawing("brownian", brownian.generator, brownian.defaultContext)
+            brownian.drawing
         )
 }

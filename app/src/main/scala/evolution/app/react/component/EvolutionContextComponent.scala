@@ -10,7 +10,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import paint.geometry.Geometry.Point
 
 trait EvolutionContextComponent[Context] {
-  def component(context: Context, callback: Context => Callback): VdomElement
+  def component(props: EvolutionContextComponentProps[Context]): VdomElement
 }
 
 case class EvolutionContextComponentProps[Context](
@@ -19,35 +19,38 @@ case class EvolutionContextComponentProps[Context](
 )
 
 object instances {
+  object BrownianComponent extends EvolutionContextComponent[brownian.Context] {
+    type Context = brownian.Context
+    type Props = EvolutionContextComponentProps[brownian.Context]
 
-  class Backend(bs: BackendScope[EvolutionContextComponentProps[brownian.Context], Unit]) {
-    def render(props: EvolutionContextComponentProps[brownian.Context]): VdomElement = {
-      <.div(
-        DoubleInputComponent.component(DoubleInputComponent.Props(props.context.radius, onRadiusChange)),
-        DoubleInputComponent.component(DoubleInputComponent.Props(props.context.start.x, onXChange)),
-        DoubleInputComponent.component(DoubleInputComponent.Props(props.context.start.y, onYChange))
-      )
+    class Backend(bs: BackendScope[EvolutionContextComponentProps[brownian.Context], Unit]) {
+      def render(props: Props): VdomElement = {
+        <.div(
+          DoubleInputComponent.component(DoubleInputComponent.Props(props.context.radius, onRadiusChange(props))),
+          DoubleInputComponent.component(DoubleInputComponent.Props(props.context.start.x, onXChange(props))),
+          DoubleInputComponent.component(DoubleInputComponent.Props(props.context.start.y, onYChange(props)))
+        )
+      }
+
+      private def onRadiusChange(props: Props)(radius: Double): Callback = {
+        props.callback(props.context.copy(radius = radius))
+      }
+
+      private def onXChange(props: Props)(x: Double): Callback = {
+        val currentStart = props.context.start
+        props.callback(props.context.copy(start = currentStart.copy(x = x)))
+      }
+
+      private def onYChange(props: Props)(y: Double): Callback = {
+        val currentStart = props.context.start
+        props.callback(props.context.copy(start = currentStart.copy(y = y)))
+      }
     }
 
-    private def onRadiusChange(radius: Double): Callback = {
-      ???
-    }
-
-    private def onXChange(x: Double): Callback = {
-      ???
-    }
-
-    private def onYChange(y: Double): Callback = {
-      ???
-    }
+    def component(props: Props): VdomElement =
+      ScalaComponent.builder[Props]("Component")
+        .renderBackend[Backend]
+        .build
+        .apply(props)
   }
-
-  val brownianContextComponent = new EvolutionContextComponent[brownian.Context] {
-    override def component(context: brownian.Context, callback: (brownian.Context) => Callback): VdomElement =
-      <.div(
-        NumericInputComponent.component()
-      )
-  }
-
-
 }

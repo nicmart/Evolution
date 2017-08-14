@@ -1,7 +1,7 @@
 package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
-import evolution.app.model.legacy.Drawing
+import evolution.app.model.Drawing
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -32,7 +32,11 @@ object CanvasComponent {
 
         def onMount(canvas: dom.html.Canvas, props: Props): Callback = Callback {
             props.canvasInitializer(canvas)
-            val cancelAnimationCallback = props.drawer.animationCallback(canvas, props.currentDrawing.evolution(props.windowSize * 2))
+            val cancelAnimationCallback =
+                props.drawer.animationCallback(
+                    canvas,
+                    props.currentDrawing.evolution
+                )
             stopAnimationCallback = Callback {
                 cancelAnimationCallback()
             }

@@ -42,7 +42,7 @@ object DoubleInputComponent {
                 <.div(
                     ^.className := "control",
                     <.input(
-                        ^.`type` := "number",
+                        ^.`type` := "text",
                         ^.className := "input",
                         ^.value := props.value,
                         ^.onChange ==> onChange(props)
