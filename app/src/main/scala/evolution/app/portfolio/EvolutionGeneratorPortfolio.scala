@@ -29,6 +29,7 @@ object EvolutionGeneratorPortfolio {
             generator,
             Context(Point(200, 200), 2)
         )
+
         val defaultContext: generator.Context = Context(Point(200, 200), 2)
     }
 

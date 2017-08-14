@@ -32,3 +32,30 @@ object NumericInputComponent {
         .renderBackend[Backend]
         .build
 }
+
+object DoubleInputComponent {
+    case class Props(value: Double, onChange: Double => Callback)
+    class Backend(bs: BackendScope[Props, Unit]) {
+        def render(props: Props) = {
+            <.div(
+                ^.className := "field",
+                <.div(
+                    ^.className := "control",
+                    <.input(
+                        ^.`type` := "number",
+                        ^.className := "input",
+                        ^.value := props.value,
+                        ^.onChange ==> onChange(props)
+                    )
+                )
+            )
+        }
+
+        def onChange(props: Props)(e: ReactEventFromInput): Callback =
+            props.onChange(e.target.value.toDouble)
+    }
+
+    val component = ScalaComponent.builder[Props]("Numeric Input")
+      .renderBackend[Backend]
+      .build
+}
