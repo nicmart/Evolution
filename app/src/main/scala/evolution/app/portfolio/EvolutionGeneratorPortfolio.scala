@@ -1,9 +1,7 @@
 package evolution.app.portfolio
 
-import evolution.app.canvas.CanvasSize
 import evolution.app.model.{Drawing, DrawingListWithSelection, DrawingList}
 import evolution.app.react.component.instances.BrownianComponent
-import paint.evolution.Evolution
 import paint.evolution.PointEvolutions.rectangle2D
 import paint.evolution.generator.EvolutionGenerator
 import paint.evolution.motion.MotionEvolutions.solveIndependent

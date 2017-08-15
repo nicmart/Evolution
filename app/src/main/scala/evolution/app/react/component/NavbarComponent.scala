@@ -1,6 +1,5 @@
 package evolution.app.react.component
 
-import evolution.app.portfolio.EvolutionPortfolio
 import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement

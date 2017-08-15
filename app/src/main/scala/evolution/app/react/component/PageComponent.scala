@@ -4,6 +4,7 @@ import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
 import evolution.app.portfolio.{EvolutionGeneratorPortfolio, EvolutionPortfolio}
+import evolution.app.react.component.presentational.SidebarComponent
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -55,15 +56,20 @@ object PageComponent {
 //                            state.drawer.strokeSize,
 //                            onSizeChanged
 //                        ))
-                        state.selection.current.contextElement(onDrawingChange)
+
                     )
                 )),
-                CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
-                    state.canvasInitializer,
-                    state.currentDrawing,
-                    state.drawer,
-                    state.size
-                ))
+                <.div(^.id := "page-content",
+                    CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
+                        state.canvasInitializer,
+                        state.currentDrawing,
+                        state.drawer,
+                        state.size
+                    )),
+                    SidebarComponent.component(SidebarComponent.Props(active = true, 3))(
+                        state.selection.current.contextElement(onDrawingChange)
+                    )
+                )
             )
         }
 

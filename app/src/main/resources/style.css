@@ -1,0 +1,11 @@
+#page-content {
+  position: relative;
+}
+
+.sidebar {
+  height:100%;
+  position:absolute;
+  right:0;
+  top:0;
+  background:pink;
+}
