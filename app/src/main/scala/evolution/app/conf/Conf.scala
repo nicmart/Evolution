@@ -7,8 +7,8 @@ import org.scalajs.dom
   * Created by nic on 26/11/2016.
   */
 object Conf {
-    lazy val canvasInitializer: CanvasInitializer =
-        ColorCanvasInitializer("black")
+  lazy val canvasInitializer: CanvasInitializer =
+    ColorCanvasInitializer("black")
 
-    lazy val drawings = ???
+  lazy val drawings = ???
 }

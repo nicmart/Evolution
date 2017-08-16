@@ -4,92 +4,44 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
-class SingleInputComponent[T] {
-    case class Props(value: T, onChange: T => Callback, parser: String => T)
-    class Backend(bs: BackendScope[Props, Unit]) {
-        def render(props: Props) = {
-            <.div(
-                ^.className := "field",
-                <.div(
-                    ^.className := "control",
-                    <.input(
-                        ^.`type` := "text",
-                        ^.className := "input",
-                        ^.value := props.value,
-                        ^.onChange ==> onChange(props)
-                    )
-                )
-            )
-        }
+object SingleInputComponent {
 
-        def onChange(props: Props)(e: ReactEventFromInput): Callback =
-            props.onChange(e.target.value.toInt)
+  case class Props[T](value: T, onChange: T => Callback, parser: String => T)
+
+  class Backend[T](bs: BackendScope[Props[T], Unit]) {
+    def render(props: Props[T]) = {
+      <.div(
+        ^.className := "field",
+        <.div(
+          ^.className := "control",
+          <.input(
+            ^.`type` := "text",
+            ^.className := "input",
+            ^.value := props.value.toString,
+            ^.onChange ==> onChange(props)
+          )
+        )
+      )
     }
 
-    val component = ScalaComponent.builder[Props]("Numeric Input")
-      .renderBackend[Backend]
+    def onChange(props: Props[T])(e: ReactEventFromInput): Callback =
+      props.onChange(props.parser(e.target.value))
+  }
+
+  def component[T] = ScalaComponent.builder[Props[T]]("Single input")
+      .renderBackend[Backend[T]]
       .build
 
-    def apply(value: T, onChange: T => Callback, parser: String => T): VdomElement =
-        component(Props(value, onChange, parser))
+  def apply[T](value: T, onChange: T => Callback, parser: String => T): VdomElement =
+    component[T](Props(value, onChange, parser))
 }
 
 object NumericInputComponent {
-    case class Props(value: Int, onChange: Int => Callback)
-    class Backend(bs: BackendScope[Props, Unit]) {
-        def render(props: Props) = {
-            <.div(
-                ^.className := "field",
-                <.div(
-                    ^.className := "control",
-                    <.input(
-                        ^.`type` := "number",
-                        ^.className := "input",
-                        ^.value := props.value,
-                        ^.onChange ==> onChange(props)
-                    )
-                )
-            )
-        }
-
-        def onChange(props: Props)(e: ReactEventFromInput): Callback =
-            props.onChange(e.target.value.toInt)
-    }
-
-    val component = ScalaComponent.builder[Props]("Numeric Input")
-        .renderBackend[Backend]
-        .build
-
-    def apply(value: Int, onChange: Int => Callback): VdomElement =
-        component(Props(value, onChange))
+  def apply(value: Int, onChange: Int => Callback): VdomElement =
+    SingleInputComponent[Int](value, onChange, _.toInt)
 }
 
 object DoubleInputComponent {
-    case class Props(value: Double, onChange: Double => Callback)
-    class Backend(bs: BackendScope[Props, Unit]) {
-        def render(props: Props) = {
-            <.div(
-                ^.className := "field",
-                <.div(
-                    ^.className := "control",
-                    <.input(
-                        ^.`type` := "text",
-                        ^.className := "input",
-                        ^.value := props.value,
-                        ^.onChange ==> onChange(props)
-                    )
-                )
-            )
-        }
-
-        def onChange(props: Props)(e: ReactEventFromInput): Callback =
-            props.onChange(e.target.value.toDouble)
-    }
-
-    val component = ScalaComponent.builder[Props]("Numeric Input")
-      .renderBackend[Backend]
-      .build
-
-    def apply(value: Double, onChange: Double => Callback): VdomElement =
-        component(Props(value, onChange))
+  def apply(value: Double, onChange: Double => Callback): VdomElement =
+    SingleInputComponent[Double](value, onChange, _.toDouble)
 }

@@ -7,5 +7,9 @@
   position:absolute;
   right:0;
   top:0;
-  background:pink;
+  padding: 15px;
+}
+
+.sidebar label.label {
+  color: White;
 }
