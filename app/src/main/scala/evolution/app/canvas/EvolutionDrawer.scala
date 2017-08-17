@@ -1,8 +1,6 @@
 package evolution.app.canvas
 
-import evolution.app.canvas.CanvasEvolution.{drawPoint, drawPointEvolution, drawedPoints, lastDebugTime}
 import org.scalajs.dom
-import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom.html.Canvas
 import org.scalajs.dom.raw.CanvasRenderingContext2D
 import paint.evolution.Evolution

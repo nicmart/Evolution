@@ -2,15 +2,12 @@ package paint.evolution.generator
 
 import paint.evolution.Evolution
 
-trait EvolutionGenerator[T] {
-    type Context
-    def evolution(context: Context): Evolution[T]
+trait EvolutionGenerator[T, Settings] {
+    def evolution(settings: Settings): Evolution[T]
 }
 
 object EvolutionGenerator {
-    type Aux[T, C] = EvolutionGenerator[T] { type Context = C }
-    def apply[T, C](f: C => Evolution[T]): Aux[T, C] = new EvolutionGenerator[T] {
-        type Context = C
-        def evolution(context: Context): Evolution[T] = f(context)
+    def apply[T, S](f: S => Evolution[T]): EvolutionGenerator[T, S] = new EvolutionGenerator[T, S] {
+        def evolution(settings: S): Evolution[T] = f(settings)
     }
 }

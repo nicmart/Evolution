@@ -3,7 +3,7 @@ package evolution.app.react.component
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
-import evolution.app.portfolio.{EvolutionGeneratorPortfolio, EvolutionPortfolio}
+import evolution.app.portfolio.EvolutionGeneratorPortfolio
 import evolution.app.react.component.presentational.SidebarComponent
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -52,17 +52,7 @@ object PageComponent {
               onDrawingChange
             )
           ),
-          List(
-            //                        NumericInputComponent.component(NumericInputComponent.Props(
-            //                            state.drawer.iterations,
-            //                            onIterationsChanged
-            //                        )),
-            //                        NumericInputComponent.component(NumericInputComponent.Props(
-            //                            state.drawer.strokeSize,
-            //                            onSizeChanged
-            //                        ))
-
-          )
+          List()
         )),
         <.div(^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
@@ -72,7 +62,7 @@ object PageComponent {
             state.size
           )),
           SidebarComponent.component(SidebarComponent.Props(active = true, 3))(
-            state.selection.current.contextElement(onDrawingChange)
+            state.selection.current.settingsElement(onDrawingChange)
           )
         )
       )

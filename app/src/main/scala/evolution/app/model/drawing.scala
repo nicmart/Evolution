@@ -1,45 +1,45 @@
 package evolution.app.model
 
-import evolution.app.react.component.EvolutionContextComponent
+import evolution.app.react.component.settings.SettingsComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import paint.evolution.Evolution
 import paint.evolution.generator.EvolutionGenerator
 
 sealed trait Drawing[T] {
-  type Context
+  type Settings
   val name: String
-  val generator: EvolutionGenerator.Aux[T, Context]
-  val contextComponent: EvolutionContextComponent[Context]
-  val context: Context
+  val generator: EvolutionGenerator[T, Settings]
+  val settingsComponent: SettingsComponent[Settings]
+  val settings: Settings
 
-  def evolution: Evolution[T] = generator.evolution(context)
+  def evolution: Evolution[T] = generator.evolution(settings)
 
-  def contextElement(callback: Drawing[T] => Callback): VdomElement = {
-    contextComponent.component(EvolutionContextComponent.Props(
-      context,
-      ctx => callback(withContext(ctx))
+  def settingsElement(callback: Drawing[T] => Callback): VdomElement = {
+    settingsComponent.component(SettingsComponent.Props(
+      settings,
+      settings => callback(withSettings(settings))
     ))
   }
 
-  def withContext(ctx: Context): Drawing.Aux[T, Context] =
-    Drawing(name, generator, contextComponent, ctx)
+  def withSettings(settings: Settings): Drawing.Aux[T, Settings] =
+    Drawing(name, generator, settingsComponent, settings)
 }
 
 object Drawing {
-  type Aux[T, C] = Drawing[T] {type Context = C}
+  type Aux[T, C] = Drawing[T] { type Settings = C }
 
-  def apply[T, C](
+  def apply[T, S](
     _name: String,
-    _generator: EvolutionGenerator.Aux[T, C],
-    _component: EvolutionContextComponent[C],
-    _context: C
-  ): Aux[T, C] = new Drawing[T] {
-    type Context = C
+    _generator: EvolutionGenerator[T, S],
+    _component: SettingsComponent[S],
+    _settings: S
+  ): Aux[T, S] = new Drawing[T] {
+    type Settings = S
     val name = _name
     val generator = _generator
-    val context = _context
-    val contextComponent = _component
+    val settings = _settings
+    val settingsComponent = _component
   }
 }
 
