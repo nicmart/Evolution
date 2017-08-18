@@ -1,45 +1,45 @@
 package evolution.app.model
 
-import evolution.app.react.component.settings.SettingsComponent
+import evolution.app.react.component.config.ConfigComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import paint.evolution.Evolution
 import paint.evolution.generator.EvolutionGenerator
 
 sealed trait Drawing[T] {
-  type Settings
+  type Config
   val name: String
-  val generator: EvolutionGenerator[T, Settings]
-  val settingsComponent: SettingsComponent[Settings]
-  val settings: Settings
+  val generator: EvolutionGenerator[T, Config]
+  val configComponent: ConfigComponent[Config]
+  val config: Config
 
-  def evolution: Evolution[T] = generator.evolution(settings)
+  def evolution: Evolution[T] = generator.evolution(config)
 
-  def settingsElement(callback: Drawing[T] => Callback): VdomElement = {
-    settingsComponent.component(SettingsComponent.Props(
-      settings,
-      settings => callback(withSettings(settings))
+  def configElement(callback: Drawing[T] => Callback): VdomElement = {
+    configComponent.component(ConfigComponent.Props(
+      config,
+      config => callback(withConfig(config))
     ))
   }
 
-  def withSettings(settings: Settings): Drawing.Aux[T, Settings] =
-    Drawing(name, generator, settingsComponent, settings)
+  def withConfig(config: Config): Drawing.Aux[T, Config] =
+    Drawing(name, generator, configComponent, config)
 }
 
 object Drawing {
-  type Aux[T, C] = Drawing[T] { type Settings = C }
+  type Aux[T, C] = Drawing[T] { type Config = C }
 
-  def apply[T, S](
-    _name: String,
-    _generator: EvolutionGenerator[T, S],
-    _component: SettingsComponent[S],
-    _settings: S
-  ): Aux[T, S] = new Drawing[T] {
-    type Settings = S
-    val name = _name
-    val generator = _generator
-    val settings = _settings
-    val settingsComponent = _component
+  def apply[T, C](
+                   _name: String,
+                   _generator: EvolutionGenerator[T, C],
+                   _component: ConfigComponent[C],
+                   _config: C
+  ): Aux[T, C] = new Drawing[T] {
+    type Config = C
+    override val name = _name
+    override val generator = _generator
+    override val config = _config
+    override val configComponent = _component
   }
 }
 

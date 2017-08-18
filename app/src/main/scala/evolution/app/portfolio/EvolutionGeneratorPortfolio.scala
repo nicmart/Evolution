@@ -1,8 +1,8 @@
 package evolution.app.portfolio
 
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
-import evolution.app.react.component.settings.instances._
-import evolution.app.react.component.settings.SettingsComponent
+import evolution.app.react.component.config.instances._
+import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.PointEvolutions.rectangle2D
 import paint.evolution.generator.EvolutionGenerator
 import paint.evolution.motion.MotionEvolutions.solveIndependent
@@ -15,50 +15,50 @@ object EvolutionGeneratorPortfolio {
 
   object brownian {
 
-    case class Settings(
+    case class Config(
       start: Point,
       radius: Double
     )
 
-    val generator: EvolutionGenerator[Point, Settings] =
-      EvolutionGenerator { settings: Settings =>
-        solveIndependent(settings.start)(
-          rectangle2D(settings.radius)
+    val generator: EvolutionGenerator[Point, Config] =
+      EvolutionGenerator { config: Config =>
+        solveIndependent(config.start)(
+          rectangle2D(config.radius)
         ).positional
       }
 
     val drawing = Drawing(
       "brownian",
       generator,
-      SettingsComponent[Settings],
-      Settings(Point(900, 600), 2)
+      ConfigComponent[Config],
+      Config(Point(900, 600), 2)
     )
   }
 
   object brownianWithRandomJumps {
 
-    case class Settings(
+    case class Config(
       start: Point,
       radius: Double,
       jumpProbability: Double,
       jumpSize: Int
     )
 
-    val generator: EvolutionGenerator[Point, Settings] =
-      EvolutionGenerator { settings: Settings =>
+    val generator: EvolutionGenerator[Point, Config] =
+      EvolutionGenerator { config: Config =>
         val slowDownEvo = double.map[Int] { d =>
-          if (d < settings.jumpProbability) settings.jumpSize else 1
+          if (d < config.jumpProbability) config.jumpSize else 1
         }
-        MotionEvolutions.solveIndependent(settings.start)(
-          rectangle2D(settings.radius).slowDown(slowDownEvo)
+        MotionEvolutions.solveIndependent(config.start)(
+          rectangle2D(config.radius).slowDown(slowDownEvo)
         ).positional
       }
 
     val drawing = Drawing(
       "brownian with random jumps",
       generator,
-      SettingsComponent[Settings],
-      Settings(
+      ConfigComponent[Config],
+      Config(
         Point(900, 600),
         1,
         0.0001,

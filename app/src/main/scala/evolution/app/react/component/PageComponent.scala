@@ -62,7 +62,7 @@ object PageComponent {
             state.size
           )),
           SidebarComponent.component(SidebarComponent.Props(active = true, 3))(
-            state.selection.current.settingsElement(onDrawingChange)
+            state.selection.current.configElement(onDrawingChange)
           )
         )
       )
