@@ -6,9 +6,6 @@ import paint.random.{RNG, SimpleRNG}
 import scala.collection.immutable.{Queue, Stream}
 import scala.util.Random
 
-/**
-  * Created by Nicolò Martini on 12/05/2017.
-  */
 final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
     // Primitives

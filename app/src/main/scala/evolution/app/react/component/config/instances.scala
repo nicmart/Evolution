@@ -12,10 +12,14 @@ object instances {
   import ConfigComponent._
 
   implicit val doubleConfig: ConfigComponent[Double] =
-    ConfigComponent.instance[Double](props => DoubleInputComponent(props.config, props.callback))
+    ConfigComponent.instance[Double]{
+      props => List(DoubleInputComponent(props.config, props.callback))
+    }
 
   implicit val intConfig: ConfigComponent[Int] =
-    ConfigComponent.instance[Int](props => IntInputComponent(props.config, props.callback))
+    ConfigComponent.instance[Int] {
+      props => List(IntInputComponent(props.config, props.callback))
+    }
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
     new SeqComponent[T](configComponent)
@@ -24,7 +28,7 @@ object instances {
     new OptionComponent[T](configComponent)
 
   implicit val hnilConfig: ConfigComponent[HNil] =
-    ConfigComponent.instance[HNil](props => <.div())
+    ConfigComponent.instance[HNil](props => Nil)
 
   implicit def hlistConfig[K <: Symbol, H, T <: HList](
     implicit
@@ -47,8 +51,8 @@ object instances {
     ConfigComponent.instance { props =>
       <.div(
         <.label(^.className := "label", fieldName),
-        hConfig.value.element(Props(props.config.head, hCallback(props)))
-      )
+        hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
+      ) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
     }
   }
 
@@ -70,11 +74,10 @@ object instances {
 
     import ConfigComponent.Props
 
-    def element(props: Props[Seq[T]]): VdomElement = {
-      val children: Seq[VdomElement] = props.config.zipWithIndex.map { case (t, index) =>
+    def element(props: Props[Seq[T]]): List[VdomElement] = {
+      props.config.toList.zipWithIndex.flatMap { case (t, index) =>
         component.element(Props(t, onChangeElement(props, index)))
       }
-      <.div(children.toTagMod)
     }
 
     private def onChangeElement(props: Props[Seq[T]], index: Int)(t: T): Callback =
@@ -90,8 +93,8 @@ object instances {
 
     import ConfigComponent.Props
 
-    def element(props: Props[Option[T]]): VdomElement = {
-      props.config.fold[VdomElement](<.span())(t => component.element(Props(t, onChange(props))))
+    def element(props: Props[Option[T]]): List[VdomElement] = {
+      props.config.fold[List[VdomElement]](Nil)(t => component.element(Props(t, onChange(props))))
     }
 
     private def onChange(props: Props[Option[T]])(t: T): Callback =
