@@ -1,8 +1,6 @@
 package evolution.app.portfolio
 
-import evolution.app.canvas.CanvasSize
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
-import evolution.app.portfolio.DrawingPortfolio.drops
 import evolution.app.react.component.config.instances._
 import evolution.app.react.component.config.{ConfigComponent, ConfiguredComponent}
 import paint.evolution.Evolution

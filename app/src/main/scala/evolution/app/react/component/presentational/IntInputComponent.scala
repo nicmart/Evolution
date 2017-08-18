@@ -36,7 +36,7 @@ object SingleInputComponent {
     component[T](Props(value, onChange, parser))
 }
 
-object NumericInputComponent {
+object IntInputComponent {
   def apply(value: Int, onChange: Int => Callback): VdomElement =
     SingleInputComponent[Int](value, onChange, _.toInt)
 }

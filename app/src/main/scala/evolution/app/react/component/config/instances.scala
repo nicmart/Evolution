@@ -1,6 +1,6 @@
 package evolution.app.react.component.config
 
-import evolution.app.react.component.presentational.{DoubleInputComponent, NumericInputComponent}
+import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, _}
@@ -15,7 +15,7 @@ object instances {
     ConfigComponent.instance[Double](props => DoubleInputComponent(props.config, props.callback))
 
   implicit val intConfig: ConfigComponent[Int] =
-    ConfigComponent.instance[Int](props => NumericInputComponent(props.config, props.callback))
+    ConfigComponent.instance[Int](props => IntInputComponent(props.config, props.callback))
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
     new SeqComponent[T](configComponent)
@@ -47,8 +47,7 @@ object instances {
     ConfigComponent.instance { props =>
       <.div(
         <.label(^.className := "label", fieldName),
-        hConfig.value.element(Props(props.config.head, hCallback(props))),
-        tConfigs.element(Props(props.config.tail, tCallback(props)))
+        hConfig.value.element(Props(props.config.head, hCallback(props)))
       )
     }
   }

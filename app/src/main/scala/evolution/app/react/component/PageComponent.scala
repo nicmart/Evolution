@@ -61,8 +61,11 @@ object PageComponent {
             state.drawer,
             state.size
           )),
-          SidebarComponent.component(SidebarComponent.Props(active = true, 3))(
-            state.selection.current.configElement(onDrawingChange)
+          SidebarComponent.component(
+            SidebarComponent.Props(
+              active = true,
+              state.selection.current.configElement(onDrawingChange)
+            )
           )
         )
       )
@@ -88,7 +91,7 @@ object PageComponent {
       bs.modState { state =>
         state
             .copy(selection = state.selection.copy(current = drawing))
-            .increaseVersion
+            //.increaseVersion
             .updateSeed
       }
     }
