@@ -47,8 +47,8 @@ object instances {
     ConfigComponent.instance { props =>
       <.div(
         <.label(^.className := "label", fieldName),
-        hConfig.value.component(Props(props.config.head, hCallback(props))),
-        tConfigs.component(Props(props.config.tail, tCallback(props)))
+        hConfig.value.element(Props(props.config.head, hCallback(props))),
+        tConfigs.element(Props(props.config.tail, tCallback(props)))
       )
     }
   }
@@ -63,7 +63,7 @@ object instances {
     }
 
     ConfigComponent.instance { props =>
-      hConfig.value.component(Props(generic.to(props.config), callback(props)))
+      hConfig.value.element(Props(generic.to(props.config), callback(props)))
     }
   }
 
@@ -71,9 +71,9 @@ object instances {
 
     import ConfigComponent.Props
 
-    def component(props: Props[Seq[T]]): VdomElement = {
+    def element(props: Props[Seq[T]]): VdomElement = {
       val children: Seq[VdomElement] = props.config.zipWithIndex.map { case (t, index) =>
-        component.component(Props(t, onChangeElement(props, index)))
+        component.element(Props(t, onChangeElement(props, index)))
       }
       <.div(children.toTagMod)
     }
@@ -91,8 +91,8 @@ object instances {
 
     import ConfigComponent.Props
 
-    def component(props: Props[Option[T]]): VdomElement = {
-      props.config.fold[VdomElement](<.span())(t => component.component(Props(t, onChange(props))))
+    def element(props: Props[Option[T]]): VdomElement = {
+      props.config.fold[VdomElement](<.span())(t => component.element(Props(t, onChange(props))))
     }
 
     private def onChange(props: Props[Option[T]])(t: T): Callback =

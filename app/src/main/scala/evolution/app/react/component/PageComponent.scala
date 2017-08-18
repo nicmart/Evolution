@@ -3,7 +3,7 @@ package evolution.app.react.component
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
-import evolution.app.portfolio.EvolutionGeneratorPortfolio
+import evolution.app.portfolio.DrawingPortfolio
 import evolution.app.react.component.presentational.SidebarComponent
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -101,7 +101,7 @@ object PageComponent {
       1000,
       1
     ),
-    EvolutionGeneratorPortfolio.listWithSelection,
+    DrawingPortfolio.listWithSelection,
     windowSize(dom.window)
   )
 
