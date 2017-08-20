@@ -49,7 +49,8 @@ object PageComponent {
               onDrawingChange
             )
           ),
-          List()
+          List(),
+          bs.modState(_.increaseVersion.updateSeed)
         )),
         <.div(^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(

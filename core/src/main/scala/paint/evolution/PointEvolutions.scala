@@ -41,8 +41,6 @@ object PointEvolutions {
         }
     }
 
-
-
     def ring(radius: Double, size: Evolution[Double]): Evolution[Point] =
         polar(
             size.map(_ + radius),
