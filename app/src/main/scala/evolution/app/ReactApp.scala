@@ -21,7 +21,7 @@ object ReactApp {
     import dsl._
 
     (emptyRule
-        | staticRoute(root, Home) ~> render(PageComponent.component())
+        | staticRoute(root, Home) ~> render(PageComponent.component.apply())
         ).notFound(redirectToPage(Home)(Redirect.Replace))
   }
 

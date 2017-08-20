@@ -20,7 +20,7 @@ object DrawingPortfolio {
   }
 
   abstract class DrawingDefinition(name: String) {
-    type Config <: WithCanvasSize
+    type Config// <: WithCanvasSize
     def evolution(config: Config): Evolution[Point]
     def defaultConfig: Config
     def component: ConfigComponent[Config]

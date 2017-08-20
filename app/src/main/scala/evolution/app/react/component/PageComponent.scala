@@ -4,7 +4,7 @@ import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
 import evolution.app.portfolio.DrawingPortfolio
-import evolution.app.react.component.presentational.SidebarComponent
+import evolution.app.react.component.presentational.{IntInputComponent, SidebarComponent}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -29,11 +29,8 @@ object PageComponent {
     def evolution: Evolution[Point] = currentDrawing.evolution
 
     def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
-
     def currentDrawing: Drawing[Point] = selection.current
-
     def drawingList: DrawingList[Point] = selection.list
-
     def updateSeed: State =
       copy(drawer = drawer.copy(rng = SimpleRNG(Random.nextLong())))
   }
@@ -91,7 +88,7 @@ object PageComponent {
       bs.modState { state =>
         state
             .copy(selection = state.selection.copy(current = drawing))
-            //.increaseVersion
+            .increaseVersion
             .updateSeed
       }
     }

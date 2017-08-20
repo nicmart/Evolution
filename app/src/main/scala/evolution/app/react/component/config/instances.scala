@@ -50,7 +50,7 @@ object instances {
 
     ConfigComponent.instance { props =>
       <.div(
-        <.label(^.className := "label", fieldName),
+        <.label(^.className := "label is-small", fieldName),
         hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
       ) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
     }
