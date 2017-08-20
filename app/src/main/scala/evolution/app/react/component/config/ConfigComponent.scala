@@ -7,6 +7,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 trait ConfigComponent[Config] {
   import ConfigComponent._
+
   def element(props: Props[Config]): List[VdomElement]
 }
 
