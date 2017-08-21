@@ -6,6 +6,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
+import scala.util.Try
+
 object SingleInputComponent {
 
   case class Props[T](value: T, onChange: T => Callback, parser: String => T)
@@ -28,7 +30,12 @@ object SingleInputComponent {
 
     def onChange(props: Props[T])(e: ReactEventFromInput): Callback = {
       val newVal = e.target.value
-      props.onChange(props.parser(newVal)) >> bs.setState(newVal)
+      val parser = safeParser(props) _
+      props.onChange(parser(newVal)) >> bs.setState(newVal)
+    }
+
+    private def safeParser(props: Props[T])(value: String): T = {
+      Try(props.parser(value)).getOrElse(props.value)
     }
   }
 
