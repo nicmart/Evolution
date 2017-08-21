@@ -1,5 +1,6 @@
 package evolution.app.portfolio
 
+import evolution.app.model.DrawingContext
 import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
@@ -15,7 +16,6 @@ import paint.evolution.implicits._
 object waves extends DrawingDefinition("waves") {
 
   case class Config(
-    canvasSize: Point,
     springConstant: Double,
     friction: Double,
     speed: Double,
@@ -23,8 +23,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves: Int
   )
 
-  def defaultConfig = Config(
-    canvasSize = Point(1700, 800),
+  def currentConfig = Config(
     springConstant = 0.0004,
     friction = 0.0004,
     speed = 0.1,
@@ -32,7 +31,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves = 40
   )
 
-  def evolution(config: Config): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     val accelerationEq: (Point, Point) => Point =
       (x, v) => Point(0, -config.springConstant * x.y) - v * config.friction
     val accelerationEvo: AccelerationEvolution[Point] = constant(accelerationEq)
@@ -52,7 +51,7 @@ object waves extends DrawingDefinition("waves") {
     )
 
     sequenceParallel(
-      Point.sequence(config.numberOfWaves, Point.zero, config.canvasSize.copy(x = 0)).map(vibration)
+      Point.sequence(config.numberOfWaves, Point.zero, context.canvasSize.point.copy(x = 0)).map(vibration)
     ).flattenList
   }
 

@@ -1,6 +1,7 @@
 package evolution.app.react.component
 
-import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
+import evolution.app.model.{ConfiguredDrawing, DrawingDefinitionList, DrawingListWithSelection}
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import paint.geometry.Geometry.Point
@@ -9,12 +10,12 @@ import japgolly.scalajs.react._
 object DrawingListComponent {
 
   case class Props(
-    drawingList: DrawingListWithSelection[Point],
-    onSelect: Drawing[Point] => Callback
+    drawingList: DrawingListWithSelection,
+    onSelect: DrawingDefinition => Callback
   ) {
-    def currentDrawing: Drawing[Point] = drawingList.current
+    def currentDrawing: DrawingDefinition = drawingList.current
 
-    def list: DrawingList[Point] = drawingList.list
+    def list: DrawingDefinitionList = drawingList.list
   }
 
   class Backend(bs: BackendScope[Props, Unit]) {

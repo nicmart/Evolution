@@ -2,8 +2,9 @@ package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
-import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
+import evolution.app.model.{ConfiguredDrawing, DrawingContext, DrawingDefinitionList, DrawingListWithSelection}
 import evolution.app.portfolio.DrawingPortfolio
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.presentational.{IntInputComponent, SidebarComponent}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -22,15 +23,17 @@ object PageComponent {
   case class State(
     canvasInitializer: dom.html.Canvas => Unit,
     drawer: EvolutionDrawer,
-    selection: DrawingListWithSelection[Point],
-    size: Point,
+    currentDrawing: ConfiguredDrawing[Point],
+    drawingListWithSelection: DrawingListWithSelection,
+    drawingContext: DrawingContext,
     canvasVersion: Int = 0
   ) {
     def evolution: Evolution[Point] = currentDrawing.evolution
 
     def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
-    def currentDrawing: Drawing[Point] = selection.current
-    def drawingList: DrawingList[Point] = selection.list
+
+    def drawingList: DrawingDefinitionList = drawingListWithSelection.list
+
     def updateSeed: State =
       copy(drawer = drawer.copy(rng = SimpleRNG(Random.nextLong())))
   }
@@ -45,8 +48,8 @@ object PageComponent {
         NavbarComponent.component(NavbarComponent.Props(
           DrawingListComponent.component(
             DrawingListComponent.Props(
-              state.selection,
-              onDrawingChange
+              state.drawingListWithSelection,
+              onDrawingDefinitionChange
             )
           ),
           List(),
@@ -57,12 +60,12 @@ object PageComponent {
             state.canvasInitializer,
             state.currentDrawing,
             state.drawer,
-            state.size
+            state.drawingContext
           )),
           SidebarComponent.component(
             SidebarComponent.Props(
               active = true,
-              state.selection.current.configElement(onDrawingChange)
+              state.currentDrawing.configElement(onConfiguredDrawingChange)
             )
           )
         )
@@ -72,25 +75,35 @@ object PageComponent {
     def onIterationsChanged(value: Int): Callback = {
       bs.modState { state =>
         state
-            .copy(drawer = state.drawer.copy(iterations = value))
-            .increaseVersion
+          .copy(drawer = state.drawer.copy(iterations = value))
+          .increaseVersion
       }
     }
 
     def onSizeChanged(value: Int): Callback = {
       bs.modState { state =>
         state
-            .copy(drawer = state.drawer.copy(strokeSize = value))
-            .increaseVersion
+          .copy(drawer = state.drawer.copy(strokeSize = value))
+          .increaseVersion
       }
     }
 
-    def onDrawingChange(drawing: Drawing[Point]): Callback = {
+    def onConfiguredDrawingChange(configuredDrawing: ConfiguredDrawing[Point]): Callback = {
       bs.modState { state =>
         state
-            .copy(selection = state.selection.copy(current = drawing))
-            .increaseVersion
-            .updateSeed
+          .copy(currentDrawing = configuredDrawing)
+          .increaseVersion
+          .updateSeed
+      }
+    }
+
+    def onDrawingDefinitionChange(definition: DrawingDefinition): Callback = {
+      bs.modState { state =>
+        state
+          .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
+            .copy(currentDrawing = definition.drawing(state.drawingContext))
+          .increaseVersion
+          .updateSeed
       }
     }
   }
@@ -102,20 +115,23 @@ object PageComponent {
       1000,
       1
     ),
+    DrawingPortfolio.listWithSelection.current.drawing(drawingContext(dom.window)),
     DrawingPortfolio.listWithSelection,
-    windowSize(dom.window)
+    drawingContext(dom.window)
   )
 
   val component = ScalaComponent.builder[Unit]("Page")
-      .initialState(initialState)
-      .renderBackend[Backend]
-      .build
+    .initialState(initialState)
+    .renderBackend[Backend]
+    .build
 
-  private def windowSize(window: Window) = {
+  private def drawingContext(window: Window): DrawingContext = {
     val document = window.document
-    Point(
-      Math.max(document.documentElement.clientWidth, window.innerWidth).toInt,
-      Math.max(document.documentElement.clientHeight, window.innerHeight).toInt
+    DrawingContext(
+      DrawingContext.CanvasSize(
+        2 * Math.max(document.documentElement.clientWidth, window.innerWidth).toInt,
+        2 * Math.max(document.documentElement.clientHeight, window.innerHeight).toInt
+      )
     )
   }
 }

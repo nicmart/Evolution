@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
-import evolution.app.portfolio.DrawingPortfolio.{DrawingDefinition, WithCanvasSize}
+import evolution.app.model.DrawingContext
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.Evolution
 import paint.evolution.NumericEvolutions.double
@@ -13,27 +14,25 @@ import evolution.app.react.component.config.instances._
 object brownianWithRandomJumps extends DrawingDefinition("brownian with random jumps") {
 
   case class Config(
-    canvasSize: Point,
     radius: Double,
     jumpProbability: Double,
     jumpSize: Int
-  ) extends WithCanvasSize
+  )
 
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config): Evolution[Point] = {
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     val slowDownEvo = double.map[Int] { d =>
       if (d < config.jumpProbability) config.jumpSize else 1
     }
-    MotionEvolutions.solveIndependent(config.canvasSize)(
+    MotionEvolutions.solveIndependent(context.canvasSize.point / 2)(
       rectangle2D(config.radius).slowDown(slowDownEvo)
     ).positional
   }
 
-  val defaultConfig =
+  val currentConfig =
     Config(
-      Point(900, 600),
       1,
       0.0001,
       200

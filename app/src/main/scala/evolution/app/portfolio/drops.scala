@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
-import evolution.app.portfolio.DrawingPortfolio.{DrawingDefinition, WithCanvasSize}
+import evolution.app.model.DrawingContext
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.Evolution
 import paint.evolution.Evolution.{pure, sequenceParallel}
@@ -12,19 +13,18 @@ import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
 
 object drops extends DrawingDefinition("drops") {
+
   case class Config(
-    canvasSize: Point,
     friction: Double,
     acceleration: Double,
     threshold: Double,
     randomForceProbability: Double,
     randomForceStrength: Double,
     numberOfDrops: Int
-  ) extends WithCanvasSize
+  )
 
-  override def defaultConfig: Config =
+  override def currentConfig: Config =
     Config(
-      canvasSize = Point(1300, 600),
       friction = 0.02,
       acceleration = 0.003,
       threshold = 0.1,
@@ -33,7 +33,7 @@ object drops extends DrawingDefinition("drops") {
       numberOfDrops = 80
     )
 
-  override def evolution(config: Config): Evolution[Point] = {
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     val acc = Point(0, config.acceleration)
     val randomForces = double.flatMap { p =>
       if (p < config.randomForceProbability) ring(config.randomForceStrength).first else pure(Point.zero)
@@ -50,7 +50,11 @@ object drops extends DrawingDefinition("drops") {
     }
 
     val evo = sequenceParallel(
-      Point.sequence(config.numberOfDrops, config.canvasSize.copy(y = 0), Point(0, 0)).map(pointEvo)
+      Point.sequence(
+        config.numberOfDrops,
+        context.canvasSize.point.copy(y = 0),
+        Point(0, 0)).map(pointEvo
+      )
     ).flattenList
 
     evo

@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
-import evolution.app.portfolio.DrawingPortfolio.{DrawingDefinition, WithCanvasSize}
+import evolution.app.model.DrawingContext
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.Evolution
 import paint.evolution.PointEvolutions.rectangle2D
@@ -12,18 +13,17 @@ import evolution.app.react.component.config.instances._
 object brownian extends DrawingDefinition("brownian") {
 
   case class Config(
-    canvasSize: Point,
     radius: Double
-  ) extends WithCanvasSize
+  )
 
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config): Evolution[Point] = {
-    solveIndependent(config.canvasSize)(
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+    solveIndependent(context.canvasSize.point / 2)(
       rectangle2D(config.radius)
     ).positional
   }
 
-  val defaultConfig = Config(Point(900, 600), 2)
+  val currentConfig = Config(2)
 }

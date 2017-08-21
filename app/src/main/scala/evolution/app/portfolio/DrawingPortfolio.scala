@@ -1,39 +1,34 @@
 package evolution.app.portfolio
 
-import evolution.app.model.{Drawing, DrawingList, DrawingListWithSelection}
+import evolution.app.model._
 import evolution.app.react.component.config.{ConfigComponent, ConfiguredComponent}
 import paint.evolution.Evolution
-import paint.evolution.generator.ConfiguredEvolution
 import paint.geometry.Geometry.Point
 
 object DrawingPortfolio {
 
-  trait WithCanvasSize {
-    def canvasSize: Point
-  }
-
-  abstract class DrawingDefinition(name: String) {
-    type Config// <: WithCanvasSize
-    def evolution(config: Config): Evolution[Point]
-    def defaultConfig: Config
-    def component: ConfigComponent[Config]
-    def drawing: Drawing[Point] =
-      Drawing(
+  abstract class DrawingDefinition(val name: String) {
+    type Config // <: WithCanvasSize
+    protected def evolution(config: Config, context: DrawingContext): Evolution[Point]
+    protected def currentConfig: Config
+    protected def component: ConfigComponent[Config]
+    def drawing(context: DrawingContext): ConfiguredDrawing[Point] =
+      ConfiguredDrawing(
         name,
-        ConfiguredEvolution(evolution, defaultConfig),
-        ConfiguredComponent(component, defaultConfig)
+        ConfiguredEvolution(evolution, context, currentConfig),
+        ConfiguredComponent(component, currentConfig)
       )
   }
 
-  def listWithSelection: DrawingListWithSelection[Point] =
+  def listWithSelection: DrawingListWithSelection =
     DrawingListWithSelection(
-      DrawingList(List(
-        brownian.drawing,
-        brownianWithRandomJumps.drawing,
-        drops.drawing,
-        waves.drawing,
-        curlyRing.drawing
+      DrawingDefinitionList(List(
+        brownian,
+        brownianWithRandomJumps,
+        drops,
+        waves,
+        curlyRing
       )),
-      brownian.drawing
+      brownian
     )
 }

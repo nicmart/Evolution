@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
-import evolution.app.portfolio.DrawingPortfolio.{DrawingDefinition, WithCanvasSize}
+import evolution.app.model.DrawingContext
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.{Evolution, PointEvolutions}
 import paint.evolution.NumericEvolutions.ball
@@ -13,7 +14,6 @@ import evolution.app.react.component.config.instances._
 
 object curlyRing extends DrawingDefinition("curly ring") {
   case class Config(
-    canvasSize: Point,
     bigRadius: Double,
     bigRadialSpeed: Double,
     mediumRadius: Double,
@@ -22,11 +22,10 @@ object curlyRing extends DrawingDefinition("curly ring") {
     smallRadialSpeed: Double,
     noiseStrength: Double,
     noiseFrames: Int
-  ) extends WithCanvasSize
+  )
 
 
-  val defaultConfig = Config(
-    canvasSize = Point(1700, 900),
+  val currentConfig = Config(
     bigRadius = 300,
     bigRadialSpeed = 0.0001,
     mediumRadius = 30,
@@ -40,8 +39,8 @@ object curlyRing extends DrawingDefinition("curly ring") {
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config): Evolution[Point] = {
-    centeredIn(config.canvasSize / 2) {
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+    centeredIn(context.canvasSize.point / 2) {
       translate(
         translate(
           uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),

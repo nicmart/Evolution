@@ -1,38 +1,39 @@
 package evolution.app.model
 
+import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
 import evolution.app.react.component.config.{ConfigComponent, ConfiguredComponent}
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import paint.evolution.Evolution
-import paint.evolution.generator.ConfiguredEvolution
+import paint.geometry.Geometry.Point
 
-sealed trait Drawing[T] {
+sealed trait ConfiguredDrawing[T] {
   type Config
   val name: String
   def evolution: Evolution[T]
-  def configElement(onChange: Drawing[T] => Callback): VdomElement
+  def configElement(onChange: ConfiguredDrawing[T] => Callback): VdomElement
 }
 
-object Drawing {
-  type Aux[T, C] = Drawing[T] { type Config = C }
+object ConfiguredDrawing {
+  type Aux[T, C] = ConfiguredDrawing[T] { type Config = C }
 
   def apply[T, C](
     _name: String,
     _configuredEvolution: ConfiguredEvolution[T, C],
     _configuredComponent: ConfiguredComponent[C]
-  ): Aux[T, C] = new Drawing[T] {
+  ): Aux[T, C] = new ConfiguredDrawing[T] {
     type Config = C
     private val configuredEvolution: ConfiguredEvolution[T, Config] = _configuredEvolution
     private val configuredComponent: ConfiguredComponent[Config] = _configuredComponent
-    override val name = _name
+    override val name: String = _name
 
     override def evolution: Evolution[T] = configuredEvolution.evolution
-    override def configElement(callback: Drawing[T] => Callback): VdomElement = {
+    override def configElement(callback: ConfiguredDrawing[T] => Callback): VdomElement = {
       configuredComponent.element(config => callback(withConfig(config)))
     }
 
-    private def withConfig(config: Config): Drawing.Aux[T, Config] =
-      Drawing(
+    private def withConfig(config: Config): ConfiguredDrawing.Aux[T, Config] =
+      ConfiguredDrawing(
         name,
         configuredEvolution.withConfig(config),
         configuredComponent.withConfig(config)
@@ -40,17 +41,27 @@ object Drawing {
   }
 }
 
-case class DrawingList[T](drawings: List[Drawing[T]]) {
-  def drawing(name: String): Option[Drawing[T]] =
+final case class DrawingDefinitionList(drawings: List[DrawingDefinition]) {
+  def drawing(name: String): Option[DrawingDefinition] =
     drawings.dropWhile(_.name != name).headOption
 }
 
-case class DrawingListWithSelection[T](
-  list: DrawingList[T],
-  current: Drawing[T]
+final case class DrawingListWithSelection(
+  list: DrawingDefinitionList,
+  current: DrawingDefinition
 ) {
-  def select(drawingName: String): DrawingListWithSelection[T] = {
+  def select(drawingName: String): DrawingListWithSelection = {
     val newCurrent = list.drawing(drawingName).getOrElse(current)
     copy(current = newCurrent)
+  }
+}
+
+final case class DrawingContext(
+  canvasSize: DrawingContext.CanvasSize
+)
+
+object DrawingContext {
+  final case class CanvasSize(width: Int, height: Int) {
+    def point: Point = Point(width.toDouble, height.toDouble)
   }
 }

@@ -1,7 +1,7 @@
 package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
-import evolution.app.model.Drawing
+import evolution.app.model.{ConfiguredDrawing, DrawingContext}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -13,16 +13,16 @@ object CanvasComponent {
 
   case class Props(
     canvasInitializer: dom.html.Canvas => Unit,
-    currentDrawing: Drawing[Point],
+    currentDrawing: ConfiguredDrawing[Point],
     drawer: EvolutionDrawer,
-    windowSize: Point
+    drawingContext: DrawingContext
   )
 
   class Backend(bs: BackendScope[Props, Unit]) {
     var stopAnimationCallback: Callback = Callback.empty
 
     def render(props: Props): VdomElement = {
-      val size = props.windowSize
+      val size = props.drawingContext.canvasSize.point
       <.canvas(
         ^.width := size.x.toString,
         ^.height := size.y.toString,
