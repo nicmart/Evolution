@@ -8,7 +8,7 @@ import paint.geometry.Geometry.Point
 object DrawingPortfolio {
 
   abstract class DrawingDefinition(val name: String) {
-    type Config // <: WithCanvasSize
+    protected type Config // <: WithCanvasSize
     protected def evolution(config: Config, context: DrawingContext): Evolution[Point]
     protected def currentConfig: Config
     protected def component: ConfigComponent[Config]

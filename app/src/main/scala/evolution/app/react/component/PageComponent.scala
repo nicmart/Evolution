@@ -48,7 +48,9 @@ object PageComponent {
         NavbarComponent.component(NavbarComponent.Props(
           DrawingListComponent.component(
             DrawingListComponent.Props(
-              state.drawingListWithSelection,
+              // @TODO remove drawing definition list
+              state.drawingListWithSelection.list.drawings,
+              state.drawingListWithSelection.current,
               onDrawingDefinitionChange
             )
           ),
