@@ -24,6 +24,7 @@ object SelectComponent {
       }
       <.select(
         options.toTagMod,
+        ^.className := "select",
         ^.onChange ==> onChange(props),
         ^.value := props.current.key
       )

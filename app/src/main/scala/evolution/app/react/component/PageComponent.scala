@@ -6,7 +6,7 @@ import evolution.app.model.configured.ConfiguredDrawing
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
-import evolution.app.react.component.presentational.{ButtonComponent, NavbarComponent, SidebarComponent}
+import evolution.app.react.component.presentational.{ButtonComponent, IntInputComponent, NavbarComponent, SidebarComponent}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -50,8 +50,13 @@ object PageComponent {
             bs.modState(_.increaseVersion.updateSeed)
           )),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+            "Iterations",
+            "",
+            IntInputComponent(state.drawer.iterations, onIterationsChanged)
+          )),
+          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Drawing",
-            "select is-fullwidth",
+            "",
             DrawingListComponent.component(
               DrawingListComponent.Props(
                 state.drawingListWithSelection.list,
