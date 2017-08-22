@@ -2,15 +2,16 @@ package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
-import evolution.app.model.{ConfiguredDrawing, DrawingContext, DrawingDefinitionList, DrawingListWithSelection}
-import evolution.app.portfolio.DrawingPortfolio
-import evolution.app.portfolio.DrawingPortfolio.DrawingDefinition
-import evolution.app.react.component.presentational.{IntInputComponent, SidebarComponent}
+import evolution.app.model.configured.ConfiguredDrawing
+import evolution.app.model.context.DrawingContext
+import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
+import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
+import evolution.app.react.component.presentational.{ButtonComponent, NavbarComponent, SidebarComponent}
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import org.scalajs.dom.{Document, Window}
+import org.scalajs.dom.Window
 import paint.geometry.Geometry.Point
 import org.scalajs.dom
 import paint.evolution.Evolution
@@ -32,8 +33,6 @@ object PageComponent {
 
     def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
 
-    def drawingList: DrawingDefinitionList = drawingListWithSelection.list
-
     def updateSeed: State =
       copy(drawer = drawer.copy(rng = SimpleRNG(Random.nextLong())))
   }
@@ -46,16 +45,21 @@ object PageComponent {
     def render(state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
-          DrawingListComponent.component(
-            DrawingListComponent.Props(
-              // @TODO remove drawing definition list
-              state.drawingListWithSelection.list.drawings,
-              state.drawingListWithSelection.current,
-              onDrawingDefinitionChange
+          ButtonComponent.component(ButtonComponent.Props(
+            "Refresh",
+            bs.modState(_.increaseVersion.updateSeed)
+          )),
+          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+            "Drawing",
+            "select is-fullwidth",
+            DrawingListComponent.component(
+              DrawingListComponent.Props(
+                state.drawingListWithSelection.list,
+                state.drawingListWithSelection.current,
+                onDrawingDefinitionChange
+              )
             )
-          ),
-          List(),
-          bs.modState(_.increaseVersion.updateSeed)
+          ))
         )),
         <.div(^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
@@ -103,7 +107,7 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
-            .copy(currentDrawing = definition.drawing(state.drawingContext))
+          .copy(currentDrawing = definition.drawing(state.drawingContext))
           .increaseVersion
           .updateSeed
       }
@@ -117,8 +121,8 @@ object PageComponent {
       1000,
       1
     ),
-    DrawingPortfolio.listWithSelection.current.drawing(drawingContext(dom.window)),
-    DrawingPortfolio.listWithSelection,
+    Conf.drawingList.current.drawing(drawingContext(dom.window)),
+    Conf.drawingList,
     drawingContext(dom.window)
   )
 

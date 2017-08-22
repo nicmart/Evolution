@@ -1,14 +1,22 @@
 package evolution.app.conf
 
+import evolution.app.model.definition.DrawingListWithSelection
+import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer, FullWindowCanvasInitializer}
 import org.scalajs.dom
 
-/**
-  * Created by nic on 26/11/2016.
-  */
 object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawings = ???
+  lazy val drawingList = DrawingListWithSelection(
+    List(
+      brownian,
+      brownianWithRandomJumps,
+      drops,
+      waves,
+      curlyRing
+    ),
+    brownian
+  )
 }

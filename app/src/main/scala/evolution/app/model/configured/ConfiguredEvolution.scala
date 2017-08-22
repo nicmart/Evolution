@@ -1,5 +1,6 @@
-package evolution.app.model
+package evolution.app.model.configured
 
+import evolution.app.model.context.DrawingContext
 import paint.evolution.Evolution
 
 final case class ConfiguredEvolution[T, Config](

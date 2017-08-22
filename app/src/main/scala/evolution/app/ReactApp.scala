@@ -1,6 +1,6 @@
 package evolution.app
 
-import evolution.app.react.component.{DrawingListComponent, NavbarComponent, PageComponent}
+import evolution.app.react.component.PageComponent
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterConfigDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom

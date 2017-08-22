@@ -1,5 +1,6 @@
 package evolution.app.react.component.config
 
+import evolution.app.react.component.presentational.styled.FormFieldComponent
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -49,10 +50,13 @@ object instances {
     }
 
     ConfigComponent.instance { props =>
-      <.div(
-        <.label(^.className := "label is-small", fieldName),
-        hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
-      ) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
+      FormFieldComponent.component(FormFieldComponent.Props(
+        fieldName,
+        "",
+        <.div(
+          hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
+        )
+      )) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
     }
   }
 
