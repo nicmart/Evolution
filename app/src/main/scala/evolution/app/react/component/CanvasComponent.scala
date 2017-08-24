@@ -25,10 +25,10 @@ object CanvasComponent {
     def render(props: Props): VdomElement = {
       val size = props.drawingContext.canvasSize.point
       <.canvas(
-        ^.width := size.x.toString,
-        ^.height := size.y.toString,
-        VdomAttr("width") := (2 * size.x).toString,
-        VdomAttr("height") := (2 * size.y).toString
+        ^.width := (size.x / 2).toString,
+        ^.height := (size.y / 2).toString,
+        VdomAttr("width") := size.x.toString,
+        VdomAttr("height") := size.y.toString
       )
     }
 

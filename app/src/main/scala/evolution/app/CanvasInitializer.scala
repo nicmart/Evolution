@@ -16,21 +16,6 @@ trait CanvasInitializer extends (dom.html.Canvas => Unit) {
   }
 }
 
-case class FullWindowCanvasInitializer(document: Document, window: Window) extends CanvasInitializer {
-  def apply(canvas: dom.html.Canvas): Unit = {
-    val (width, height) = windowSize(document, window)
-    canvas.width = 2 * width
-    canvas.height = 2 * height
-    canvas.style.width = s"${width}px"
-    canvas.style.height = s"${height}px"
-  }
-
-  private def windowSize(document: Document, window: Window) = (
-      Math.max(document.documentElement.clientWidth, window.innerWidth).toInt,
-      Math.max(document.documentElement.clientHeight, window.innerHeight).toInt
-  )
-}
-
 case class ColorCanvasInitializer(color: String) extends CanvasInitializer {
   override def apply(canvas: dom.html.Canvas): Unit = {
     val ctx = canvas.getContext("2d")

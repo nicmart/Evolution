@@ -2,7 +2,7 @@ package evolution.app.conf
 
 import evolution.app.model.definition.DrawingListWithSelection
 import evolution.app.portfolio._
-import evolution.app.{CanvasInitializer, ColorCanvasInitializer, FullWindowCanvasInitializer}
+import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 
 object Conf {
   lazy val canvasInitializer: CanvasInitializer =
