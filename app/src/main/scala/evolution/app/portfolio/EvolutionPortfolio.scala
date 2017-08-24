@@ -76,7 +76,7 @@ object EvolutionPortfolio {
       canvasSize / 2,
       0,
       MotionEvolutions.solveIndependent(canvasSize / 2)(
-        choice(Point.regularPolygon(4)).zipWith(choice(IndexedSeq(1, 2, 3, 4))) { (point, k) =>
+        choose(Point.regularPolygon(4)).zipWith(choose(IndexedSeq(1, 2, 3, 4))) { (point, k) =>
           point * k
         }.slowDown(10),
         (p, _) => true // p.inRectangle(Point.zero, canvasSize)

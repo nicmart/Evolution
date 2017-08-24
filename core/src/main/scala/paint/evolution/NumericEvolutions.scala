@@ -56,7 +56,7 @@ object NumericEvolutions {
             math.signum(d) * (radius - math.abs(d))
         }
 
-    def choice[A](as: IndexedSeq[A]): Evolution[A] =
+    def choose[A](as: IndexedSeq[A]): Evolution[A] =
         int.map(i => as.apply(Math.abs(i) % as.length))
 
 }

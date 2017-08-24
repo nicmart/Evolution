@@ -16,7 +16,8 @@ object Conf {
       brownianWithRandomJumps,
       drops,
       waves,
-      curlyRing
+      curlyRing,
+      brownianStraight
     ),
     brownian
   )
