@@ -12,7 +12,7 @@ import paint.evolution.motion.MotionEvolutions.solveIndependent
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 
-object curlyRing extends DrawingDefinition("curly ring") {
+object circlesOnCircles extends DrawingDefinition("circles on circles") {
   case class Config(
     bigRadius: Double,
     bigRadialSpeed: Double,
@@ -26,14 +26,14 @@ object curlyRing extends DrawingDefinition("curly ring") {
 
 
   val currentConfig = Config(
-    bigRadius = 300,
-    bigRadialSpeed = 0.0001,
-    mediumRadius = 30,
-    mediumRadialSpeed = 0.003,
-    smallRadius = 5,
-    smallRadialSpeed = 0.01,
-    noiseFrames = 50,
-    noiseStrength = 5
+    bigRadius = 500,
+    bigRadialSpeed = 0.002,
+    mediumRadius = 104,
+    mediumRadialSpeed = 1,
+    smallRadius = 39,
+    smallRadialSpeed = 1.01,
+    noiseFrames = 1,
+    noiseStrength = 0
   )
 
   override def component: ConfigComponent[Config] =

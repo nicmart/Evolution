@@ -15,7 +15,7 @@ object Conf {
       brownianWithRandomJumps,
       drops,
       waves,
-      curlyRing,
+      circlesOnCircles,
       brownianStraight,
       dynamics,
       bouncing

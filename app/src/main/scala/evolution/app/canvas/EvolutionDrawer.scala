@@ -10,15 +10,14 @@ import paint.random.RNG
 case class EvolutionDrawer(rng: RNG, iterations: Int, strokeSize: Int) {
 
   def animationCallback(canvas: Canvas, evolution: Evolution[Point]): Unit => Unit = {
-    val initialStream = drawingStream(evolution)
+    val initialStream = pointStream(evolution)
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
     var currentAnimationFrameId: Option[Int] = None
 
-    def draw(stream: Stream[CanvasRenderingContext2D => Unit])(t: Double): Unit = {
+    def draw(stream: Stream[Point])(t: Double): Unit = {
       var currentStream = stream
       for (i <- 1 to iterations) {
-        currentStream.head.apply(ctx)
-        currentStream = currentStream.tail
+        currentStream = drawAndNext(currentStream, ctx)
       }
       val id = dom.window.requestAnimationFrame(draw(currentStream))
       currentAnimationFrameId = Some(id)
@@ -28,14 +27,13 @@ case class EvolutionDrawer(rng: RNG, iterations: Int, strokeSize: Int) {
     (_: Unit) => currentAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
   }
 
-  def drawingStream(evolution: Evolution[Point]): Stream[CanvasRenderingContext2D => Unit] =
-    drawPointEvolution(strokeSize, evolution).unfold(rng)
+  def drawAndNext(points: Stream[Point], context: CanvasRenderingContext2D): Stream[Point] = {
+    drawPoint(points.head, strokeSize, context)
+    points.tail
+  }
 
-  private def drawPointEvolution(size: Double, pointEv: Evolution[Point]): Evolution[CanvasRenderingContext2D => Unit] =
-    pointEv.map { point => { context =>
-      drawPoint(point, size, context)
-    }
-    }
+  def pointStream(evolution: Evolution[Point]): Stream[Point] =
+    evolution.unfold(rng)
 
   private def drawPoint(point: Point, size: Double, context: CanvasRenderingContext2D): Unit = {
     context.lineWidth = size
