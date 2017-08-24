@@ -3,7 +3,6 @@ package evolution.app.conf
 import evolution.app.model.definition.DrawingListWithSelection
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer, FullWindowCanvasInitializer}
-import org.scalajs.dom
 
 object Conf {
   lazy val canvasInitializer: CanvasInitializer =
@@ -18,7 +17,8 @@ object Conf {
       waves,
       curlyRing,
       brownianStraight,
-      dynamics
+      dynamics,
+      bouncing
     ),
     dynamics
   )
