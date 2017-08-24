@@ -17,8 +17,9 @@ object Conf {
       drops,
       waves,
       curlyRing,
-      brownianStraight
+      brownianStraight,
+      dynamics
     ),
-    brownian
+    dynamics
   )
 }
