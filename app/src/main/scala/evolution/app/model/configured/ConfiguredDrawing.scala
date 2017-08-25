@@ -12,12 +12,11 @@ sealed trait ConfiguredDrawing[T] {
 }
 
 object ConfiguredDrawing {
-  def apply[T, C](
+  def apply[T, Config](
     _name: String,
-    _configuredEvolution: ConfiguredEvolution[T, C],
-    _configuredComponent: ConfiguredComponent[C]
+    _configuredEvolution: ConfiguredEvolution[T, Config],
+    _configuredComponent: ConfiguredComponent[Config]
   ): ConfiguredDrawing[T] = new ConfiguredDrawing[T] {
-    type Config = C
     private val configuredEvolution: ConfiguredEvolution[T, Config] = _configuredEvolution
     private val configuredComponent: ConfiguredComponent[Config] = _configuredComponent
     override val name: String = _name

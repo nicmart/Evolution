@@ -9,7 +9,7 @@ import paint.random.RNG
 
 case class EvolutionDrawer(rng: RNG, iterations: Int, strokeSize: Int) {
 
-  def animationCallback(canvas: Canvas, evolution: Evolution[Point]): Unit => Unit = {
+  def draw(canvas: Canvas, evolution: Evolution[Point]): Unit => Unit = {
     val initialStream = pointStream(evolution)
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
     var currentAnimationFrameId: Option[Int] = None

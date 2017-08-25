@@ -35,7 +35,7 @@ object CanvasComponent {
     def onMount(canvas: dom.html.Canvas, props: Props): Callback = Callback {
       props.canvasInitializer(canvas)
       val cancelAnimationCallback =
-        props.drawer.animationCallback(
+        props.drawer.draw(
           canvas,
           props.currentDrawing.evolution
         )
