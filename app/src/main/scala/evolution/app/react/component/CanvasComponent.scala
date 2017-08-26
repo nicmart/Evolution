@@ -16,10 +16,13 @@ object CanvasComponent {
     canvasInitializer: dom.html.Canvas => Unit,
     currentDrawing: ConfiguredDrawing[Point],
     drawer: EvolutionDrawer,
-    drawingContext: DrawingContext
+    drawingContext: DrawingContext,
+    onFrameDidDraw: Callback
   )
 
-  class Backend(bs: BackendScope[Props, Unit]) {
+  case class MutableState(var running: Boolean)
+
+  class Backend(bs: BackendScope[Props, MutableState]) {
     var stopAnimationCallback: Callback = Callback.empty
 
     def render(props: Props): VdomElement = {
@@ -32,24 +35,32 @@ object CanvasComponent {
       )
     }
 
-    def onMount(canvas: dom.html.Canvas, props: Props): Callback = Callback {
-      props.canvasInitializer(canvas)
-      val cancelAnimationCallback =
-        props.drawer.draw(
-          canvas,
-          props.currentDrawing.evolution
-        )
-      stopAnimationCallback = Callback {
-        cancelAnimationCallback()
+    def animationCallback(state: MutableState, props: Props)(action: Unit => Unit): Unit = {
+      if (state.running) {
+        dom.window.requestAnimationFrame(_ => action())
+        props.onFrameDidDraw.runNow()
       }
+    }
+
+    def onMount(canvas: dom.html.Canvas, props: Props, state: MutableState): Callback = Callback {
+      props.canvasInitializer(canvas)
+      val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+      val initialStream = props.drawer.pointStream(props.currentDrawing.evolution)
+      props.drawer.loop[Unit](
+        ctx,
+        initialStream,
+        animationCallback(state, props)
+      )
     }
   }
 
-  val component = ScalaComponent.builder[Props]("Canvas")
+  val component =
+    ScalaComponent.builder[Props]("Canvas")
+      .initialState(MutableState(true))
       .renderBackend[Backend]
       .componentDidMount(s =>
-        s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props)
+        s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props, s.state)
       )
-      .componentWillUnmount(_.backend.stopAnimationCallback)
+      .componentWillUnmount(s => Callback { s.state.running = false })
       .build
 }

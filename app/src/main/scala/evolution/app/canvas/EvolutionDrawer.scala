@@ -7,24 +7,24 @@ import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
 import paint.random.RNG
 
+import scala.scalajs.js
+
 case class EvolutionDrawer(rng: RNG, iterations: Int, strokeSize: Int) {
 
-  def draw(canvas: Canvas, evolution: Evolution[Point]): Unit => Unit = {
-    val initialStream = pointStream(evolution)
-    val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-    var currentAnimationFrameId: Option[Int] = None
-
-    def draw(stream: Stream[Point])(t: Double): Unit = {
-      var currentStream = stream
-      for (i <- 1 to iterations) {
-        currentStream = drawAndNext(currentStream, ctx)
-      }
-      val id = dom.window.requestAnimationFrame(draw(currentStream))
-      currentAnimationFrameId = Some(id)
+  def draw(context: dom.CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point] = {
+    var currentStream = pointStream
+    for (i <- 1 to iterations) {
+      currentStream = drawAndNext(currentStream, context)
     }
+    currentStream
+  }
 
-    draw(initialStream)(0)
-    (_: Unit) => currentAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
+  def loop[T](context: dom.CanvasRenderingContext2D, pointStream: Stream[Point], f: (Unit => T) => T): Unit = {
+    def innerDraw(currStream: Stream[Point]): T = {
+      val next = draw(context, currStream)
+      f(_ => innerDraw(next))
+    }
+    f(_ => innerDraw(pointStream))
   }
 
   def drawAndNext(points: Stream[Point], context: CanvasRenderingContext2D): Stream[Point] = {

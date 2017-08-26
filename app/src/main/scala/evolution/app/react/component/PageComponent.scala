@@ -4,9 +4,10 @@ import evolution.app.canvas.EvolutionDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.configured.ConfiguredDrawing
 import evolution.app.model.context.DrawingContext
+import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
-import evolution.app.react.component.presentational.{ButtonComponent, IntInputComponent, NavbarComponent, SidebarComponent}
+import evolution.app.react.component.presentational._
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -27,6 +28,7 @@ object PageComponent {
     currentDrawing: ConfiguredDrawing[Point],
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
+    pointRateCounter: RateCounter,
     canvasVersion: Int = 0
   ) {
     def evolution: Evolution[Point] = currentDrawing.evolution
@@ -49,15 +51,20 @@ object PageComponent {
             "Refresh",
             bs.modState(_.increaseVersion.updateSeed)
           )),
+//          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+//            "Rate",
+//            "",
+//            DoubleInputComponent(state.pointRateCounter.rate, _ => Callback.empty)
+//          )),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Iterations",
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
           )),
-          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+          HorizontalFormFieldComponent.component.withKey(1011)(HorizontalFormFieldComponent.Props(
             "Drawing",
             "",
-            DrawingListComponent.component(
+            DrawingListComponent.component.withKey(1)(
               DrawingListComponent.Props(
                 state.drawingListWithSelection.list,
                 state.drawingListWithSelection.current,
@@ -71,7 +78,10 @@ object PageComponent {
             state.canvasInitializer,
             state.currentDrawing,
             state.drawer,
-            state.drawingContext
+            state.drawingContext,
+            bs.modState { state =>
+              state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
+            }
           )),
           SidebarComponent.component.withKey(state.currentDrawing.name)(
             SidebarComponent.Props(
@@ -128,7 +138,8 @@ object PageComponent {
     ),
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
     Conf.drawingList,
-    drawingContext(dom.window)
+    drawingContext(dom.window),
+    RateCounter.empty(10000)
   )
 
   val component = ScalaComponent.builder[Unit]("Page")
