@@ -23,6 +23,8 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
     ConfigComponent[Config]
 
   override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+
+
     val slowDownEvo = double.map[Int] { d =>
       if (d < config.jumpProbability) config.jumpSize else 1
     }

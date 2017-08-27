@@ -61,10 +61,10 @@ object PageComponent {
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
           )),
-          HorizontalFormFieldComponent.component.withKey(1011)(HorizontalFormFieldComponent.Props(
+          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Drawing",
             "",
-            DrawingListComponent.component.withKey(1)(
+            DrawingListComponent.component(
               DrawingListComponent.Props(
                 state.drawingListWithSelection.list,
                 state.drawingListWithSelection.current,
@@ -139,7 +139,7 @@ object PageComponent {
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
     Conf.drawingList,
     drawingContext(dom.window),
-    RateCounter.empty(10000)
+    RateCounter.empty(1000)
   )
 
   val component = ScalaComponent.builder[Unit]("Page")

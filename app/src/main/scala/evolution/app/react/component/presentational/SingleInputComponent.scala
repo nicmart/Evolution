@@ -16,7 +16,7 @@ object SingleInputComponent {
   class Backend[T](bs: BackendScope[Props[T], String]) {
     def render(props: Props[T], uiValue: String): VdomElement = {
       <.input(
-        ^.`type` := "number",
+        ^.`type` := "text",
         ^.className := "input is-small",
         ^.value := uiValue,
         ^.onChange ==> onChange(props)

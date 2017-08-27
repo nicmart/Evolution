@@ -6,8 +6,11 @@ import evolution.app.react.component.presentational.SelectComponent.Item
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 
 object DrawingListComponent {
+
+  private val selectComponent = SelectComponent.component[DrawingDefinition]
 
   case class Props(
     drawingList: List[DrawingDefinition],
@@ -29,7 +32,7 @@ object DrawingListComponent {
 
   class Backend(bs: BackendScope[Props, Unit]) {
     def render(props: Props): VdomElement = {
-      SelectComponent(
+      selectComponent(
         selectProps(props)
       )
     }

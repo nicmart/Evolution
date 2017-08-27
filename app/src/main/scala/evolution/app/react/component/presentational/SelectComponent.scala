@@ -37,13 +37,16 @@ object SelectComponent {
     }
   }
 
+  /**
+    * WARNING:
+    * Don't use this method directly inside render methods, but first fix its value
+    * outside, and then use it.
+    *
+    * @tparam T
+    * @return
+    */
   def component[T] =
     react.ScalaComponent.builder[Props[T]]("dropdown")
       .renderBackend[Backend[T]]
       .build
-
-  def apply[T](props: Props[T]): VdomElement = {
-    val cmp = component[T]
-    cmp(props)
-  }
 }

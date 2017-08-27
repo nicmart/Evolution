@@ -15,14 +15,16 @@ object dynamics extends DrawingDefinition("dynamics") {
   case class Config(
     acceleration: Double,
     friction: Double,
-    initialSpeed: Point
+    initialSpeed: Point,
+    numberOfPoints: Int
   )
 
   protected def currentConfig =
     Config(
       acceleration = 0.001,
       friction = 0.0008,
-      initialSpeed = Point(0, 0)
+      initialSpeed = Point(0, 0),
+      numberOfPoints = 1
     )
 
   protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
@@ -32,10 +34,11 @@ object dynamics extends DrawingDefinition("dynamics") {
           randomAcc - velocity * config.friction
       }
 
-    MotionEvolutions.solve2(context.canvasSize.point / 2, config.initialSpeed)(
+    val singleEvo = MotionEvolutions.solve2(context.canvasSize.point / 2, config.initialSpeed)(
       accelerationEvolution
     ).positional
 
+    Evolution.sequenceParallel(List.fill(config.numberOfPoints)(singleEvo)).flattenList
   }
 
   protected def component: ConfigComponent[Config] = ConfigComponent[Config]
