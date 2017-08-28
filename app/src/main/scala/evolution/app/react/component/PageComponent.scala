@@ -8,14 +8,13 @@ import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import evolution.app.react.component.presentational._
-import japgolly.scalajs.react.{Callback, ScalaComponent}
+import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom.Window
 import paint.geometry.Geometry.Point
 import org.scalajs.dom
-import paint.evolution.Evolution
 import paint.random.SimpleRNG
 
 import scala.util.Random
@@ -29,33 +28,42 @@ object PageComponent {
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
-    canvasVersion: Int = 0
+    rng: SimpleRNG
   ) {
-    def evolution: Evolution[Point] = currentDrawing.evolution
+    def points: Stream[Point] = currentDrawing.evolution.unfold(rng)
 
-    def increaseVersion: State = copy(canvasVersion = canvasVersion + 1)
+    /**
+      * Create a new seed
+      */
+    def updateRng: State =
+      copy(rng = SimpleRNG(Random.nextLong()))
 
-    def updateSeed: State =
-      copy(drawer = drawer.copy(rng = SimpleRNG(Random.nextLong())))
+    /**
+      * Use to determine if the canvas has to be re-rendered
+      */
+    def canvasKey: String = rng.seed.toString
+
+    /**
+      * Used to determine if the page needs an update
+      * @return
+      */
+    def key: Int = (
+        rng.seed,
+        currentDrawing,
+        pointRateCounter.rate,
+        drawingListWithSelection.current.name
+      ).hashCode()
   }
 
   class Backend(bs: BackendScope[Unit, State]) {
-    // Create a mutable reference
-    private val refToCanvas =
-      ScalaComponent.mutableRefTo(CanvasComponent.component)
-
     def render(state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
+          <.span(s"${state.pointRateCounter.rate.toInt} p/s"),
           ButtonComponent.component(ButtonComponent.Props(
             "Refresh",
-            bs.modState(_.increaseVersion.updateSeed)
+            bs.modState(_.updateRng)
           )),
-//          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
-//            "Rate",
-//            "",
-//            DoubleInputComponent(state.pointRateCounter.rate, _ => Callback.empty)
-//          )),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Iterations",
             "",
@@ -74,11 +82,11 @@ object PageComponent {
           ))
         )),
         <.div(^.id := "page-content",
-          CanvasComponent.component.withKey(state.canvasVersion)(CanvasComponent.Props(
-            state.canvasInitializer,
-            state.currentDrawing,
-            state.drawer,
+          CanvasComponent.component.withKey(state.canvasKey)(CanvasComponent.Props(
             state.drawingContext,
+            state.canvasInitializer,
+            state.drawer,
+            state.points,
             bs.modState { state =>
               state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
             }
@@ -97,7 +105,7 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawer = state.drawer.copy(iterations = value))
-          .increaseVersion
+          .updateRng
       }
     }
 
@@ -105,7 +113,7 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawer = state.drawer.copy(strokeSize = value))
-          .increaseVersion
+          .updateRng
       }
     }
 
@@ -113,8 +121,7 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(currentDrawing = configuredDrawing)
-          .increaseVersion
-          .updateSeed
+          .updateRng
       }
     }
 
@@ -123,8 +130,7 @@ object PageComponent {
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
           .copy(currentDrawing = definition.drawing(state.drawingContext))
-          .increaseVersion
-          .updateSeed
+          .updateRng
       }
     }
   }
@@ -132,19 +138,20 @@ object PageComponent {
   val initialState = State(
     Conf.canvasInitializer,
     EvolutionDrawer(
-      SimpleRNG(Random.nextLong()),
       1000,
       1
     ),
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
     Conf.drawingList,
     drawingContext(dom.window),
-    RateCounter.empty(1000)
+    RateCounter.empty(1000),
+    SimpleRNG(Random.nextLong())
   )
 
   val component = ScalaComponent.builder[Unit]("Page")
     .initialState(initialState)
     .renderBackend[Backend]
+      .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
     .build
 
   private def drawingContext(window: Window): DrawingContext = {

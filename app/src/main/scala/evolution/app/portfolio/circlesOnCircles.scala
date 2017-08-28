@@ -42,14 +42,11 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
   override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     centeredIn(context.canvasSize.point / 2) {
       translate(
+        uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),
         translate(
-          uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),
-          translate(
-            uniformRadial(Point(0, config.mediumRadius), config.mediumRadialSpeed),
-            uniformRadial(Point(0, config.smallRadius), config.smallRadialSpeed)
-          )
-        ),
-        ball2D(config.noiseStrength).slowDown(config.noiseFrames)
+          uniformRadial(Point(0, config.mediumRadius), config.mediumRadialSpeed),
+          uniformRadial(Point(0, config.smallRadius), config.smallRadialSpeed)
+        )
       )
     }
   }

@@ -13,20 +13,17 @@ import paint.geometry.Geometry.Point
 object CanvasComponent {
 
   case class Props(
+    context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
-    currentDrawing: ConfiguredDrawing[Point],
     drawer: EvolutionDrawer,
-    drawingContext: DrawingContext,
+    points: Stream[Point],
     onFrameDidDraw: Callback
   )
 
-  case class MutableState(var running: Boolean)
-
-  class Backend(bs: BackendScope[Props, MutableState]) {
-    var stopAnimationCallback: Callback = Callback.empty
-
+  class Backend(bs: BackendScope[Props, Unit]) {
+    var running = true
     def render(props: Props): VdomElement = {
-      val size = props.drawingContext.canvasSize.point
+      val size = props.context.canvasSize.point
       <.canvas(
         ^.width := (size.x / 2).toString,
         ^.height := (size.y / 2).toString,
@@ -35,32 +32,27 @@ object CanvasComponent {
       )
     }
 
-    def animationCallback(state: MutableState, props: Props)(action: Unit => Unit): Unit = {
-      if (state.running) {
-        dom.window.requestAnimationFrame(_ => action())
-        props.onFrameDidDraw.runNow()
+    def tick(props: Props, ctx: dom.CanvasRenderingContext2D)(points: Stream[Point]): Unit = {
+      if (running) {
+          val nextPoints: Stream[Point] = props.drawer.draw(ctx, points)
+          props.onFrameDidDraw.runNow()
+          dom.window.requestAnimationFrame(_ => tick(props, ctx)(nextPoints))
       }
     }
 
-    def onMount(canvas: dom.html.Canvas, props: Props, state: MutableState): Callback = Callback {
-      props.canvasInitializer(canvas)
+    def onMount(canvas: dom.html.Canvas, props: Props): Callback = Callback {
       val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-      val initialStream = props.drawer.pointStream(props.currentDrawing.evolution)
-      props.drawer.loop[Unit](
-        ctx,
-        initialStream,
-        animationCallback(state, props)
-      )
+      props.canvasInitializer(canvas)
+      dom.window.requestAnimationFrame(_ => tick(props, ctx)(props.points))
     }
   }
 
   val component =
     ScalaComponent.builder[Props]("Canvas")
-      .initialState(MutableState(true))
       .renderBackend[Backend]
       .componentDidMount(s =>
-        s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props, s.state)
+        s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props)
       )
-      .componentWillUnmount(s => Callback { s.state.running = false })
+      .componentWillUnmount(s => Callback { s.backend.running = false })
       .build
 }
