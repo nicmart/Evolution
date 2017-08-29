@@ -12,6 +12,11 @@ object instances {
 
   import ConfigComponent._
 
+  implicit val unitConfig: ConfigComponent[Unit] =
+    ConfigComponent.instance[Unit]{
+      props => List()
+    }
+
   implicit val doubleConfig: ConfigComponent[Double] =
     ConfigComponent.instance[Double]{
       props => List(DoubleInputComponent(props.config, props.callback))

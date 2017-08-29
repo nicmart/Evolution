@@ -4,6 +4,7 @@ import cats.data.NonEmptyList
 import cats.kernel.{Group, Semigroup}
 import cats.syntax.semigroup._
 import Evolution._
+import paint.geometry.Geometry.Point
 
 /**
   * Created by Nicolò Martini on 15/05/2017.

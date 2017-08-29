@@ -74,4 +74,17 @@ object PointEvolutions {
         def predicate(position: Point, speed: Point): Boolean = position.norm() <= radius
         MotionEvolutions.solveIndependent(Point.zero)(speed, predicate).positional
     }
+
+    /**
+      * To test performance
+      */
+    def sum(ev1: Evolution[Point], ev2: Evolution[Point]): Evolution[Point] =
+        Evolution { rng =>
+            val (rng2, optEv1Next) = ev1.run(rng)
+            val (rng3, optEv2Next) = ev2.run(rng2)
+            (optEv1Next, optEv2Next) match {
+                case (Some((p1, ev1Next)), Some((p2, ev2Next))) => (rng3, Some(p1 + p2, sum(ev1Next, ev2Next)))
+                case _ => (rng3, None)
+            }
+        }
 }

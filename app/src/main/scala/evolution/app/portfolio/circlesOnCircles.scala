@@ -3,12 +3,10 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.{Evolution, PointEvolutions}
-import paint.evolution.NumericEvolutions.ball
+import paint.evolution.Evolution
 import paint.evolution.PointEvolutions._
-import paint.evolution.SemigroupEvolutions.translate
+import paint.evolution.SemigroupEvolutions._
 import paint.evolution.implicits._
-import paint.evolution.motion.MotionEvolutions.solveIndependent
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 
@@ -19,9 +17,7 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     mediumRadius: Double,
     mediumRadialSpeed: Double,
     smallRadius: Double,
-    smallRadialSpeed: Double,
-    noiseStrength: Double,
-    noiseFrames: Int
+    smallRadialSpeed: Double
   )
 
 
@@ -31,9 +27,7 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     mediumRadius = 104,
     mediumRadialSpeed = 1,
     smallRadius = 39,
-    smallRadialSpeed = 1.01,
-    noiseFrames = 1,
-    noiseStrength = 0
+    smallRadialSpeed = 1.01
   )
 
   override def component: ConfigComponent[Config] =
