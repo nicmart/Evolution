@@ -17,7 +17,9 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     mediumRadius: Double,
     mediumRadialSpeed: Double,
     smallRadius: Double,
-    smallRadialSpeed: Double
+    smallRadialSpeed: Double,
+    lastRadius: Double,
+    lastRadialSpeed: Double
   )
 
 
@@ -27,7 +29,9 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     mediumRadius = 104,
     mediumRadialSpeed = 1,
     smallRadius = 39,
-    smallRadialSpeed = 1.01
+    smallRadialSpeed = 1.01,
+    lastRadius = 10,
+    lastRadialSpeed = 1.02
   )
 
   override def component: ConfigComponent[Config] =
@@ -39,7 +43,11 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
         uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),
         translate(
           uniformRadial(Point(0, config.mediumRadius), config.mediumRadialSpeed),
-          uniformRadial(Point(0, config.smallRadius), config.smallRadialSpeed)
+          translate(
+            uniformRadial(Point(0, config.smallRadius), config.smallRadialSpeed),
+            uniformRadial(Point(0, config.lastRadius), config.lastRadialSpeed)
+          )
+
         )
       )
     }

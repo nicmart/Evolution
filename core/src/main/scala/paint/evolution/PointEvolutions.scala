@@ -62,6 +62,12 @@ object PointEvolutions {
     def rotate(center: Point, angle: Double, ev: Evolution[Point]): Evolution[Point] =
         ev.map(p => (p - center).rotate(angle) + center)
 
+    def evoRotate(center: Evolution[Point], angle: Evolution[Double])(ev: Evolution[Point]): Evolution[Point] = {
+        center.zip(angle).zipWith(ev) { case ((cc, ang), point) =>
+            (point - cc).rotate(ang) + cc
+        }
+    }
+
     def inRectangle(bottomRight: Point, topLeft: Point = Point.zero): Evolution[Point] = {
         cartesian(
             double.map(_ * (bottomRight.x - topLeft.x)),

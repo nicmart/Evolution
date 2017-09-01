@@ -18,8 +18,10 @@ object Conf {
       circlesOnCircles,
       brownianStraight,
       dynamics,
-      singlePoint
+      singlePoint,
+      primes,
+      dynamicRotation
     ),
-    dynamics
+    dynamicRotation
   )
 }

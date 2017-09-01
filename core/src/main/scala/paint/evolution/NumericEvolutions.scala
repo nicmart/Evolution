@@ -22,10 +22,11 @@ object NumericEvolutions {
 
     def nonNegativeLessThan(n: Int): Evolution[Int] =
         nonNegative flatMapNext { (i, nonNeg2) =>
+            val memoized = nonNegativeLessThan(n)
             val mod = i % n
             if (i + (n-1) - mod >= 0)
-                i :: nonNegativeLessThan(n)
-            else nonNegativeLessThan(n)
+                i :: memoized
+            else memoized
         }
 
     val double: Evolution[Double] =
