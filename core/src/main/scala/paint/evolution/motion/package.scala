@@ -5,9 +5,6 @@ import cats.syntax.group._
 
 import scala.language.implicitConversions
 
-/**
-  * Created by Nicolò Martini on 21/05/2017.
-  */
 package object motion {
     type Position[A] = A
     type Velocity[A] = A

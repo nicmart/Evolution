@@ -9,34 +9,53 @@ import paint.evolution.PointEvolutions._
 import paint.evolution.SemigroupEvolutions._
 import paint.evolution.NumericEvolutions._
 import cats.implicits._
+import paint.evolution.Evolution.constant
 import paint.evolution.motion.MotionEvolutions._
 import paint.evolution.implicits._
+import paint.evolution.motion.{AccelerationEvolution, AccelerationLaw, MotionEvolutions}
 import paint.geometry.Geometry.Point
 
 object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
   case class Config(
-    horizontalSpeed: Double,
-    angleSpeed: Double,
-    centerSpeed: Double
+    normSpeed: Double,
+    angularSpeed: Double,
+    omega: Double,
+    amplitude: Double,
+    omega2: Double,
+    amplitude2: Double
   )
 
   override protected def currentConfig =
     Config(
-      horizontalSpeed = 0.01,
-      angleSpeed = 0.01,
-      centerSpeed = 0.01
+      normSpeed = 0.01,
+      angularSpeed = 0.001,
+      omega = 0.01,
+      amplitude = 30,
+      omega2 = 0.2,
+      amplitude2 = 10
     )
 
   override protected def evolution(config: Config, context: DrawingContext) = {
     import config._
-    val line = solveIndependentStatic(Point.zero)(Point(horizontalSpeed, 0)).positional
-    val angle = solveIndependentStatic(0.0)(angleSpeed).positional
-    val center = uniformRadial(Point.zero, centerSpeed)
+    val spiral = toPhaseSpace(polar(
+      solveIndependentStatic(0.0)(normSpeed).positional,
+      solveIndependentStatic(0.0)(angularSpeed).positional
+    ))
 
-    def evo1 = evoRotate(center, angle)(line)
+    val spiralNormOfSpeed: Evolution[Double] = spiral.map { case (pos, speed) => speed.norm() }
+    solveIndependent(0.0)(spiralNormOfSpeed).positional
+
+    def vibration(om: Double, ampl: Double): Evolution[Point] =
+      solveIndependentStatic(0.0)(om).positional.map( d => Point(0, Math.sin(d) * ampl))
 
     centeredIn(context.canvasSize.point / 2) {
-      evoRotate(evo1, angle)(line)
+      drawOnEvolution(
+        toPhaseSpace(drawOnEvolution(
+          spiral,
+          vibration(omega, amplitude)
+        )),
+        vibration(omega2, amplitude2)
+      )
     }
   }
 

@@ -145,8 +145,8 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
   def slidingPairs: Evolution[(A, A)] =
     flatMapNext { (a1, eva2) =>
-      eva2.flatMapNext { (a2, _) =>
-        (a1, a2) :: (a2 :: eva2).slidingPairs
+      eva2.flatMapNext { (a2, eva3) =>
+        (a1, a2) :: (a2 :: eva3).slidingPairs
       }
     }
 

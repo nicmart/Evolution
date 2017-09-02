@@ -6,9 +6,6 @@ import cats.syntax.semigroup._
 import Evolution._
 import paint.geometry.Geometry.Point
 
-/**
-  * Created by Nicolò Martini on 15/05/2017.
-  */
 object SemigroupEvolutions {
     def differentiate[A: Group](f: Evolution[A]): Evolution[A] =
         f.slidingPairs.map{ case (a1, a2) => Group[A].remove(a1, a2) }

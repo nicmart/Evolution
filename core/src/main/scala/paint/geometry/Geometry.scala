@@ -24,6 +24,11 @@ object Geometry
         }
         def norm(): Double = Math.sqrt(x * x + y * y)
         def distance(other: Point): Double = (this - other).norm()
+        def angle: Double = (x, y) match {
+            case (0, _) => 0
+            case _ if x > 0 => Math.atan(y / x)
+            case _ => Math.atan(y / x) + Math.PI
+        }
         def versor(): Option[Point] = {
             val normValue = norm()
             if (normValue > 0) Some(this / normValue) else None

@@ -3,6 +3,7 @@ package paint.evolution.motion
 import cats.kernel.{Group, Semigroup}
 import paint.evolution.Evolution
 import cats.syntax.semigroup._
+import paint.geometry.Geometry.Point
 //import cats.syntax.group._
 
 /**
@@ -96,4 +97,19 @@ object MotionEvolutions {
         p: SecondOrderPredicate[A] = trueSecondOrderPredicate[A]
     ): Evolution[PhaseSpace[A]] =
         solve2(a0, v0)(independentAcceleration(acceleration), p)
+
+    def toPhaseSpace[A: Group](evolution: Evolution[A]): Evolution[PhaseSpace[A]] = {
+        evolution.slidingPairs.map { case (a1, a2) => (a1, Group[A].remove(a2, a1)) }
+    }
+
+    // @TODO not the right place for this
+    def drawOnEvolution(
+        evphase: Evolution[PhaseSpace[Point]],
+        ev: Evolution[Point]
+    ): Evolution[Point] = {
+        evphase.zipWith[Point, Point](ev) { (phase, point) =>
+          val (position, velocity) = phase
+          position + point.rotate(velocity.angle)
+        }
+    }
 }

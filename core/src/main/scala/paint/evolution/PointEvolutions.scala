@@ -17,6 +17,7 @@ object PointEvolutions {
     def polar(norm: Evolution[Double], angle: Evolution[Double]): Evolution[Point] =
         norm.zipWith(angle)(Point.polar)
 
+    // @TODO move into Semigroup evolutions
     def uniformLinear(from: Point, speed: Point): Evolution[Point] =
         MotionEvolutions.solveIndependent(from)(constant(speed)).positional
 
