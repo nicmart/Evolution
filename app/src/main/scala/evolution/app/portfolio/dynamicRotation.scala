@@ -27,26 +27,28 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
 
   override protected def currentConfig =
     Config(
-      normSpeed = 0.01,
-      angularSpeed = 0.001,
+      normSpeed = 15,
+      angularSpeed = 0.1,
       omega = 0.01,
-      amplitude = 30,
-      omega2 = 0.2,
+      amplitude = 20,
+      omega2 = 0.1,
       amplitude2 = 10
     )
 
   override protected def evolution(config: Config, context: DrawingContext) = {
     import config._
-    val spiral = toPhaseSpace(polar(
-      solveIndependentStatic(0.0)(normSpeed).positional,
-      solveIndependentStatic(0.0)(angularSpeed).positional
-    ))
-
-    val spiralNormOfSpeed: Evolution[Double] = spiral.map { case (pos, speed) => speed.norm() }
-    solveIndependent(0.0)(spiralNormOfSpeed).positional
 
     def vibration(om: Double, ampl: Double): Evolution[Point] =
       solveIndependentStatic(0.0)(om).positional.map( d => Point(0, Math.sin(d) * ampl))
+
+    // Make the spiral go at constant speed
+    val time = solveStatic(0.0){ t =>
+      (angularSpeed / normSpeed) * Math.sqrt(1 / (1 + Math.pow(t, 2)))
+    }.positional
+
+    val spiral = toPhaseSpace(time.map { t =>
+      Point.polar(normSpeed * t, t)
+    })
 
     centeredIn(context.canvasSize.point / 2) {
       drawOnEvolution(
