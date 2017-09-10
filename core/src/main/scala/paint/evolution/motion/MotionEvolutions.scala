@@ -6,9 +6,6 @@ import cats.syntax.semigroup._
 import paint.geometry.Geometry.Point
 //import cats.syntax.group._
 
-/**
-  * Created by Nicolò Martini on 21/05/2017.
-  */
 object MotionEvolutions {
     def solve0[A: Group](a0: Position[A])(
         position: PositionEvolution[A],

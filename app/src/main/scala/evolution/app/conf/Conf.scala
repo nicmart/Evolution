@@ -20,8 +20,9 @@ object Conf {
       dynamics,
       singlePoint,
       primes,
-      dynamicRotation
+      dynamicRotation,
+      nBodies
     ),
-    dynamicRotation
+    nBodies
   )
 }
