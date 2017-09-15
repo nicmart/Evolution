@@ -4,6 +4,7 @@ trait Evolutions[Evolution[_], W] { self =>
   def run[A](evo: Evolution[A], world: W): Stream[A]
   def extractInt(world: W): Int
   def worlds: Evolution[W]
+  def int: Evolution[Int]
 
   def empty[A]: Evolution[A]
   def pure[A](a: A): Evolution[A]
