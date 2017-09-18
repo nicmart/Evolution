@@ -39,9 +39,6 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
   def flatMap[B](f: A => Evolution[B]): Evolution[B] =
     flatMapNext((a, eva2) => f(a).append(eva2.flatMap(f)))
 
-  def flatten[B](implicit ev: A =:= Evolution[B]): Evolution[B] =
-    flatMap(identity[A])
-
   def map[B](f: A => B): Evolution[B] =
     mapNext((a, eva2) => (f(a), eva2.map(f)))
 

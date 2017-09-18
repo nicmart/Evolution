@@ -3,18 +3,56 @@ package paint.laws
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import paint.evolution.`new`.Evolutions
+import paint.evolution.algebra.{EvolutionAlgebra, MaterializableEvolutionAlgebra}
 
-trait LawsBaseSpec[Evolution[_], W] extends WordSpec with Matchers with PropertyChecks {
+trait LawsBaseSpec[Evolution[_], W]
+  extends WordSpec
+  with Matchers
+  with PropertyChecks
+  with EvolutionLaws[Evolution, W]
+{
   val sampleSize = 100
 
-  val E: Evolutions[Evolution, W]
-  def validWorlds: Gen[W]
+  val E: MaterializableEvolutionAlgebra[Evolution, W]
+  def worlds: Gen[W]
 
   import E._
 
+  "map compose" in {
+    forAll (intEvolutions, intFunctions, intFunctions) { (evo, f, g) =>
+      check(covariantComposition[Int, Int, Int](evo, f, g))
+    }
+  }
+
+  "map is flatMap with pure" in {
+    forAll (intEvolutions, intFunctions) { (evo, f) =>
+      check(mapAsFlatmap(evo, f))
+    }
+  }
+
+  "pure materializes to one-element stream" in {
+    forAll (intGen, worlds) { (n, w) =>
+      checkStream(pureLaw(n, w))
+    }
+  }
+
+  "scan accumulates values" in {
+    forAll (intEvolutions, worlds) { (evo, w) =>
+      checkStream(scanLaw[Int, Int](evo, _ + _, 0, w))
+    }
+  }
+
+  "int is a static evolution" in {
+    forAll (nonNegativeInt, nonNegativeInt) { (n, m) =>
+      if (n + m > 0) check(intIsAStaticEvolution(n, m))
+    }
+  }
+
   def intGen: Gen[Int] =
     Gen.choose(Int.MinValue, Int.MaxValue)
+
+  def nonNegativeInt: Gen[Int] =
+    Gen.choose(0, Int.MaxValue)
 
   def intEvolutions: Gen[Evolution[Int]] =
     Gen.oneOf(Seq(
@@ -32,8 +70,12 @@ trait LawsBaseSpec[Evolution[_], W] extends WordSpec with Matchers with Property
   }
 
   def check[A](eq: IsEq[Evolution[A]]): Unit = {
-    forAll (validWorlds) { (world: W) =>
+    forAll (worlds) { (world: W) =>
       E.run(eq.lhs, world).take(sampleSize) shouldBe E.run(eq.rhs, world).take(sampleSize)
     }
+  }
+
+  def checkStream[A](eq: IsEq[Stream[A]]): Unit = {
+    eq.lhs.take(100) shouldBe eq.rhs.take(100)
   }
 }
