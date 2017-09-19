@@ -6,9 +6,6 @@ import NumericEvolutions._
 import org.scalatest._
 import paint.random.SequenceRNG
 
-/**
-  * Created by Nicolò Martini on 15/05/2017.
-  */
 class EvolutionTest extends PaintEvolutionSpec {
 
     "A slowed down evolution" must {
@@ -32,18 +29,6 @@ class EvolutionTest extends PaintEvolutionSpec {
         "allows multiple slow downs" in {
             val expected = debug(int, 100)(Some(SequenceRNG(0))).flatMap(List.fill(4)(_))
             assertEvolution(int.slowDown(2).slowDown(2), expected)
-        }
-    }
-
-    "A speeded up evolution" must {
-        "return the same evolution if speed-up is zero" in {
-            assertEquivalent(int, int.speedUp(0))
-        }
-
-        "discard elements" in {
-            val expected = debug(int)(Some(SequenceRNG(0)))
-                .filter { case (rng, n) => n % 3 == 0 }
-            assertEvolution(int.speedUp(2), expected)
         }
     }
 

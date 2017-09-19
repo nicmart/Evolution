@@ -11,7 +11,7 @@ trait LawsBaseSpec[Evolution[_], W]
   with PropertyChecks
   with EvolutionLaws[Evolution, W]
 {
-  val sampleSize = 100
+  val sampleSize = 10
 
   val E: MaterializableEvolutionAlgebra[Evolution, W]
   def worlds: Gen[W]
@@ -43,8 +43,22 @@ trait LawsBaseSpec[Evolution[_], W]
   }
 
   "int is a static evolution" in {
-    forAll (nonNegativeInt, nonNegativeInt) { (n, m) =>
-      if (n + m > 0) check(intIsAStaticEvolution(n, m))
+    // @TODO Not stack safe!
+    forAll (Gen.choose(0, 100)) { n =>
+      check(intIsAStaticEvolution(n))
+    }
+  }
+
+  "repeat law" in {
+    // @TODO Not stack safe!
+    forAll (intEvolutions, nonNegativeInt) { (evo, n) =>
+      if (n < Int.MaxValue / 1000) check(repeatLaw(evo, n))
+    }
+  }
+
+  "slow down law" in {
+    forAll (intEvolutions, nonNegativeInt, worlds) { (evo, n, w) =>
+      checkStream(slowDownLaw(evo, n, w))
     }
   }
 

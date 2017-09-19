@@ -19,9 +19,15 @@ trait EvolutionLaws[Evolution[_], W] {
   def scanLaw[A, Z](ev: Evolution[A], f: (Z, A) => Z, z: Z, world: W): IsEq[Stream[Z]] =
     ev.scan(z)(f).run(world) <-> ev.run(world).scanLeft(z)(f)
 
-  def intIsAStaticEvolution(n: Int, m: Int): IsEq[Evolution[Int]] =
-    staticEvolution(int, n, m)
+  def intIsAStaticEvolution(n: Int): IsEq[Evolution[Int]] =
+    staticEvolution(int, n)
 
-  private def staticEvolution[A](ev: Evolution[A], n: Int, m: Int): IsEq[Evolution[A]] =
-    concat(ev.take(n), ev.take(m)) <-> ev.take(n + m)
+  def repeatLaw[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
+    ev.repeat(n) <-> concat(ev, ev.repeat(n - 1))
+
+  def slowDownLaw[A](ev: Evolution[A], n: Int, world: W): IsEq[Stream[A]] =
+    ev.slowDown(n).run(world) <-> ev.run(world).flatMap { a => Stream.fill(n)(a) }
+
+  private def staticEvolution[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
+    ev <-> ev.drop(n)
 }

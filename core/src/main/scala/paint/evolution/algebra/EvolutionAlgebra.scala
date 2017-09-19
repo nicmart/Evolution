@@ -7,7 +7,9 @@ trait EvolutionCoreAlgebra[Evo[_]] {
   def flatMap[A, B](eva: Evo[A])(f: A => Evo[B]): Evo[B]
   def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A]
   def take[A](evo: Evo[A], n: Int): Evo[A]
+  def drop[A](evo: Evo[A], n: Int): Evo[A]
   def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z]
+  def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C]
 }
 
 trait EvolutionMaterialization[Evo[_], W] {
@@ -29,6 +31,18 @@ trait EvolutionAlgebra[Evo[_]] extends EvolutionCoreAlgebra[Evo] {
 
   def cyclic[A](eva: Evo[A]): Evo[A] =
     concat(eva, cyclic(eva))
+
+  def repeat[A](eva: Evo[A], times: Int): Evo[A] =
+    times match {
+      case _ if times <= 0 => eva
+      case _ => concat(eva, repeat(eva, times - 1))
+    }
+
+  def slowDown[A](eva: Evo[A], n: Int): Evo[A] =
+    flatMap(eva) { a => repeat(pure(a), n) }
+
+  def slowDownBy[A](eva: Evo[A], evn: Evo[Int]): Evo[A] =
+    flatten(zipWith(eva, evn){ (a, n) => seq(List.fill(n)(a)) })
 }
 
 trait MaterializableEvolutionAlgebra[Evo[_], W]

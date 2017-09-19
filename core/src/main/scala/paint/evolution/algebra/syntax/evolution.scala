@@ -18,8 +18,18 @@ final class EvolutionOps[Evo[_], A](val ev: Evo[A]) extends AnyVal {
     E.concat(ev, otherEv)
   def take(n: Int)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
     E.take(ev, n)
+  def drop(n: Int)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.drop(ev, n)
+  def zipWith[B, C](evb: Evo[B])(f: (A, B) => C)(implicit E: EvolutionAlgebra[Evo]): Evo[C] =
+    E.zipWith(ev, evb)(f)
   def scan[Z](z: Z)(f: (Z, A) => Z)(implicit E: EvolutionAlgebra[Evo]): Evo[Z] =
     E.scan(ev)(z)(f)
+  def repeat(times: Int)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.repeat(ev, times)
+  def slowDown(n: Int)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.slowDown(ev, n)
+  def slowDownBy(evn: Evo[Int])(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.slowDownBy(ev, evn)
 }
 
 final class MaterializableEvolutionOps[Evo[_], W, A](val ev: Evo[A]) extends AnyVal {

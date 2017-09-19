@@ -65,10 +65,13 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
   def first: Evolution[A] =
     flatMapNext { (a, _) => pure(a) }
 
-  def tail: Evolution[A] =
-    flatMapNext { (_, eva2) =>
-      eva2
+  def tail: Evolution[A] = Evolution { rng =>
+    val (_, opt) = run(rng)
+    opt match {
+      case None => (rng, None)
+      case Some((a, ev2)) => ev2.run(rng)
     }
+  }
 
   def drop(n: Int): Evolution[A] = n match {
     case _ if n <= 0 => this
@@ -84,9 +87,6 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
   def zip[B](evb: Evolution[B]): Evolution[(A, B)] =
     zipWith(evb)((_, _))
-
-  def speedUp(skip: Int): Evolution[A] =
-    mapOnlyNext(_.drop(skip).speedUp(skip))
 
   def slowDown(times: Int): Evolution[A] =
     flatMap { a => list(List.fill(times)(a)) }
