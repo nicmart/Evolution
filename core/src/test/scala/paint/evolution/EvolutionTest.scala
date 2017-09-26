@@ -76,15 +76,6 @@ class EvolutionTest extends PaintEvolutionSpec {
         }
     }
 
-    "dropWhile" must {
-        "drop the first elements according to a predicate" in {
-            assertValues(
-                int.dropWhile(_ % 10 < 4),
-                List(4, 5, 6, 7, 8, 9, 10, 11, 12)
-            )
-        }
-    }
-
     "sliding" must {
         "return a sliding evolution" in {
             assertValues(
@@ -106,19 +97,6 @@ class EvolutionTest extends PaintEvolutionSpec {
                     List(0, 1, 2),
                     List(3, 4, 5),
                     List(6, 7, 8)
-                )
-            )
-        }
-    }
-
-    "append after" must {
-        "append a second evolution after k generations" in {
-            assertValues(
-                int.appendAfter(2, pure(10)),
-                List(
-                    0,
-                    1,
-                    10
                 )
             )
         }

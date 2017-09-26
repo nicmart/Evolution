@@ -28,6 +28,9 @@ trait EvolutionLaws[Evolution[_], W] {
   def slowDownLaw[A](ev: Evolution[A], n: Int, world: W): IsEq[Stream[A]] =
     ev.slowDown(n).run(world) <-> ev.run(world).flatMap { a => Stream.fill(n)(a) }
 
+  def filterLaw[A](ev: Evolution[A], predicate: A => Boolean, world: W): IsEq[Stream[A]] =
+    ev.run(world).filter(predicate) <-> ev.filter(predicate).run(world)
+
   private def staticEvolution[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
     ev <-> ev.drop(n)
 }

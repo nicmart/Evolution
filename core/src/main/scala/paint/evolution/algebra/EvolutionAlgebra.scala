@@ -43,6 +43,26 @@ trait EvolutionAlgebra[Evo[_]] extends EvolutionCoreAlgebra[Evo] {
 
   def slowDownBy[A](eva: Evo[A], evn: Evo[Int]): Evo[A] =
     flatten(zipWith(eva, evn){ (a, n) => seq(List.fill(n)(a)) })
+
+  def head[A](eva: Evo[A]): Evo[A] =
+    take(eva, 1)
+
+  def tail[A](eva: Evo[A]): Evo[A] =
+    drop(eva, 1)
+
+  def zip[A, B](eva: Evo[A], evb: Evo[B]): Evo[(A, B)] =
+    zipWith(eva, evb)((_, _))
+
+  def filter[A](eva: Evo[A], predicate: A => Boolean): Evo[A] =
+    flatMap(eva) { a =>
+      if (predicate(a)) pure(a) else empty
+    }
+
+  def flattenList[A](eva: Evo[List[A]]): Evo[A] =
+    flatMap(eva)(seq)
+
+  def slidingPairs[A](eva: Evo[A]): Evo[(A, A)] = ???
+
 }
 
 trait MaterializableEvolutionAlgebra[Evo[_], W]

@@ -57,8 +57,14 @@ trait LawsBaseSpec[Evolution[_], W]
   }
 
   "slow down law" in {
-    forAll (intEvolutions, nonNegativeInt, worlds) { (evo, n, w) =>
+    forAll(intEvolutions, nonNegativeInt, worlds) { (evo, n, w) =>
       checkStream(slowDownLaw(evo, n, w))
+    }
+  }
+
+  "filter law" in {
+    forAll (intEvolutions, intPredicates, worlds) { (evo, p, w) =>
+      checkStream(filterLaw(evo, p, w))
     }
   }
 
@@ -82,6 +88,9 @@ trait LawsBaseSpec[Evolution[_], W]
       m => m * n * n + 1
     ))
   }
+
+  def intPredicates: Gen[Int => Boolean] =
+    intGen.map(n => (m: Int) => n > m)
 
   def check[A](eq: IsEq[Evolution[A]]): Unit = {
     forAll (worlds) { (world: W) =>

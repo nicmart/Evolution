@@ -20,11 +20,18 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
       }
     }
 
-  def mapNext[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] =
-    Evolution { rng =>
-      val (rng2, next) = run(rng)
-      (rng2, next.map(f.tupled))
+  def mapNext[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] = {
+//    Evolution { rng =>
+//      val (rng2, next) = run(rng)
+//      (rng2, next.map(f.tupled))
+//    }
+    // Not primitive!
+    flatMapNext { (a, eva) =>
+      val (b, evb) = f(a, eva)
+      pure(b).append(evb)
     }
+  }
+
 
   def append(other: => Evolution[A]): Evolution[A] =
     Evolution { rng =>
@@ -41,12 +48,6 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
   def map[B](f: A => B): Evolution[B] =
     mapNext((a, eva2) => (f(a), eva2.map(f)))
-
-  def mapOnlyNext(f: Evolution[A] => Evolution[A]): Evolution[A] =
-    mapNext((a, eva2) => (a, f(eva2)))
-
-  def map2[B, C](evb: Evolution[B])(f: (A, B) => C): Evolution[C] =
-    Evolution.map2(f)(this, evb)
 
   def zipWith[B, C](evb: Evolution[B])(f: (A, B) => C): Evolution[C] =
     Evolution.zipWith(f)(this, evb)
@@ -108,30 +109,6 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
     flatMapNext { (a, eva2) =>
       if (predicate(a)) eva2.filter(predicate).prepend(List(a))
       else eva2.filter(predicate)
-    }
-
-  def dropWhile(predicate: A => Boolean): Evolution[A] =
-    flatMapNext { (a, next) =>
-      if (predicate(a)) next.dropWhile(predicate)
-      else a :: next
-    }
-
-  def appendAfter(k: Int, after: => Evolution[A]): Evolution[A] =
-    take(k).append(after)
-
-  def flatMapNextAfter(k: Int, f: (A, Evolution[A]) => Evolution[A]): Evolution[A] =
-    flatMapNext { (a, eva2) =>
-      k match {
-        case _ if k <= 0 => f(a, eva2)
-        case _ => flatMapNext { (a, eva2) =>
-          a :: eva2.flatMapNextAfter(k - 1, f)
-        }
-      }
-    }
-
-  def flatMapNextEvery(k: Int, f: (A, Evolution[A]) => Evolution[A]): Evolution[A] =
-    flatMapNext { (a, eva2) =>
-      flatMapNextAfter(k, (a, eva3) => f(a, eva3).flatMapNextEvery(k, f))
     }
 
   def ::(value: A): Evolution[A] =
@@ -201,9 +178,6 @@ object Evolution {
 
   def zipWith[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
     zipNext(eva, evb)((a, eva2, b, evb2) => f(a, b) :: zipWith(f)(eva2, evb2))
-
-  def map2[A, B, C](f: (A, B) => C)(eva: Evolution[A], evb: Evolution[B]): Evolution[C] =
-    eva.flatMap(a => evb.map(b => f(a, b)))
 
   def traverse[A, B](as: List[A])(f: A => Evolution[B]): Evolution[List[B]] =
     as.foldRight[Evolution[List[B]]](pure(List())) { (a, evb) =>

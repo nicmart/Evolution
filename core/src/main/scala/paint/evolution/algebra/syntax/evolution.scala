@@ -30,6 +30,18 @@ final class EvolutionOps[Evo[_], A](val ev: Evo[A]) extends AnyVal {
     E.slowDown(ev, n)
   def slowDownBy(evn: Evo[Int])(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
     E.slowDownBy(ev, evn)
+  def head(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.head(ev)
+  def tail(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.drop(ev, 1)
+  def zip[B](evb: Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[(A, B)] =
+    E.zip(ev, evb)
+  def filter(predicate: A => Boolean)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.filter(ev, predicate)
+  def ::(a: A)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
+    E.concat(E.pure(a), ev)
+  def flattenList[B](implicit E: EvolutionAlgebra[Evo], evidence: Evo[A] <:< Evo[List[B]]): Evo[B] =
+    E.flattenList(ev)
 }
 
 final class MaterializableEvolutionOps[Evo[_], W, A](val ev: Evo[A]) extends AnyVal {
