@@ -1,6 +1,6 @@
 package paint.evolution.algebra
 
-trait EvolutionCoreAlgebra[Evo[_]] {
+trait EvolutionCoreAlgebra[Evo[+_]] {
   def int: Evo[Int]
   def empty[A]: Evo[A]
   def pure[A](a: A): Evo[A]
@@ -16,7 +16,7 @@ trait EvolutionMaterialization[Evo[_], W] {
   def run[A](evo: Evo[A], world: W): Stream[A]
 }
 
-trait EvolutionAlgebra[Evo[_]] extends EvolutionCoreAlgebra[Evo] {
+trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
   def seq[A](as: List[A]): Evo[A] =
     as match {
       case Nil => empty
@@ -61,10 +61,17 @@ trait EvolutionAlgebra[Evo[_]] extends EvolutionCoreAlgebra[Evo] {
   def flattenList[A](eva: Evo[List[A]]): Evo[A] =
     flatMap(eva)(seq)
 
-  def slidingPairs[A](eva: Evo[A]): Evo[(A, A)] = ???
-
+  def slidingPairs[A](eva: Evo[A]): Evo[(A, A)] = {
+    val listEvo = scan[List[A], A](eva)(List.empty) {
+      (as, a) => (a :: as).take(2)
+    }
+    flatMap(listEvo) {
+      case List(a1, a2) => pure((a2, a1))
+      case _ => empty
+    }
+  }
 }
 
-trait MaterializableEvolutionAlgebra[Evo[_], W]
+trait MaterializableEvolutionAlgebra[Evo[+_], W]
   extends EvolutionAlgebra[Evo]
     with EvolutionMaterialization[Evo, W]

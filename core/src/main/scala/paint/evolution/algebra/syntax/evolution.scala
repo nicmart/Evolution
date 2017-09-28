@@ -3,13 +3,13 @@ package paint.evolution.algebra.syntax
 import paint.evolution.algebra.{EvolutionAlgebra, EvolutionMaterialization}
 
 trait EvolutionSyntax {
-  implicit final def syntaxEvolution[Evo[_], A](evo: Evo[A]): EvolutionOps[Evo, A] =
+  implicit final def syntaxEvolution[Evo[+_], A](evo: Evo[A]): EvolutionOps[Evo, A] =
     new EvolutionOps(evo)
-  implicit final def syntaxMaterializableEvolution[Evo[_], W, A](evo: Evo[A]): MaterializableEvolutionOps[Evo, W, A] =
+  implicit final def syntaxMaterializableEvolution[Evo[+_], W, A](evo: Evo[A]): MaterializableEvolutionOps[Evo, W, A] =
     new MaterializableEvolutionOps(evo)
 }
 
-final class EvolutionOps[Evo[_], A](val ev: Evo[A]) extends AnyVal {
+final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
   def flatMap[B](f: A => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
     E.flatMap(ev)(f)
   def map[B](f: A => B)(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
@@ -42,6 +42,8 @@ final class EvolutionOps[Evo[_], A](val ev: Evo[A]) extends AnyVal {
     E.concat(E.pure(a), ev)
   def flattenList[B](implicit E: EvolutionAlgebra[Evo], evidence: Evo[A] <:< Evo[List[B]]): Evo[B] =
     E.flattenList(ev)
+  def slidingPair(implicit E: EvolutionAlgebra[Evo]): Evo[(A, A)] =
+    E.slidingPairs(ev)
 }
 
 final class MaterializableEvolutionOps[Evo[_], W, A](val ev: Evo[A]) extends AnyVal {

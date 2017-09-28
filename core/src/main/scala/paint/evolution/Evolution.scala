@@ -7,7 +7,7 @@ import paint.random.{RNG, SimpleRNG}
 import scala.collection.immutable.{Queue, Stream}
 import scala.util.Random
 
-final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
+final case class Evolution[+A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
   // Primitives
 
@@ -33,12 +33,21 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
   }
 
 
-  def append(other: => Evolution[A]): Evolution[A] =
+  def append[B >: A](other: => Evolution[B]): Evolution[B] =
     Evolution { rng =>
       val (rng2, next) = run(rng)
       next match {
         case None => other.run(rng2)
         case Some((a, eva2)) => (rng2, Some(a, eva2.append(other)))
+      }
+    }
+
+  def tail: Evolution[A] =
+    Evolution { rng =>
+      val (_, opt) = run(rng)
+      opt match {
+        case None => (rng, None)
+        case Some((a, ev2)) => ev2.run(rng)
       }
     }
 
@@ -60,19 +69,11 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
       (z, eva2.scan(f(z, a))(f))
     }
 
-  def prepend(as: List[A]): Evolution[A] =
+  def prepend[B >: A](as: List[B]): Evolution[B] =
     Evolution.prepend(as)(this)
 
   def first: Evolution[A] =
     flatMapNext { (a, _) => pure(a) }
-
-  def tail: Evolution[A] = Evolution { rng =>
-    val (_, opt) = run(rng)
-    opt match {
-      case None => (rng, None)
-      case Some((a, ev2)) => ev2.run(rng)
-    }
-  }
 
   def drop(n: Int): Evolution[A] = n match {
     case _ if n <= 0 => this
@@ -111,7 +112,7 @@ final case class Evolution[A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
       else eva2.filter(predicate)
     }
 
-  def ::(value: A): Evolution[A] =
+  def ::[B >: A](value: B): Evolution[A] =
     pure(value).append(this)
 
   def flattenList[B](implicit ev: A <:< List[B]): Evolution[B] =

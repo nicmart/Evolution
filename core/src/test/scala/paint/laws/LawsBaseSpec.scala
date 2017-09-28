@@ -5,7 +5,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import paint.evolution.algebra.{EvolutionAlgebra, MaterializableEvolutionAlgebra}
 
-trait LawsBaseSpec[Evolution[_], W]
+trait LawsBaseSpec[Evolution[+_], W]
   extends WordSpec
   with Matchers
   with PropertyChecks
@@ -68,6 +68,12 @@ trait LawsBaseSpec[Evolution[_], W]
     }
   }
 
+  "sliding pairs law" in {
+    forAll (intEvolutions, worlds) { (evo, w) =>
+      checkStream(slidingPairsLaw(evo, w))
+    }
+  }
+
   def intGen: Gen[Int] =
     Gen.choose(Int.MinValue, Int.MaxValue)
 
@@ -99,6 +105,6 @@ trait LawsBaseSpec[Evolution[_], W]
   }
 
   def checkStream[A](eq: IsEq[Stream[A]]): Unit = {
-    eq.lhs.take(100) shouldBe eq.rhs.take(100)
+    eq.lhs.take(sampleSize) shouldBe eq.rhs.take(sampleSize)
   }
 }

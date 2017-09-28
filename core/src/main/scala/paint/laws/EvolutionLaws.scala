@@ -3,7 +3,7 @@ package paint.laws
 import paint.evolution.algebra.MaterializableEvolutionAlgebra
 import paint.evolution.algebra.syntax.all._
 
-trait EvolutionLaws[Evolution[_], W] {
+trait EvolutionLaws[Evolution[+_], W] {
   implicit val E: MaterializableEvolutionAlgebra[Evolution, W]
   import E._
 
@@ -30,6 +30,9 @@ trait EvolutionLaws[Evolution[_], W] {
 
   def filterLaw[A](ev: Evolution[A], predicate: A => Boolean, world: W): IsEq[Stream[A]] =
     ev.run(world).filter(predicate) <-> ev.filter(predicate).run(world)
+
+  def slidingPairsLaw[A](ev: Evolution[A], world: W): IsEq[Stream[(A, A)]] =
+    ev.slidingPair.run(world) <-> ev.run(world).sliding(2).filter(_.length == 2).toStream.map(as => (as(0), as(1)))
 
   private def staticEvolution[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
     ev <-> ev.drop(n)
