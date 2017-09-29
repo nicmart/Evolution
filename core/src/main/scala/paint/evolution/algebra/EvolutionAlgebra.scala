@@ -61,7 +61,11 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
     flatten(zipWith(eva, evn){ (a, n) => seq(List.fill(n)(a)) })
 
   def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C] = {
-    ???
+    flatMapNext(eva) { (a, eva2) =>
+      flatMapNext(evb) { (b, evb2) =>
+        concat(pure(f(a, b)), zipWith(eva2, evb2)(f))
+      }
+    }
   }
 
   def zip[A, B](eva: Evo[A], evb: Evo[B]): Evo[(A, B)] =

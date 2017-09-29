@@ -11,6 +11,4 @@ final class RNGEvolutionAlgebra extends MaterializableEvolutionAlgebra[Evolution
   override def pure[A](a: A): Evolution[A] = Evolution.pure(a)
   override def flatMapNext[A, B](eva: Evolution[A])(f: (A, Evolution[A]) => Evolution[B]): Evolution[B] = eva.flatMapNext(f)
   override def concat[A](evo1: Evolution[A], evo2: =>Evolution[A]): Evolution[A] = evo1.append(evo2)
-  override def zipWith[A, B, C](eva: Evolution[A], evb: Evolution[B])(f: (A, B) => C): Evolution[C] =
-    eva.zipWith(evb)(f)
 }
