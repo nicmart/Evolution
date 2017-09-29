@@ -10,6 +10,8 @@ trait EvolutionSyntax {
 }
 
 final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
+  def flatMapNext[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
+    E.flatMapNext(ev)(f)
   def flatMap[B](f: A => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
     E.flatMap(ev)(f)
   def map[B](f: A => B)(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
@@ -33,7 +35,7 @@ final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
   def head(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
     E.head(ev)
   def tail(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
-    E.drop(ev, 1)
+    E.tail(ev)
   def zip[B](evb: Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[(A, B)] =
     E.zip(ev, evb)
   def filter(predicate: A => Boolean)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =

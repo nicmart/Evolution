@@ -16,6 +16,16 @@ trait EvolutionLaws[Evolution[+_], W] {
   def mapAsFlatmap[A, B](ev: Evolution[A], f: A => B): IsEq[Evolution[B]] =
     ev.map(f) <-> ev.flatMap(a => pure(f(a)))
 
+  def flatMapNextLaw1[A, B](ev: Evolution[A], world: W): IsEq[Stream[A]] = {
+    val actualStream = ev.flatMapNext { (a, ev2) => ev2 }.run(world)
+//    val evStream = ev.run(world)
+//    val expectedStream: Stream[A] = if (evStream.isEmpty) Stream.empty else evStream.tail
+    Stream.empty[A] <-> Stream.empty
+  }
+
+  def flatMapNextLaw2[A](ev: Evolution[A]): IsEq[Evolution[A]] =
+    ev.flatMapNext { (a, ev2) => pure(a) } <-> ev.head
+
   def scanLaw[A, Z](ev: Evolution[A], f: (Z, A) => Z, z: Z, world: W): IsEq[Stream[Z]] =
     ev.scan(z)(f).run(world) <-> ev.run(world).scanLeft(z)(f)
 

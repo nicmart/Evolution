@@ -44,10 +44,10 @@ final case class Evolution[+A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
 
   def tail: Evolution[A] =
     Evolution { rng =>
-      val (_, opt) = run(rng)
+      val (rng2, opt) = run(rng)
       opt match {
         case None => (rng, None)
-        case Some((a, ev2)) => ev2.run(rng)
+        case Some((a, ev2)) => ev2.run(rng2)
       }
     }
 
@@ -112,7 +112,7 @@ final case class Evolution[+A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
       else eva2.filter(predicate)
     }
 
-  def ::[B >: A](value: B): Evolution[A] =
+  def ::[B >: A](value: B): Evolution[B] =
     pure(value).append(this)
 
   def flattenList[B](implicit ev: A <:< List[B]): Evolution[B] =

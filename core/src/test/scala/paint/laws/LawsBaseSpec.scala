@@ -30,6 +30,18 @@ trait LawsBaseSpec[Evolution[+_], W]
     }
   }
 
+  "flatmapnext law 1" in {
+    forAll (intEvolutions, worlds) { (evo, world) =>
+      checkStream(flatMapNextLaw1(evo, world))
+    }
+  }
+
+  "flatmapnext law 2" in {
+    forAll (intEvolutions) { (evo) =>
+      check(flatMapNextLaw2(evo))
+    }
+  }
+
   "pure materializes to one-element stream" in {
     forAll (intGen, worlds) { (n, w) =>
       checkStream(pureLaw(n, w))

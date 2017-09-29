@@ -4,12 +4,8 @@ trait EvolutionCoreAlgebra[Evo[+_]] {
   def int: Evo[Int]
   def empty[A]: Evo[A]
   def pure[A](a: A): Evo[A]
-  def flatMap[A, B](eva: Evo[A])(f: A => Evo[B]): Evo[B]
+  def flatMapNext[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
   def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A]
-  def take[A](evo: Evo[A], n: Int): Evo[A]
-  def drop[A](evo: Evo[A], n: Int): Evo[A]
-  def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z]
-  def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C]
 }
 
 trait EvolutionMaterialization[Evo[_], W] {
@@ -22,6 +18,26 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
       case Nil => empty
       case head :: tail => concat(pure(head), seq(tail))
     }
+
+  def flatMap[A, B](eva: Evo[A])(f: A => Evo[B]): Evo[B] =
+    flatMapNext(eva) { (a, eva2) => concat(f(a), flatMap(eva2)(f)) }
+
+  def head[A](eva: Evo[A]): Evo[A] =
+    flatMapNext(eva) { (a, eva2) => pure(a) }
+
+  def tail[A](eva: Evo[A]): Evo[A] =
+    flatMapNext(eva) { (a, eva2) => eva2 }
+
+  def take[A](evo: Evo[A], n: Int): Evo[A] = {
+    if (n <= 0) empty[A] else flatMapNext(evo) { (a, eva2) => concat(pure(a), take(eva2, n - 1)) }
+  }
+
+  def drop[A](evo: Evo[A], n: Int): Evo[A] = {
+    if (n <= 0) evo else flatMapNext(evo) { (a, eva2) => drop(eva2, n - 1) }
+  }
+
+  def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z] =
+    concat(pure(z), flatMapNext(evo) { (a, evo2) => scan(evo2)(f(z, a))(f)})
 
   def map[A, B](eva: Evo[A])(f: A => B): Evo[B] =
     flatMap(eva)(f andThen pure)
@@ -44,11 +60,9 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
   def slowDownBy[A](eva: Evo[A], evn: Evo[Int]): Evo[A] =
     flatten(zipWith(eva, evn){ (a, n) => seq(List.fill(n)(a)) })
 
-  def head[A](eva: Evo[A]): Evo[A] =
-    take(eva, 1)
-
-  def tail[A](eva: Evo[A]): Evo[A] =
-    drop(eva, 1)
+  def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C] = {
+    ???
+  }
 
   def zip[A, B](eva: Evo[A], evb: Evo[B]): Evo[(A, B)] =
     zipWith(eva, evb)((_, _))
