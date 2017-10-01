@@ -56,8 +56,8 @@ trait LawsBaseSpec[Evolution[+_], W]
 
   "int is a static evolution" in {
     // @TODO Not stack safe!
-    forAll (Gen.choose(0, 100)) { n =>
-      check(intIsAStaticEvolution(n))
+    forAll (Gen.choose(0, 100), Gen.choose(0, 100)) { (n, m) =>
+      check(intIsAStaticEvolution(n, m))
     }
   }
 
@@ -86,6 +86,12 @@ trait LawsBaseSpec[Evolution[+_], W]
     }
   }
 
+  "grouped law" in {
+    forAll (intEvolutions, worlds, nonNegativeInt) { (evo, w, n) =>
+      //checkStream(groupedLaw(seq(List(1, 2, 3, 4, 5, 6, 7)), w, 4))
+    }
+  }
+
   def intGen: Gen[Int] =
     Gen.choose(Int.MinValue, Int.MaxValue)
 
@@ -94,7 +100,7 @@ trait LawsBaseSpec[Evolution[+_], W]
 
   def intEvolutions: Gen[Evolution[Int]] =
     Gen.oneOf(Seq(
-      E.empty[Int],
+      E.empty,
       pure(99),
       int
     ))

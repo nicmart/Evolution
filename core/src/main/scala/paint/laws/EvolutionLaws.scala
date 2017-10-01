@@ -29,8 +29,8 @@ trait EvolutionLaws[Evolution[+_], W] {
   def scanLaw[A, Z](ev: Evolution[A], f: (Z, A) => Z, z: Z, world: W): IsEq[Stream[Z]] =
     ev.scan(z)(f).run(world) <-> ev.run(world).scanLeft(z)(f)
 
-  def intIsAStaticEvolution(n: Int): IsEq[Evolution[Int]] =
-    staticEvolution(int, n)
+  def intIsAStaticEvolution(n: Int, m: Int): IsEq[Evolution[Int]] =
+    staticEvolution(int, n, m)
 
   def repeatLaw[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
     ev.repeat(n) <-> concat(ev, ev.repeat(n - 1))
@@ -44,6 +44,9 @@ trait EvolutionLaws[Evolution[+_], W] {
   def slidingPairsLaw[A](ev: Evolution[A], world: W): IsEq[Stream[(A, A)]] =
     ev.slidingPair.run(world) <-> ev.run(world).sliding(2).filter(_.length == 2).toStream.map(as => (as(0), as(1)))
 
-  private def staticEvolution[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
-    ev <-> ev.drop(n)
+  def groupedLaw[A](ev: Evolution[A], world: W, n: Int): IsEq[Stream[List[A]]] =
+    ev.grouped(n).run(world) <-> ev.run(world).grouped(n).map(_.toList).toStream
+
+  private def staticEvolution[A](ev: Evolution[A], n: Int, m: Int): IsEq[Evolution[A]] =
+    concat(take(ev, n), take(ev, m)) <-> take(ev, n + m)
 }

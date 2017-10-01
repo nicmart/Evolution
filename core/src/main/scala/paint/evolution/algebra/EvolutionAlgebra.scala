@@ -1,18 +1,28 @@
 package paint.evolution.algebra
 
+import paint.evolution.Evolution
+
 trait EvolutionCoreAlgebra[Evo[+_]] {
-  def int: Evo[Int]
-  def empty[A]: Evo[A]
-  def pure[A](a: A): Evo[A]
+  val empty: Evo[Nothing]
+  def cons[A](head: A, tail: => Evo[A]): Evo[A]
   def flatMapNext[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
-  def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A]
+  def flatMapEmpty[A](eva: Evo[A])(eva2: => Evo[A]): Evo[A]
+  def int: Evo[Int]
 }
 
-trait EvolutionMaterialization[Evo[_], W] {
+trait EvolutionMaterialization[Evo[+_], -W] {
   def run[A](evo: Evo[A], world: W): Stream[A]
 }
 
 trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
+  def pure[A](a: A): Evo[A] =
+    cons(a, empty)
+
+  def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A] =
+    flatMapEmpty(
+      flatMapNext(evo1) { (a, evo12) => cons(a, concat(evo12, evo2)) }
+    )(evo2)
+
   def seq[A](as: List[A]): Evo[A] =
     as match {
       case Nil => empty
@@ -29,7 +39,7 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
     flatMapNext(eva) { (a, eva2) => eva2 }
 
   def take[A](evo: Evo[A], n: Int): Evo[A] = {
-    if (n <= 0) empty[A] else flatMapNext(evo) { (a, eva2) => concat(pure(a), take(eva2, n - 1)) }
+    if (n <= 0) empty else flatMapNext(evo) { (a, eva2) => concat(pure(a), take(eva2, n - 1)) }
   }
 
   def drop[A](evo: Evo[A], n: Int): Evo[A] = {
@@ -37,7 +47,7 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
   }
 
   def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z] =
-    concat(pure(z), flatMapNext(evo) { (a, evo2) => scan(evo2)(f(z, a))(f)})
+    cons(z, flatMapNext(evo) { (a, evo2) => scan(evo2)(f(z, a))(f)})
 
   def map[A, B](eva: Evo[A])(f: A => B): Evo[B] =
     flatMap(eva)(f andThen pure)
@@ -88,6 +98,18 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
       case _ => empty
     }
   }
+
+  def grouped[A](eva: Evo[A])(i: Int, from: Int = 0): Evo[List[A]] =
+    i match {
+      case _ if i <= 0 => cyclic(pure(List()))
+      case _ if from >= i => cons(Nil, grouped(eva)(i))
+        // 0 <= from < i
+      case _ => flatMapNext(eva) { (a, eva2) =>
+        flatMapNext(grouped(eva2)(i, from + 1)) { (as, evas) =>
+          cons(a :: as, evas)
+        }
+      }
+    }
 }
 
 trait MaterializableEvolutionAlgebra[Evo[+_], W]
