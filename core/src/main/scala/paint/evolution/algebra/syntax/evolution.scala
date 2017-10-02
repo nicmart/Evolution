@@ -1,6 +1,6 @@
 package paint.evolution.algebra.syntax
 
-import paint.evolution.algebra.{EvolutionAlgebra, EvolutionMaterialization}
+import paint.evolution.algebra.{EvolutionAlgebra, EvolutionCoreAlgebra, EvolutionMaterialization}
 
 trait EvolutionSyntax {
   implicit final def syntaxEvolution[Evo[+_], A](evo: Evo[A]): EvolutionOps[Evo, A] =
@@ -10,7 +10,7 @@ trait EvolutionSyntax {
 }
 
 final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
-  def flatMapNext[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
+  def flatMapNext[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionCoreAlgebra[Evo]): Evo[B] =
     E.flatMapNext(ev)(f)
   def flatMap[B](f: A => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
     E.flatMap(ev)(f)
@@ -40,8 +40,8 @@ final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
     E.zip(ev, evb)
   def filter(predicate: A => Boolean)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
     E.filter(ev, predicate)
-  def ::(a: A)(implicit E: EvolutionAlgebra[Evo]): Evo[A] =
-    E.concat(E.pure(a), ev)
+  def ::(a: A)(implicit E: EvolutionCoreAlgebra[Evo]): Evo[A] =
+    E.cons(a, ev)
   def flattenList[B](implicit E: EvolutionAlgebra[Evo], evidence: Evo[A] <:< Evo[List[B]]): Evo[B] =
     E.flattenList(ev)
   def slidingPair(implicit E: EvolutionAlgebra[Evo]): Evo[(A, A)] =

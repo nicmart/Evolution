@@ -10,8 +10,4 @@ final class StreamEvolutionAlgebra extends MaterializableEvolutionAlgebra[Stream
     if (eva.isEmpty) empty else { f(eva.head, eva.tail) }
   override def flatMapEmpty[A](eva: Stream[A])(eva2: => Stream[A]): Stream[A] =
     if (eva.isEmpty) eva2 else eva
-  override def int: Stream[Int] = {
-    def from(n: Int): Stream[Int] = n #:: from(n + 1)
-    from(0)
-  }
 }

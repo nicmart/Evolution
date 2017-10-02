@@ -5,6 +5,8 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import paint.evolution.algebra.{EvolutionAlgebra, MaterializableEvolutionAlgebra}
 
+import scala.util.Random
+
 trait LawsBaseSpec[Evolution[+_], W]
   extends WordSpec
   with Matchers
@@ -54,12 +56,12 @@ trait LawsBaseSpec[Evolution[+_], W]
     }
   }
 
-  "int is a static evolution" in {
-    // @TODO Not stack safe!
-    forAll (Gen.choose(0, 100), Gen.choose(0, 100)) { (n, m) =>
-      check(intIsAStaticEvolution(n, m))
-    }
-  }
+//  "int is a static evolution" in {
+//    // @TODO Not stack safe!
+//    forAll (Gen.choose(0, 100), Gen.choose(0, 100)) { (n, m) =>
+//      check(intIsAStaticEvolution(n, m))
+//    }
+//  }
 
   "repeat law" in {
     // @TODO Not stack safe!
@@ -102,7 +104,7 @@ trait LawsBaseSpec[Evolution[+_], W]
     Gen.oneOf(Seq(
       E.empty,
       pure(99),
-      int
+      seq(List.fill(1000)(Random.nextInt()))
     ))
 
   def intFunctions: Gen[Int => Int] = intGen.flatMap { n =>

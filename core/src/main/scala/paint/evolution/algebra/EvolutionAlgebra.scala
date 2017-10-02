@@ -7,7 +7,6 @@ trait EvolutionCoreAlgebra[Evo[+_]] {
   def cons[A](head: A, tail: => Evo[A]): Evo[A]
   def flatMapNext[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
   def flatMapEmpty[A](eva: Evo[A])(eva2: => Evo[A]): Evo[A]
-  def int: Evo[Int]
 }
 
 trait EvolutionMaterialization[Evo[+_], -W] {

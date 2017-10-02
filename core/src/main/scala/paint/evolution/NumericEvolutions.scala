@@ -20,15 +20,6 @@ object NumericEvolutions {
             }
         }
 
-    def nonNegativeLessThan(n: Int): Evolution[Int] =
-        nonNegative flatMapNext { (i, nonNeg2) =>
-            val memoized = nonNegativeLessThan(n)
-            val mod = i % n
-            if (i + (n-1) - mod >= 0)
-                i :: memoized
-            else memoized
-        }
-
     val double: Evolution[Double] =
         int.map { n =>
             (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
@@ -51,11 +42,6 @@ object NumericEvolutions {
                 val multiplier = math.sqrt(-2 * math.log(s) / s)
                 v1 * multiplier
             }
-
-    def complement(ev: Evolution[Double], radius: Double): Evolution[Double] =
-        ev.map { d =>
-            math.signum(d) * (radius - math.abs(d))
-        }
 
     def choose[A](as: IndexedSeq[A]): Evolution[A] =
         int.map(i => as.apply(Math.abs(i) % as.length))

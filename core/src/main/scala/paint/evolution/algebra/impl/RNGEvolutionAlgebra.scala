@@ -9,8 +9,6 @@ final class RNGEvolutionAlgebra extends MaterializableEvolutionAlgebra[Evolution
     evo.unfold(world)
   override val empty: Evolution[Nothing] =
     Evolution.empty
-  override def int: Evolution[Int] =
-    NumericEvolutions.int
   override def flatMapNext[A, B](eva: Evolution[A])(f: (A, Evolution[A]) => Evolution[B]): Evolution[B] =
     eva.flatMapNext(f)
   override def cons[A](head: A, tail: => Evolution[A]): Evolution[A] =
