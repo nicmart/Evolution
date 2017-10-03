@@ -17,6 +17,9 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
   def pure[A](a: A): Evo[A] =
     cons(a, empty)
 
+  def constant[A](a: A): Evo[A] =
+    cyclic(pure(a))
+
   def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A] =
     flatMapEmpty(
       flatMapNext(evo1) { (a, evo12) => cons(a, concat(evo12, evo2)) }

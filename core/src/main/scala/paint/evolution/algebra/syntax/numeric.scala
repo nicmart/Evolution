@@ -3,7 +3,7 @@ package paint.evolution.algebra.syntax
 import paint.evolution.algebra.{EvolutionAlgebra, EvolutionCoreAlgebra, EvolutionMaterialization}
 
 trait NumericEvolutionSyntax {
-  implicit final def syntaxEvolution[Evo[+_], A](evo: Evo[A]): NumericEvolutionOps[Evo, A] =
+  implicit final def numericSyntax[Evo[+_], A](evo: Evo[A]): NumericEvolutionOps[Evo, A] =
     new NumericEvolutionOps(evo)
 }
 

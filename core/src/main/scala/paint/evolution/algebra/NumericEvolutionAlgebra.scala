@@ -1,7 +1,5 @@
 package paint.evolution.algebra
 
-import paint.evolution.Evolution
-import paint.evolution.NumericEvolutions.{double, doubleRange, int}
 import paint.evolution.algebra.syntax.all._
 
 trait NumericEvolutionAlgebra[Evo[+_]] extends EvolutionAlgebra[Evo] {
