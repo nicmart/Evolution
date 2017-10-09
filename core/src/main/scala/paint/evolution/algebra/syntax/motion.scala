@@ -1,6 +1,7 @@
 package paint.evolution.algebra.syntax
 
 import cats.kernel.Group
+import paint.evolution.Evolution
 import paint.evolution.algebra.MotionEvolutionAlgebra.PhaseSpace
 import paint.evolution.algebra._
 import paint.geometry.Geometry.Point
@@ -15,5 +16,6 @@ final class MotionEvolutionOps[Evo[+_], A](val evo: Evo[A]) extends AnyVal {
     E.toPhaseSpace(evo)
   def drawAlong(other: Evo[Point])(implicit E: MotionEvolutionAlgebra[Evo], ev: Evo[A] =:= Evo[PhaseSpace[Point]]): Evo[Point] =
     E.drawOnEvolution(evo, other)
-  //def solve0(from: Pos)
+  def positional(implicit E: EvolutionAlgebra[Evo], ev: Evo[A] =:= Evo[PhaseSpace[Point]]): Evo[Point] =
+    E.map[PhaseSpace[Point], Point](evo)(_._1)
 }
