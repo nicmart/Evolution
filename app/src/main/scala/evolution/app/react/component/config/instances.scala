@@ -13,12 +13,12 @@ object instances {
   import ConfigComponent._
 
   implicit val unitConfig: ConfigComponent[Unit] =
-    ConfigComponent.instance[Unit]{
+    ConfigComponent.instance[Unit] {
       props => List()
     }
 
   implicit val doubleConfig: ConfigComponent[Double] =
-    ConfigComponent.instance[Double]{
+    ConfigComponent.instance[Double] {
       props => List(DoubleInputComponent(props.config, props.callback))
     }
 
@@ -61,7 +61,8 @@ object instances {
         <.div(
           hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
         )
-      )) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
+      )
+      ) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
     }
   }
 

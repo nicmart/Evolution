@@ -1,6 +1,6 @@
 package paint.evolution.algebra.impl
 
-import paint.evolution.{Evolution, NumericEvolutions}
+import paint.evolution.Evolution
 import paint.evolution.algebra.MaterializableEvolutionAlgebra
 import paint.random.RNG
 

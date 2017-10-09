@@ -1,10 +1,9 @@
 package paint.evolution
 
 import paint.evolution.Evolution._
-import paint.geometry.Geometry.Point
 import paint.random.{RNG, SimpleRNG}
 
-import scala.collection.immutable.{Queue, Stream}
+import scala.collection.immutable.Stream
 import scala.util.Random
 
 final case class Evolution[+A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
@@ -21,10 +20,10 @@ final case class Evolution[+A](run: RNG => (RNG, Option[(A, Evolution[A])])) {
     }
 
   def mapNext[B](f: (A, Evolution[A]) => (B, Evolution[B])): Evolution[B] = {
-//    Evolution { rng =>
-//      val (rng2, next) = run(rng)
-//      (rng2, next.map(f.tupled))
-//    }
+    //    Evolution { rng =>
+    //      val (rng2, next) = run(rng)
+    //      (rng2, next.map(f.tupled))
+    //    }
     // Not primitive!
     flatMapNext { (a, eva) =>
       val (b, evb) = f(a, eva)

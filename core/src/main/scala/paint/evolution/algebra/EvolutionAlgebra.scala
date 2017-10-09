@@ -1,19 +1,17 @@
 package paint.evolution.algebra
 
-import paint.evolution.Evolution
-
-trait EvolutionCoreAlgebra[Evo[+_]] {
+trait EvolutionCoreAlgebra[Evo[+ _]] {
   val empty: Evo[Nothing]
   def cons[A](head: A, tail: => Evo[A]): Evo[A]
   def flatMapNext[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
   def flatMapEmpty[A](eva: Evo[A])(eva2: => Evo[A]): Evo[A]
 }
 
-trait EvolutionMaterialization[Evo[+_], -W] {
+trait EvolutionMaterialization[Evo[+ _], -W] {
   def run[A](evo: Evo[A], world: W): Stream[A]
 }
 
-trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
+trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
   def pure[A](a: A): Evo[A] =
     cons(a, empty)
 
@@ -49,7 +47,7 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
   }
 
   def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z] =
-    cons(z, flatMapNext(evo) { (a, evo2) => scan(evo2)(f(z, a))(f)})
+    cons(z, flatMapNext(evo) { (a, evo2) => scan(evo2)(f(z, a))(f) })
 
   def map[A, B](eva: Evo[A])(f: A => B): Evo[B] =
     flatMap(eva)(f andThen pure)
@@ -70,7 +68,7 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
     flatMap(eva) { a => repeat(pure(a), n) }
 
   def slowDownBy[A](eva: Evo[A], evn: Evo[Int]): Evo[A] =
-    flatten(zipWith(eva, evn){ (a, n) => seq(List.fill(n)(a)) })
+    flatten(zipWith(eva, evn) { (a, n) => seq(List.fill(n)(a)) })
 
   def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C] = {
     flatMapNext(eva) { (a, eva2) =>
@@ -105,7 +103,7 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
     i match {
       case _ if i <= 0 => cyclic(pure(List()))
       case _ if from >= i => cons(Nil, grouped(eva)(i))
-        // 0 <= from < i
+      // 0 <= from < i
       case _ => flatMapNext(eva) { (a, eva2) =>
         flatMapNext(grouped(eva2)(i, from + 1)) { (as, evas) =>
           cons(a :: as, evas)
@@ -114,6 +112,6 @@ trait EvolutionAlgebra[Evo[+_]] extends EvolutionCoreAlgebra[Evo] {
     }
 }
 
-trait MaterializableEvolutionAlgebra[Evo[+_], W]
+trait MaterializableEvolutionAlgebra[Evo[+ _], W]
   extends EvolutionAlgebra[Evo]
     with EvolutionMaterialization[Evo, W]

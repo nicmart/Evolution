@@ -3,16 +3,18 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.instances._
-import paint.evolution.{Evolution, NumericEvolutions}
 import paint.evolution.NumericEvolutions.choose
 import paint.evolution.PointEvolutions.rotate
-import paint.evolution.motion.MotionEvolutions
-import paint.geometry.Geometry.Point
 import paint.evolution.implicits._
 import paint.evolution.motion.MotionEvolutions._
+import paint.evolution.{Evolution, NumericEvolutions}
+import paint.geometry.Geometry.Point
+import paint.evolution.implicits._
+import evolution.app.react.component.config.instances._
+
 
 object brownianStraight extends DrawingDefinition("brownian straight") {
+
   case class Config(
     maxLength: Int,
     minLength: Int,

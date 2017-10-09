@@ -6,11 +6,12 @@ import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.Evolution
 import paint.evolution.PointEvolutions._
 import paint.evolution.SemigroupEvolutions._
-import paint.evolution.implicits._
 import paint.geometry.Geometry.Point
+import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
 
 object circlesOnCircles extends DrawingDefinition("circles on circles") {
+
   case class Config(
     bigRadius: Double,
     bigRadialSpeed: Double,

@@ -3,9 +3,9 @@ package evolution.app.react.component
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.presentational.SelectComponent
 import evolution.app.react.component.presentational.SelectComponent.Item
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 object DrawingListComponent {

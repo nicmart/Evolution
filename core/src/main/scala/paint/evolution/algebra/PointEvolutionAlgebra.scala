@@ -1,17 +1,11 @@
 package paint.evolution.algebra
 
-import paint.evolution.Evolution
-import paint.evolution.Evolution.{constant, empty, pure}
-import paint.evolution.NumericEvolutions.{ball, double, doubleRange}
-import paint.evolution.PointEvolutions.{cartesian, polar}
 import paint.evolution.algebra.syntax.all._
-import paint.evolution.motion.MotionEvolutions
 import paint.geometry.Geometry.Point
 
-trait PointEvolutionAlgebra[Evo[+_]]
+trait PointEvolutionAlgebra[Evo[+ _]]
   extends NumericEvolutionAlgebra[Evo]
-  with MotionEvolutionAlgebra[Evo]
-{
+    with MotionEvolutionAlgebra[Evo] {
   implicit private val alg: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =
     this
 

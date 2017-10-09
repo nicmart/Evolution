@@ -1,7 +1,7 @@
 package paint.laws.impl
 
 import org.scalacheck.Gen
-import paint.evolution.{Evolution, NumericEvolutions}
+import paint.evolution.Evolution
 import paint.evolution.algebra.impl.RNGEvolutionAlgebra
 import paint.laws.{EvolutionLaws, LawsBaseSpec}
 import paint.random.{RNG, SimpleRNG}

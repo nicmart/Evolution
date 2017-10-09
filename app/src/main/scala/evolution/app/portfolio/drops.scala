@@ -7,9 +7,9 @@ import paint.evolution.Evolution
 import paint.evolution.Evolution.{pure, sequenceParallel}
 import paint.evolution.NumericEvolutions.double
 import paint.evolution.PointEvolutions.ring
+import paint.evolution.implicits._
 import paint.evolution.motion.{AccelerationLaw, MotionEvolutions}
 import paint.geometry.Geometry.Point
-import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
 
 object drops extends DrawingDefinition("drops") {
@@ -53,7 +53,8 @@ object drops extends DrawingDefinition("drops") {
       Point.sequence(
         config.numberOfDrops,
         context.canvasSize.point.copy(y = 0),
-        Point(0, 0)).map(pointEvo
+        Point(0, 0)
+      ).map(pointEvo
       )
     ).flattenList
 

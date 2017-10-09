@@ -5,19 +5,26 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 object HorizontalFormFieldComponent {
+
   case class Props(label: String, className: String, element: VdomElement)
 
   val component =
     ScalaComponent.builder[Props]("Horizontal Input")
       .render_P { props =>
-        <.div(^.className := "field is-horizontal",
-          <.div(^.className := "field-label is-narrow",
+        <.div(
+          ^.className := "field is-horizontal",
+          <.div(
+            ^.className := "field-label is-narrow",
             <.label(^.className := "label", props.label)
           ),
-          <.div(^.className := "field-body",
-            <.div(^.className := "field is-narrow",
-              <.div(^.className := "control",
-                <.div(^.className := props.className,
+          <.div(
+            ^.className := "field-body",
+            <.div(
+              ^.className := "field is-narrow",
+              <.div(
+                ^.className := "control",
+                <.div(
+                  ^.className := props.className,
                   props.element
                 )
               )

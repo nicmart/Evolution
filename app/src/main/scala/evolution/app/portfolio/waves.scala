@@ -3,15 +3,15 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.instances._
 import paint.evolution.Evolution
 import paint.evolution.Evolution.{constant, sequenceParallel}
 import paint.evolution.NumericEvolutions.ball
 import paint.evolution.PointEvolutions.{cartesian, uniformLinear}
 import paint.evolution.SemigroupEvolutions.translate
+import paint.evolution.implicits._
 import paint.evolution.motion.{AccelerationEvolution, MotionEvolutions}
 import paint.geometry.Geometry.Point
-import paint.evolution.implicits._
+import evolution.app.react.component.config.instances._
 
 object waves extends DrawingDefinition("waves") {
 

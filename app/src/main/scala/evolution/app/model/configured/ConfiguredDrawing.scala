@@ -7,7 +7,9 @@ import paint.evolution.Evolution
 
 sealed trait ConfiguredDrawing[T] {
   val name: String
+
   def evolution: Evolution[T]
+
   def configElement(onChange: ConfiguredDrawing[T] => Callback): VdomElement
 }
 

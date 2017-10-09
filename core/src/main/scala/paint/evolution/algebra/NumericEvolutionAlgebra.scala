@@ -2,7 +2,7 @@ package paint.evolution.algebra
 
 import paint.evolution.algebra.syntax.all._
 
-trait NumericEvolutionAlgebra[Evo[+_]] extends EvolutionAlgebra[Evo] {
+trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   implicit private val alg: EvolutionAlgebra[Evo] = this
 
   def int: Evo[Int]

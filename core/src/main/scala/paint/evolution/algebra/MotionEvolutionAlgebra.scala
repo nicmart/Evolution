@@ -1,9 +1,9 @@
 package paint.evolution.algebra
 
 import cats.kernel.{Group, Semigroup}
+import cats.syntax.group._
 import paint.evolution.algebra.syntax.all._
 import paint.geometry.Geometry.Point
-import cats.syntax.group._
 
 trait MotionEvolutionAlgebra[Evo[+ _]] {
   self: EvolutionAlgebra[Evo] =>
@@ -106,10 +106,10 @@ trait MotionEvolutionAlgebra[Evo[+ _]] {
   }
 
   private def simpleToAcceleration[A](law: SimpleAccelerationLaw[A]): AccelerationLaw[A]
-    = (position, _) => law(position)
+  = (position, _) => law(position)
 
   private def simpleToAccelerationEvolution[A](eq: SimpleAccelerationEvolution[A]): AccelerationEvolution[A]
-    = E.map(eq)(simpleToAcceleration(_))
+  = E.map(eq)(simpleToAcceleration(_))
 
   private def positionToVelocityEvolution[A: Group](posEv: PositionEvolution[A]): VelocityEvolution[A] = {
     (posEv: Evo[PositionLaw[A]]).map(positionLaw => p => positionLaw(p) |-| p)

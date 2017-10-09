@@ -10,7 +10,7 @@ object Conf {
 
   lazy val drawingList = DrawingListWithSelection(
     List(
-      segments, 
+      segments,
       brownian,
       brownianWithRandomJumps,
       drops,

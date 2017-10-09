@@ -3,9 +3,9 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.instances._
 import paint.evolution.Evolution
 import paint.geometry.Geometry.Point
-import evolution.app.react.component.config.instances._
 
 object singlePoint extends DrawingDefinition("single constant point") {
   type Config = Unit

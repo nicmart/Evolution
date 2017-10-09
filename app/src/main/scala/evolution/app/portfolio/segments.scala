@@ -3,11 +3,11 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.instances._
 import paint.evolution.Evolution
 import paint.evolution.PointEvolutions.{rectangle2D, segment}
 import paint.evolution.motion.{AccelerationLaw, MotionEvolutions}
 import paint.geometry.Geometry.Point
+import evolution.app.react.component.config.instances._
 
 object segments extends DrawingDefinition("segments") {
 

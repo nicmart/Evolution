@@ -1,17 +1,19 @@
 package evolution.app.react.component.config
 
 import evolution.app.react.component.config.ConfigComponent.Props
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.{Callback, _}
 import japgolly.scalajs.react.vdom.html_<^._
 
 trait ConfigComponent[Config] {
+
   import ConfigComponent._
 
   def element(props: Props[Config]): List[VdomElement]
 }
 
 object ConfigComponent {
+
   case class Props[Config](
     config: Config,
     callback: Config => Callback
@@ -27,7 +29,7 @@ object ConfigComponent {
     * Summoner method
     */
   def apply[Config](implicit component: ConfigComponent[Config]): ConfigComponent[Config]
-    = component
+  = component
 }
 
 final case class ConfiguredComponent[Config](component: ConfigComponent[Config], config: Config) {

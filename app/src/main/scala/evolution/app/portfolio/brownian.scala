@@ -5,6 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.Evolution
 import paint.evolution.PointEvolutions.rectangle2D
+import paint.evolution.implicits._
 import paint.evolution.motion.MotionEvolutions.solveIndependent
 import paint.geometry.Geometry.Point
 import paint.evolution.implicits._

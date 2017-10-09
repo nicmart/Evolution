@@ -1,12 +1,11 @@
 package paint.laws
 
-import paint.evolution.Evolution
-import paint.evolution.NumericEvolutions.{ball, double}
-import paint.evolution.algebra.{MaterializableEvolutionAlgebra, MaterializedAlgebra, NumericEvolutionAlgebra}
 import paint.evolution.algebra.syntax.all._
+import paint.evolution.algebra.{MaterializedAlgebra, NumericEvolutionAlgebra}
 
-trait NumericEvolutionLaws[Evo[+_], W] {
+trait NumericEvolutionLaws[Evo[+ _], W] {
   implicit val E: MaterializedAlgebra[NumericEvolutionAlgebra, Evo, W]
+
   import E._
 
   def nonNegativeLaw(evo: Evo[Int]): IsEq[Evo[Int]] = {
@@ -28,7 +27,6 @@ trait NumericEvolutionLaws[Evo[+_], W] {
   def ballLaw(evo: Evo[Double], radius: Double): IsEq[Evo[Boolean]] = {
     forAll(evo)(d => d >= -radius && d >= radius)
   }
-
 
 
   private def forAll[A](evo: Evo[A])(predicate: A => Boolean): IsEq[Evo[Boolean]] = {

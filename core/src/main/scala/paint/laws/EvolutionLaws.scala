@@ -3,8 +3,9 @@ package paint.laws
 import paint.evolution.algebra.MaterializableEvolutionAlgebra
 import paint.evolution.algebra.syntax.all._
 
-trait EvolutionLaws[Evolution[+_], W] {
+trait EvolutionLaws[Evolution[+ _], W] {
   implicit val E: MaterializableEvolutionAlgebra[Evolution, W]
+
   import E._
 
   def pureLaw[A](a: A, world: W): IsEq[Stream[A]] =
@@ -18,8 +19,8 @@ trait EvolutionLaws[Evolution[+_], W] {
 
   def flatMapNextLaw1[A, B](ev: Evolution[A], world: W): IsEq[Stream[A]] = {
     val actualStream = ev.flatMapNext { (a, ev2) => ev2 }.run(world)
-//    val evStream = ev.run(world)
-//    val expectedStream: Stream[A] = if (evStream.isEmpty) Stream.empty else evStream.tail
+    //    val evStream = ev.run(world)
+    //    val expectedStream: Stream[A] = if (evStream.isEmpty) Stream.empty else evStream.tail
     Stream.empty[A] <-> Stream.empty
   }
 
@@ -29,8 +30,8 @@ trait EvolutionLaws[Evolution[+_], W] {
   def scanLaw[A, Z](ev: Evolution[A], f: (Z, A) => Z, z: Z, world: W): IsEq[Stream[Z]] =
     ev.scan(z)(f).run(world) <-> ev.run(world).scanLeft(z)(f)
 
-//  def intIsAStaticEvolution(n: Int, m: Int): IsEq[Evolution[Int]] =
-//    staticEvolution(int, n, m)
+  //  def intIsAStaticEvolution(n: Int, m: Int): IsEq[Evolution[Int]] =
+  //    staticEvolution(int, n, m)
 
   def repeatLaw[A](ev: Evolution[A], n: Int): IsEq[Evolution[A]] =
     ev.repeat(n) <-> concat(ev, ev.repeat(n - 1))

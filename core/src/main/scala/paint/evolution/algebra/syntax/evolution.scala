@@ -3,13 +3,14 @@ package paint.evolution.algebra.syntax
 import paint.evolution.algebra.{EvolutionAlgebra, EvolutionCoreAlgebra, EvolutionMaterialization}
 
 trait EvolutionSyntax {
-  implicit final def syntaxEvolution[Evo[+_], A](evo: Evo[A]): EvolutionOps[Evo, A] =
+  implicit final def syntaxEvolution[Evo[+ _], A](evo: Evo[A]): EvolutionOps[Evo, A] =
     new EvolutionOps(evo)
-  implicit final def syntaxMaterializableEvolution[Evo[+_], W, A](evo: Evo[A]): MaterializableEvolutionOps[Evo, W, A] =
+
+  implicit final def syntaxMaterializableEvolution[Evo[+ _], W, A](evo: Evo[A]): MaterializableEvolutionOps[Evo, W, A] =
     new MaterializableEvolutionOps(evo)
 }
 
-final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
+final class EvolutionOps[Evo[+ _], A](val ev: Evo[A]) extends AnyVal {
   def flatMapNext[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionCoreAlgebra[Evo]): Evo[B] =
     E.flatMapNext(ev)(f)
   def flatMap[B](f: A => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
@@ -50,7 +51,7 @@ final class EvolutionOps[Evo[+_], A](val ev: Evo[A]) extends AnyVal {
     E.grouped(ev)(n, from)
 }
 
-final class MaterializableEvolutionOps[Evo[+_], W, A](val ev: Evo[A]) extends AnyVal {
+final class MaterializableEvolutionOps[Evo[+ _], W, A](val ev: Evo[A]) extends AnyVal {
   def run(w: W)(implicit materialization: EvolutionMaterialization[Evo, W]): Stream[A] =
     materialization.run(ev, w)
 }
