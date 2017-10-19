@@ -1,6 +1,6 @@
 package paint.evolution.algebra.syntax
 
-import paint.evolution.algebra.PointEvolutionAlgebra
+import paint.evolution.algebra.{EvolutionAlgebra, PointEvolutionAlgebra}
 import paint.evolution.algebra.syntax.all._
 import paint.geometry.Geometry.Point
 
@@ -10,6 +10,6 @@ trait PointEvolutionSyntax {
 }
 
 final class PointEvolutionOps[Evo[+ _]](val ev: Evo[Point]) extends AnyVal {
-  def rotate(center: Point, angle: Double)(implicit E: PointEvolutionAlgebra[Evo]): Evo[Point] =
+  def rotate(center: Point, angle: Double)(implicit E: EvolutionAlgebra[Evo]): Evo[Point] =
     ev.map(p => (p - center).rotate(angle) + center)
 }

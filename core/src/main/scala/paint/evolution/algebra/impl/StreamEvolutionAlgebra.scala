@@ -1,8 +1,8 @@
 package paint.evolution.algebra.impl
 
-import paint.evolution.algebra.MaterializableEvolutionAlgebra
+import paint.evolution.algebra.MaterializableFullAlgebra
 
-final class StreamEvolutionAlgebra extends MaterializableEvolutionAlgebra[Stream, Any] {
+final class StreamEvolutionAlgebra extends MaterializableFullAlgebra[Stream, Any] {
   override val empty: Stream[Nothing] = Stream.empty
   override def run[A](evo: Stream[A], world: Any): Stream[A] = evo
   override def cons[A](head: A, tail: => Stream[A]): Stream[A] = head #:: tail
@@ -12,4 +12,5 @@ final class StreamEvolutionAlgebra extends MaterializableEvolutionAlgebra[Stream
     }
   override def flatMapEmpty[A](eva: Stream[A])(eva2: => Stream[A]): Stream[A] =
     if (eva.isEmpty) eva2 else eva
+  override def int: Stream[Int] = 0 #:: int
 }

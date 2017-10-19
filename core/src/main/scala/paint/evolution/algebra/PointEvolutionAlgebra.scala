@@ -3,10 +3,10 @@ package paint.evolution.algebra
 import paint.evolution.algebra.syntax.all._
 import paint.geometry.Geometry.Point
 
-trait PointEvolutionAlgebra[Evo[+ _]]
-  extends NumericEvolutionAlgebra[Evo]
-    with MotionEvolutionAlgebra[Evo] {
-  implicit private val alg: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =
+trait PointEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
+  self: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =>
+
+  implicit private lazy val alg: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =
     this
 
   def cartesian(x: Evo[Double], y: Evo[Double]): Evo[Point] =

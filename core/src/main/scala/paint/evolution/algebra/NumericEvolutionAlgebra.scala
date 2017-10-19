@@ -3,7 +3,7 @@ package paint.evolution.algebra
 import paint.evolution.algebra.syntax.all._
 
 trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
-  implicit private val alg: EvolutionAlgebra[Evo] = this
+  implicit private lazy val alg: EvolutionAlgebra[Evo] = this
 
   def int: Evo[Int]
 
@@ -31,7 +31,7 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     double.map(d => radius * (d * 2 - 1))
 
   // Gaussian / Normal distribution
-  val normal: Evo[Double] =
+  lazy val normal: Evo[Double] =
     ball(1.0)
       .zipWith(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
       .filter { case (_, _, s) => s > 0 && s < 1 }

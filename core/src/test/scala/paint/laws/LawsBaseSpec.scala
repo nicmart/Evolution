@@ -3,18 +3,19 @@ package paint.laws
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import paint.evolution.algebra.MaterializableEvolutionAlgebra
+import paint.evolution.algebra.{EvolutionAlgebra, EvolutionMaterialization}
+import paint.evolution.algebra.syntax.MaterializableEvolutionOps
 
 import scala.util.Random
 
-trait LawsBaseSpec[Evolution[+ _], W]
+trait LawsBaseSpec[Evo[+ _], W]
   extends WordSpec
     with Matchers
     with PropertyChecks
-    with EvolutionLaws[Evolution, W] {
+    with EvolutionLaws[Evo, W] {
   val sampleSize = 10
 
-  val E: MaterializableEvolutionAlgebra[Evolution, W]
+  val E: EvolutionAlgebra[Evo] with EvolutionMaterialization[Evo, W]
 
   def worlds: Gen[W]
 
@@ -100,7 +101,7 @@ trait LawsBaseSpec[Evolution[+ _], W]
   def nonNegativeInt: Gen[Int] =
     Gen.choose(0, Int.MaxValue)
 
-  def intEvolutions: Gen[Evolution[Int]] =
+  def intEvolutions: Gen[Evo[Int]] =
     Gen.oneOf(Seq(
       E.empty,
       pure(99),
@@ -120,7 +121,7 @@ trait LawsBaseSpec[Evolution[+ _], W]
   def intPredicates: Gen[Int => Boolean] =
     intGen.map(n => (m: Int) => n > m)
 
-  def check[A](eq: IsEq[Evolution[A]]): Unit = {
+  def check[A](eq: IsEq[Evo[A]]): Unit = {
     forAll(worlds) { (world: W) =>
       E.run(eq.lhs, world).take(sampleSize) shouldBe E.run(eq.rhs, world).take(sampleSize)
     }

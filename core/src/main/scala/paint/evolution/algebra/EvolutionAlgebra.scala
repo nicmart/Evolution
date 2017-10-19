@@ -111,7 +111,3 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
       }
     }
 }
-
-trait MaterializableEvolutionAlgebra[Evo[+ _], W]
-  extends EvolutionAlgebra[Evo]
-    with EvolutionMaterialization[Evo, W]

@@ -1,10 +1,10 @@
 package paint.evolution.algebra.impl
 
 import paint.evolution.Evolution
-import paint.evolution.algebra.MaterializableEvolutionAlgebra
+import paint.evolution.algebra.MaterializableFullAlgebra
 import paint.random.RNG
 
-final class RNGEvolutionAlgebra extends MaterializableEvolutionAlgebra[Evolution, RNG] {
+final class RNGEvolutionAlgebra extends MaterializableFullAlgebra[Evolution, RNG] {
   override def run[A](evo: Evolution[A], world: RNG): Stream[A] =
     evo.unfold(world)
   override val empty: Evolution[Nothing] =
@@ -21,4 +21,8 @@ final class RNGEvolutionAlgebra extends MaterializableEvolutionAlgebra[Evolution
         case _ => (rng2, next)
       }
     }
+  override def int: Evolution[Int] = Evolution { rng =>
+    val (n, rng2) = rng.nextInt
+    (rng2, Some((n, int)))
+  }
 }

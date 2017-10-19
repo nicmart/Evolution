@@ -15,6 +15,10 @@ final class MotionEvolutionOps[Evo[+ _], A](val evo: Evo[A]) extends AnyVal {
     E.toPhaseSpace(evo)
   def drawAlong(other: Evo[Point])(implicit E: MotionEvolutionAlgebra[Evo], ev: Evo[A] =:= Evo[PhaseSpace[Point]]): Evo[Point] =
     E.drawOnEvolution(evo, other)
-  def positional(implicit E: EvolutionAlgebra[Evo], ev: Evo[A] =:= Evo[PhaseSpace[Point]]): Evo[Point] =
+  def positional(
+    implicit
+    E: EvolutionAlgebra[Evo],
+    ev: Evo[A] =:= Evo[PhaseSpace[Point]]
+  ): Evo[Point] =
     E.map[PhaseSpace[Point], Point](evo)(_._1)
 }

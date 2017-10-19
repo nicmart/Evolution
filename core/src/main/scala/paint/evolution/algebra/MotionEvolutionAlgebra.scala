@@ -5,12 +5,10 @@ import cats.syntax.group._
 import paint.evolution.algebra.syntax.all._
 import paint.geometry.Geometry.Point
 
-trait MotionEvolutionAlgebra[Evo[+ _]] {
-  self: EvolutionAlgebra[Evo] =>
-
+trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   import MotionEvolutionAlgebra._
 
-  implicit val E: EvolutionAlgebra[Evo] = this
+  implicit lazy val E: EvolutionAlgebra[Evo] = this
   type PositionEvolution[A] = Evo[PositionLaw[A]]
   type VelocityEvolution[A] = Evo[VelocityLaw[A]]
   type AccelerationEvolution[A] = Evo[AccelerationLaw[A]]

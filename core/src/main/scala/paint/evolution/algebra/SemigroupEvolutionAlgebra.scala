@@ -3,9 +3,8 @@ package paint.evolution.algebra
 import cats.kernel.{Group, Semigroup}
 import paint.evolution.algebra.syntax.all._
 
-trait SemigroupEvolutionAlgebra[Evo[+ _]] {
-  self: EvolutionAlgebra[Evo] =>
-  implicit val W: EvolutionAlgebra[Evo] = this
+trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
+  implicit lazy val W: EvolutionAlgebra[Evo] = this
 
   def differentiate[A: Group](f: Evo[A]): Evo[A] =
     f.slidingPair.map { case (a1, a2) => Group[A].remove(a1, a2) }
