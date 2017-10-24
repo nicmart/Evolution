@@ -31,7 +31,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves = 40
   )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
