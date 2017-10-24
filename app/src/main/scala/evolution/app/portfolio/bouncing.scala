@@ -3,14 +3,14 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import paint.evolution.implicits._
-import paint.evolution.Evolution.constant
+import paint.evolution.EvolutionLegacy.constant
 import paint.evolution.PointEvolutions.cartesian
 import paint.evolution.motion.AccelerationEvolution
 import paint.evolution.motion.MotionEvolutions._
 import evolution.app.react.component.config.instances._
 import cats.implicits._
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 import paint.geometry.Geometry
 
 object bouncing extends DrawingDefinition("bouncing") {
@@ -31,7 +31,7 @@ object bouncing extends DrawingDefinition("bouncing") {
       horizontalSpeed = 0.003
     )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Geometry.Point] = {
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Geometry.Point] = {
     val canvasSize = context.canvasSize.point
     val ground = canvasSize.y - config.groundLevel
 

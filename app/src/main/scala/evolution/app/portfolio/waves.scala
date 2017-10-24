@@ -2,16 +2,16 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
+import evolution.app.portfolio.drops.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
-import paint.evolution.Evolution.{constant, sequenceParallel}
-import paint.evolution.NumericEvolutions.ball
-import paint.evolution.PointEvolutions.{cartesian, uniformLinear}
-import paint.evolution.SemigroupEvolutions.translate
-import paint.evolution.implicits._
-import paint.evolution.motion.{AccelerationEvolution, MotionEvolutions}
+import paint.evolution.EvolutionLegacy
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
+import paint.evolution.algebra.syntax.all._
+import paint.evolution.algebra.{Evolution, FullAlgebra}
+
+import scala.collection.immutable.Queue
 
 object waves extends DrawingDefinition("waves") {
 
@@ -31,28 +31,42 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves = 40
   )
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    val accelerationEq: (Point, Point) => Point =
-      (x, v) => Point(0, -config.springConstant * x.y) - v * config.friction
-    val accelerationEvo: AccelerationEvolution[Point] = constant(accelerationEq)
-    val accelerationEvo2: AccelerationEvolution[Point] =
-      accelerationEvo.zipWith(cartesian(constant(0), ball(config.acceleration))) {
-        (eq, noise: Point) => {
-          (x: Point, v: Point) => {
-            val acc = eq(x, v)
-            acc + noise
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+    import config._
+    new Evolution[Point] {
+      override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+        import alg._
+
+        val accelerationEq: AccelerationLaw[Point] =
+          (x, v) => Point(0, -springConstant * x.y) - v * friction
+        // Note: AccelerationEvolution[Point] type alias causes problems with implicits: it thinks that the repr is AccEvo...
+        val accelerationEvo: Evo[AccelerationLaw[Point]] = constant(accelerationEq)
+        val accelerationEvo2 =
+          accelerationEvo.zipWith[Point, AccelerationLaw[Point]](cartesian(constant(0.0), ball(acceleration))) {
+            (eq: AccelerationLaw[Point], noise: Point) => {
+              (x: Point, v: Point) => {
+                val acc = eq(x, v)
+                acc + noise
+              }
+            }
           }
-        }
+
+        def vibration(from: Point) = translate(
+          uniformLinear(from, Point(config.speed, 0)),
+          solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
+        )
+
+        sequenceParallel(
+          Queue(
+            Point.sequence(
+              config.numberOfWaves,
+              Point.zero,
+              context.canvasSize.point.copy(x = 0)
+            ).map(vibration): _*
+          )
+        )
       }
-
-    def vibration(from: Point) = translate(
-      uniformLinear(from, Point(config.speed, 0)),
-      MotionEvolutions.solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
-    )
-
-    sequenceParallel(
-      Point.sequence(config.numberOfWaves, Point.zero, context.canvasSize.point.copy(x = 0)).map(vibration)
-    ).flattenList
+    }.run
   }
 
   def component: ConfigComponent[Config] = ConfigComponent[Config]

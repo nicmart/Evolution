@@ -2,15 +2,14 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
+import evolution.app.portfolio.brownian.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
-import paint.evolution.NumericEvolutions.double
-import paint.evolution.PointEvolutions.rectangle2D
-import paint.evolution.implicits._
+import paint.evolution.EvolutionLegacy
 import paint.evolution.motion.MotionEvolutions
 import paint.geometry.Geometry.Point
-import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.{Evolution, FullAlgebra}
+import paint.evolution.algebra.syntax.all._
 
 object brownianWithRandomJumps extends DrawingDefinition("brownian with random jumps") {
 
@@ -23,14 +22,18 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-
-    val slowDownEvo = double.map[Int] { d =>
-      if (d < config.jumpProbability) config.jumpSize else 1
-    }
-    MotionEvolutions.solveIndependent(context.canvasSize.point / 2)(
-      rectangle2D(config.radius).slowDown(slowDownEvo)
-    ).positional
+  def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
+    new Evolution[Point] {
+      override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+        import alg._
+        val slowDownEvo = double.map[Int] { d =>
+          if (d < config.jumpProbability) config.jumpSize else 1
+        }
+        solveIndependent(context.canvasSize.point / 2)(
+          rectangle2D(config.radius).slowDownBy(slowDownEvo)
+        ).positional
+      }
+    }.run
   }
 
   val currentConfig =

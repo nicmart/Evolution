@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 import paint.evolution.PointEvolutions.rectangle2D
 import paint.evolution.implicits._
 import paint.evolution.motion.{AccelerationLaw, MotionEvolutions}
@@ -27,8 +27,8 @@ object dynamics extends DrawingDefinition("dynamics") {
       numberOfPoints = 1
     )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    def accelerationEvolution: Evolution[AccelerationLaw[Point]] =
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
+    def accelerationEvolution: EvolutionLegacy[AccelerationLaw[Point]] =
       rectangle2D(config.acceleration) map { randomAcc =>
         (position, velocity) =>
           randomAcc - velocity * config.friction
@@ -38,7 +38,7 @@ object dynamics extends DrawingDefinition("dynamics") {
       accelerationEvolution
     ).positional
 
-    Evolution.sequenceParallel(List.fill(config.numberOfPoints)(singleEvo)).flattenList
+    EvolutionLegacy.sequenceParallel(List.fill(config.numberOfPoints)(singleEvo)).flattenList
   }
 
   protected def component: ConfigComponent[Config] = ConfigComponent[Config]

@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 import paint.evolution.PointEvolutions._
 import paint.evolution.SemigroupEvolutions._
 import paint.geometry.Geometry.Point
@@ -38,7 +38,7 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  override def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
     centeredIn(context.canvasSize.point / 2) {
       translate(
         uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),

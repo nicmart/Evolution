@@ -17,10 +17,10 @@ package object motion {
   type AccelerationLaw[A] = (Position[A], Velocity[A]) => Acceleration[A]
   type SimpleAccelerationLaw[A] = Position[A] => Acceleration[A]
 
-  type PositionEvolution[A] = Evolution[PositionLaw[A]]
-  type VelocityEvolution[A] = Evolution[VelocityLaw[A]]
-  type AccelerationEvolution[A] = Evolution[AccelerationLaw[A]]
-  type SimpleAccelerationEvolution[A] = Evolution[SimpleAccelerationLaw[A]]
+  type PositionEvolution[A] = EvolutionLegacy[PositionLaw[A]]
+  type VelocityEvolution[A] = EvolutionLegacy[VelocityLaw[A]]
+  type AccelerationEvolution[A] = EvolutionLegacy[AccelerationLaw[A]]
+  type SimpleAccelerationEvolution[A] = EvolutionLegacy[SimpleAccelerationLaw[A]]
 
   type FirstOrderPredicate[A] = (Position[A], Velocity[A]) => Boolean
   type SecondOrderPredicate[A] = (Acceleration[A], Position[A], Velocity[A]) => Boolean
@@ -35,30 +35,30 @@ package object motion {
     posEv.map(positionLaw => p => positionLaw(p) |-| p)
 
   def staticPosition[A](positionLaw: PositionLaw[A]): PositionEvolution[A] =
-    Evolution.constant(positionLaw)
+    EvolutionLegacy.constant(positionLaw)
 
   def independentStaticPosition[A](position: Position[A]): PositionEvolution[A] =
-    Evolution.constant(_ => position)
+    EvolutionLegacy.constant(_ => position)
 
-  def independentPosition[A](position: Evolution[Position[A]]): PositionEvolution[A] =
+  def independentPosition[A](position: EvolutionLegacy[Position[A]]): PositionEvolution[A] =
     position.map(p => _ => p)
 
   def staticVelocity[A](velocityLaw: VelocityLaw[A]): VelocityEvolution[A] =
-    Evolution.constant(velocityLaw)
+    EvolutionLegacy.constant(velocityLaw)
 
   def independentStaticVelocity[A](velocity: Velocity[A]): VelocityEvolution[A] =
-    Evolution.constant(_ => velocity)
+    EvolutionLegacy.constant(_ => velocity)
 
-  def independentVelocity[A](velocity: Evolution[Velocity[A]]): VelocityEvolution[A] =
+  def independentVelocity[A](velocity: EvolutionLegacy[Velocity[A]]): VelocityEvolution[A] =
     velocity.map(v => _ => v)
 
   def staticAcceleration[A](accelerationLaw: AccelerationLaw[A]): AccelerationEvolution[A] =
-    Evolution.constant(accelerationLaw)
+    EvolutionLegacy.constant(accelerationLaw)
 
   def independentStaticAcceleration[A](acceleration: Acceleration[A]): AccelerationEvolution[A] =
-    Evolution.constant((_, _) => acceleration)
+    EvolutionLegacy.constant((_, _) => acceleration)
 
-  def independentAcceleration[A](acceleration: Evolution[Acceleration[A]]): AccelerationEvolution[A] =
+  def independentAcceleration[A](acceleration: EvolutionLegacy[Acceleration[A]]): AccelerationEvolution[A] =
     acceleration.map(acc => (_, _) => acc)
 
   def positionalFirstOrderPredicate[A](p: Position[A] => Boolean): FirstOrderPredicate[A] =

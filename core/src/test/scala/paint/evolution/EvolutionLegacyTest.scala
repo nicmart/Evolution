@@ -1,10 +1,10 @@
 package paint.evolution
 
-import paint.evolution.Evolution._
+import paint.evolution.EvolutionLegacy._
 import paint.evolution.NumericEvolutions._
 import paint.random.SequenceRNG
 
-class EvolutionTest extends PaintEvolutionSpec {
+class EvolutionLegacyTest extends PaintEvolutionSpec {
 
   "A slowed down evolution" must {
 
@@ -39,8 +39,8 @@ class EvolutionTest extends PaintEvolutionSpec {
     }
 
     "respect composition law" in {
-      val f1: Int => Evolution[Int] = n => pure(n + 1)
-      val f2: Int => Evolution[Int] = n => pure(n * 2)
+      val f1: Int => EvolutionLegacy[Int] = n => pure(n + 1)
+      val f2: Int => EvolutionLegacy[Int] = n => pure(n * 2)
       assertEquivalent(
         int.flatMap(f1).flatMap(f2),
         int.flatMap(n => f1(n).flatMap(f2))

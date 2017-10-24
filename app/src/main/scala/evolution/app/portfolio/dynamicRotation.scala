@@ -4,7 +4,7 @@ import cats.implicits._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 import paint.evolution.PointEvolutions._
 import paint.evolution.implicits._
 import paint.evolution.motion.MotionEvolutions._
@@ -35,7 +35,7 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
   override protected def evolution(config: Config, context: DrawingContext) = {
     import config._
 
-    def vibration(om: Double, ampl: Double): Evolution[Point] =
+    def vibration(om: Double, ampl: Double): EvolutionLegacy[Point] =
       solveIndependentStatic(0.0)(om).positional.map(d => Point(0, Math.sin(d) * ampl))
 
     // Make the spiral go at constant speed

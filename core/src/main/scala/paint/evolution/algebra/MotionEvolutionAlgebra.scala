@@ -7,8 +7,8 @@ import paint.geometry.Geometry.Point
 
 trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   import MotionEvolutionAlgebra._
+  private implicit lazy val E: EvolutionAlgebra[Evo] = this
 
-  implicit lazy val E: EvolutionAlgebra[Evo] = this
   type PositionEvolution[A] = Evo[PositionLaw[A]]
   type VelocityEvolution[A] = Evo[VelocityLaw[A]]
   type AccelerationEvolution[A] = Evo[AccelerationLaw[A]]

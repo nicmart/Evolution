@@ -4,7 +4,7 @@ import cats.kernel.{Group, Semigroup}
 import paint.evolution.algebra.syntax.all._
 
 trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
-  implicit lazy val W: EvolutionAlgebra[Evo] = this
+  private implicit lazy val E: EvolutionAlgebra[Evo] = this
 
   def differentiate[A: Group](f: Evo[A]): Evo[A] =
     f.slidingPair.map { case (a1, a2) => Group[A].remove(a1, a2) }

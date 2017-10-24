@@ -7,7 +7,7 @@ import paint.evolution.NumericEvolutions.choose
 import paint.evolution.PointEvolutions.rotate
 import paint.evolution.implicits._
 import paint.evolution.motion.MotionEvolutions._
-import paint.evolution.{Evolution, NumericEvolutions}
+import paint.evolution.{EvolutionLegacy, NumericEvolutions}
 import paint.geometry.Geometry.Point
 import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
@@ -29,7 +29,7 @@ object brownianStraight extends DrawingDefinition("brownian straight") {
     n = 4
   )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
     rotate(
       context.canvasSize.point / 2,
       2 * Math.PI * (config.rotation / 360),

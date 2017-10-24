@@ -3,12 +3,12 @@ package evolution.app.model.configured
 import evolution.app.react.component.config.ConfiguredComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 
 sealed trait ConfiguredDrawing[T] {
   val name: String
 
-  def evolution: Evolution[T]
+  def evolution: EvolutionLegacy[T]
 
   def configElement(onChange: ConfiguredDrawing[T] => Callback): VdomElement
 }
@@ -23,7 +23,7 @@ object ConfiguredDrawing {
     private val configuredComponent: ConfiguredComponent[Config] = _configuredComponent
     override val name: String = _name
 
-    override def evolution: Evolution[T] = configuredEvolution.evolution
+    override def evolution: EvolutionLegacy[T] = configuredEvolution.evolution
     override def configElement(callback: ConfiguredDrawing[T] => Callback): VdomElement = {
       configuredComponent.element(config => callback(withConfig(config)))
     }

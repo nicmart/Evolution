@@ -4,12 +4,12 @@ package paint.evolution
   * Created by Nicolò Martini on 15/05/2017.
   */
 object NumericEvolutions {
-  val int: Evolution[Int] = Evolution { rng =>
+  val int: EvolutionLegacy[Int] = EvolutionLegacy { rng =>
     val (i, rng2) = rng.nextInt
     (rng2, Some(i, int))
   }
 
-  val nonNegative: Evolution[Int] =
+  val nonNegative: EvolutionLegacy[Int] =
     int flatMapNext { (n, int2) =>
       n match {
         case Int.MinValue => nonNegative
@@ -18,21 +18,21 @@ object NumericEvolutions {
       }
     }
 
-  val double: Evolution[Double] =
+  val double: EvolutionLegacy[Double] =
     int.map { n =>
       (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
     }
 
-  def doubleRange(from: Double, to: Double): Evolution[Double] =
+  def doubleRange(from: Double, to: Double): EvolutionLegacy[Double] =
     double.map(d => (to - from) * d + from)
 
-  def intRange(from: Int, to: Int): Evolution[Int] =
+  def intRange(from: Int, to: Int): EvolutionLegacy[Int] =
     doubleRange(from, to).map(_.toInt)
 
-  def ball(radius: Double): Evolution[Double] =
+  def ball(radius: Double): EvolutionLegacy[Double] =
     double.map(d => radius * (d * 2 - 1))
 
-  def normal: Evolution[Double] =
+  def normal: EvolutionLegacy[Double] =
     ball(1)
       .zipWith(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
       .filter { case (_, _, s) => s > 0 && s < 1 }
@@ -41,7 +41,7 @@ object NumericEvolutions {
         v1 * multiplier
       }
 
-  def choose[A](as: IndexedSeq[A]): Evolution[A] =
+  def choose[A](as: IndexedSeq[A]): EvolutionLegacy[A] =
     int.map(i => as.apply(Math.abs(i) % as.length))
 
 }

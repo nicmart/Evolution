@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.Evolution
+import paint.evolution.EvolutionLegacy
 import paint.evolution.PointEvolutions._
 import paint.evolution.implicits._
 import paint.evolution.motion.{AccelerationLaw, PhaseSpace, Position, Velocity}
@@ -30,14 +30,14 @@ object nBodies extends DrawingDefinition("n bodies") {
     mass2 = 1
   )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
     import config._
     val start = IndexedSeq(
       ((Point(-distance / 2, 0), Point(0, speed1)), mass1),
       ((Point(distance / 2, 0), Point(0, speed2)), mass2)
     )
     val fieldGens: IndexedSeq[FieldGen] = IndexedSeq(fieldGen(gravityConstant, mass1), fieldGen(gravityConstant, mass2))
-    val evo: Evolution[IndexedSeq[(Position[Point], Velocity[Point])]] = solve2Multi(start, fieldGens)
+    val evo: EvolutionLegacy[IndexedSeq[(Position[Point], Velocity[Point])]] = solve2Multi(start, fieldGens)
 
     centeredIn(context.canvasSize.point / 2) {
       evo.map(_.toList).flattenList.positional
@@ -60,14 +60,14 @@ object nBodies extends DrawingDefinition("n bodies") {
   private def solve2Multi(
     bodyStates: IndexedSeq[(PhaseSpace[Point], Mass)],
     fields: IndexedSeq[FieldGen]
-  ): Evolution[IndexedSeq[PhaseSpace[Point]]] = {
+  ): EvolutionLegacy[IndexedSeq[PhaseSpace[Point]]] = {
     val currentLaws: IndexedSeq[(AccelerationLaw[Point], Mass)] = laws(bodyStates, fields)
     val accs = currentLaws.zip(bodyStates).map { case ((law, mass1), ((pos, vel), mass2)) => law(pos, vel) }
     val nextStates: IndexedSeq[(PhaseSpace[Point], Mass)] = bodyStates.zip(accs).map {
       case (((pos, vel), mass), acc) =>
         ((pos + vel, vel + acc), mass)
     }
-    Evolution.pure(bodyStates.map(_._1)).append(solve2Multi(nextStates, fields))
+    EvolutionLegacy.pure(bodyStates.map(_._1)).append(solve2Multi(nextStates, fields))
   }
 
   private def laws(
