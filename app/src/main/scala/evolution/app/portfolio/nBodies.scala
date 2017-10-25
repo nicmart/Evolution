@@ -5,7 +5,6 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.{EvolutionLegacy, algebra}
-import paint.evolution.implicits._
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.Evolution

@@ -1,7 +1,7 @@
 package paint.evolution.algebra.syntax
 
-import cats.kernel.Group
-import paint.evolution.algebra.MotionEvolutionAlgebra.PhaseSpace
+import cats.kernel.{Group, Semigroup}
+import paint.evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace}
 import paint.evolution.algebra._
 import paint.geometry.Geometry.Point
 
@@ -10,6 +10,8 @@ trait MotionEvolutionSyntax {
     new MotionEvolutionOps(evo)
   implicit final def phaseSpaceSyntax[Evo[+ _], A](evo: Evo[PhaseSpace[A]]): PhaseSpaceEvolutionOps[Evo, A] =
     new PhaseSpaceEvolutionOps(evo)
+  implicit final def accelerationLawSyntax[Evo[+ _], A](evo: Evo[AccelerationLaw[A]]): AccelerationLawEvolutionOps[Evo, A] =
+    new AccelerationLawEvolutionOps(evo)
 }
 
 final class MotionEvolutionOps[Evo[+ _], A](val evo: Evo[A]) extends AnyVal {
@@ -23,3 +25,16 @@ final class PhaseSpaceEvolutionOps[Evo[+_], A](val evo: Evo[PhaseSpace[A]]) exte
   def positional[B](implicit E: EvolutionAlgebra[Evo]): Evo[A] =
     E.map(evo)(_._1)
 }
+
+final class AccelerationLawEvolutionOps[Evo[+_], A](val evo: Evo[AccelerationLaw[A]]) extends AnyVal {
+  def +(other: Evo[AccelerationLaw[A]])(
+    implicit
+    E: EvolutionAlgebra[Evo],
+    sg: Semigroup[A]
+  ): Evo[AccelerationLaw[A]] = {
+    E.zipWith(evo, other){ (law1, law2) =>
+      (position, velocity) => sg.combine(law1(position, velocity), law2(position, velocity))
+    }
+  }
+}
+

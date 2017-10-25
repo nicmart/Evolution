@@ -2,10 +2,8 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.portfolio.brownian.Config
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.EvolutionLegacy
-import paint.evolution.motion.MotionEvolutions
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.{Evolution, FullAlgebra}

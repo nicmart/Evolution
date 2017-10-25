@@ -21,8 +21,9 @@ object Conf {
       singlePoint,
       primes,
       dynamicRotation,
-      nBodies
+      nBodies,
+      bouncing
     ),
-    nBodies
+    brownianStraight
   )
 }

@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.{EvolutionLegacy, NumericEvolutions, algebra}
+import paint.evolution.{EvolutionLegacy, algebra}
 import paint.geometry.Geometry.Point
 import paint.evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
