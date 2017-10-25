@@ -5,7 +5,6 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
-import paint.evolution.EvolutionLegacy
 import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import paint.evolution.algebra.{Evolution, FullAlgebra}
 import paint.evolution.algebra.syntax.all._
@@ -26,7 +25,7 @@ object segments extends DrawingDefinition("segments") {
     lengthOverSpeed = 100
   )
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
@@ -46,7 +45,7 @@ object segments extends DrawingDefinition("segments") {
           segment(position - rotatedVel * lengthOverSpeed, position + rotatedVel * lengthOverSpeed, 1)
         }
       }
-    }.run
+    }
   }
 
   protected def component = ConfigComponent[Config]

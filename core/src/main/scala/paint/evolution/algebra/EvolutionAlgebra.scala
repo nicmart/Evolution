@@ -18,7 +18,9 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     cons(a, empty)
 
   def constant[A](a: A): Evo[A] =
-    cons(a, constant(a))
+    memoize[Evo[A]] { self =>
+      cons(a, self)
+    }
 
   def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A] =
     mapEmpty(
@@ -57,8 +59,9 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
   def flatten[A](ev: Evo[Evo[A]]): Evo[A] =
     flatMap(ev)(identity)
 
-  def cyclic[A](eva: Evo[A]): Evo[A] =
-    concat(eva, cyclic(eva))
+  def cyclic[A](eva: Evo[A]): Evo[A] = memoize[Evo[A]] { self =>
+    concat(eva, self)
+  }
 
   def repeat[A](eva: Evo[A], times: Int): Evo[A] =
     times match {
@@ -121,5 +124,10 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
         cons(a, sequenceParallel(rest.enqueue(first2)))
       }
     }
+  }
+
+  private def memoize[T](f: => T => T): T = {
+    lazy val fixedpoint: T = f(fixedpoint)
+    fixedpoint
   }
 }

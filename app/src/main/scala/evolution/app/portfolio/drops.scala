@@ -3,7 +3,6 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
@@ -62,8 +61,8 @@ object drops extends DrawingDefinition("drops") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 
   override def component: ConfigComponent[Config] = ConfigComponent[Config]
 }

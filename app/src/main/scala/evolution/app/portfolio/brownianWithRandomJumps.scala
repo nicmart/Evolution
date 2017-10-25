@@ -3,7 +3,6 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.{Evolution, FullAlgebra}
@@ -20,7 +19,7 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
@@ -31,7 +30,7 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
           rectangle2D(config.radius).slowDownBy(slowDownEvo)
         ).positional
       }
-    }.run
+    }
   }
 
   val currentConfig =

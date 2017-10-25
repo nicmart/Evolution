@@ -4,7 +4,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
-import paint.evolution.{EvolutionLegacy, algebra}
+import paint.evolution.algebra
 import paint.evolution.algebra.Evolution
 import paint.geometry.Geometry.Point
 
@@ -17,8 +17,8 @@ object singlePoint extends DrawingDefinition("single constant point") {
       alg.constant(Point.zero)
   }
 
-  protected def evolution(config: Unit, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  protected def evolution(config: Unit, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 
   protected def component: ConfigComponent[Unit] = ConfigComponent[Unit]
 }

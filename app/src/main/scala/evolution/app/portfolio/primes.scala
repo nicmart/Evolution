@@ -6,7 +6,7 @@ import evolution.app.react.component.config.ConfigComponent
 import paint.geometry.Geometry.Point
 import paint.evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
-import paint.evolution.{EvolutionLegacy, algebra}
+import paint.evolution.algebra
 import paint.evolution.algebra.Evolution
 
 object primes extends DrawingDefinition("primes") {
@@ -45,8 +45,8 @@ object primes extends DrawingDefinition("primes") {
     }
   }
 
-  override protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  override protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 
   override protected def component: ConfigComponent[Config] =
     ConfigComponent[Config]

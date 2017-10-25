@@ -3,7 +3,6 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.{EvolutionLegacy, algebra}
 import paint.geometry.Geometry.Point
 import paint.evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
@@ -42,12 +41,12 @@ object dynamics extends DrawingDefinition("dynamics") {
         accelerationEvolution
       ).positional
 
-      sequenceParallel(Queue.fill(config.numberOfPoints)(singleEvo))
+      sequenceParallel(Queue.fill(config.numberOfPoints)(singleEvo)).take(3000).repeat(100)
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 
   protected def component: ConfigComponent[Config] = ConfigComponent[Config]
 }

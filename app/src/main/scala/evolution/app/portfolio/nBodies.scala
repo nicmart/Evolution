@@ -4,7 +4,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.{EvolutionLegacy, algebra}
+import paint.evolution.algebra
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.Evolution
@@ -87,8 +87,8 @@ object nBodies extends DrawingDefinition("n bodies") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 
   protected def component = ConfigComponent[Config]
 

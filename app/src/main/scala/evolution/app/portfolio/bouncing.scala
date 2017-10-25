@@ -8,7 +8,7 @@ import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
 import paint.evolution.algebra.Evolution
 import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
-import paint.evolution.{EvolutionLegacy, algebra}
+import paint.evolution.algebra
 import paint.geometry.Geometry
 import paint.evolution.algebra.syntax.all._
 import paint.geometry.Geometry.Point
@@ -60,8 +60,8 @@ object bouncing extends DrawingDefinition("bouncing") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Geometry.Point] =
-    new ThisEvolution(config, context).run
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Geometry.Point] =
+    new ThisEvolution(config, context)
 
   protected def component = ConfigComponent[Config]
 }

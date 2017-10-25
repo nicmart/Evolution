@@ -2,9 +2,7 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.portfolio.drops.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
@@ -31,7 +29,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves = 40
   )
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
@@ -66,7 +64,7 @@ object waves extends DrawingDefinition("waves") {
           )
         )
       }
-    }.run
+    }
   }
 
   def component: ConfigComponent[Config] = ConfigComponent[Config]

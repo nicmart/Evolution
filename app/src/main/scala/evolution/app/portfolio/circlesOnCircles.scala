@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.{EvolutionLegacy, algebra}
+import paint.evolution.algebra
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
 import paint.evolution.algebra.syntax.all._
@@ -55,6 +55,6 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     }
   }
 
-  override protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
-    new ThisEvolution(config, context).run
+  override protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+    new ThisEvolution(config, context)
 }
