@@ -3,13 +3,13 @@ package evolution.app.portfolio
 import cats.implicits._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
+import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
-import paint.evolution.PointEvolutions._
-import paint.evolution.implicits._
-import paint.evolution.motion.MotionEvolutions._
+import paint.evolution.{EvolutionLegacy, algebra}
 import paint.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.syntax.all._
+import paint.evolution.algebra.{Evolution, FullAlgebra}
 
 object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
 
@@ -32,33 +32,39 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
       amplitude2 = 10
     )
 
-  override protected def evolution(config: Config, context: DrawingContext) = {
-    import config._
+  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+    override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+      import alg._
+      import config._
 
-    def vibration(om: Double, ampl: Double): EvolutionLegacy[Point] =
-      solveIndependentStatic(0.0)(om).positional.map(d => Point(0, Math.sin(d) * ampl))
+      def vibration(om: Double, ampl: Double): Evo[Point] =
+        solveIndependentStatic(0.0)(om).positional.map(d => Point(0, Math.sin(d) * ampl))
 
-    // Make the spiral go at constant speed
-    val time = solveStatic(0.0) { t =>
-      (angularSpeed / normSpeed) * Math.sqrt(1 / (1 + Math.pow(t, 2)))
-    }.positional
+      // Make the spiral go at constant speed
+      val time = solveStatic(0.0) { t =>
+        (angularSpeed / normSpeed) * Math.sqrt(1 / (1 + Math.pow(t, 2)))
+      }.positional
 
-    val spiral = toPhaseSpace(time.map { t =>
-      Point.polar(normSpeed * t, t)
-    }
-    )
+      val spiral = toPhaseSpace(time.map { t =>
+        Point.polar(normSpeed * t, t)
+      })
 
-    centeredIn(context.canvasSize.point / 2) {
-      drawOnEvolution(
-        toPhaseSpace(drawOnEvolution(
-          spiral,
-          vibration(omega, amplitude)
+      centeredIn(context.canvasSize.point / 2) {
+        drawOnEvolution(
+          toPhaseSpace(drawOnEvolution(
+            spiral,
+            vibration(omega, amplitude)
+          )
+          ),
+          vibration(omega2, amplitude2)
         )
-        ),
-        vibration(omega2, amplitude2)
-      )
+      }
     }
   }
 
-  override protected def component = ConfigComponent[Config]
+  override protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
+    new ThisEvolution(config, context).run
+
+  override protected def component: ConfigComponent[Config] =
+    ConfigComponent[Config]
 }

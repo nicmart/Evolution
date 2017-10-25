@@ -14,5 +14,5 @@ final class SemigroupEvolutionOps[Evo[+ _], A](val evo: Evo[A]) extends AnyVal {
   def translate(other: Evo[A])(implicit E: SemigroupEvolutionAlgebra[Evo], group: Group[A]): Evo[A] =
     E.translate(evo, other)
   def centredIn(center: A)(implicit E: SemigroupEvolutionAlgebra[Evo], semigroup: Semigroup[A]): Evo[A] =
-    E.centredIn(center)(evo)
+    E.centeredIn(center)(evo)
 }

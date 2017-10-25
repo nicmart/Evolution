@@ -5,3 +5,4 @@ trait AllSyntax
     with NumericEvolutionSyntax
     with SemigroupEvolutionSyntax
     with MotionEvolutionSyntax
+    with PointEvolutionSyntax

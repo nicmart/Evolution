@@ -12,6 +12,6 @@ trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   def translate[A: Semigroup](ev1: Evo[A], ev2: Evo[A]): Evo[A] =
     ev1.zipWith(ev2)(Semigroup[A].combine)
 
-  def centredIn[A](center: A)(evo: Evo[A])(implicit semigroup: Semigroup[A]): Evo[A] =
+  def centeredIn[A](center: A)(evo: Evo[A])(implicit semigroup: Semigroup[A]): Evo[A] =
     evo.map(semigroup.combine(center, _))
 }

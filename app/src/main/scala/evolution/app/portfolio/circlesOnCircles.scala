@@ -3,12 +3,11 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
-import paint.evolution.PointEvolutions._
-import paint.evolution.SemigroupEvolutions._
+import paint.evolution.{EvolutionLegacy, algebra}
 import paint.geometry.Geometry.Point
-import paint.evolution.implicits._
 import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.syntax.all._
+import paint.evolution.algebra.Evolution
 
 object circlesOnCircles extends DrawingDefinition("circles on circles") {
 
@@ -22,7 +21,6 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     lastRadius: Double,
     lastRadialSpeed: Double
   )
-
 
   val currentConfig = Config(
     bigRadius = 500,
@@ -38,19 +36,25 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
-    centeredIn(context.canvasSize.point / 2) {
-      translate(
-        uniformRadial(Point(0, config.bigRadius), config.bigRadialSpeed),
+  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+    import config._
+    override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
+      import alg._
+      centeredIn(context.canvasSize.point / 2) {
         translate(
-          uniformRadial(Point(0, config.mediumRadius), config.mediumRadialSpeed),
+          uniformRadial(Point(0, bigRadius), bigRadialSpeed),
           translate(
-            uniformRadial(Point(0, config.smallRadius), config.smallRadialSpeed),
-            uniformRadial(Point(0, config.lastRadius), config.lastRadialSpeed)
+            uniformRadial(Point(0, mediumRadius), mediumRadialSpeed),
+            translate(
+              uniformRadial(Point(0, smallRadius), smallRadialSpeed),
+              uniformRadial(Point(0, lastRadius), lastRadialSpeed)
+            )
           )
-
         )
-      )
+      }
     }
   }
+
+  override protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
+    new ThisEvolution(config, context).run
 }

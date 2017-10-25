@@ -3,12 +3,14 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.EvolutionLegacy
-import paint.evolution.PointEvolutions.rectangle2D
-import paint.evolution.implicits._
-import paint.evolution.motion.{AccelerationLaw, MotionEvolutions}
+import paint.evolution.{EvolutionLegacy, algebra}
 import paint.geometry.Geometry.Point
+import paint.evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
+import paint.evolution.algebra.{Evolution, FullAlgebra}
+
+import scala.collection.immutable.Queue
 
 object dynamics extends DrawingDefinition("dynamics") {
 
@@ -27,19 +29,25 @@ object dynamics extends DrawingDefinition("dynamics") {
       numberOfPoints = 1
     )
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
-    def accelerationEvolution: EvolutionLegacy[AccelerationLaw[Point]] =
-      rectangle2D(config.acceleration) map { randomAcc =>
-        (position, velocity) =>
-          randomAcc - velocity * config.friction
-      }
+  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+    import config._
+    override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+      import alg._
+      val accelerationEvolution: Evo[AccelerationLaw[Point]] =
+        rectangle2D(acceleration) map { randomAcc =>
+          (position, velocity) =>
+            randomAcc - velocity * friction
+        }
+      val singleEvo = solve2(context.canvasSize.point / 2, initialSpeed)(
+        accelerationEvolution
+      ).positional
 
-    val singleEvo = MotionEvolutions.solve2(context.canvasSize.point / 2, config.initialSpeed)(
-      accelerationEvolution
-    ).positional
-
-    EvolutionLegacy.sequenceParallel(List.fill(config.numberOfPoints)(singleEvo)).flattenList
+      sequenceParallel(Queue.fill(config.numberOfPoints)(singleEvo))
+    }
   }
+
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
+    new ThisEvolution(config, context).run
 
   protected def component: ConfigComponent[Config] = ConfigComponent[Config]
 }

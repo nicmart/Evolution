@@ -32,37 +32,38 @@ object drops extends DrawingDefinition("drops") {
       numberOfDrops = 80
     )
 
-  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] = {
-    import config._
-    new Evolution[Point] {
-      override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
-        import alg._
+  private class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+    override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+      import config._
+      import alg._
 
-        val acc = Point(0, acceleration)
-        val randomForces = double.flatMap { p =>
-          if (p < randomForceProbability) ring(randomForceStrength).head else pure(Point.zero)
-        }
-
-        def accelerationEvolution: Evo[AccelerationLaw[Point]] = randomForces map { randomAcc =>
-          (position, velocity) =>
-            if ((randomAcc + velocity + acc).norm() < threshold) -velocity
-            else randomAcc + acc - velocity * friction
-        }
-
-        def pointEvo(from: Point): Evo[Point] = {
-          solve2(from, Point.zero)(accelerationEvolution).positional
-        }
-
-        sequenceParallel(
-          Queue.apply(Point.sequence(
-            numberOfDrops,
-            context.canvasSize.point.copy(y = 0),
-            Point(0, 0)
-          ).map(pointEvo): _*)
-        )
+      val acc = Point(0, acceleration)
+      val randomForces = double.flatMap { p =>
+        if (p < randomForceProbability) ring(randomForceStrength).head else pure(Point.zero)
       }
-    }.run
+
+      def accelerationEvolution: Evo[AccelerationLaw[Point]] = randomForces map { randomAcc =>
+        (position, velocity) =>
+          if ((randomAcc + velocity + acc).norm() < threshold) -velocity
+          else randomAcc + acc - velocity * friction
+      }
+
+      def pointEvo(from: Point): Evo[Point] = {
+        solve2(from, Point.zero)(accelerationEvolution).positional
+      }
+
+      sequenceParallel(
+        Queue.apply(Point.sequence(
+          numberOfDrops,
+          context.canvasSize.point.copy(y = 0),
+          Point(0, 0)
+        ).map(pointEvo): _*)
+      )
+    }
   }
+
+  protected def evolution(config: Config, context: DrawingContext): EvolutionLegacy[Point] =
+    new ThisEvolution(config, context).run
 
   override def component: ConfigComponent[Config] = ConfigComponent[Config]
 }
