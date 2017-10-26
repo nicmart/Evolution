@@ -9,10 +9,6 @@ trait EvolutionCoreAlgebra[Evo[+ _]] {
   def mapCons[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
 }
 
-trait EvolutionMaterialization[Evo[+ _], -W] {
-  def run[A](evo: Evo[A], world: W): Stream[A]
-}
-
 trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
   def pure[A](a: A): Evo[A] =
     cons(a, empty)

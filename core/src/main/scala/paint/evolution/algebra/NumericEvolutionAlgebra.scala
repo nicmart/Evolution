@@ -11,7 +11,7 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     doubleBetween(from, to).map(_.toInt)
 
   val nonNegative: Evo[Int] =
-    int flatMapNext { (n, int2) =>
+    int mapCons { (n, int2) =>
       n match {
         case Int.MinValue => nonNegative
         case _ if n < 0 => -n :: nonNegative

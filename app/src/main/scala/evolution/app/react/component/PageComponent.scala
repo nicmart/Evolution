@@ -32,7 +32,7 @@ object PageComponent {
     rng: SimpleRNG
   ) {
     val algebra = new RNGEvolutionAlgebra
-    def points: Stream[Point] = algebra.run(currentDrawing.evolution.run(algebra), rng)
+    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
 
     /**
       * Create a new seed

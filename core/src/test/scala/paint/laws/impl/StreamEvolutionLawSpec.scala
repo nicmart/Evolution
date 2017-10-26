@@ -1,10 +1,10 @@
 package paint.laws.impl
 
-import org.scalacheck.Gen
 import paint.evolution.algebra.impl.StreamEvolutionAlgebra
-import paint.laws.{EvolutionLaws, LawsBaseSpec}
+import paint.laws.{EvolutionLaws, IsEq, LawsBaseSpec}
 
-class StreamEvolutionLawSpec extends LawsBaseSpec[Stream, Any] with EvolutionLaws[Stream, Any] {
+class StreamEvolutionLawSpec extends LawsBaseSpec[Stream] with EvolutionLaws[Stream] {
   override val E: StreamEvolutionAlgebra = new StreamEvolutionAlgebra
-  override def worlds: Gen[Any] = Gen.const(0)
+  override def check[A](eq: IsEq[Stream[A]]): Unit =
+    assert(eq.lhs.take(100) == eq.rhs.take(100))
 }

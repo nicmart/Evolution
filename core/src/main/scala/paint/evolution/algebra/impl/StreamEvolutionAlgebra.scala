@@ -1,10 +1,9 @@
 package paint.evolution.algebra.impl
 
-import paint.evolution.algebra.MaterializableFullAlgebra
+import paint.evolution.algebra.FullAlgebra
 
-final class StreamEvolutionAlgebra extends MaterializableFullAlgebra[Stream, Any] {
+final class StreamEvolutionAlgebra extends FullAlgebra[Stream] {
   override val empty: Stream[Nothing] = Stream.empty
-  override def run[A](evo: Stream[A], world: Any): Stream[A] = evo
   override def cons[A](head: A, tail: => Stream[A]): Stream[A] = head #:: tail
   override def mapCons[A, B](eva: Stream[A])(f: (A, Stream[A]) => Stream[B]): Stream[B] =
     if (eva.isEmpty) empty else {

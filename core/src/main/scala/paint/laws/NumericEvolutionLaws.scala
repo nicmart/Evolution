@@ -1,10 +1,10 @@
 package paint.laws
 
 import paint.evolution.algebra.syntax.all._
-import paint.evolution.algebra.{MaterializedAlgebra, NumericEvolutionAlgebra}
+import paint.evolution.algebra.NumericEvolutionAlgebra
 
-trait NumericEvolutionLaws[Evo[+ _], W] {
-  implicit val E: MaterializedAlgebra[NumericEvolutionAlgebra, Evo, W]
+trait NumericEvolutionLaws[Evo[+ _]] {
+  implicit val E: NumericEvolutionAlgebra[Evo]
 
   import E._
 

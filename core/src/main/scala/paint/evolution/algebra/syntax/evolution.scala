@@ -1,18 +1,17 @@
 package paint.evolution.algebra.syntax
 
-import paint.evolution.algebra.{EvolutionAlgebra, EvolutionCoreAlgebra, EvolutionMaterialization}
+import paint.evolution.algebra.{EvolutionAlgebra, EvolutionCoreAlgebra}
 
 trait EvolutionSyntax {
   implicit final def syntaxEvolution[Evo[+ _], A](evo: Evo[A]): EvolutionOps[Evo, A] =
     new EvolutionOps(evo)
-
-  implicit final def syntaxMaterializableEvolution[Evo[+ _], W, A](evo: Evo[A]): MaterializableEvolutionOps[Evo, W, A] =
-    new MaterializableEvolutionOps(evo)
 }
 
 final class EvolutionOps[Evo[+ _], A](val ev: Evo[A]) extends AnyVal {
-  def flatMapNext[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionCoreAlgebra[Evo]): Evo[B] =
+  def mapCons[B](f: (A, Evo[A]) => Evo[B])(implicit E: EvolutionCoreAlgebra[Evo]): Evo[B] =
     E.mapCons(ev)(f)
+  def mapEmpty(f: => Evo[A])(implicit E: EvolutionCoreAlgebra[Evo]): Evo[A] =
+    E.mapEmpty(ev)(f)
   def flatMap[B](f: A => Evo[B])(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
     E.flatMap(ev)(f)
   def map[B](f: A => B)(implicit E: EvolutionAlgebra[Evo]): Evo[B] =
@@ -49,9 +48,4 @@ final class EvolutionOps[Evo[+ _], A](val ev: Evo[A]) extends AnyVal {
     E.slidingPairs(ev)
   def grouped(n: Int, from: Int = 0)(implicit E: EvolutionAlgebra[Evo]): Evo[List[A]] =
     E.grouped(ev)(n, from)
-}
-
-final class MaterializableEvolutionOps[Evo[+ _], W, A](val ev: Evo[A]) extends AnyVal {
-  def run(w: W)(implicit materialization: EvolutionMaterialization[Evo, W]): Stream[A] =
-    materialization.run(ev, w)
 }

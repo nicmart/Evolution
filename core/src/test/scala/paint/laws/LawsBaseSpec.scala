@@ -3,23 +3,23 @@ package paint.laws
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import paint.evolution.algebra.{EvolutionAlgebra, EvolutionMaterialization}
-import paint.evolution.algebra.syntax.MaterializableEvolutionOps
+import paint.evolution.algebra.EvolutionAlgebra
 
 import scala.util.Random
 
-trait LawsBaseSpec[Evo[+ _], W]
+//@todo remove W
+trait LawsBaseSpec[Evo[+ _]]
   extends WordSpec
     with Matchers
     with PropertyChecks
-    with EvolutionLaws[Evo, W] {
+    with EvolutionLaws[Evo] {
   val sampleSize = 10
 
-  val E: EvolutionAlgebra[Evo] with EvolutionMaterialization[Evo, W]
-
-  def worlds: Gen[W]
+  val E: EvolutionAlgebra[Evo]
 
   import E._
+
+  def check[A](eq: IsEq[Evo[A]]): Unit
 
   "map compose" in {
     forAll(intEvolutions, intFunctions, intFunctions) { (evo, f, g) =>
@@ -33,29 +33,29 @@ trait LawsBaseSpec[Evo[+ _], W]
     }
   }
 
-  "flatmapnext law 1" in {
-    forAll(intEvolutions, worlds) { (evo, world) =>
-      checkStream(flatMapNextLaw1(evo, world))
+  "mapcons law 1" in {
+    forAll(intEvolutions, intGen, intMapConsFunctions) { (evo, n, f) =>
+      check(mapConsLaw1(evo, n, f))
     }
   }
 
-  "flatmapnext law 2" in {
+  "mapcons law 2" in {
     forAll(intEvolutions) { (evo) =>
-      check(flatMapNextLaw2(evo))
+      check(mapConsLaw2(evo))
     }
   }
 
   "pure materializes to one-element stream" in {
-    forAll(intGen, worlds) { (n, w) =>
-      checkStream(pureLaw(n, w))
+    forAll(intGen) { (n) =>
+      check(pureLaw(n))
     }
   }
 
-  "scan accumulates values" in {
-    forAll(intEvolutions, worlds) { (evo, w) =>
-      checkStream(scanLaw[Int, Int](evo, _ + _, 0, w))
-    }
-  }
+//  "scan accumulates values" in {
+//    forAll(intEvolutions, worlds) { (evo, w) =>
+//      checkStream(scanLaw[Int, Int](evo, _ + _, 0, w))
+//    }
+//  }
 
   //  "int is a static evolution" in {
   //    // @TODO Not stack safe!
@@ -72,26 +72,26 @@ trait LawsBaseSpec[Evo[+ _], W]
   }
 
   "slow down law" in {
-    forAll(intEvolutions, nonNegativeInt, worlds) { (evo, n, w) =>
-      checkStream(slowDownLaw(evo, n, w))
+    forAll(intEvolutions, intGen, nonNegativeInt) { (evo, m, n) =>
+      check(slowDownLaw(evo, m, n))
     }
   }
 
   "filter law" in {
-    forAll(intEvolutions, intPredicates, worlds) { (evo, p, w) =>
-      checkStream(filterLaw(evo, p, w))
+    forAll(intEvolutions, intGen, intPredicates) { (evo, n, p) =>
+      check(filterLaw(evo, n, p))
     }
   }
 
   "sliding pairs law" in {
-    forAll(intEvolutions, worlds) { (evo, w) =>
-      checkStream(slidingPairsLaw(evo, w))
+    forAll(intEvolutions, intGen, intGen) { (evo, n1, n2) =>
+      check(slidingPairsLaw(evo, n1, n2))
     }
   }
 
   "grouped law" in {
-    forAll(intEvolutions, worlds, nonNegativeInt) { (evo, w, n) =>
-      //checkStream(groupedLaw(seq(List(1, 2, 3, 4, 5, 6, 7)), w, 4))
+    forAll(intEvolutions, nonNegativeInt) { (evo, n) =>
+      check(groupedLaw(evo, n))
     }
   }
 
@@ -114,18 +114,19 @@ trait LawsBaseSpec[Evo[+ _], W]
       m => n * m,
       m => m + n,
       m => m * n * n + 1
-    )
-    )
+    ))
+  }
+
+  def intMapConsFunctions: Gen[(Int, Evo[Int]) => Evo[Int]] = intGen.flatMap { n =>
+    Gen.oneOf[(Int, Evo[Int]) => Evo[Int]](Seq[(Int, Evo[Int]) => Evo[Int]](
+      (m, tail) => pure(m * n),
+      (m, tail) => constant(n * m + 1),
+      (m, tail) => tail
+    ))
   }
 
   def intPredicates: Gen[Int => Boolean] =
     intGen.map(n => (m: Int) => n > m)
-
-  def check[A](eq: IsEq[Evo[A]]): Unit = {
-    forAll(worlds) { (world: W) =>
-      E.run(eq.lhs, world).take(sampleSize) shouldBe E.run(eq.rhs, world).take(sampleSize)
-    }
-  }
 
   def checkStream[A](eq: IsEq[Stream[A]]): Unit = {
     eq.lhs.take(sampleSize) shouldBe eq.rhs.take(sampleSize)
