@@ -1,6 +1,6 @@
 package paint.laws.impl
 
-import paint.evolution.algebra.impl.StreamEvolutionAlgebra
+import paint.evolution.algebra.interpreter.StreamEvolutionAlgebra
 import paint.laws.{EvolutionLaws, IsEq, LawsBaseSpec}
 
 class StreamEvolutionLawSpec extends LawsBaseSpec[Stream] with EvolutionLaws[Stream] {

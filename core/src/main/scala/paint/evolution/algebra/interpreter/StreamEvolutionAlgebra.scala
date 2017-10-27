@@ -1,4 +1,4 @@
-package paint.evolution.algebra.impl
+package paint.evolution.algebra.interpreter
 
 import paint.evolution.algebra.FullAlgebra
 
