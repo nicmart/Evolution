@@ -19,7 +19,7 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
       }
     }
 
-  val double: Evo[Double] =
+  lazy val double: Evo[Double] =
     int.map { n =>
       (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
     }

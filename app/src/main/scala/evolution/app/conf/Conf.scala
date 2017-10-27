@@ -24,6 +24,6 @@ object Conf {
       nBodies,
       bouncing
     ),
-    brownianStraight
+    brownian
   )
 }

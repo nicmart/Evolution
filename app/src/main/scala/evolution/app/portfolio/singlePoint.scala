@@ -7,14 +7,17 @@ import evolution.app.react.component.config.instances._
 import paint.evolution.algebra
 import paint.evolution.algebra.Evolution
 import paint.geometry.Geometry.Point
+import paint.evolution.algebra.syntax.all._
 
 object singlePoint extends DrawingDefinition("single constant point") {
   type Config = Unit
   protected def currentConfig: Unit = ()
 
   class ThisEvolution(config: Unit, context: DrawingContext) extends Evolution[Point] {
-    override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] =
-      alg.constant(Point.zero)
+    override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
+      import alg._
+      constant(Point.zero)
+    }
   }
 
   protected def evolution(config: Unit, context: DrawingContext): Evolution[Point] =

@@ -16,7 +16,7 @@ import org.scalajs.dom
 import org.scalajs.dom.Window
 import paint.evolution.algebra.impl.RNGEvolutionAlgebra
 import paint.geometry.Geometry.Point
-import paint.random.SimpleRNG
+import paint.random.RNG
 
 import scala.util.Random
 
@@ -29,7 +29,7 @@ object PageComponent {
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
-    rng: SimpleRNG
+    rng: RNG
   ) {
     val algebra = new RNGEvolutionAlgebra
     def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
@@ -38,7 +38,7 @@ object PageComponent {
       * Create a new seed
       */
     def updateRng: State =
-      copy(rng = SimpleRNG(Random.nextLong()))
+      copy(rng = RNG(Random.nextLong()))
 
     /**
       * Use to determine if the canvas has to be re-rendered
@@ -154,7 +154,7 @@ object PageComponent {
     Conf.drawingList,
     drawingContext(dom.window),
     RateCounter.empty(1000),
-    SimpleRNG(Random.nextLong())
+    RNG(Random.nextLong())
   )
 
   val component = ScalaComponent.builder[Unit]("Page")

@@ -4,12 +4,12 @@ import org.scalacheck.Gen
 import paint.evolution.Repr
 import paint.evolution.algebra.impl.RNGEvolutionAlgebra
 import paint.laws.{EvolutionLaws, IsEq, LawsBaseSpec}
-import paint.random.{RNG, SimpleRNG}
+import paint.random.RNG
 
 class RNGEvolutionLawsSpec extends LawsBaseSpec[Repr] with EvolutionLaws[Repr] {
   override val E = new RNGEvolutionAlgebra
   def rngs: Gen[RNG] =
-    Gen.choose(Long.MinValue, Long.MaxValue).map(SimpleRNG)
+    Gen.choose(Long.MinValue, Long.MaxValue).map(RNG)
 
   override def check[A](eq: IsEq[Repr[A]]): Unit = {
     forAll(rngs) { (world: RNG) =>
