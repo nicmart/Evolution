@@ -14,7 +14,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
-import paint.evolution.algebra.interpreter.{RNGInterpreter, SeedInterpreter}
+import paint.evolution.algebra.interpreter.{LazyStreamInterpreter, RNGInterpreter, SeedInterpreter, StreamInterpreter}
 import paint.geometry.Geometry.Point
 import paint.random.RNG
 
@@ -31,11 +31,16 @@ object PageComponent {
     pointRateCounter: RateCounter,
     rng: RNG
   ) {
-//    val algebra = new RNGInterpreter
-//    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
+    val algebra = new RNGInterpreter
+    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
 
-    val algebra = new SeedInterpreter
-    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng.seed)
+//    val algebra = new SeedInterpreter
+//    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng.seed)
+
+//    val algebra = new StreamInterpreter
+//    def points: Stream[Point] = algebra.unfold((), currentDrawing.evolution.run(algebra))
+//    val algebra = new LazyStreamInterpreter
+//    def points: Stream[Point] = algebra.unfold((), currentDrawing.evolution.run(algebra))
 
     /**
       * Create a new seed

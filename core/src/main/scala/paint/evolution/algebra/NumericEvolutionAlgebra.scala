@@ -14,8 +14,8 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     int mapCons { (n, int2) =>
       n match {
         case Int.MinValue => nonNegative
-        case _ if n < 0 => -n :: nonNegative
-        case _ => n :: nonNegative
+        case _ if n < 0 => cons(-n, nonNegative)
+        case _ => cons(n, nonNegative)
       }
     }
 

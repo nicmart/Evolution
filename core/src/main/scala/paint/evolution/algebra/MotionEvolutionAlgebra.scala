@@ -42,7 +42,7 @@ trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     (velocity: Evo[VelocityLaw[A]]).mapCons { (vEq, evv2) =>
       val v1 = vEq(a0)
       val a1 = a0 |+| v1
-      (a0, v1) :: solve(a1)(evv2)
+      cons((a0, v1), solve(a1)(evv2))
     }
   }
 
@@ -70,7 +70,7 @@ trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
       val acc1 = accEq(a0, v0)
       val v1 = acc1 |+| v0
       val a1 = a0 |+| v1
-      (a0, v0) :: solve2(a1, v1)(evacc2)
+      cons((a0, v0), solve2(a1, v1)(evacc2))
     }
 
   def solve2Static[A: Semigroup](a0: Position[A], v0: Velocity[A])(
