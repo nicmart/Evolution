@@ -4,9 +4,10 @@ import paint.evolution.RNGRepr
 import paint.evolution.algebra.FullAlgebra
 import paint.random.RNG
 
-import scala.collection.immutable.Stream
-
-final class RNGEvolutionAlgebra extends FullAlgebra[RNGRepr] {
+final class RNGInterpreter
+  extends FullAlgebra[RNGRepr]
+    with UnfoldInterpreter[RNG, RNGRepr]
+{
 
   override val empty: RNGRepr[Nothing] =
     RNGRepr { rng => (rng, None) }
@@ -34,5 +35,8 @@ final class RNGEvolutionAlgebra extends FullAlgebra[RNGRepr] {
   override val int: RNGRepr[Int] = RNGRepr { rng =>
     val (n, rng2) = rng.nextInt
     (rng2, Some((n, int)))
+  }
+  override def unfold[A](state: RNG, repr: RNGRepr[A]): Stream[A] = {
+    repr.unfold(state)
   }
 }

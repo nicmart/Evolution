@@ -14,7 +14,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
-import paint.evolution.algebra.interpreter.RNGEvolutionAlgebra
+import paint.evolution.algebra.interpreter.{RNGInterpreter, SeedInterpreter}
 import paint.geometry.Geometry.Point
 import paint.random.RNG
 
@@ -31,8 +31,11 @@ object PageComponent {
     pointRateCounter: RateCounter,
     rng: RNG
   ) {
-    val algebra = new RNGEvolutionAlgebra
-    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
+//    val algebra = new RNGInterpreter
+//    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
+
+    val algebra = new SeedInterpreter
+    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng.seed)
 
     /**
       * Create a new seed

@@ -18,18 +18,11 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
   }
 }
 
-final case class RNGRepr[+A](run: RNG => (RNG, Option[(A, RNGRepr[A])])) extends StateRepr[A, RNG, RNGRepr[A]]
-final case class SeedRepr[+A](run: Long => (Long, Option[(A, SeedRepr[A])])) extends StateRepr[A, Long, SeedRepr[A]]
+final case class RNGRepr[+A](
+  run: RNG => (RNG, Option[(A, RNGRepr[A])])
+) extends StateRepr[A, RNG, RNGRepr[A]]
 
-//final class ReprF[+A, F[+_]](val run: RNG => (RNG, Option[(A, F[ReprF[A, F]])])) extends AnyVal
-//trait ReprAbstract {
-//  type Id[+A]
-//  type Repr[+A] = ReprF[A, Id]
-//}
-//
-//object Repr extends ReprAbstract{
-//  type Id[+A] = A
-//  def apply[A](run: RNG => (RNG, Option[(A, Repr[A])])): Repr[A] =
-//    new ReprF[A, Id](run)
-//}
+final case class SeedRepr[@specialized(Int, Double) +A](
+  run: Long => (Long, Option[(A, SeedRepr[A])])
+) extends StateRepr[A, Long, SeedRepr[A]]
 
