@@ -4,10 +4,7 @@ import paint.evolution.RNGRepr
 import paint.evolution.algebra.FullAlgebra
 import paint.random.RNG
 
-final class RNGInterpreter
-  extends FullAlgebra[RNGRepr]
-    with UnfoldInterpreter[RNG, RNGRepr]
-{
+final class RNGInterpreter extends FullAlgebra[RNGRepr] {
   /**
     * Primitives
     */
@@ -83,9 +80,5 @@ final class RNGInterpreter
       case None => (rng2, None)
       case Some((a, eva2)) => (rng2, Some((f(a), map(eva2)(f))))
     }
-  }
-
-  override def unfold[A](state: RNG, repr: RNGRepr[A]): Stream[A] = {
-    repr.unfold(state)
   }
 }

@@ -5,9 +5,7 @@ import paint.evolution.algebra.interpreter.LazyStreamInterpreter.LazyStream
 
 import scala.util.Random
 
-final class LazyStreamInterpreter
-  extends FullAlgebra[LazyStream]
-  with UnfoldInterpreter[Unit, LazyStream]
+final class LazyStreamInterpreter extends FullAlgebra[LazyStream]
 {
   override val empty: LazyStream[Nothing] = () => Stream.empty
   override def cons[A](head: A, tail: => LazyStream[A]): LazyStream[A] = () => head #:: tail()
@@ -24,7 +22,6 @@ final class LazyStreamInterpreter
       if (stream.isEmpty) eva2() else stream
     }
   override val int: LazyStream[Int] = () => Random.nextInt() #:: int()
-  override def unfold[A](state: Unit, repr: LazyStream[A]): Stream[A] = repr()
 
   override def concat[A](
     evo1: LazyStream[A],

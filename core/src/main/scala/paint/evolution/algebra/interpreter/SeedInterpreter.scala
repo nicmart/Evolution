@@ -4,9 +4,7 @@ import paint.evolution.{RNGRepr, SeedRepr}
 import paint.evolution.algebra.FullAlgebra
 import paint.random.RNG
 
-final class SeedInterpreter
-  extends FullAlgebra[SeedRepr]
-  with UnfoldInterpreter[Long, SeedRepr]
+final class SeedInterpreter extends FullAlgebra[SeedRepr]
 {
 
   override val empty: SeedRepr[Nothing] =
@@ -36,7 +34,4 @@ final class SeedInterpreter
     val (n, seed2) = RNG.next(seed)
     (seed2, Some((n, int)))
   }
-
-  override def unfold[A](state: Long, repr: SeedRepr[A]): Stream[A] =
-    repr.unfold(state)
 }

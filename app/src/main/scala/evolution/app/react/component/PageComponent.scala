@@ -14,9 +14,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
-import paint.evolution.algebra.interpreter.{LazyStreamInterpreter, RNGInterpreter, SeedInterpreter, StreamInterpreter}
 import paint.geometry.Geometry.Point
-import paint.random.RNG
+import paint.evolution.materializer.Materializer
 
 import scala.util.Random
 
@@ -26,32 +25,25 @@ object PageComponent {
     canvasInitializer: dom.html.Canvas => Unit,
     drawer: EvolutionDrawer,
     currentDrawing: ConfiguredDrawing[Point],
+    materializer: Materializer[Long],
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
-    rng: RNG
+    seed: Long
   ) {
-    val algebra = new RNGInterpreter
-    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng)
-
-//    val algebra = new SeedInterpreter
-//    def points: Stream[Point] = currentDrawing.evolution.run(algebra).unfold(rng.seed)
-
-//    val algebra = new StreamInterpreter
-//    def points: Stream[Point] = algebra.unfold((), currentDrawing.evolution.run(algebra))
-//    val algebra = new LazyStreamInterpreter
-//    def points: Stream[Point] = algebra.unfold((), currentDrawing.evolution.run(algebra))
+    def points: Stream[Point] =
+      materializer.materialize(seed, currentDrawing.evolution)
 
     /**
       * Create a new seed
       */
     def updateRng: State =
-      copy(rng = RNG(Random.nextLong()))
+      copy(seed = Random.nextLong())
 
     /**
       * Use to determine if the canvas has to be re-rendered
       */
-    def canvasKey: String = rng.seed.toString
+    def canvasKey: String = seed.toString
 
     /**
       * Used to determine if the page needs an update
@@ -59,7 +51,7 @@ object PageComponent {
       * @return
       */
     def key: Int = (
-      rng.seed,
+      seed,
       currentDrawing,
       pointRateCounter.rate,
       drawingListWithSelection.current.name
@@ -159,10 +151,11 @@ object PageComponent {
       1
     ),
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
+    Conf.materializer,
     Conf.drawingList,
     drawingContext(dom.window),
     RateCounter.empty(1000),
-    RNG(Random.nextLong())
+    Random.nextLong()
   )
 
   val component = ScalaComponent.builder[Unit]("Page")
