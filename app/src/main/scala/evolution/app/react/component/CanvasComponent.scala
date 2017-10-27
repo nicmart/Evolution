@@ -1,12 +1,11 @@
 package evolution.app.react.component
 
 import evolution.app.canvas.EvolutionDrawer
-import evolution.app.model.configured.ConfiguredDrawing
 import evolution.app.model.context.DrawingContext
-import japgolly.scalajs.react.{Callback, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{Callback, ScalaComponent}
 import org.scalajs.dom
 import paint.geometry.Geometry.Point
 
@@ -34,9 +33,9 @@ object CanvasComponent {
 
     def tick(props: Props, ctx: dom.CanvasRenderingContext2D)(points: Stream[Point]): Unit = {
       if (running) {
-          val nextPoints: Stream[Point] = props.drawer.draw(ctx, points)
-          props.onFrameDidDraw.runNow()
-          dom.window.requestAnimationFrame(_ => tick(props, ctx)(nextPoints))
+        val nextPoints: Stream[Point] = props.drawer.draw(ctx, points)
+        props.onFrameDidDraw.runNow()
+        dom.window.requestAnimationFrame(_ => tick(props, ctx)(nextPoints))
       }
     }
 
@@ -53,6 +52,9 @@ object CanvasComponent {
       .componentDidMount(s =>
         s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props)
       )
-      .componentWillUnmount(s => Callback { s.backend.running = false })
+      .componentWillUnmount(s => Callback {
+        s.backend.running = false
+      }
+      )
       .build
 }

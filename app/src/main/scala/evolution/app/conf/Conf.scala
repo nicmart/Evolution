@@ -3,14 +3,17 @@ package evolution.app.conf
 import evolution.app.model.definition.DrawingListWithSelection
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
+import paint.evolution.materializer.{Materializer, RNGMaterializer}
+import paint.evolution.algebra.interpreter.RNGInterpreter
 
 object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawingList = DrawingListWithSelection(
+  lazy val drawingList =
+    DrawingListWithSelection(
     List(
-      segments, 
+      segments,
       brownian,
       brownianWithRandomJumps,
       drops,
@@ -21,8 +24,11 @@ object Conf {
       singlePoint,
       primes,
       dynamicRotation,
-      nBodies
+      nBodies,
+      bouncing
     ),
-    nBodies
+    singlePoint
   )
+  lazy val materializer: Materializer[Long] =
+    RNGMaterializer(new RNGInterpreter)
 }

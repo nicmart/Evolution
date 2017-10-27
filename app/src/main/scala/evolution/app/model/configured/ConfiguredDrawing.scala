@@ -3,11 +3,13 @@ package evolution.app.model.configured
 import evolution.app.react.component.config.ConfiguredComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
-import paint.evolution.Evolution
+import paint.evolution.algebra.Evolution
 
 sealed trait ConfiguredDrawing[T] {
   val name: String
+
   def evolution: Evolution[T]
+
   def configElement(onChange: ConfiguredDrawing[T] => Callback): VdomElement
 }
 

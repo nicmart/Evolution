@@ -1,8 +1,6 @@
 package evolution.app
 
 import org.scalajs.dom
-import org.scalajs.dom._
-import org.scalajs.dom.html.Canvas
 
 trait CanvasInitializer extends (dom.html.Canvas => Unit) {
   self =>
@@ -19,7 +17,7 @@ trait CanvasInitializer extends (dom.html.Canvas => Unit) {
 case class ColorCanvasInitializer(color: String) extends CanvasInitializer {
   override def apply(canvas: dom.html.Canvas): Unit = {
     val ctx = canvas.getContext("2d")
-        .asInstanceOf[dom.CanvasRenderingContext2D]
+      .asInstanceOf[dom.CanvasRenderingContext2D]
     val oldFillStyle = ctx.fillStyle.toString
     ctx.fillStyle = color
     ctx.fillRect(0, 0, canvas.width.toDouble, canvas.height.toDouble)

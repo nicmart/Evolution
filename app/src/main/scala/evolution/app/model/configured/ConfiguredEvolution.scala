@@ -1,7 +1,7 @@
 package evolution.app.model.configured
 
 import evolution.app.model.context.DrawingContext
-import paint.evolution.Evolution
+import paint.evolution.algebra.Evolution
 
 final case class ConfiguredEvolution[T, Config](
   generator: (Config, DrawingContext) => Evolution[T],

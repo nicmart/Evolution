@@ -5,8 +5,6 @@ import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterCon
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 
-import scala.scalajs.js.annotation.JSExport
-
 object ReactApp {
 
   sealed trait MyPages
@@ -21,8 +19,8 @@ object ReactApp {
     import dsl._
 
     (emptyRule
-        | staticRoute(root, Home) ~> render(PageComponent.component.apply())
-        ).notFound(redirectToPage(Home)(Redirect.Replace))
+      | staticRoute(root, Home) ~> render(PageComponent.component.apply())
+      ).notFound(redirectToPage(Home)(Redirect.Replace))
   }
 
   def main(args: Array[String]): Unit = {

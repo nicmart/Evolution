@@ -3,11 +3,11 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.instances._
-import paint.evolution.Evolution
-import paint.evolution.PointEvolutions.{rectangle2D, segment}
-import paint.evolution.motion.{AccelerationLaw, MotionEvolutions}
 import paint.geometry.Geometry.Point
+import evolution.app.react.component.config.instances._
+import paint.evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
+import paint.evolution.algebra.{Evolution, FullAlgebra}
+import paint.evolution.algebra.syntax.all._
 
 object segments extends DrawingDefinition("segments") {
 
@@ -25,19 +25,26 @@ object segments extends DrawingDefinition("segments") {
     lengthOverSpeed = 100
   )
 
-  protected def evolution(config: Config, context: DrawingContext) = {
+  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
-    def accelerationEvolution: Evolution[AccelerationLaw[Point]] =
-      rectangle2D(acceleration) map { randomAcc =>
-        (position, velocity) =>
-          randomAcc - velocity * friction
-      }
+    new Evolution[Point] {
+      override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
+        import alg._
 
-    MotionEvolutions.solve2((context.canvasSize.point / 2).copy(x = 0), Point(startingSpeed, 0))(
-      accelerationEvolution
-    ).flatMap { case (position, velocity) =>
-      val rotatedVel = velocity.rotate(Math.PI / 2)
-      segment(position - rotatedVel * lengthOverSpeed, position + rotatedVel * lengthOverSpeed, 1)
+        def accelerationEvolution: Evo[AccelerationLaw[Point]] = {
+          rectangle2D(acceleration) map { randomAcc =>
+            (position, velocity) =>
+              randomAcc - velocity * friction
+          }
+        }
+
+        solve2((context.canvasSize.point / 2).copy(x = 0), Point(startingSpeed, 0))(
+          accelerationEvolution
+        ).flatMap { case (position, velocity) =>
+          val rotatedVel = velocity.rotate(Math.PI / 2)
+          segment(position - rotatedVel * lengthOverSpeed, position + rotatedVel * lengthOverSpeed, 1)
+        }
+      }
     }
   }
 

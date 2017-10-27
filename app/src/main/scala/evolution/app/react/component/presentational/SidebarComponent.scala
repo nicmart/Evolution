@@ -1,8 +1,6 @@
 package evolution.app.react.component.presentational
 
-import evolution.app.react.component.DrawingListComponent.Props
 import japgolly.scalajs.react
-import japgolly.scalajs.react.{Callback, Children, PropsChildren}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._

@@ -6,16 +6,16 @@ import evolution.app.model.configured.ConfiguredDrawing
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
-import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import evolution.app.react.component.presentational._
-import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
+import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
+import org.scalajs.dom
 import org.scalajs.dom.Window
 import paint.geometry.Geometry.Point
-import org.scalajs.dom
-import paint.random.SimpleRNG
+import paint.evolution.materializer.Materializer
 
 import scala.util.Random
 
@@ -25,34 +25,37 @@ object PageComponent {
     canvasInitializer: dom.html.Canvas => Unit,
     drawer: EvolutionDrawer,
     currentDrawing: ConfiguredDrawing[Point],
+    materializer: Materializer[Long],
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
-    rng: SimpleRNG
+    seed: Long
   ) {
-    def points: Stream[Point] = currentDrawing.evolution.unfold(rng)
+    def points: Stream[Point] =
+      materializer.materialize(seed, currentDrawing.evolution)
 
     /**
       * Create a new seed
       */
     def updateRng: State =
-      copy(rng = SimpleRNG(Random.nextLong()))
+      copy(seed = Random.nextLong())
 
     /**
       * Use to determine if the canvas has to be re-rendered
       */
-    def canvasKey: String = rng.seed.toString
+    def canvasKey: String = seed.toString
 
     /**
       * Used to determine if the page needs an update
+      *
       * @return
       */
     def key: Int = (
-        rng.seed,
-        currentDrawing,
-        pointRateCounter.rate,
-        drawingListWithSelection.current.name
-      ).hashCode()
+      seed,
+      currentDrawing,
+      pointRateCounter.rate,
+      drawingListWithSelection.current.name
+    ).hashCode()
   }
 
   class Backend(bs: BackendScope[Unit, State]) {
@@ -63,12 +66,14 @@ object PageComponent {
           ButtonComponent.component(ButtonComponent.Props(
             "Refresh",
             bs.modState(_.updateRng)
-          )),
+          )
+          ),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Iterations",
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
-          )),
+          )
+          ),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Drawing",
             "",
@@ -79,9 +84,12 @@ object PageComponent {
                 onDrawingDefinitionChange
               )
             )
-          ))
-        )),
-        <.div(^.id := "page-content",
+          )
+          )
+        )
+        ),
+        <.div(
+          ^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasKey)(CanvasComponent.Props(
             state.drawingContext,
             state.canvasInitializer,
@@ -90,7 +98,8 @@ object PageComponent {
             bs.modState { state =>
               state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
             }
-          )),
+          )
+          ),
           SidebarComponent.component.withKey(state.currentDrawing.name)(
             SidebarComponent.Props(
               active = true,
@@ -142,16 +151,17 @@ object PageComponent {
       1
     ),
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
+    Conf.materializer,
     Conf.drawingList,
     drawingContext(dom.window),
     RateCounter.empty(1000),
-    SimpleRNG(Random.nextLong())
+    Random.nextLong()
   )
 
   val component = ScalaComponent.builder[Unit]("Page")
     .initialState(initialState)
     .renderBackend[Backend]
-      .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
+    .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
     .build
 
   private def drawingContext(window: Window): DrawingContext = {

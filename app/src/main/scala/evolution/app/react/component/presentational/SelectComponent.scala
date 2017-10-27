@@ -1,11 +1,10 @@
 package evolution.app.react.component.presentational
 
 import japgolly.scalajs.react
-import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.{Callback, ReactEventFromInput}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.ReactEventFromInput
 
 object SelectComponent {
 

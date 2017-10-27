@@ -7,7 +7,9 @@ final case class DrawingContext(
 )
 
 object DrawingContext {
+
   final case class CanvasSize(width: Int, height: Int) {
     def point: Point = Point(width.toDouble, height.toDouble)
   }
+
 }

@@ -5,6 +5,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 object FormFieldComponent {
+
   case class Props(label: String, className: String, element: VdomElement)
 
   val component =
