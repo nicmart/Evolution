@@ -4,10 +4,10 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
-import paint.evolution.algebra
-import paint.evolution.algebra.Evolution
-import paint.geometry.Geometry.Point
-import paint.evolution.algebra.syntax.all._
+import evolution.algebra
+import evolution.algebra.Evolution
+import evolution.geometry.Geometry.Point
+import evolution.algebra.syntax.all._
 
 object singlePoint extends DrawingDefinition("single constant point") {
   type Config = Unit

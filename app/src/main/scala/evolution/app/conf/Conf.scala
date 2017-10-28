@@ -3,8 +3,8 @@ package evolution.app.conf
 import evolution.app.model.definition.DrawingListWithSelection
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
-import paint.evolution.materializer.{Materializer, RNGMaterializer}
-import paint.evolution.algebra.interpreter.RNGInterpreter
+import evolution.algebra.materializer.{Materializer, RNGMaterializer}
+import evolution.algebra.interpreter.RNGInterpreter
 
 object Conf {
   lazy val canvasInitializer: CanvasInitializer =

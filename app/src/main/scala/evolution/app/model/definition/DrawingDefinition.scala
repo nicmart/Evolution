@@ -3,8 +3,8 @@ package evolution.app.model.definition
 import evolution.app.model.configured.{ConfiguredDrawing, ConfiguredEvolution}
 import evolution.app.model.context.DrawingContext
 import evolution.app.react.component.config.{ConfigComponent, ConfiguredComponent}
-import paint.evolution.algebra.Evolution
-import paint.geometry.Geometry.Point
+import evolution.algebra.Evolution
+import evolution.geometry.Geometry.Point
 
 abstract class DrawingDefinition(val name: String) {
   protected type Config

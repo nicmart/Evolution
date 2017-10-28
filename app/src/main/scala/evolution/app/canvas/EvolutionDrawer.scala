@@ -2,7 +2,7 @@ package evolution.app.canvas
 
 import org.scalajs.dom
 import org.scalajs.dom.raw.CanvasRenderingContext2D
-import paint.geometry.Geometry.Point
+import evolution.geometry.Geometry.Point
 
 case class EvolutionDrawer(iterations: Int, strokeSize: Int) {
 

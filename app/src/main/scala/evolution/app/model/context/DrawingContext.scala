@@ -1,6 +1,6 @@
 package evolution.app.model.context
 
-import paint.geometry.Geometry.Point
+import evolution.geometry.Geometry.Point
 
 final case class DrawingContext(
   canvasSize: DrawingContext.CanvasSize

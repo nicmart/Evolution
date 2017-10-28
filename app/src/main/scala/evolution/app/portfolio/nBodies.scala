@@ -4,12 +4,12 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
-import paint.evolution.algebra
-import paint.geometry.Geometry.Point
+import evolution.algebra
+import evolution.geometry.Geometry.Point
 import evolution.app.react.component.config.instances._
-import paint.evolution.algebra.Evolution
-import paint.evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
-import paint.evolution.algebra.syntax.all._
+import evolution.algebra.Evolution
+import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
+import evolution.algebra.syntax.all._
 
 object nBodies extends DrawingDefinition("n bodies") {
 

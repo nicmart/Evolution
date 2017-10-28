@@ -3,11 +3,11 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import paint.geometry.Geometry.Point
-import paint.evolution.algebra.syntax.all._
+import evolution.geometry.Geometry.Point
+import evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
-import paint.evolution.algebra
-import paint.evolution.algebra.Evolution
+import evolution.algebra
+import evolution.algebra.Evolution
 
 object primes extends DrawingDefinition("primes") {
 

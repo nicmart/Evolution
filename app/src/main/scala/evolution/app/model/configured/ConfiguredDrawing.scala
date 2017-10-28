@@ -3,7 +3,7 @@ package evolution.app.model.configured
 import evolution.app.react.component.config.ConfiguredComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
-import paint.evolution.algebra.Evolution
+import evolution.algebra.Evolution
 
 sealed trait ConfiguredDrawing[T] {
   val name: String
