@@ -97,18 +97,6 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     }
   }
 
-  def grouped[A](eva: Evo[A])(i: Int, from: Int = 0): Evo[List[A]] =
-    i match {
-      case _ if i <= 0 => cyclic(pure(List()))
-      case _ if from >= i => cons(Nil, grouped(eva)(i))
-      // 0 <= from < i
-      case _ => mapCons(eva) { (a, eva2) =>
-        mapCons(grouped(eva2)(i, from + 1)) { (as, evas) =>
-          cons(a :: as, evas)
-        }
-      }
-    }
-
   def sequenceParallel[A](evs: Queue[Evo[A]]): Evo[A] = {
     if (evs.isEmpty) empty
     else {

@@ -46,6 +46,4 @@ final class EvolutionOps[Evo[+ _], A](val ev: Evo[A]) extends AnyVal {
     E.flattenList(ev)
   def slidingPair(implicit E: EvolutionAlgebra[Evo]): Evo[(A, A)] =
     E.slidingPairs(ev)
-  def grouped(n: Int, from: Int = 0)(implicit E: EvolutionAlgebra[Evo]): Evo[List[A]] =
-    E.grouped(ev)(n, from)
 }

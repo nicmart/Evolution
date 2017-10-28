@@ -7,7 +7,6 @@ import evolution.algebra.EvolutionAlgebra
 
 import scala.util.Random
 
-//@todo remove W
 trait LawsBaseSpec[Evo[+ _]]
   extends WordSpec
     with Matchers
@@ -51,23 +50,9 @@ trait LawsBaseSpec[Evo[+ _]]
     }
   }
 
-//  "scan accumulates values" in {
-//    forAll(intEvolutions, worlds) { (evo, w) =>
-//      checkStream(scanLaw[Int, Int](evo, _ + _, 0, w))
-//    }
-//  }
-
-  //  "int is a static evolution" in {
-  //    // @TODO Not stack safe!
-  //    forAll (Gen.choose(0, 100), Gen.choose(0, 100)) { (n, m) =>
-  //      check(intIsAStaticEvolution(n, m))
-  //    }
-  //  }
-
   "repeat law" in {
-    // @TODO Not stack safe!
     forAll(intEvolutions, nonNegativeInt) { (evo, n) =>
-      if (n < Int.MaxValue / 1000) check(repeatLaw(evo, n))
+      check(repeatLaw(evo, n))
     }
   }
 
@@ -86,12 +71,6 @@ trait LawsBaseSpec[Evo[+ _]]
   "sliding pairs law" in {
     forAll(intEvolutions, intGen, intGen) { (evo, n1, n2) =>
       check(slidingPairsLaw(evo, n1, n2))
-    }
-  }
-
-  "grouped law" in {
-    forAll(intEvolutions, nonNegativeInt) { (evo, n) =>
-      check(groupedLaw(evo, n))
     }
   }
 

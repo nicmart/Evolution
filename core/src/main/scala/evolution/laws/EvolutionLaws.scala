@@ -23,12 +23,6 @@ trait EvolutionLaws[Evo[+ _]] {
   def mapConsLaw2[A](ev: Evo[A]): IsEq[Evo[A]] =
     ev.mapCons { (a, ev2) => pure(a) } <-> ev.head
 
-//  def scanLaw[A, Z](ev: Evo[A], f: (Z, A) => Z, z: Z, world: W): IsEq[Stream[Z]] =
-//    ev.scan(z)(f).run(world) <-> ev.run(world).scanLeft(z)(f)
-
-  //  def intIsAStaticEvolution(n: Int, m: Int): IsEq[Evolution[Int]] =
-  //    staticEvolution(int, n, m)
-
   def repeatLaw[A](ev: Evo[A], n: Int): IsEq[Evo[A]] =
     ev.repeat(n) <-> concat(ev, ev.repeat(n - 1))
 
@@ -40,10 +34,4 @@ trait EvolutionLaws[Evo[+ _]] {
 
   def slidingPairsLaw[A](ev: Evo[A], a1: A, a2: A): IsEq[Evo[(A, A)]] =
     cons(a1, cons(a2, ev)).slidingPair <-> cons((a1, a2), cons(a2, ev).slidingPair)
-
-  def groupedLaw[A](ev: Evo[A], n: Int): IsEq[Evo[A]] =
-    ev.grouped(n).flatMap(seq) <-> ev
-
-  private def staticEvolution[A](ev: Evo[A], n: Int, m: Int): IsEq[Evo[A]] =
-    concat(take(ev, n), take(ev, m)) <-> take(ev, n + m)
 }

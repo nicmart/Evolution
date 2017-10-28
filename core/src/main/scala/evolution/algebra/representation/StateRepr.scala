@@ -9,7 +9,6 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
     next match {
       case None => Stream.empty
       case Some((a, eva2)) => {
-        val ss: StateRepr[A, S, Self] = eva2
         a #:: eva2.unfold(rng2)
       }
     }

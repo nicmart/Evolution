@@ -53,28 +53,9 @@ object Point {
     pointsOnArc(edges, start, 2 * Math.PI / edges)
   }
 
-  def distanceFromRectangle(p: Point, topLeft: Point, bottomRight: Point): Double = {
-    Math.sqrt(
-      Math.pow(List(0, topLeft.x - p.x, p.x - bottomRight.x).max, 2) +
-        Math.pow(List(0, topLeft.y - p.y, p.y - bottomRight.y).max, 2)
-    )
-  }
-
   def sequence(n: Int, from: Point, to: Point): List[Point] = {
     val step = (to - from) / n
     (0 to n).toList.map(from + step * _)
-  }
-
-  def grid(topLeft: Point, bottomRight: Point, w: Int, h: Int): List[Point] = {
-    val xStep = (bottomRight.x - topLeft.x) / w
-    val yStep = (bottomRight.y - topLeft.y) / h
-    val points = for {
-      i <- 0 to w
-      x = topLeft.x + i * xStep
-      j <- 0 to h
-      y = topLeft.y + j * yStep
-    } yield Point(x, y)
-    points.toList
   }
 
   implicit val pointGroup: Group[Point] = new Group[Point] {
