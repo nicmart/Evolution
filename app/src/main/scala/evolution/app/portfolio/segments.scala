@@ -25,7 +25,7 @@ object segments extends DrawingDefinition("segments") {
     lengthOverSpeed = 100
   )
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {

@@ -21,7 +21,7 @@ object singlePoint extends DrawingDefinition("single constant point") {
     }
   }
 
-  protected def evolution(config: Unit, context: DrawingContext): Evolution[Point] =
+  protected def generateEvolution(config: Unit, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   protected def component: ConfigComponent[Unit] = ConfigComponent[Unit]

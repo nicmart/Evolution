@@ -60,7 +60,7 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
     }
   }
 
-  override protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   override protected def component: ConfigComponent[Config] =

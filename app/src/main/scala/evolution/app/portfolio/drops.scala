@@ -61,7 +61,7 @@ object drops extends DrawingDefinition("drops") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   override def component: ConfigComponent[Config] = ConfigComponent[Config]

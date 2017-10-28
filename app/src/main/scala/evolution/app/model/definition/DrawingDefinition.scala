@@ -9,12 +9,12 @@ import evolution.geometry.Geometry.Point
 abstract class DrawingDefinition(val name: String) {
   protected type Config
   protected def currentConfig: Config
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point]
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point]
   protected def component: ConfigComponent[Config]
   def drawing(context: DrawingContext): ConfiguredDrawing[Point] =
     ConfiguredDrawing(
       name,
-      ConfiguredEvolution(evolution, context, currentConfig),
+      ConfiguredEvolution(generateEvolution, context, currentConfig),
       ConfiguredComponent(component, currentConfig)
     )
 }

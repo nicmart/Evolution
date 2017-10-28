@@ -60,7 +60,7 @@ object bouncing extends DrawingDefinition("bouncing") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Geometry.Point] =
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Geometry.Point] =
     new ThisEvolution(config, context)
 
   protected def component = ConfigComponent[Config]

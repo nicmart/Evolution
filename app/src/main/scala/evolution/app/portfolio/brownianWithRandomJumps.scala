@@ -19,7 +19,7 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
   override def component: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._

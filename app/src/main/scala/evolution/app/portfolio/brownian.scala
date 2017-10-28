@@ -18,7 +18,7 @@ object brownian extends DrawingDefinition("brownian") {
     ConfigComponent[Config]
 
   // Example with new
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._

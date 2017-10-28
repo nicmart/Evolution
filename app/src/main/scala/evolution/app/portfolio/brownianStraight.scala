@@ -39,7 +39,7 @@ object brownianStraight extends DrawingDefinition("brownian straight") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   protected def component: ConfigComponent[Config] = ConfigComponent[Config]

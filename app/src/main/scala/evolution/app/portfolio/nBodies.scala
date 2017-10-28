@@ -87,7 +87,7 @@ object nBodies extends DrawingDefinition("n bodies") {
     }
   }
 
-  protected def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   protected def component = ConfigComponent[Config]

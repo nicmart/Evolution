@@ -22,7 +22,6 @@ object ConfiguredDrawing {
     private val configuredEvolution: ConfiguredEvolution[T, Config] = _configuredEvolution
     private val configuredComponent: ConfiguredComponent[Config] = _configuredComponent
     override val name: String = _name
-
     override def evolution: Evolution[T] = configuredEvolution.evolution
     override def configElement(callback: ConfiguredDrawing[T] => Callback): VdomElement = {
       configuredComponent.element(config => callback(withConfig(config)))
