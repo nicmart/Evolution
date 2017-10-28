@@ -7,7 +7,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 import org.scalajs.dom
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 object CanvasComponent {
 

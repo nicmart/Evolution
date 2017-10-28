@@ -4,7 +4,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.Evolution

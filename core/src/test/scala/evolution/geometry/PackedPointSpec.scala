@@ -9,7 +9,7 @@ class PackedPointSpec
   with PropertyChecks {
 
   forAll { (x: Float, y: Float) =>
-    val point = PackedPoint(x, y)
+    val point = Point(x, y)
     point.x shouldBe x
     point.y shouldBe y
   }

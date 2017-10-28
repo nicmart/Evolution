@@ -6,7 +6,7 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
 object singlePoint extends DrawingDefinition("single constant point") {

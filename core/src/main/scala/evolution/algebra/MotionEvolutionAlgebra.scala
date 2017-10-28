@@ -3,7 +3,7 @@ package evolution.algebra
 import cats.kernel.{Group, Semigroup}
 import cats.syntax.group._
 import evolution.algebra.syntax.all._
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   import MotionEvolutionAlgebra._

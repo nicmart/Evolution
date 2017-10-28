@@ -1,7 +1,7 @@
 package evolution.algebra
 
 import evolution.algebra.syntax.all._
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 trait PointEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   self: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =>

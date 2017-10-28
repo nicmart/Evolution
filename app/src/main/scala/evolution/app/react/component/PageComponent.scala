@@ -14,7 +14,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 import evolution.algebra.materializer.Materializer
 
 import scala.util.Random

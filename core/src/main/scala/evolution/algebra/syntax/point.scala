@@ -1,7 +1,7 @@
 package evolution.algebra.syntax
 
 import evolution.algebra.EvolutionAlgebra
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
 

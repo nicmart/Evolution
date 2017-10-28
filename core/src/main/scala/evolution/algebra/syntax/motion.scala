@@ -3,7 +3,7 @@ package evolution.algebra.syntax
 import cats.kernel.{Group, Semigroup}
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace}
 import evolution.algebra._
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 trait MotionEvolutionSyntax {
   implicit final def motionSyntax[Evo[+ _], A](evo: Evo[A]): MotionEvolutionOps[Evo, A] =

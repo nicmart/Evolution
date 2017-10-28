@@ -4,7 +4,7 @@ import evolution.app.model.configured.{ConfiguredDrawing, ConfiguredEvolution}
 import evolution.app.model.context.DrawingContext
 import evolution.app.react.component.config.{ConfigComponent, ConfiguredComponent}
 import evolution.algebra.Evolution
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 abstract class DrawingDefinition(val name: String) {
   protected type Config

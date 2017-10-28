@@ -9,9 +9,8 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra
-import evolution.geometry.Geometry
 import evolution.algebra.syntax.all._
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 
 object bouncing extends DrawingDefinition("bouncing") {
   case class Config(
@@ -60,7 +59,7 @@ object bouncing extends DrawingDefinition("bouncing") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Geometry.Point] =
+  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
   protected def component = ConfigComponent[Config]

@@ -5,7 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra._
-import evolution.geometry.Geometry.Point
+import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
 object brownian extends DrawingDefinition("brownian") {
