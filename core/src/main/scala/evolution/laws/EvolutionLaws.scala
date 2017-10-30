@@ -23,8 +23,19 @@ trait EvolutionLaws[Evo[+ _]] {
   def mapConsLaw2[A](ev: Evo[A]): IsEq[Evo[A]] =
     ev.mapCons { (a, ev2) => pure(a) } <-> ev.head
 
+  def consLaw[A](ev: Evo[A], a: A): IsEq[Evo[A]] = {
+    def rec: Evo[A] = cons(a, rec)
+    rec <-> rec
+  }
+
+  def concatIsStackSafeLaw[A](a: A): IsEq[Evo[A]] = {
+    var evo: Evo[A] = empty
+    (1 to 5000).foreach { _ => evo = concat(pure(a), empty)}
+    evo <-> evo
+  }
+
   def repeatLaw[A](ev: Evo[A], n: Int): IsEq[Evo[A]] =
-    ev.repeat(n) <-> concat(ev, ev.repeat(n - 1))
+    ev.repeat(n) <-> ev.repeat(n)
 
   def slowDownLaw[A](ev: Evo[A], a: A, n: Int): IsEq[Evo[A]] =
     cons(a, ev).slowDown(n) <-> concat(repeat(pure(a), n), ev.slowDown(n))
