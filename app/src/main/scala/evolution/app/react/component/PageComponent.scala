@@ -2,10 +2,10 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.MaterializableDrawing
+import evolution.app.model.configured.DrawingComponent
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
-import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
+import evolution.app.model.definition.{AbstractDrawingDefinition, DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational._
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -24,8 +24,8 @@ object PageComponent {
   case class State(
     canvasInitializer: dom.html.Canvas => Unit,
     drawer: Drawer,
-    currentDrawing: MaterializableDrawing[Long, Point],
-    drawingListWithSelection: DrawingListWithSelection,
+    currentDrawing: DrawingComponent[Long, Point],
+    drawingListWithSelection: DrawingListWithSelection[Point],
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     seed: Long
@@ -125,7 +125,7 @@ object PageComponent {
       }
     }
 
-    def onConfiguredDrawingChange(configuredDrawing: MaterializableDrawing[Long, Point]): Callback = {
+    def onConfiguredDrawingChange(configuredDrawing: DrawingComponent[Long, Point]): Callback = {
       bs.modState { state =>
         state
           .copy(currentDrawing = configuredDrawing)
@@ -133,7 +133,7 @@ object PageComponent {
       }
     }
 
-    def onDrawingDefinitionChange(definition: DrawingDefinition): Callback = {
+    def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
       bs.modState { state =>
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))

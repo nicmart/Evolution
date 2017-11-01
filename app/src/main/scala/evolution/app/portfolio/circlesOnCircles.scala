@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
 import evolution.geometry.Point
@@ -9,7 +9,7 @@ import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.Evolution
 
-object circlesOnCircles extends DrawingDefinition("circles on circles") {
+object circlesOnCircles extends AbstractDrawingDefinition("circles on circles") {
 
   case class Config(
     bigRadius: Double,
@@ -22,7 +22,7 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     lastRadialSpeed: Double
   )
 
-  val currentConfig = Config(
+  val initialConfig = Config(
     bigRadius = 500,
     bigRadialSpeed = 0.002,
     mediumRadius = 104,
@@ -33,7 +33,7 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     lastRadialSpeed = 1.02
   )
 
-  override def component: ConfigComponent[Config] =
+  override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
   class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
@@ -55,6 +55,6 @@ object circlesOnCircles extends DrawingDefinition("circles on circles") {
     }
   }
 
-  override protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 }

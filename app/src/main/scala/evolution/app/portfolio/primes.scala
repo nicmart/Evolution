@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -9,7 +9,7 @@ import evolution.app.react.component.config.instances._
 import evolution.algebra
 import evolution.algebra.Evolution
 
-object primes extends DrawingDefinition("primes") {
+object primes extends AbstractDrawingDefinition("primes") {
 
   case class Config(
     p: Int,
@@ -17,7 +17,7 @@ object primes extends DrawingDefinition("primes") {
     size: Int
   )
 
-  override protected def currentConfig =
+  override def initialConfig =
     Config(
       p = 7,
       q = 101,
@@ -45,9 +45,9 @@ object primes extends DrawingDefinition("primes") {
     }
   }
 
-  override protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  override protected def component: ConfigComponent[Config] =
+  override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 }

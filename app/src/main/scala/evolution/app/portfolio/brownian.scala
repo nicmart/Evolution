@@ -1,24 +1,23 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra._
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
-object brownian extends DrawingDefinition("brownian") {
+object brownian extends AbstractDrawingDefinition("brownian") {
 
   case class Config(
     radius: Double
   )
 
-  override def component: ConfigComponent[Config] =
+  override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  // Example with new
-  def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
@@ -29,5 +28,5 @@ object brownian extends DrawingDefinition("brownian") {
     }
   }
 
-  val currentConfig = Config(2)
+  val initialConfig = Config(2)
 }

@@ -1,10 +1,9 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.instances._
 import cats.implicits._
-import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
@@ -12,7 +11,7 @@ import evolution.algebra
 import evolution.algebra.syntax.all._
 import evolution.geometry.Point
 
-object bouncing extends DrawingDefinition("bouncing") {
+object bouncing extends AbstractDrawingDefinition("bouncing") {
   case class Config(
     groundLevel: Int,
     gravity: Double,
@@ -21,7 +20,7 @@ object bouncing extends DrawingDefinition("bouncing") {
     horizontalSpeed: Double
   )
 
-  protected def currentConfig =
+  def initialConfig =
     Config(
       groundLevel = 100,
       gravity = 0.000001,
@@ -59,8 +58,8 @@ object bouncing extends DrawingDefinition("bouncing") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  protected def component = ConfigComponent[Config]
+  def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 }

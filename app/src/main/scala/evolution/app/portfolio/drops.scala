@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
@@ -10,7 +10,7 @@ import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 import scala.collection.immutable.Queue
 
-object drops extends DrawingDefinition("drops") {
+object drops extends AbstractDrawingDefinition("drops") {
 
   case class Config(
     friction: Double,
@@ -21,7 +21,7 @@ object drops extends DrawingDefinition("drops") {
     numberOfDrops: Int
   )
 
-  override def currentConfig: Config =
+  override def initialConfig: Config =
     Config(
       friction = 0.02,
       acceleration = 0.003,
@@ -61,8 +61,8 @@ object drops extends DrawingDefinition("drops") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  override def component: ConfigComponent[Config] = ConfigComponent[Config]
+  override def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 }

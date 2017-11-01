@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -9,7 +9,7 @@ import evolution.app.react.component.config.instances._
 import evolution.algebra.{Evolution, FullAlgebra}
 
 
-object brownianStraight extends DrawingDefinition("brownian straight") {
+object brownianStraight extends AbstractDrawingDefinition("brownian straight") {
 
   case class Config(
     maxLength: Int,
@@ -18,7 +18,7 @@ object brownianStraight extends DrawingDefinition("brownian straight") {
     n: Int
   )
 
-  protected def currentConfig = Config(
+  def initialConfig = Config(
     maxLength = 10,
     minLength = 5,
     rotation = 0,
@@ -39,8 +39,8 @@ object brownianStraight extends DrawingDefinition("brownian straight") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  protected def component: ConfigComponent[Config] = ConfigComponent[Config]
+  def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 }

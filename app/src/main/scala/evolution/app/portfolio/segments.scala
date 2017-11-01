@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
@@ -9,7 +9,7 @@ import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 
-object segments extends DrawingDefinition("segments") {
+object segments extends AbstractDrawingDefinition("segments") {
 
   case class Config(
     startingSpeed: Double,
@@ -18,14 +18,14 @@ object segments extends DrawingDefinition("segments") {
     lengthOverSpeed: Int
   )
 
-  protected def currentConfig = Config(
+  def initialConfig = Config(
     startingSpeed = 3,
     acceleration = 0.1,
     friction = 0.00001,
     lengthOverSpeed = 100
   )
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
@@ -48,5 +48,5 @@ object segments extends DrawingDefinition("segments") {
     }
   }
 
-  protected def component = ConfigComponent[Config]
+  def configComponent = ConfigComponent[Config]
 }

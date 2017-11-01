@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -11,7 +11,7 @@ import evolution.algebra.{Evolution, FullAlgebra}
 
 import scala.collection.immutable.Queue
 
-object dynamics extends DrawingDefinition("dynamics") {
+object dynamics extends AbstractDrawingDefinition("dynamics") {
 
   case class Config(
     acceleration: Double,
@@ -19,7 +19,7 @@ object dynamics extends DrawingDefinition("dynamics") {
     numberOfPoints: Int
   )
 
-  protected def currentConfig =
+  def initialConfig =
     Config(
       acceleration = 0.001,
       friction = 0.0008,
@@ -43,8 +43,8 @@ object dynamics extends DrawingDefinition("dynamics") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  protected def component: ConfigComponent[Config] = ConfigComponent[Config]
+  def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 }

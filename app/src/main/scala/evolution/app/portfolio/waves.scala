@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
@@ -11,7 +11,7 @@ import evolution.algebra.{Evolution, FullAlgebra}
 
 import scala.collection.immutable.Queue
 
-object waves extends DrawingDefinition("waves") {
+object waves extends AbstractDrawingDefinition("waves") {
 
   case class Config(
     springConstant: Double,
@@ -21,7 +21,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves: Int
   )
 
-  def currentConfig = Config(
+  def initialConfig = Config(
     springConstant = 0.0004,
     friction = 0.0004,
     speed = 0.1,
@@ -29,7 +29,7 @@ object waves extends DrawingDefinition("waves") {
     numberOfWaves = 40
   )
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     import config._
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
@@ -67,5 +67,5 @@ object waves extends DrawingDefinition("waves") {
     }
   }
 
-  def component: ConfigComponent[Config] = ConfigComponent[Config]
+  def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 }

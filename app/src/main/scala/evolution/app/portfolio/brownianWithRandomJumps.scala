@@ -1,14 +1,14 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 
-object brownianWithRandomJumps extends DrawingDefinition("brownian with random jumps") {
+object brownianWithRandomJumps extends AbstractDrawingDefinition("brownian with random jumps") {
 
   case class Config(
     radius: Double,
@@ -16,10 +16,10 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
     jumpSize: Int
   )
 
-  override def component: ConfigComponent[Config] =
+  override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
@@ -33,7 +33,7 @@ object brownianWithRandomJumps extends DrawingDefinition("brownian with random j
     }
   }
 
-  val currentConfig =
+  val initialConfig =
     Config(
       1,
       0.0001,

@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
@@ -11,7 +11,7 @@ import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
 import evolution.algebra.syntax.all._
 
-object nBodies extends DrawingDefinition("n bodies") {
+object nBodies extends AbstractDrawingDefinition("n bodies") {
 
   case class Config(
     gravityConstant: Double,
@@ -22,7 +22,7 @@ object nBodies extends DrawingDefinition("n bodies") {
     speed2: Double
   )
 
-  protected def currentConfig = Config(
+  def initialConfig = Config(
     gravityConstant = 0.01,
     distance = 200,
     speed1 = 0,
@@ -87,10 +87,10 @@ object nBodies extends DrawingDefinition("n bodies") {
     }
   }
 
-  protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  protected def component = ConfigComponent[Config]
+  def configComponent = ConfigComponent[Config]
 
   private def fieldGen(gravityConstant: Double, mass: Double)(phase: PhaseSpace[Point]): AccelerationLaw[Point] = {
     val (pos1, vel1) = phase

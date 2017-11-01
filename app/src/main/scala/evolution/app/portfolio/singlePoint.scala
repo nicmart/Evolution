@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra
@@ -9,9 +9,9 @@ import evolution.algebra.Evolution
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
-object singlePoint extends DrawingDefinition("single constant point") {
+object singlePoint extends AbstractDrawingDefinition("single constant point") {
   type Config = Unit
-  protected def currentConfig: Unit = ()
+  def initialConfig: Unit = ()
 
   class ThisEvolution(config: Unit, context: DrawingContext) extends Evolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
@@ -21,8 +21,8 @@ object singlePoint extends DrawingDefinition("single constant point") {
     }
   }
 
-  protected def generateEvolution(config: Unit, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Unit, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  protected def component: ConfigComponent[Unit] = ConfigComponent[Unit]
+  def configComponent: ConfigComponent[Unit] = ConfigComponent[Unit]
 }

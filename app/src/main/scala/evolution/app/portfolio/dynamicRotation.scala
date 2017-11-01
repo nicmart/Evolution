@@ -2,14 +2,14 @@ package evolution.app.portfolio
 
 import cats.implicits._
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.AbstractDrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.{Evolution, FullAlgebra}
 
-object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
+object dynamicRotation extends AbstractDrawingDefinition("Dynamic Rotation") {
 
   case class Config(
     normSpeed: Double,
@@ -20,7 +20,7 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
     amplitude2: Double
   )
 
-  override protected def currentConfig =
+  override def initialConfig =
     Config(
       normSpeed = 15,
       angularSpeed = 0.1,
@@ -60,9 +60,9 @@ object dynamicRotation extends DrawingDefinition("Dynamic Rotation") {
     }
   }
 
-  override protected def generateEvolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  override protected def component: ConfigComponent[Config] =
+  override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 }
