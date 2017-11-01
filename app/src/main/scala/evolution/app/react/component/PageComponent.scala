@@ -1,8 +1,8 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.EvolutionDrawer
+import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.ConfiguredDrawing
+import evolution.app.model.configured.MaterializableDrawing
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
@@ -23,16 +23,15 @@ object PageComponent {
 
   case class State(
     canvasInitializer: dom.html.Canvas => Unit,
-    drawer: EvolutionDrawer,
-    currentDrawing: ConfiguredDrawing[Point],
-    materializer: Materializer[Long],
+    drawer: Drawer,
+    currentDrawing: MaterializableDrawing[Long, Point],
     drawingListWithSelection: DrawingListWithSelection,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     seed: Long
   ) {
     def points: Stream[Point] =
-      materializer.materialize(seed, currentDrawing.evolution)
+      currentDrawing.materialize(seed)
 
     /**
       * Create a new seed
@@ -126,7 +125,7 @@ object PageComponent {
       }
     }
 
-    def onConfiguredDrawingChange(configuredDrawing: ConfiguredDrawing[Point]): Callback = {
+    def onConfiguredDrawingChange(configuredDrawing: MaterializableDrawing[Long, Point]): Callback = {
       bs.modState { state =>
         state
           .copy(currentDrawing = configuredDrawing)
@@ -146,12 +145,11 @@ object PageComponent {
 
   val initialState = State(
     Conf.canvasInitializer,
-    EvolutionDrawer(
+    Drawer(
       1000,
       1
     ),
     Conf.drawingList.current.drawing(drawingContext(dom.window)),
-    Conf.materializer,
     Conf.drawingList,
     drawingContext(dom.window),
     RateCounter.empty(1000),

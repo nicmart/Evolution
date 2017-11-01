@@ -1,6 +1,6 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.EvolutionDrawer
+import evolution.app.canvas.Drawer
 import evolution.app.model.context.DrawingContext
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -14,7 +14,7 @@ object CanvasComponent {
   case class Props(
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
-    drawer: EvolutionDrawer,
+    drawer: Drawer,
     points: Stream[Point],
     onFrameDidDraw: Callback
   )

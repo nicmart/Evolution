@@ -4,7 +4,7 @@ import org.scalajs.dom
 import org.scalajs.dom.raw.CanvasRenderingContext2D
 import evolution.geometry.Point
 
-case class EvolutionDrawer(iterations: Int, strokeSize: Int) {
+case class Drawer(iterations: Int, strokeSize: Int) {
 
   def draw(context: dom.CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point] = {
     var currentStream = pointStream
