@@ -32,14 +32,3 @@ object ConfigComponent {
   = component
 }
 
-final case class ConfiguredComponent[Config](component: ConfigComponent[Config], config: Config) {
-  def element(onChange: Config => Callback): VdomElement =
-    <.div(
-      component.element(Props(config, onChange)).toTagMod
-    )
-
-  def withConfig(config: Config): ConfiguredComponent[Config] =
-    copy(config = config)
-}
-
-

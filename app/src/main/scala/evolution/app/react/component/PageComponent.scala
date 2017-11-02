@@ -2,7 +2,7 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.DrawingComponent
+import evolution.app.model.configured.{DefinitionToComponent, DrawingComponent}
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.{AbstractDrawingDefinition, DrawingDefinition, DrawingListWithSelection}
@@ -21,8 +21,13 @@ import scala.util.Random
 
 object PageComponent {
 
+  def definitionToComponent: DefinitionToComponent[Long, Point] =
+    Conf.definitionToComponent
+
+  def canvasInitializer: dom.html.Canvas => Unit =
+    Conf.canvasInitializer
+
   case class State(
-    canvasInitializer: dom.html.Canvas => Unit,
     drawer: Drawer,
     currentDrawing: DrawingComponent[Long, Point],
     drawingListWithSelection: DrawingListWithSelection[Point],
@@ -91,7 +96,7 @@ object PageComponent {
           ^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasKey)(CanvasComponent.Props(
             state.drawingContext,
-            state.canvasInitializer,
+            canvasInitializer,
             state.drawer,
             state.points,
             bs.modState { state =>
@@ -137,19 +142,21 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
-          .copy(currentDrawing = definition.drawing(state.drawingContext))
+          .copy(currentDrawing = definitionToComponent.toComponent(definition, state.drawingContext))
           .updateRng
       }
     }
   }
 
   val initialState = State(
-    Conf.canvasInitializer,
     Drawer(
       1000,
       1
     ),
-    Conf.drawingList.current.drawing(drawingContext(dom.window)),
+    definitionToComponent.toComponent(
+      Conf.drawingList.current,
+      drawingContext(dom.window)
+    ),
     Conf.drawingList,
     drawingContext(dom.window),
     RateCounter.empty(1000),

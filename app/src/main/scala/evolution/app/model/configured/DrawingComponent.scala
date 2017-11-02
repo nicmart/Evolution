@@ -1,6 +1,5 @@
 package evolution.app.model.configured
 
-import evolution.app.react.component.config.ConfiguredComponent
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import evolution.algebra.materializer.Materializer
