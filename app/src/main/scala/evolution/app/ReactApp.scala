@@ -11,7 +11,7 @@ object ReactApp {
 
   case object Home extends MyPages
 
-  val htmlPage = "/app/target/scala-2.12/classes/react.html"
+  val htmlPage = "/classes/react.html"
 
   val baseUrl =
     BaseUrl(BaseUrl.fromWindowOrigin.value + htmlPage)
