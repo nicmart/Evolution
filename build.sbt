@@ -33,9 +33,9 @@ lazy val jsApp = project.
         name := "jsApp",
         version      := "0.1.0-SNAPSHOT",
         libraryDependencies ++= Seq(
-            "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-            "com.github.japgolly.scalajs-react" %%% "core" % "1.1.0",
-            "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
+            "org.scala-js" %%% "scalajs-dom" % "0.9.2",
+            "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
+            "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.1",
             "com.lihaoyi" %%% "scalatags" % "0.6.2"
         ),
 
