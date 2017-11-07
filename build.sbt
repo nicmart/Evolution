@@ -1,4 +1,5 @@
 import Dependencies._
+import WebKeys._
 
 lazy val commonSettings = List(
     organization := "nicmart",
@@ -27,7 +28,7 @@ lazy val core = crossProject.
 lazy val jsApp = project.
     in(file("app"))
     .dependsOn(core.js)
-    .enablePlugins(ScalaJSPlugin)
+    .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
     .settings(
         inThisBuild(commonSettings),
         name := "jsApp",
@@ -46,6 +47,16 @@ lazy val jsApp = project.
         ),
         scalaJSUseMainModuleInitializer := true
     )
+
+lazy val server = (project in file("server")).settings(
+  scalaJSProjects := Seq(jsApp),
+  pipelineStages in Assets := Seq(scalaJSPipeline),
+  libraryDependencies ++= Seq(
+    "com.typesafe.akka" %% "akka-http" % "10.0.10"
+  ),
+  (managedClasspath in Runtime) += (packageBin in Assets).value,
+  packagePrefix in Assets := "public/",
+).enablePlugins(SbtWeb)
 
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
