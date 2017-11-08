@@ -1,0 +1,13 @@
+language: scala
+scala:
+   - 2.12.1
+script:
+  - sbt server/webStage
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: server/target/web/stage
+  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+  on:
+    branch: master
