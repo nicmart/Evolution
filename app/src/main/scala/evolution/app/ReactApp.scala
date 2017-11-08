@@ -11,7 +11,7 @@ object ReactApp {
 
   case object Home extends MyPages
 
-  val htmlPage = "index.html"
+  val htmlPage = "/index.html"
 
   val baseUrl =
     BaseUrl(BaseUrl.fromWindowOrigin.value + htmlPage)
