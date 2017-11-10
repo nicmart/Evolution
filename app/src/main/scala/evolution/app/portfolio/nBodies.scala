@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio.primes.Config
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
@@ -11,7 +11,8 @@ import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
 import evolution.algebra.syntax.all._
 
-object nBodies extends AbstractDrawingDefinition("n bodies") {
+object nBodies extends DrawingDefinition[Point] {
+  val name = "n bodies"
 
   case class Config(
     gravityConstant: Double,

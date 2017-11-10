@@ -1,14 +1,15 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 
-object brownianWithRandomJumps extends AbstractDrawingDefinition("brownian with random jumps") {
+object brownianWithRandomJumps extends DrawingDefinition[Point] {
+  val name = "brownian with random jumps"
 
   case class Config(
     radius: Double,

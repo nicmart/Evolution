@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -11,7 +11,8 @@ import evolution.algebra.{Evolution, FullAlgebra}
 
 import scala.collection.immutable.Queue
 
-object dynamics extends AbstractDrawingDefinition("dynamics") {
+object dynamics extends DrawingDefinition[Point] {
+  val name = "dynamics"
 
   case class Config(
     acceleration: Double,

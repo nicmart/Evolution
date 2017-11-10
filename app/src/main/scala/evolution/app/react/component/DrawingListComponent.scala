@@ -1,6 +1,6 @@
 package evolution.app.react.component
 
-import evolution.app.model.definition.{AbstractDrawingDefinition, DrawingDefinition}
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.presentational.SelectComponent
 import evolution.app.react.component.presentational.SelectComponent.Item
 import evolution.geometry.Point

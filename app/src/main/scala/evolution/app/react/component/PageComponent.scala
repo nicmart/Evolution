@@ -5,7 +5,7 @@ import evolution.app.conf.Conf
 import evolution.app.model.configured.{DefinitionToComponent, DrawingComponent}
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
-import evolution.app.model.definition.{AbstractDrawingDefinition, DrawingDefinition, DrawingListWithSelection}
+import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational._
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import japgolly.scalajs.react.component.Scala.BackendScope

@@ -1,15 +1,15 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra._
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
-object brownian extends AbstractDrawingDefinition("brownian") {
-
+object brownian extends DrawingDefinition[Point] {
+  val name = "brownian"
   case class Config(
     radius: Double
   )

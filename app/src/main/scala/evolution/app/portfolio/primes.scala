@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -9,7 +9,8 @@ import evolution.app.react.component.config.instances._
 import evolution.algebra
 import evolution.algebra.Evolution
 
-object primes extends AbstractDrawingDefinition("primes") {
+object primes extends DrawingDefinition[Point] {
+  val name = "primes"
 
   case class Config(
     p: Int,

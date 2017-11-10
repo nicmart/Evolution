@@ -2,14 +2,15 @@ package evolution.app.portfolio
 
 import cats.implicits._
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.{Evolution, FullAlgebra}
 
-object dynamicRotation extends AbstractDrawingDefinition("Dynamic Rotation") {
+object dynamicRotation extends DrawingDefinition[Point] {
+  val name = "Dynamic Rotation"
 
   case class Config(
     normSpeed: Double,

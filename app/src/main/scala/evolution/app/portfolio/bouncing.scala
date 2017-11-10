@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.instances._
 import cats.implicits._
 import evolution.app.react.component.config.ConfigComponent
@@ -11,7 +11,8 @@ import evolution.algebra
 import evolution.algebra.syntax.all._
 import evolution.geometry.Point
 
-object bouncing extends AbstractDrawingDefinition("bouncing") {
+object bouncing extends DrawingDefinition[Point] {
+  override val name = "bouncing"
   case class Config(
     groundLevel: Int,
     gravity: Double,

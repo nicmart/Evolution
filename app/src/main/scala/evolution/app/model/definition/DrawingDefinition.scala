@@ -17,9 +17,6 @@ object DrawingDefinition {
   type Aux[T, C] = DrawingDefinition[T] { type Config = C }
 }
 
-// @todo remove
-abstract class AbstractDrawingDefinition(val name: String) extends DrawingDefinition[Point]
-
 final case class DrawingListWithSelection[T](
   list: List[DrawingDefinition[T]],
   current: DrawingDefinition[T]

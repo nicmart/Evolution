@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.AbstractDrawingDefinition
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra
@@ -9,7 +9,8 @@ import evolution.algebra.Evolution
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
-object singlePoint extends AbstractDrawingDefinition("single constant point") {
+object singlePoint extends DrawingDefinition[Point] {
+  val name = "single constant point"
   type Config = Unit
   def initialConfig: Unit = ()
 
