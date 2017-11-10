@@ -13,7 +13,12 @@ object WebServer {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.dispatcher
 
+    val port = 12345
+
     val route =
+      pathSingleSlash {
+        getFromResource("public/index-dev.html")
+      } ~
       pathPrefix(Remaining) { file =>
         // optionally compresses the response with Gzip or Deflate
         // if the client accepts compressed responses
@@ -22,9 +27,9 @@ object WebServer {
         }
       }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(route, "localhost", port)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://localhost:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

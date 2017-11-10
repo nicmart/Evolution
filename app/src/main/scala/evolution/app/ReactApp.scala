@@ -10,17 +10,17 @@ object ReactApp {
   sealed trait MyPages
 
   case object Home extends MyPages
-
-  val htmlPage = "/index.html"
+  case object NotFound extends MyPages
 
   val baseUrl =
-    BaseUrl(BaseUrl.fromWindowOrigin.value + htmlPage)
+    BaseUrl(BaseUrl.until_#.value)
   val routerConfig = RouterConfigDsl[MyPages].buildConfig { dsl =>
     import dsl._
 
     (emptyRule
       | staticRoute(root, Home) ~> render(PageComponent.component.apply())
-      ).notFound(redirectToPage(Home)(Redirect.Replace))
+      | staticRoute("#notFound", NotFound) ~> render(<.div("NOT FOUND"))
+      ).notFound(redirectToPage(NotFound)(Redirect.Push))
   }
 
   def main(args: Array[String]): Unit = {
