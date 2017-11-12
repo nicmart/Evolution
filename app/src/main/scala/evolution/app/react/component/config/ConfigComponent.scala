@@ -6,9 +6,6 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 trait ConfigComponent[Config] {
-
-  import ConfigComponent._
-
   def element(props: Props[Config]): List[VdomElement]
 }
 
@@ -29,6 +26,6 @@ object ConfigComponent {
     * Summoner method
     */
   def apply[Config](implicit component: ConfigComponent[Config]): ConfigComponent[Config]
-  = component
+    = component
 }
 

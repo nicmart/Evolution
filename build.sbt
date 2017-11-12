@@ -1,4 +1,3 @@
-import Dependencies._
 import WebKeys._
 
 lazy val commonSettings = List(
@@ -14,10 +13,10 @@ lazy val core = crossProject.
         inThisBuild(commonSettings),
         name := "test", // default name would be p1
         libraryDependencies ++= Seq(
-            scalaTest % Test,
+            "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
             "org.typelevel" %%% "cats" % "0.9.0",
             "com.chuusai" %%% "shapeless" % "2.3.2",
-            "org.scalacheck" %% "scalacheck" % "1.13.4" % Test
+            "org.scalacheck" %%% "scalacheck" % "1.13.4" % Test
         )
     ).
     jvmSettings(
@@ -27,7 +26,7 @@ lazy val core = crossProject.
 
 lazy val jsApp = project.
     in(file("app"))
-    .dependsOn(core.js)
+    .dependsOn(core.js % "test->test;compile->compile")
     .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
     .settings(
         inThisBuild(commonSettings),
@@ -37,15 +36,22 @@ lazy val jsApp = project.
             "org.scala-js" %%% "scalajs-dom" % "0.9.2",
             "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
             "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.1",
-            "com.lihaoyi" %%% "scalatags" % "0.6.2"
+            "com.github.japgolly.scalajs-react" %%% "test" % "1.1.1" % "test",
+            "com.lihaoyi" %%% "scalatags" % "0.6.2",
+            "io.circe" %%% "circe-core" % "0.8.0",
+            "io.circe" %%% "circe-generic" % "0.8.0",
+            "io.circe" %%% "circe-parser" % "0.8.0"
         ),
-
         jsDependencies ++= Seq(
             "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
             "org.webjars.bower" % "react" % "15.6.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
             "org.webjars.bower" % "react" % "15.6.1" / "react-dom-server.js" minified  "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer"
         ),
-        scalaJSUseMainModuleInitializer := true
+        scalaJSUseMainModuleInitializer := true,
+        scalaJSStage in Global := FastOptStage,
+        // jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value),
+        jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
+
     )
 
 lazy val server = (project in file("server")).settings(

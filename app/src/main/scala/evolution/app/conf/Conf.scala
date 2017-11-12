@@ -30,7 +30,7 @@ object Conf {
         nBodies,
         bouncing
       ),
-      singlePoint
+      brownian
     )
 
   lazy val materializer: Materializer[Long] =
