@@ -3,11 +3,25 @@ package evolution.app.model.configured
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import evolution.algebra.materializer.Materializer
+import evolution.app.conf.Conf
+import evolution.app.model.context.DrawingContext
+import evolution.app.portfolio.brownian
+import evolution.geometry.Point
+import io.circe.Json
 
 trait DrawingComponent[S, T] {
   def name: String
   def materialize(seed: S): Stream[T]
   def configElement(onChange: DrawingComponent[S, T] => Callback): VdomElement
+  def serialize: Json = Json.obj {
+    "config" -> Json.fromString("this is my config")
+  }
+}
+
+object DrawingComponent {
+  def unserialize(drawingContext: DrawingContext, json: Json): Option[DrawingComponent[Long, Point]] = {
+    Some(Conf.definitionToComponent.toComponent(brownian, drawingContext))
+  }
 }
 
 class EvolutionDrawingComponent[S, T, Config](
