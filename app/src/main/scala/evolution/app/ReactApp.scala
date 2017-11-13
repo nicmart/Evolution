@@ -10,6 +10,7 @@ object ReactApp {
   sealed trait MyPages
 
   case object Home extends MyPages
+  case class SerializedDrawing(serialized: String) extends MyPages
   case object NotFound extends MyPages
 
   val baseUrl =
@@ -18,8 +19,11 @@ object ReactApp {
     import dsl._
 
     (emptyRule
-      | staticRoute(root, Home) ~> render(PageComponent.component.apply())
+      | staticRoute(root, Home) ~> renderR(PageComponent.component.apply)
       | staticRoute("#notFound", NotFound) ~> render(<.div("NOT FOUND"))
+      | dynamicRoute[SerializedDrawing]("#" ~ string(".*").caseClass[SerializedDrawing]) {
+        case page @ SerializedDrawing(_) => page
+      } ~> renderR(PageComponent.component.apply)
       ).notFound(redirectToPage(NotFound)(Redirect.Push))
   }
 

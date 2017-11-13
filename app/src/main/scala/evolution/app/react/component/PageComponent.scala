@@ -16,6 +16,8 @@ import org.scalajs.dom
 import org.scalajs.dom.Window
 import evolution.geometry.Point
 import evolution.algebra.materializer.Materializer
+import evolution.app.ReactApp.{MyPages, SerializedDrawing}
+import japgolly.scalajs.react.extra.router.RouterCtl
 
 import scala.util.Random
 
@@ -39,12 +41,6 @@ object PageComponent {
       currentDrawing.materialize(seed)
 
     /**
-      * Create a new seed
-      */
-    def updateRng: State =
-      copy(seed = Random.nextLong())
-
-    /**
       * Use to determine if the canvas has to be re-rendered
       */
     def canvasKey: String = seed.toString
@@ -62,16 +58,15 @@ object PageComponent {
     ).hashCode()
   }
 
-  class Backend(bs: BackendScope[Unit, State]) {
-    def render(state: State): VdomElement = {
+  class Backend(bs: BackendScope[RouterCtl[MyPages], State]) {
+    def render(router: RouterCtl[MyPages], state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
           <.span(s"${state.pointRateCounter.rate.toInt} p/s"),
           ButtonComponent.component(ButtonComponent.Props(
             "Refresh",
-            bs.modState(_.updateRng)
-          )
-          ),
+            refresh
+          )),
           HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Iterations",
             "",
@@ -118,24 +113,21 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawer = state.drawer.copy(iterations = value))
-          .updateRng
-      }
+      } >> refresh
     }
 
     def onSizeChanged(value: Int): Callback = {
       bs.modState { state =>
         state
           .copy(drawer = state.drawer.copy(strokeSize = value))
-          .updateRng
-      }
+      } >> refresh
     }
 
     def onConfiguredDrawingChange(configuredDrawing: DrawingComponent[Long, Point]): Callback = {
       bs.modState { state =>
         state
           .copy(currentDrawing = configuredDrawing)
-          .updateRng
-      }
+      } >> refresh
     }
 
     def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
@@ -143,9 +135,23 @@ object PageComponent {
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
           .copy(currentDrawing = definitionToComponent.toComponent(definition, state.drawingContext))
-          .updateRng
-      }
+      } >> refresh
     }
+
+    private def refresh: Callback = {
+      updateSeed >> updateUrl
+    }
+
+    private def updateSeed: Callback = {
+      bs.modState { _.copy(seed = Random.nextLong()) }
+    }
+
+    private def updateUrl: Callback =
+      for {
+        state <- bs.state
+        router <- bs.props
+        _ <- router.set(SerializedDrawing(state.seed.toString))
+      } yield ()
   }
 
   val initialState = State(
@@ -163,7 +169,7 @@ object PageComponent {
     Random.nextLong()
   )
 
-  val component = ScalaComponent.builder[Unit]("Page")
+  val component = ScalaComponent.builder[RouterCtl[MyPages]]("Page")
     .initialState(initialState)
     .renderBackend[Backend]
     .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
