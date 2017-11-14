@@ -109,28 +109,21 @@ object PageComponent {
       )
     }
 
-    def onIterationsChanged(value: Int): Callback = {
+    private def onIterationsChanged(value: Int): Callback = {
       bs.modState { state =>
         state
           .copy(drawer = state.drawer.copy(iterations = value))
       } >> refresh
     }
 
-    def onSizeChanged(value: Int): Callback = {
-      bs.modState { state =>
-        state
-          .copy(drawer = state.drawer.copy(strokeSize = value))
-      } >> refresh
-    }
-
-    def onConfiguredDrawingChange(configuredDrawing: DrawingComponent[Long, Point]): Callback = {
+    private def onConfiguredDrawingChange(configuredDrawing: DrawingComponent[Long, Point]): Callback = {
       bs.modState { state =>
         state
           .copy(currentDrawing = configuredDrawing)
       } >> refresh
     }
 
-    def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
+    private def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
       bs.modState { state =>
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
