@@ -15,11 +15,10 @@ import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
 import evolution.geometry.Point
-import evolution.algebra.materializer.Materializer
-import evolution.app.ReactApp.{MyPages, SerializedDrawing}
+import evolution.app.ReactApp.{MyPages, LoadDrawingPage}
 import japgolly.scalajs.react.extra.router.RouterCtl
 
-import scala.util.Random
+import scala.util.{Random, Try}
 
 object PageComponent {
 
@@ -58,8 +57,38 @@ object PageComponent {
     ).hashCode()
   }
 
-  class Backend(bs: BackendScope[RouterCtl[MyPages], State]) {
-    def render(router: RouterCtl[MyPages], state: State): VdomElement = {
+  case class UrlState(
+    seed: Long,
+    drawingComponent: DrawingComponent[Long, Point]
+  )
+
+  object UrlState {
+    def unserialize(string: String): Option[UrlState] = {
+      Try {
+        string.split("/").toList match {
+          case name :: seed :: Nil =>
+            UrlState(
+              seed.toLong,
+              definitionToComponent.toComponent(
+                Conf.drawingList.byName(name),
+                drawingContext(dom.window)
+              )
+            )
+        }
+      }.toOption
+    }
+    def serialize(urlState: UrlState): String = {
+      s"${urlState.drawingComponent.name}/${urlState.seed.toString}"
+    }
+  }
+
+  case class Props(
+    router: RouterCtl[MyPages],
+    urlState: Option[UrlState]
+  )
+
+  class Backend(bs: BackendScope[Props, State]) {
+    def render(props: Props, state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
           <.span(s"${state.pointRateCounter.rate.toInt} p/s"),
@@ -116,10 +145,10 @@ object PageComponent {
       } >> refresh
     }
 
-    private def onConfiguredDrawingChange(configuredDrawing: DrawingComponent[Long, Point]): Callback = {
+    private def onConfiguredDrawingChange(drawingComponent: DrawingComponent[Long, Point]): Callback = {
       bs.modState { state =>
         state
-          .copy(currentDrawing = configuredDrawing)
+          .copy(currentDrawing = drawingComponent)
       } >> refresh
     }
 
@@ -136,34 +165,46 @@ object PageComponent {
     }
 
     private def updateSeed: Callback = {
-      bs.modState { _.copy(seed = Random.nextLong()) }
+      bs.modState { state =>
+        state.copy(seed = Random.nextLong())
+      }
     }
 
     private def updateUrl: Callback =
       for {
         state <- bs.state
-        router <- bs.props
-        _ <- router.set(SerializedDrawing(state.seed.toString))
+        props <- bs.props
+        router = props.router
+        _ <- router.set(LoadDrawingPage(UrlState(state.seed, state.currentDrawing)))
       } yield ()
   }
 
-  val initialState = State(
-    Drawer(
-      1000,
-      1
-    ),
-    definitionToComponent.toComponent(
-      Conf.drawingList.current,
-      drawingContext(dom.window)
-    ),
-    Conf.drawingList,
-    drawingContext(dom.window),
-    RateCounter.empty(1000),
-    Random.nextLong()
-  )
+  val initialUrlState =
+    UrlState(
+      Random.nextLong(),
+      definitionToComponent.toComponent(
+        Conf.drawingList.current,
+        drawingContext(dom.window)
+      )
+    )
 
-  val component = ScalaComponent.builder[RouterCtl[MyPages]]("Page")
-    .initialState(initialState)
+  def initialState(props: Props): State = {
+    val urlState = props.urlState.getOrElse(initialUrlState)
+    State(
+      Drawer(
+        1000,
+        1
+      ),
+      urlState.drawingComponent,
+      Conf.drawingList.copy(current = Conf.drawingList.byName(urlState.drawingComponent.name)),
+      drawingContext(dom.window),
+      RateCounter.empty(1000),
+      urlState.seed
+    )
+  }
+
+  val component = ScalaComponent.builder[Props]("Page")
+    .initialStateFromProps(initialState)
     .renderBackend[Backend]
     .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
     .build

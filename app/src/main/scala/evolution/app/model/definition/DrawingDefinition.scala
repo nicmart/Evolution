@@ -20,4 +20,7 @@ object DrawingDefinition {
 final case class DrawingListWithSelection[T](
   list: List[DrawingDefinition[T]],
   current: DrawingDefinition[T]
-)
+) {
+  def byName(name: String): DrawingDefinition[T] =
+    list.find(_.name == name).getOrElse(current)
+}
