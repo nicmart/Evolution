@@ -15,7 +15,7 @@ import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.Window
 import evolution.geometry.Point
-import evolution.app.ReactApp.{MyPages, LoadDrawingPage}
+import evolution.app.ReactApp.{LoadDrawingPage, MyPages, NotFound}
 import japgolly.scalajs.react.extra.router.RouterCtl
 
 import scala.util.{Random, Try}
@@ -91,7 +91,7 @@ object PageComponent {
     def render(props: Props, state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
-          <.span(s"${state.pointRateCounter.rate.toInt} p/s"),
+          <.span(s"${ state.pointRateCounter.rate.toInt } p/s"),
           ButtonComponent.component(ButtonComponent.Props(
             "Refresh",
             refresh
@@ -161,22 +161,10 @@ object PageComponent {
     }
 
     private def refresh: Callback = {
-      updateSeed >> updateUrl
-    }
-
-    private def updateSeed: Callback = {
       bs.modState { state =>
         state.copy(seed = Random.nextLong())
       }
     }
-
-    private def updateUrl: Callback =
-      for {
-        state <- bs.state
-        props <- bs.props
-        router = props.router
-        _ <- router.set(LoadDrawingPage(UrlState(state.seed, state.currentDrawing)))
-      } yield ()
   }
 
   val initialUrlState =
@@ -206,10 +194,25 @@ object PageComponent {
   val component = ScalaComponent.builder[Props]("Page")
     .initialStateFromProps(initialState)
     .renderBackend[Backend]
-    .shouldComponentUpdate(s => CallbackTo.pure(s.currentState.key != s.nextState.key))
+    .shouldComponentUpdate { s =>
+      CallbackTo.pure {
+        s.currentState.key != s.nextState.key ||
+          s.currentProps.urlState.map(UrlState.serialize) != s.nextProps.urlState.map(UrlState.serialize)
+      }
+    }
+    .componentDidUpdate { x =>
+      x.currentProps.router.set(
+        LoadDrawingPage(
+          UrlState(
+            x.currentState.seed,
+            x.currentState.currentDrawing
+          )
+        )
+      )
+    }
     .build
 
-  private def drawingContext(window: Window): DrawingContext = {
+  def drawingContext(window: Window): DrawingContext = {
     val document = window.document
     DrawingContext(
       DrawingContext.CanvasSize(
