@@ -1,5 +1,6 @@
 package evolution.app
 
+import evolution.app.conf.Conf
 import evolution.app.react.component.PageComponent
 import evolution.app.react.component.PageComponent.UrlState
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterConfigDsl}
@@ -27,13 +28,11 @@ object ReactApp {
       }
 
     (emptyRule
-      | staticRoute(root, Home) ~> renderR { router =>
-        PageComponent.component.apply(PageComponent.Props(router , None))
-      }
+      | staticRoute(root, Home) ~> redirectToPage(Conf.initialPage)(Redirect.Replace)
       | dynamicRoute[LoadDrawingPage]("#/" ~ loadDrawingPagePath) {
         case page @ LoadDrawingPage(_) => page
       } ~> dynRenderR((loadDrawingPage, router) =>
-          PageComponent.component.apply(PageComponent.Props(router , Some(loadDrawingPage.urlState)))
+          PageComponent.component.apply(PageComponent.Props(router , loadDrawingPage.urlState))
         )
       | staticRoute("#notFound", NotFound) ~> render(<.div("NOT FOUND"))
       ).notFound(redirectToPage(NotFound)(Redirect.Push))

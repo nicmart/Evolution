@@ -13,9 +13,8 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
-import org.scalajs.dom.Window
 import evolution.geometry.Point
-import evolution.app.ReactApp.{LoadDrawingPage, MyPages, NotFound}
+import evolution.app.ReactApp.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
 
 import scala.util.{Random, Try}
@@ -46,8 +45,6 @@ object PageComponent {
 
     /**
       * Used to determine if the page needs an update
-      *
-      * @return
       */
     def key: Int = (
       seed,
@@ -71,7 +68,7 @@ object PageComponent {
               seed.toLong,
               definitionToComponent.toComponent(
                 Conf.drawingList.byName(name),
-                drawingContext(dom.window)
+                Conf.drawingContext
               )
             )
         }
@@ -84,7 +81,7 @@ object PageComponent {
 
   case class Props(
     router: RouterCtl[MyPages],
-    urlState: Option[UrlState]
+    urlState: UrlState
   )
 
   class Backend(bs: BackendScope[Props, State]) {
@@ -167,37 +164,26 @@ object PageComponent {
     }
   }
 
-  val initialUrlState =
-    UrlState(
-      Random.nextLong(),
-      definitionToComponent.toComponent(
-        Conf.drawingList.current,
-        drawingContext(dom.window)
-      )
-    )
-
-  def initialState(props: Props): State = {
-    val urlState = props.urlState.getOrElse(initialUrlState)
+  def stateFromProps(props: Props): State = {
     State(
       Drawer(
         1000,
         1
       ),
-      urlState.drawingComponent,
-      Conf.drawingList.copy(current = Conf.drawingList.byName(urlState.drawingComponent.name)),
-      drawingContext(dom.window),
+      props.urlState.drawingComponent,
+      Conf.drawingList.copy(current = Conf.drawingList.byName(props.urlState.drawingComponent.name)),
+      Conf.drawingContext,
       RateCounter.empty(1000),
-      urlState.seed
+      props.urlState.seed
     )
   }
 
   val component = ScalaComponent.builder[Props]("Page")
-    .initialStateFromProps(initialState)
+    .initialStateFromProps(stateFromProps)
     .renderBackend[Backend]
     .shouldComponentUpdate { s =>
       CallbackTo.pure {
-        s.currentState.key != s.nextState.key ||
-          s.currentProps.urlState.map(UrlState.serialize) != s.nextProps.urlState.map(UrlState.serialize)
+        s.currentState.key != s.nextState.key
       }
     }
     .componentDidUpdate { x =>
@@ -210,15 +196,10 @@ object PageComponent {
         )
       )
     }
+    .componentWillReceiveProps { x =>
+      if (UrlState.serialize(x.nextProps.urlState) != UrlState.serialize(x.currentProps.urlState)) {
+        x.setState(stateFromProps(x.nextProps)) >> Callback.log("Props changed")
+      } else Callback.empty
+    }
     .build
-
-  def drawingContext(window: Window): DrawingContext = {
-    val document = window.document
-    DrawingContext(
-      DrawingContext.CanvasSize(
-        2 * Math.max(document.documentElement.clientWidth, window.innerWidth).toInt,
-        2 * Math.max(document.documentElement.clientHeight, window.innerHeight).toInt
-      )
-    )
-  }
 }
