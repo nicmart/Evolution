@@ -58,7 +58,7 @@ object Conf {
     LoadDrawingPage(
       UrlState(
         Random.nextLong(),
-        definitionToComponent.toComponent(
+        definitionToComponent.toComponentWithInitialConfig(
           drawingList.current,
           drawingContext
         )

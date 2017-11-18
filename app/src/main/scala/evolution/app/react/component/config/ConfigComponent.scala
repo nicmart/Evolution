@@ -1,6 +1,7 @@
 package evolution.app.react.component.config
 
 import evolution.app.react.component.config.ConfigComponent.Props
+import io.circe.{Decoder, Encoder}
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._

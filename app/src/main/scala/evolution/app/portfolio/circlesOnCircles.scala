@@ -2,12 +2,14 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
 import evolution.algebra
 import evolution.geometry.Point
-import evolution.app.react.component.config.instances._
+import evolution.app.react.component.config.componentInstances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.Evolution
+import evolution.app.portfolio.bouncing.Config
+import io.circe.generic.auto._
 
 object circlesOnCircles extends DrawingDefinition[Point] {
   val name = "circles on circles"
@@ -58,4 +60,7 @@ object circlesOnCircles extends DrawingDefinition[Point] {
 
   override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
+
+  override def configCodec: ConfigCodec[Config] =
+    ConfigCodec[Config]
 }

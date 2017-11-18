@@ -7,8 +7,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, _}
 import shapeless.labelled.FieldType
 import shapeless.{::, HList, HNil, LabelledGeneric, Lazy, Witness, labelled}
+import io.circe.syntax._
+import io.circe.generic.auto._
 
-object instances {
+object componentInstances {
 
   import ConfigComponent._
 
@@ -61,8 +63,7 @@ object instances {
         <.div(
           hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
         )
-      )
-      ) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
+      )) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
     }
   }
 

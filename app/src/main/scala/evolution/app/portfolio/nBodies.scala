@@ -3,13 +3,15 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio.primes.Config
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
 import evolution.algebra
 import evolution.geometry.Point
-import evolution.app.react.component.config.instances._
+import evolution.app.react.component.config.componentInstances._
 import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
 import evolution.algebra.syntax.all._
+import evolution.app.portfolio.bouncing.Config
+import io.circe.generic.auto._
 
 object nBodies extends DrawingDefinition[Point] {
   val name = "n bodies"
@@ -92,6 +94,9 @@ object nBodies extends DrawingDefinition[Point] {
     new ThisEvolution(config, context)
 
   def configComponent = ConfigComponent[Config]
+
+  override def configCodec: ConfigCodec[Config] =
+    ConfigCodec[Config]
 
   private def fieldGen(gravityConstant: Double, mass: Double)(phase: PhaseSpace[Point]): AccelerationLaw[Point] = {
     val (pos1, vel1) = phase

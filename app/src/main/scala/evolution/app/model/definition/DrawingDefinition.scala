@@ -1,9 +1,10 @@
 package evolution.app.model.definition
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
 import evolution.algebra.Evolution
 import evolution.geometry.Point
+import io.circe.Json
 
 trait DrawingDefinition[T] {
   type Config
@@ -11,6 +12,11 @@ trait DrawingDefinition[T] {
   def initialConfig: Config
   def evolution(config: Config, context: DrawingContext): Evolution[T]
   def configComponent: ConfigComponent[Config]
+  def configCodec: ConfigCodec[Config] =
+    ConfigCodec.instance(
+      config => Json.fromString(name),
+      json => Some(initialConfig)
+    )
 }
 
 object DrawingDefinition {

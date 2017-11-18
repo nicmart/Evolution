@@ -1,14 +1,21 @@
 package evolution.app.model.configured
 
 import evolution.algebra.materializer.Materializer
-import evolution.app.conf.Conf.materializer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 
 trait DefinitionToComponent[S, T] {
-  def toComponent(
+  // @todo change definition to use a configured drawing
+  def toComponentWithInitialConfig(
     definition: DrawingDefinition[T],
     context: DrawingContext
+  ): DrawingComponent[S, T] =
+    toComponent(definition, context)(definition.initialConfig)
+
+  def toComponent(
+    definition: DrawingDefinition[T],
+    context: DrawingContext)(
+    config: definition.Config
   ): DrawingComponent[S, T]
 }
 
@@ -18,16 +25,15 @@ class MaterializerDefinitionToComponent[S, T](
 
   override def toComponent(
     definition: DrawingDefinition[T],
-    context: DrawingContext
-  ): DrawingComponent[S, T] = {
+    context: DrawingContext)(
+    config: definition.Config
+  ): DrawingComponent[S, T] =
     new EvolutionDrawingComponent[S, T, definition.Config](
       materializer,
       ConfiguredDrawing[T, definition.Config](
-        // @todo find a better solution
-        definition.asInstanceOf[DrawingDefinition.Aux[T, definition.Config]],
+        definition,
         context,
-        definition.initialConfig
+        config
       )
     )
-  }
 }

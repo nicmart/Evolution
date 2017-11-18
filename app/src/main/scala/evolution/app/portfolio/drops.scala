@@ -2,13 +2,16 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
 import evolution.geometry.Point
-import evolution.app.react.component.config.instances._
+import evolution.app.react.component.config.componentInstances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
+import evolution.app.portfolio.bouncing.Config
+
 import scala.collection.immutable.Queue
+import io.circe.generic.auto._
 
 object drops extends DrawingDefinition[Point] {
   val name = "drops"
@@ -66,4 +69,7 @@ object drops extends DrawingDefinition[Point] {
     new ThisEvolution(config, context)
 
   override def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
+
+  override def configCodec: ConfigCodec[Config] =
+    ConfigCodec[Config]
 }

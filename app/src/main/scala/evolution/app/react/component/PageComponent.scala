@@ -16,6 +16,7 @@ import org.scalajs.dom
 import evolution.geometry.Point
 import evolution.app.ReactApp.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
+import io.circe._, io.circe.parser._
 
 import scala.util.{Random, Try}
 
@@ -61,21 +62,23 @@ object PageComponent {
 
   object UrlState {
     def unserialize(string: String): Option[UrlState] = {
-      Try {
-        string.split("/").toList match {
-          case name :: seed :: Nil =>
-            UrlState(
-              seed.toLong,
-              definitionToComponent.toComponent(
-                Conf.drawingList.byName(name),
-                Conf.drawingContext
-              )
-            )
-        }
-      }.toOption
+      string.split("/").toList match {
+        case serializedComponent :: seed :: Nil =>
+          println(serializedComponent)
+          val jsonString = new String(java.util.Base64.getDecoder.decode(serializedComponent))
+          for {
+            json <- parse(jsonString).toOption
+            component <- DrawingComponent.unserialize(Conf.drawingContext, json)
+            seedLong <- Try(seed.toLong).toOption
+          } yield UrlState(seedLong, component)
+        case _ => None
+      }
     }
+
     def serialize(urlState: UrlState): String = {
-      s"${urlState.drawingComponent.name}/${urlState.seed.toString}"
+      val jsonComponent = urlState.drawingComponent.serialize.noSpaces
+      val base64Component = java.util.Base64.getEncoder.encodeToString(jsonComponent.getBytes())
+      s"$base64Component/${urlState.seed}"
     }
   }
 
@@ -153,7 +156,7 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
-          .copy(currentDrawing = definitionToComponent.toComponent(definition, state.drawingContext))
+          .copy(currentDrawing = definitionToComponent.toComponentWithInitialConfig(definition, state.drawingContext))
       } >> refresh
     }
 

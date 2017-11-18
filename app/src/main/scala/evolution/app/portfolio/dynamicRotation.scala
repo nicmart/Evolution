@@ -3,11 +3,13 @@ package evolution.app.portfolio
 import cats.implicits._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
 import evolution.geometry.Point
-import evolution.app.react.component.config.instances._
+import evolution.app.react.component.config.componentInstances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.{Evolution, FullAlgebra}
+import evolution.app.portfolio.bouncing.Config
+import io.circe.generic.auto._
 
 object dynamicRotation extends DrawingDefinition[Point] {
   val name = "Dynamic Rotation"
@@ -66,4 +68,7 @@ object dynamicRotation extends DrawingDefinition[Point] {
 
   override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
+
+  override def configCodec: ConfigCodec[Config] =
+    ConfigCodec[Config]
 }
