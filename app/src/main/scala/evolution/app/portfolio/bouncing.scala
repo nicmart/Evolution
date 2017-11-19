@@ -4,11 +4,13 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
-import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
+import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra
 import evolution.algebra.syntax.all._
+import evolution.app.codec.JsonCodec
+import evolution.app.codec.JsonCodec._
 import evolution.app.portfolio.brownian.Config
 import evolution.geometry.Point
 import io.circe.generic.auto._
@@ -66,6 +68,6 @@ object bouncing extends DrawingDefinition[Point] {
 
   def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 
-  override def configCodec: ConfigCodec[Config] =
-    ConfigCodec[Config]
+  override def configCodec: JsonCodec[Config] =
+    JsonCodec[Config]
 }

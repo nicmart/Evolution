@@ -2,18 +2,12 @@ package evolution.app
 
 import evolution.app.conf.Conf
 import evolution.app.react.component.PageComponent
-import evolution.app.react.component.PageComponent.UrlState
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterConfigDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
+import evolution.app.react.pages._
 
 object ReactApp {
-
-  sealed trait MyPages
-
-  case object Home extends MyPages
-  case class LoadDrawingPage(urlState: UrlState) extends MyPages
-  case object NotFound extends MyPages
 
   private val baseUrl =
     BaseUrl(BaseUrl.until_#.value)
@@ -22,9 +16,9 @@ object ReactApp {
 
     val loadDrawingPagePath =
       string(".*").pmap[LoadDrawingPage] { string =>
-        UrlState.unserialize(string).map(LoadDrawingPage)
+        Conf.loadDrawingPageStringCodec.decode(string)
       } { page =>
-        UrlState.serialize(page.urlState)
+        Conf.loadDrawingPageStringCodec.encode(page)
       }
 
     (emptyRule
@@ -32,7 +26,7 @@ object ReactApp {
       | dynamicRoute[LoadDrawingPage]("#/" ~ loadDrawingPagePath) {
         case page @ LoadDrawingPage(_) => page
       } ~> dynRenderR((loadDrawingPage, router) =>
-          PageComponent.component.apply(PageComponent.Props(router , loadDrawingPage.urlState))
+          PageComponent.component.apply(PageComponent.Props(router , loadDrawingPage.loadableDrawing))
         )
       | staticRoute("#notFound", NotFound) ~> render(<.div("NOT FOUND"))
       ).notFound(redirectToPage(NotFound)(Redirect.Push))

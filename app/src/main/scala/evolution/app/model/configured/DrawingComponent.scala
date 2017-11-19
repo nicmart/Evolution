@@ -5,6 +5,8 @@ import japgolly.scalajs.react.vdom.VdomElement
 import evolution.algebra.materializer.Materializer
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
+import evolution.app.codec
+import evolution.app.model.definition.DrawingDefinition
 import evolution.geometry.Point
 import io.circe.Json
 import io.circe.syntax._
@@ -17,13 +19,23 @@ trait DrawingComponent[S, T] {
 }
 
 object DrawingComponent {
-  def unserialize(drawingContext: DrawingContext, json: Json): Option[DrawingComponent[Long, Point]] = {
-    for {
-      definitionName <- json.hcursor.downField("name").as[String].toOption
-      drawing = Conf.drawingList.byName(definitionName)
-      configJson <- json.hcursor.downField("config").focus
-      config <- drawing.configCodec.decode(configJson)
-    } yield Conf.definitionToComponent.toComponent(drawing, drawingContext)(config)
+
+  class JsonCodec(
+    drawingContext: DrawingContext,
+    stringToDrawing: String => DrawingDefinition[Point],
+    definitionToComponent: DefinitionToComponent[Long, Point]
+  ) extends codec.JsonCodec[DrawingComponent[Long, Point]] {
+
+    override def encode(component: DrawingComponent[Long, Point]): Json =
+      component.serialize
+
+    override def decode(json: Json): Option[DrawingComponent[Long, Point]] =
+      for {
+        definitionName <- json.hcursor.downField("name").as[String].toOption
+        drawing = stringToDrawing(definitionName)
+        configJson <- json.hcursor.downField("config").focus
+        config <- drawing.configCodec.decode(configJson)
+      } yield definitionToComponent.toComponent(drawing, drawingContext)(config)
   }
 }
 

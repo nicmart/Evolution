@@ -1,14 +1,16 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
+import evolution.app.model.definition.DrawingListWithSelection
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import evolution.algebra.materializer.{Materializer, RNGMaterializer}
 import evolution.algebra.interpreter.RNGInterpreter
-import evolution.app.ReactApp.{LoadDrawingPage, MyPages}
+import evolution.app.codec._
 import evolution.app.model.configured._
 import evolution.app.model.context.DrawingContext
-import evolution.app.react.component.PageComponent.UrlState
+import evolution.app.model.state.LoadableDrawing
+import evolution.app.react.pages
+import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.geometry.Point
 import org.scalajs.dom
 
@@ -54,9 +56,32 @@ object Conf {
     )
   }
 
+  lazy val drawingComponentCodec: JsonCodec[DrawingComponent[Long, Point]] =
+    new DrawingComponent.JsonCodec(
+      drawingContext,
+      drawingList.byName,
+      definitionToComponent
+    )
+
+  lazy val loadableDrawingJsonCodec: JsonCodec[LoadableDrawing] =
+    new LoadableDrawing.JsonCodec(drawingComponentCodec)
+
+  lazy val pageDrawingCodec: Codec[LoadDrawingPage, LoadableDrawing] =
+    Codec.instance[LoadDrawingPage, LoadableDrawing](
+      _.loadableDrawing,
+      drawing => Some(LoadDrawingPage(drawing))
+    )
+
+  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, String] =
+    pageDrawingCodec >>
+    loadableDrawingJsonCodec >>
+    JsonStringCodec >>
+    StringByteCodec >>
+    Base64Codec
+
   lazy val initialPage: MyPages =
     LoadDrawingPage(
-      UrlState(
+      LoadableDrawing(
         Random.nextLong(),
         definitionToComponent.toComponentWithInitialConfig(
           drawingList.current,
@@ -64,4 +89,7 @@ object Conf {
         )
       )
     )
+
+  def areLoadableDrawingEquivalent(drawing1: LoadableDrawing, drawing2: LoadableDrawing): Boolean =
+    loadableDrawingJsonCodec.encode(drawing1) != loadableDrawingJsonCodec.encode(drawing2)
 }

@@ -40,9 +40,6 @@ object SelectComponent {
     * WARNING:
     * Don't use this method directly inside render methods, but first fix its value
     * outside, and then use it.
-    *
-    * @tparam T
-    * @return
     */
   def component[T] =
     react.ScalaComponent.builder[Props[T]]("dropdown")

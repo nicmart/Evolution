@@ -2,11 +2,13 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
+import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.componentInstances._
 import evolution.algebra._
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
+import evolution.app.codec.JsonCodec
+import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
 
 object brownian extends DrawingDefinition[Point] {
@@ -31,6 +33,6 @@ object brownian extends DrawingDefinition[Point] {
 
   val initialConfig = Config(2)
 
-  override def configCodec: ConfigCodec[Config] =
-    ConfigCodec[Config]
+  override def configCodec: JsonCodec[Config] =
+    JsonCodec[Config]
 }

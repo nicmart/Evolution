@@ -16,7 +16,7 @@ object componentInstances {
 
   implicit val unitConfig: ConfigComponent[Unit] =
     ConfigComponent.instance[Unit] {
-      props => List()
+      _ => List()
     }
 
   implicit val doubleConfig: ConfigComponent[Double] =
@@ -36,7 +36,7 @@ object componentInstances {
     new OptionComponent[T](configComponent)
 
   implicit val hnilConfig: ConfigComponent[HNil] =
-    ConfigComponent.instance[HNil](props => Nil)
+    ConfigComponent.instance[HNil](_ => Nil)
 
   implicit def hlistConfig[K <: Symbol, H, T <: HList](
     implicit

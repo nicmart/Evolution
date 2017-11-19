@@ -2,6 +2,7 @@ package evolution.app.model.definition.state
 
 import evolution.algebra
 import evolution.algebra.Evolution
+import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
@@ -32,6 +33,7 @@ class DrawingDefinitionStateSpec
         }
       }
       override def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
+      override def configCodec() = JsonCodec[Config]
     }
 
     case class Config(x: Int, y: Int)

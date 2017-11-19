@@ -14,9 +14,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
-import evolution.app.ReactApp.{LoadDrawingPage, MyPages}
+import evolution.app.model.state.LoadableDrawing
+import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
-import io.circe._, io.circe.parser._
+import io.circe._
+import io.circe.parser._
 
 import scala.util.{Random, Try}
 
@@ -55,36 +57,9 @@ object PageComponent {
     ).hashCode()
   }
 
-  case class UrlState(
-    seed: Long,
-    drawingComponent: DrawingComponent[Long, Point]
-  )
-
-  object UrlState {
-    def unserialize(string: String): Option[UrlState] = {
-      string.split("/").toList match {
-        case serializedComponent :: seed :: Nil =>
-          println(serializedComponent)
-          val jsonString = new String(java.util.Base64.getDecoder.decode(serializedComponent))
-          for {
-            json <- parse(jsonString).toOption
-            component <- DrawingComponent.unserialize(Conf.drawingContext, json)
-            seedLong <- Try(seed.toLong).toOption
-          } yield UrlState(seedLong, component)
-        case _ => None
-      }
-    }
-
-    def serialize(urlState: UrlState): String = {
-      val jsonComponent = urlState.drawingComponent.serialize.noSpaces
-      val base64Component = java.util.Base64.getEncoder.encodeToString(jsonComponent.getBytes())
-      s"$base64Component/${urlState.seed}"
-    }
-  }
-
   case class Props(
     router: RouterCtl[MyPages],
-    urlState: UrlState
+    loadableDrawing: LoadableDrawing
   )
 
   class Backend(bs: BackendScope[Props, State]) {
@@ -173,11 +148,11 @@ object PageComponent {
         1000,
         1
       ),
-      props.urlState.drawingComponent,
-      Conf.drawingList.copy(current = Conf.drawingList.byName(props.urlState.drawingComponent.name)),
+      props.loadableDrawing.drawingComponent,
+      Conf.drawingList.copy(current = Conf.drawingList.byName(props.loadableDrawing.drawingComponent.name)),
       Conf.drawingContext,
       RateCounter.empty(1000),
-      props.urlState.seed
+      props.loadableDrawing.seed
     )
   }
 
@@ -192,7 +167,7 @@ object PageComponent {
     .componentDidUpdate { x =>
       x.currentProps.router.set(
         LoadDrawingPage(
-          UrlState(
+          LoadableDrawing(
             x.currentState.seed,
             x.currentState.currentDrawing
           )
@@ -200,8 +175,8 @@ object PageComponent {
       )
     }
     .componentWillReceiveProps { x =>
-      if (UrlState.serialize(x.nextProps.urlState) != UrlState.serialize(x.currentProps.urlState)) {
-        x.setState(stateFromProps(x.nextProps)) >> Callback.log("Props changed")
+      if (Conf.areLoadableDrawingEquivalent(x.nextProps.loadableDrawing, x.currentProps.loadableDrawing)) {
+        x.setState(stateFromProps(x.nextProps))
       } else Callback.empty
     }
     .build

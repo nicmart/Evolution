@@ -8,7 +8,7 @@ case class Drawer(iterations: Int, strokeSize: Int) {
 
   def draw(context: dom.CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point] = {
     var currentStream = pointStream
-    for (i <- 1 to iterations) {
+    (1 to iterations).foreach { _ =>
       currentStream = drawAndNext(currentStream, context)
     }
     currentStream

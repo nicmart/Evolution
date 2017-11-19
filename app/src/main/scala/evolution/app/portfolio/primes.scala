@@ -2,13 +2,14 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
+import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 import evolution.app.react.component.config.componentInstances._
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.app.portfolio.bouncing.Config
+import evolution.app.codec.JsonCodec
+import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
 
 object primes extends DrawingDefinition[Point] {
@@ -54,6 +55,6 @@ object primes extends DrawingDefinition[Point] {
   override def configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  override def configCodec: ConfigCodec[Config] =
-    ConfigCodec[Config]
+  override def configCodec: JsonCodec[Config] =
+    JsonCodec[Config]
 }

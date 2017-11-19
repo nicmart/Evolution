@@ -2,13 +2,14 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.{ConfigCodec, ConfigComponent}
+import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 import evolution.app.react.component.config.componentInstances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra.{Evolution, FullAlgebra}
-import evolution.app.portfolio.bouncing.Config
+import evolution.app.codec.JsonCodec
+import evolution.app.codec.JsonCodec._
 
 import scala.collection.immutable.Queue
 import io.circe.generic.auto._
@@ -35,7 +36,7 @@ object dynamics extends DrawingDefinition[Point] {
       import alg._
       val accelerationEvolution: Evo[AccelerationLaw[Point]] =
         rectangle2D(acceleration) map { randomAcc =>
-          (position, velocity) =>
+          (_, velocity) =>
             randomAcc - velocity * friction
         }
       val singleEvo = solve2(context.canvasSize.point / 2, Point(0, 0))(
@@ -51,6 +52,6 @@ object dynamics extends DrawingDefinition[Point] {
 
   def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 
-  override def configCodec: ConfigCodec[Config] =
-    ConfigCodec[Config]
+  override def configCodec: JsonCodec[Config] =
+    JsonCodec[Config]
 }
