@@ -62,6 +62,7 @@ lazy val server = (project in file("server")).settings(
   ),
   (managedClasspath in Runtime) += (packageBin in Assets).value,
   packagePrefix in Assets := "public/",
+  compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value
 ).enablePlugins(SbtWeb)
 
 // Needed, so sbt finds the projects
