@@ -9,9 +9,10 @@ import evolution.app.codec._
 import evolution.app.model.configured._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.LoadableDrawing
-import evolution.app.react.pages
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
+import evolution.app.react.routing.Routing
 import evolution.geometry.Point
+import japgolly.scalajs.react.extra.router.Router
 import org.scalajs.dom
 
 import scala.util.Random
@@ -79,6 +80,8 @@ object Conf {
     StringByteCodec >>
     Base64Codec
 
+  lazy val urlDelimiter = "#"
+
   lazy val initialPage: MyPages =
     LoadDrawingPage(
       LoadableDrawing(
@@ -89,6 +92,12 @@ object Conf {
         )
       )
     )
+
+  lazy val routingConfig: Routing =
+    new Routing(urlDelimiter, initialPage, loadDrawingPageStringCodec)
+
+  lazy val router =
+    Router(routingConfig.baseUrl, routingConfig.config)
 
   def areLoadableDrawingEquivalent(drawing1: LoadableDrawing, drawing2: LoadableDrawing): Boolean =
     loadableDrawingJsonCodec.encode(drawing1) != loadableDrawingJsonCodec.encode(drawing2)
