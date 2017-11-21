@@ -53,7 +53,7 @@ object waves extends DrawingDefinition[Point] {
             }
           }
 
-        def vibration(from: Point) = translate(
+        def wave(from: Point) = translate(
           uniformLinear(from, Point(config.speed, 0)),
           solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
         )
@@ -64,7 +64,7 @@ object waves extends DrawingDefinition[Point] {
               config.numberOfWaves,
               Point.zero,
               context.canvasSize.point.copy(x = 0)
-            ).map(vibration): _*
+            ).map(wave): _*
           )
         )
       }

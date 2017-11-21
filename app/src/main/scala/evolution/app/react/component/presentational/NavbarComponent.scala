@@ -14,7 +14,7 @@ object NavbarComponent {
       <.nav(
         ^.className := "navbar is-transparent",
         <.div(
-          ^.className := "navbar-brand",
+          ^.className := "navbar-brand is-hidden-touch",
           <.a(
             ^.className := "navbar-item",
             <.h1(
@@ -24,16 +24,11 @@ object NavbarComponent {
           )
         ),
         <.div(
-          ^.id := "navMenuExample", ^.className := "navbar-menu",
+          ^.id := "navMenuExample", ^.className := "navbar-menu is-active",
           <.div(^.className := "navbar-start"),
           <.div(
             ^.className := "navbar-end",
-            props.elements.map { element =>
-              <.div(
-                ^.className := "navbar-item",
-                element
-              )
-            }.toTagMod
+            props.elements.toTagMod
           )
         )
       )

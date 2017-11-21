@@ -21,8 +21,9 @@ case class Drawer(iterations: Int, strokeSize: Int) {
 
   private def drawPoint(point: Point, size: Double, context: CanvasRenderingContext2D): Unit = {
     context.lineWidth = size
-    context.beginPath()
-    context.lineTo(point.x.toInt, point.y.toInt)
+    context.beginPath
+    context.moveTo(point.x, point.y)
+    context.lineTo(point.x + 1, point.y + 1)
     context.stroke()
   }
 }

@@ -66,18 +66,17 @@ object PageComponent {
     def render(props: Props, state: State): VdomElement = {
       <.div(
         NavbarComponent.component(NavbarComponent.Props(
-          <.span(s"${ state.pointRateCounter.rate.toInt } p/s"),
-          ButtonComponent.component(ButtonComponent.Props(
+          <.div(^.className := "navbar-item is-hidden-touch",<.span(s"${ state.pointRateCounter.rate.toInt } p/s")),
+          <.div(^.className := "navbar-item is-hidden-touch", ButtonComponent.component(ButtonComponent.Props(
             "Refresh",
             refresh
-          )),
-          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+          ))),
+          <.div(^.className := "navbar-item is-hidden-touch", HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Iterations",
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
-          )
-          ),
-          HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+          ))),
+          <.div(^.className := "navbar-item", HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
             "Drawing",
             "",
             DrawingListComponent.component(
@@ -87,8 +86,7 @@ object PageComponent {
                 onDrawingDefinitionChange
               )
             )
-          )
-          )
+          )))
         )
         ),
         <.div(
