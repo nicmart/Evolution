@@ -40,4 +40,7 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
         val multiplier = math.sqrt(-2 * math.log(s) / s)
         v1 * multiplier
       }
+
+  def progression(step: Double, from: Double = 0): Evo[Double] =
+    cons(from, progression(step, from + step))
 }

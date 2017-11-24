@@ -11,6 +11,8 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.LoadableDrawing
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
+import evolution.app.react.component.config.componentInstances._
+import cats.implicits._
 import evolution.geometry.Point
 import japgolly.scalajs.react.extra.router.Router
 import org.scalajs.dom
@@ -36,7 +38,8 @@ object Conf {
         primes,
         dynamicRotation,
         nBodies,
-        bouncing
+        bouncing,
+        lissajous
       ),
       brownian
     )
