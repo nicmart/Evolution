@@ -23,7 +23,7 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawingList =
+  lazy val innerDrawingList: DrawingListWithSelection[Point] =
     DrawingListWithSelection(
       List(
         segments,
@@ -44,6 +44,11 @@ object Conf {
       brownian
     )
 
+  lazy val drawingDefinition = new DrawingListDefinition(innerDrawingList)
+
+  lazy val drawingList: DrawingListWithSelection[Point] =
+    DrawingListWithSelection(Nil, drawingDefinition)
+
   lazy val materializer: Materializer[Long] =
     RNGMaterializer(new RNGInterpreter)
 
@@ -63,7 +68,7 @@ object Conf {
   lazy val drawingComponentCodec: JsonCodec[DrawingComponent[Long, Point]] =
     new DrawingComponent.JsonCodec(
       drawingContext,
-      drawingList.byName,
+      drawingDefinition,
       definitionToComponent
     )
 
@@ -102,6 +107,6 @@ object Conf {
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)
 
-  def areLoadableDrawingEquivalent(drawing1: LoadableDrawing, drawing2: LoadableDrawing): Boolean =
+  def areLoadableDrawingDifferent(drawing1: LoadableDrawing, drawing2: LoadableDrawing): Boolean =
     loadableDrawingJsonCodec.encode(drawing1) != loadableDrawingJsonCodec.encode(drawing2)
 }

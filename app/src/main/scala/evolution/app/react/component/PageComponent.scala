@@ -33,7 +33,6 @@ object PageComponent {
   case class State(
     drawer: Drawer,
     currentDrawing: DrawingComponent[Long, Point],
-    drawingListWithSelection: DrawingListWithSelection[Point],
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     seed: Long
@@ -53,7 +52,7 @@ object PageComponent {
       seed,
       currentDrawing,
       pointRateCounter.rate,
-      drawingListWithSelection.current.name
+      currentDrawing.name
     ).hashCode()
   }
 
@@ -75,20 +74,8 @@ object PageComponent {
             "Iterations",
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
-          ))),
-          <.div(^.className := "navbar-item", HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
-            "Drawing",
-            "",
-            DrawingListComponent.component(
-              DrawingListComponent.Props(
-                state.drawingListWithSelection.list,
-                state.drawingListWithSelection.current,
-                onDrawingDefinitionChange
-              )
-            )
           )))
-        )
-        ),
+        )),
         <.div(
           ^.id := "page-content",
           CanvasComponent.component.withKey(state.canvasKey)(CanvasComponent.Props(
@@ -128,7 +115,6 @@ object PageComponent {
     private def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
       bs.modState { state =>
         state
-          .copy(drawingListWithSelection = state.drawingListWithSelection.copy(current = definition))
           .copy(currentDrawing = definitionToComponent.toComponentWithInitialConfig(definition, state.drawingContext))
       } >> refresh
     }
@@ -147,7 +133,6 @@ object PageComponent {
         1
       ),
       props.loadableDrawing.drawingComponent,
-      Conf.drawingList.copy(current = Conf.drawingList.byName(props.loadableDrawing.drawingComponent.name)),
       Conf.drawingContext,
       RateCounter.empty(1000),
       props.loadableDrawing.seed
@@ -163,18 +148,26 @@ object PageComponent {
       }
     }
     .componentDidUpdate { x =>
-      x.currentProps.router.set(
-        LoadDrawingPage(
-          LoadableDrawing(
-            x.currentState.seed,
-            x.currentState.currentDrawing
+      if (
+        x.currentState.currentDrawing.serialize != x.prevState.currentDrawing.serialize &&
+        !Conf.areLoadableDrawingDifferent(x.prevProps.loadableDrawing, x.currentProps.loadableDrawing)
+      ) {
+        x.currentProps.router.set(
+          LoadDrawingPage(
+            LoadableDrawing(
+              x.currentState.seed,
+              x.currentState.currentDrawing
+            )
           )
-        )
-      )
+        ) >> Callback.log("DIDUPDATE")
+      } else Callback.empty
     }
     .componentWillReceiveProps { x =>
-      if (Conf.areLoadableDrawingEquivalent(x.nextProps.loadableDrawing, x.currentProps.loadableDrawing)) {
-        x.setState(stateFromProps(x.nextProps))
+      if (Conf.areLoadableDrawingDifferent(x.nextProps.loadableDrawing, x.currentProps.loadableDrawing)) {
+        val newState = stateFromProps(x.nextProps)
+        if (newState.currentDrawing.serialize != x.state.currentDrawing.serialize) {
+          x.setState(newState) >> Callback.log("WILL RECEIVE PROPS")
+        } else Callback.empty
       } else Callback.empty
     }
     .build

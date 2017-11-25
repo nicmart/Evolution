@@ -9,7 +9,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 trait ConfigComponent[Config] { self =>
   def element(props: Props[Config]): List[VdomElement]
 
-  def inmap[C2](f: Config => C2)(g: C2 => Config): ConfigComponent[C2] =
+  def inmap[C2](f: Config => C2, g: C2 => Config): ConfigComponent[C2] =
     new ConfigComponent[C2] {
       override def element(props: Props[C2]): List[VdomElement] = {
         val propsC1 = Props[Config](

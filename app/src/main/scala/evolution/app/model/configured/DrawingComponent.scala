@@ -22,20 +22,18 @@ object DrawingComponent {
 
   class JsonCodec(
     drawingContext: DrawingContext,
-    stringToDrawing: String => DrawingDefinition[Point],
+    drawing: DrawingDefinition[Point],
     definitionToComponent: DefinitionToComponent[Long, Point]
   ) extends codec.JsonCodec[DrawingComponent[Long, Point]] {
 
     override def encode(component: DrawingComponent[Long, Point]): Json =
       component.serialize
 
-    override def decode(json: Json): Option[DrawingComponent[Long, Point]] =
+    override def decode(json: Json): Option[DrawingComponent[Long, Point]] = {
       for {
-        definitionName <- json.hcursor.downField("name").as[String].toOption
-        drawing = stringToDrawing(definitionName)
-        configJson <- json.hcursor.downField("config").focus
-        config <- drawing.configCodec.decode(configJson)
+        config <- drawing.configCodec.decode(json)
       } yield definitionToComponent.toComponent(drawing, drawingContext)(config)
+    }
   }
 }
 
@@ -53,10 +51,8 @@ class EvolutionDrawingComponent[S, T, Config](
   override def materialize(seed: S): Stream[T] =
     materializer.materialize(seed, configuredDrawing.evolution)
 
-  override def serialize: Json = Json.obj(
-    "name" -> Json.fromString(name),
-    "config" -> configuredDrawing.drawing.configCodec.encode(configuredDrawing.config)
-  )
+  override def serialize: Json =
+    configuredDrawing.drawing.configCodec.encode(configuredDrawing.config)
 
   private def withConfig(config: Config): DrawingComponent[S, T] =
     new EvolutionDrawingComponent[S, T, Config](
