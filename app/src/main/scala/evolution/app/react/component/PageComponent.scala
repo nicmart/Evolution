@@ -88,7 +88,7 @@ object PageComponent {
             }
           )
           ),
-          SidebarComponent.component.withKey(state.currentDrawing.name)(
+          SidebarComponent.component.withKey("sidebar")(
             SidebarComponent.Props(
               active = true,
               state.currentDrawing.configElement(onConfiguredDrawingChange)

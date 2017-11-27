@@ -16,17 +16,17 @@ object componentInstances {
 
   implicit val unitConfig: ConfigComponent[Unit] =
     ConfigComponent.instance[Unit] {
-      _ => List()
+      props => props.render(List())
     }
 
   implicit val doubleConfig: ConfigComponent[Double] =
     ConfigComponent.instance[Double] {
-      props => List(DoubleInputComponent(props.config, props.callback))
+      props => DoubleInputComponent(props.config, props.callback)
     }
 
   implicit val intConfig: ConfigComponent[Int] =
     ConfigComponent.instance[Int] {
-      props => List(IntInputComponent(props.config, props.callback))
+      props => IntInputComponent(props.config, props.callback)
     }
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
@@ -36,7 +36,7 @@ object componentInstances {
     new OptionComponent[T](configComponent)
 
   implicit val hnilConfig: ConfigComponent[HNil] =
-    ConfigComponent.instance[HNil](_ => Nil)
+    ConfigComponent.instance[HNil](props => props.render(Nil))
 
   implicit def hlistConfig[K <: Symbol, H, T <: HList](
     implicit
@@ -57,13 +57,15 @@ object componentInstances {
     }
 
     ConfigComponent.instance { props =>
-      FormFieldComponent.component(FormFieldComponent.Props(
+      val headElement = FormFieldComponent.component(FormFieldComponent.Props(
         fieldName,
         "",
         <.div(
-          hConfig.value.element(Props(props.config.head, hCallback(props))).toTagMod
+          hConfig.value.element(Props(props.config.head, hCallback(props), props.render))
         )
-      )) :: tConfigs.element(Props(props.config.tail, tCallback(props)))
+      ))
+
+      tConfigs.element(Props(props.config.tail, tCallback(props), prepend(headElement, props.render)))
     }
   }
 
@@ -77,18 +79,29 @@ object componentInstances {
     }
 
     ConfigComponent.instance { props =>
-      hConfig.value.element(Props(generic.to(props.config), callback(props)))
-    }
-  }
+      hConfig.value.element(Props(generic.to(props.config), callback(props), props.render))
+    } }
 
   class SeqComponent[T](component: ConfigComponent[T]) extends ConfigComponent[Seq[T]] {
 
     import ConfigComponent.Props
 
-    def element(props: Props[Seq[T]]): List[VdomElement] = {
-      props.config.toList.zipWithIndex.flatMap { case (t, index) =>
-        component.element(Props(t, onChangeElement(props, index)))
+    def element(props: Props[Seq[T]]): VdomElement = {
+      val configsWithIndex = props.config.toList.zipWithIndex
+      val render = configsWithIndex.foldLeft[List[VdomElement] => VdomElement](props.render) { (accRender, indexedConfig) =>
+        prepend(
+          component.reactComponent(
+            Props(
+              indexedConfig._1,
+              onChangeElement(props, indexedConfig._2),
+              props.render
+            )
+          ),
+          accRender
+        )
       }
+
+      render(Nil)
     }
 
     private def onChangeElement(props: Props[Seq[T]], index: Int)(t: T): Callback =
@@ -104,8 +117,10 @@ object componentInstances {
 
     import ConfigComponent.Props
 
-    def element(props: Props[Option[T]]): List[VdomElement] = {
-      props.config.fold[List[VdomElement]](Nil)(t => component.element(Props(t, onChange(props))))
+    def element(props: Props[Option[T]]): VdomElement = {
+      props.config.fold[VdomElement](props.render(Nil)) { t =>
+        component.element(Props(t, onChange(props), props.render))
+      }
     }
 
     private def onChange(props: Props[Option[T]])(t: T): Callback =

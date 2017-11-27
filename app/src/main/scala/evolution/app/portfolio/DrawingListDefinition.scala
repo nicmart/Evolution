@@ -54,16 +54,11 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
     config.configC.innerDrawing.evolution(config.configC.innerConfig, context)
 
   override def configComponent: ConfigComponent[Config] = new ConfigComponent[Config] {
-    override def element(props: ConfigComponent.Props[Config]): List[VdomElement] = {
+    override def element(props: ConfigComponent.Props[Config]): VdomElement = {
       val config = props.config
       val innerComponent: ConfigComponent[config.InnerConfig] =
         config.configC.innerDrawing.configComponent
       val innerConfig = config.configC.innerConfig
-
-      val innerDom = innerComponent.element(ConfigComponent.Props[config.InnerConfig](
-        innerConfig,
-        newInnerConfig => props.callback(config.withConfig(config.configC.copy(innerConfig = newInnerConfig)))
-      ))
 
       val dropdown = HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
         "Drawing",
@@ -83,7 +78,12 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
         )
       ))
 
-      dropdown :: innerDom
+      val innerElementKey = config.configC.innerDrawing.name
+      innerComponent.reactComponent.withKey("asdsd")(ConfigComponent.Props[config.InnerConfig](
+        innerConfig,
+        newInnerConfig => props.callback(config.withConfig(config.configC.copy(innerConfig = newInnerConfig))),
+        ConfigComponent.prepend(dropdown, props.render)
+      ))
     }
   }
 

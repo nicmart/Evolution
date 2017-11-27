@@ -14,10 +14,13 @@ case class ConfiguredDrawing[T, Config](
   config: Config
 ) {
   def configElement(onChange: Config => Callback): VdomElement =
-    <.div(
-      drawing.configComponent.element(Props(config, onChange)).toTagMod
-    )
+    drawing.configComponent.element(Props(config, onChange, render))
 
   def evolution: Evolution[T] =
     drawing.evolution(config, context)
+
+  private def render(elements: List[VdomElement]): VdomElement =
+    <.div(
+      elements.toTagMod
+    )
 }
