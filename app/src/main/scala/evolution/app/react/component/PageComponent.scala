@@ -51,8 +51,7 @@ object PageComponent {
     def key: Int = (
       seed,
       currentDrawing,
-      pointRateCounter.rate,
-      currentDrawing.name
+      pointRateCounter.rate
     ).hashCode()
   }
 
