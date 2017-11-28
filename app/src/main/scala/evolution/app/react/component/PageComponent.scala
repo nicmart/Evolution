@@ -2,7 +2,7 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.DrawingComponent
+import evolution.app.model.configured.LegacyDrawingComponent
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
@@ -28,7 +28,7 @@ object PageComponent {
 
   case class State(
     drawer: Drawer,
-    currentDrawing: DrawingComponent[Long, Point],
+    currentDrawing: LegacyDrawingComponent[Long, Point],
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     seed: Long
@@ -85,9 +85,11 @@ object PageComponent {
           ),
           SidebarComponent.component.withKey("sidebar")(
             SidebarComponent.Props(
-              active = true,
-              state.currentDrawing.configElement(onConfiguredDrawingChange)
+              active = true
             )
+          )(
+            //state.currentDrawing.configElement(onConfiguredDrawingChange)
+            Conf.drawingConfComponent(Conf.drawingConfComponentProps)
           )
         )
       )
@@ -100,7 +102,7 @@ object PageComponent {
       } >> refresh
     }
 
-    private def onConfiguredDrawingChange(drawingComponent: DrawingComponent[Long, Point]): Callback = {
+    private def onConfiguredDrawingChange(drawingComponent: LegacyDrawingComponent[Long, Point]): Callback = {
       bs.modState { state =>
         state
           .copy(currentDrawing = drawingComponent)

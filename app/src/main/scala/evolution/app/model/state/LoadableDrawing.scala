@@ -4,7 +4,7 @@ import java.util.Base64
 
 import evolution.app.codec
 import evolution.app.codec.JsonCodec
-import evolution.app.model.configured.DrawingComponent
+import evolution.app.model.configured.LegacyDrawingComponent
 import evolution.geometry.Point
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
@@ -18,18 +18,18 @@ import scala.util.Try
   */
 case class LoadableDrawing(
   seed: Long,
-  drawingComponent: DrawingComponent[Long, Point]
+  drawingComponent: LegacyDrawingComponent[Long, Point]
 )
 
 object LoadableDrawing {
   class JsonCodec(
-    componentCodec: codec.JsonCodec[DrawingComponent[Long, Point]]
+    componentCodec: codec.JsonCodec[LegacyDrawingComponent[Long, Point]]
   ) extends codec.JsonCodec[LoadableDrawing] {
 
-    implicit private val encoder: Encoder[DrawingComponent[Long, Point]] =
+    implicit private val encoder: Encoder[LegacyDrawingComponent[Long, Point]] =
       JsonCodec.toCirceEncoder(componentCodec)
 
-    implicit private val decoder: Decoder[DrawingComponent[Long, Point]] =
+    implicit private val decoder: Decoder[LegacyDrawingComponent[Long, Point]] =
       JsonCodec.toCirceDecoder(componentCodec)
 
     override def encode(t: LoadableDrawing): Json =

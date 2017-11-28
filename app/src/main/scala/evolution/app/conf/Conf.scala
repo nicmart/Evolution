@@ -14,6 +14,7 @@ import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
 import evolution.geometry.Point
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.Router
 import org.scalajs.dom
 
@@ -65,8 +66,8 @@ object Conf {
     )
   }
 
-  lazy val drawingComponentCodec: JsonCodec[DrawingComponent[Long, Point]] =
-    new DrawingComponent.JsonCodec(
+  lazy val drawingComponentCodec: JsonCodec[LegacyDrawingComponent[Long, Point]] =
+    new LegacyDrawingComponent.JsonCodec(
       drawingContext,
       drawingDefinition,
       definitionToComponent
@@ -100,6 +101,13 @@ object Conf {
         )
       )
     )
+
+  lazy val drawingConfComponent =
+    DrawingConfigComponent.component[Long, Point](drawingDefinition, drawingContext, materializer)
+
+  lazy val drawingConfComponentProps = {
+    DrawingConfigComponent.Props[Long, Point, drawingDefinition.Config](drawingDefinition.initialConfig, _ => Callback.empty, _ => Callback.empty)
+  }
 
   lazy val routingConfig: Routing =
     new Routing(urlDelimiter, initialPage, loadDrawingPageStringCodec)

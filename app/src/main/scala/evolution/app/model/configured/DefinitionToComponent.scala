@@ -9,14 +9,14 @@ trait DefinitionToComponent[S, T] {
   def toComponentWithInitialConfig(
     definition: DrawingDefinition[T],
     context: DrawingContext
-  ): DrawingComponent[S, T] =
+  ): LegacyDrawingComponent[S, T] =
     toComponent(definition, context)(definition.initialConfig)
 
   def toComponent(
     definition: DrawingDefinition[T],
     context: DrawingContext)(
     config: definition.Config
-  ): DrawingComponent[S, T]
+  ): LegacyDrawingComponent[S, T]
 }
 
 class MaterializerDefinitionToComponent[S, T](
@@ -27,7 +27,7 @@ class MaterializerDefinitionToComponent[S, T](
     definition: DrawingDefinition[T],
     context: DrawingContext)(
     config: definition.Config
-  ): DrawingComponent[S, T] =
+  ): LegacyDrawingComponent[S, T] =
     new EvolutionDrawingComponent[S, T, definition.Config](
       materializer,
       ConfiguredDrawing[T, definition.Config](
