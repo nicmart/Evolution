@@ -2,10 +2,9 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.{DefinitionToComponent, DrawingComponent}
+import evolution.app.model.configured.DrawingComponent
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
-import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.presentational._
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -23,9 +22,6 @@ import io.circe.parser._
 import scala.util.{Random, Try}
 
 object PageComponent {
-
-  def definitionToComponent: DefinitionToComponent[Long, Point] =
-    Conf.definitionToComponent
 
   def canvasInitializer: dom.html.Canvas => Unit =
     Conf.canvasInitializer
@@ -108,13 +104,6 @@ object PageComponent {
       bs.modState { state =>
         state
           .copy(currentDrawing = drawingComponent)
-      } >> refresh
-    }
-
-    private def onDrawingDefinitionChange(definition: DrawingDefinition[Point]): Callback = {
-      bs.modState { state =>
-        state
-          .copy(currentDrawing = definitionToComponent.toComponentWithInitialConfig(definition, state.drawingContext))
       } >> refresh
     }
 
