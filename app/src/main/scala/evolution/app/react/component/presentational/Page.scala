@@ -3,18 +3,13 @@ package evolution.app.react.component.presentational
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.counter.RateCounter
-import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.DrawingConfig
-import evolution.app.react.component.config.DrawingConfig.{Backend, Props}
 import evolution.app.react.component.presentational.styled.HorizontalFormField
-import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.geometry.Point
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
-import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
