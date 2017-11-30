@@ -65,7 +65,6 @@ object PageComponent {
         state.stream,
         props.drawingState,
         state.pointRateCounter.rate.toInt,
-        state.drawer.iterations,
         onConfigChange,
         onStreamChange,
         refresh,

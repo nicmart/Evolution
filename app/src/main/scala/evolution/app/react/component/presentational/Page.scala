@@ -28,7 +28,6 @@ object Page {
     points: Stream[Point],
     drawingState: DrawingState[C],
     pointRate: Int,
-    iterations: Int,
     onConfigChange: C => Callback,
     onStreamChange: (Long => Stream[Point]) => Callback,
     onRefresh: Callback,
@@ -54,7 +53,7 @@ object Page {
             ^.className := "navbar-item is-hidden-touch", HorizontalFormField.component(HorizontalFormField.Props(
               "Iterations",
               "",
-              IntInputComponent(props.iterations, props.onIterationsChange)
+              IntInputComponent(props.drawer.iterations, props.onIterationsChange)
             )
             )
           )
