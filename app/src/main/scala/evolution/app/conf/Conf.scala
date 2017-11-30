@@ -1,6 +1,6 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.DrawingListWithSelection
+import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import evolution.algebra.materializer.{Materializer, RNGMaterializer}
@@ -8,7 +8,7 @@ import evolution.algebra.interpreter.RNGInterpreter
 import evolution.app.codec._
 import evolution.app.model.configured._
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.state.LoadableDrawing
+import evolution.app.model.state.DrawingState
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
@@ -45,16 +45,15 @@ object Conf {
       brownian
     )
 
-  lazy val drawingDefinition = new DrawingListDefinition(innerDrawingList)
+  lazy val drawingDefinition: DrawingDefinition[Point] = new DrawingListDefinition(innerDrawingList)
+
+  type DrawingConfig = drawingDefinition.Config
 
   lazy val drawingList: DrawingListWithSelection[Point] =
     DrawingListWithSelection(Nil, drawingDefinition)
 
   lazy val materializer: Materializer[Long] =
     RNGMaterializer(new RNGInterpreter)
-
-  lazy val definitionToComponent: DefinitionToComponent[Long, Point] =
-    new MaterializerDefinitionToComponent(materializer)
 
   lazy val drawingContext: DrawingContext = {
     val document = dom.window.document
@@ -66,25 +65,18 @@ object Conf {
     )
   }
 
-  lazy val drawingComponentCodec: JsonCodec[LegacyDrawingComponent[Long, Point]] =
-    new LegacyDrawingComponent.JsonCodec(
-      drawingContext,
-      drawingDefinition,
-      definitionToComponent
-    )
+  lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
+    DrawingState.jsonCodec(drawingDefinition)
 
-  lazy val loadableDrawingJsonCodec: JsonCodec[LoadableDrawing] =
-    new LoadableDrawing.JsonCodec(drawingComponentCodec)
-
-  lazy val pageDrawingCodec: Codec[LoadDrawingPage, LoadableDrawing] =
-    Codec.instance[LoadDrawingPage, LoadableDrawing](
-      _.loadableDrawing,
-      drawing => Some(LoadDrawingPage(drawing))
+  lazy val pageDrawingCodec: Codec[LoadDrawingPage, DrawingState[DrawingConfig]] =
+    Codec.instance[LoadDrawingPage, DrawingState[DrawingConfig]](
+      _.state,
+      state => Some(LoadDrawingPage(state))
     )
 
   lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, String] =
     pageDrawingCodec >>
-    loadableDrawingJsonCodec >>
+    drawingStateCodec >>
     JsonStringCodec >>
     StringByteCodec >>
     Base64Codec
@@ -93,12 +85,9 @@ object Conf {
 
   lazy val initialPage: MyPages =
     LoadDrawingPage(
-      LoadableDrawing(
+      DrawingState(
         Random.nextLong(),
-        definitionToComponent.toComponentWithInitialConfig(
-          drawingList.current,
-          drawingContext
-        )
+        drawingDefinition.initialConfig
       )
     )
 
@@ -115,6 +104,6 @@ object Conf {
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)
 
-  def areLoadableDrawingDifferent(drawing1: LoadableDrawing, drawing2: LoadableDrawing): Boolean =
-    loadableDrawingJsonCodec.encode(drawing1) != loadableDrawingJsonCodec.encode(drawing2)
+  def areLoadableDrawingDifferent(drawing1: DrawingState[DrawingConfig], drawing2: DrawingState[DrawingConfig]): Boolean =
+    drawingStateCodec.encode(drawing1) != drawingStateCodec.encode(drawing2)
 }

@@ -2,9 +2,10 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.LegacyDrawingComponent
+import evolution.app.model.configured.DrawingConfigComponent
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.presentational._
 import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -13,8 +14,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
-import evolution.app.model.state.LoadableDrawing
-import evolution.app.react.pages.{LoadDrawingPage, MyPages}
+import evolution.app.model.state.DrawingState
+import evolution.app.react.pages.MyPages
 import japgolly.scalajs.react.extra.router.RouterCtl
 import io.circe._
 import io.circe.parser._
@@ -23,37 +24,37 @@ import scala.util.{Random, Try}
 
 object PageComponent {
 
+  val definition: DrawingDefinition.Aux[Point, Conf.drawingDefinition.Config] =
+    Conf.drawingDefinition
+
   def canvasInitializer: dom.html.Canvas => Unit =
     Conf.canvasInitializer
 
   case class State(
     drawer: Drawer,
-    currentDrawing: LegacyDrawingComponent[Long, Point],
+    points: Long => Stream[Point],
+    drawingState: DrawingState[definition.Config],
     drawingContext: DrawingContext,
-    pointRateCounter: RateCounter,
-    seed: Long
+    pointRateCounter: RateCounter
   ) {
-    def points: Stream[Point] =
-      currentDrawing.materialize(seed)
-
+    def stream: Stream[Point] = points(drawingState.seed)
     /**
       * Use to determine if the canvas has to be re-rendered
       */
-    def canvasKey: String = seed.toString
+    def canvasKey: String = drawingState.seed.toString
 
     /**
       * Used to determine if the page needs an update
       */
     def key: Int = (
-      seed,
-      currentDrawing,
+      drawingState,
       pointRateCounter.rate
     ).hashCode()
   }
 
   case class Props(
     router: RouterCtl[MyPages],
-    loadableDrawing: LoadableDrawing
+    drawingState: DrawingState[definition.Config]
   )
 
   class Backend(bs: BackendScope[Props, State]) {
@@ -77,7 +78,7 @@ object PageComponent {
             state.drawingContext,
             canvasInitializer,
             state.drawer,
-            state.points,
+            state.stream,
             bs.modState { state =>
               state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
             }
@@ -88,8 +89,11 @@ object PageComponent {
               active = true
             )
           )(
-            //state.currentDrawing.configElement(onConfiguredDrawingChange)
-            Conf.drawingConfComponent(Conf.drawingConfComponentProps)
+            Conf.drawingConfComponent(DrawingConfigComponent.Props[Long, Point, definition.Config](
+              props.drawingState.config,
+              onConfigChange,
+              onStreamChange
+            ))
           )
         )
       )
@@ -102,16 +106,24 @@ object PageComponent {
       } >> refresh
     }
 
-    private def onConfiguredDrawingChange(drawingComponent: LegacyDrawingComponent[Long, Point]): Callback = {
+    private def onConfigChange(drawingConfig: definition.Config): Callback = {
       bs.modState { state =>
         state
-          .copy(currentDrawing = drawingComponent)
+          .copy(drawingState = state.drawingState.copy(config = drawingConfig))
+      } >> refresh
+    }
+
+    private def onStreamChange(points: Long => Stream[Point]): Callback = {
+      bs.modState { state =>
+        state
+          .copy(points = points)
       } >> refresh
     }
 
     private def refresh: Callback = {
       bs.modState { state =>
-        state.copy(seed = Random.nextLong())
+        state
+          .copy(drawingState = state.drawingState.copy(seed = Random.nextLong()))
       }
     }
   }
@@ -122,10 +134,10 @@ object PageComponent {
         1000,
         1
       ),
-      props.loadableDrawing.drawingComponent,
+      seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)),
+      props.drawingState,
       Conf.drawingContext,
-      RateCounter.empty(1000),
-      props.loadableDrawing.seed
+      RateCounter.empty(1000)
     )
   }
 
@@ -137,25 +149,25 @@ object PageComponent {
         s.currentState.key != s.nextState.key
       }
     }
-    .componentDidUpdate { x =>
-      if (
-        x.currentState.currentDrawing.serialize != x.prevState.currentDrawing.serialize &&
-        !Conf.areLoadableDrawingDifferent(x.prevProps.loadableDrawing, x.currentProps.loadableDrawing)
-      ) {
-        x.currentProps.router.set(
-          LoadDrawingPage(
-            LoadableDrawing(
-              x.currentState.seed,
-              x.currentState.currentDrawing
-            )
-          )
-        ) >> Callback.log("DIDUPDATE")
-      } else Callback.empty
-    }
+//    .componentDidUpdate { x =>
+//      if (
+//        x.currentState.currentDrawing.serialize != x.prevState.currentDrawing.serialize &&
+//        !Conf.areLoadableDrawingDifferent(x.prevProps.loadableDrawing, x.currentProps.loadableDrawing)
+//      ) {
+//        x.currentProps.router.set(
+//          LoadDrawingPage(
+//            DrawingState(
+//              x.currentState.seed,
+//              x.currentState.currentDrawing.
+//            )
+//          )
+//        ) >> Callback.log("DIDUPDATE")
+//      } else Callback.empty
+//    }
     .componentWillReceiveProps { x =>
-      if (Conf.areLoadableDrawingDifferent(x.nextProps.loadableDrawing, x.currentProps.loadableDrawing)) {
+      if (Conf.areLoadableDrawingDifferent(x.nextProps.drawingState, x.currentProps.drawingState)) {
         val newState = stateFromProps(x.nextProps)
-        if (newState.currentDrawing.serialize != x.state.currentDrawing.serialize) {
+        if (newState.drawingState != x.state.drawingState) {
           x.setState(newState) >> Callback.log("WILL RECEIVE PROPS")
         } else Callback.empty
       } else Callback.empty

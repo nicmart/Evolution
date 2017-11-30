@@ -11,7 +11,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 class Routing(
   urlDelimiter: String,
   defaultPage: MyPages,
-  loadDrawingPageCodec: Codec[LoadDrawingPage, String]
+  drawingStateCodec: Codec[LoadDrawingPage, String]
 ) {
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
@@ -48,12 +48,12 @@ class Routing(
       route ~> renderPage
 
     private def route =
-      dynamicRouteCT[LoadDrawingPage](routeFromCodec(string(".*"), loadDrawingPageCodec))
+      dynamicRouteCT[LoadDrawingPage](routeFromCodec(string(".*"), drawingStateCodec))
 
     private def renderPage: LoadDrawingPage => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         PageComponent.component.apply(
-          PageComponent.Props(router , loadDrawingPage.loadableDrawing)
+          PageComponent.Props(router , loadDrawingPage.state)
         )
       }
   }
