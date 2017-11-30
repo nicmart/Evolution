@@ -6,7 +6,6 @@ import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import evolution.algebra.materializer.{Materializer, RNGMaterializer}
 import evolution.algebra.interpreter.RNGInterpreter
 import evolution.app.codec._
-import evolution.app.model.configured._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.DrawingState
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
@@ -14,6 +13,7 @@ import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
 import evolution.app.react.component.config.DrawingConfig
+import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.Router
@@ -95,9 +95,8 @@ object Conf {
   lazy val drawingConfComponent =
     DrawingConfig.component[Long, Point](drawingDefinition, drawingContext, materializer)
 
-  lazy val drawingConfComponentProps = {
-    DrawingConfig.Props[Long, Point, drawingDefinition.Config](drawingDefinition.initialConfig, _ => Callback.empty, _ => Callback.empty)
-  }
+  lazy val pageComponent =
+    Page.withConfig[drawingDefinition.Config](drawingConfComponent)
 
   lazy val routingConfig: Routing =
     new Routing(urlDelimiter, initialPage, loadDrawingPageStringCodec)

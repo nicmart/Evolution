@@ -59,40 +59,21 @@ object PageComponent {
 
   class Backend(bs: BackendScope[Props, State]) {
     def render(props: Props, state: State): VdomElement = {
-      <.div(
-        Navbar.component(
-          <.div(^.className := "navbar-item is-hidden-touch",<.span(s"${ state.pointRateCounter.rate.toInt } p/s")),
-          <.div(^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
-            "Refresh",
-            refresh
-          ))),
-          <.div(^.className := "navbar-item is-hidden-touch", HorizontalFormField.component(HorizontalFormField.Props(
-            "Iterations",
-            "",
-            IntInputComponent(state.drawer.iterations, onIterationsChanged)
-          )))
-        ),
-        <.div(
-          ^.id := "page-content",
-          Canvas.component.withKey(state.canvasKey)(Canvas.Props(
-            state.drawingContext,
-            canvasInitializer,
-            state.drawer,
-            state.stream,
-            bs.modState { state =>
-              state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
-            }
-          )
-          ),
-          Sidebar.component.withKey("sidebar")(
-            Conf.drawingConfComponent(DrawingConfig.Props[Long, Point, definition.Config](
-              props.drawingState.config,
-              onConfigChange,
-              onStreamChange
-            ))
-          )
-        )
-      )
+      Conf.pageComponent(Page.Props(
+        state.drawingContext,
+        state.drawer,
+        state.stream,
+        props.drawingState,
+        state.pointRateCounter.rate.toInt,
+        state.drawer.iterations,
+        onConfigChange,
+        onStreamChange,
+        refresh,
+        onIterationsChanged,
+        bs.modState { state =>
+          state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
+        }
+      ))
     }
 
     private def onIterationsChanged(value: Int): Callback = {

@@ -3,12 +3,14 @@ package evolution.app.react.component.config
 import evolution.algebra.materializer.Materializer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{Callback, ScalaComponent}
+import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 
 object DrawingConfig {
+  type ReactComponent[S, T, C] = Component[Props[S, T, C], Unit, Backend[S, T, C], CtorType.Props]
+
   case class Props[S, T, C](
     config: C,
     onChange: C => Callback,
@@ -45,7 +47,7 @@ object DrawingConfig {
     definition: DrawingDefinition[T],
     context: DrawingContext,
     materializer: Materializer[S]
-  ) = ScalaComponent
+  ): ReactComponent[S, T, definition.Config] = ScalaComponent
     .builder[Props[S, T, definition.Config]]("drawing config")
     .backend(new Backend[S, T, definition.Config](definition, context, materializer)(_))
     .render(scope => scope.backend.render(scope.props))
