@@ -1,17 +1,17 @@
 package evolution.app.react.component
 
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.presentational.SelectComponent
-import evolution.app.react.component.presentational.SelectComponent.Item
+import evolution.app.react.component.presentational.Select
+import evolution.app.react.component.presentational.Select.Item
 import evolution.geometry.Point
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
-object DrawingListComponent {
+object DrawingList {
 
-  private val selectComponent = SelectComponent.component[DrawingDefinition[Point]]
+  private val selectComponent = Select.component[DrawingDefinition[Point]]
 
   case class Props(
     drawingList: List[DrawingDefinition[Point]],
@@ -19,7 +19,7 @@ object DrawingListComponent {
     onSelect: DrawingDefinition[Point] => Callback
   )
 
-  def selectProps(props: Props): SelectComponent.Props[DrawingDefinition[Point]] = {
+  def selectProps(props: Props): Select.Props[DrawingDefinition[Point]] = {
     val items = props.drawingList.map { definition =>
       Item(definition.name, definition.name, definition)
     }
@@ -28,7 +28,7 @@ object DrawingListComponent {
       props.onSelect(item.value)
     }
 
-    SelectComponent.Props(items, current, onChange)
+    Select.Props(items, current, onChange)
   }
 
   class Backend(bs: BackendScope[Props, Unit]) {

@@ -9,7 +9,7 @@ import japgolly.scalajs.react.{Callback, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
 
-object CanvasComponent {
+object Canvas {
 
   case class Props(
     context: DrawingContext,

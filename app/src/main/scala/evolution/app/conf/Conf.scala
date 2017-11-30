@@ -13,6 +13,7 @@ import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
+import evolution.app.react.component.config.DrawingConfig
 import evolution.geometry.Point
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.Router
@@ -92,10 +93,10 @@ object Conf {
     )
 
   lazy val drawingConfComponent =
-    DrawingConfigComponent.component[Long, Point](drawingDefinition, drawingContext, materializer)
+    DrawingConfig.component[Long, Point](drawingDefinition, drawingContext, materializer)
 
   lazy val drawingConfComponentProps = {
-    DrawingConfigComponent.Props[Long, Point, drawingDefinition.Config](drawingDefinition.initialConfig, _ => Callback.empty, _ => Callback.empty)
+    DrawingConfig.Props[Long, Point, drawingDefinition.Config](drawingDefinition.initialConfig, _ => Callback.empty, _ => Callback.empty)
   }
 
   lazy val routingConfig: Routing =

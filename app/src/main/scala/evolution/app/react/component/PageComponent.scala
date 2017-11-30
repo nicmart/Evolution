@@ -2,12 +2,11 @@ package evolution.app.react.component
 
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf
-import evolution.app.model.configured.DrawingConfigComponent
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.presentational._
-import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
+import evolution.app.react.component.presentational.styled.HorizontalFormField
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -15,7 +14,8 @@ import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
 import evolution.app.model.state.DrawingState
-import evolution.app.react.pages.MyPages
+import evolution.app.react.component.config.DrawingConfig
+import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import io.circe._
 import io.circe.parser._
@@ -60,21 +60,21 @@ object PageComponent {
   class Backend(bs: BackendScope[Props, State]) {
     def render(props: Props, state: State): VdomElement = {
       <.div(
-        NavbarComponent.component(NavbarComponent.Props(
+        Navbar.component(
           <.div(^.className := "navbar-item is-hidden-touch",<.span(s"${ state.pointRateCounter.rate.toInt } p/s")),
-          <.div(^.className := "navbar-item is-hidden-touch", ButtonComponent.component(ButtonComponent.Props(
+          <.div(^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
             "Refresh",
             refresh
           ))),
-          <.div(^.className := "navbar-item is-hidden-touch", HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+          <.div(^.className := "navbar-item is-hidden-touch", HorizontalFormField.component(HorizontalFormField.Props(
             "Iterations",
             "",
             IntInputComponent(state.drawer.iterations, onIterationsChanged)
           )))
-        )),
+        ),
         <.div(
           ^.id := "page-content",
-          CanvasComponent.component.withKey(state.canvasKey)(CanvasComponent.Props(
+          Canvas.component.withKey(state.canvasKey)(Canvas.Props(
             state.drawingContext,
             canvasInitializer,
             state.drawer,
@@ -84,12 +84,8 @@ object PageComponent {
             }
           )
           ),
-          SidebarComponent.component.withKey("sidebar")(
-            SidebarComponent.Props(
-              active = true
-            )
-          )(
-            Conf.drawingConfComponent(DrawingConfigComponent.Props[Long, Point, definition.Config](
+          Sidebar.component.withKey("sidebar")(
+            Conf.drawingConfComponent(DrawingConfig.Props[Long, Point, definition.Config](
               props.drawingState.config,
               onConfigChange,
               onStreamChange
@@ -131,7 +127,7 @@ object PageComponent {
   def stateFromProps(props: Props): State = {
     State(
       Drawer(
-        1000,
+        5000,
         1
       ),
       seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)),
@@ -149,21 +145,15 @@ object PageComponent {
         s.currentState.key != s.nextState.key
       }
     }
-//    .componentDidUpdate { x =>
-//      if (
-//        x.currentState.currentDrawing.serialize != x.prevState.currentDrawing.serialize &&
-//        !Conf.areLoadableDrawingDifferent(x.prevProps.loadableDrawing, x.currentProps.loadableDrawing)
-//      ) {
-//        x.currentProps.router.set(
-//          LoadDrawingPage(
-//            DrawingState(
-//              x.currentState.seed,
-//              x.currentState.currentDrawing.
-//            )
-//          )
-//        ) >> Callback.log("DIDUPDATE")
-//      } else Callback.empty
-//    }
+    .componentDidUpdate { x =>
+      if (x.currentState.drawingState != x.prevState.drawingState) {
+        x.currentProps.router.set(
+          LoadDrawingPage(
+            x.currentState.drawingState
+          )
+        ) >> Callback.log("DIDUPDATE")
+      } else Callback.empty
+    }
     .componentWillReceiveProps { x =>
       if (Conf.areLoadableDrawingDifferent(x.nextProps.drawingState, x.currentProps.drawingState)) {
         val newState = stateFromProps(x.nextProps)

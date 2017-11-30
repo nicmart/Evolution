@@ -1,19 +1,14 @@
-package evolution.app.model.configured
+package evolution.app.react.component.config
 
-import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
-import japgolly.scalajs.react.vdom.VdomElement
 import evolution.algebra.materializer.Materializer
 import evolution.app.model.context.DrawingContext
-import evolution.app.codec
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.ConfigComponent
-import evolution.geometry.Point
-import io.circe.Json
-import io.circe.syntax._
 import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{Callback, ScalaComponent}
 
-object DrawingConfigComponent {
+object DrawingConfig {
   case class Props[S, T, C](
     config: C,
     onChange: C => Callback,
@@ -24,9 +19,7 @@ object DrawingConfigComponent {
     definition: DrawingDefinition.Aux[T, C],
     context: DrawingContext,
     materializer: Materializer[S]
-  )(
-    bs: BackendScope[Props[S, T, C], Unit]
-  ) {
+  )(bs: BackendScope[Props[S, T, C], Unit]) {
     def render(props: Props[S, T, C]): VdomElement = {
       definition.configComponent.element(
         ConfigComponent.Props(

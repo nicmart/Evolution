@@ -1,16 +1,14 @@
 package evolution.app.react.component.presentational
 
-import japgolly.scalajs.react.ScalaComponent
+import japgolly.scalajs.react.{PropsChildren, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
-object NavbarComponent {
+object Navbar {
 
-  case class Props(elements: VdomElement*)
-
-  class Backend(bs: BackendScope[Props, Unit]) {
-    def render(props: Props): VdomElement = {
+  class Backend(bs: BackendScope[Unit, Unit]) {
+    def render(children: PropsChildren): VdomElement = {
       <.nav(
         ^.className := "navbar is-transparent",
         <.div(
@@ -28,14 +26,14 @@ object NavbarComponent {
           <.div(^.className := "navbar-start"),
           <.div(
             ^.className := "navbar-end",
-            props.elements.toTagMod
+            children
           )
         )
       )
     }
   }
 
-  val component = ScalaComponent.builder[Props]("Example")
-    .renderBackend[Backend]
+  val component = ScalaComponent.builder[Unit]("navbar")
+    .renderBackendWithChildren[Backend]
     .build
 }

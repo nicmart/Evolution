@@ -4,9 +4,9 @@ import evolution.algebra.Evolution
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
-import evolution.app.react.component.DrawingListComponent
+import evolution.app.react.component.DrawingList
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.presentational.styled.HorizontalFormFieldComponent
+import evolution.app.react.component.presentational.styled.HorizontalFormField
 import evolution.geometry.Point
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import japgolly.scalajs.react.vdom.VdomElement
@@ -60,11 +60,11 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
         config.configC.innerDrawing.configComponent
       val innerConfig = config.configC.innerConfig
 
-      val dropdown = HorizontalFormFieldComponent.component(HorizontalFormFieldComponent.Props(
+      val dropdown = HorizontalFormField.component(HorizontalFormField.Props(
         "Drawing",
         "",
-        DrawingListComponent.component(
-          DrawingListComponent.Props(
+        DrawingList.component(
+          DrawingList.Props(
             props.config.configC.allDrawings,
             props.config.configC.innerDrawing,
             newDefinition => props.callback(

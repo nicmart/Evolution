@@ -1,6 +1,6 @@
 package evolution.app.react.component.config
 
-import evolution.app.react.component.presentational.styled.FormFieldComponent
+import evolution.app.react.component.presentational.styled.FormField
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -57,7 +57,7 @@ object componentInstances {
     }
 
     ConfigComponent.instance { props =>
-      val headElement = FormFieldComponent.component(FormFieldComponent.Props(
+      val headElement = FormField.component(FormField.Props(
         fieldName,
         "",
         <.div(

@@ -6,15 +6,12 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
-object SidebarComponent {
+object Sidebar {
 
-  case class Props(active: Boolean)
-
-  class Backend(bs: BackendScope[Props, Unit]) {
-    def render(props: Props, children: PropsChildren): VdomElement = {
+  class Backend(bs: BackendScope[Unit, Unit]) {
+    def render(children: PropsChildren): VdomElement = {
       <.div(
         ^.classSet(
-          "is-hidden" -> !props.active,
           "sidebar" -> true
         ),
         children
@@ -23,7 +20,7 @@ object SidebarComponent {
   }
 
   val component = react.ScalaComponent
-    .builder[Props]("sidebar")
+    .builder[Unit]("sidebar")
     .renderBackendWithChildren[Backend]
     .build
 }

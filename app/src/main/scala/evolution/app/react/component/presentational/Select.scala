@@ -6,7 +6,7 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
-object SelectComponent {
+object Select {
 
   final case class Item[T](label: String, key: String, value: T)
 
