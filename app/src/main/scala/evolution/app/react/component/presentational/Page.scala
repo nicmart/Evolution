@@ -33,7 +33,9 @@ object Page {
     onRefresh: Callback,
     onIterationsChange: Int => Callback,
     onFrameDraw: Callback
-  )
+  ) {
+    def canvasKey = (drawer.iterations, drawingState).hashCode().toString
+  }
 
   class Backend[C](
     drawingConfig: DrawingConfig.ReactComponent[Long, Point, C]
@@ -41,6 +43,7 @@ object Page {
     def render(props: Props[C]): VdomElement = {
       <.div(
         Navbar.component(
+          <.div(^.className := "navbar-item is-hidden-touch", <.span(s"Seed: ${props.drawingState.seed.toHexString}")),
           <.div(^.className := "navbar-item is-hidden-touch", <.span(s"${props.pointRate} p/s")),
           <.div(
             ^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
@@ -60,7 +63,7 @@ object Page {
         ),
         <.div(
           ^.id := "page-content",
-          Canvas.component.withKey(props.drawingState.seed.toString)(Canvas.Props(
+          Canvas.component.withKey(props.canvasKey)(Canvas.Props(
             props.drawingContext,
             canvasInitializer,
             props.drawer,
@@ -68,7 +71,7 @@ object Page {
             props.onFrameDraw
           )
           ),
-          Sidebar.component.withKey("sidebar")(
+          Sidebar.component(
             drawingConfig(DrawingConfig.Props[Long, Point, C](
               props.drawingState.config,
               props.onConfigChange,

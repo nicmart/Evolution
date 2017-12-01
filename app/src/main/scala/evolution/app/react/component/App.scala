@@ -27,20 +27,9 @@ object App {
   case class State[C](
     drawer: Drawer,
     points: Long => Stream[Point],
-    drawingState: DrawingState[C],
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter
-  ) {
-    def stream: Stream[Point] = points(drawingState.seed)
-
-    /**
-      * Used to determine if the page needs an update
-      */
-    def key: Int = (
-      drawingState,
-      pointRateCounter.rate
-    ).hashCode()
-  }
+  )
 
   case class Props[C](
     router: RouterCtl[MyPages[C]],
@@ -56,46 +45,58 @@ object App {
       pageComponent(Page.Props(
         state.drawingContext,
         state.drawer,
-        state.stream,
+        points(props, state),
         props.drawingState,
         state.pointRateCounter.rate.toInt,
-        onConfigChange,
+        onConfigChange(props),
         onStreamChange,
-        refresh,
+        refresh(props),
         onIterationsChanged,
-        bs.modState { state =>
-          state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
-        }
+        onRateCountUpdate
       ))
     }
 
-    private def onIterationsChanged(value: Int): Callback = {
+    private def points(p: Props[C], s: State[C]): Stream[Point] =
+      s.points(p.drawingState.seed)
+
+    private[App] def key(p: Props[C], s: State[C]): Int =
+      ( p.drawingState,
+        s.pointRateCounter.rate,
+        s.drawer.iterations
+      ).hashCode()
+
+    private[App] def onIterationsChanged(value: Int): Callback = {
       bs.modState { state =>
-        state
-          .copy(drawer = state.drawer.copy(iterations = value))
-      } >> refresh
+        state.copy(drawer = state.drawer.copy(iterations = value))
+      }
     }
 
-    private def onConfigChange(drawingConfig: C): Callback = {
-      bs.modState { state =>
-        state
-          .copy(drawingState = state.drawingState.copy(config = drawingConfig))
-      } >> Callback.log("updating confs: " + drawingConfig.toString) >> refresh
+    private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
+      props.router.set(LoadDrawingPage(
+        DrawingState(
+          Random.nextLong(),
+          drawingConfig
+        )
+      ))
     }
 
     private def onStreamChange(points: Long => Stream[Point]): Callback = {
-      bs.modState { state =>
-        state
-          .copy(points = points)
-      } >> refresh
+      Callback.empty
     }
 
-    private def refresh: Callback = {
-      bs.modState { state =>
-        state
-          .copy(drawingState = state.drawingState.copy(seed = Random.nextLong()))
-      }
+    private def refresh(props: Props[C]): Callback = {
+      props.router.set(LoadDrawingPage(
+        DrawingState(
+          Random.nextLong(),
+          props.drawingState.config
+        )
+      ))
     }
+
+    private def onRateCountUpdate: Callback =
+      bs.modState { state =>
+        state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
+      }
   }
 
   private def stateFromProps[C](
@@ -103,15 +104,20 @@ object App {
   )(props: Props[C]): State[C] = {
     State(
       Drawer(
-        5000,
+        1000,
         1
       ),
       seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)),
-      props.drawingState,
       Conf.drawingContext,
-      RateCounter.empty(1000)
+      RateCounter.empty(5000)
     )
   }
+
+  private def updateStateFromProps[C](
+    definition: DrawingDefinition.Aux[Point, C]
+  )(props: Props[C], state: State[C]): State[C] =
+    state
+      .copy(points = seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)))
 
   def component[C](
     definition: DrawingDefinition.Aux[Point, C],
@@ -124,29 +130,12 @@ object App {
     .render(scope => scope.backend.render(scope.props, scope.state))
     .shouldComponentUpdate { s =>
       CallbackTo.pure {
-        s.currentState.key != s.nextState.key
+        s.backend.key(s.currentProps, s.currentState) != s.backend.key(s.nextProps, s.nextState)
       }
     }
-    .componentDidUpdate { event =>
-      if (event.currentState.drawingState != event.prevState.drawingState) {
-//        event.currentProps.router.set(
-//          LoadDrawingPage(
-//            event.currentState.drawingState
-//          )
-//        ) >>
-          Callback.log("DIDUPDATE")
-      } else Callback.empty
-    }
     .componentWillReceiveProps { event =>
-      // @todo
-      if (event.nextProps.drawingState != event.currentProps.drawingState) {
-        println(event.nextProps.drawingState)
-        println(event.currentProps.drawingState)
-        val newState = stateFromProps(definition)(event.nextProps)
-        if (newState.drawingState != event.state.drawingState) {
-          event.setState(newState) >> Callback.log("WILL RECEIVE PROPS")
-        } else Callback.empty
-      } else Callback.empty
+      val newState = updateStateFromProps(definition)(event.nextProps, event.state)
+      event.setState(newState)
     }
     .build
 }
