@@ -12,10 +12,13 @@ import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
+import evolution.app.conf.Conf.drawingDefinition
+import evolution.app.react.component.App
 import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
-import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.{Callback, CtorType}
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.router.Router
 import org.scalajs.dom
 
@@ -66,16 +69,16 @@ object Conf {
     )
   }
 
-  lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
+  lazy val drawingStateCodec: JsonCodec[DrawingState[drawingDefinition.Config]] =
     DrawingState.jsonCodec(drawingDefinition)
 
-  lazy val pageDrawingCodec: Codec[LoadDrawingPage, DrawingState[DrawingConfig]] =
-    Codec.instance[LoadDrawingPage, DrawingState[DrawingConfig]](
+  lazy val pageDrawingCodec: Codec[LoadDrawingPage[drawingDefinition.Config], DrawingState[DrawingConfig]] =
+    Codec.instance[LoadDrawingPage[drawingDefinition.Config], DrawingState[DrawingConfig]](
       _.state,
       state => Some(LoadDrawingPage(state))
     )
 
-  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, String] =
+  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage[drawingDefinition.Config], String] =
     pageDrawingCodec >>
     drawingStateCodec >>
     JsonStringCodec >>
@@ -84,7 +87,7 @@ object Conf {
 
   lazy val urlDelimiter = "#"
 
-  lazy val initialPage: MyPages =
+  lazy val initialPage: MyPages[drawingDefinition.Config] =
     LoadDrawingPage(
       DrawingState(
         Random.nextLong(),
@@ -95,11 +98,23 @@ object Conf {
   lazy val drawingConfComponent =
     DrawingConfig.component[Long, Point](drawingDefinition, drawingContext, materializer)
 
-  lazy val pageComponent =
-    Page.withConfig[drawingDefinition.Config](drawingConfComponent)
+  lazy val pageComponent: Page.ReactComponent[drawingDefinition.Config] =
+    Page.component[drawingDefinition.Config](drawingConfComponent)
 
-  lazy val routingConfig: Routing =
-    new Routing(urlDelimiter, initialPage, loadDrawingPageStringCodec)
+  lazy val appComponent: App.ReactComponent[drawingDefinition.Config] =
+    App.component[drawingDefinition.Config](
+      drawingDefinition,
+      canvasInitializer,
+      pageComponent
+    )
+
+  lazy val routingConfig: Routing[drawingDefinition.Config] =
+    new Routing(
+      urlDelimiter,
+      appComponent,
+      initialPage,
+      loadDrawingPageStringCodec
+    )
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)

@@ -6,7 +6,7 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-case class DrawingState[C](
+case class DrawingState[+C](
   seed: Long,
   config: C
 )

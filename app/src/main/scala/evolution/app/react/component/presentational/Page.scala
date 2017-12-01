@@ -81,7 +81,7 @@ object Page {
     }
   }
 
-  def withConfig[C](drawingConfig: DrawingConfig.ReactComponent[Long, Point, C]) =
+  def component[C](drawingConfig: DrawingConfig.ReactComponent[Long, Point, C]): Page.ReactComponent[C] =
     ScalaComponent
       .builder[Props[C]]("Page")
       .backend[Backend[C]](scope => new Backend[C](drawingConfig)(scope))

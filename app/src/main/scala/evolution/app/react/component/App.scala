@@ -6,15 +6,13 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.presentational._
-import evolution.app.react.component.presentational.styled.HorizontalFormField
-import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{Callback, CallbackTo, ScalaComponent}
+import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
 import evolution.app.model.state.DrawingState
-import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import io.circe._
@@ -22,26 +20,18 @@ import io.circe.parser._
 
 import scala.util.{Random, Try}
 
-object PageComponent {
+object App {
 
-  val definition: DrawingDefinition.Aux[Point, Conf.drawingDefinition.Config] =
-    Conf.drawingDefinition
+  type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
 
-  def canvasInitializer: dom.html.Canvas => Unit =
-    Conf.canvasInitializer
-
-  case class State(
+  case class State[C](
     drawer: Drawer,
     points: Long => Stream[Point],
-    drawingState: DrawingState[definition.Config],
+    drawingState: DrawingState[C],
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter
   ) {
     def stream: Stream[Point] = points(drawingState.seed)
-    /**
-      * Use to determine if the canvas has to be re-rendered
-      */
-    def canvasKey: String = drawingState.seed.toString
 
     /**
       * Used to determine if the page needs an update
@@ -52,14 +42,18 @@ object PageComponent {
     ).hashCode()
   }
 
-  case class Props(
-    router: RouterCtl[MyPages],
-    drawingState: DrawingState[definition.Config]
+  case class Props[C](
+    router: RouterCtl[MyPages[C]],
+    drawingState: DrawingState[C]
   )
 
-  class Backend(bs: BackendScope[Props, State]) {
-    def render(props: Props, state: State): VdomElement = {
-      Conf.pageComponent(Page.Props(
+  class Backend[C](
+    definition: DrawingDefinition.Aux[Point, C],
+    canvasInitializer: dom.html.Canvas => Unit,
+    pageComponent: Page.ReactComponent[C]
+  )(bs: BackendScope[Props[C], State[C]]) {
+    def render(props: Props[C], state: State[C]): VdomElement = {
+      pageComponent(Page.Props(
         state.drawingContext,
         state.drawer,
         state.stream,
@@ -82,11 +76,11 @@ object PageComponent {
       } >> refresh
     }
 
-    private def onConfigChange(drawingConfig: definition.Config): Callback = {
+    private def onConfigChange(drawingConfig: C): Callback = {
       bs.modState { state =>
         state
           .copy(drawingState = state.drawingState.copy(config = drawingConfig))
-      } >> refresh
+      } >> Callback.log("updating confs: " + drawingConfig.toString) >> refresh
     }
 
     private def onStreamChange(points: Long => Stream[Point]): Callback = {
@@ -104,7 +98,9 @@ object PageComponent {
     }
   }
 
-  def stateFromProps(props: Props): State = {
+  private def stateFromProps[C](
+    definition: DrawingDefinition.Aux[Point, C]
+  )(props: Props[C]): State[C] = {
     State(
       Drawer(
         5000,
@@ -117,28 +113,38 @@ object PageComponent {
     )
   }
 
-  val component = ScalaComponent.builder[Props]("Page")
-    .initialStateFromProps(stateFromProps)
-    .renderBackend[Backend]
+  def component[C](
+    definition: DrawingDefinition.Aux[Point, C],
+    canvasInitializer: dom.html.Canvas => Unit,
+    pageComponent: Page.ReactComponent[C]
+  ) =
+    ScalaComponent.builder[Props[C]]("App")
+    .initialStateFromProps(stateFromProps(definition))
+    .backend[Backend[C]](scope => new Backend[C](definition, canvasInitializer, pageComponent)(scope))
+    .render(scope => scope.backend.render(scope.props, scope.state))
     .shouldComponentUpdate { s =>
       CallbackTo.pure {
         s.currentState.key != s.nextState.key
       }
     }
-    .componentDidUpdate { x =>
-      if (x.currentState.drawingState != x.prevState.drawingState) {
-        x.currentProps.router.set(
-          LoadDrawingPage(
-            x.currentState.drawingState
-          )
-        ) >> Callback.log("DIDUPDATE")
+    .componentDidUpdate { event =>
+      if (event.currentState.drawingState != event.prevState.drawingState) {
+//        event.currentProps.router.set(
+//          LoadDrawingPage(
+//            event.currentState.drawingState
+//          )
+//        ) >>
+          Callback.log("DIDUPDATE")
       } else Callback.empty
     }
-    .componentWillReceiveProps { x =>
-      if (Conf.areLoadableDrawingDifferent(x.nextProps.drawingState, x.currentProps.drawingState)) {
-        val newState = stateFromProps(x.nextProps)
-        if (newState.drawingState != x.state.drawingState) {
-          x.setState(newState) >> Callback.log("WILL RECEIVE PROPS")
+    .componentWillReceiveProps { event =>
+      // @todo
+      if (event.nextProps.drawingState != event.currentProps.drawingState) {
+        println(event.nextProps.drawingState)
+        println(event.currentProps.drawingState)
+        val newState = stateFromProps(definition)(event.nextProps)
+        if (newState.drawingState != event.state.drawingState) {
+          event.setState(newState) >> Callback.log("WILL RECEIVE PROPS")
         } else Callback.empty
       } else Callback.empty
     }
