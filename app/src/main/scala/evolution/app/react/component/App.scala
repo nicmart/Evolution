@@ -24,6 +24,8 @@ object App {
 
   type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
 
+  // @todo: move points and context to the props
+  // This should allow us to remove stateFromProps methods
   case class State[C](
     drawer: Drawer,
     points: Long => Stream[Point],
@@ -49,7 +51,6 @@ object App {
         props.drawingState,
         state.pointRateCounter.rate.toInt,
         onConfigChange(props),
-        onStreamChange,
         refresh(props),
         onIterationsChanged,
         onRateCountUpdate
@@ -80,10 +81,6 @@ object App {
       ))
     }
 
-    private def onStreamChange(points: Long => Stream[Point]): Callback = {
-      Callback.empty
-    }
-
     private def refresh(props: Props[C]): Callback = {
       props.router.set(LoadDrawingPage(
         DrawingState(
@@ -99,6 +96,16 @@ object App {
       }
   }
 
+  private val drawingContext: DrawingContext = {
+    val document = dom.window.document
+    DrawingContext(
+      DrawingContext.CanvasSize(
+        2 * Math.max(document.documentElement.clientWidth, dom.window.innerWidth).toInt,
+        2 * Math.max(document.documentElement.clientHeight, dom.window.innerHeight).toInt
+      )
+    )
+  }
+
   private def stateFromProps[C](
     definition: DrawingDefinition.Aux[Point, C]
   )(props: Props[C]): State[C] = {
@@ -107,8 +114,8 @@ object App {
         1000,
         1
       ),
-      seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)),
-      Conf.drawingContext,
+      seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, drawingContext)),
+      drawingContext,
       RateCounter.empty(5000)
     )
   }
@@ -117,7 +124,7 @@ object App {
     definition: DrawingDefinition.Aux[Point, C]
   )(props: Props[C], state: State[C]): State[C] =
     state
-      .copy(points = seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, Conf.drawingContext)))
+      .copy(points = seed => Conf.materializer.materialize(seed, definition.evolution(props.drawingState.config, drawingContext)))
 
   def component[C](
     definition: DrawingDefinition.Aux[Point, C],

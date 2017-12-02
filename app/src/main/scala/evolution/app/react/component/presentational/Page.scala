@@ -29,7 +29,6 @@ object Page {
     drawingState: DrawingState[C],
     pointRate: Int,
     onConfigChange: C => Callback,
-    onStreamChange: (Long => Stream[Point]) => Callback,
     onRefresh: Callback,
     onIterationsChange: Int => Callback,
     onFrameDraw: Callback
@@ -74,8 +73,7 @@ object Page {
           Sidebar.component(
             drawingConfig(DrawingConfig.Props[Long, Point, C](
               props.drawingState.config,
-              props.onConfigChange,
-              props.onStreamChange
+              props.onConfigChange
             )
             )
           )

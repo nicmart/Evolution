@@ -59,16 +59,6 @@ object Conf {
   lazy val materializer: Materializer[Long] =
     RNGMaterializer(new RNGInterpreter)
 
-  lazy val drawingContext: DrawingContext = {
-    val document = dom.window.document
-    DrawingContext(
-      DrawingContext.CanvasSize(
-        2 * Math.max(document.documentElement.clientWidth, dom.window.innerWidth).toInt,
-        2 * Math.max(document.documentElement.clientHeight, dom.window.innerHeight).toInt
-      )
-    )
-  }
-
   lazy val drawingStateCodec: JsonCodec[DrawingState[drawingDefinition.Config]] =
     DrawingState.jsonCodec(drawingDefinition)
 
@@ -96,7 +86,7 @@ object Conf {
     )
 
   lazy val drawingConfComponent =
-    DrawingConfig.component[Long, Point](drawingDefinition, drawingContext, materializer)
+    DrawingConfig.component[Long, Point](drawingDefinition)
 
   lazy val pageComponent: Page.ReactComponent[drawingDefinition.Config] =
     Page.component[drawingDefinition.Config](drawingConfComponent)
