@@ -12,7 +12,9 @@ import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
 import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
+import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf.drawingDefinition
+import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.App
 import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.presentational.Page
@@ -59,16 +61,16 @@ object Conf {
   lazy val materializer: Materializer[Long] =
     RNGMaterializer(new RNGInterpreter)
 
-  lazy val drawingStateCodec: JsonCodec[DrawingState[drawingDefinition.Config]] =
+  lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
     DrawingState.jsonCodec(drawingDefinition)
 
-  lazy val pageDrawingCodec: Codec[LoadDrawingPage[drawingDefinition.Config], DrawingState[DrawingConfig]] =
-    Codec.instance[LoadDrawingPage[drawingDefinition.Config], DrawingState[DrawingConfig]](
+  lazy val pageDrawingCodec: Codec[LoadDrawingPage[DrawingConfig], DrawingState[DrawingConfig]] =
+    Codec.instance[LoadDrawingPage[DrawingConfig], DrawingState[DrawingConfig]](
       _.state,
       state => Some(LoadDrawingPage(state))
     )
 
-  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage[drawingDefinition.Config], String] =
+  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage[DrawingConfig], String] =
     pageDrawingCodec >>
     drawingStateCodec >>
     JsonStringCodec >>
@@ -77,7 +79,7 @@ object Conf {
 
   lazy val urlDelimiter = "#"
 
-  lazy val initialPage: MyPages[drawingDefinition.Config] =
+  lazy val initialPage: MyPages[DrawingConfig] =
     LoadDrawingPage(
       DrawingState(
         Random.nextLong(),
@@ -85,20 +87,35 @@ object Conf {
       )
     )
 
+  lazy val initialDrawer: Drawer =
+    Drawer(
+      iterations = 1000,
+      strokeSize = 1
+    )
+
+  lazy val initialRateCounter: RateCounter =
+    RateCounter.empty(1000)
+
   lazy val drawingConfComponent =
     DrawingConfig.component[Long, Point](drawingDefinition)
 
-  lazy val pageComponent: Page.ReactComponent[drawingDefinition.Config] =
-    Page.component[drawingDefinition.Config](drawingConfComponent)
+  lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Stream[Point] =
+    (context, state) => materializer.materialize(state.seed, drawingDefinition.evolution(state.config, context))
 
-  lazy val appComponent: App.ReactComponent[drawingDefinition.Config] =
-    App.component[drawingDefinition.Config](
-      drawingDefinition,
+  lazy val pageComponent: Page.ReactComponent[DrawingConfig] =
+    Page.component[DrawingConfig](drawingConfComponent)
+
+  lazy val appComponent: App.ReactComponent[DrawingConfig] =
+    App.component[DrawingConfig](
+      points,
       canvasInitializer,
+      initialDrawer,
+      initialRateCounter,
       pageComponent
     )
 
-  lazy val routingConfig: Routing[drawingDefinition.Config] =
+
+  lazy val routingConfig: Routing[DrawingConfig] =
     new Routing(
       urlDelimiter,
       appComponent,
@@ -108,7 +125,4 @@ object Conf {
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)
-
-  def areLoadableDrawingDifferent(drawing1: DrawingState[DrawingConfig], drawing2: DrawingState[DrawingConfig]): Boolean =
-    drawingStateCodec.encode(drawing1) != drawingStateCodec.encode(drawing2)
 }
