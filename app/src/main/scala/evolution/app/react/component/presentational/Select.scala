@@ -1,12 +1,15 @@
 package evolution.app.react.component.presentational
 
+import evolution.app.react.component.presentational.Page.{Backend, Props}
 import japgolly.scalajs.react
-import japgolly.scalajs.react.{Callback, ReactEventFromInput}
-import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.{Callback, CtorType, ReactEventFromInput}
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Select {
+
+  type ReactComponent[T] = Component[Props[T], Unit, Backend[T], CtorType.Props]
 
   final case class Item[T](label: String, key: String, value: T)
 
@@ -41,7 +44,7 @@ object Select {
     * Don't use this method directly inside render methods, but first fix its value
     * outside, and then use it.
     */
-  def component[T] =
+  def component[T]: ReactComponent[T] =
     react.ScalaComponent.builder[Props[T]]("dropdown")
       .renderBackend[Backend[T]]
       .build

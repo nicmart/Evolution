@@ -51,7 +51,8 @@ object Conf {
       brownian
     )
 
-  lazy val drawingDefinition: DrawingDefinition[Point] = new DrawingListDefinition(innerDrawingList)
+  lazy val drawingDefinition: DrawingDefinition[Point] =
+    new DrawingListDefinition(innerDrawingList)
 
   type DrawingConfig = drawingDefinition.Config
 

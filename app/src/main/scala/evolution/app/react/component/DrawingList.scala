@@ -11,36 +11,36 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object DrawingList {
 
-  private val selectComponent = Select.component[DrawingDefinition[Point]]
-
-  case class Props(
-    drawingList: List[DrawingDefinition[Point]],
-    current: DrawingDefinition[Point],
-    onSelect: DrawingDefinition[Point] => Callback
+  case class Props[T](
+    drawingList: List[DrawingDefinition[T]],
+    current: DrawingDefinition[T],
+    onSelect: DrawingDefinition[T] => Callback
   )
 
-  def selectProps(props: Props): Select.Props[DrawingDefinition[Point]] = {
+  def selectProps[T](props: Props[T]): Select.Props[DrawingDefinition[T]] = {
     val items = props.drawingList.map { definition =>
       Item(definition.name, definition.name, definition)
     }
     val current = Item(props.current.name, props.current.name, props.current)
-    def onChange(item: Item[DrawingDefinition[Point]]): Callback = {
+    def onChange(item: Item[DrawingDefinition[T]]): Callback = {
       props.onSelect(item.value)
     }
 
     Select.Props(items, current, onChange)
   }
 
-  class Backend(bs: BackendScope[Props, Unit]) {
-    def render(props: Props): VdomElement = {
+  class Backend[T](selectComponent: Select.ReactComponent[DrawingDefinition[T]])(bs: BackendScope[Props[T], Unit]) {
+    def render(props: Props[T]): VdomElement = {
       selectComponent(
         selectProps(props)
       )
     }
   }
 
-  val component =
-    ScalaComponent.builder[Props]("Example")
-      .renderBackend[Backend]
+  def component[T] = {
+    ScalaComponent.builder[Props[T]]("Example")
+      .backend[Backend[T]](scope => new Backend[T](Select.component[DrawingDefinition[T]])(scope))
+      .render(scope => scope.backend.render(scope.props))
       .build
+  }
 }

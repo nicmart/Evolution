@@ -1,6 +1,8 @@
 package evolution.app.react.component.config
 
-import evolution.app.react.component.presentational.styled.FormField
+import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingListWithSelection}
+import evolution.app.react.component.DrawingList
+import evolution.app.react.component.presentational.styled.{FormField, HorizontalFormField}
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -125,6 +127,42 @@ object componentInstances {
 
     private def onChange(props: Props[Option[T]])(t: T): Callback =
       props.callback(Some(t))
+  }
+
+  class CompositeComponent[T](drawingList: DrawingListWithSelection[T])
+    extends ConfigComponent[CompositeDefinitionConfig[T]] {
+
+    private val drawingListComponent = DrawingList.component[T]
+
+    override def element(props: ConfigComponent.Props[CompositeDefinitionConfig[T]]): VdomElement = {
+      val config = props.config
+      val innerComponent: ConfigComponent[config.InnerConfig] =
+        config.definition.configComponent
+      val innerConfig: config.InnerConfig = config.config
+
+      val dropdown = HorizontalFormField.component(HorizontalFormField.Props(
+        "Drawing",
+        "",
+        drawingListComponent(
+          DrawingList.Props(
+            drawingList.list,
+            props.config.definition,
+            newDefinition => props.callback(
+              CompositeDefinitionConfig[T, newDefinition.Config](
+                newDefinition.initialConfig,
+                newDefinition
+              )
+            )
+          )
+        )
+      ))
+
+      innerComponent.reactComponent(ConfigComponent.Props[config.InnerConfig](
+        innerConfig,
+        newInnerConfig => props.callback(CompositeDefinitionConfig(innerConfig, config.definition)),
+        ConfigComponent.prepend(dropdown, props.render)
+      ))
+    }
   }
 
 }
