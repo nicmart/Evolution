@@ -7,7 +7,7 @@ import evolution.app.codec.JsonCodec._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.geometry.Point
 import io.circe.generic.auto._
 
@@ -21,7 +21,7 @@ object lissajous extends DrawingDefinition[Point] {
     speed: Double
   )
 
-  override def configComponent: ConfigComponent[Config] =
+  override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {

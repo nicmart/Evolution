@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra._
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
@@ -17,7 +17,7 @@ object brownian extends DrawingDefinition[Point] {
     radius: Double
   )
 
-  override def configComponent: ConfigComponent[Config] =
+  override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {

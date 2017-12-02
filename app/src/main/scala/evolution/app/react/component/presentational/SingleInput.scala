@@ -1,6 +1,6 @@
 package evolution.app.react.component.presentational
 
-import evolution.app.react.component.presentational.SingleInputComponent.Props
+import evolution.app.react.component.presentational.SingleInput.Props
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -8,7 +8,7 @@ import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
 import scala.util.Try
 
-object SingleInputComponent {
+object SingleInput {
 
   case class Props[T](value: T, onChange: T => Callback, parser: String => T)
 
@@ -40,14 +40,14 @@ object SingleInputComponent {
 }
 
 object IntInputComponent {
-  val component = SingleInputComponent.component[Int]
+  val component = SingleInput.component[Int]
 
   def apply(value: Int, onChange: Int => Callback): VdomElement =
     component(Props(value, onChange, _.toInt))
 }
 
 object DoubleInputComponent {
-  val component = SingleInputComponent.component[Double]
+  val component = SingleInput.component[Double]
 
   def apply(value: Double, onChange: Double => Callback): VdomElement =
     component(Props(value, onChange, _.toDouble))

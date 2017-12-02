@@ -22,6 +22,11 @@ final case class DrawingListWithSelection[T](
   list: List[DrawingDefinition[T]],
   current: DrawingDefinition[T]
 ) {
+  type CurrentConfig = current.Config
   def byName(name: String): DrawingDefinition[T] =
     list.find(_.name == name).getOrElse(current)
+}
+
+object DrawingListWithSelection {
+  type Aux[T, C] = DrawingDefinition[T] { type CurrentConfig = C }
 }

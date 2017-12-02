@@ -1,27 +1,25 @@
 package evolution.app.react.component.config
 
-import evolution.app.react.component.config.ConfigComponent.Props
-import io.circe.{Decoder, Encoder}
-import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react
+import japgolly.scalajs.react.{Callback, PropsChildren}
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
-
-trait ConfigComponent[Config] {
-  def element(props: Props[Config]): List[VdomElement]
-}
 
 object ConfigComponent {
-
   case class Props[Config](
     config: Config,
-    callback: Config => Callback
+    callback: Config => Callback,
+    render: List[VdomElement] => VdomElement
   )
 
-  def instance[Config](render: Props[Config] => List[VdomElement]): ConfigComponent[Config] =
-    new ConfigComponent[Config] {
-      override def element(props: Props[Config]): List[VdomElement] =
-        render(props)
-    }
+  def instance[C](name: String)(render: Props[C] => VdomElement): ConfigComponent[C] =
+    react.ScalaComponent
+      .builder[Props[C]](name)
+      .stateless
+      .render_P(render)
+      .build
+
+  def prepend(head: VdomElement, render: List[VdomElement] => VdomElement)(tail: List[VdomElement]): VdomElement =
+    render(head :: tail)
 
   /**
     * Summoner method
@@ -29,4 +27,3 @@ object ConfigComponent {
   def apply[Config](implicit component: ConfigComponent[Config]): ConfigComponent[Config]
     = component
 }
-

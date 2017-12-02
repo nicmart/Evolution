@@ -1,0 +1,115 @@
+package evolution.app.react.component
+
+import evolution.app.canvas.Drawer
+import evolution.app.model.context.DrawingContext
+import evolution.app.model.counter.RateCounter
+import evolution.app.react.component.presentational._
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
+import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
+import org.scalajs.dom
+import evolution.geometry.Point
+import evolution.app.model.state.DrawingState
+import evolution.app.react.pages.{LoadDrawingPage, MyPages}
+import japgolly.scalajs.react.extra.router.RouterCtl
+import scala.util.Random
+
+object App {
+
+  type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
+
+  case class State[C](
+    drawer: Drawer,
+    drawingContext: DrawingContext,
+    pointRateCounter: RateCounter
+  )
+
+  case class Props[C](
+    router: RouterCtl[MyPages[C]],
+    drawingState: DrawingState[C]
+  )
+
+  class Backend[C](
+    points: (DrawingContext, DrawingState[C]) => Stream[Point],
+    canvasInitializer: dom.html.Canvas => Unit,
+    pageComponent: Page.ReactComponent[C]
+  )(bs: BackendScope[Props[C], State[C]]) {
+    def render(props: Props[C], state: State[C]): VdomElement = {
+      pageComponent(Page.Props(
+        state.drawingContext,
+        state.drawer,
+        points(state.drawingContext, props.drawingState),
+        props.drawingState,
+        state.pointRateCounter.rate.toInt,
+        onConfigChange(props),
+        refresh(props),
+        onIterationsChanged,
+        onRateCountUpdate
+      ))
+    }
+
+    private[App] def key(p: Props[C], s: State[C]): Int =
+      ( p.drawingState,
+        s.pointRateCounter.rate,
+        s.drawer.iterations
+      ).hashCode()
+
+    private[App] def onIterationsChanged(value: Int): Callback = {
+      bs.modState { state =>
+        state.copy(drawer = state.drawer.copy(iterations = value))
+      }
+    }
+
+    private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
+      props.router.set(LoadDrawingPage(
+        DrawingState(
+          Random.nextLong(),
+          drawingConfig
+        )
+      ))
+    }
+
+    private def refresh(props: Props[C]): Callback = {
+      props.router.set(LoadDrawingPage(
+        DrawingState(
+          Random.nextLong(),
+          props.drawingState.config
+        )
+      ))
+    }
+
+    private def onRateCountUpdate: Callback =
+      bs.modState { state =>
+        state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
+      }
+  }
+
+  private val drawingContext: DrawingContext = {
+    val document = dom.window.document
+    DrawingContext(
+      DrawingContext.CanvasSize(
+        2 * Math.max(document.documentElement.clientWidth, dom.window.innerWidth).toInt,
+        2 * Math.max(document.documentElement.clientHeight, dom.window.innerHeight).toInt
+      )
+    )
+  }
+
+  def component[C](
+    points: (DrawingContext, DrawingState[C]) => Stream[Point],
+    canvasInitializer: dom.html.Canvas => Unit,
+    initialDrawer: Drawer,
+    rateCounter: RateCounter,
+    pageComponent: Page.ReactComponent[C]
+  ) =
+    ScalaComponent.builder[Props[C]]("App")
+      .initialState(State[C](initialDrawer, drawingContext, rateCounter))
+      .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
+      .render(scope => scope.backend.render(scope.props, scope.state))
+      .shouldComponentUpdate { s =>
+        CallbackTo.pure {
+          s.backend.key(s.currentProps, s.currentState) != s.backend.key(s.nextProps, s.nextState)
+        }
+      }
+      .build
+}

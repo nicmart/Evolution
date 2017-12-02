@@ -4,7 +4,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
@@ -20,7 +20,7 @@ object brownianWithRandomJumps extends DrawingDefinition[Point] {
     jumpSize: Int
   )
 
-  override def configComponent: ConfigComponent[Config] =
+  override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {

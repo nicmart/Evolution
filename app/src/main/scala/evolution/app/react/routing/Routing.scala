@@ -1,22 +1,22 @@
 package evolution.app.react.routing
 
 import evolution.app.codec.Codec
-import evolution.app.conf.Conf
-import evolution.app.react.component.PageComponent
+import evolution.app.react.component.App
 import evolution.app.react.pages.{Home, LoadDrawingPage, MyPages, NotFound}
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, RouterConfig, RouterConfigDsl, StaticDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 
-class Routing(
+class Routing[C](
   urlDelimiter: String,
-  defaultPage: MyPages,
-  loadDrawingPageCodec: Codec[LoadDrawingPage, String]
+  appComponent: App.ReactComponent[C],
+  defaultPage: MyPages[C],
+  drawingStateCodec: Codec[LoadDrawingPage[C], String]
 ) {
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
 
-  val config: RouterConfig[MyPages] = RouterConfigDsl[MyPages].buildConfig { dsl =>
+  val config: RouterConfig[MyPages[C]] = RouterConfigDsl[MyPages[C]].buildConfig { dsl =>
     import dsl._
 
     (emptyRule
@@ -28,7 +28,7 @@ class Routing(
       ).notFound(redirectToPage(NotFound)(Redirect.Push))
   }
 
-  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
     import dsl._
 
     val rule: dsl.Rule =
@@ -41,24 +41,24 @@ class Routing(
       redirectToPage(defaultPage)(Redirect.Replace)
   }
 
-  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
     import dsl._
 
     val rule: dsl.Rule =
       route ~> renderPage
 
     private def route =
-      dynamicRouteCT[LoadDrawingPage](routeFromCodec(string(".*"), loadDrawingPageCodec))
+      dynamicRouteCT[LoadDrawingPage[C]](routeFromCodec(string(".*"), drawingStateCodec))
 
-    private def renderPage: LoadDrawingPage => dsl.Renderer =
+    private def renderPage: LoadDrawingPage[C] => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
-        PageComponent.component.apply(
-          PageComponent.Props(router , loadDrawingPage.loadableDrawing)
+        appComponent(
+          App.Props(router , loadDrawingPage.state)
         )
       }
   }
 
-  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
     import dsl._
 
     val rule: dsl.Rule =
