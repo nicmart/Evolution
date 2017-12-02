@@ -42,7 +42,15 @@ object Page {
     def render(props: Props[C]): VdomElement = {
       <.div(
         Navbar.component(
-          <.div(^.className := "navbar-item is-hidden-touch", <.span(s"Seed: ${props.drawingState.seed.toHexString}")),
+          <.div(^.className := "navbar-item is-hidden-touch",
+            <.span(^.className := "is-size-7 has-text-grey-light", s"${props.drawingState.seed.toHexString}")
+          ),
+          <.div(^.className := "navbar-item is-hidden-touch",
+            <.a(
+              ^.href := "https://github.com/nicmart/Evolution",
+              "GitHub"
+            )
+          ),
           <.div(^.className := "navbar-item is-hidden-touch", <.span(s"${props.pointRate} p/s")),
           <.div(
             ^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
