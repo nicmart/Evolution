@@ -26,19 +26,17 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
   object Config {
     def apply[C](
       innerDrawing: DrawingDefinition.Aux[Point, C],
-      allDrawings: List[DrawingDefinition[Point]],
       innerConfig: C
     ): Config =
       new Config {
         override type InnerConfig = C
         override def configC: ConfigC[C] =
-          ConfigC(innerDrawing, allDrawings, innerConfig)
+          ConfigC(innerDrawing, innerConfig)
       }
   }
 
   case class ConfigC[C](
     innerDrawing: DrawingDefinition.Aux[Point, C],
-    allDrawings: List[DrawingDefinition[Point]],
     innerConfig: C
   )
 
@@ -46,7 +44,6 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
   override def initialConfig: Config =
     Config[drawingList.current.Config](
       drawingList.current,
-      drawingList.list,
       drawingList.current.initialConfig
     )
 
@@ -65,12 +62,11 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
         "",
         DrawingList.component(
           DrawingList.Props(
-            props.config.configC.allDrawings,
+            drawingList.list,
             props.config.configC.innerDrawing,
             newDefinition => props.callback(
               Config[newDefinition.Config](
                 newDefinition,
-                drawingList.list,
                 newDefinition.initialConfig
               )
             )
@@ -78,7 +74,6 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
         )
       ))
 
-      val innerElementKey = config.configC.innerDrawing.name
       innerComponent.reactComponent.withKey("asdsd")(ConfigComponent.Props[config.InnerConfig](
         innerConfig,
         newInnerConfig => props.callback(config.withConfig(config.configC.copy(innerConfig = newInnerConfig))),
@@ -100,7 +95,7 @@ class DrawingListDefinition(drawingList: DrawingListWithSelection[Point]) extend
           drawing = drawingList.byName(name)
           configJson <- cursor.downField("config").focus
           config <- drawing.configCodec.decode(configJson)
-        } yield Config[drawing.Config](drawing, drawingList.list, config)
+        } yield Config[drawing.Config](drawing, config)
       }
     }
   }
