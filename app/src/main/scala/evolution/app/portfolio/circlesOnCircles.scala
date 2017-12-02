@@ -5,7 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
 import evolution.geometry.Point
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
 import evolution.algebra.Evolution
 import evolution.app.codec.JsonCodec
@@ -37,7 +37,7 @@ object circlesOnCircles extends DrawingDefinition[Point] {
     lastRadialSpeed = 1.02
   )
 
-  override def configComponent: ConfigComponent[Config] =
+  override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
   class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {

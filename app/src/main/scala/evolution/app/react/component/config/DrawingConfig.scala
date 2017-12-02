@@ -19,7 +19,7 @@ object DrawingConfig {
     definition: DrawingDefinition.Aux[T, C]
   )(bs: BackendScope[Props[S, T, C], Unit]) {
     def render(props: Props[S, T, C]): VdomElement = {
-      definition.configComponent.element(
+      definition.configComponent(
         ConfigComponent.Props(
           props.config,
           props.onChange,

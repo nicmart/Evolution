@@ -10,7 +10,6 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.DrawingState
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
-import evolution.app.react.component.config.componentInstances._
 import cats.implicits._
 import evolution.app.canvas.Drawer
 import evolution.app.conf.Conf.drawingDefinition

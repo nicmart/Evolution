@@ -5,7 +5,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition, DrawingListWithSelection}
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.componentInstances.CompositeComponent
+import evolution.app.react.component.config.instances.CompositeComponent
 
 class DrawingListDefinition[T](drawingList: DrawingListWithSelection[T]) extends DrawingDefinition[T] {
 
@@ -22,8 +22,8 @@ class DrawingListDefinition[T](drawingList: DrawingListWithSelection[T]) extends
   override def evolution(config: Config, context: DrawingContext): Evolution[T] =
     config.definition.evolution(config.config, context)
 
-  override def configComponent: ConfigComponent[Config] =
-    new CompositeComponent[T](drawingList)
+  override val configComponent: ConfigComponent[Config] =
+    CompositeComponent[T](drawingList)
 
   override def configCodec: JsonCodec[Config] =
     CompositeDefinitionConfig.jsonCodec[T](drawingList)

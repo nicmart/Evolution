@@ -5,7 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
 import evolution.geometry.Point
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra.Evolution
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
 import evolution.algebra.syntax.all._
@@ -93,7 +93,8 @@ object nBodies extends DrawingDefinition[Point] {
   def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  def configComponent = ConfigComponent[Config]
+  val configComponent: ConfigComponent[Config] =
+    ConfigComponent[Config]
 
   override def configCodec: JsonCodec[Config] =
     JsonCodec[Config]

@@ -3,7 +3,7 @@ package evolution.app.portfolio
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra
 import evolution.algebra.Evolution
 import evolution.geometry.Point
@@ -28,7 +28,7 @@ object singlePoint extends DrawingDefinition[Point] {
   def evolution(config: Unit, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  def configComponent: ConfigComponent[Unit] = ConfigComponent[Unit]
+  val configComponent: ConfigComponent[Unit] = ConfigComponent[Unit]
 
   override def configCodec: JsonCodec[Unit] =
     JsonCodec[Config]

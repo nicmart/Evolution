@@ -2,7 +2,7 @@ package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import cats.implicits._
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra.Evolution
@@ -66,7 +66,7 @@ object bouncing extends DrawingDefinition[Point] {
   def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
+  val configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 
   override def configCodec: JsonCodec[Config] =
     JsonCodec[Config]

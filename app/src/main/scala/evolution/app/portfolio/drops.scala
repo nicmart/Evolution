@@ -4,7 +4,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
-import evolution.app.react.component.config.componentInstances._
+import evolution.app.react.component.config.instances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra.{Evolution, FullAlgebra}
 import evolution.algebra.syntax.all._
@@ -69,7 +69,7 @@ object drops extends DrawingDefinition[Point] {
   def evolution(config: Config, context: DrawingContext): Evolution[Point] =
     new ThisEvolution(config, context)
 
-  override def configComponent: ConfigComponent[Config] = ConfigComponent[Config]
+  override val configComponent: ConfigComponent[Config] = ConfigComponent[Config]
 
   override def configCodec: JsonCodec[Config] =
     JsonCodec[Config]
