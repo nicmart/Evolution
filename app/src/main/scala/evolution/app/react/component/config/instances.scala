@@ -133,17 +133,19 @@ object instances {
           config.definition.configComponent
         val innerConfig: config.InnerConfig = config.config
 
-        val dropdown = HorizontalFormField.component(HorizontalFormField.Props(
+        val dropdown = FormField.component(FormField.Props(
           "Drawing",
           "",
-          drawingListComponent(
-            DrawingList.Props(
-              drawingList.list,
-              props.config.definition,
-              newDefinition => props.callback(
-                CompositeDefinitionConfig[T, newDefinition.Config](
-                  newDefinition.initialConfig,
-                  newDefinition
+          <.div(
+            drawingListComponent(
+              DrawingList.Props(
+                drawingList.list,
+                props.config.definition,
+                newDefinition => props.callback(
+                  CompositeDefinitionConfig[T, newDefinition.Config](
+                    newDefinition.initialConfig,
+                    newDefinition
+                  )
                 )
               )
             )
