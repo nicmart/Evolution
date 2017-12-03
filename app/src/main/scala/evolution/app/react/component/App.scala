@@ -22,8 +22,13 @@ object App {
   case class State[C](
     drawer: Drawer,
     drawingContext: DrawingContext,
-    pointRateCounter: RateCounter
-  )
+    pointRateCounter: RateCounter,
+    running: Boolean
+  ) {
+    def play: State[C] = copy(running = true)
+    def stop: State[C] = copy(running = false)
+    def toggle: State[C] = copy(running = !running)
+  }
 
   case class Props[C](
     router: RouterCtl[MyPages[C]],
@@ -37,11 +42,13 @@ object App {
   )(bs: BackendScope[Props[C], State[C]]) {
     def render(props: Props[C], state: State[C]): VdomElement = {
       pageComponent(Page.Props(
+        state.running,
         state.drawingContext,
         state.drawer,
         points(state.drawingContext, props.drawingState),
         props.drawingState,
         state.pointRateCounter.rate.toInt,
+        onRunningToggleChange,
         onConfigChange(props),
         refresh(props),
         onIterationsChanged,
@@ -52,7 +59,8 @@ object App {
     private[App] def key(p: Props[C], s: State[C]): Int =
       ( p.drawingState,
         s.pointRateCounter.rate,
-        s.drawer.iterations
+        s.drawer.iterations,
+        s.running
       ).hashCode()
 
     private[App] def onIterationsChanged(value: Int): Callback = {
@@ -67,7 +75,7 @@ object App {
           Random.nextLong(),
           drawingConfig
         )
-      ))
+      )) >> bs.modState(state => state.play)
     }
 
     private def refresh(props: Props[C]): Callback = {
@@ -76,13 +84,16 @@ object App {
           Random.nextLong(),
           props.drawingState.config
         )
-      ))
+      )) >> bs.modState(state => state.play)
     }
 
     private def onRateCountUpdate: Callback =
       bs.modState { state =>
         state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
       }
+
+    private def onRunningToggleChange(isRunning: Boolean): Callback =
+      bs.modState { state => state.toggle }
   }
 
   private val drawingContext: DrawingContext = {
@@ -103,7 +114,7 @@ object App {
     pageComponent: Page.ReactComponent[C]
   ) =
     ScalaComponent.builder[Props[C]]("App")
-      .initialState(State[C](initialDrawer, drawingContext, rateCounter))
+      .initialState(State[C](initialDrawer, drawingContext, rateCounter, true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>

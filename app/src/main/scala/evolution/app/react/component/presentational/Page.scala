@@ -6,6 +6,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.DrawingConfig
+import evolution.app.react.component.control.PlayToggle
 import evolution.app.react.component.presentational.styled.HorizontalFormField
 import evolution.geometry.Point
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
@@ -23,11 +24,13 @@ object Page {
     Conf.canvasInitializer
 
   case class Props[C](
+    running: Boolean,
     drawingContext: DrawingContext,
     drawer: Drawer,
     points: Stream[Point],
     drawingState: DrawingState[C],
     pointRate: Int,
+    onRunningToggleChange: Boolean => Callback,
     onConfigChange: C => Callback,
     onRefresh: Callback,
     onIterationsChange: Int => Callback,
@@ -42,9 +45,6 @@ object Page {
     def render(props: Props[C]): VdomElement = {
       <.div(
         Navbar.component(
-          <.div(^.className := "navbar-item",
-            <.span(^.className := "is-size-7", s"${props.drawingState.seed.toHexString}")
-          ),
           <.div(^.className := "navbar-item is-hidden-touch",
             <.a(
               ^.href := "https://github.com/nicmart/Evolution",
@@ -54,13 +54,17 @@ object Page {
               )
             )
           ),
-          //fa fa-lg fa-github
-          <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
-            ^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
-              "Refresh",
-              props.onRefresh
-            )
+            ^.className := "navbar-item is-hidden-touch",
+            <.div(
+              ^.className := "buttons has-addons is-centered",
+              PlayToggle.component(PlayToggle.Props(props.running, props.onRunningToggleChange)),
+              Button.component(props.onRefresh) {
+                <.span(
+                  ^.className := "icon",
+                  <.i(^.className := "fa fa-random")
+                )
+              }
             )
           ),
           <.div(
@@ -70,6 +74,10 @@ object Page {
               IntInputComponent(props.drawer.iterations, props.onIterationsChange)
             )
             )
+          ),
+          <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
+          <.div(^.className := "navbar-item",
+            <.span(^.className := "is-size-7", s"${props.drawingState.seed.toHexString}")
           )
         ),
         <.div(
@@ -79,7 +87,8 @@ object Page {
             canvasInitializer,
             props.drawer,
             props.points,
-            props.onFrameDraw
+            props.onFrameDraw,
+            props.running
           )
           ),
           Sidebar.component(

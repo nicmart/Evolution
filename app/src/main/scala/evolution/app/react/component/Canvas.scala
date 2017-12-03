@@ -16,11 +16,15 @@ object Canvas {
     canvasInitializer: dom.html.Canvas => Unit,
     drawer: Drawer,
     points: Stream[Point],
-    onFrameDidDraw: Callback
+    onFrameDidDraw: Callback,
+    running: Boolean
   )
 
   class Backend(bs: BackendScope[Props, Unit]) {
-    var running = true
+    var running = false
+    var stopPending = false
+    var points: Stream[Point] = Stream.empty
+
     def render(props: Props): VdomElement = {
       val size = props.context.canvasSize.point
       <.canvas(
@@ -31,30 +35,62 @@ object Canvas {
       )
     }
 
-    def tick(props: Props, ctx: dom.CanvasRenderingContext2D)(points: Stream[Point]): Unit = {
-      if (running) {
-        val nextPoints: Stream[Point] = props.drawer.draw(ctx, points)
-        props.onFrameDidDraw.runNow()
-        dom.window.requestAnimationFrame(_ => tick(props, ctx)(nextPoints))
+    def tick(props: Props, ctx: dom.CanvasRenderingContext2D): Unit = {
+      if (runNext()) {
+          points = props.drawer.draw(ctx, points)
+          props.onFrameDidDraw.runNow()
+          dom.window.requestAnimationFrame(_ => tick(props, ctx))
+      } else {
+        running = false
+        stopPending = false
       }
     }
 
-    def onMount(canvas: dom.html.Canvas, props: Props): Callback = Callback {
-      val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-      props.canvasInitializer(canvas)
-      dom.window.requestAnimationFrame(_ => tick(props, ctx)(props.points))
+    def toggleRunning(node: dom.Element, props: Props): Callback = Callback {
+      if (props.running) start(node, props)
+      else scheduleStop()
     }
+
+    def onMount(node: dom.Element, props: Props): Callback = Callback {
+      props.canvasInitializer(canvas(node))
+      points = props.points
+      start(node, props)
+    }
+
+    def start(node: dom.Element, props: Props): Unit = {
+      println("starting")
+      if (!running && props.running) {
+        println("really starting")
+        running = true
+        stopPending = false
+        dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node)))
+      }
+    }
+
+    def scheduleStop(): Unit = {
+      println("stopping")
+      stopPending = true
+    }
+
+    def runNext(): Boolean =
+      running && !stopPending
+
+    def canvas(node: dom.Element): dom.html.Canvas =
+      node.asInstanceOf[dom.html.Canvas]
+
+    def canvasContext(node: dom.Element): dom.CanvasRenderingContext2D =
+      canvas(node).getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   }
 
   val component =
     ScalaComponent.builder[Props]("Canvas")
       .renderBackend[Backend]
-      .componentDidMount(s =>
-        s.backend.onMount(s.getDOMNode.asInstanceOf[dom.html.Canvas], s.props)
-      )
-      .componentWillUnmount(s => Callback {
-        s.backend.running = false
+      .componentDidMount { s =>
+        s.backend.onMount(s.getDOMNode, s.props)
       }
-      )
+      .componentWillUnmount(s => Callback {
+        s.backend.scheduleStop()
+      })
+      .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode, s.nextProps))
       .build
 }

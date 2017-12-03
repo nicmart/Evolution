@@ -35,4 +35,12 @@ nav.navbar .navbar-item a {
 nav .points-rate span {
   display: inline-block;
   width: 8rem;
+  text-align: center;
+}
+
+nav .button,
+nav .button:active,
+nav .button:hover,
+nav .button:focus{
+  border-color: White !important;
 }
