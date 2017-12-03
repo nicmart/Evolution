@@ -13,6 +13,8 @@ import evolution.geometry.Point
 import evolution.app.model.state.DrawingState
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import japgolly.scalajs.react.extra.router.RouterCtl
+import org.scalajs.dom.raw.UIEvent
+
 import scala.util.Random
 
 object App {
@@ -94,9 +96,12 @@ object App {
 
     private def onRunningToggleChange(isRunning: Boolean): Callback =
       bs.modState { state => state.toggle }
+
+    def onResize: Callback =
+      bs.modState(s => s.copy(drawingContext = drawingContext))
   }
 
-  private val drawingContext: DrawingContext = {
+  private def drawingContext: DrawingContext = {
     val document = dom.window.document
     DrawingContext(
       DrawingContext.CanvasSize(
@@ -122,5 +127,6 @@ object App {
           s.backend.key(s.currentProps, s.currentState) != s.backend.key(s.nextProps, s.nextState)
         }
       }
+      .componentDidMount(s => Callback { dom.window.addEventListener("resize", (_: Any) => s.backend.onResize.runNow()) })
       .build
 }

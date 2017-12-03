@@ -36,7 +36,7 @@ object Page {
     onIterationsChange: Int => Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey = (drawer.iterations, drawingState).hashCode().toString
+    def canvasKey = (drawer.iterations, drawingState, drawingContext).hashCode().toString
   }
 
   class Backend[C](
