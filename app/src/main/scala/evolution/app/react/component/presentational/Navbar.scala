@@ -10,7 +10,7 @@ object Navbar {
   class Backend(bs: BackendScope[Unit, Unit]) {
     def render(children: PropsChildren): VdomElement = {
       <.nav(
-        ^.className := "navbar is-transparent",
+        ^.className := "navbar is-transparent has-text-white",
         <.div(
           ^.className := "navbar-brand is-hidden-touch",
           <.a(

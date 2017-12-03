@@ -42,16 +42,20 @@ object Page {
     def render(props: Props[C]): VdomElement = {
       <.div(
         Navbar.component(
-          <.div(^.className := "navbar-item is-hidden-touch",
-            <.span(^.className := "is-size-7 has-text-grey-light", s"${props.drawingState.seed.toHexString}")
+          <.div(^.className := "navbar-item",
+            <.span(^.className := "is-size-7", s"${props.drawingState.seed.toHexString}")
           ),
           <.div(^.className := "navbar-item is-hidden-touch",
             <.a(
               ^.href := "https://github.com/nicmart/Evolution",
-              "GitHub"
+              <.span(
+                ^.className := "icon",
+                <.i(^.className := "fa fa-lg fa-github")
+              )
             )
           ),
-          <.div(^.className := "navbar-item is-hidden-touch", <.span(s"${props.pointRate} p/s")),
+          //fa fa-lg fa-github
+          <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
             ^.className := "navbar-item is-hidden-touch", Button.component(Button.Props(
               "Refresh",
