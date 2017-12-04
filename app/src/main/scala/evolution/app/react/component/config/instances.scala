@@ -152,11 +152,13 @@ object instances {
           )
         ))
 
-        innerComponent(ConfigComponent.Props[config.InnerConfig](
+        val innerConfigComp = innerComponent(ConfigComponent.Props[config.InnerConfig](
           innerConfig,
           newInnerConfig => props.callback(CompositeDefinitionConfig(newInnerConfig, config.definition)),
-          ConfigComponent.prepend(dropdown, props.render)
+          list => <.div(list.toTagMod)
         ))
+
+        <.div(dropdown, innerConfigComp)
       }
     }
   }

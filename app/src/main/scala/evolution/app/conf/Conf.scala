@@ -29,24 +29,27 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
+  lazy val drawings: List[DrawingDefinition[Point]] =
+    List(
+      segments,
+      brownian,
+      brownianWithRandomJumps,
+      drops,
+      waves,
+      circlesOnCircles,
+      brownianStraight,
+      dynamics,
+      singlePoint,
+      primes,
+      dynamicRotation,
+      nBodies,
+      bouncing,
+      lissajous
+    )
+
   lazy val innerDrawingList: DrawingListWithSelection[Point] =
     DrawingListWithSelection(
-      List(
-        segments,
-        brownian,
-        brownianWithRandomJumps,
-        drops,
-        waves,
-        circlesOnCircles,
-        brownianStraight,
-        dynamics,
-        singlePoint,
-        primes,
-        dynamicRotation,
-        nBodies,
-        bouncing,
-        lissajous
-      ),
+      drawings :+ new CombinedDrawingsDefinition(DrawingListWithSelection(drawings, brownian)),
       brownian
     )
 

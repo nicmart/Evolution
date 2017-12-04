@@ -14,7 +14,8 @@ import io.circe.generic.auto._
 object brownian extends DrawingDefinition[Point] {
   val name = "brownian"
   case class Config(
-    radius: Double
+    radius: Double,
+    order: Int
   )
 
   override val configComponent: ConfigComponent[Config] =
@@ -24,14 +25,20 @@ object brownian extends DrawingDefinition[Point] {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
-        solveIndependent(context.canvasSize.point / 2)(
-          rectangle2D(config.radius)
-        ).positional
+        val order = if (config.order > 0) config.order else 0
+
+        val start: Evo[Point] = rectangle2D(config.radius)
+
+        centeredIn(context.canvasSize.point / 2) {
+          (1 to order).foldLeft[Evo[Point]](start) { (evoSoFar, _) =>
+            solveIndependent(Point.zero)(evoSoFar).positional
+          }
+        }
       }
     }
   }
 
-  val initialConfig = Config(2)
+  val initialConfig = Config(2, 1)
 
   override def configCodec: JsonCodec[Config] =
     JsonCodec[Config]

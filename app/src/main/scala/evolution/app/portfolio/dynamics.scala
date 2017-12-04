@@ -43,7 +43,7 @@ object dynamics extends DrawingDefinition[Point] {
         accelerationEvolution
       ).positional
 
-      sequenceParallel(Queue.fill(config.numberOfPoints)(singleEvo)).take(3000).repeat(100)
+      sequenceParallel(Queue.fill(config.numberOfPoints)(singleEvo))
     }
   }
 
