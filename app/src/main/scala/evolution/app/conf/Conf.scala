@@ -44,7 +44,8 @@ object Conf {
       dynamicRotation,
       nBodies,
       bouncing,
-      lissajous
+      lissajous,
+      oscillator
     )
 
   lazy val innerDrawingList: DrawingListWithSelection[Point] =

@@ -38,6 +38,13 @@ class CombinedDrawingsDefinition(
             config.drawing2.definition.evolution(config.drawing2.config, context).run
           )
         }
+
+        drawOnEvolution(
+          toPhaseSpace(config.drawing1.definition.evolution(config.drawing1.config, context).run),
+          centeredIn(- context.canvasSize.point / 2) {
+            config.drawing2.definition.evolution(config.drawing2.config, context).run
+          }
+        )
       }
     }
 
