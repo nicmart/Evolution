@@ -20,15 +20,15 @@ object oscillator extends DrawingDefinition[Point] {
   case class Config(
     springConstant: Double,
     friction: Double,
-    speed: Double,
-    randomNoise: Double
+    randomNoiseProbability: Double,
+    randomNoiseStrength: Double
   )
 
   def initialConfig = Config(
     springConstant = 0.0004,
     friction = 0.0004,
-    speed = 0.1,
-    randomNoise = 0.0025
+    randomNoiseProbability = 0.1,
+    randomNoiseStrength = 0.0025
   )
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
@@ -41,8 +41,13 @@ object oscillator extends DrawingDefinition[Point] {
           (x, v) => Point(0, -springConstant * x.y) - v * friction
         // Note: AccelerationEvolution[Point] type alias causes problems with implicits: it thinks that the repr is AccEvo...
         val accelerationEvo: Evo[AccelerationLaw[Point]] = constant(accelerationEq)
+        val random = doubleBetween(0, 1)
+          .zipWith(ball(randomNoiseStrength)) { (p, y) =>
+            if (p <= randomNoiseProbability) Point(0, y)
+            else Point.zero
+          }
         val accelerationEvo2 =
-          accelerationEvo.zipWith[Point, AccelerationLaw[Point]](cartesian(constant(0.0), ball(randomNoise))) {
+          accelerationEvo.zipWith[Point, AccelerationLaw[Point]](random) {
             (eq: AccelerationLaw[Point], noise: Point) => {
               (x: Point, v: Point) => {
                 val acc = eq(x, v)
