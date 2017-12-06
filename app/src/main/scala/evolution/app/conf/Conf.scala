@@ -11,17 +11,13 @@ import evolution.app.model.state.DrawingState
 import evolution.app.react.pages.{LoadDrawingPage, MyPages}
 import evolution.app.react.routing.Routing
 import cats.implicits._
-import evolution.app.canvas.Drawer
-import evolution.app.conf.Conf.drawingDefinition
+import evolution.app.canvas.drawer._
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.App
 import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
-import japgolly.scalajs.react.{Callback, CtorType}
-import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.router.Router
-import org.scalajs.dom
 
 import scala.util.Random
 
@@ -91,10 +87,17 @@ object Conf {
       )
     )
 
-  lazy val initialDrawer: Drawer =
-    Drawer(
+  def pointDrawerFromContext(drawingContext: DrawingContext): PointDrawer =
+    TorusPlaneDrawer(
+      FillRectDrawer(1),
+      drawingContext
+    )
+
+  def frameDrawerFromContext(drawingContext: DrawingContext): BaseFrameDrawer =
+    BaseFrameDrawer(
       iterations = 1000,
-      strokeSize = 1
+      pointDrawerFromContext(drawingContext),
+      drawingContext
     )
 
   lazy val initialRateCounter: RateCounter =
@@ -113,7 +116,7 @@ object Conf {
     App.component[DrawingConfig](
       points,
       canvasInitializer,
-      initialDrawer,
+      frameDrawerFromContext,
       initialRateCounter,
       pageComponent
     )

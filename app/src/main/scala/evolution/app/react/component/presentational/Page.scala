@@ -1,6 +1,6 @@
 package evolution.app.react.component.presentational
 
-import evolution.app.canvas.Drawer
+import evolution.app.canvas.drawer.BaseFrameDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.DrawingState
@@ -26,7 +26,7 @@ object Page {
   case class Props[C](
     running: Boolean,
     drawingContext: DrawingContext,
-    drawer: Drawer,
+    drawer: BaseFrameDrawer,
     points: Stream[Point],
     drawingState: DrawingState[C],
     pointRate: Int,

@@ -1,6 +1,6 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.Drawer
+import evolution.app.canvas.drawer.{BaseFrameDrawer, FrameDrawer}
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
@@ -22,7 +22,7 @@ object App {
   type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
 
   case class State[C](
-    drawer: Drawer,
+    drawer: BaseFrameDrawer,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     running: Boolean
@@ -114,12 +114,12 @@ object App {
   def component[C](
     points: (DrawingContext, DrawingState[C]) => Stream[Point],
     canvasInitializer: dom.html.Canvas => Unit,
-    initialDrawer: Drawer,
+    frameDrawerFromContext: DrawingContext => BaseFrameDrawer,
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent[C]
   ) =
     ScalaComponent.builder[Props[C]]("App")
-      .initialState(State[C](initialDrawer, drawingContext, rateCounter, true))
+      .initialState(State[C](frameDrawerFromContext(drawingContext), drawingContext, rateCounter, true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>

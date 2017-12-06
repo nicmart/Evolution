@@ -1,6 +1,6 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.Drawer
+import evolution.app.canvas.drawer.BaseFrameDrawer
 import evolution.app.model.context.DrawingContext
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
@@ -14,7 +14,7 @@ object Canvas {
   case class Props(
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
-    drawer: Drawer,
+    drawer: BaseFrameDrawer,
     points: Stream[Point],
     onFrameDidDraw: Callback,
     running: Boolean
@@ -37,7 +37,7 @@ object Canvas {
 
     def tick(props: Props, ctx: dom.CanvasRenderingContext2D): Unit = {
       if (runNext()) {
-          points = props.drawer.draw(ctx, points)
+          points = props.drawer.drawFrame(ctx, points)
           props.onFrameDidDraw.runNow()
           dom.window.requestAnimationFrame(_ => tick(props, ctx))
       } else {
