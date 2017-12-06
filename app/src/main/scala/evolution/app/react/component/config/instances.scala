@@ -122,7 +122,7 @@ object instances {
       props.callback(Some(t))
   }
 
-  object CompositeComponent {
+  object CompositeConfigComponent {
 
     def apply[T](drawingList: DrawingListWithSelection[T]): ConfigComponent[CompositeDefinitionConfig[T]] = {
       val drawingListComponent = DrawingList.component[T]
@@ -158,7 +158,7 @@ object instances {
           list => <.div(list.toTagMod)
         ))
 
-        <.div(dropdown, innerConfigComp)
+        <.div(^.className := "inner-config", dropdown, innerConfigComp)
       }
     }
   }

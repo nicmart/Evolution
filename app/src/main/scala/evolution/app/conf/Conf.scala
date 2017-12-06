@@ -46,7 +46,7 @@ object Conf {
 
   lazy val innerDrawingList: DrawingListWithSelection[Point] =
     DrawingListWithSelection(
-      drawings :+ new CombinedDrawingsDefinition(DrawingListWithSelection(drawings, brownian)),
+      drawings :+ new CompositeDrawingDefinition(DrawingListWithSelection(drawings, brownian)),
       brownian
     )
 

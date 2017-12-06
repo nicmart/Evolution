@@ -12,7 +12,7 @@ import evolution.app.codec.JsonCodec._
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 
-class CombinedDrawingsDefinition(
+class CompositeDrawingDefinition(
   drawings: DrawingListWithSelection[Point]
 ) extends DrawingDefinition[Point] {
 
@@ -53,7 +53,7 @@ class CombinedDrawingsDefinition(
 
     override lazy val configComponent: ConfigComponent[Config] = {
       implicit val drawingListComponent: ConfigComponent[CompositeDefinitionConfig[Point]] =
-        CompositeComponent(drawings)
+        CompositeConfigComponent(drawings)
       ConfigComponent[Config]
     }
 
