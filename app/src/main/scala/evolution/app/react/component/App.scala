@@ -32,9 +32,15 @@ object App {
   }
 
   case class Props[C](
-    router: RouterCtl[MyPages[C]],
-    pageState: PageState[C]
-  )
+    pageState: PageState[C],
+    onPageStateChange: PageState[C] => Callback
+  ) {
+    def hasChanged: Callback = onPageStateChange(pageState)
+    def withDrawingState(drawingState: DrawingState[C]): Props[C] =
+      copy(pageState.copy(drawingState = drawingState))
+    def withRenderingState(rendererState: RendererState): Props[C] =
+      copy(pageState.copy(rendererState = rendererState))
+  }
 
   class Backend[C](
     points: (DrawingContext, DrawingState[C]) => Stream[Point],
@@ -65,30 +71,25 @@ object App {
       ).hashCode()
 
     private[App] def onIterationsChanged(props: Props[C])(value: Int): Callback = {
-      setPageState(props, props.pageState.copy(
-        rendererState = props.pageState.rendererState.copy(iterations = value)
-      ))
+      props.withRenderingState(props.pageState.rendererState.copy(iterations = value)).hasChanged
     }
 
     private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
-      setPageState(props, props.pageState.copy(
-        drawingState = DrawingState(
+      props.withDrawingState(
+        DrawingState(
           Random.nextLong(),
           drawingConfig
         )
-      )) >> bs.modState(state => state.play)
+      ).hasChanged >> bs.modState(state => state.play)
     }
 
-    private def setPageState(props: Props[C], state: PageState[C]): Callback =
-      props.router.set(LoadDrawingPage(state))
-
     private def refresh(props: Props[C]): Callback = {
-      props.router.set(LoadDrawingPage(props.pageState.copy(
-        drawingState = DrawingState(
+      props.withDrawingState(
+        DrawingState(
           Random.nextLong(),
           props.pageState.drawingState.config
-        ))
-      )) >> bs.modState(state => state.play)
+        )
+      ).hasChanged >> bs.modState(state => state.play)
     }
 
     private def onRateCountUpdate(p: Props[C]): Callback =
