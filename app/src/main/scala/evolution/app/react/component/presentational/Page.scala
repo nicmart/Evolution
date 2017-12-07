@@ -3,7 +3,7 @@ package evolution.app.react.component.presentational
 import evolution.app.canvas.drawer.BaseFrameDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.state.DrawingState
+import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.control.PlayToggle
@@ -15,8 +15,6 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 
-import scala.util.Random
-
 object Page {
   type ReactComponent[C] = Component[Props[C], Unit, Backend[C], CtorType.Props]
 
@@ -26,7 +24,7 @@ object Page {
   case class Props[C](
     running: Boolean,
     drawingContext: DrawingContext,
-    drawer: BaseFrameDrawer,
+    rendererState: RendererState,
     points: Stream[Point],
     drawingState: DrawingState[C],
     pointRate: Int,
@@ -36,11 +34,12 @@ object Page {
     onIterationsChange: Int => Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey = (drawer.iterations, drawingState, drawingContext).hashCode().toString
+    def canvasKey = (rendererState, drawingState, drawingContext).hashCode().toString
   }
 
   class Backend[C](
-    drawingConfig: DrawingConfig.ReactComponent[Long, Point, C]
+    drawingConfig: DrawingConfig.ReactComponent[Long, Point, C],
+    canvasComponent: Canvas.ReactComponent
   )(bs: BackendScope[Props[C], Unit]) {
     def render(props: Props[C]): VdomElement = {
       <.div(
@@ -71,7 +70,7 @@ object Page {
             ^.className := "navbar-item is-hidden-touch", HorizontalFormField.component(HorizontalFormField.Props(
               "Iterations",
               "",
-              IntInputComponent(props.drawer.iterations, props.onIterationsChange)
+              IntInputComponent(props.rendererState.iterations, props.onIterationsChange)
             )
             )
           ),
@@ -82,10 +81,10 @@ object Page {
         ),
         <.div(
           ^.id := "page-content",
-          Canvas.component.withKey(props.canvasKey)(Canvas.Props(
+          canvasComponent.withKey(props.canvasKey)(Canvas.Props(
             props.drawingContext,
             canvasInitializer,
-            props.drawer,
+            props.rendererState,
             props.points,
             props.onFrameDraw,
             props.running
@@ -103,10 +102,13 @@ object Page {
     }
   }
 
-  def component[C](drawingConfig: DrawingConfig.ReactComponent[Long, Point, C]): Page.ReactComponent[C] =
+  def component[C](
+    drawingConfig: DrawingConfig.ReactComponent[Long, Point, C],
+    canvasComponent: Canvas.ReactComponent
+  ): Page.ReactComponent[C] =
     ScalaComponent
       .builder[Props[C]]("Page")
-      .backend[Backend[C]](scope => new Backend[C](drawingConfig)(scope))
+      .backend[Backend[C]](scope => new Backend[C](drawingConfig, canvasComponent)(scope))
       .render(scope => scope.backend.render(scope.props))
       .build
 }

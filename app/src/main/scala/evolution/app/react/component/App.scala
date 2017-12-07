@@ -10,8 +10,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
-import evolution.app.model.state.DrawingState
-import evolution.app.react.pages.{LoadDrawingPage, MyPages}
+import evolution.app.model.state.{DrawingState, RendererState}
+import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import org.scalajs.dom.raw.UIEvent
 
@@ -22,7 +22,6 @@ object App {
   type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
 
   case class State[C](
-    drawer: BaseFrameDrawer,
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     running: Boolean
@@ -34,7 +33,7 @@ object App {
 
   case class Props[C](
     router: RouterCtl[MyPages[C]],
-    drawingState: DrawingState[C]
+    pageState: PageState[C]
   )
 
   class Backend[C](
@@ -46,52 +45,55 @@ object App {
       pageComponent(Page.Props(
         state.running,
         state.drawingContext,
-        state.drawer,
-        points(state.drawingContext, props.drawingState),
-        props.drawingState,
+        props.pageState.rendererState,
+        points(state.drawingContext, props.pageState.drawingState),
+        props.pageState.drawingState,
         state.pointRateCounter.rate.toInt,
         onRunningToggleChange,
         onConfigChange(props),
         refresh(props),
-        onIterationsChanged,
-        onRateCountUpdate
+        onIterationsChanged(props),
+        onRateCountUpdate(props)
       ))
     }
 
     private[App] def key(p: Props[C], s: State[C]): Int =
-      ( p.drawingState,
+      ( p.pageState.drawingState,
         s.pointRateCounter.rate,
-        s.drawer.iterations,
+        p.pageState.rendererState.iterations,
         s.running
       ).hashCode()
 
-    private[App] def onIterationsChanged(value: Int): Callback = {
-      bs.modState { state =>
-        state.copy(drawer = state.drawer.copy(iterations = value))
-      }
+    private[App] def onIterationsChanged(props: Props[C])(value: Int): Callback = {
+      setPageState(props, props.pageState.copy(
+        rendererState = props.pageState.rendererState.copy(iterations = value)
+      ))
     }
 
     private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
-      props.router.set(LoadDrawingPage(
-        DrawingState(
+      setPageState(props, props.pageState.copy(
+        drawingState = DrawingState(
           Random.nextLong(),
           drawingConfig
         )
       )) >> bs.modState(state => state.play)
     }
 
+    private def setPageState(props: Props[C], state: PageState[C]): Callback =
+      props.router.set(LoadDrawingPage(state))
+
     private def refresh(props: Props[C]): Callback = {
-      props.router.set(LoadDrawingPage(
-        DrawingState(
+      props.router.set(LoadDrawingPage(props.pageState.copy(
+        drawingState = DrawingState(
           Random.nextLong(),
-          props.drawingState.config
-        )
+          props.pageState.drawingState.config
+        ))
       )) >> bs.modState(state => state.play)
     }
 
-    private def onRateCountUpdate: Callback =
+    private def onRateCountUpdate(p: Props[C]): Callback =
       bs.modState { state =>
-        state.copy(pointRateCounter = state.pointRateCounter.count(state.drawer.iterations))
+        state.copy(pointRateCounter = state.pointRateCounter.count(p.pageState.rendererState.iterations))
       }
 
     private def onRunningToggleChange(isRunning: Boolean): Callback =
@@ -114,12 +116,11 @@ object App {
   def component[C](
     points: (DrawingContext, DrawingState[C]) => Stream[Point],
     canvasInitializer: dom.html.Canvas => Unit,
-    frameDrawerFromContext: DrawingContext => BaseFrameDrawer,
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent[C]
   ) =
     ScalaComponent.builder[Props[C]]("App")
-      .initialState(State[C](frameDrawerFromContext(drawingContext), drawingContext, rateCounter, true))
+      .initialState(State[C](drawingContext, rateCounter, true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>

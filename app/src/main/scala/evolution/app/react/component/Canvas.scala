@@ -1,26 +1,33 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.drawer.BaseFrameDrawer
+import evolution.app.canvas.drawer.{BaseFrameDrawer, FrameDrawer}
 import evolution.app.model.context.DrawingContext
-import japgolly.scalajs.react.component.Scala.BackendScope
+import evolution.app.model.state.RendererState
+import evolution.app.react.component.config.DrawingConfig.{Backend, Props}
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{Callback, ScalaComponent}
+import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
 
 object Canvas {
 
+  type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
+
   case class Props(
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
-    drawer: BaseFrameDrawer,
+    rendererState: RendererState,
     points: Stream[Point],
     onFrameDidDraw: Callback,
     running: Boolean
   )
 
-  class Backend(bs: BackendScope[Props, Unit]) {
+  class Backend(
+    drawerFromState: (RendererState, DrawingContext) => FrameDrawer)(
+    bs: BackendScope[Props, Unit]
+  ) {
     var running = false
     var stopPending = false
     var points: Stream[Point] = Stream.empty
@@ -35,11 +42,11 @@ object Canvas {
       )
     }
 
-    def tick(props: Props, ctx: dom.CanvasRenderingContext2D): Unit = {
+    def tick(props: Props, ctx: dom.CanvasRenderingContext2D, drawer: FrameDrawer): Unit = {
       if (runNext()) {
-          points = props.drawer.drawFrame(ctx, points)
+          points = drawer.drawFrame(ctx, points)
           props.onFrameDidDraw.runNow()
-          dom.window.requestAnimationFrame(_ => tick(props, ctx))
+          dom.window.requestAnimationFrame(_ => tick(props, ctx, drawer))
       } else {
         running = false
         stopPending = false
@@ -58,12 +65,11 @@ object Canvas {
     }
 
     def start(node: dom.Element, props: Props): Unit = {
-      println("starting")
+      val drawer = drawerFromState(props.rendererState, props.context)
       if (!running && props.running) {
-        println("really starting")
         running = true
         stopPending = false
-        dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node)))
+        dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node), drawer))
       }
     }
 
@@ -82,9 +88,10 @@ object Canvas {
       canvas(node).getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   }
 
-  val component =
+  def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
     ScalaComponent.builder[Props]("Canvas")
-      .renderBackend[Backend]
+      .backend[Backend](scope => new Backend(drawerFromState)(scope))
+      .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
         s.backend.onMount(s.getDOMNode, s.props)
       }

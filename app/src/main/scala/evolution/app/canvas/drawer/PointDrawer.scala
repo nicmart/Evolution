@@ -7,7 +7,7 @@ trait PointDrawer {
   def drawPoint(x: Double, y: Double, canvasContext: CanvasRenderingContext2D): Unit
 }
 
-final case class FillRectDrawer(size: Int) extends PointDrawer {
+final case class FillRectPointDrawer(size: Int) extends PointDrawer {
   @inline override def drawPoint(x: Double, y: Double, context: CanvasRenderingContext2D): Unit =
     context.fillRect(x, y, 1, 1)
 }

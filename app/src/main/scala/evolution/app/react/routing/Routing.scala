@@ -53,7 +53,7 @@ class Routing[C](
     private def renderPage: LoadDrawingPage[C] => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         appComponent(
-          App.Props(router , loadDrawingPage.state)
+          App.Props(router, loadDrawingPage.state)
         )
       }
   }

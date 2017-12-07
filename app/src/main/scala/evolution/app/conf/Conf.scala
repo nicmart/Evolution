@@ -7,13 +7,14 @@ import evolution.algebra.materializer.{Materializer, RNGMaterializer}
 import evolution.algebra.interpreter.RNGInterpreter
 import evolution.app.codec._
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.state.DrawingState
-import evolution.app.react.pages.{LoadDrawingPage, MyPages}
+import evolution.app.model.state._
+import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState}
 import evolution.app.react.routing.Routing
 import cats.implicits._
 import evolution.app.canvas.drawer._
 import evolution.app.model.counter.RateCounter
-import evolution.app.react.component.App
+import evolution.app.model.state
+import evolution.app.react.component.{App, Canvas}
 import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
@@ -64,15 +65,18 @@ object Conf {
   lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
     DrawingState.jsonCodec(drawingDefinition)
 
-  lazy val pageDrawingCodec: Codec[LoadDrawingPage[DrawingConfig], DrawingState[DrawingConfig]] =
-    Codec.instance[LoadDrawingPage[DrawingConfig], DrawingState[DrawingConfig]](
+  lazy val pageStateCodec: JsonCodec[PageState[DrawingConfig]] =
+    PageState.jsonCodec(drawingStateCodec)
+
+  lazy val pageDrawingCodec: Codec[LoadDrawingPage[DrawingConfig], PageState[DrawingConfig]] =
+    Codec.instance[LoadDrawingPage[DrawingConfig], PageState[DrawingConfig]](
       _.state,
       state => Some(LoadDrawingPage(state))
     )
 
   lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage[DrawingConfig], String] =
     pageDrawingCodec >>
-    drawingStateCodec >>
+    pageStateCodec >>
     JsonStringCodec >>
     StringByteCodec >>
     Base64Codec
@@ -81,23 +85,21 @@ object Conf {
 
   lazy val initialPage: MyPages[DrawingConfig] =
     LoadDrawingPage(
-      DrawingState(
-        Random.nextLong(),
-        drawingDefinition.initialConfig
+      PageState(
+        DrawingState(
+          Random.nextLong(),
+          drawingDefinition.initialConfig
+        ),
+        RendererState(
+          1000,
+          1,
+          TrailSettings(
+            true,
+            0.12
+          ),
+          TorusCanvas
+        )
       )
-    )
-
-  def pointDrawerFromContext(drawingContext: DrawingContext): PointDrawer =
-    TorusPlaneDrawer(
-      FillRectDrawer(1),
-      drawingContext
-    )
-
-  def frameDrawerFromContext(drawingContext: DrawingContext): BaseFrameDrawer =
-    BaseFrameDrawer(
-      iterations = 1000,
-      pointDrawerFromContext(drawingContext),
-      drawingContext
     )
 
   lazy val initialRateCounter: RateCounter =
@@ -109,14 +111,22 @@ object Conf {
   lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Stream[Point] =
     (context, state) => materializer.materialize(state.seed, drawingDefinition.evolution(state.config, context))
 
+  lazy val rendererStateToPointDrawer: (state.RendererState, DrawingContext) => PointDrawer =
+    RendererStateToPointDrawer.apply
+
+  lazy val rendererStateToFrameDrawer: (state.RendererState, DrawingContext) => FrameDrawer =
+    RendererStateToFrameDrawer(rendererStateToPointDrawer)
+
+  lazy val canvasComponent: Canvas.ReactComponent =
+    Canvas.component(rendererStateToFrameDrawer)
+
   lazy val pageComponent: Page.ReactComponent[DrawingConfig] =
-    Page.component[DrawingConfig](drawingConfComponent)
+    Page.component[DrawingConfig](drawingConfComponent, canvasComponent)
 
   lazy val appComponent: App.ReactComponent[DrawingConfig] =
     App.component[DrawingConfig](
       points,
       canvasInitializer,
-      frameDrawerFromContext,
       initialRateCounter,
       pageComponent
     )
