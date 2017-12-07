@@ -49,6 +49,16 @@ nav .button:focus{
   border-color: White !important;
 }
 
+nav .dropdown-content {
+  background-color: transparent;
+}
+
+nav .dropdown-content .dropdown-item,
+nav .dropdown-content .dropdown-item:hover,
+nav .checkbox:hover {
+  color: inherit;
+}
+
 .inner-config .inner-config {
   position: relative;
   padding: .7em .5em;

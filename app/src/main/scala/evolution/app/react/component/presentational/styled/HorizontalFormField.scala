@@ -1,15 +1,21 @@
 package evolution.app.react.component.presentational.styled
 
-import japgolly.scalajs.react.ScalaComponent
+import japgolly.scalajs.react.{CtorType, ScalaComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
+case class HorizontalFormField(
+  label: String,
+  className: String,
+  element: VdomElement
+) {
+  def render = HorizontalFormField.component(this)
+}
+
 object HorizontalFormField {
 
-  case class Props(label: String, className: String, element: VdomElement)
-
   val component =
-    ScalaComponent.builder[Props]("Horizontal Input")
+    ScalaComponent.builder[HorizontalFormField]("Horizontal Input")
       .render_P { props =>
         <.div(
           ^.className := "field is-horizontal",

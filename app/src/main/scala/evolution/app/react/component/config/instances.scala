@@ -57,13 +57,11 @@ object instances {
     }
 
     ConfigComponent.instance("hlist config") { props =>
-      val headElement = FormField.component(FormField.Props(
-        fieldName,
-        "",
+      val headElement = FormField.component(FormField.Props(fieldName)) {
         <.div(
           hConfig.value(Props(props.config.head, hCallback(props), props.render))
         )
-      ))
+      }
 
       tConfigs(Props(props.config.tail, tCallback(props), prepend(headElement, props.render)))
     }
@@ -133,9 +131,7 @@ object instances {
           config.definition.configComponent
         val innerConfig: config.InnerConfig = config.config
 
-        val dropdown = FormField.component(FormField.Props(
-          "Drawing",
-          "",
+        val dropdown = FormField.component(FormField.Props("Drawing")) {
           <.div(
             drawingListComponent(
               DrawingList.Props(
@@ -150,7 +146,7 @@ object instances {
               )
             )
           )
-        ))
+        }
 
         val innerConfigComp = innerComponent(ConfigComponent.Props[config.InnerConfig](
           innerConfig,

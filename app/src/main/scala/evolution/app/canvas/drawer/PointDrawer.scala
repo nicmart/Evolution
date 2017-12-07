@@ -9,7 +9,7 @@ trait PointDrawer {
 
 final case class FillRectPointDrawer(size: Int) extends PointDrawer {
   @inline override def drawPoint(x: Double, y: Double, context: CanvasRenderingContext2D): Unit =
-    context.fillRect(x, y, 1, 1)
+    context.fillRect(x, y, size, size)
 }
 
 case class TorusPlaneDrawer(drawer: PointDrawer, drawingContext: DrawingContext) extends PointDrawer {

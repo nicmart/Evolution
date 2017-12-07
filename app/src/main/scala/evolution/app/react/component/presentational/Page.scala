@@ -6,7 +6,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.DrawingConfig
-import evolution.app.react.component.control.PlayToggle
+import evolution.app.react.component.control.{PlayToggle, RenderingSettings}
 import evolution.app.react.component.presentational.styled.HorizontalFormField
 import evolution.geometry.Point
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
@@ -30,8 +30,8 @@ object Page {
     pointRate: Int,
     onRunningToggleChange: Boolean => Callback,
     onConfigChange: C => Callback,
+    onRendererChange: RendererState => Callback,
     onRefresh: Callback,
-    onIterationsChange: Int => Callback,
     onFrameDraw: Callback
   ) {
     def canvasKey = (rendererState, drawingState, drawingContext).hashCode().toString
@@ -67,12 +67,11 @@ object Page {
             )
           ),
           <.div(
-            ^.className := "navbar-item is-hidden-touch", HorizontalFormField.component(HorizontalFormField.Props(
-              "Iterations",
-              "",
-              IntInputComponent(props.rendererState.iterations, props.onIterationsChange)
-            )
-            )
+            ^.className := "navbar-item is-hidden-touch",
+            RenderingSettings(
+              props.rendererState,
+              props.onRendererChange
+            ).render
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(^.className := "navbar-item",

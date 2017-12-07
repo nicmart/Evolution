@@ -57,22 +57,15 @@ object App {
         state.pointRateCounter.rate.toInt,
         onRunningToggleChange,
         onConfigChange(props),
+        props.withRenderingState(_).hasChanged,
         refresh(props),
-        onIterationsChanged(props),
         onRateCountUpdate(props)
       ))
     }
 
     private[App] def key(p: Props[C], s: State[C]): Int =
-      ( p.pageState.drawingState,
-        s.pointRateCounter.rate,
-        p.pageState.rendererState.iterations,
-        s.running
-      ).hashCode()
+      (s.pointRateCounter.rate, p.pageState, s.running).hashCode()
 
-    private[App] def onIterationsChanged(props: Props[C])(value: Int): Callback = {
-      props.withRenderingState(props.pageState.rendererState.copy(iterations = value)).hasChanged
-    }
 
     private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
       props.withDrawingState(
