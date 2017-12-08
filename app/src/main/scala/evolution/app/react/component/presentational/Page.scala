@@ -65,10 +65,7 @@ object Page {
           ),
           <.div(
             ^.className := "navbar-item is-hidden-touch",
-            RenderingSettings(
-              props.rendererState.value,
-              props.rendererState.setState
-            ).render
+            RenderingSettings.component(props.rendererState)
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(^.className := "navbar-item",
