@@ -45,18 +45,12 @@ object RenderingSettings {
             ),
             <.div(^.className := "dropdown-item",
               FormField.component(FormField.Props("Stroke size")) {
-                IntInputComponent(
-                  strokeSize(props).value,
-                  strokeSize(props).setState
-                )
+                IntInputComponent.component(strokeSize(props))
               }
             ),
             <.div(^.className := "dropdown-item",
               FormField.component(FormField.Props("Points per frame")) {
-                IntInputComponent(
-                  iterations(props).value,
-                  iterations(props).setState
-                )
+                IntInputComponent.component(iterations(props))
               }
             ),
             <.div(^.className := "dropdown-item",
@@ -71,10 +65,7 @@ object RenderingSettings {
             ),
             <.div(^.className := "dropdown-item",
               FormField.component(FormField.Props("Trail opacity")) {
-                DoubleInputComponent(
-                  props.value.trail.opacity,
-                  trailOpacity(props).setState
-                )
+                DoubleInputComponent.component(trailOpacity(props))
               }
             )
           )

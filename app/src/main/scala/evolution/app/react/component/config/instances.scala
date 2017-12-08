@@ -11,6 +11,7 @@ import shapeless.labelled.FieldType
 import shapeless.{::, HList, HNil, LabelledGeneric, Lazy, Witness, labelled}
 import io.circe.syntax._
 import io.circe.generic.auto._
+import japgolly.scalajs.react.extra.StateSnapshot
 
 object instances {
   import ConfigComponent._
@@ -20,12 +21,12 @@ object instances {
 
   implicit val doubleConfig: ConfigComponent[Double] =
     instance[Double]("double config") {
-      props => DoubleInputComponent(props.config, props.callback)
+      props => DoubleInputComponent.component(StateSnapshot(props.config)(props.callback))
     }
 
   implicit val intConfig: ConfigComponent[Int] =
     instance[Int]("int config") {
-      props => IntInputComponent(props.config, props.callback)
+      props => IntInputComponent.component(StateSnapshot(props.config)(props.callback))
     }
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
