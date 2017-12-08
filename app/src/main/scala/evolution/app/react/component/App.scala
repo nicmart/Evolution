@@ -1,6 +1,5 @@
 package evolution.app.react.component
 
-import evolution.app.canvas.drawer.{BaseFrameDrawer, FrameDrawer}
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
@@ -11,87 +10,51 @@ import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import org.scalajs.dom
 import evolution.geometry.Point
 import evolution.app.model.state.{DrawingState, RendererState}
-import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState}
-import japgolly.scalajs.react.extra.router.RouterCtl
-import org.scalajs.dom.raw.UIEvent
+import evolution.app.react.pages._
+import japgolly.scalajs.react.extra.StateSnapshot
 
-import scala.util.Random
 
 object App {
 
-  type ReactComponent[C] = Component[Props[C], State[C], Backend[C], CtorType.Props]
+  type ReactComponent[C] = Component[StateSnapshot[PageState[C]], State[C], Backend[C], CtorType.Props]
 
   case class State[C](
     drawingContext: DrawingContext,
     pointRateCounter: RateCounter,
     running: Boolean
-  ) {
-    def play: State[C] = copy(running = true)
-    def stop: State[C] = copy(running = false)
-    def toggle: State[C] = copy(running = !running)
-  }
-
-  case class Props[C](
-    pageState: PageState[C],
-    onPageStateChange: PageState[C] => Callback
-  ) {
-    def hasChanged: Callback = onPageStateChange(pageState)
-    def withDrawingState(drawingState: DrawingState[C]): Props[C] =
-      copy(pageState.copy(drawingState = drawingState))
-    def withRenderingState(rendererState: RendererState): Props[C] =
-      copy(pageState.copy(rendererState = rendererState))
-  }
+  )
 
   class Backend[C](
     points: (DrawingContext, DrawingState[C]) => Stream[Point],
     canvasInitializer: dom.html.Canvas => Unit,
     pageComponent: Page.ReactComponent[C]
-  )(bs: BackendScope[Props[C], State[C]]) {
-    def render(props: Props[C], state: State[C]): VdomElement = {
+  )(bs: BackendScope[StateSnapshot[PageState[C]], State[C]]) {
+    def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State[C]): VdomElement = {
+      val stateSnapshot = StateSnapshot(state)(s => bs.setState(s))
+      val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(drawingState => pageState => pageState.copy(drawingState = drawingState))
+      val configStateSnapshot = drawingStateSnapshot.zoomState(_.config)(config => drawingState => drawingState.copy(config = config).withNewSeed)
+      val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(renderingState => pageState => pageState.copy(rendererState = renderingState))
+
       pageComponent(Page.Props(
-        state.running,
+        stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
         state.drawingContext,
-        props.pageState.rendererState,
-        points(state.drawingContext, props.pageState.drawingState),
-        props.pageState.drawingState,
+        renderingStateSnapshot,
+        points(state.drawingContext, pageStateSnapshot.value.drawingState),
+        pageStateSnapshot.value.drawingState,
         state.pointRateCounter.rate.toInt,
-        onRunningToggleChange,
-        onConfigChange(props),
-        props.withRenderingState(_).hasChanged,
-        refresh(props),
-        onRateCountUpdate(props)
+        configStateSnapshot.setState,
+        drawingStateSnapshot.modState(_.withNewSeed),
+        onRateCountUpdate(pageStateSnapshot.value.rendererState)
       ))
     }
 
-    private[App] def key(p: Props[C], s: State[C]): Int =
-      (s.pointRateCounter.rate, p.pageState, s.running).hashCode()
+    private[App] def key(p: PageState[C], s: State[C]): Int =
+      (s.pointRateCounter.rate, p, s.running).hashCode()
 
-
-    private def onConfigChange(props: Props[C])(drawingConfig: C): Callback = {
-      props.withDrawingState(
-        DrawingState(
-          Random.nextLong(),
-          drawingConfig
-        )
-      ).hasChanged >> bs.modState(state => state.play)
-    }
-
-    private def refresh(props: Props[C]): Callback = {
-      props.withDrawingState(
-        DrawingState(
-          Random.nextLong(),
-          props.pageState.drawingState.config
-        )
-      ).hasChanged >> bs.modState(state => state.play)
-    }
-
-    private def onRateCountUpdate(p: Props[C]): Callback =
+    private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
-        state.copy(pointRateCounter = state.pointRateCounter.count(p.pageState.rendererState.iterations))
+        state.copy(pointRateCounter = state.pointRateCounter.count(rendererState.iterations))
       }
-
-    private def onRunningToggleChange(isRunning: Boolean): Callback =
-      bs.modState { state => state.toggle }
 
     def onResize: Callback =
       bs.modState(s => s.copy(drawingContext = drawingContext))
@@ -113,13 +76,13 @@ object App {
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent[C]
   ) =
-    ScalaComponent.builder[Props[C]]("App")
+    ScalaComponent.builder[StateSnapshot[PageState[C]]]("App")
       .initialState(State[C](drawingContext, rateCounter, true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
         CallbackTo.pure {
-          s.backend.key(s.currentProps, s.currentState) != s.backend.key(s.nextProps, s.nextState)
+          s.backend.key(s.currentProps.value, s.currentState) != s.backend.key(s.nextProps.value, s.nextState)
         }
       }
       .componentDidMount(s => Callback { dom.window.addEventListener("resize", (_: Any) => s.backend.onResize.runNow()) })

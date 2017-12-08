@@ -2,7 +2,8 @@ package evolution.app.react.routing
 
 import evolution.app.codec.Codec
 import evolution.app.react.component.App
-import evolution.app.react.pages.{Home, LoadDrawingPage, MyPages, NotFound}
+import evolution.app.react.pages._
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
 import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, RouterConfig, RouterConfigDsl, StaticDsl}
 import japgolly.scalajs.react.vdom.html_<^._
@@ -53,10 +54,7 @@ class Routing[C](
     private def renderPage: LoadDrawingPage[C] => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         appComponent(
-          App.Props(
-            loadDrawingPage.state,
-            pageState => router.set(LoadDrawingPage(pageState))
-          )
+          StateSnapshot[PageState[C]](loadDrawingPage.state)(pageState => router.set(LoadDrawingPage(pageState)))
         )
       }
   }

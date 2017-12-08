@@ -11,6 +11,7 @@ import evolution.app.react.component.presentational.styled.HorizontalFormField
 import evolution.geometry.Point
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
@@ -22,19 +23,17 @@ object Page {
     Conf.canvasInitializer
 
   case class Props[C](
-    running: Boolean,
+    running: StateSnapshot[Boolean],
     drawingContext: DrawingContext,
-    rendererState: RendererState,
+    rendererState: StateSnapshot[RendererState],
     points: Stream[Point],
     drawingState: DrawingState[C],
     pointRate: Int,
-    onRunningToggleChange: Boolean => Callback,
     onConfigChange: C => Callback,
-    onRendererChange: RendererState => Callback,
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey = (rendererState, drawingState, drawingContext).hashCode().toString
+    def canvasKey = (rendererState.value, drawingState, drawingContext).hashCode().toString
   }
 
   class Backend[C](
@@ -57,7 +56,7 @@ object Page {
             ^.className := "navbar-item is-hidden-touch",
             <.div(
               ^.className := "buttons has-addons is-centered",
-              PlayToggle.component(PlayToggle.Props(props.running, props.onRunningToggleChange)),
+              PlayToggle.component(props.running),
               Button.component(props.onRefresh) {
                 <.span(
                   ^.className := "icon",
@@ -69,8 +68,8 @@ object Page {
           <.div(
             ^.className := "navbar-item is-hidden-touch",
             RenderingSettings(
-              props.rendererState,
-              props.onRendererChange
+              props.rendererState.value,
+              props.rendererState.setState
             ).render
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
@@ -83,10 +82,10 @@ object Page {
           canvasComponent.withKey(props.canvasKey)(Canvas.Props(
             props.drawingContext,
             canvasInitializer,
-            props.rendererState,
+            props.rendererState.value,
             props.points,
             props.onFrameDraw,
-            props.running
+            props.running.value
           )
           ),
           Sidebar.component(
