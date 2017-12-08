@@ -16,17 +16,19 @@ import japgolly.scalajs.react.extra.StateSnapshot
 object instances {
   import ConfigComponent._
 
+  val empty: VdomElement = <.div()
+
   implicit val unitConfig: ConfigComponent[Unit] =
-    instance("unit config")(props => props.render(Nil))
+    instance("unit config")((props, children) => <.div(children))
 
   implicit val doubleConfig: ConfigComponent[Double] =
     instance[Double]("double config") {
-      props => DoubleInputComponent.component(StateSnapshot(props.config)(props.callback))
+      (props, children) => DoubleInputComponent.component(props)
     }
 
   implicit val intConfig: ConfigComponent[Int] =
     instance[Int]("int config") {
-      props => IntInputComponent.component(StateSnapshot(props.config)(props.callback))
+      (props, children) => IntInputComponent.component(props)
     }
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
@@ -34,9 +36,9 @@ object instances {
 
   implicit def optConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Option[T]] =
     OptionalConfig(configComponent)
-//
+
   implicit val hnilConfig: ConfigComponent[HNil] =
-    instance[HNil]("hnil config")(props => props.render(Nil))
+    instance[HNil]("hnil config")((props, children) => <.div(children))
 
   implicit def hlistConfig[K <: Symbol, H, T <: HList](
     implicit
@@ -47,23 +49,13 @@ object instances {
 
     val fieldName = witness.value.name
 
-    def hCallback(props: Props[FieldType[K, H] :: T])(h: H): Callback = {
-      val hh: FieldType[K, H] = labelled.field[K](h)
-      props.callback(hh :: props.config.tail)
-    }
-
-    def tCallback(props: Props[FieldType[K, H] :: T])(t: T): Callback = {
-      props.callback(props.config.head :: t)
-    }
-
-    ConfigComponent.instance("hlist config") { props =>
+    ConfigComponent.instance("hlist config") { (props, children) =>
+      val hSnapshot = props.zoomState[H](_.head)(h => hlist => labelled.field[K](h) :: hlist.tail)
+      val tSnapshot = props.zoomState[T](_.tail)(t => hlist => hlist.head :: t)
       val headElement = FormField.component(FormField.Props(fieldName)) {
-        <.div(
-          hConfig.value(Props(props.config.head, hCallback(props), props.render))
-        )
+        hConfig.value(hSnapshot)()
       }
-
-      tConfigs(Props(props.config.tail, tCallback(props), prepend(headElement, props.render)))
+      tConfigs(tSnapshot)(children, headElement)
     }
   }
 
@@ -72,52 +64,33 @@ object instances {
     generic: LabelledGeneric.Aux[A, H],
     hConfig: Lazy[ConfigComponent[H]]
   ): ConfigComponent[A] = {
-    def callback(props: Props[A])(h: H): Callback = {
-      props.callback(generic.from(h))
+    ConfigComponent.instance("generic product config") { (props, children) =>
+      val aSnapshot = props.zoomState[H](a => generic.to(a))(h => a => generic.from(h))
+      hConfig.value(aSnapshot)(children)
     }
-
-    ConfigComponent.instance("generic product config") { props =>
-      hConfig.value(Props(generic.to(props.config), callback(props), props.render))
-    } }
+  }
 
   object SeqComponent {
     def apply[T](innerComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
-      instance[Seq[T]]("sequence config") { props =>
-        val configsWithIndex = props.config.toList.zipWithIndex
-        val render = configsWithIndex.foldLeft[List[VdomElement] => VdomElement](props.render) { (accRender, indexedConfig) =>
-          prepend(
-            innerComponent(
-              Props(
-                indexedConfig._1,
-                onChangeElement(props, indexedConfig._2),
-                props.render
-              )
-            ),
-            accRender
-          )
-        }
-        render(Nil)
+      instance[Seq[T]]("sequence config") { (props, children) =>
+        val components = for {
+            i <- props.value.indices
+            snapshot = tSnapshot(props)(i)
+            component = innerComponent(snapshot)()
+          } yield component
+        <.div(components.toTagMod)
       }
 
-    private def onChangeElement[T](props: Props[Seq[T]], index: Int)(t: T): Callback =
-      for {
-        newConfig <- CallbackTo {
-          props.config.updated(index, t)
-        }
-        _ <- props.callback(newConfig)
-      } yield ()
+    private def tSnapshot[T](props: StateSnapshot[Seq[T]])(index: Int): StateSnapshot[T] =
+      props.zoomState(_.apply(index))(t => ts => ts.updated(index, t))
   }
-//
+
   object OptionalConfig {
     def apply[T](component: ConfigComponent[T]): ConfigComponent[Option[T]] =
-      instance("optional config") { props =>
-        props.config.fold[VdomElement](props.render(Nil)) { t =>
-          component(Props(t, onChange(props), props.render))
-        }
+      instance("optional config") { (props, children) =>
+        def tSnapshot(t: T): StateSnapshot[T] = props.zoomState(_ => t)(tt => opt => Some(tt))
+        props.value.fold(empty)(t => component(tSnapshot(t))())
       }
-
-    private def onChange[T](props: Props[Option[T]])(t: T): Callback =
-      props.callback(Some(t))
   }
 
   object CompositeConfigComponent {
@@ -125,8 +98,8 @@ object instances {
     def apply[T](drawingList: DrawingListWithSelection[T]): ConfigComponent[CompositeDefinitionConfig[T]] = {
       val drawingListComponent = DrawingList.component[T]
 
-      instance("composite config component") { props =>
-        val config = props.config
+      instance("composite config component") { (props, children) =>
+        val config = props.value
         val innerComponent: ConfigComponent[config.InnerConfig] =
           config.definition.configComponent
         val innerConfig: config.InnerConfig = config.config
@@ -136,8 +109,8 @@ object instances {
             drawingListComponent(
               DrawingList.Props(
                 drawingList.list,
-                props.config.definition,
-                newDefinition => props.callback(
+                config.definition,
+                newDefinition => props.setState(
                   CompositeDefinitionConfig[T, newDefinition.Config](
                     newDefinition.initialConfig,
                     newDefinition
@@ -148,11 +121,10 @@ object instances {
           )
         }
 
-        val innerConfigComp = innerComponent(ConfigComponent.Props[config.InnerConfig](
-          innerConfig,
-          newInnerConfig => props.callback(CompositeDefinitionConfig(newInnerConfig, config.definition)),
-          list => <.div(list.toTagMod)
-        ))
+        val innerConfigComp = innerComponent(
+          StateSnapshot[config.InnerConfig](innerConfig)
+            (newInnerConfig => props.setState(CompositeDefinitionConfig(newInnerConfig, config.definition)))
+        )()
 
         <.div(^.className := "inner-config", dropdown, innerConfigComp)
       }

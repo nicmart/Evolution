@@ -85,11 +85,7 @@ object Page {
           )
           ),
           Sidebar.component(
-            drawingConfig(ConfigComponent.Props[C](
-              configState.value,
-              configState.setState,
-              elements => <.div(elements.toTagMod)
-            ))
+            drawingConfig(configState)()
           )
         )
       )

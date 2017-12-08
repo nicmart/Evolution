@@ -1,25 +1,17 @@
 package evolution.app.react.component.config
 
 import japgolly.scalajs.react
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.{Callback, PropsChildren}
 import japgolly.scalajs.react.vdom.VdomElement
 
 object ConfigComponent {
-  case class Props[Config](
-    config: Config,
-    callback: Config => Callback,
-    render: List[VdomElement] => VdomElement
-  )
 
-  def instance[C](name: String)(render: Props[C] => VdomElement): ConfigComponent[C] =
+  def instance[C](name: String)(render: (StateSnapshot[C], PropsChildren) => VdomElement): ConfigComponent[C] =
     react.ScalaComponent
-      .builder[Props[C]](name)
-      .stateless
-      .render_P(render)
+      .builder[StateSnapshot[C]](name)
+      .render_PC(render)
       .build
-
-  def prepend(head: VdomElement, render: List[VdomElement] => VdomElement)(tail: List[VdomElement]): VdomElement =
-    render(head :: tail)
 
   /**
     * Summoner method
