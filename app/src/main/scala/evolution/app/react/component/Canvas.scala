@@ -3,7 +3,6 @@ package evolution.app.react.component
 import evolution.app.canvas.drawer.{BaseFrameDrawer, FrameDrawer}
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
-import evolution.app.react.component.config.DrawingConfig.{Backend, Props}
 import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._

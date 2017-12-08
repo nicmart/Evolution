@@ -13,12 +13,11 @@ import io.circe.syntax._
 import io.circe.generic.auto._
 
 object instances {
-//
   import ConfigComponent._
-//
+
   implicit val unitConfig: ConfigComponent[Unit] =
     instance("unit config")(props => props.render(Nil))
-//
+
   implicit val doubleConfig: ConfigComponent[Double] =
     instance[Double]("double config") {
       props => DoubleInputComponent(props.config, props.callback)

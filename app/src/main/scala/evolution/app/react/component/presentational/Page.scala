@@ -1,13 +1,11 @@
 package evolution.app.react.component.presentational
 
-import evolution.app.canvas.drawer.BaseFrameDrawer
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.react.component.Canvas
-import evolution.app.react.component.config.DrawingConfig
+import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.control.{PlayToggle, RenderingSettings}
-import evolution.app.react.component.presentational.styled.HorizontalFormField
 import evolution.geometry.Point
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
@@ -37,7 +35,7 @@ object Page {
   }
 
   class Backend[C](
-    drawingConfig: DrawingConfig.ReactComponent[Long, Point, C],
+    drawingConfig: ConfigComponent[C],
     canvasComponent: Canvas.ReactComponent
   )(bs: BackendScope[Props[C], Unit]) {
     def render(props: Props[C]): VdomElement = {
@@ -89,11 +87,11 @@ object Page {
           )
           ),
           Sidebar.component(
-            drawingConfig(DrawingConfig.Props[Long, Point, C](
+            drawingConfig(ConfigComponent.Props[C](
               props.drawingState.config,
-              props.onConfigChange
-            )
-            )
+              props.onConfigChange,
+              elements => <.div(elements.toTagMod)
+            ))
           )
         )
       )
@@ -101,7 +99,7 @@ object Page {
   }
 
   def component[C](
-    drawingConfig: DrawingConfig.ReactComponent[Long, Point, C],
+    drawingConfig: ConfigComponent[C],
     canvasComponent: Canvas.ReactComponent
   ): Page.ReactComponent[C] =
     ScalaComponent

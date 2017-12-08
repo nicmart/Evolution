@@ -15,7 +15,6 @@ import evolution.app.canvas.drawer._
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
 import evolution.app.react.component.{App, Canvas}
-import evolution.app.react.component.config.DrawingConfig
 import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
 import japgolly.scalajs.react.extra.router.Router
@@ -94,7 +93,7 @@ object Conf {
           1000,
           1,
           TrailSettings(
-            true,
+            false,
             0.12
           ),
           TorusCanvas
@@ -105,8 +104,7 @@ object Conf {
   lazy val initialRateCounter: RateCounter =
     RateCounter.empty(1000)
 
-  lazy val drawingConfComponent =
-    DrawingConfig.component[Long, Point](drawingDefinition)
+  lazy val drawingConfComponent = drawingDefinition.configComponent
 
   lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Stream[Point] =
     (context, state) => materializer.materialize(state.seed, drawingDefinition.evolution(state.config, context))
