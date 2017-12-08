@@ -25,10 +25,10 @@ object oscillator extends DrawingDefinition[Point] {
   )
 
   def initialConfig = Config(
-    springConstant = 0.0004,
-    friction = 0.0004,
-    randomNoiseProbability = 0.1,
-    randomNoiseStrength = 0.0025
+    springConstant = 0.00001,
+    friction = 0.0001,
+    randomNoiseProbability = .001,
+    randomNoiseStrength = .1
   )
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {

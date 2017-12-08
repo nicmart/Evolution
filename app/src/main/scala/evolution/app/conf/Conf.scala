@@ -27,6 +27,8 @@ object Conf {
 
   lazy val drawings: List[DrawingDefinition[Point]] =
     List(
+      line,
+      circle,
       segments,
       brownian,
       brownianWithRandomJumps,
