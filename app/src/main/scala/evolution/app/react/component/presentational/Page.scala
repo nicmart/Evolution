@@ -25,13 +25,13 @@ object Page {
     drawingContext: DrawingContext,
     rendererState: StateSnapshot[RendererState],
     points: Stream[Point],
-    drawingState: DrawingState[C],
+    drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
-    onConfigChange: C => Callback,
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey = (rendererState.value, drawingState, drawingContext).hashCode().toString
+    def canvasKey: String =
+      (rendererState.value, drawingState.value, drawingContext).hashCode().toString
   }
 
   class Backend[C](
@@ -39,6 +39,7 @@ object Page {
     canvasComponent: Canvas.ReactComponent
   )(bs: BackendScope[Props[C], Unit]) {
     def render(props: Props[C]): VdomElement = {
+      val configState = props.drawingState.zoomState(_.config)(config => state => state.copy(config = config))
       <.div(
         Navbar.component(
           <.div(^.className := "navbar-item is-hidden-touch",
@@ -69,7 +70,7 @@ object Page {
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(^.className := "navbar-item",
-            <.span(^.className := "is-size-7", s"${props.drawingState.seed.toHexString}")
+            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")
           )
         ),
         <.div(
@@ -85,8 +86,8 @@ object Page {
           ),
           Sidebar.component(
             drawingConfig(ConfigComponent.Props[C](
-              props.drawingState.config,
-              props.onConfigChange,
+              configState.value,
+              configState.setState,
               elements => <.div(elements.toTagMod)
             ))
           )

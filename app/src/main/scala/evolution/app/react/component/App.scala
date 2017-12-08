@@ -32,7 +32,6 @@ object App {
     def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State[C]): VdomElement = {
       val stateSnapshot = StateSnapshot(state)(s => bs.setState(s))
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(drawingState => pageState => pageState.copy(drawingState = drawingState))
-      val configStateSnapshot = drawingStateSnapshot.zoomState(_.config)(config => drawingState => drawingState.copy(config = config).withNewSeed)
       val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(renderingState => pageState => pageState.copy(rendererState = renderingState))
 
       pageComponent(Page.Props(
@@ -40,9 +39,8 @@ object App {
         state.drawingContext,
         renderingStateSnapshot,
         points(state.drawingContext, pageStateSnapshot.value.drawingState),
-        pageStateSnapshot.value.drawingState,
+        drawingStateSnapshot,
         state.pointRateCounter.rate.toInt,
-        configStateSnapshot.setState,
         drawingStateSnapshot.modState(_.withNewSeed),
         onRateCountUpdate(pageStateSnapshot.value.rendererState)
       ))
