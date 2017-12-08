@@ -10,9 +10,9 @@ import scala.util.Try
 
 object SingleInput {
 
-  case class Props[T](value: T, onChange: T => Callback, parser: String => T)
+  case class Props[T](value: T, onChange: T => Callback)
 
-  class Backend[T](bs: BackendScope[Props[T], String]) {
+  class Backend[T](parser: String => T)(bs: BackendScope[Props[T], String]) {
     def render(props: Props[T], uiValue: String): VdomElement = {
       <.input(
         ^.`type` := "text",
@@ -29,26 +29,27 @@ object SingleInput {
     }
 
     private def safeParser(props: Props[T])(value: String): T = {
-      Try(props.parser(value)).getOrElse(props.value)
+      Try(parser(value)).getOrElse(props.value)
     }
   }
 
-  def component[T] = ScalaComponent.builder[Props[T]]("Single input")
+  def component[T](parser: String => T) = ScalaComponent.builder[Props[T]]("Single input")
     .initialStateFromProps(_.value.toString)
-    .renderBackend[Backend[T]]
+    .backend(s => new Backend(parser)(s))
+    .render(s => s.backend.render(s.props, s.state))
     .build
 }
 
 object IntInputComponent {
-  val component = SingleInput.component[Int]
+  val component = SingleInput.component[Int](_.toInt)
 
   def apply(value: Int, onChange: Int => Callback): VdomElement =
-    component(Props(value, onChange, _.toInt))
+    component(Props(value, onChange))
 }
 
 object DoubleInputComponent {
-  val component = SingleInput.component[Double]
+  val component = SingleInput.component[Double](_.toDouble)
 
   def apply(value: Double, onChange: Double => Callback): VdomElement =
-    component(Props(value, onChange, _.toDouble))
+    component(Props(value, onChange))
 }
