@@ -17,11 +17,3 @@ trait DrawingDefinition[T] {
 object DrawingDefinition {
   type Aux[T, C] = DrawingDefinition[T] { type Config = C }
 }
-
-final case class DrawingListWithSelection[T](
-  list: List[DrawingDefinition[T]],
-  current: DrawingDefinition[T]
-) {
-  def byName(name: String): DrawingDefinition[T] =
-    list.find(_.name == name).getOrElse(current)
-}

@@ -1,6 +1,6 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.{DrawingDefinition, DrawingListWithSelection}
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import evolution.algebra.materializer.{Materializer, RNGMaterializer}
@@ -12,6 +12,7 @@ import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState}
 import evolution.app.react.routing.Routing
 import cats.implicits._
 import evolution.app.canvas.drawer._
+import evolution.app.data.PointedSeq
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
 import evolution.app.react.component.{App, Canvas}
@@ -46,9 +47,9 @@ object Conf {
       oscillator
     )
 
-  lazy val innerDrawingList: DrawingListWithSelection[Point] =
-    DrawingListWithSelection(
-      drawings :+ new CompositeDrawingDefinition(DrawingListWithSelection(drawings, brownian)),
+  lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
+    PointedSeq(
+      drawings :+ new CompositeDrawingDefinition(PointedSeq(drawings, brownian)),
       brownian
     )
 
@@ -56,9 +57,6 @@ object Conf {
     new DrawingListDefinition(innerDrawingList)
 
   type DrawingConfig = drawingDefinition.Config
-
-  lazy val drawingList: DrawingListWithSelection[Point] =
-    DrawingListWithSelection(Nil, drawingDefinition)
 
   lazy val materializer: Materializer[Long] =
     RNGMaterializer(new RNGInterpreter)

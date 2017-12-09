@@ -1,6 +1,7 @@
 package evolution.app.model.definition
 
 import evolution.app.codec.JsonCodec
+import evolution.app.data.PointedSeq
 import io.circe.Json
 
 sealed trait CompositeDefinitionConfig[T] {
@@ -19,7 +20,7 @@ object CompositeDefinitionConfig {
       override def config: C = cfg
     }
 
-  def jsonCodec[T](drawingList: DrawingListWithSelection[T]): JsonCodec[CompositeDefinitionConfig[T]] =
+  def jsonCodec[T](drawingList: PointedSeq[DrawingDefinition[T]]): JsonCodec[CompositeDefinitionConfig[T]] =
     new JsonCodec[CompositeDefinitionConfig[T]] {
       override def encode(config: CompositeDefinitionConfig[T]): Json = Json.obj(
         "name" -> Json.fromString(config.definition.name),
@@ -29,7 +30,7 @@ object CompositeDefinitionConfig {
         val cursor = json.hcursor
         for {
           name <- cursor.downField("name").as[String].toOption
-          drawing = drawingList.byName(name)
+          drawing = drawingList.get(_.name == name)
           configJson <- cursor.downField("config").focus
           config <- drawing.configCodec.decode(configJson)
         } yield CompositeDefinitionConfig[T, drawing.Config](config, drawing)

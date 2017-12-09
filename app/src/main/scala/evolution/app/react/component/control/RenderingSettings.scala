@@ -1,5 +1,6 @@
 package evolution.app.react.component.control
 
+import evolution.app.data.PointedSeq
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Select.Item
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, Select}
@@ -32,15 +33,7 @@ object RenderingSettings {
           <.div(^.className := "dropdown-content",
             <.div(^.className := "dropdown-item",
               FormField.component(FormField.Props("Off-canvas strategy")) {
-                offCanvasSettingComponent(Select.Props[OffCanvasStrategy](
-                  List(
-                    Item("Infinite", InfiniteCanvas.toString, InfiniteCanvas),
-                    Item("Torus", TorusCanvas.toString, TorusCanvas),
-                    Item("Projective", RealProjectivePlane.toString, RealProjectivePlane)
-                  ),
-                  Item("", props.value.offCanvasSettings.toString, props.value.offCanvasSettings),
-                  offCanvasSettings(props).setState.compose(_.value)
-                ))
+                offCanvasSettingComponent(offCanvasStrategyItems(props))
               }
             ),
             <.div(^.className := "dropdown-item",
@@ -90,6 +83,18 @@ object RenderingSettings {
 
     private def offCanvasSettings(s: StateSnapshot[RendererState]): StateSnapshot[OffCanvasStrategy] =
       s.zoomState(_.offCanvasSettings)(settings => state => state.copy(offCanvasSettings = settings))
+
+    private def offCanvasStrategyItems(s: StateSnapshot[RendererState]): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
+      def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
+        PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))
+      offCanvasSettings(s).xmapState[PointedSeq[Item[OffCanvasStrategy]]](strategyToPointedSeq)(_.selected.value)
+    }
+    private val offCanvasStrategies: Seq[Item[OffCanvasStrategy]] =
+      List(
+        Item("Infinite", InfiniteCanvas.toString, InfiniteCanvas),
+        Item("Torus", TorusCanvas.toString, TorusCanvas),
+        Item("Projective", RealProjectivePlane.toString, RealProjectivePlane)
+      )
   }
 
   val component = ScalaComponent

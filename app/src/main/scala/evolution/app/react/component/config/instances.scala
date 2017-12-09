@@ -1,6 +1,7 @@
 package evolution.app.react.component.config
 
-import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingListWithSelection}
+import evolution.app.data.PointedSeq
+import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
 import evolution.app.react.component.DrawingList
 import evolution.app.react.component.presentational.styled.FormField
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
@@ -95,7 +96,7 @@ object instances {
 
   object CompositeConfigComponent {
 
-    def apply[T](drawingList: DrawingListWithSelection[T]): ConfigComponent[CompositeDefinitionConfig[T]] = {
+    def apply[T](drawings: PointedSeq[DrawingDefinition[T]]): ConfigComponent[CompositeDefinitionConfig[T]] = {
       val drawingListComponent = DrawingList.component[T]
 
       instance("composite config component") { (props, children) =>
@@ -107,16 +108,12 @@ object instances {
         val dropdown = FormField.component(FormField.Props("Drawing")) {
           <.div(
             drawingListComponent(
-              DrawingList.Props(
-                drawingList.list,
-                config.definition,
-                newDefinition => props.setState(
-                  CompositeDefinitionConfig[T, newDefinition.Config](
-                    newDefinition.initialConfig,
-                    newDefinition
-                  )
+              props.zoomState(cfg => drawings.select(cfg.definition)) {
+                drawings => cfg => CompositeDefinitionConfig[T, drawings.selected.Config](
+                  drawings.selected.initialConfig,
+                  drawings.selected
                 )
-              )
+              }
             )
           )
         }

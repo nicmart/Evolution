@@ -4,16 +4,17 @@ import evolution.algebra
 import evolution.algebra.Evolution
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition, DrawingListWithSelection}
+import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.app.codec.JsonCodec._
+import evolution.app.data.PointedSeq
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 
 class CompositeDrawingDefinition(
-  drawings: DrawingListWithSelection[Point]
+  drawings: PointedSeq[DrawingDefinition[Point]]
 ) extends DrawingDefinition[Point] {
 
     val name = "combined drawings"
@@ -25,8 +26,8 @@ class CompositeDrawingDefinition(
 
     override def initialConfig =
       Config(
-        CompositeDefinitionConfig(drawings.current.initialConfig, drawings.current),
-        CompositeDefinitionConfig(drawings.current.initialConfig, drawings.current)
+        CompositeDefinitionConfig(drawings.selected.initialConfig, drawings.selected),
+        CompositeDefinitionConfig(drawings.selected.initialConfig, drawings.selected)
       )
 
     class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
