@@ -29,10 +29,8 @@ object brownian extends DrawingDefinition[Point] {
 
         val start: Evo[Point] = rectangle2D(config.radius)
 
-        centeredIn(context.canvasSize.point / 2) {
-          (1 to order).foldLeft[Evo[Point]](start) { (evoSoFar, _) =>
-            solveIndependent(Point.zero)(evoSoFar).positional
-          }
+        (1 to order).foldLeft[Evo[Point]](start) { (evoSoFar, _) =>
+          solveIndependent(Point.zero)(evoSoFar).positional
         }
       }
     }

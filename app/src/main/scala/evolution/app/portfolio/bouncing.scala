@@ -28,7 +28,7 @@ object bouncing extends DrawingDefinition[Point] {
   def initialConfig =
     Config(
       groundLevel = 100,
-      gravity = 0.000001,
+      gravity = -0.000001,
       elasticity = 0.000001,
       friction = 0.0001,
       horizontalSpeed = 0.003
@@ -38,7 +38,7 @@ object bouncing extends DrawingDefinition[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       val canvasSize = context.canvasSize.point
-      val ground = canvasSize.y - config.groundLevel
+      val ground = config.groundLevel + context.bottom
 
       val gravityField: Evo[AccelerationLaw[Double]] = constant {
         (_, _) => config.gravity
@@ -46,7 +46,7 @@ object bouncing extends DrawingDefinition[Point] {
 
       val elasticGround: Evo[AccelerationLaw[Double]] = constant {
         (y, vel) =>
-          if (y > ground) {
+          if (y < ground) {
             (ground - y) * config.elasticity + config.gravity - config.friction * vel
           }
           else 0
@@ -54,8 +54,8 @@ object bouncing extends DrawingDefinition[Point] {
 
       val law = gravityField + elasticGround
 
-      val xEv = solveIndependentStatic(0.0)(config.horizontalSpeed).positional
-      val yEv = solve2(0.0, 0.0) {
+      val xEv = solveIndependentStatic(context.left)(config.horizontalSpeed).positional
+      val yEv = solve2(context.top, 0.0) {
         law
       }.positional
 

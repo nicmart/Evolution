@@ -84,9 +84,7 @@ object nBodies extends DrawingDefinition[Point] {
       val fieldGens: IndexedSeq[FieldGen] = IndexedSeq(fieldGen(gravityConstant, mass1), fieldGen(gravityConstant, mass2))
       val evo: Evo[IndexedSeq[(Position[Point], Velocity[Point])]] = solve2Multi(start, fieldGens)
 
-      centeredIn(context.canvasSize.point / 2) {
-        evo.map(_.toList).flattenList.positional
-      }
+      evo.map(_.toList).flattenList.positional
     }
   }
 

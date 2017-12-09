@@ -30,7 +30,7 @@ object brownianWithRandomJumps extends DrawingDefinition[Point] {
         val slowDownEvo = double.map[Int] { d =>
           if (d < config.jumpProbability) config.jumpSize else 1
         }
-        solveIndependent(context.canvasSize.point / 2)(
+        solveIndependent(Point.zero)(
           rectangle2D(config.radius).slowDownBy(slowDownEvo)
         ).positional
       }

@@ -32,7 +32,7 @@ object brownianStraight extends DrawingDefinition[Point] {
     import config._
     override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
       import alg._
-        solveIndependent(context.canvasSize.point / 2) {
+        solveIndependent(Point.zero) {
           choose(Point.regularPolygon(config.n))
             .slowDownBy(intBetween(minLength, maxLength))
         }.positional.rotate(

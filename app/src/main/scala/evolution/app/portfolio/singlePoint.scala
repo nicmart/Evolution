@@ -20,8 +20,7 @@ object singlePoint extends DrawingDefinition[Point] {
   class ThisEvolution(config: Unit, context: DrawingContext) extends Evolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
-      //constant(Point.zero)
-      int.map(n => Point(n, n))
+      constant(Point.zero)
     }
   }
 

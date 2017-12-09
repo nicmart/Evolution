@@ -27,9 +27,7 @@ object circle extends DrawingDefinition[Point] {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
-        centeredIn(context.canvasSize.point / 2) {
-          polar(constant(config.radius), progression(config.omega, config.phase))
-        }
+        polar(constant(config.radius), progression(config.omega, config.phase))
       }
     }
   }

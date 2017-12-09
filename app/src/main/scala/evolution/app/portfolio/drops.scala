@@ -29,7 +29,7 @@ object drops extends DrawingDefinition[Point] {
   override def initialConfig: Config =
     Config(
       friction = 0.02,
-      acceleration = 0.003,
+      acceleration = -0.003,
       threshold = 0.1,
       randomForceProbability = 0.01,
       randomForceStrength = 0.1,
@@ -59,8 +59,8 @@ object drops extends DrawingDefinition[Point] {
       sequenceParallel(
         Queue.apply(Point.sequence(
           numberOfDrops,
-          context.canvasSize.point.copy(y = 0),
-          Point(0, 0)
+          Point(context.right, context.top),
+          Point(context.left, context.top)
         ).map(pointEvo): _*)
       )
     }

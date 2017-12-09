@@ -39,13 +39,11 @@ object primes extends DrawingDefinition[Point] {
 
       val start = (context.canvasSize.point - Point(config.size, config.size)) / 2
 
-      centeredIn(start) {
-        val integers = intBetween(0, mod)
-        val value = integers
-          .zipWith(integers)((n, m) => (config.p * n + config.q * m) % mod)
-          .map(n => config.size.toDouble * n / mod)
-        cartesian(value, value)
-      }
+      val integers = intBetween(0, mod)
+      val value = integers
+        .zipWith(integers)((n, m) => (config.p * n + config.q * m) % mod)
+        .map(n => config.size.toDouble * n / mod)
+      cartesian(value, value)
     }
   }
 

@@ -33,13 +33,11 @@ object lissajous extends DrawingDefinition[Point] {
         val radiants = (delta / 360) * 2 * Math.PI
         val size = Math.min(context.canvasSize.height, context.canvasSize.width) * 0.4
 
-        centeredIn(context.canvasSize.point / 2) {
-          progression(speed).map { t =>
-            Point(
-              Math.sin(a * t + radiants),
-              Math.sin(b * t)
-            ) * size
-          }
+        progression(speed).map { t =>
+          Point(
+            Math.sin(a * t + radiants),
+            Math.sin(b * t)
+          ) * size
         }
       }
     }

@@ -51,16 +51,14 @@ object dynamicRotation extends DrawingDefinition[Point] {
         Point.polar(normSpeed * t, t)
       })
 
-      centeredIn(context.canvasSize.point / 2) {
-        drawOnEvolution(
-          toPhaseSpace(drawOnEvolution(
-            spiral,
-            vibration(omega, amplitude)
-          )
-          ),
-          vibration(omega2, amplitude2)
+      drawOnEvolution(
+        toPhaseSpace(drawOnEvolution(
+          spiral,
+          vibration(omega, amplitude)
         )
-      }
+        ),
+        vibration(omega2, amplitude2)
+      )
     }
   }
 

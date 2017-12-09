@@ -25,9 +25,7 @@ object line extends DrawingDefinition[Point] {
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
-        centeredIn(context.canvasSize.point / 2) {
-          solveIndependentStatic(Point.zero)(Point(config.speed, 0)).positional
-        }
+        solveIndependentStatic(Point.zero)(Point(config.speed, 0)).positional
       }
     }
   }

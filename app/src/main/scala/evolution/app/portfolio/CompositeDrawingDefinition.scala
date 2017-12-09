@@ -33,18 +33,9 @@ class CompositeDrawingDefinition(
     class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
         import alg._
-        centeredIn(- context.canvasSize.point / 2) {
-          translate(
-            config.drawing1.definition.evolution(config.drawing1.config, context).run,
-            config.drawing2.definition.evolution(config.drawing2.config, context).run
-          )
-        }
-
         drawOnEvolution(
           toPhaseSpace(config.drawing1.definition.evolution(config.drawing1.config, context).run),
-          centeredIn(- context.canvasSize.point / 2) {
-            config.drawing2.definition.evolution(config.drawing2.config, context).run
-          }
+          config.drawing2.definition.evolution(config.drawing2.config, context).run
         )
       }
     }

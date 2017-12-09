@@ -42,7 +42,7 @@ object segments extends DrawingDefinition[Point] {
           }
         }
 
-        solve2((context.canvasSize.point / 2).copy(x = 0), Point(startingSpeed, 0))(
+        solve2(Point(context.left, 0), Point(startingSpeed, 0))(
           accelerationEvolution
         ).flatMap { case (position, velocity) =>
           val rotatedVel = velocity.rotate(Math.PI / 2)

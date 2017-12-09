@@ -42,6 +42,7 @@ object RendererStateToFrameDrawer {
   def apply(f: (RendererState, DrawingContext) => PointDrawer)(state: RendererState, drawingContext: DrawingContext): FrameDrawer = {
     state.trail.decorate(
       BaseFrameDrawer(
+        drawingContext,
         state.iterations,
         f(state, drawingContext)
       ),

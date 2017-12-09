@@ -62,8 +62,8 @@ object waves extends DrawingDefinition[Point] {
           Queue(
             Point.sequence(
               config.numberOfWaves,
-              Point.zero,
-              context.canvasSize.point.copy(x = 0)
+              Point(context.left, context.top),
+              Point(context.left, context.bottom)
             ).map(wave): _*
           )
         )

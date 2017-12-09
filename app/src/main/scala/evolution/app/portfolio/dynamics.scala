@@ -39,7 +39,7 @@ object dynamics extends DrawingDefinition[Point] {
           (_, velocity) =>
             randomAcc - velocity * friction
         }
-      val singleEvo = solve2(context.canvasSize.point / 2, Point(0, 0))(
+      val singleEvo = solve2(Point.zero, Point.zero)(
         accelerationEvolution
       ).positional
 

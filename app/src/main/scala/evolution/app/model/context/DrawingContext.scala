@@ -4,7 +4,12 @@ import evolution.geometry.Point
 
 final case class DrawingContext(
   canvasSize: DrawingContext.CanvasSize
-)
+) {
+  def right: Double = canvasSize.width / 2
+  def top: Double = canvasSize.height / 2
+  def left: Double = -right
+  def bottom: Double = -top
+}
 
 object DrawingContext {
 

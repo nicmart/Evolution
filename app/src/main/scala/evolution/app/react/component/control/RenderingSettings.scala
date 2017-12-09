@@ -87,7 +87,7 @@ object RenderingSettings {
     private def offCanvasStrategyItems(s: StateSnapshot[RendererState]): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
       def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
         PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))
-      offCanvasSettings(s).xmapState[PointedSeq[Item[OffCanvasStrategy]]](strategyToPointedSeq)(_.selected.value)
+      offCanvasSettings(s).xmapState(strategyToPointedSeq)(_.selected.value)
     }
     private val offCanvasStrategies: Seq[Item[OffCanvasStrategy]] =
       List(
