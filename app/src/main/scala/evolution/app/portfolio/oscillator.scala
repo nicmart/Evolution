@@ -56,9 +56,7 @@ object oscillator extends DrawingDefinition[Point] {
             }
           }
 
-        centeredIn(context.canvasSize.point / 2) {
-          solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
-        }
+        solve2[Point](Point.zero, Point.zero)(accelerationEvo2).positional
       }
     }
   }
