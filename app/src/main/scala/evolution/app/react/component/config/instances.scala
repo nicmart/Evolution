@@ -2,7 +2,7 @@ package evolution.app.react.component.config
 
 import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingListWithSelection}
 import evolution.app.react.component.DrawingList
-import evolution.app.react.component.presentational.styled.{FormField, HorizontalFormField}
+import evolution.app.react.component.presentational.styled.FormField
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
