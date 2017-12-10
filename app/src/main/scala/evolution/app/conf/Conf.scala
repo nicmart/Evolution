@@ -26,9 +26,8 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawings: List[DrawingDefinition[Point]] =
-    List(
-      line,
+  lazy val drawings: Stream[DrawingDefinition[Point]] =
+    line #:: Stream(
       circle,
       segments,
       brownian,
@@ -44,12 +43,13 @@ object Conf {
       nBodies,
       bouncing,
       lissajous,
-      oscillator
+      oscillator,
+      new CompositeDrawingDefinition(PointedSeq(drawings, brownian))
     )
 
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
     PointedSeq(
-      drawings :+ new CompositeDrawingDefinition(PointedSeq(drawings, brownian)),
+      drawings,
       brownian
     )
 
