@@ -1,10 +1,12 @@
 package evolution.server
 
+import akka.Done
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
+import scala.concurrent.{Future, Promise}
 import scala.io.StdIn
 
 object WebServer {
@@ -31,10 +33,22 @@ object WebServer {
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", port)
 
-    println(s"Server online at http://localhost:$port/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    def shutdown = {
+      val promise = Promise[Done]()
+      sys.addShutdownHook {
+        promise.success(Done)
+      }
+      Future {
+        if (StdIn.readLine(s"Server online at http://localhost:$port/\nPress RETURN to stop...") != null)
+          promise.success(Done)
+      }
+      promise.future
+    }
+
+    shutdown.onComplete { _ =>
+      bindingFuture
+        .flatMap(_.unbind()) // trigger unbinding from the port
+        .onComplete(_ => system.terminate()) // and shutdown when done
+    }
   }
 }

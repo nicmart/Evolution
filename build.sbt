@@ -58,11 +58,11 @@ lazy val server = (project in file("server")).settings(
   scalaJSProjects := Seq(jsApp),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-http" % "10.0.10"
+    "com.typesafe.akka" %% "akka-http" % "10.0.11"
   ),
   (managedClasspath in Runtime) += (packageBin in Assets).value,
   packagePrefix in Assets := "public/",
-  compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value
+  compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value
 ).enablePlugins(SbtWeb)
 
 // Needed, so sbt finds the projects
