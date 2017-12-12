@@ -16,7 +16,8 @@ lazy val core = crossProject.
             "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
             "org.typelevel" %%% "cats" % "0.9.0",
             "com.chuusai" %%% "shapeless" % "2.3.2",
-            "org.scalacheck" %%% "scalacheck" % "1.13.4" % Test
+            "org.scalacheck" %%% "scalacheck" % "1.13.4" % Test,
+            "com.lihaoyi" %%% "fastparse" % "1.0.0"
         )
     ).
     jvmSettings(
