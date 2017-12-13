@@ -2,7 +2,7 @@ import WebKeys._
 
 lazy val commonSettings = List(
     organization := "nicmart",
-    scalaVersion := "2.12.1",
+    scalaVersion := "2.12.4",
     version      := "0.1.0-SNAPSHOT"
 )
 
