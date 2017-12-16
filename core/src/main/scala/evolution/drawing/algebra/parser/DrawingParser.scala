@@ -24,12 +24,11 @@ object DrawingParser {
       P((floatDigits | digit.rep(1)).!.map(_.toDouble))
     val point: Parser[Point] =
       P("point(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Point(x, y) }
+    def literal[T: DrawingAlgebra.Type]: Parser[T] =
+      DrawingAlgebra.typeInstance[T].foldT(double, point)
 
-    val constPoint: Parser[Drawing[Point]] =
-      point.map(Builder.const[Point])
-
-    val constDouble: Parser[Drawing[Double]] =
-      double.map(Builder.const[Double])
+    def const[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
+      literal[T].map(t => Builder.const[T](t))
 
     val cartesian: Parser[Drawing[Point]] =
       P("cartesian(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.cartesian(x, y)}
@@ -40,23 +39,23 @@ object DrawingParser {
     val rnd: Parser[Drawing[Double]] =
       P("rnd(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Builder.rnd(x, y) }
 
-    val integrateDouble: Parser[Drawing[Double]] =
-      P("integrate(" ~ double ~ "," ~ doubleDrawing ~ ")").map { case (start, f) => Builder.integrate(start, f) }
+    def integrate[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
+      P("integrate(" ~ literal[T] ~ "," ~ drawing[T] ~ ")").map { case (s, f) => Builder.integrate(s, f)}
 
-    val integratePoint: Parser[Drawing[Point]] =
-      P("integrate(" ~ point ~ "," ~ pointDrawing ~ ")").map { case (start, f) => Builder.integrate(start, f) }
-
-    val deriveDouble: Parser[Drawing[Double]] =
-      P("derive(" ~ doubleDrawing ~ ")").map { f => Builder.derive(f) }
-
-    val derivePoint: Parser[Drawing[Point]] =
-      P("derive(" ~ pointDrawing ~ ")").map { f => Builder.derive(f) }
+    def derive[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
+      P("derive(" ~ drawing[T] ~ ")").map { f => Builder.derive(f)}
 
     lazy val doubleDrawing: Parser[Drawing[Double]] =
-      P(constDouble | rnd | integrateDouble | deriveDouble)
+      P(const[Double] | rnd | integrate[Double] | derive[Double])
 
     lazy val pointDrawing: Parser[Drawing[Point]] =
-      P(cartesian | polar | constPoint | integratePoint | derivePoint)
+      P(cartesian | polar | const[Point] | integrate[Point] | derive[Point])
+
+    def drawing[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
+      DrawingAlgebra.typeInstance[T].foldT[({type L[A] = Parser[Drawing[A]]})#L](
+        doubleDrawing,
+        pointDrawing
+      )
   }
 
   implicit object DoubleDrawingParser extends DrawingParser[Double] {
