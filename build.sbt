@@ -11,7 +11,6 @@ lazy val core = crossProject.
     in(file("core")).
     settings(
         inThisBuild(commonSettings),
-        name := "test", // default name would be p1
         libraryDependencies ++= Seq(
             "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
             "org.typelevel" %%% "cats" % "0.9.0",
@@ -31,7 +30,6 @@ lazy val jsApp = project.
     .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
     .settings(
         inThisBuild(commonSettings),
-        name := "jsApp",
         version      := "0.1.0-SNAPSHOT",
         libraryDependencies ++= Seq(
             "org.scala-js" %%% "scalajs-dom" % "0.9.2",

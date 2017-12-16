@@ -9,11 +9,6 @@ object Builder extends DrawingAlgebra[Drawing] {
       alg.rnd(from, to)
   }
 
-  override def const(x: Double): Drawing[Double] = new Drawing[Double] {
-    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Double] =
-      alg.const(x)
-  }
-
   override def cartesian(x: Drawing[Double], y: Drawing[Double]): Drawing[Point] = new Drawing[Point] {
     override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Point] =
       alg.cartesian(x.run(alg), y.run(alg))
@@ -24,23 +19,16 @@ object Builder extends DrawingAlgebra[Drawing] {
       alg.polar(r.run(alg), w.run(alg))
   }
 
-  override def integrateDouble(start: Double, f: Drawing[Double]): Drawing[Double] = new Drawing[Double] {
-    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Double] =
-      alg.integrateDouble(start, f.run(alg))
+  override def const[T: DrawingAlgebra.Type](x: T): Drawing[T] = new Drawing[T] {
+    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[T] =
+      alg.const(x)
   }
-
-  override def integratePoint(start: Point, f: Drawing[Point]): Drawing[Point] = new Drawing[Point] {
-    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Point] =
-      alg.integratePoint(start, f.run(alg))
+  override def integrate[T: DrawingAlgebra.Type](start: T, f: Drawing[T]): Drawing[T] = new Drawing[T] {
+    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[T] =
+      alg.integrate(start, f.run(alg))
   }
-
-  override def deriveDouble(f: Drawing[Double]): Drawing[Double] = new Drawing[Double] {
-    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Double] =
-      alg.deriveDouble(f.run(alg))
-  }
-
-  override def derivePoint(f: Drawing[Point]): Drawing[Point] = new Drawing[Point] {
-    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Point] =
-      alg.derivePoint(f.run(alg))
+  override def derive[T: DrawingAlgebra.Type](f: Drawing[T]): Drawing[T] = new Drawing[T] {
+    override def run[F[+ _]](alg: DrawingAlgebra[F]): F[T] =
+      alg.derive(f.run(alg))
   }
 }

@@ -22,38 +22,38 @@ class ParserSpec
       assertParse("rnd(.1,1.001)", rnd(0.1, 1.001))
     }
     "parse a const expression" in {
-      assertParse("const(0.1)", const(0.1))
-      assertParse("const(.1)", const(0.1))
+      assertParse("0.1", const(0.1))
+      assertParse(".1", const(0.1))
       assertParse(".123", const(0.123))
     }
-    "parse an integrateDouble expression" in {
-      assertParse("integrateDouble(.1,.1)", integrateDouble(.1, const(0.1)))
+    "parse an integrate of a double expression" in {
+      assertParse("integrate(.1,.1)", integrate(.1, const(0.1)))
       assertParse(
-        "integrateDouble(.1,integrateDouble(0,const(.1)))",
-        integrateDouble(.1, integrateDouble(0, const(0.1)))
+        "integrate(.1,integrate(0,.1))",
+        integrate(.1, integrate(0.0, const(0.1)))
       )
     }
-    "parse a deriveDouble expression" in {
-      assertParse("deriveDouble(1)", deriveDouble(const(1)))
+    "parse a derive Double expression" in {
+      assertParse("derive(1)", derive(const(1.0)))
     }
-    "parse an integratePoint expression" in {
-      assertParse("integratePoint(point(0,0),point(1,1))", integratePoint(Point.zero, cartesian(const(1), const(1))))
+    "parse an integrate Point expression" in {
+      assertParse("integrate(point(0,0),point(1,1))", integrate(Point.zero, const(Point(1, 1))))
     }
-    "parse a derivePoint expression" in {
-      assertParse("derivePoint(point(1,1))", derivePoint(cartesian(const(1), const(1))))
+    "parse a derive Point expression" in {
+      assertParse("derive(point(1,1))", derive(const(Point(1, 1))))
     }
     "parse an cartesian expression" in {
       assertParse("cartesian(.1,.1)", cartesian(const(.1), const(0.1)))
       assertParse(
-        "cartesian(.1,integrateDouble(0,const(.1)))",
-        cartesian(const(.1), integrateDouble(0, const(0.1)))
+        "cartesian(.1,integrate(0,.1))",
+        cartesian(const(.1), integrate(0, const(0.1)))
       )
     }
     "parse a polar expression" in {
       assertParse("polar(.1,.1)", polar(const(.1), const(0.1)))
       assertParse(
-        "polar(.1,integrateDouble(0,const(.1)))",
-        polar(const(.1), integrateDouble(0, const(0.1)))
+        "polar(.1,integrate(0,.1))",
+        polar(const(.1), integrate(0, const(0.1)))
       )
     }
   }

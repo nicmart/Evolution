@@ -1,5 +1,6 @@
 package evolution.drawing.algebra.parser
 
+import evolution.drawing.algebra.DrawingAlgebra.{DoubleType, PointType}
 import evolution.drawing.algebra.interpreter.Builder
 import evolution.drawing.algebra.{Drawing, DrawingAlgebra}
 import evolution.geometry.Point
@@ -23,11 +24,12 @@ object DrawingParser {
       P((floatDigits | digit.rep(1)).!.map(_.toDouble))
     val point: Parser[Point] =
       P("point(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Point(x, y) }
-    val constPoint: Parser[Drawing[Point]] =
-      P("point(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Builder.cartesian(Builder.const(x), Builder.const(y)) }
 
-    val const: Parser[Drawing[Double]] =
-      P(double | "const(" ~ double ~ ")").map(Builder.const)
+    val constPoint: Parser[Drawing[Point]] =
+      point.map(Builder.const[Point])
+
+    val constDouble: Parser[Drawing[Double]] =
+      double.map(Builder.const[Double])
 
     val cartesian: Parser[Drawing[Point]] =
       P("cartesian(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.cartesian(x, y)}
@@ -39,19 +41,19 @@ object DrawingParser {
       P("rnd(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Builder.rnd(x, y) }
 
     val integrateDouble: Parser[Drawing[Double]] =
-      P("integrateDouble(" ~ double ~ "," ~ doubleDrawing ~ ")").map { case (start, f) => Builder.integrateDouble(start, f) }
+      P("integrate(" ~ double ~ "," ~ doubleDrawing ~ ")").map { case (start, f) => Builder.integrate(start, f) }
 
     val integratePoint: Parser[Drawing[Point]] =
-      P("integratePoint(" ~ point ~ "," ~ pointDrawing ~ ")").map { case (start, f) => Builder.integratePoint(start, f) }
+      P("integrate(" ~ point ~ "," ~ pointDrawing ~ ")").map { case (start, f) => Builder.integrate(start, f) }
 
     val deriveDouble: Parser[Drawing[Double]] =
-      P("deriveDouble(" ~ doubleDrawing ~ ")").map { Builder.deriveDouble }
+      P("derive(" ~ doubleDrawing ~ ")").map { f => Builder.derive(f) }
 
     val derivePoint: Parser[Drawing[Point]] =
-      P("derivePoint(" ~ pointDrawing ~ ")").map { Builder.derivePoint }
+      P("derive(" ~ pointDrawing ~ ")").map { f => Builder.derive(f) }
 
     lazy val doubleDrawing: Parser[Drawing[Double]] =
-      P(const | rnd | integrateDouble | deriveDouble)
+      P(constDouble | rnd | integrateDouble | deriveDouble)
 
     lazy val pointDrawing: Parser[Drawing[Point]] =
       P(cartesian | polar | constPoint | integratePoint | derivePoint)
