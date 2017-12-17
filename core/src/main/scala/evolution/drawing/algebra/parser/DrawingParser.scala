@@ -52,7 +52,7 @@ object DrawingParser {
       P(cartesian | polar | const[Point] | integrate[Point] | derive[Point])
 
     def drawing[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
-      DrawingAlgebra.typeInstance[T].foldT[({type L[A] = Parser[Drawing[A]]})#L](
+      DrawingAlgebra.typeInstance[T].foldT[Lambda[A => Parser[Drawing[A]]]](
         doubleDrawing,
         pointDrawing
       )

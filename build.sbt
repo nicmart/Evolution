@@ -1,9 +1,16 @@
 import WebKeys._
 
+autoCompilerPlugins := true
+resolvers += Resolver.sonatypeRepo("releases")
+addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary)
+
 lazy val commonSettings = List(
-    organization := "nicmart",
-    scalaVersion := "2.12.4",
-    version      := "0.1.0-SNAPSHOT"
+  organization := "nicmart",
+  scalaVersion := "2.12.4",
+  version      := "0.1.0-SNAPSHOT",
+  libraryDependencies ++= Seq(
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
+  )
 )
 
 lazy val core = crossProject.
