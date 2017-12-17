@@ -4,8 +4,7 @@ import evolution.drawing.algebra.DrawingAlgebra.{DoubleType, PointType}
 import evolution.drawing.algebra.interpreter.Builder
 import evolution.drawing.algebra.{Drawing, DrawingAlgebra}
 import evolution.geometry.Point
-import fastparse.{all, core}
-import fastparse.all._
+import fastparse.{WhitespaceApi, all, core}
 
 trait DrawingParser[+A] {
   def parse(s: String): Either[String, Drawing[A]]
@@ -16,6 +15,13 @@ object DrawingParser {
   type Error = String
 
   object Parsers {
+    val White = WhitespaceApi.Wrapper{
+      import fastparse.all._
+      NoTrace(CharIn(" ", "\n", "\r").rep)
+    }
+    import fastparse.noApi._
+    import White._
+
     val digit: Parser[Unit] =
       P(CharIn('0' to '9'))
     val floatDigits: all.Parser[Unit] =

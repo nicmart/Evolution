@@ -22,6 +22,10 @@ class ParserSpec
       assertParse("rnd(.1,1.001)", rnd(0.1, 1.001))
       assertParse("rnd(-.1,1.001)", rnd(-0.1, 1.001))
     }
+    "ignore whitespaces" in {
+      assertParse("rnd(0.1, 1)", rnd(0.1, 1))
+      assertParse("rnd(\n.1,\n1)", rnd(0.1, 1))
+    }
     "parse a const expression" in {
       assertParse("0.1", const(0.1))
       assertParse(".1", const(0.1))
