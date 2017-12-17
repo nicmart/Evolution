@@ -17,21 +17,34 @@ import evolution.drawing.algebra.interpreter.{Serializer, ToEvolution}
 import evolution.drawing.algebra.interpreter.Builder._
 import evolution.drawing.algebra.parser.DrawingParser.PointDrawingParser
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.auto._
 
 object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
-  type Config = Drawing[Point]
+  case class Config(
+    dsl: Drawing[Point]
+  )
 
-  override val configComponent: ConfigComponent[Config] =
-    DrawingDSLComponent.apply(instances.stringConfig)
-
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    config.run(ToEvolution)
+  override val configComponent: ConfigComponent[Config] = {
+    implicit val dslComponent: ConfigComponent[Drawing[Point]] =
+      DrawingDSLComponent.apply(instances.textConfig)
+    ConfigComponent[Config]
   }
 
-  val initialConfig = integrate(Point.zero, point(rnd(-1, 1), rnd(-1, 1)))
+  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+    config.dsl.run(ToEvolution)
+  }
 
-  override def configCodec: JsonCodec[Config] =
-    new DrawingJsonCodec[Point](PointDrawingParser, Serializer)
+  val initialConfig = Config(
+    integrate(Point.zero, point(rnd(-1, 1), rnd(-1, 1)))
+  )
+
+  override def configCodec: JsonCodec[Config] = {
+    implicit val drawingCodec: DrawingJsonCodec[Point] =
+      new DrawingJsonCodec[Point](PointDrawingParser, Serializer)
+    import circeImplicits._
+    JsonCodec[Config]
+  }
+
 }

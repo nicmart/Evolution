@@ -22,6 +22,13 @@ object JsonCodec {
         codec.decode(c.value).toRight(DecodingFailure("Undefined decoding error", Nil))
     }
 
+  object circeImplicits {
+    implicit def encoder[T](implicit codec: JsonCodec[T]): Encoder[T] =
+      toCirceEncoder(codec)
+    implicit def decoder[T](implicit codec: JsonCodec[T]): Decoder[T] =
+      toCirceDecoder(codec)
+  }
+
   /**
     * Summoner method
     */
