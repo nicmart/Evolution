@@ -5,7 +5,7 @@ import evolution.algebra.Evolution
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.config.{CompositeConfigComponent, ConfigComponent}
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.app.codec.JsonCodec._

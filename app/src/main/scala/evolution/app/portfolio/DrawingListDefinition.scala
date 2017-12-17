@@ -5,8 +5,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.data.PointedSeq
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
-import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.config.instances.CompositeConfigComponent
+import evolution.app.react.component.config.{CompositeConfigComponent, ConfigComponent}
 
 class DrawingListDefinition[T](drawingList: PointedSeq[DrawingDefinition[T]]) extends DrawingDefinition[T] {
 

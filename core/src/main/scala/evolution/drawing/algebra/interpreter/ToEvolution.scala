@@ -10,13 +10,13 @@ import evolution.algebra.syntax.all._
 object ToEvolution extends DrawingAlgebra[Evolution] {
   override def const[T: DrawingAlgebra.Type](x: T): Evolution[T] = new Evolution[T] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
-      alg.pure(x)
+      alg.constant(x)
   }
   override def rnd(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] =
       alg.doubleBetween(from, to)
   }
-  override def cartesian(x: Evolution[Double], y: Evolution[Double]): Evolution[Point] = new Evolution[Point] {
+  override def point(x: Evolution[Double], y: Evolution[Double]): Evolution[Point] = new Evolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] =
       alg.cartesian(x.run, y.run)
   }

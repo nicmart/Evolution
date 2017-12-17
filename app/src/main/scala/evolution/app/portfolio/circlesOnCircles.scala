@@ -44,8 +44,7 @@ object circlesOnCircles extends DrawingDefinition[Point] {
     import config._
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
-      centeredIn(context.canvasSize.point / 2) {
-        translate(
+      translate(
           uniformRadial(Point(0, bigRadius), bigRadialSpeed),
           translate(
             uniformRadial(Point(0, mediumRadius), mediumRadialSpeed),
@@ -55,7 +54,6 @@ object circlesOnCircles extends DrawingDefinition[Point] {
             )
           )
         )
-      }
     }
   }
 

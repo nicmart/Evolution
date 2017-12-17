@@ -44,6 +44,7 @@ object Conf {
       bouncing,
       lissajous,
       oscillator,
+      dsl,
       new CompositeDrawingDefinition(PointedSeq(drawings, brownian))
     )
 

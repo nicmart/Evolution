@@ -9,9 +9,9 @@ object Builder extends DrawingAlgebra[Drawing] {
       alg.rnd(from, to)
   }
 
-  override def cartesian(x: Drawing[Double], y: Drawing[Double]): Drawing[Point] = new Drawing[Point] {
+  override def point(x: Drawing[Double], y: Drawing[Double]): Drawing[Point] = new Drawing[Point] {
     override def run[F[+ _]](alg: DrawingAlgebra[F]): F[Point] =
-      alg.cartesian(x.run(alg), y.run(alg))
+      alg.point(x.run(alg), y.run(alg))
   }
 
   override def polar(r: Drawing[Double], w: Drawing[Double]): Drawing[Point] = new Drawing[Point] {

@@ -46,3 +46,7 @@ object IntInputComponent {
 object DoubleInputComponent {
   val component = SingleInput.component[Double](_.toDouble)
 }
+
+object StringInputComponent {
+  val component = SingleInput.component[String](identity)
+}

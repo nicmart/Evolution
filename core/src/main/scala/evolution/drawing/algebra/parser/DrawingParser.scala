@@ -21,7 +21,7 @@ object DrawingParser {
     val floatDigits: all.Parser[Unit] =
       P(digit.rep ~ "." ~ digit.rep(1))
     val double: Parser[Double] =
-      P((floatDigits | digit.rep(1)).!.map(_.toDouble))
+      P("-".? ~ (floatDigits | digit.rep(1))).!.map(_.toDouble)
     val point: Parser[Point] =
       P("point(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Point(x, y) }
     def literal[T: DrawingAlgebra.Type]: Parser[T] =
@@ -31,7 +31,7 @@ object DrawingParser {
       literal[T].map(t => Builder.const[T](t))
 
     val cartesian: Parser[Drawing[Point]] =
-      P("cartesian(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.cartesian(x, y)}
+      P("point(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.point(x, y)}
 
     val polar: Parser[Drawing[Point]] =
       P("polar(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.polar(x, y)}
@@ -71,6 +71,7 @@ object DrawingParser {
   def parse[T](s: String)(implicit parser: DrawingParser[T]): Either[String, Drawing[T]] =
     parser.parse(s)
 
-  private def toEither[T, Elem, Repr](result: core.Parsed[T, Elem, Repr]): Either[String, T] =
-    result.fold((_, _, _) => Left("error"), (t, _) => Right(t))
+  private def toEither[T, Elem, Repr](result: core.Parsed[T, Elem, Repr]): Either[String, T] = {
+    result.fold((_, _, failure) => Left(failure.toString), (t, _) => Right(t))
+  }
 }

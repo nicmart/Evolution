@@ -7,8 +7,8 @@ import evolution.geometry.Point
 object Serializer extends DrawingAlgebra[ConstString] {
   override def rnd(from: Double, to: Double) =
     s"rnd($from,$to)"
-  override def cartesian(x: String, y: String) =
-    s"cartesian($x,$y)"
+  override def point(x: String, y: String) =
+    s"point($x,$y)"
   override def polar(r: String, w: String) =
     s"polar($r,$w)"
   override def const[T: DrawingAlgebra.Type](x: T): String =

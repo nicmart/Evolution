@@ -20,6 +20,7 @@ class ParserSpec
       assertParse("rnd(0.1,1)", rnd(0.1, 1))
       assertParse("rnd(.1,1)", rnd(0.1, 1))
       assertParse("rnd(.1,1.001)", rnd(0.1, 1.001))
+      assertParse("rnd(-.1,1.001)", rnd(-0.1, 1.001))
     }
     "parse a const expression" in {
       assertParse("0.1", const(0.1))
@@ -42,11 +43,11 @@ class ParserSpec
     "parse a derive Point expression" in {
       assertParse("derive(point(1,1))", derive(const(Point(1, 1))))
     }
-    "parse an cartesian expression" in {
-      assertParse("cartesian(.1,.1)", cartesian(const(.1), const(0.1)))
+    "parse a point expression" in {
+      assertParse("point(.1,.1)", point(const(.1), const(0.1)))
       assertParse(
-        "cartesian(.1,integrate(0,.1))",
-        cartesian(const(.1), integrate(0, const(0.1)))
+        "point(.1,integrate(0,.1))",
+        point(const(.1), integrate(0, const(0.1)))
       )
     }
     "parse a polar expression" in {

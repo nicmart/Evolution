@@ -1,13 +1,9 @@
 package evolution.app.react.component.config
 
-import evolution.app.data.PointedSeq
-import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
-import evolution.app.react.component.DrawingList
 import evolution.app.react.component.presentational.styled.FormField
-import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent}
+import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, StringInputComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{Callback, _}
 import shapeless.labelled.FieldType
 import shapeless.{::, HList, HNil, LabelledGeneric, Lazy, Witness, labelled}
 import io.circe.syntax._
@@ -32,11 +28,16 @@ object instances {
       (props, children) => IntInputComponent.component(props)
     }
 
+  implicit val stringConfig: ConfigComponent[String] =
+    instance[String]("string config") {
+      (props, children) => StringInputComponent.component(props)
+    }
+
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
-    SeqComponent(configComponent)
+    SeqConfigComponent(configComponent)
 
   implicit def optConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Option[T]] =
-    OptionalConfig(configComponent)
+    OptionalConfigComponent(configComponent)
 
   implicit val hnilConfig: ConfigComponent[HNil] =
     instance[HNil]("hnil config")((props, children) => <.div(children))
@@ -70,63 +71,5 @@ object instances {
       hConfig.value(aSnapshot)(children)
     }
   }
-
-  object SeqComponent {
-    def apply[T](innerComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
-      instance[Seq[T]]("sequence config") { (props, children) =>
-        val components = for {
-            i <- props.value.indices
-            snapshot = tSnapshot(props)(i)
-            component = innerComponent(snapshot)()
-          } yield component
-        <.div(components.toTagMod)
-      }
-
-    private def tSnapshot[T](props: StateSnapshot[Seq[T]])(index: Int): StateSnapshot[T] =
-      props.zoomState(_.apply(index))(t => ts => ts.updated(index, t))
-  }
-
-  object OptionalConfig {
-    def apply[T](component: ConfigComponent[T]): ConfigComponent[Option[T]] =
-      instance("optional config") { (props, children) =>
-        def tSnapshot(t: T): StateSnapshot[T] = props.zoomState(_ => t)(tt => opt => Some(tt))
-        props.value.fold(empty)(t => component(tSnapshot(t))())
-      }
-  }
-
-  object CompositeConfigComponent {
-
-    def apply[T](drawings: PointedSeq[DrawingDefinition[T]]): ConfigComponent[CompositeDefinitionConfig[T]] = {
-      val drawingListComponent = DrawingList.component[T]
-
-      instance("composite config component") { (props, children) =>
-        val config = props.value
-        val innerComponent: ConfigComponent[config.InnerConfig] =
-          config.definition.configComponent
-        val innerConfig: config.InnerConfig = config.config
-
-        val dropdown = FormField.component(FormField.Props("Drawing")) {
-          <.div(
-            drawingListComponent(
-              props.zoomState(cfg => drawings.select(cfg.definition)) {
-                drawings => cfg => CompositeDefinitionConfig[T, drawings.selected.Config](
-                  drawings.selected.initialConfig,
-                  drawings.selected
-                )
-              }
-            )
-          )
-        }
-
-        val innerConfigComp = innerComponent(
-          StateSnapshot[config.InnerConfig](innerConfig)
-            (newInnerConfig => props.setState(CompositeDefinitionConfig(newInnerConfig, config.definition)))
-        )()
-
-        <.div(^.className := "inner-config", dropdown, innerConfigComp)
-      }
-    }
-  }
-
 }
 

@@ -7,7 +7,7 @@ import evolution.geometry.Point
 trait DrawingAlgebra[F[+_]] {
   def const[T: DrawingAlgebra.Type](x: T): F[T]
   def rnd(from: Double, to: Double): F[Double]
-  def cartesian(x: F[Double], y: F[Double]): F[Point]
+  def point(x: F[Double], y: F[Double]): F[Point]
   def polar(r: F[Double], w: F[Double]): F[Point]
   def integrate[T : DrawingAlgebra.Type](start: T, f: F[T]): F[T]
   def derive[T : DrawingAlgebra.Type](f: F[T]): F[T]
