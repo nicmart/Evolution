@@ -1,19 +1,23 @@
 package evolution.app.react.component.presentational
 
 import japgolly.scalajs.react
-import japgolly.scalajs.react.PropsChildren
+import japgolly.scalajs.react.{Callback, PropsChildren}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Sidebar {
-
-  class Backend(bs: BackendScope[Unit, Unit]) {
-    def render(children: PropsChildren): VdomElement = {
+  type Expanded = Boolean
+  class Backend(bs: BackendScope[Unit, Expanded]) {
+    def render(expanded: Expanded, children: PropsChildren): VdomElement = {
       <.div(
         ^.classSet(
-          "sidebar" -> true
+          "sidebar" -> true,
+          "expanded" -> expanded
         ),
+        Button.component(bs.modState(!_)) {
+          <.i(^.className := s"fas fa-angle-${if (expanded) "right" else "left"}")
+        },
         children
       )
     }
@@ -21,6 +25,7 @@ object Sidebar {
 
   val component = react.ScalaComponent
     .builder[Unit]("sidebar")
+    .initialState(false)
     .renderBackendWithChildren[Backend]
     .build
 }

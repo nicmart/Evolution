@@ -45,10 +45,7 @@ object Page {
           <.div(^.className := "navbar-item is-hidden-touch",
             <.a(
               ^.href := "https://github.com/nicmart/Evolution",
-              <.span(
-                ^.className := "icon",
-                <.i(^.className := "fa fa-lg fa-github")
-              )
+              <.i(^.className := "fab fa-github fa-lg")
             )
           ),
           <.div(
@@ -59,7 +56,7 @@ object Page {
               Button.component(props.onRefresh) {
                 <.span(
                   ^.className := "icon",
-                  <.i(^.className := "fa fa-random")
+                  <.i(^.className := "fas fa-random")
                 )
               }
             )

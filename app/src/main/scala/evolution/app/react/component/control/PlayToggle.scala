@@ -17,7 +17,7 @@ object PlayToggle {
       Button.component(s.modState(!_)) {
         <.span(
           ^.className := "icon",
-          <.i(^.className := s"fa $className")
+          <.i(^.className := s"fas $className")
         )
       }
     }

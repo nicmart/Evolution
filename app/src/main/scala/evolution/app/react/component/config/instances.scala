@@ -1,7 +1,7 @@
 package evolution.app.react.component.config
 
 import evolution.app.react.component.presentational.styled.FormField
-import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, StringInputComponent}
+import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, StringInputComponent, TextArea}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import shapeless.labelled.FieldType
@@ -28,9 +28,10 @@ object instances {
       (props, children) => IntInputComponent.component(props)
     }
 
-  implicit val stringConfig: ConfigComponent[String] =
+  implicit val textConfig: ConfigComponent[String] =
     instance[String]("string config") {
-      (props, children) => StringInputComponent.component(props)
+      (props, children) =>
+        TextArea.component(props)
     }
 
   implicit def seqConfig[T](implicit configComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =

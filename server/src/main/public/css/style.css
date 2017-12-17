@@ -14,6 +14,10 @@ html {
   padding: 15px;
 }
 
+.sidebar.expanded {
+  width: 40%;
+}
+
 .sidebar label.label {
   color: White;
 }
@@ -42,10 +46,10 @@ nav .points-rate span {
   text-align: center;
 }
 
-nav .button,
-nav .button:active,
-nav .button:hover,
-nav .button:focus{
+.button,
+.button:active,
+.button:hover,
+.button:focus{
   border-color: White !important;
 }
 
