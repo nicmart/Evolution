@@ -24,12 +24,16 @@ object DrawingParser {
 
     val digit: Parser[Unit] =
       P(CharIn('0' to '9'))
+
     val floatDigits: all.Parser[Unit] =
       P(digit.rep ~ "." ~ digit.rep(1))
+
     val double: Parser[Double] =
       P("-".? ~ (floatDigits | digit.rep(1))).!.map(_.toDouble)
+
     val point: Parser[Point] =
-      P("point(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Point(x, y) }
+      function2("point", double, double).map { case (x, y) => Point(x, y) }
+
     def literal[T: DrawingAlgebra.Type]: Parser[T] =
       DrawingAlgebra.typeInstance[T].foldT(double, point)
 
@@ -37,19 +41,19 @@ object DrawingParser {
       literal[T].map(t => Builder.const[T](t))
 
     val cartesian: Parser[Drawing[Point]] =
-      P("point(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.point(x, y)}
+      function2("point", doubleDrawing, doubleDrawing).map { case (x, y) => Builder.point(x, y)}
 
     val polar: Parser[Drawing[Point]] =
-      P("polar(" ~ doubleDrawing ~ "," ~ doubleDrawing ~ ")").map { case (x, y) => Builder.polar(x, y)}
+      function2("polar", doubleDrawing, doubleDrawing).map { case (x, y) => Builder.polar(x, y)}
 
     val rnd: Parser[Drawing[Double]] =
-      P("rnd(" ~ double ~ "," ~ double ~ ")").map { case (x, y) => Builder.rnd(x, y) }
+      function2("rnd", double, double).map { case (x, y) => Builder.rnd(x, y) }
 
     def integrate[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
-      P("integrate(" ~ literal[T] ~ "," ~ drawing[T] ~ ")").map { case (s, f) => Builder.integrate(s, f)}
+      function2("integrate", literal[T], drawing[T]).map { case (s, f) => Builder.integrate(s, f)}
 
     def derive[T: DrawingAlgebra.Type]: Parser[Drawing[T]] =
-      P("derive(" ~ drawing[T] ~ ")").map { f => Builder.derive(f)}
+      function1("derive", drawing[T]).map { f => Builder.derive(f)}
 
     lazy val doubleDrawing: Parser[Drawing[Double]] =
       P(const[Double] | rnd | integrate[Double] | derive[Double])
@@ -62,6 +66,13 @@ object DrawingParser {
         doubleDrawing,
         pointDrawing
       )
+
+    def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
+      P(funcName ~ "(" ~ parser ~ ")")
+    def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
+      P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
+    def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
+      P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
   }
 
   implicit object DoubleDrawingParser extends DrawingParser[Double] {
