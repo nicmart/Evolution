@@ -91,8 +91,8 @@ object Parsers {
   def int[E]: Parser[TermE[E, Int]] =
     P(CharIn('0' to '9').rep(1).!.map(_.toInt)).map(BuilderE.int)
 
-  def add[E]: Parser[TermE[E, Int]] =
-    function2("add", expr, expr).map { case (n, m) =>  BuilderE.add(n, m) }
+  def add[E](innerParser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    function2("add", innerParser, innerParser).map { case (n, m) =>  BuilderE.add(n, m) }
 
   def var0[E, A]: Parser[TermE[(A, E), A]] =
     P("$").map(_ => BuilderE.var0)
@@ -101,9 +101,9 @@ object Parsers {
     function2("let", expr[E], openExpr[E]).map { case (v, e) => BuilderE.let(v)(e) }
 
   def expr[E]: Parser[TermE[E, Int]] =
-    P(int | add | let)
+    P(int | add(expr) | let)
   def openExpr[E]: Parser[TermE[(Int, E), Int]] =
-    P(expr | var0)
+    P(int | add(openExpr) | let | var0)
 
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
@@ -114,4 +114,4 @@ object Parsers {
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 }
 
-Parsers.expr[Unit].parse("let(5,add($, 13))").get.value.run(Evaluate)(())
+Parsers.expr[Unit].parse("let(7,add($,let(5,add($,add($, add(2,3))))))").get.value.run(Evaluate)(())
