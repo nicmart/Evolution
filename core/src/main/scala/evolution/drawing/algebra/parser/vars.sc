@@ -5,6 +5,7 @@ trait Lang[F[-_, +_]] {
   def int[E](n: Int): F[E, Int]
   def add[E](n: F[E, Int], m: F[E, Int]): F[E, Int]
   def var0[E, A]: F[(A, E), A]
+  def varS[E, A, B](e: F[E, A]): F[(B, E), A]
   def let[E, A, B](value: F[E, A])(expr: F[(A, E), B]): F[E, B]
 }
 
@@ -29,6 +30,10 @@ object Evaluate extends Lang[Ctx] {
     _._1
   override def let[E, A, B](value: Ctx[E, A])(expr: Ctx[(A, E), B]): Ctx[E, B] =
     env => expr((value(env), env))
+  override def varS[E, A, B](e: Ctx[E, A]): Ctx[(B, E), A] =
+    env =>
+
+      e(env._2)
 }
 
 object BuilderE extends Lang[TermE] {
@@ -40,6 +45,8 @@ object BuilderE extends Lang[TermE] {
     new TermE[(A, E), A] { override def run[F[- _, + _]](alg: Lang[F]): F[(A, E), A] = alg.var0 }
   override def let[E, A, B](value: TermE[E, A])(expr: TermE[(A, E), B]): TermE[E, B] =
     new TermE[E, B] { override def run[F[- _, + _]](alg: Lang[F]): F[E, B] = alg.let(value.run(alg))(expr.run(alg)) }
+  override def varS[E, A, B](e: TermE[E, A]): TermE[(B, E), A] =
+    new TermE[(B, E), A] { override def run[F[- _, + _]](alg: Lang[F]): F[(B,E), A] = alg.varS(e.run(alg)) }
 }
 
 object Serialize extends Lang[StringConst] {
@@ -51,6 +58,8 @@ object Serialize extends Lang[StringConst] {
     "$"
   override def let[E, A, B](v: StringConst[E, A])(e: StringConst[(A, E), B]): StringConst[E, B] =
     s"let($v)($e)"
+  override def varS[E, A, B](e: StringConst[E, A]): StringConst[(B, E), A] =
+    s"\$$e"
 }
 
 val expr1: Term[Int] = new Term[Int] {
@@ -97,13 +106,16 @@ object Parsers {
   def var0[E, A]: Parser[TermE[(A, E), A]] =
     P("$").map(_ => BuilderE.var0)
 
-  def let[E]: Parser[TermE[E, Int]] =
-    function2("let", expr[E], openExpr[E]).map { case (v, e) => BuilderE.let(v)(e) }
+  def varN[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
+    ???
+
+  def let[E](parser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    function2("let", parser, openExpr[E]).map { case (v, e) => BuilderE.let(v)(e) }
 
   def expr[E]: Parser[TermE[E, Int]] =
-    P(int | add(expr) | let)
+    P(int | add(expr) | let(expr))
   def openExpr[E]: Parser[TermE[(Int, E), Int]] =
-    P(int | add(openExpr) | let | var0)
+    P(int | add(openExpr) | let(openExpr) | var0)
 
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
@@ -114,4 +126,15 @@ object Parsers {
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 }
 
-Parsers.expr[Unit].parse("let(7,add($,let(5,add($,add($, add(2,3))))))").get.value.run(Evaluate)(())
+val exprVarSucc: TermE[Any, Int] = {
+  import BuilderE._
+  let(int(2))(let[(Int, Any), Int, Int](int(3))(add(var0, varS(var0))))
+}
+
+def evaluate(serializedExpression: String): Int =
+  Parsers.expr[Unit].parse(serializedExpression).get.value.run(Evaluate)(())
+
+evaluate("let(7,add($,let(5,add($,add($, add(2,3))))))")
+evaluate("let(1,let($,$))")
+
+exprVarSucc.run(Evaluate)(())
