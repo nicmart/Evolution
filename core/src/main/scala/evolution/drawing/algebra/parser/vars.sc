@@ -1,3 +1,4 @@
+import scala.language.higherKinds
 
 import fastparse.{WhitespaceApi, all, core, noApi}
 
@@ -53,13 +54,13 @@ object Serialize extends Lang[StringConst] {
   override def int[E](n: Int): StringConst[E, Int] =
     n.toString
   override def add[E](n: StringConst[E, Int], m: StringConst[E, Int]): StringConst[E, Int] =
-    s"$n + $m"
+    s"add($n, $m)"
   override def var0[E, A]: StringConst[(A, E), A] =
     "$"
   override def let[E, A, B](v: StringConst[E, A])(e: StringConst[(A, E), B]): StringConst[E, B] =
     s"let($v)($e)"
   override def varS[E, A, B](e: StringConst[E, A]): StringConst[(B, E), A] =
-    s"\$$e"
+    "$" + e
 }
 
 val expr1: Term[Int] = new Term[Int] {
@@ -106,24 +107,24 @@ object Parsers {
   def var0[E, A]: Parser[TermE[(A, E), A]] =
     P("$").map(_ => BuilderE.var0)
 
-  def varN[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
-    ???
+  def varS[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
+    P("$" ~ current).map(t => BuilderE.varS(t))
 
   def let[E](parser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    function2("let", parser, openExpr[E]).map { case (v, e) => BuilderE.let(v)(e) }
+    function2("let", parser, exprS[E](parser)).map { case (v, e) => BuilderE.let(v)(e) }
 
-  def expr[E]: Parser[TermE[E, Int]] =
-    P(int | add(expr) | let(expr))
-  def openExpr[E]: Parser[TermE[(Int, E), Int]] =
-    P(int | add(openExpr) | let(openExpr) | var0)
+  def expr0[E]: Parser[TermE[E, Int]] =
+    P(int | add(expr0) | let(expr0))
+  def exprS[E](curr: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
+    P(int | add(exprS(curr)) | let(exprS(curr)) | varS(curr) | var0)
 
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
-    P(funcName ~ "(" ~ parser ~ ")")
+    P(funcName ~ "(" ~/ parser ~ ")")
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
-    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
+    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ ")")
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
-    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 }
 
 val exprVarSucc: TermE[Any, Int] = {
@@ -132,9 +133,15 @@ val exprVarSucc: TermE[Any, Int] = {
 }
 
 def evaluate(serializedExpression: String): Int =
-  Parsers.expr[Unit].parse(serializedExpression).get.value.run(Evaluate)(())
+  Parsers.expr0[Unit].parse(serializedExpression).get.value.run(Evaluate)(())
+def reserialize(serializedExpression: String): String =
+  Parsers.expr0[Unit].parse(serializedExpression).get.value.run(Serialize)
 
 evaluate("let(7,add($,let(5,add($,add($, add(2,3))))))")
 evaluate("let(1,let($,$))")
+evaluate("let(1,let(2,add($,$$)))")
+reserialize("let(1,let(2,add($,$$)))")
+evaluate("let(1,let(2,$add($,$)))")
+reserialize("let(1,let(2,$add($,$)))")
 
 exprVarSucc.run(Evaluate)(())
