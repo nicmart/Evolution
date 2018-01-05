@@ -10,10 +10,10 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 
 object DrawingDSLComponent {
-  def apply(component: ConfigComponent[String]): ConfigComponent[Drawing[Point]] =
+  def apply(component: ConfigComponent[String]): ConfigComponent[Drawing[Unit, Point]] =
     instance("drawing config") { (props, children) =>
       val stringSnapshot = props.zoomState[String](
-        drawing => drawing.run(Serializer))(
+        drawing => drawing.run(Serializer)(()))(
         serialized => currDrawing => PointDrawingParser.parse(serialized).fold(_ => currDrawing, identity)
       )
       component(stringSnapshot)()

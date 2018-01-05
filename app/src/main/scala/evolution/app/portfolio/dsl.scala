@@ -23,17 +23,17 @@ object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
   case class Config(
-    dsl: Drawing[Point]
+    dsl: Drawing[Unit, Point]
   )
 
   override val configComponent: ConfigComponent[Config] = {
-    implicit val dslComponent: ConfigComponent[Drawing[Point]] =
+    implicit val dslComponent: ConfigComponent[Drawing[Unit, Point]] =
       DrawingDSLComponent.apply(instances.textConfig)
     ConfigComponent[Config]
   }
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    config.dsl.run(ToEvolution)
+    config.dsl.run(ToEvolution)(())
   }
 
   val initialConfig = Config(

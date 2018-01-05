@@ -1,5 +1,5 @@
 package evolution.drawing.algebra
 
-trait Drawing[+A] {
-  def run[F[+_]](alg: DrawingAlgebra[F]): F[A]
+trait Drawing[-E, +A] {
+  def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, A]
 }

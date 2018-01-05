@@ -10,11 +10,33 @@ trait Term[A] {
   def run[F[_]](alg: Alg[F]): F[A]
 }
 
+object Builder extends Alg[Term] {
+  def pure[A](a: A): Term[A] =
+    new Term[A] { override def run[F[_]](alg: Alg[F]): F[A] = alg.pure(a) }
+  def sum(a: Term[Int], b: Term[Int]): Term[Int] =
+    new Term[Int] { override def run[F[_]](alg: Alg[F]): F[Int] = alg.sum(a.run(alg), b.run(alg)) }
+  def and(a: Term[Boolean], b: Term[Boolean]): Term[Boolean] =
+    new Term[Boolean] { override def run[F[_]](alg: Alg[F]): F[Boolean] = alg.and(a.run(alg), b.run(alg)) }
+}
+
 trait LetExtension[F[_, _]] {
   def var0[A, E]: F[(A, E), A]
   def varS[A, B, E](e: F[E, A]): F[(B, E), A]
   def let[E, A, B](name: String, value: F[E, A])(expr: F[(A, E), B]): F[E, B]
 }
+
+trait Program[E, A] {
+  def run[F[_, _]](alg: FullAlgebra[F]): F[E, A]
+}
+
+object LetExtensionBuilder extends FullAlgebra[Program] {
+  override def var0[A, E]: Program[(A, E), A] = ???
+  override def varS[A, B, E](e: Program[E, A]): Program[(B, E), A] = ???
+  override def let[E, A, B](name: String, value: Program[E, A])(expr: Program[(A, E), B]): Program[E, B] = ???
+  override def alg[E]: Alg[({type L[A] = Program[E,A]})#L] = ???
+}
+
+// It looks like it is hard to make the builders composable
 
 // This is unrelated with the other one
 //trait AlgWithExtension[F[_,_]] {
@@ -59,8 +81,15 @@ trait TermVar[A, E] {
   def run[F[_, _]](alg: LetExtension[F]): F[A, E]
 }
 
-trait Program[E, A] {
-  def run[F[_, _]](alg: FullAlgebra[F]): F[E, A]
+
+def embed[E, A](term: Term[A]): Program[E, A] =
+  new Program[E, A] {
+    override def run[F[_, _]](alg: FullAlgebra[F]): F[E, A] =
+      term.run[({type L[A] = F[E, A]})#L](alg.alg[E])
+  }
+
+object BuilderFull {
+
 }
 
 val program = new Program[Unit, Int] {
@@ -133,3 +162,17 @@ object PrintFullAlg extends FullAlgebra[StringWithCtx] with PrintBindings {
 }
 
 program.run(PrintFullAlg)(Nil)
+
+
+// Embed a term in the full algebra
+
+val programToEmbed = new Term[Int] {
+  override def run[F[_]](alg: Alg[F]): F[Int] =
+    alg.sum(alg.pure(12), alg.pure(12))
+}
+
+val embeddedProgram = embed[Unit, Int](programToEmbed)
+embeddedProgram.run(EvaluateFullAlg)(())
+embeddedProgram.run(PrintFullAlg)(Nil)
+
+

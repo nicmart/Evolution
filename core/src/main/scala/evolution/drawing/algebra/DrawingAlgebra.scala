@@ -4,13 +4,13 @@ import cats.kernel.{Group, Semigroup}
 import cats.implicits._
 import evolution.geometry.Point
 
-trait DrawingAlgebra[F[+_]] {
-  def const[T: DrawingAlgebra.Type](x: T): F[T]
-  def rnd(from: Double, to: Double): F[Double]
-  def point(x: F[Double], y: F[Double]): F[Point]
-  def polar(r: F[Double], w: F[Double]): F[Point]
-  def integrate[T : DrawingAlgebra.Type](start: T, f: F[T]): F[T]
-  def derive[T : DrawingAlgebra.Type](f: F[T]): F[T]
+trait DrawingAlgebra[F[-_, +_]] {
+  def const[E, T: DrawingAlgebra.Type](x: T): F[E, T]
+  def rnd[E](from: Double, to: Double): F[E, Double]
+  def point[E](x: F[E, Double], y: F[E, Double]): F[E, Point]
+  def polar[E](r: F[E, Double], w: F[E, Double]): F[E, Point]
+  def integrate[E, T : DrawingAlgebra.Type](start: T, f: F[E, T]): F[E, T]
+  def derive[E, T : DrawingAlgebra.Type](f: F[E, T]): F[E, T]
 }
 
 object DrawingAlgebra {
