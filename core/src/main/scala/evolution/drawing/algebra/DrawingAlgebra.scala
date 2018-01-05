@@ -4,6 +4,12 @@ import cats.kernel.{Group, Semigroup}
 import cats.implicits._
 import evolution.geometry.Point
 
+trait BindingAlgebra[F[-_, +_]] {
+  def var0[E, A]: F[(A, E), A]
+  def shift[E, A, B](expr: F[E, A]): F[(B, E), A]
+  def let[E, A, B](name: String, value: F[E, A])(expr: F[(A, E), B]): F[E, B]
+}
+
 trait DrawingAlgebra[F[-_, +_]] {
   def const[E, T: DrawingAlgebra.Type](x: T): F[E, T]
   def rnd[E](from: Double, to: Double): F[E, Double]
