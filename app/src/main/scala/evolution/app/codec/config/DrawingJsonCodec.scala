@@ -12,7 +12,7 @@ class DrawingJsonCodec[T: DrawingAlgebra.Type](
   serializer: DrawingAlgebra[CtxString]
 ) extends JsonCodec[Drawing[Unit, T]]
 {
-  override def encode(t: Drawing[Unit, T]): Json =  Json.fromString(t.run[CtxString](serializer)(()))
+  override def encode(t: Drawing[Unit, T]): Json =  Json.fromString(t.run[CtxString](serializer)(Nil))
   override def decode(r: Json): Option[Drawing[Unit, T]] =
     for {
       serialized <- r.asString

@@ -40,4 +40,15 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
         alg.toPhaseSpace(f(e).run).map(_._2)
     }
+  override def var0[E, A]: CtxEvolution[(CtxEvolution[E, A], E), A] = {
+    case (ctx, e) => ctx(e)
+  }
+
+  override def shift[E, A, B](expr: CtxEvolution[E, A]): CtxEvolution[(CtxEvolution[E, B], E), A] = {
+    case (_, e) => expr(e)
+  }
+
+  override def let[E, A, B](name: String, value: CtxEvolution[E, A])
+  (expr: CtxEvolution[(CtxEvolution[E, A], E), B]): E => Evolution[B] =
+  ctx => expr((value, ctx))
 }
