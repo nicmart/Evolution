@@ -2,7 +2,8 @@ package evolution.drawing.algebra.parser
 
 import evolution.drawing.algebra.DrawingAlgebra.{DoubleType, PointType}
 import evolution.drawing.algebra.interpreter.Builder
-import evolution.drawing.algebra.{Drawing, DrawingAlgebra}
+import evolution.drawing.algebra.interpreter.Builder._
+import evolution.drawing.algebra.{Drawing, DrawingAlgebra, DrawingOpen}
 import evolution.geometry.Point
 import fastparse.{WhitespaceApi, all, core}
 
@@ -60,6 +61,12 @@ object DrawingParser {
 
     def pointDrawing[E]: Parser[Drawing[E, Point]] =
       P(cartesian | polar | const[E, Point] | integrate[E, Point] | derive[E, Point])
+
+    def var0[E, A](varName: String): Parser[DrawingOpen[E, A, A]] =
+      P("$" ~ varName).map(_ => Builder.var0)
+
+//    def shift[E, A, B](current: Parser[Drawing[E, A]]): Parser[TermE[(Int, E), A]] =
+//      current.map(t => BuilderE.varS(t))
 
     def drawing[E, T: DrawingAlgebra.Type]: Parser[Drawing[E, T]] =
       DrawingAlgebra.typeInstance[T].foldT[Lambda[A => Parser[Drawing[E, A]]]](
