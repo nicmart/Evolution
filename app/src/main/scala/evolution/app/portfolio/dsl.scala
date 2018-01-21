@@ -10,7 +10,7 @@ import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import evolution.app.codec.config.DrawingJsonCodec
-import evolution.drawing.algebra.Drawing
+import evolution.drawing.algebra._
 import io.circe.generic.auto._
 import evolution.app.react.component.config.instances
 import evolution.drawing.algebra.interpreter.{Serializer, ToEvolution}
@@ -37,7 +37,7 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   val initialConfig = Config(
-    integrate(Point.zero, point(rnd(-1, 1), rnd(-1, 1)))
+    integrate[Empty, Point](Point.zero, point(rnd(-1, 1), rnd(-1, 1)))
   )
 
   override def configCodec: JsonCodec[Config] = {

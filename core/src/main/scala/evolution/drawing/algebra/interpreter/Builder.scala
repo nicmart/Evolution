@@ -1,49 +1,48 @@
 package evolution.drawing.algebra.interpreter
 
-import evolution.drawing.algebra.{Drawing, DrawingAlgebra, DrawingOpen}
+import evolution.drawing.algebra._
 import evolution.geometry.Point
 
 object Builder {
-  def rnd[E](from: Double, to: Double): Drawing[E, Double] = new Drawing[E, Double] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, Double] =
-      alg.rnd(from, to)
+  def rnd[E[_[_, _]]](from: Double, to: Double): DrawingE[E, Double] = new DrawingE[E, Double] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], Double] =
+      alg.rnd[E[F]](from, to)
   }
 
-  def point[E](x: Drawing[E, Double], y: Drawing[E, Double]): Drawing[E, Point] = new Drawing[E, Point] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, Point] =
-      alg.point(x.run(alg), y.run(alg))
+  def point[E[_[_, _]]](x: DrawingE[E, Double], y: DrawingE[E, Double]): DrawingE[E, Point] = new DrawingE[E, Point] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], Point] =
+      alg.point[E[F]](x.run(alg), y.run(alg))
   }
 
-  def polar[E](r: Drawing[E, Double], w: Drawing[E, Double]): Drawing[E, Point] = new Drawing[E, Point] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, Point] =
+  def polar[E[_[_, _]]](r: DrawingE[E, Double], w: DrawingE[E, Double]): DrawingE[E, Point] = new DrawingE[E, Point] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], Point] =
       alg.polar(r.run(alg), w.run(alg))
   }
 
-  def const[E, T: DrawingAlgebra.Type](x: T): Drawing[E, T] = new Drawing[E, T] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, T] =
+  def const[E[_[_, _]], T: DrawingAlgebra.Type](x: T): DrawingE[E, T] = new DrawingE[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
       alg.const(x)
   }
-  def integrate[E, T: DrawingAlgebra.Type](start: T, f: Drawing[E, T]): Drawing[E, T] = new Drawing[E, T] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, T] =
+  def integrate[E[_[_, _]], T: DrawingAlgebra.Type](start: T, f: DrawingE[E, T]): DrawingE[E, T] = new DrawingE[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
       alg.integrate(start, f.run(alg))
   }
-  def derive[E, T: DrawingAlgebra.Type](f: Drawing[E, T]): Drawing[E, T] = new Drawing[E, T] {
-    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E, T] =
+  def derive[E[_[_, _]], T: DrawingAlgebra.Type](f: DrawingE[E, T]): DrawingE[E, T] = new DrawingE[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
       alg.derive(f.run(alg))
   }
 
-  def var0[E, A]: DrawingOpen[E, A, A] = new DrawingOpen[E, A, A] {
-    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[(F[E, A], E), A] =
-      alg.var0[E, A]
+  def var0[E[_[_, _]], A]: DrawingS[E, A, A] = new DrawingE[Lambda[F[_, _] => SuccE[E, A, F]], A] {
+    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[(F[E[F], A], E[F]), A] =
+      alg.var0[E[F], A]
+  }
+  def shift[E[_[_, _]], A, B](expr: DrawingE[E, A]): DrawingS[E, A, B] = new DrawingE[Lambda[F[_, _] => SuccE[E, B, F]], A] {
+    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[(F[E[F], B], E[F]), A] =
+      alg.shift[E[F], A, B](expr.run(alg))
   }
 
-  def shift[E, A, B](expr: Drawing[E, A]): DrawingOpen[E, B, A] = new DrawingOpen[E, B, A] {
-    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[(F[E, B], E), A] =
-      alg.shift(expr.run(alg))
-  }
-
-  def let[E, A, B](name: String, value: Drawing[E, A])(expr: DrawingOpen[E, A, B]): Drawing[E, B] = new Drawing[E, B] {
-    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[E, B] =
-      alg.let(name, value.run(alg))(expr.run(alg))
+  def let[E[_[_, _]], A, B](name: String, value: DrawingE[E, A])(expr: DrawingS[E, B, A]): DrawingE[E, B] = new DrawingE[E, B] {
+    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[E[F], B] =
+      alg.let[E[F], A, B](name, value.run(alg))(expr.run(alg))
   }
 }

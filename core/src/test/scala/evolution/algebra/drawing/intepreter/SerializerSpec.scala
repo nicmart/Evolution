@@ -1,10 +1,12 @@
 package evolution.algebra.drawing.intepreter
 
+import evolution.drawing.algebra._
 import evolution.drawing.algebra.interpreter.Builder._
 import evolution.drawing.algebra.interpreter.Serializer
 import evolution.geometry.Point
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
+
 
 class SerializerSpec
   extends WordSpec
@@ -13,7 +15,7 @@ class SerializerSpec
 
   "A Serializer interpreter" should {
     "serialize a complex drawing" in {
-      val drawing = integrate(
+      val drawing = integrate[Empty, Point](
         Point.zero,
         point(rnd(-1, 1), rnd(-1, 1))
       )
