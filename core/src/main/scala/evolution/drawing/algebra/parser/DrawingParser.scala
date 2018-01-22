@@ -22,6 +22,10 @@ object DrawingParser {
     import fastparse.noApi._
     import White._
 
+    case class CurrentParsers[E[_[_, _]]](double: Parser[DrawingE[E, Double]], point: Parser[DrawingE[E, Point]]) {
+      def shiftParsers[B](varName: String): CurrentParsers[Lambda[F[_, _] => SuccE[E, B, F]]] = ???
+    }
+
     val digit: Parser[Unit] =
       P(CharIn('0' to '9'))
 
@@ -50,16 +54,10 @@ object DrawingParser {
       function2("rnd", double, double).map { case (x, y) => Builder.rnd(x, y) }
 
     def integrate[E[_[_, _]], T: DrawingAlgebra.Type]: Parser[DrawingE[E, T]] =
-      function2("integrate", literal[T], DrawingE[E, T]).map { case (s, f) => Builder.integrate(s, f)}
+      function2("integrate", literal[T], drawing[E, T]).map { case (s, f) => Builder.integrate(s, f)}
 
     def derive[E[_[_, _]], T: DrawingAlgebra.Type]: Parser[DrawingE[E, T]] =
-      function1("derive", DrawingE[E, T]).map { f => Builder.derive(f)}
-
-    def doubleDrawing[E[_[_, _]]]: Parser[DrawingE[E, Double]] =
-      P(const[E, Double] | rnd | integrate[E, Double] | derive[E, Double])
-
-    def pointDrawing[E[_[_, _]]]: Parser[DrawingE[E, Point]] =
-      P(cartesian[E] | polar[E] | const[E, Point] | integrate[E, Point] | derive[E, Point])
+      function1("derive", drawing[E, T]).map { f => Builder.derive(f)}
 
     def var0[E[_[_, _]], A](varName: String): Parser[DrawingS[E, A, A]] =
       P("$" ~ varName).map(_ => Builder.var0)
@@ -67,10 +65,21 @@ object DrawingParser {
     def shift[E[_[_, _]], A, B](current: Parser[DrawingE[E, A]]): Parser[DrawingS[E, A, B]] =
       current.map(t => Builder.shift(t))
 
-    def DrawingE[E[_[_, _]], T: DrawingAlgebra.Type]: Parser[DrawingE[E, T]] =
+    def parsers[E[_[_, _]]](current: => CurrentParsers[E]): CurrentParsers[E] = CurrentParsers[E](
+      P(const[E, Double] | rnd | integrate[E, Double] | derive[E, Double]),
+      P(cartesian[E] | polar[E] | const[E, Point] | integrate[E, Point] | derive[E, Point])
+    )
+
+    // TODO Here the type is WRONG
+    def parsersS[E[_[_, _]]](varname: String, current: => CurrentParsers[E]): CurrentParsers[E] =
+      parsers(parsersS(varname, current))
+
+    def initialParsers: CurrentParsers[Empty] = parsers(initialParsers)
+
+    def drawing[E[_[_, _]], T: DrawingAlgebra.Type](current: CurrentParsers[E]): Parser[DrawingE[E, T]] =
       DrawingAlgebra.typeInstance[T].foldT[Lambda[A => Parser[DrawingE[E, A]]]](
-        doubleDrawing,
-        pointDrawing
+        current.double,
+        current.point
       )
 
     def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
