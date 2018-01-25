@@ -24,6 +24,11 @@ object DrawingParser {
 
     case class CurrentParsers[E[_[_, _]]](double: Parser[DrawingE[E, Double]], point: Parser[DrawingE[E, Point]]) {
       def shiftParsers[B](varName: String): CurrentParsers[Lambda[F[_, _] => SuccE[E, B, F]]] = ???
+      def parser[T: DrawingAlgebra.Type]: Parser[DrawingE[E, T]] =
+        DrawingAlgebra.typeInstance[T].foldT[Parser[DrawingE[E, ?]]](
+          double,
+          point
+        )
     }
 
     val digit: Parser[Unit] =
@@ -40,6 +45,9 @@ object DrawingParser {
 
     def literal[T: DrawingAlgebra.Type]: Parser[T] =
       DrawingAlgebra.typeInstance[T].foldT(double, point)
+
+    val varName: Parser[String] =
+      P(CharsWhileIn('a' to 'z').!)
 
     def const[E[_[_, _]], T: DrawingAlgebra.Type]: Parser[DrawingE[E, T]] =
       literal[T].map(t => Builder.const[E, T](t))
@@ -65,13 +73,28 @@ object DrawingParser {
     def shift[E[_[_, _]], A, B](current: Parser[DrawingE[E, A]]): Parser[DrawingS[E, A, B]] =
       current.map(t => Builder.shift(t))
 
+    def let[E[_[_, _]], A: DrawingAlgebra.Type, B: DrawingAlgebra.Type]
+      (current: CurrentParsers[E]): Parser[DrawingS[E, A, B]] =
+      P("let" ~/ "(" ~ varName ~/ "," ~ current.parser[A] ~/ "," ~ "").flatMap { case (name, value) =>
+        exprS(name, parser).map(e => Builder.let(name, value)(e))
+      } ~ ")"
+
+    def succFoo[E[_[_, _]], A, B](curr: Parser[Drawing[E, A]]): Parser[DrawingS[E, A, B]]
+
     def parsers[E[_[_, _]]](current: => CurrentParsers[E]): CurrentParsers[E] = CurrentParsers[E](
       P(const[E, Double] | rnd | integrate[E, Double] | derive[E, Double]),
       P(cartesian[E] | polar[E] | const[E, Point] | integrate[E, Point] | derive[E, Point])
     )
 
+    def parsersS[E[_[_, _]], A: DrawingAlgebra.Type, B: DrawingAlgebra.Type]
+      (varname: String, current: => CurrentParsers[E]): CurrentParsers[Lambda[F[_, _] => (F[E[F], A], E[F])]] =
+        CurrentParsers[Lambda[F[_, _] => (F[E[F], A], E[F])]](
+          P(const[E, Double] | rnd | integrate[E, Double] | derive[E, Double]),
+          P(cartesian[E] | polar[E] | const[E, Point] | integrate[E, Point] | derive[E, Point])
+        )
+
     // TODO Here the type is WRONG
-    def parsersS[E[_[_, _]]](varname: String, current: => CurrentParsers[E]): CurrentParsers[E] =
+    def varDouble[E[_[_, _]]](varname: String, current: => CurrentParsers[E]): CurrentParsers[E] =
       parsers(parsersS(varname, current))
 
     def initialParsers: CurrentParsers[Empty] = parsers(initialParsers)
