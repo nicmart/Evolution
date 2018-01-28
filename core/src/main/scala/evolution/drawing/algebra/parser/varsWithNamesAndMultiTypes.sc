@@ -97,6 +97,52 @@ expr2e.run(Evaluate)(())
 
 
 object Parsers {
+  // "parseable types"
+
+  trait TypeAlg[F[_]] {
+    def int: F[Int]
+    def bool: F[Boolean]
+  }
+
+  trait Type[A] {
+    def run[F[_]](alg: TypeAlg[F]): F[A]
+  }
+
+  object Type {
+    def apply[A](implicit t: Type[A]): Type[A] = t
+  }
+
+  implicit val intType: Type[Int] = new Type[Int] {
+    def run[F[_]](alg: TypeAlg[F]): F[Int] = alg.int
+  }
+
+  implicit val boolType: Type[Boolean] = new Type[Boolean] {
+    def run[F[_]](alg: TypeAlg[F]): F[Boolean] = alg.bool
+  }
+
+  object InitialEnc {
+    sealed trait Type[T] {
+      def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[T]
+    }
+
+    object Type {
+
+      case object Int extends Type[Int] {
+        def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[Int] = ifInt
+      }
+
+      case object Bool extends Type[Boolean] {
+        def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[Boolean] = ifBoolean
+      }
+
+      implicit val intType: Type[Int] = Int
+      implicit val boolType: Type[Boolean] = Bool
+
+      def fold[T, F[_]](ifInt: F[Int], ifBoolean: F[Boolean])(implicit ev: Type[T]): F[T] =
+        ev.fold(ifInt, ifBoolean)
+    }
+  }
+
   object Config {
     import fastparse.all._
     val whitespaces = CharIn(" ", "\n", "\r").rep
@@ -107,6 +153,15 @@ object Parsers {
   }
   import White._
   import fastparse.noApi._
+
+  case class Parsers[E](int: Parser[TermE[E, Int]], bool: Parser[TermE[E, Boolean]])
+    extends TypeAlg[({ type L[A] = Parser[TermE[E, A]]} )#L] {
+    def pushVar[T: Type](varname: String): Parsers[(T, E)] =
+      Parsers[(T, E)](
+        varS[E, Int, T](int),
+        varS[E, Boolean, T](bool)
+      )
+  }
 
   def int[E]: Parser[TermE[E, Int]] =
     P(CharIn('0' to '9').rep(1).!.map(_.toInt)).map(BuilderE.int)
@@ -123,7 +178,7 @@ object Parsers {
   def var0[E, A](varName: String): Parser[TermE[(A, E), A]] =
     P("$" ~ varName).map(_ => BuilderE.var0)
 
-  def varS[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
+  def varS[E, A, B](current: Parser[TermE[E, A]]): Parser[TermE[(B, E), A]] =
     current.map(t => BuilderE.varS(t))
 
   def let[E, A, B](pa: Parser[TermE[E, A]], pb: Parser[TermE[E, B]]): Parser[TermE[E, B]] =
@@ -134,7 +189,9 @@ object Parsers {
 
   def expr[E, A](current: => Parser[TermE[E, A]]): Parser[TermE[E, A]] =
     whitespaceWrap(P(int | add(current) | let(current)))
-  def exprS[E, A, B](varName: String, curr: Parser[TermE[E, A]]): Parser[TermE[(A, E), A]] =
+
+  // Add to a current parse of As the capability to parse variables of type A
+  def exprS[E, A](varName: String, curr: Parser[TermE[E, A]]): Parser[TermE[(A, E), A]] =
     whitespaceWrap(P(expr(exprS(varName, curr)) | varS(curr) | var0(varName)))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
