@@ -1,3 +1,4 @@
+import Parsers.{Id, chooseIfTypeMatches}
 import fastparse.WhitespaceApi
 
 import scala.language.higherKinds
@@ -120,6 +121,29 @@ object Parsers {
     def run[F[_]](alg: TypeAlg[F]): F[Boolean] = alg.bool
   }
 
+  def chooser[F[_]]: TypeAlg[({ type X[T] = F[T] => TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] })#X] =
+    new TypeAlg[({ type X[T] = F[T] => TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] })#X] {
+      override def int: F[Int] => TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] =
+        fint1 => new TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] {
+          override def int: F[Int] => F[Int] = fint2 => fint1
+          override def bool: F[Boolean] => F[Boolean] = fbool => fbool
+        }
+      override def bool: F[Boolean] => TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] =
+        fbool1 => new TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] {
+          override def int: F[Int] => F[Int] = fint => fint
+          override def bool: F[Boolean] => F[Boolean] = fbool2 => fbool1
+        }
+    }
+
+  type Id[T] = T
+
+  /**
+    * Returns u if U type is the same as T, returns t otherwise
+    */
+  def chooseIfTypeMatches[F[_], A: Type, B: Type](t: F[A], u: F[B]): F[A] =
+    Type[A].run[({ type Y[U] = F[U] => F[U] })#Y](Type[B].run[({ type X[T] = F[T] => TypeAlg[({ type Y[U] = F[U] => F[U] })#Y] })#X](chooser[F])(u))(t)
+
+/*
   object InitialEnc {
     sealed trait Type[T] {
       def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[T]
@@ -161,6 +185,10 @@ object Parsers {
         varS[E, Int, T](int),
         varS[E, Boolean, T](bool)
       )
+    def withParser[T: Type](p: Parser[TermE[E, T]]): Parsers[T] =
+
+    def mapT[T: Type](f: Parser[TermE[E, T]] => Parser[TermE[E, T]]): Parsers[E] =
+      f(Type[T].run(this))
   }
 
   def int[E]: Parser[TermE[E, Int]] =
@@ -205,36 +233,41 @@ object Parsers {
     P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
   def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser)
+  */
 }
 
-def evaluate(serializedExpression: String): Int =
-  Parsers.initialParser.parse(serializedExpression).get.value.run(Evaluate)(())
-def reserialize(serializedExpression: String): String =
-  Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
+chooseIfTypeMatches[Parsers.Id, Int, Int](1, 2)
+chooseIfTypeMatches[Parsers.Id, Boolean, Int](true, 2)
 
-evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
-evaluate("let(x,1,$x)")
-evaluate("let(x,1,let(y,2,add($x,$y)))")
-reserialize("let(x,1,let(z,2,add($x,$z)))")
-evaluate("let(x,1,let(y,2,add($x,$y)))")
-reserialize("let(x,1,let(y,2,add($x,$y)))")
+//def evaluate(serializedExpression: String): Int =
+//  Parsers.initialParser.parse(serializedExpression).get.value.run(Evaluate)(())
+//def reserialize(serializedExpression: String): String =
+//  Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
+//
+//evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
+//evaluate("let(x,1,$x)")
+//evaluate("let(x,1,let(y,2,add($x,$y)))")
+//reserialize("let(x,1,let(z,2,add($x,$z)))")
+//evaluate("let(x,1,let(y,2,add($x,$y)))")
+//reserialize("let(x,1,let(y,2,add($x,$y)))")
 
 
-val exprVarSucc: TermE[Any, Int] = {
-  import BuilderE._
-  let("x", int(2))(let[(Int, Any), Int, Int]("y", int(3))(add(var0, varS(var0))))
-}
 
-exprVarSucc.run(Evaluate)(())
-
-exprVarSucc.run(Serialize)(Nil)
+//val exprVarSucc: TermE[Any, Int] = {
+//  import BuilderE._
+//  let("x", int(2))(let[(Int, Any), Int, Int]("y", int(3))(add(var0, varS(var0))))
+//}
+//
+//exprVarSucc.run(Evaluate)(())
+//
+//exprVarSucc.run(Serialize)(Nil)
 
 // Scoping
-evaluate("let(x,2,add($x, let(x, 3, add($x, $x))))")
-
-evaluate(exprVarSucc.run(Serialize)(Nil))
-reserialize(exprVarSucc.run(Serialize)(Nil))
-
-evaluate("let(x, 5, let(y, 10, add($x, add($y, $x))))")
+//evaluate("let(x,2,add($x, let(x, 3, add($x, $x))))")
+//
+//evaluate(exprVarSucc.run(Serialize)(Nil))
+//reserialize(exprVarSucc.run(Serialize)(Nil))
+//
+//evaluate("let(x, 5, let(y, 10, add($x, add($y, $x))))")
 
 
