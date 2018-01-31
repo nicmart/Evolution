@@ -166,6 +166,7 @@ object Parsers {
         ev.fold(ifInt, ifBoolean)
     }
   }
+  */
 
   object Config {
     import fastparse.all._
@@ -182,13 +183,17 @@ object Parsers {
     extends TypeAlg[({ type L[A] = Parser[TermE[E, A]]} )#L] {
     def pushVar[T: Type](varname: String): Parsers[(T, E)] =
       Parsers[(T, E)](
-        varS[E, Int, T](int),
-        varS[E, Boolean, T](bool)
+        chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Int, T](
+          varS[E, Int, T](int),
+          withVar[E, T](varname, get[T])
+        ),
+        chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Boolean, T](
+          varS[E, Boolean, T](bool),
+          withVar[E, T](varname, get[T])
+        )
       )
-    def withParser[T: Type](p: Parser[TermE[E, T]]): Parsers[T] =
-
-    def mapT[T: Type](f: Parser[TermE[E, T]] => Parser[TermE[E, T]]): Parsers[E] =
-      f(Type[T].run(this))
+    def get[T: Type]: Parser[TermE[E, T]] =
+      Type[T].run[({ type L[X] = Parser[TermE[E, X]]})#L](this)
   }
 
   def int[E]: Parser[TermE[E, Int]] =
@@ -200,8 +205,8 @@ object Parsers {
   val varName: Parser[String] =
     P(CharsWhileIn('a' to 'z').!)
 
-  def add[E](innerParser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    function2("add", innerParser, innerParser).map { case (n, m) =>  BuilderE.add(n, m) }
+  def add[E](current: Parsers[E]): Parser[TermE[E, Int]] =
+    function2("add", current.int, current.int).map { case (n, m) =>  BuilderE.add(n, m) }
 
   def var0[E, A](varName: String): Parser[TermE[(A, E), A]] =
     P("$" ~ varName).map(_ => BuilderE.var0)
@@ -209,18 +214,21 @@ object Parsers {
   def varS[E, A, B](current: Parser[TermE[E, A]]): Parser[TermE[(B, E), A]] =
     current.map(t => BuilderE.varS(t))
 
-  def let[E, A, B](pa: Parser[TermE[E, A]], pb: Parser[TermE[E, B]]): Parser[TermE[E, B]] =
-    P("let" ~/ "(" ~ varName ~/ "," ~ pa ~/ "," ~ "").flatMap { case (name, value) =>
-        exprS(name, pb).map(e => BuilderE.let(name, value)(e))
+  def withVar[E, A](name: String, current: Parser[TermE[E, A]]): Parser[TermE[(A, E), A]] =
+    varS[E, A, A](current) | var0[E, A](name)
+
+  def let[E, A: Type, B: Type](current: Parsers[E]): Parser[TermE[E, B]] =
+    P("let" ~/ "(" ~ varName ~/ "," ~ current.get[A]  ~/ "," ~ "").flatMap { case (name, value) =>
+      current.pushVar[A](name).get[B].map(e => BuilderE.let(name, value)(e))
+        //exprS(name, current.get[B])
     } ~ ")"
     //function3("let", varName, parser, exprS[E](varName, parser)).map { case (name, v, e) => BuilderE.let(name, v)(e) }
 
-  def expr[E, A](current: => Parser[TermE[E, A]]): Parser[TermE[E, A]] =
-    whitespaceWrap(P(int | add(current) | let(current)))
+  def intExpr[E](current: => Parsers[E]): Parser[TermE[E, Int]] =
+    whitespaceWrap(P(int | add(current) | let[E, Int, Int](current) | let[E, Boolean, Int](current)))
 
-  // Add to a current parse of As the capability to parse variables of type A
-  def exprS[E, A](varName: String, curr: Parser[TermE[E, A]]): Parser[TermE[(A, E), A]] =
-    whitespaceWrap(P(expr(exprS(varName, curr)) | varS(curr) | var0(varName)))
+  def boolExpr[E](current: => Parsers[E]): Parser[TermE[E, Boolean]] =
+    whitespaceWrap(P(bool))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
@@ -232,20 +240,23 @@ object Parsers {
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser)
-  */
+  def initialParsers: Parsers[Unit] = Parsers(
+    intExpr(initialParsers),
+    boolExpr(initialParsers)
+  )
+
 }
 
 chooseIfTypeMatches[Parsers.Id, Int, Int](1, 2)
 chooseIfTypeMatches[Parsers.Id, Boolean, Int](true, 2)
 
-//def evaluate(serializedExpression: String): Int =
-//  Parsers.initialParser.parse(serializedExpression).get.value.run(Evaluate)(())
+def evaluate(serializedExpression: String): Int =
+  Parsers.initialParsers.get[Int].parse(serializedExpression).get.value.run(Evaluate)(())
 //def reserialize(serializedExpression: String): String =
 //  Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
 //
 //evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
-//evaluate("let(x,1,$x)")
+evaluate("let(x,1,add($x, $x))")
 //evaluate("let(x,1,let(y,2,add($x,$y)))")
 //reserialize("let(x,1,let(z,2,add($x,$z)))")
 //evaluate("let(x,1,let(y,2,add($x,$y)))")
