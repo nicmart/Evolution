@@ -117,7 +117,7 @@ object Parsers {
     current.map(t => BuilderE.varS(t))
 
   def let[E](parser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    P("let" ~/ "(" ~ varName ~/ "," ~ parser ~/ "," ~ "").flatMap { case (name, value) =>
+    P("let" ~ "(" ~ varName ~ "," ~ parser ~ "," ~ "").flatMap { case (name, value) =>
         exprS(name, parser).map(e => BuilderE.let(name, value)(e))
     } ~ ")"
     //function3("let", varName, parser, exprS[E](varName, parser)).map { case (name, v, e) => BuilderE.let(name, v)(e) }
@@ -125,17 +125,18 @@ object Parsers {
   def expr[E](current: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
     whitespaceWrap(P(int | add(current) | let(current)))
   def exprS[E](varName: String, curr: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
-    whitespaceWrap(P(expr(exprS(varName, curr)) | varS(curr) | var0(varName)))
+    //whitespaceWrap(P(var0[E, Int](varName) | varS(curr) | expr(exprS(varName, curr))))
+    whitespaceWrap(P(expr(exprS(varName, curr)) | varS(curr) | var0[E, Int](varName)))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
-    P(funcName ~ "(" ~/ parser ~ ")")
+    P(funcName ~ "(" ~ parser ~ ")")
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
-    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ ")")
+    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
-    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
   def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser)
 }
@@ -145,9 +146,10 @@ def evaluate(serializedExpression: String): Int =
 def reserialize(serializedExpression: String): String =
   Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
 
-evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
 evaluate("let(x,1,$x)")
+evaluate("let(x,1,add($x,$x))")
 evaluate("let(x,1,let(y,2,add($x,$y)))")
+evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
 reserialize("let(x,1,let(z,2,add($x,$z)))")
 evaluate("let(x,1,let(y,2,add($x,$y)))")
 reserialize("let(x,1,let(y,2,add($x,$y)))")

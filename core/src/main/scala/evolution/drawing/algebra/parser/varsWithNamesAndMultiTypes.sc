@@ -182,14 +182,15 @@ object Parsers {
   case class Parsers[E](int: Parser[TermE[E, Int]], bool: Parser[TermE[E, Boolean]])
     extends TypeAlg[({ type L[A] = Parser[TermE[E, A]]} )#L] {
     def pushVar[T: Type](varname: String): Parsers[(T, E)] =
-      Parsers[(T, E)](
-        chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Int, T](
-          varS[E, Int, T](int),
-          withVar[E, T](varname, get[T])
-        ),
-        chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Boolean, T](
-          varS[E, Boolean, T](bool),
-          withVar[E, T](varname, get[T])
+      parsers(Parsers[(T, E)](
+          chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Int, T](
+            varS[E, Int, T](int),
+            withVar[E, T](varname, get[T])
+          ),
+          chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Boolean, T](
+            varS[E, Boolean, T](bool),
+            withVar[E, T](varname, get[T])
+          )
         )
       )
     def get[T: Type]: Parser[TermE[E, T]] =
@@ -240,11 +241,12 @@ object Parsers {
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  def initialParsers: Parsers[Unit] = Parsers(
-    intExpr(initialParsers),
-    boolExpr(initialParsers)
-  )
+  def initialParsers: Parsers[Unit] = parsers(initialParsers)
 
+  def parsers[E](current: => Parsers[E]): Parsers[E] = Parsers[E](
+    intExpr(current),
+    boolExpr(current)
+  )
 }
 
 chooseIfTypeMatches[Parsers.Id, Int, Int](1, 2)
@@ -255,11 +257,12 @@ def evaluate(serializedExpression: String): Int =
 //def reserialize(serializedExpression: String): String =
 //  Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
 //
-//evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
+//evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar,add(2,3))))))")
+evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar,add(2,3))))))")
 evaluate("let(x,1,add($x, $x))")
-//evaluate("let(x,1,let(y,2,add($x,$y)))")
+evaluate("let(x,1,let(y,2,add($x,$y)))")
 //reserialize("let(x,1,let(z,2,add($x,$z)))")
-//evaluate("let(x,1,let(y,2,add($x,$y)))")
+evaluate("let(x,1,let(y,2,add($x,$y)))")
 //reserialize("let(x,1,let(y,2,add($x,$y)))")
 
 
