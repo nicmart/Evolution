@@ -107,8 +107,8 @@ object Parsers {
   val varName: Parser[String] =
     P(CharsWhileIn('a' to 'z').!)
 
-  def add[E](innerParser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    function2("add", innerParser, innerParser).map { case (n, m) =>  BuilderE.add(n, m) }
+  def add[E](vars: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    function2("add", expr(vars), expr(vars)).map { case (n, m) =>  BuilderE.add(n, m) }
 
   def var0[E, A](varName: String): Parser[TermE[(A, E), A]] =
     P("$" ~ varName).map(_ => BuilderE.var0)
@@ -116,17 +116,19 @@ object Parsers {
   def varS[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
     current.map(t => BuilderE.varS(t))
 
-  def let[E](parser: Parser[TermE[E, Int]], vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    P("let" ~ "(" ~ varName ~ "," ~ parser ~ "," ~ "").flatMap { case (name, value) =>
-        exprS(name, parser, vars).map(e => BuilderE.let(name, value)(e))
+  def let[E](vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    P("let" ~ "(" ~ varName ~ "," ~ expr(vars) ~ "," ~ "").flatMap { case (name, value) =>
+      exprS(name, vars).map(e => BuilderE.let(name, value)(e))
     } ~ ")"
 
   def pushVar[E](varName: String, vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
     P( var0[E, Int](varName) | varS[E, Int](vars) )
-  def expr[E](current: => Parser[TermE[E, Int]], vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    whitespaceWrap(P(int | add(current) | let(current, vars)))
-  def exprS[E](varName: String, current: Parser[TermE[E, Int]], vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
-    whitespaceWrap(P( pushVar(varName, vars) | expr( exprS(varName, current, vars), pushVar(varName, vars) )))
+
+  def exprS[E](varName: String, vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
+    whitespaceWrap(P( pushVar(varName, vars) | expr(pushVar(varName, vars))))
+
+  def expr[E](vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    whitespaceWrap(P(vars | int | add(vars) | let(vars)))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
@@ -138,7 +140,7 @@ object Parsers {
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser, Fail)
+  def initialParser: Parser[TermE[Unit, Int]] = expr(Fail)
 }
 
 def evaluate(serializedExpression: String): Int =
@@ -146,8 +148,10 @@ def evaluate(serializedExpression: String): Int =
 def reserialize(serializedExpression: String): String =
   Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
 
-evaluate("let(x,1,$x)")
-evaluate("let(x,1,add($x,$x))")
+evaluate("add(1,add(1,1))")
+evaluate("let(x,2,$x)")
+evaluate("let(y,1,add(3,4))")
+evaluate("let(z,1,add($z,$z))")
 evaluate("let(x,1,let(y,2,add($x,$y)))")
 evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar, add(2,3))))))")
 reserialize("let(x,1,let(z,2,add($x,$z)))")
