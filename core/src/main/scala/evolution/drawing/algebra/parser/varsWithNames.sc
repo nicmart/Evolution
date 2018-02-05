@@ -116,17 +116,17 @@ object Parsers {
   def varS[E, A](current: Parser[TermE[E, A]]): Parser[TermE[(Int, E), A]] =
     current.map(t => BuilderE.varS(t))
 
-  def let[E](parser: Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+  def let[E](parser: Parser[TermE[E, Int]], vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
     P("let" ~ "(" ~ varName ~ "," ~ parser ~ "," ~ "").flatMap { case (name, value) =>
-        exprS(name, parser).map(e => BuilderE.let(name, value)(e))
+        exprS(name, parser, vars).map(e => BuilderE.let(name, value)(e))
     } ~ ")"
-    //function3("let", varName, parser, exprS[E](varName, parser)).map { case (name, v, e) => BuilderE.let(name, v)(e) }
 
-  def expr[E](current: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
-    whitespaceWrap(P(int | add(current) | let(current)))
-  def exprS[E](varName: String, curr: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
-    //whitespaceWrap(P(var0[E, Int](varName) | varS(curr) | expr(exprS(varName, curr))))
-    whitespaceWrap(P(expr(exprS(varName, curr)) | varS(curr) | var0[E, Int](varName)))
+  def pushVar[E](varName: String, vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
+    P( var0[E, Int](varName) | varS[E, Int](vars) )
+  def expr[E](current: => Parser[TermE[E, Int]], vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
+    whitespaceWrap(P(int | add(current) | let(current, vars)))
+  def exprS[E](varName: String, current: Parser[TermE[E, Int]], vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
+    whitespaceWrap(P( pushVar(varName, vars) | expr( exprS(varName, current, vars), pushVar(varName, vars) )))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
@@ -138,7 +138,7 @@ object Parsers {
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser)
+  def initialParser: Parser[TermE[Unit, Int]] = expr(initialParser, Fail)
 }
 
 def evaluate(serializedExpression: String): Int =
