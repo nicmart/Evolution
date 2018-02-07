@@ -125,7 +125,7 @@ object Parsers {
     P( var0[E, Int](varName) | varS[E, Int](vars) )
 
   def exprS[E](varName: String, vars: Parser[TermE[E, Int]]): Parser[TermE[(Int, E), Int]] =
-    whitespaceWrap(P( pushVar(varName, vars) | expr(pushVar(varName, vars))))
+    whitespaceWrap(P( expr(pushVar(varName, vars))))
 
   def expr[E](vars: => Parser[TermE[E, Int]]): Parser[TermE[E, Int]] =
     whitespaceWrap(P(vars | int | add(vars) | let(vars)))

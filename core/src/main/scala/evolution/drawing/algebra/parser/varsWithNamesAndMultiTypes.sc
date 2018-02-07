@@ -1,5 +1,6 @@
 import Parsers.{Id, chooseIfTypeMatches}
 import fastparse.WhitespaceApi
+import fastparse.noApi.P
 
 import scala.language.higherKinds
 
@@ -182,36 +183,23 @@ object Parsers {
   case class Parsers[E](int: Parser[TermE[E, Int]], bool: Parser[TermE[E, Boolean]])
     extends TypeAlg[({ type L[A] = Parser[TermE[E, A]]} )#L] {
     def pushVar[T: Type](varname: String): Parsers[(T, E)] =
-      //parsers(
-        Parsers[(T, E)](
-          chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Int, T](
-            varS[E, Int, T](int),
-            withVar[E, T](varname, get[T])
-          ),
-          chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Boolean, T](
-            varS[E, Boolean, T](bool),
-            withVar[E, T](varname, get[T])
-          )
-        )
-      //)
-
-
-
-    def pushVar2[T: Type](varname: String)(self: => Parsers[(T, E)]): Parsers[(T, E)] =
-      parsers(Parsers[(T, E)](
+      Parsers[(T, E)](
         chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Int, T](
           varS[E, Int, T](int),
-          withVar[E, T](varname, get[T])
+          P (var0[E, T](varname) | varS[E, T, T](get[T]))
         ),
         chooseIfTypeMatches[({ type L[X] = Parser[TermE[(T, E), X]]})#L, Boolean, T](
           varS[E, Boolean, T](bool),
-          withVar[E, T](varname, get[T])
+          P (var0[E, T](varname) | varS[E, T, T](get[T]))
         )
-      )
       )
 
     def get[T: Type]: Parser[TermE[E, T]] =
       Type[T].run[({ type L[X] = Parser[TermE[E, X]]})#L](this)
+  }
+
+  object Parsers {
+    def empty[E]: Parsers[E] = Parsers(Fail, Fail)
   }
 
   def int[E]: Parser[TermE[E, Int]] =
@@ -223,8 +211,8 @@ object Parsers {
   val varName: Parser[String] =
     P(CharsWhileIn('a' to 'z').!)
 
-  def add[E](current: Parsers[E]): Parser[TermE[E, Int]] =
-    function2("add", current.int, current.int).map { case (n, m) =>  BuilderE.add(n, m) }
+  def add[E](vars: Parsers[E]): Parser[TermE[E, Int]] =
+    function2("add", expr(vars).int, expr(vars).int).map { case (n, m) =>  BuilderE.add(n, m) }
 
   def var0[E, A](varName: String): Parser[TermE[(A, E), A]] =
     P("$" ~ varName).map(_ => BuilderE.var0)
@@ -232,25 +220,16 @@ object Parsers {
   def varS[E, A, B](current: Parser[TermE[E, A]]): Parser[TermE[(B, E), A]] =
     current.map(t => BuilderE.varS(t))
 
-  def withVar[E, A](name: String, current: Parser[TermE[E, A]]): Parser[TermE[(A, E), A]] =
-    P(var0[E, A](name) | varS[E, A, A](current))
-
-  def let[E, A: Type, B: Type](current: Parsers[E]): Parser[TermE[E, B]] =
-    P(P("let" ~ "(" ~ varName ~ "," ~ current.get[A]  ~ "," ~ "").flatMap { case (name, value) =>
-      println("here")
-      println(name, value.run(Serialize)(Nil))
-      println("trying to parse " + "$" + name)
-      println(parsers(current.pushVar[A](name)).get[B].parse("$" + name))
-      parsers(current.pushVar[A](name)).get[B].map(e => BuilderE.let(name, value)(e))
-        //exprS(name, current.get[B])
+  def let[E, A: Type, B: Type](vars: Parsers[E]): Parser[TermE[E, B]] =
+    P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[A]  ~ "," ~ "").flatMap { case (name, value) =>
+      expr(vars.pushVar[A](name)).get[B].map(e => BuilderE.let(name, value)(e))
     } ~ ")")
-    //function3("let", varName, parser, exprS[E](varName, parser)).map { case (name, v, e) => BuilderE.let(name, v)(e) }
 
-  def intExpr[E](current: => Parsers[E]): Parser[TermE[E, Int]] =
-    P(int | add(current) | let[E, Int, Int](current) | let[E, Boolean, Int](current))
+  def intExpr[E](vars: => Parsers[E]): Parser[TermE[E, Int]] =
+    P(vars.int | int | add(vars) | let[E, Int, Int](vars) | let[E, Boolean, Int](vars))
 
-  def boolExpr[E](current: => Parsers[E]): Parser[TermE[E, Boolean]] =
-    P(bool | let[E, Int, Boolean](current) | let[E, Boolean, Boolean](current))
+  def boolExpr[E](vars: => Parsers[E]): Parser[TermE[E, Boolean]] =
+    P(vars.bool | bool | let[E, Int, Boolean](vars) | let[E, Boolean, Boolean](vars))
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
@@ -262,51 +241,39 @@ object Parsers {
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  def initialParsers: Parsers[Unit] = parsers(initialParsers)
-
-  def parsers[E](current: => Parsers[E]): Parsers[E] = Parsers[E](
-    intExpr[E](current),
-    boolExpr[E](current)
+  def expr[E](vars: => Parsers[E]): Parsers[E] = Parsers[E](
+    intExpr[E](vars),
+    boolExpr[E](vars)
   )
+
+  val initialParser: Parsers[Unit] = expr(Parsers.empty)
 }
 
 chooseIfTypeMatches[Parsers.Id, Int, Int](1, 2)
 chooseIfTypeMatches[Parsers.Id, Boolean, Int](true, 2)
 
-def evaluate(serializedExpression: String): Int =
-  Parsers.initialParsers.get[Int].parse(serializedExpression).get.value.run(Evaluate)(())
-//def reserialize(serializedExpression: String): String =
-//  Parsers.initialParser.parse(serializedExpression).get.value.run(Serialize)(Nil)
-//
-evaluate("1")
-evaluate("add(1,1)")
-evaluate("let(x,1,$x)")
-evaluate("let(a,1,add($a,$a))")
-evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar,add(2,3))))))")
-//evaluate("let(foo,7,add($foo,let(bar,5,add($bar,add($bar,add(2,3))))))")
+def evaluate[T: Parsers.Type](serializedExpression: String): T =
+  Parsers.initialParser.get[T].parse(serializedExpression).get.value.run(Evaluate)(())
+def reserialize[T: Parsers.Type](serializedExpression: String): String =
+  Parsers.initialParser.get[T].parse(serializedExpression).get.value.run(Serialize)(Nil)
 
-evaluate("let(x,1,let(y,2,add($x,$y)))")
-//reserialize("let(x,1,let(z,2,add($x,$z)))")
-evaluate("let(x,1,let(y,2,add($x,$y)))")
-//reserialize("let(x,1,let(y,2,add($x,$y)))")
+evaluate[Int]("1")
+evaluate[Int]("add(1,1)")
+evaluate[Int]("let(x,1,$x)")
+evaluate[Int]("let(a,1,add($a,$a))")
+evaluate[Int]("let(foo,7,add($foo,let(bar,5,add($bar,add($bar,add(2,3))))))")
 
-
-
-//val exprVarSucc: TermE[Any, Int] = {
-//  import BuilderE._
-//  let("x", int(2))(let[(Int, Any), Int, Int]("y", int(3))(add(var0, varS(var0))))
-//}
-//
-//exprVarSucc.run(Evaluate)(())
-//
-//exprVarSucc.run(Serialize)(Nil)
+evaluate[Int]("let(x,1,let(y,2,add($x,$y)))")
+reserialize[Int]("let(x,1,let(z,2,add($x,$z)))")
+evaluate[Int]("let(x,1,let(y,2,add($x,$y)))")
+reserialize[Int]("let(x,1,let(y,2,add($x,$y)))")
 
 // Scoping
-//evaluate("let(x,2,add($x, let(x, 3, add($x, $x))))")
-//
-//evaluate(exprVarSucc.run(Serialize)(Nil))
-//reserialize(exprVarSucc.run(Serialize)(Nil))
-//
-//evaluate("let(x, 5, let(y, 10, add($x, add($y, $x))))")
+evaluate[Int]("let(x,2,add($x,let(x,3,add($x,$x))))")
+reserialize[Int]("let(x,2,add($x,let(x,3,add($x,$x))))")
+evaluate[Int]("let(x,5,let(y,10,add($x,add($y,$x))))")
+
+evaluate[Boolean]("true")
+evaluate[Boolean]("let(x,true,let(y,false,$y))")
 
 
