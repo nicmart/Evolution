@@ -8,6 +8,7 @@ trait Lang[F[-_, +_]] {
   def int[E](n: Int): F[E, Int]
   def bool[E](b: Boolean): F[E, Boolean]
   def add[E](n: F[E, Int], m: F[E, Int]): F[E, Int]
+  def ifElse[E, A](condition: F[E, Boolean], ifTrue: F[E, A], ifFalse: F[E, A]): F[E, A]
   def var0[E, A]: F[(A, E), A]
   def varS[E, A, B](e: F[E, A]): F[(B, E), A]
   def let[E, A, B](name: String, value: F[E, A])(expr: F[(A, E), B]): F[E, B]
@@ -33,6 +34,8 @@ object Evaluate extends Lang[Ctx] {
     _ => b
   override def add[E](n: Ctx[E, Int], m: Ctx[E, Int]): Ctx[E, Int] =
     e => n(e) + m(e)
+  override def ifElse[E, A](condition: Ctx[E, Boolean], ifTrue: Ctx[E, A], ifFalse: Ctx[E, A]): Ctx[E, A] =
+    e => if(condition(e)) ifTrue(e) else ifFalse(e)
   override def var0[E, A]: Ctx[(A, E), A] =
     _._1
   override def let[E, A, B](name: String, value: Ctx[E, A])(expr: Ctx[(A, E), B]): Ctx[E, B] =
@@ -48,6 +51,8 @@ object BuilderE extends Lang[TermE] {
     new TermE[E, Boolean] { override def run[F[- _, + _]](alg: Lang[F]) = alg.bool(b) }
   override def add[E](n: TermE[E, Int], m: TermE[E, Int]): TermE[E, Int] =
     new TermE[E, Int] { override def run[F[- _, + _]](alg: Lang[F]): F[E, Int] = alg.add(n.run(alg), m.run(alg)) }
+  override def ifElse[E, A](condition: TermE[E, Boolean], ifTrue: TermE[E, A], ifFalse: TermE[E, A]): TermE[E, A] =
+    new TermE[E, A] { override def run[F[- _, + _]](alg: Lang[F]) = alg.ifElse(condition.run(alg), ifTrue.run(alg), ifFalse.run(alg)) }
   override def var0[E, A]: TermE[(A, E), A] =
     new TermE[(A, E), A] { override def run[F[- _, + _]](alg: Lang[F]): F[(A, E), A] = alg.var0 }
   override def let[E, A, B](name: String, value: TermE[E, A])(expr: TermE[(A, E), B]): TermE[E, B] =
@@ -63,6 +68,8 @@ object Serialize extends Lang[StringWithContext] {
     _ => b.toString
   override def add[E](n: StringWithContext[E, Int], m: StringWithContext[E, Int]): StringWithContext[E, Int] =
     ctx => s"add(${n(ctx)}, ${m(ctx)})"
+  override def ifElse[E, A](condition: StringWithContext[E, Boolean], ifTrue: StringWithContext[E, A], ifFalse: StringWithContext[E, A]) =
+    ctx => s"if(${condition(ctx)}, ${ifTrue(ctx)}, ${ifFalse(ctx)})"
   override def var0[E, A]: StringWithContext[(A, E), A] =
     ctx => "$" + ctx.headOption.getOrElse("x")
   override def let[E, A, B](name: String, v: StringWithContext[E, A])(e: StringWithContext[(A, E), B]): StringWithContext[E, B] =
@@ -214,6 +221,11 @@ object Parsers {
   def add[E](vars: Parsers[E]): Parser[TermE[E, Int]] =
     function2("add", expr(vars).int, expr(vars).int).map { case (n, m) =>  BuilderE.add(n, m) }
 
+  def ifElse[E, A: Type](vars: Parsers[E]): Parser[TermE[E, A]] =
+    function3("if", expr(vars).bool, expr(vars).get[A], expr(vars).get[A]).map {
+      case (cond, ifTrue, ifFalse) => BuilderE.ifElse(cond, ifTrue, ifFalse)
+    }
+
   def var0[E, A](varName: String): Parser[TermE[(A, E), A]] =
     P("$" ~ varName).map(_ => BuilderE.var0)
 
@@ -225,11 +237,14 @@ object Parsers {
       expr(vars.pushVar[A](name)).get[B].map(e => BuilderE.let(name, value)(e))
     } ~ ")")
 
+  def polymorphicExpr[E, A: Type](vars: => Parsers[E]): Parser[TermE[E, A]] =
+    P( let[E, Int, A](vars) | let[E, Boolean, A](vars) | ifElse[E, A](vars) )
+
   def intExpr[E](vars: => Parsers[E]): Parser[TermE[E, Int]] =
-    P(vars.int | int | add(vars) | let[E, Int, Int](vars) | let[E, Boolean, Int](vars))
+    P(vars.int | int | add(vars) | polymorphicExpr[E, Int](vars) )
 
   def boolExpr[E](vars: => Parsers[E]): Parser[TermE[E, Boolean]] =
-    P(vars.bool | bool | let[E, Int, Boolean](vars) | let[E, Boolean, Boolean](vars))
+    P(vars.bool | bool | polymorphicExpr[E, Boolean](vars) )
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)
@@ -275,5 +290,9 @@ evaluate[Int]("let(x,5,let(y,10,add($x,add($y,$x))))")
 
 evaluate[Boolean]("true")
 evaluate[Boolean]("let(x,true,let(y,false,$y))")
+
+// Ifs
+evaluate[Int]("if(true,1,0)")
+evaluate[Int]("let(x,false,if($x,1,0))")
 
 
