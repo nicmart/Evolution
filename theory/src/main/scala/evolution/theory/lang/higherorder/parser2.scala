@@ -1,8 +1,12 @@
 package evolution.theory.lang.higherorder
 
-import fastparse.{WhitespaceApi, noApi}
+import fastparse.WhitespaceApi
 
-object parser {
+/**
+  * This is the same parser, but it uses a different "choosing" strategy, with implicits instead than
+  * an interpreter on the Type algebra.
+  */
+object parser2 {
   // "parseable types"
 
   trait TypeAlg[F[_]] {
@@ -10,47 +14,8 @@ object parser {
     def bool: F[Boolean]
   }
 
-  object TypeAlg {
-    def apply[F[_]](intF: F[Int], boolF: F[Boolean]): TypeAlg[F] = new TypeAlg[F] {
-      override def int: F[Int] = intF
-      override def bool: F[Boolean] = boolF
-    }
-  }
-
-  type PairTypeAlg[F[_, _]] = TypeAlg[λ[X => TypeAlg[λ[Y => F[X, Y]]]]]
-
-  object PairTypeAlg {
-    def apply[F[_, _]](
-      intInt: F[Int, Int],
-      intBool: F[Int, Boolean],
-      boolInt: F[Boolean, Int],
-      boolBool: F[Boolean, Boolean]
-    ): PairTypeAlg[F] =
-      TypeAlg[λ[X => TypeAlg[F[X, ?]]]](
-        TypeAlg[F[Int, ?]](
-          intInt,
-          intBool
-        ),
-        TypeAlg[F[Boolean, ?]](
-          boolInt,
-          boolBool
-        )
-      )
-  }
-
   trait Type[A] {
     def run[F[_]](alg: TypeAlg[F]): F[A]
-  }
-
-  trait PairType[A, B] {
-    def run[F[_, _]](alg: PairTypeAlg[F]): F[A, B]
-  }
-
-  object PairType {
-    def get[A: Type, B: Type]: PairType[A, B] = new PairType[A, B] {
-      def run[F[_, _]](alg: PairTypeAlg[F]): F[A, B] =
-        Type[B].run[F[A, ?]](Type[A].run[λ[X => TypeAlg[λ[Y => F[X, Y]]]]](alg))
-    }
   }
 
   object Type {
@@ -65,52 +30,30 @@ object parser {
     def run[F[_]](alg: TypeAlg[F]): F[Boolean] = alg.bool
   }
 
-  def chooser[F[_]]: TypeAlg[λ[T => F[T] => TypeAlg[λ[U => F[U] => F[U]]]]] =
-    new TypeAlg[λ[T => (F[T] => TypeAlg[λ[U => F[U] => F[U]]])]] {
-      override def int: F[Int] => TypeAlg[λ[U => F[U] => F[U]]] =
-        fint1 => new TypeAlg[λ[U => F[U] => F[U]]] {
-          override def int: F[Int] => F[Int] = fint2 => fint1
-          override def bool: F[Boolean] => F[Boolean] = fbool => fbool
-        }
-      override def bool: F[Boolean] => TypeAlg[λ[U => F[U] => F[U]]] =
-        fbool1 => new TypeAlg[λ[U => F[U] => F[U]]] {
-          override def int: F[Int] => F[Int] = fint => fint
-          override def bool: F[Boolean] => F[Boolean] = fbool2 => fbool1
-        }
-    }
-
   type Id[T] = T
 
-  /**
-    * Returns u if U type is the same as T, returns t otherwise
-    */
-  def choose[F[_], A: Type, B: Type](t: F[A], u: F[B]): F[A] =
-    Type[A].run[λ[U => F[U] => F[U]]](Type[B].run[λ[T => F[T] => TypeAlg[λ[U => (F[U] => F[U])]]]](chooser[F])(u))(t)
+  trait Chooser[T, U] {
+      def choose(t: T, u: U): T
+      def chooseF[F[_]](t: F[T], u: F[U]): F[T]
+}
 
-  /*
-    object InitialEnc {
-      sealed trait Type[T] {
-        def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[T]
-      }
+  trait ChooseFirst[T, U] extends Chooser[T, U] {
+    def choose(t: T, u: U): T = t
+    def chooseF[F[_]](t: F[T], u: F[U]): F[T] = t
+  }
 
-      object Type {
+  trait ChooseSecond[T] extends ChooseFirst[T, T] {
+    override def choose(t: T, u: T): T = u
+    override def chooseF[F[_]](t: F[T], u: F[T]): F[T] = u
+  }
 
-        case object Int extends Type[Int] {
-          def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[Int] = ifInt
-        }
+  object Chooser {
+    implicit def chooseFirst[T, U]: ChooseFirst[T, U] = new ChooseFirst[T, U] {}
+    implicit def chooseSecond[T]: ChooseSecond[T] = new ChooseSecond[T] {}
+  }
 
-        case object Bool extends Type[Boolean] {
-          def fold[F[_]](ifInt: F[Int], ifBoolean: F[Boolean]): F[Boolean] = ifBoolean
-        }
-
-        implicit val intType: Type[Int] = Int
-        implicit val boolType: Type[Boolean] = Bool
-
-        def fold[T, F[_]](ifInt: F[Int], ifBoolean: F[Boolean])(implicit ev: Type[T]): F[T] =
-          ev.fold(ifInt, ifBoolean)
-      }
-    }
-    */
+  def choose[T, U](t: T, u: U)(implicit c: Chooser[T, U]): T = c.choose(t, u)
+  def chooseF[F[_], T, U](t: F[T], u: F[U])(implicit c: Chooser[T, U]): F[T] = c.chooseF(t, u)
 
   object Config {
     import fastparse.all._
@@ -125,27 +68,13 @@ object parser {
 
   case class Parsers[E](int: Parser[Term[E, Int]], bool: Parser[Term[E, Boolean]])
     extends TypeAlg[λ[X => Parser[Term[E, X]]]] {
-    def pushVar[T: Type](varName: String): Parsers[(T, E)] = {
-      type F[A, B] = Parser[Term[(A, E), B]]
-      val pushedParsers = PairTypeAlg[F](
-        P(var0[E, Int](varName) | varS[E, Int, Int](int)),
-        varS[E, Boolean, Int](bool),
-        varS[E, Int, Boolean](int),
-        P(var0[E, Boolean](varName) | varS[E, Boolean, Boolean](bool))
-      )
-      Parsers(
-        PairType.get[T, Int].run[F](pushedParsers),
-        PairType.get[T, Boolean].run[F](pushedParsers)
-      )
-    }
-
-    def pushVarWithChooser[T: Type](varname: String): Parsers[(T, E)] =
+    def pushVar[T: Type](varname: String)(implicit c1: Chooser[Int, T], c2: Chooser[Boolean, T]): Parsers[(T, E)] =
       Parsers[(T, E)](
-        choose[λ[X => Parser[Term[(T, E), X]]], Int, T](
+        c1.chooseF[λ[X => Parser[Term[(T, E), X]]]](
           varS[E, Int, T](int),
           P (var0[E, T](varname) | varS[E, T, T](get[T]))
         ),
-        choose[λ[X => Parser[Term[(T, E), X]]], Boolean, T](
+        c2.chooseF[λ[X => Parser[Term[(T, E), X]]]](
           varS[E, Boolean, T](bool),
           P (var0[E, T](varname) | varS[E, T, T](get[T]))
         )
@@ -182,7 +111,7 @@ object parser {
   def varS[E, A, B](current: Parser[Term[E, A]]): Parser[Term[(B, E), A]] =
     current.map(t => Builder.varS(t))
 
-  def let[E, A: Type, B: Type](vars: Parsers[E]): Parser[Term[E, B]] =
+  def let[E, A: Type, B: Type](vars: Parsers[E])(implicit c1: Chooser[Int, A], c2: Chooser[Boolean, A]): Parser[Term[E, B]] =
     P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[A]  ~ "," ~ "").flatMap { case (name, value) =>
       expr(vars.pushVar[A](name)).get[B].map(e => Builder.let(name, value)(e))
     } ~ ")")

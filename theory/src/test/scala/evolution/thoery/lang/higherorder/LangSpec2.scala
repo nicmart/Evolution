@@ -1,10 +1,10 @@
 package evolution.thoery.lang.higherorder
 
+import evolution.theory.lang.higherorder.parser2._
 import evolution.theory.lang.higherorder.{Evaluate, Serialize}
-import evolution.theory.lang.higherorder.parser._
 import org.scalatest.{Matchers, WordSpec}
 
-class LangSpec extends WordSpec with Matchers {
+class LangSpec2 extends WordSpec with Matchers {
   "An higher-order language with let-bindings" should {
     "parse and evaluate expressions correctly" in {
 
@@ -29,6 +29,27 @@ class LangSpec extends WordSpec with Matchers {
       // Ifs
       evaluate[Int]("if(true,1,0)") shouldBe 1
       evaluate[Int]("let(x,false,if($x,1,0))") shouldBe 0
+    }
+
+    "chooser test" in {
+      choose("asdasd", 12) shouldBe "asdasd"
+      choose("asdasd", "x") shouldBe "x"
+
+      def test[T, U](t: T, u: U): T = choose(t, u)
+
+      test("asdasd", 12) shouldBe "asdasd"
+
+      // This fails, because the implicit resolution happens once in the definition of  test
+      //test("asdasd", "x") shouldBe "x"
+
+      chooseF[Option, Int, Boolean](Some(12), Some(false)) shouldBe Some(12)
+      chooseF[Option, Int, Int](Some(12), Some(13)) shouldBe Some(13)
+
+      def test2[T](n: Int, t: T)(implicit chooser: Chooser[Int, T]): Int =
+        chooser.choose(n, t)
+
+      test2(12, "asdasd") shouldBe 12
+      test2(12, 13) shouldBe 13
     }
   }
 
