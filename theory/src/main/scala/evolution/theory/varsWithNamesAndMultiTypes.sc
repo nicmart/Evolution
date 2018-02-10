@@ -27,6 +27,9 @@ type StringConst[-E, +A] = String
 type StringWithContext[-E, +A] = List[String] => String
 type Id[-E, +A] = A
 
+trait Test[F[_]]
+new Test[Id[? ,String]]
+
 object Evaluate extends Lang[Ctx] {
   override def int[E](n: Int): Ctx[E, Int] =
     _ => n

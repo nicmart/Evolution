@@ -72,6 +72,15 @@ lazy val server = (project in file("server")).settings(
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value
 ).enablePlugins(SbtWeb)
 
+lazy val theory = (project in file("theory"))
+  .settings(
+    inThisBuild(commonSettings),
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
+      "com.lihaoyi" %%% "fastparse" % "1.0.0"
+    )
+  )
+
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
