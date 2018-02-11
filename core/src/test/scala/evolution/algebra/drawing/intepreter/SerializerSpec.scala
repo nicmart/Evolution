@@ -19,7 +19,7 @@ class SerializerSpec
         Point.zero,
         point(rnd(-1, 1), rnd(-1, 1))
       )
-      drawing.run(Serializer) shouldBe "integrate(point(0.0,0.0),point(rnd(-1.0,1.0),rnd(-1.0,1.0)))"
+      drawing.run(Serializer)(Nil) shouldBe "integrate(point(0.0,0.0),point(rnd(-1.0,1.0),rnd(-1.0,1.0)))"
     }
   }
 }

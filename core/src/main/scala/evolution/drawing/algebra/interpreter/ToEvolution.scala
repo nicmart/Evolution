@@ -3,12 +3,12 @@ package evolution.drawing.algebra.interpreter
 import cats.kernel.Group
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.drawing.algebra.DrawingAlgebra
+import evolution.drawing.algebra.{DrawingAlgebra, Type}
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
 object ToEvolution extends DrawingAlgebra[CtxEvolution] {
-  override def const[E, T: DrawingAlgebra.Type](x: T): E => Evolution[T] =
+  override def const[E, T: Type](x: T): E => Evolution[T] =
     _ => new Evolution[T] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
         alg.constant(x)
@@ -28,15 +28,15 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] =
         alg.polar(r(e).run, w(e).run)
     }
-  override def integrate[E, T: DrawingAlgebra.Type](start: T, f: E => Evolution[T]): E => Evolution[T] =
+  override def integrate[E, T: Type](start: T, f: E => Evolution[T]): E => Evolution[T] =
     e => new Evolution[T] {
-      implicit val group: Group[T] = DrawingAlgebra.typeInstance[T].group
+      implicit val group: Group[T] = Type.group[T]
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
         alg.solveIndependent(start)(f(e).run).positional
     }
-  override def derive[E, T: DrawingAlgebra.Type](f: E => Evolution[T]): E => Evolution[T] =
+  override def derive[E, T: Type](f: E => Evolution[T]): E => Evolution[T] =
     e => new Evolution[T] {
-      implicit val group: Group[T] = DrawingAlgebra.typeInstance[T].group
+      implicit val group: Group[T] = Type.group[T]
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
         alg.toPhaseSpace(f(e).run).map(_._2)
     }

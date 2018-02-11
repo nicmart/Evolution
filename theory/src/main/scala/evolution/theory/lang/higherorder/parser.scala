@@ -27,14 +27,8 @@ object parser {
       boolBool: F[Boolean, Boolean]
     ): PairTypeAlg[F] =
       TypeAlg[λ[X => TypeAlg[F[X, ?]]]](
-        TypeAlg[F[Int, ?]](
-          intInt,
-          intBool
-        ),
-        TypeAlg[F[Boolean, ?]](
-          boolInt,
-          boolBool
-        )
+        TypeAlg[F[Int, ?]](intInt, intBool),
+        TypeAlg[F[Boolean, ?]](boolInt, boolBool)
       )
   }
 

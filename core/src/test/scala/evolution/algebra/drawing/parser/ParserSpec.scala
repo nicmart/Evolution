@@ -65,6 +65,6 @@ class ParserSpec
 
   def assertParse[T](serializedDrawing: String, expected: DrawingE[Empty, T])(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
-    actual.map(_.run(Serializer)) shouldBe Right(expected.run(Serializer))
+    actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
   }
 }

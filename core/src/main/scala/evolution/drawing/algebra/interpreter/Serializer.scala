@@ -1,7 +1,6 @@
 package evolution.drawing.algebra.interpreter
 
-import evolution.drawing.algebra.DrawingAlgebra
-import evolution.drawing.algebra.DrawingAlgebra.{DoubleType, PointType}
+import evolution.drawing.algebra._
 import evolution.geometry.Point
 
 object Serializer extends DrawingAlgebra[CtxString] {
@@ -11,14 +10,11 @@ object Serializer extends DrawingAlgebra[CtxString] {
     e => s"point(${x(e)},${y(e)})"
   override def polar[E](r: List[String] => String, w: List[String] => String): List[String] => String =
     e => s"polar(${r(e)},${w(e)})"
-  override def const[E, T: DrawingAlgebra.Type](x: T): List[String] => String =
-    e => DrawingAlgebra.typeInstance[T].fold(x)(
-      _.toString,
-      point => s"point(${point.x},${point.y})"
-    )
-  override def integrate[E, T: DrawingAlgebra.Type](start: T, f: List[String] => String): List[String] => String =
+  override def const[E, T: Type](x: T): List[String] => String =
+    e => Type[T].fold[λ[X => String]](x)(_.toString, point => s"point(${point.x},${point.y})")
+  override def integrate[E, T: Type](start: T, f: List[String] => String): List[String] => String =
     e => s"integrate(${const(start).apply(e)},${f(e)})"
-  override def derive[E, T: DrawingAlgebra.Type](f: List[String] => String): List[String] => String =
+  override def derive[E, T: Type](f: List[String] => String): List[String] => String =
     e => s"derive(${f(e)})"
   override def var0[E, A]: CtxString[(CtxString[E, A], E), A] =
     ctx => "$" + ctx.headOption.getOrElse("x")
