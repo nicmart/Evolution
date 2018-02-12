@@ -61,10 +61,22 @@ class ParserSpec
         polar(const(.1), integrate(0, const(0.1)))
       )
     }
+    "parse let binding" in {
+      assertParse("let(x,1,$x)", let[Empty, Double, Double]("x", const(1.0))(var0))
+      assertDoubleParse[Point]("let(x,1.0,point($x,$x))")
+      assertDoubleParse[Point]("let(x,1.0,let(y,1.0,point($x,$y)))")
+    }
   }
+
+
 
   def assertParse[T](serializedDrawing: String, expected: DrawingE[Empty, T])(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
     actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
+  }
+
+  def assertDoubleParse[T](serializedDrawing: String)(implicit parser: DrawingParser[T]) = {
+    val actual = parser.parse(serializedDrawing)
+    actual.map(_.run(Serializer)(Nil)) shouldBe Right(serializedDrawing)
   }
 }

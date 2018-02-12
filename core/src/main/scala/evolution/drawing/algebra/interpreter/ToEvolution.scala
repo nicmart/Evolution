@@ -48,7 +48,7 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
     case (_, e) => expr(e)
   }
 
-  override def let[E, A, B](name: String, value: CtxEvolution[E, A])
-  (expr: CtxEvolution[(CtxEvolution[E, A], E), B]): E => Evolution[B] =
+  override def let[E, In, Out](name: String, value: CtxEvolution[E, In])
+  (expr: CtxEvolution[(CtxEvolution[E, In], E), Out]): E => Evolution[Out] =
   ctx => expr((value, ctx))
 }

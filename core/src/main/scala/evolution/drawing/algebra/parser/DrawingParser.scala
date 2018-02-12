@@ -95,15 +95,24 @@ object DrawingParser {
     def shift[E[_[_, _]], Out, In](current: Parser[DrawingE[E, Out]]): Parser[DrawingS[E, Out, In]] =
       current.map(t => Builder.shift[E, Out, In](t))
 
-    def let[E[_[_, _]], A: Type, B: Type](vars: Parsers[E]): Parser[DrawingE[E, B]] =
-      P(P("let" ~/ "(" ~ varName ~/ "," ~ expr(vars).get[A] ~/ "," ~ "").flatMap {
+    def let[E[_[_, _]], In: Type, Out: Type](vars: Parsers[E]): Parser[DrawingE[E, Out]] =
+      P(P("let" ~/ "(" ~ varName ~/ "," ~ expr(vars).get[In] ~/ "," ~ "").flatMap {
         case (name, value) =>
-          expr[λ[F[_, _] => (F[E[F], A], E[F])]](vars.pushVar[A](name)).get[B].map(e => Builder.let[E, A, B](name, value)(e))
+          expr[λ[F[_, _] => (F[E[F], In], E[F])]](vars.pushVar[In](name)).get[Out].map(e => Builder.let[E, In, Out](name, value)(e))
         } ~ ")")
 
+    def polymorphicExpr[E[_[_, _]], A: Type](vars: => Parsers[E]): Parser[DrawingE[E, A]] =
+      P(vars.get[A]
+        | const[E, A]
+        | derive[E, A](vars)
+        | let[E, Double, A](vars)
+        | integrate[E, A](vars)
+        | let[E, Point, A](vars)
+      )
+
     def expr[E[_[_, _]]](vars: Parsers[E]): Parsers[E] = Parsers[E](
-      P(const[E, Double] | rnd | integrate[E, Double](vars) | derive[E, Double](vars)),
-      P(cartesian[E](vars) | polar[E](vars) | const[E, Point] | integrate[E, Point](vars) | derive[E, Point](vars))
+      P(rnd[E] | polymorphicExpr[E, Double](vars)),
+      P(cartesian[E](vars) | polar[E](vars) | polymorphicExpr[E, Point](vars))
     )
 
     val initialParsers: Parsers[Empty] = expr(Parsers.empty[Empty])
