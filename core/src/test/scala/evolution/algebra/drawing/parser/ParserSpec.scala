@@ -1,6 +1,6 @@
 package evolution.algebra.drawing.parser
 
-import evolution.drawing.algebra.Drawing
+import evolution.drawing.algebra._
 import evolution.drawing.algebra.interpreter.Serializer
 import evolution.drawing.algebra.parser.DrawingParser.DoubleDrawingParser
 import org.scalatest.{Matchers, WordSpec}
@@ -63,8 +63,8 @@ class ParserSpec
     }
   }
 
-  def assertParse[T](serializedDrawing: String, expected: Drawing[Unit, T])(implicit parser: DrawingParser[T]) = {
+  def assertParse[T](serializedDrawing: String, expected: DrawingE[Empty, T])(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
-    actual.map(_.run(Serializer)) shouldBe Right(expected.run(Serializer))
+    actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
   }
 }

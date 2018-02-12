@@ -10,7 +10,7 @@ lazy val commonSettings = List(
   scalaVersion := "2.12.4",
   version      := "0.1.0-SNAPSHOT",
   libraryDependencies ++= Seq(
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4" cross CrossVersion.binary)
   )
 )
 
@@ -24,7 +24,8 @@ lazy val core = crossProject.
             "org.typelevel" %%% "cats" % "0.9.0",
             "com.chuusai" %%% "shapeless" % "2.3.2",
             "org.scalacheck" %%% "scalacheck" % "1.13.4" % Test,
-            "com.lihaoyi" %%% "fastparse" % "1.0.0"
+            "com.lihaoyi" %%% "fastparse" % "1.0.0",
+            compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4" cross CrossVersion.binary)
         )
     ).
     jvmSettings(
@@ -71,6 +72,15 @@ lazy val server = (project in file("server")).settings(
   packagePrefix in Assets := "public/",
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value
 ).enablePlugins(SbtWeb)
+
+lazy val theory = (project in file("theory"))
+  .settings(
+    inThisBuild(commonSettings),
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
+      "com.lihaoyi" %%% "fastparse" % "1.0.0"
+    )
+  )
 
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
