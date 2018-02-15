@@ -182,13 +182,13 @@ object parser {
     } ~ ")")
 
   def polymorphicExpr[E, A: Type](vars: => Parsers[E]): Parser[Term[E, A]] =
-    P( let[E, Int, A](vars) | let[E, Boolean, A](vars) | ifElse[E, A](vars) )
+    P( vars.get[A] | let[E, Int, A](vars) | let[E, Boolean, A](vars) | ifElse[E, A](vars) )
 
   def intExpr[E](vars: => Parsers[E]): Parser[Term[E, Int]] =
-    P(vars.int | int | add(vars) | polymorphicExpr[E, Int](vars) )
+    P(int | add(vars) | polymorphicExpr[E, Int](vars) )
 
   def boolExpr[E](vars: => Parsers[E]): Parser[Term[E, Boolean]] =
-    P(vars.bool | bool | polymorphicExpr[E, Boolean](vars) )
+    P(bool | polymorphicExpr[E, Boolean](vars) )
 
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(Config.whitespaces ~ p ~ Config.whitespaces)

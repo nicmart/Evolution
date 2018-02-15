@@ -21,5 +21,5 @@ object Serializer extends DrawingAlgebra[CtxString] {
   override def shift[E, A, B](expr: CtxString[E, A]): CtxString[(CtxString[E, B], E), A] =
     ctx => expr(ctx.tail)
   override def let[E, A, B](name: String, value: CtxString[E, A])(expr: CtxString[(CtxString[E, A], E), B]): CtxString[E, B] =
-    ctx => s"let($name, ${value(ctx)}, ${expr(name :: ctx)})"
+    ctx => s"let($name,${value(ctx)},${expr(name :: ctx)})"
 }
