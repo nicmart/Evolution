@@ -15,6 +15,8 @@ class ParserSpec
     with Matchers
     with PropertyChecks {
 
+  type OpenDoubleEnv[F[_, _]] = (F[Double, Empty[F]], Empty[F])
+
   "A Parser" should {
     "parse a rnd expression" in {
       assertParse("rnd(0.1,1)", rnd(0.1, 1))
@@ -25,6 +27,10 @@ class ParserSpec
     "ignore whitespaces" in {
       assertParse("rnd(0.1, 1)", rnd(0.1, 1))
       assertParse("rnd(\n.1,\n1)", rnd(0.1, 1))
+      assertParse(
+        "\n\nlet(x\n  ,\n  .1  \n , $x   \n)",
+        let[Empty, Double, Double]("x", const(.1))(var0)
+      )
     }
     "parse a const expression" in {
       assertParse("0.1", const(0.1))

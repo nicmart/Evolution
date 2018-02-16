@@ -14,12 +14,19 @@ object DrawingParser {
   type Error = String
 
   object Parsers {
+    object Config {
+      import fastparse.all._
+      val whitespaces = CharIn(" ", "\n", "\r").rep
+    }
     val White = WhitespaceApi.Wrapper{
       import fastparse.all._
-      NoTrace(CharIn(" ", "\n", "\r").rep)
+      NoTrace(Config.whitespaces)
     }
-    import fastparse.noApi._
     import White._
+    import fastparse.noApi._
+
+    def whitespaceWrap[T](p: Parser[T]): Parser[T] =
+      P(Config.whitespaces ~ p ~ Config.whitespaces)
 
     case class Parsers[E[_[_, _]]](
       double: Parser[DrawingE[E, Double]],
@@ -96,9 +103,10 @@ object DrawingParser {
       current.map(t => Builder.shift[E, Out, In](t))
 
     def let[E[_[_, _]], In: Type, Out: Type](vars: Parsers[E]): Parser[DrawingE[E, Out]] =
-      P(P("let" ~/ "(" ~ varName ~/ "," ~ expr(vars).get[In] ~/ "," ~ "").flatMap {
-        case (name, value) =>
-          expr[λ[F[_, _] => (F[E[F], In], E[F])]](vars.pushVar[In](name)).get[Out].map(e => Builder.let[E, In, Out](name, value)(e))
+      P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[In] ~ "," ~ "").flatMap {
+        case (name, value) => whitespaceWrap(
+            expr[λ[F[_, _] => (F[E[F], In], E[F])]](vars.pushVar[In](name)).get[Out].map(e => Builder.let[E, In, Out](name, value)(e))
+          )
         } ~ ")")
 
     def polymorphicExpr[E[_[_, _]], A: Type](vars: => Parsers[E]): Parser[DrawingE[E, A]] =
@@ -111,8 +119,8 @@ object DrawingParser {
       )
 
     def expr[E[_[_, _]]](vars: Parsers[E]): Parsers[E] = Parsers[E](
-      P(rnd[E] | polymorphicExpr[E, Double](vars)),
-      P(cartesian[E](vars) | polar[E](vars) | polymorphicExpr[E, Point](vars))
+      whitespaceWrap(P(rnd[E] | polymorphicExpr[E, Double](vars))),
+      whitespaceWrap(P(cartesian[E](vars) | polar[E](vars) | polymorphicExpr[E, Point](vars)))
     )
 
     val initialParsers: Parsers[Empty] = expr(Parsers.empty[Empty])
