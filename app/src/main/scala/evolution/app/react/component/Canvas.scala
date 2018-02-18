@@ -73,7 +73,6 @@ object Canvas {
     }
 
     def scheduleStop(): Unit = {
-      println("stopping")
       stopPending = true
     }
 

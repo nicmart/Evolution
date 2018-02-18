@@ -25,8 +25,8 @@ object Builder {
     new Term[E, Int] { def run[F[- _, + _], P[_, _]](alg: Lang[F, P]): F[E[P], Int] = alg.add(n.run(alg), m.run(alg)) }
   def ifElse[E[_[_, _]], A](condition: Term[E, Boolean], ifTrue: Term[E, A], ifFalse: Term[E, A]): Term[E, A] =
     new Term[E, A] { def run[F[- _, + _], P[_, _]](alg: Lang[F, P]): F[E[P], A] = alg.ifElse(condition.run(alg), ifTrue.run(alg), ifFalse.run(alg)) }
-  def var0[E[_[_, _]], A]: Term[E, λ[P[_, _] => P[A, E[P]]]] =
-    new Term[E, λ[P[_, _] => P[A, E[P]]]] { def run[F[- _, + _], P[_, _]](alg: Lang[F, P]): F[P[A, E[P]], A] = alg.var0 }
+  def var0[E[_[_, _]], A]: Term[λ[P[_, _] => P[A, E[P]]], A] =
+    new Term[λ[P[_, _] => P[A, E[P]]], A] { def run[F[- _, + _], P[_, _]](alg: Lang[F, P]): F[P[A, E[P]], A] = alg.var0 }
   def let[E[_[_, _]], A, B](name: String, value: Term[E, A])(expr: Term[λ[P[_, _] => P[A, E[P]]], B]): Term[E, B] =
     new Term[E, B] { def run[F[- _, + _], P[_, _]](alg: Lang[F, P]): F[E[P], B] = alg.let(name, value.run(alg))(expr.run(alg)) }
   def varS[E[_[_, _]], A, B](e: Term[E, A]): Term[λ[P[_, _] => P[B, E[P]]], A] =

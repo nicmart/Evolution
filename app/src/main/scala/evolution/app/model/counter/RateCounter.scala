@@ -7,7 +7,6 @@ case class RateCounter(value: Int, last: RateValue, delta: Double) {
       copy(value = value + additionalValue)
     } else {
       val newValue = value + additionalValue
-      println(last.next(newValue, currentTime).rate.toString)
       RateCounter(0, last.next(newValue, currentTime), delta)
     }
   }

@@ -20,6 +20,10 @@ trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def derive[E, T: Type](f: F[E, T]): F[E, T]
 }
 
+trait DrawingExpr[E[_[_, _]], +A] {
+  def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], A]
+}
+
 trait TypeAlg[F[_]] {
   def double: F[Double]
   def point: F[Point]

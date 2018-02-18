@@ -14,7 +14,10 @@ object DrawingDSLComponent {
     instance("drawing config") { (props, children) =>
       val stringSnapshot = props.zoomState[String](
         drawing => drawing.run(Serializer)(Nil))(
-        serialized => currDrawing => PointDrawingParser.parse(serialized).fold(_ => currDrawing, identity)
+        serialized => currDrawing => PointDrawingParser.parse(serialized).fold(
+          error => { println(error); currDrawing },
+          identity
+        )
       )
       component(stringSnapshot)()
     }
