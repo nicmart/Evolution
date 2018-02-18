@@ -70,3 +70,9 @@ nav .checkbox:hover {
   border: 1px solid Black;
   border-radius: .5em;
 }
+
+.field input,
+.field select,
+.field textarea {
+  font-family: monospace;
+}

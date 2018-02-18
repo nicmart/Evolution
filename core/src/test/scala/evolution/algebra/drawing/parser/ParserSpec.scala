@@ -1,21 +1,19 @@
 package evolution.algebra.drawing.parser
 
 import evolution.drawing.algebra._
-import evolution.drawing.algebra.interpreter.Serializer
+import evolution.drawing.algebra.interpreter.{Builder, Serializer}
 import evolution.drawing.algebra.parser.DrawingParser.DoubleDrawingParser
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.prop.PropertyChecks
-import evolution.drawing.algebra.interpreter.Builder._
-import evolution.drawing.algebra.parser.DrawingParser
+import evolution.drawing.algebra.parser.{DrawingParser}
 import evolution.geometry.Point
-import fastparse.all
 
 class ParserSpec
   extends WordSpec
     with Matchers
     with PropertyChecks {
 
-  type OpenDoubleEnv[F[_, _]] = (F[Double, Empty[F]], Empty[F])
+  import Builder.start._
 
   "A Parser" should {
     "parse a rnd expression" in {
@@ -29,10 +27,11 @@ class ParserSpec
       assertParse("rnd(\n.1,\n1)", rnd(0.1, 1))
       assertParse(
         "\n\nlet(x\n  ,\n  .1  \n , $x   \n)",
-        let0("x", const(.1))(var0[Empty, Double])
+        let("x", const(.1))(_ => var0)
       )
-      assertSuccessfulParse(
-        "\n\nlet\n(\nx\n,\n.1\n,\n let \n ( \n y\n,\n.1\n,\n$y\n)\n)\n"
+      assertParse[Double](
+        "\n\nlet\n(\nx\n,\n.1\n,\n let \n ( \n y\n,\n.1\n,\n$y\n)\n)\n",
+        let("x", const(.1))(b1 => b1.let("y", b1.const(.1))(_ => b1.var0))
       )
       assertParse(
         "point(1,rnd(1,1\n)\n)\n",
@@ -75,38 +74,23 @@ class ParserSpec
       )
     }
     "parse let binding" in {
-      assertParse("let(x,1,$x)", let[Empty, Double, Double]("x", const(1.0))(var0))
+      assertParse("let(x,1,$x)", let("x", const(1.0))(_ => var0))
       assertDoubleParse[Point]("let(x,1.0,point($x,$x))")
       assertDoubleParse[Point]("let(x,1.0,let(y,1.0,point($x,$y)))")
     }
   }
 
-  type Env0[F[_, _]] = Empty[F]
-  type Env1[F[_, _], In] = (F[Env0[F], In], Env0[F])
-  type Env2[F[_, _], In1, In2] = (F[Env1[F, In2], In1], Env1[F, In2])
-  type EnvS[F[_, _], E[_[_, _]], In] = (F[E[F], In], E[F])
-
-  type Expr0[Out] = DrawingExpr[Empty, Out]
-  type Expr1[In, Out] = DrawingExpr[λ[F[_, _] => Env1[F, In]], Out]
-  type Expr2[In1, In2, Out] = DrawingExpr[λ[F[_, _] => Env2[F, In1, In2]], Out]
-
-  private def let0[In, Out](varname: String, value: Expr0[In])(expr: Expr1[In, Out]): Expr0[Out] =
-    let[Empty, In, Out](varname, value)(expr)
-
-  private def let1[In1, In2, Out](varname: String, value: Expr1[In1, In2])(expr: Expr2[In2, In1, Out]): Expr1[In1, Out] =
-    let[Env1[?[_, _], In1], In2, Out](varname, value)(expr)
-
-  def assertParse[T](serializedDrawing: String, expected: DrawingExpr[Empty, T])(implicit parser: DrawingParser[T]) = {
+  private def assertParse[T](serializedDrawing: String, expected: DrawingExpr[Empty, T])(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
     actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
   }
 
-  def assertSuccessfulParse[T](serialized: String)(implicit parser: DrawingParser[T]) = {
+  private def assertSuccessfulParse[T](serialized: String)(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serialized)
     actual.map(_.run(Serializer)(Nil)).isRight shouldBe true
   }
 
-  def assertDoubleParse[T](serializedDrawing: String)(implicit parser: DrawingParser[T]) = {
+  private def assertDoubleParse[T](serializedDrawing: String)(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
     actual.map(_.run(Serializer)(Nil)) shouldBe Right(serializedDrawing)
   }
