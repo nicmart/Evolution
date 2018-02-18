@@ -68,11 +68,13 @@ object DrawingParser {
     def literal[T: Type]: Parser[T] =
       Type[T].run(TypeAlg(double, point))
 
-    val varName: Parser[String] =
-      P(CharsWhileIn('a' to 'z').!)
+    val varName: Parser[String] = {
+      val letter = P(CharIn('a' to 'z') | CharIn('A' to 'Z') | CharIn(Seq('_', '-')) | CharIn('0' to '9'))
+      P(letter.rep(1).!)
+    }
 
     def const[E[_[_, _]], T: Type]: Parser[DrawingExpr[E, T]] =
-      literal[T].map(t => Builder.const[E, T](t))
+      literal[T].map(t => Builder.const(t))
 
     def cartesian[E[_[_, _]]](vars: Parsers[E]): Parser[DrawingExpr[E, Point]] =
       function2("point", expr(vars).get[Double], expr(vars).get[Double]).map {
@@ -104,25 +106,25 @@ object DrawingParser {
     def let[E[_[_, _]], In: Type, Out: Type](vars: Parsers[E]): Parser[DrawingExpr[E, Out]] =
       P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[In] ~ "," ~ "").flatMap {
         case (name, value) => whitespaceWrap(
-            expr[λ[F[_, _] => (F[E[F], In], E[F])]](vars.pushVar[In](name)).get[Out].map(e => Builder.let[E, In, Out](name, value)(e))
+            expr[EnvS[?[_, _], E, In]](vars.pushVar[In](name)).get[Out].map(e => Builder.let[E, In, Out](name, value)(e))
           )
         } ~ ")")
 
     def polymorphicExpr[E[_[_, _]], A: Type](vars: => Parsers[E]): Parser[DrawingExpr[E, A]] =
       P(vars.get[A]
-        | const[E, A]
-        | derive[E, A](vars)
+        | const
+        | derive(vars)
         | let[E, Double, A](vars)
-        | integrate[E, A](vars)
+        | integrate(vars)
         | let[E, Point, A](vars)
       )
 
     def expr[E[_[_, _]]](vars: Parsers[E]): Parsers[E] = Parsers[E](
       whitespaceWrap(P(rnd[E] | polymorphicExpr[E, Double](vars))),
-      whitespaceWrap(P(cartesian[E](vars) | polar[E](vars) | polymorphicExpr[E, Point](vars)))
+      whitespaceWrap(P(cartesian(vars) | polar(vars) | polymorphicExpr[E, Point](vars)))
     )
 
-    val initialParsers: Parsers[Empty] = expr(Parsers.empty[Empty])
+    val initialParsers: Parsers[Empty] = expr(Parsers.empty)
 
     def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
       P(funcName ~ "(" ~ parser ~ ")")
