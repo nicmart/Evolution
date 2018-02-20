@@ -4,8 +4,8 @@ import evolution.drawing.algebra._
 import evolution.geometry.Point
 
 object Serializer extends DrawingAlgebra[CtxString] {
-  override def rnd[E](from: Double, to: Double): List[String] => String =
-    _ => s"rnd($from,$to)"
+  override def rnd[E](from: List[String] => String, to: List[String] => String): List[String] => String =
+    e => s"rnd(${from(e)},${to(e)})"
   override def point[E](x: List[String] => String, y: List[String] => String): List[String] => String =
     e => s"point(${x(e)},${y(e)})"
   override def polar[E](r: List[String] => String, w: List[String] => String): List[String] => String =

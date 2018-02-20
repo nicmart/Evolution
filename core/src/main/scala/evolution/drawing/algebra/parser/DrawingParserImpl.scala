@@ -96,7 +96,7 @@ object DrawingParserImpl {
       }
 
     def rnd: ParserOf[Double] =
-      function2("rnd", double, double).map { case (x, y) => b.rnd(x, y) }
+      function2("rnd", expr.get[Double], expr.get[Double]).map { case (x, y) => b.rnd(x, y) }
 
     def integrate[T: Type]: ParserOf[T] =
       function2("integrate", literal[T], expr.get[T]).map {

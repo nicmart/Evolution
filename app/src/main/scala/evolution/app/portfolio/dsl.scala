@@ -37,8 +37,8 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   val initialConfig = Config(
-    let("noiseX", rnd(-1, 1)) { b1 =>
-      b1.let("noiseY", b1.rnd(-1, 1)) { b2 =>
+    let("noiseX", rnd(const(-1), const(1))) { b1 =>
+      b1.let("noiseY", b1.rnd(b1.const(-1), b1.const(1))) { b2 =>
         b2.integrate(Point.zero, b2.point(b1.shift(var0), b1.var0))
       }
     }

@@ -28,6 +28,11 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   def doubleBetween(from: Double, to: Double): Evo[Double] =
     double.map(d => (to - from) * d + from)
 
+  def doubleBetweenEvo(from: Evo[Double], to: Evo[Double]): Evo[Double] =
+    from.zip(to).zip(double).map { case ((fromDouble, toDouble), d) =>
+      (toDouble - fromDouble) * d + fromDouble
+    }
+
   def ball(radius: Double): Evo[Double] =
     double.map(d => radius * (d * 2 - 1))
 

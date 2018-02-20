@@ -13,7 +13,7 @@ trait BindingAlgebra[F[-_, +_]] {
 
 trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def const[E, T: Type](x: T): F[E, T]
-  def rnd[E](from: Double, to: Double): F[E, Double]
+  def rnd[E](from: F[E, Double], to: F[E, Double]): F[E, Double]
   def point[E](x: F[E, Double], y: F[E, Double]): F[E, Point]
   def polar[E](r: F[E, Double], w: F[E, Double]): F[E, Point]
   def integrate[E, T: Type](start: T, f: F[E, T]): F[E, T]

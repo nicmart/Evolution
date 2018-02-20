@@ -18,7 +18,7 @@ class SerializerSpec
     "serialize a complex drawing" in {
       val drawing = integrate[Point](
         Point.zero,
-        point(rnd(-1, 1), rnd(-1, 1))
+        point(rnd(const(-1), const(1)), rnd(const(-1), const(1)))
       )
       drawing.run(Serializer)(Nil) shouldBe "integrate(point(0.0,0.0),point(rnd(-1.0,1.0),rnd(-1.0,1.0)))"
     }

@@ -13,10 +13,10 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
         alg.constant(x)
     }
-  override def rnd[E](from: Double, to: Double): E => Evolution[Double] =
-    _ => new Evolution[Double] {
+  override def rnd[E](from: E => Evolution[Double], to: E => Evolution[Double]): E => Evolution[Double] =
+    e => new Evolution[Double] {
       override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] =
-        alg.doubleBetween(from, to)
+        alg.doubleBetweenEvo(from(e).run, to(e).run)
     }
   override def point[E](x: E => Evolution[Double], y: E => Evolution[Double]): E => Evolution[Point] =
     e => new Evolution[Point] {

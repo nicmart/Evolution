@@ -17,14 +17,14 @@ class ParserSpec
 
   "A Parser" should {
     "parse a rnd expression" in {
-      assertParse("rnd(0.1,1)", rnd(0.1, 1))
-      assertParse("rnd(.1,1)", rnd(0.1, 1))
-      assertParse("rnd(.1,1.001)", rnd(0.1, 1.001))
-      assertParse("rnd(-.1,1.001)", rnd(-0.1, 1.001))
+      assertParse("rnd(0.1,1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(.1,1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(.1,1.001)", rnd(const(0.1), const(1.001)))
+      assertParse("rnd(-.1,1.001)", rnd(const(-0.1), const(1.001)))
     }
     "ignore whitespaces" in {
-      assertParse("rnd(0.1, 1)", rnd(0.1, 1))
-      assertParse("rnd(\n.1,\n1)", rnd(0.1, 1))
+      assertParse("rnd(0.1, 1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(\n.1,\n1)", rnd(const(0.1), const(1)))
       assertParse(
         "\n\nlet(x\n  ,\n  .1  \n , $x   \n)",
         let("x", const(.1))(_ => var0)
@@ -35,7 +35,7 @@ class ParserSpec
       )
       assertParse(
         "point(1,rnd(1,1\n)\n)\n",
-        point(const(1.0), rnd(1, 1))
+        point(const(1.0), rnd(const(1), const(1)))
       )
     }
     "parse a const expression" in {

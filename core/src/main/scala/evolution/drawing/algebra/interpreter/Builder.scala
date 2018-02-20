@@ -8,9 +8,9 @@ final class Builder[E[_[_, _]]] {
   type NextDrawingExpr[In, Out] = DrawingExpr[EnvS[?[_, _], E, In], Out]
   def withVar[In]: NextBuilder[In] = new NextBuilder[In]
 
-  def rnd(from: Double, to: Double): DrawingExpr[E, Double] = new DrawingExpr[E, Double] {
+  def rnd(from: DrawingExpr[E, Double], to: DrawingExpr[E, Double]): DrawingExpr[E, Double] = new DrawingExpr[E, Double] {
     override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], Double] =
-      alg.rnd[E[F]](from, to)
+      alg.rnd[E[F]](from.run(alg), to.run(alg))
   }
 
   def point(x: DrawingExpr[E, Double], y: DrawingExpr[E, Double]): DrawingExpr[E, Point] = new DrawingExpr[E, Point] {
