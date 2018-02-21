@@ -33,7 +33,7 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    config.dsl.run(ToEvolution)(())
+    config.dsl.run(ToEvolution)(()).evolution
   }
 
   val initialConfig = Config(

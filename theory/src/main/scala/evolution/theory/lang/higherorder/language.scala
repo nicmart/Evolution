@@ -7,6 +7,7 @@ trait Lang[F[-_, +_]] {
   def bool[E](b: Boolean): F[E, Boolean]
   def add[E](n: F[E, Int], m: F[E, Int]): F[E, Int]
   def ifElse[E, A](condition: F[E, Boolean], ifTrue: F[E, A], ifFalse: F[E, A]): F[E, A]
+
   def var0[E, A]: F[(A, E), A]
   def varS[E, A, B](e: F[E, A]): F[(B, E), A]
   def let[E, A, B](name: String, value: F[E, A])(expr: F[(A, E), B]): F[E, B]
