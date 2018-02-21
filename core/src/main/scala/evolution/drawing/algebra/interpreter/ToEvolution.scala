@@ -1,15 +1,82 @@
 package evolution.drawing.algebra.interpreter
 
 import cats.kernel.Group
+import cats.syntax.group._
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.drawing.algebra.{DrawingAlgebra, Type}
+import evolution.drawing.algebra.{DrawingAlgebra, Type, TypeAlg}
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
 object ToEvolution extends DrawingAlgebra[CtxEvolution] {
   override def const[E, T: Type](x: T): E => StaticOrDynamicEvolution[T] =
     _ => Static(x)
+
+  override def mul[E, T: Type](k: CtxEvolution[E, Double], t: CtxEvolution[E, T]): CtxEvolution[E, T] = {
+    implicit val group: Group[T] = Type.group[T]
+    implicit val groupDouble: Group[Double] = Type.group[Double]
+    Type[T].foldF[CtxEvolution[E, ?], CtxEvolution[E, ?]](t)(
+      mulDouble[E](k),
+      mulPoint[E](k)
+    )
+  }
+
+  private def mulDouble[E](k: CtxEvolution[E, Double])(t: CtxEvolution[E, Double]): CtxEvolution[E, Double] =
+    e => (k(e), t(e)) match {
+      case (Static(kVal), Static(tVal)) => Static(kVal * tVal)
+      case (Static(kVal), Dynamic(tEvo)) => Dynamic(new Evolution[Double] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] = tEvo.run.map(kVal * _)
+      })
+      case (Dynamic(kEvo), Static(tVal)) => Dynamic(new Evolution[Double] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] = kEvo.run.map(_ * tVal)
+      })
+      case (Dynamic(kEvo), Dynamic(tEvo)) => Dynamic(new Evolution[Double] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] =
+          kEvo.run.zipWith(tEvo.run)(_ * _)
+      })
+    }
+
+  private def mulPoint[E](k: CtxEvolution[E, Double])(t: CtxEvolution[E, Point]): CtxEvolution[E, Point] =
+    e => (k(e), t(e)) match {
+      case (Static(kVal), Static(tVal)) => Static(tVal * kVal)
+      case (Static(kVal), Dynamic(tEvo)) => Dynamic(new Evolution[Point] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = tEvo.run.map(_ * kVal)
+      })
+      case (Dynamic(kEvo), Static(tVal)) => Dynamic(new Evolution[Point] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = kEvo.run.map(tVal * _)
+      })
+      case (Dynamic(kEvo), Dynamic(tEvo)) => Dynamic(new Evolution[Point] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] =
+          tEvo.run.zipWith(kEvo.run)(_ * _)
+      })
+    }
+
+  override def inverse[E, T: Type](a: CtxEvolution[E, T]): CtxEvolution[E, T] = {
+    implicit val group: Group[T] = Type.group[T]
+    e => a(e) match {
+      case Static(aVal) => Static(aVal.inverse)
+      case Dynamic(aEvo) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] = aEvo.run.map(_.inverse)
+      })
+    }
+  }
+
+  override def add[E, T: Type](a: CtxEvolution[E, T], b: CtxEvolution[E, T]): CtxEvolution[E, T] = {
+    implicit val group: Group[T] = Type.group[T]
+    e => (a(e), b(e)) match {
+      case (Static(aVal), Static(bVal)) => Static(aVal |+| bVal)
+      case (Static(aVal), Dynamic(bEvo)) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] = bEvo.run.map(aVal |+| _)
+      })
+      case (Dynamic(aEvo), Static(bVal)) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] = aEvo.run.map(_ |+| bVal)
+      })
+      case (Dynamic(aEvo), Dynamic(bEvo)) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
+          aEvo.run.zipWith(bEvo.run)(_ |+| _)
+      })
+    }
+  }
 
   /**
     * Optimise the generated evolution when both from and to are static values
@@ -65,5 +132,5 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
 
   override def let[E, In, Out](name: String, value: CtxEvolution[E, In])
   (expr: CtxEvolution[(CtxEvolution[E, In], E), Out]): E => StaticOrDynamicEvolution[Out] =
-  ctx => expr((value, ctx))
+    ctx => expr((value, ctx))
 }

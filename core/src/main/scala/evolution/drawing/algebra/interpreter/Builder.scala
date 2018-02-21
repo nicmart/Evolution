@@ -8,6 +8,21 @@ final class Builder[E[_[_, _]]] {
   type NextDrawingExpr[In, Out] = DrawingExpr[EnvS[?[_, _], E, In], Out]
   def withVar[In]: NextBuilder[In] = new NextBuilder[In]
 
+  def add[T: Type](a: DrawingExpr[E, T], b: DrawingExpr[E, T]): DrawingExpr[E, T] = new DrawingExpr[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
+      alg.add[E[F], T](a.run(alg), b.run(alg))
+  }
+
+  def inverse[T: Type](t: DrawingExpr[E, T]): DrawingExpr[E, T] = new DrawingExpr[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
+      alg.inverse[E[F], T](t.run(alg))
+  }
+
+  def mul[T: Type](k: DrawingExpr[E, Double], t: DrawingExpr[E, T]): DrawingExpr[E, T] = new DrawingExpr[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
+      alg.mul[E[F], T](k.run(alg), t.run(alg))
+  }
+
   def rnd(from: DrawingExpr[E, Double], to: DrawingExpr[E, Double]): DrawingExpr[E, Double] = new DrawingExpr[E, Double] {
     override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], Double] =
       alg.rnd[E[F]](from.run(alg), to.run(alg))

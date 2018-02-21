@@ -98,6 +98,15 @@ object DrawingParserImpl {
     def rnd: ParserOf[Double] =
       function2("rnd", expr.get[Double], expr.get[Double]).map { case (x, y) => b.rnd(x, y) }
 
+    def add[T: Type]: ParserOf[T] =
+      function2("add", expr.get[T], expr.get[T]).map { case (x, y) => b.add(x, y) }
+
+    def inverse[T: Type]: ParserOf[T] =
+      function1("inverse", expr.get[T]).map { x => b.inverse(x) }
+
+    def mul[T: Type]: ParserOf[T] =
+      function2("mul", expr.get[Double], expr.get[T]).map { case (x, y) => b.mul(x, y) }
+
     def integrate[T: Type]: ParserOf[T] =
       function2("integrate", literal[T], expr.get[T]).map {
         case (s, f) => b.integrate(s, f)
@@ -123,8 +132,11 @@ object DrawingParserImpl {
       P(vars.get[A]
         | const
         | derive
-        | let[Double, A]
         | integrate
+        | inverse[A]
+        | add[A]
+        | mul[A]
+        | let[Double, A]
         | let[Point, A]
       )
 

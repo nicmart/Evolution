@@ -13,6 +13,9 @@ trait BindingAlgebra[F[-_, +_]] {
 
 trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def const[E, T: Type](x: T): F[E, T]
+  def mul[E, T: Type](k: F[E, Double], t: F[E, T]): F[E, T]
+  def add[E, T: Type](a: F[E, T], b: F[E, T]): F[E, T]
+  def inverse[E, T: Type](a: F[E, T]): F[E, T]
   def rnd[E](from: F[E, Double], to: F[E, Double]): F[E, Double]
   def point[E](x: F[E, Double], y: F[E, Double]): F[E, Point]
   def polar[E](r: F[E, Double], w: F[E, Double]): F[E, Point]
@@ -56,6 +59,8 @@ trait Type[T] {
   def run[F[_]](alg: TypeAlg[F]): F[T]
   def fold[F[_]](t: T)(f1: Double => F[Double], f2: Point => F[Point]): F[T] =
     run[λ[X => X => F[X]]](TypeAlg[λ[X => X => F[X]]](f1, f2))(t)
+  def foldF[F[_], G[_]](t: F[T])(f1: F[Double] => G[Double], f2: F[Point] => G[Point]): G[T] =
+    run[λ[X => F[X] => G[X]]](TypeAlg[λ[X => F[X] => G[X]]](f1, f2))(t)
 }
 
 object Type {
