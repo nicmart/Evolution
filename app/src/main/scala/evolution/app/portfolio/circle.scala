@@ -10,6 +10,7 @@ import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
+import cats.instances.double._
 
 object circle extends DrawingDefinition[Point] {
   val name = "circle"

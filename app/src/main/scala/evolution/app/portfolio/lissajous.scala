@@ -10,6 +10,7 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.geometry.Point
 import io.circe.generic.auto._
+import cats.instances.double._
 
 object lissajous extends DrawingDefinition[Point] {
   val name = "lissajous"
@@ -29,11 +30,11 @@ object lissajous extends DrawingDefinition[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._, config._
 
-        val t = progression(speed)
+        val t = progression(speed, 0)
         val radiants = (delta / 360) * 2 * Math.PI
         val size = Math.min(context.canvasSize.height, context.canvasSize.width) * 0.4
 
-        progression(speed).map { t =>
+        progression(speed, 0).map { t =>
           Point(
             Math.sin(a * t + radiants),
             Math.sin(b * t)

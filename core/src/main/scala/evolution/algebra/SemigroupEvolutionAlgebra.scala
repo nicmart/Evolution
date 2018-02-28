@@ -1,6 +1,6 @@
 package evolution.algebra
 
-import cats.kernel.{Group, Semigroup}
+import cats.kernel.{Group, Monoid, Semigroup}
 import evolution.algebra.syntax.all._
 
 trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
@@ -14,4 +14,9 @@ trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
 
   def centeredIn[A](center: A)(evo: Evo[A])(implicit semigroup: Semigroup[A]): Evo[A] =
     evo.map(semigroup.combine(center, _))
+
+  def progression[A](step: A, from: A)(implicit M: Monoid[A]): Evo[A] = {
+    cons(from, progression(step, M.combine(from, step)))
+  }
+
 }
