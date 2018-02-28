@@ -21,6 +21,7 @@ trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def polar[E](r: F[E, Double], w: F[E, Double]): F[E, Point]
   def integrate[E, T: Type](start: T, f: F[E, T]): F[E, T]
   def derive[E, T: Type](f: F[E, T]): F[E, T]
+  def slowDown[E, T: Type](by: F[E, Double], drawing: F[E, T]): F[E, T]
 }
 
 trait DrawingExpr[E[_[_, _]], +A] {

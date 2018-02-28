@@ -51,6 +51,11 @@ final class Builder[E[_[_, _]]] {
       alg.derive(f.run(alg))
   }
 
+  def slowDown[T: Type](by: DrawingExpr[E, Double], t: DrawingExpr[E, T]): DrawingExpr[E, T] = new DrawingExpr[E, T] {
+    override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
+      alg.slowDown[E[F], T](by.run(alg), t.run(alg))
+  }
+
   def var0[A]: NextDrawingExpr[A, A] = new NextDrawingExpr[A, A] {
     override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[(F[E[F], A], E[F]), A] =
       alg.var0[E[F], A]

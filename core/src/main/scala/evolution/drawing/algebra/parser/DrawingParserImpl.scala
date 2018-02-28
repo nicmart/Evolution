@@ -115,6 +115,9 @@ object DrawingParserImpl {
     def derive[T: Type]: ParserOf[T] =
       function1("derive", expr.get[T]).map { f => b.derive(f) }
 
+    def slowDown[T: Type]: ParserOf[T] =
+      function2("slowDown", expr.get[Double], expr.get[T]).map { case (x, y) => b.slowDown(x, y) }
+
     def var0[A](varName: String): NextParserOf[A, A] =
       P("$" ~ varName).map(_ => b.var0)
 
@@ -136,6 +139,7 @@ object DrawingParserImpl {
         | inverse[A]
         | add[A]
         | mul[A]
+        | slowDown[A]
         | let[Double, A]
         | let[Point, A]
       )

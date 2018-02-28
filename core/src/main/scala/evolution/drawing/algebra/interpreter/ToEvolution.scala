@@ -133,4 +133,17 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
   override def let[E, In, Out](name: String, value: CtxEvolution[E, In])
   (expr: CtxEvolution[(CtxEvolution[E, In], E), Out]): E => StaticOrDynamicEvolution[Out] =
     ctx => expr((value, ctx))
+
+  override def slowDown[E, T: Type](by: CtxEvolution[E, Double], drawing: CtxEvolution[E, T]): CtxEvolution[E, T] =
+    ctx => (by(ctx), drawing(ctx)) match {
+      case (_, Static(drawingVal)) => Static(drawingVal)
+      case (Static(byVal), Dynamic(drawingEvo)) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
+          alg.slowDown(drawingEvo.run, byVal.toInt)
+      })
+      case (Dynamic(byEvo), Dynamic(drawingEvo)) => Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
+          alg.slowDownBy(drawingEvo.run, alg.map(byEvo.run)(_.toInt))
+      })
+    }
 }
