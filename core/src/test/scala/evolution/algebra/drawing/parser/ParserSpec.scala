@@ -90,6 +90,10 @@ class ParserSpec
 //      assertDoubleParse[Point]("let(x,1.0,point($x,$x))")
 //      assertDoubleParse[Point]("let(x,1.0,let(y,1.0,point($x,$y)))")
     }
+
+    "do not parse partial drawings" in {
+      assertNotParse[Point]("point(1,1) point(1,1)")
+    }
   }
 
   private def assertParse[T](serializedDrawing: String, expected: DrawingExpr[Empty, T])(implicit parser: DrawingParser[T]) = {
@@ -97,9 +101,9 @@ class ParserSpec
     actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
   }
 
-  private def assertSuccessfulParse[T](serialized: String)(implicit parser: DrawingParser[T]) = {
-    val actual = parser.parse(serialized)
-    actual.map(_.run(Serializer)(Nil)).isRight shouldBe true
+  private def assertNotParse[T](serializedDrawing: String)(implicit parser: DrawingParser[T]) = {
+    val actual = parser.parse(serializedDrawing)
+    actual.isLeft shouldBe true
   }
 
   private def assertDoubleParse[T](serializedDrawing: String)(implicit parser: DrawingParser[T]) = {

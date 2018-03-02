@@ -160,6 +160,12 @@ object DrawingParserImpl {
     )
   }
 
-  val initialParsers: Parsers[Empty] = new ByEnvParsers[Empty](Parsers(Fail, Fail)).expr
-}
+  private def finalizeParsers(parsers: Parsers[Empty]): Parsers[Empty] =
+    Parsers[Empty](
+      P(Start ~ parsers.get[Double] ~ End),
+      P(Start ~ parsers.get[Point] ~ End)
+    )
 
+  val initialParsers: Parsers[Empty] =
+    finalizeParsers(new ByEnvParsers[Empty](Parsers(Fail, Fail)).expr)
+}
