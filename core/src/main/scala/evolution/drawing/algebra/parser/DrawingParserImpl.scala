@@ -46,6 +46,8 @@ object DrawingParserImpl {
       P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
     def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
       P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    def prefix[A](operator: String, parser: Parser[A]): Parser[A] =
+      P(operator ~ parser)
     def infix[A, B](operator: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
       P(parser1 ~ operator ~ parser2)
     def whitespaceWrap[T](p: Parser[T]): Parser[T] =
@@ -103,8 +105,11 @@ object DrawingParserImpl {
     def add[T: Type]: ParserOf[T] =
       function2("add", expr.get[T], expr.get[T]).map { case (x, y) => b.add(x, y) }
 
-    def inverse[T: Type]: ParserOf[T] =
+    def inverseFunc[T: Type]: ParserOf[T] =
       function1("inverse", expr.get[T]).map { x => b.inverse(x) }
+
+    def inversePrefix[T: Type]: ParserOf[T] =
+      prefix("-", expr.get[T]).map { x => b.inverse(x) }
 
     def mul[T: Type]: ParserOf[T] =
       function2("mul", expr.get[Double], expr.get[T]).map { case (x, y) => b.mul(x, y) }
@@ -144,7 +149,8 @@ object DrawingParserImpl {
         | const
         | derive
         | integrate
-        | inverse[A]
+        | inverseFunc[A]
+        | inversePrefix[A]
         | add[A]
         | mul[A]
         | slowDown[A]

@@ -87,8 +87,14 @@ class ParserSpec
 
     "parse let binding with infix notation" in {
       assertParse("x = 1 $x", let("x", const(1.0))(_ => var0))
-//      assertDoubleParse[Point]("let(x,1.0,point($x,$x))")
-//      assertDoubleParse[Point]("let(x,1.0,let(y,1.0,point($x,$y)))")
+      assertParse(
+        " x = 1 y = point($x,$x) $y ",
+        let("x", const(1.0))(b1 => b1.let("y", b1.point(var0, var0))(_ => b1.var0))
+      )
+    }
+
+    "parse an inverse with infix notation" in {
+      assertParse("x = 1 -$x", let("x", const(1.0))(b1 => b1.inverse(var0)))
     }
 
     "do not parse partial drawings" in {
