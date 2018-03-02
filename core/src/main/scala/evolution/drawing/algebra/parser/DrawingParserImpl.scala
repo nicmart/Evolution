@@ -46,6 +46,8 @@ object DrawingParserImpl {
       P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
     def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
       P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    def infix[A, B](operator: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
+      P(parser1 ~ operator ~ parser2)
     def whitespaceWrap[T](p: Parser[T]): Parser[T] =
       P(Config.whitespaces ~ p ~ Config.whitespaces)
   }
@@ -124,12 +126,18 @@ object DrawingParserImpl {
     def shift[Out, In](current: ParserOf[Out]): NextParserOf[In, Out] =
       current.map(t => b.shift(t))
 
-    def let[In: Type, Out: Type]: ParserOf[Out] =
-      P(P("let" ~ "(" ~ varName ~ "," ~ expr.get[In] ~ "," ~ "").flatMap {
+    def let[In: Type, Out: Type](assignmentParser: Parser[(String, DrawingExpr[E, In])]): ParserOf[Out] =
+      assignmentParser.flatMap {
         case (name, value) => whitespaceWrap(
           withVar[In](name).expr.get[Out].map(e => b.let(name, value)(_ => e))
         )
-      } ~ ")")
+      }
+
+    def letFunc[In: Type, Out: Type]: ParserOf[Out] =
+      P(let[In, Out](P("let" ~ "(" ~ varName ~ "," ~ expr.get[In] ~ "," ~ "")) ~ ")")
+
+    def letInfix[In: Type, Out: Type]: ParserOf[Out] =
+      let[In, Out](P(varName ~ "=" ~ expr.get[In]))
 
     def polymorphicExpr[A: Type]: ParserOf[A] =
       P(vars.get[A]
@@ -140,8 +148,10 @@ object DrawingParserImpl {
         | add[A]
         | mul[A]
         | slowDown[A]
-        | let[Double, A]
-        | let[Point, A]
+        | letFunc[Double, A]
+        | letFunc[Point, A]
+        | letInfix[Double, A]
+        | letInfix[Point, A]
       )
 
     def expr: Parsers[E] = Parsers[E](
