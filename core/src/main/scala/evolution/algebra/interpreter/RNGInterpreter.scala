@@ -2,6 +2,7 @@ package evolution.algebra.interpreter
 
 import evolution.algebra.FullAlgebra
 import evolution.algebra.representation.RNGRepr
+import evolution.drawing.algebra.Weighted
 import evolution.random.RNG
 
 final class RNGInterpreter extends FullAlgebra[RNGRepr] {
@@ -85,6 +86,22 @@ final class RNGInterpreter extends FullAlgebra[RNGRepr] {
     next match {
       case None => (rng2, None)
       case Some((a, eva2)) => (rng2, Some((f(a), map(eva2)(f))))
+    }
+  }
+
+  override def chooseEvo[A](evo1: Weighted[RNGRepr[A]], evo2: Weighted[RNGRepr[A]]): RNGRepr[A] = {
+    val totalWeight = evo1.weight + evo2.weight
+    val cut = (evo1.weight / totalWeight) * (Int.MaxValue.toDouble - Int.MinValue) + Int.MinValue
+    RNGRepr { rng =>
+      val (n, rng2) = rng.nextInt
+      if (n < cut) {
+        val (rng3, nextOpt) = evo1.value.run(rng2)
+        (rng3, nextOpt.map { case (a, next) => (a, chooseEvo(evo1.map(_ => next), evo2)) })
+      }
+      else {
+        val (rng3, nextOpt) = evo2.value.run(rng2)
+        (rng3, nextOpt.map { case (a, next) => (a, chooseEvo(evo1, evo2.map(_ => next))) })
+      }
     }
   }
 }

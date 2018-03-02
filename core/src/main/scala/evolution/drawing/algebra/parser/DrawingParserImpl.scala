@@ -144,6 +144,14 @@ object DrawingParserImpl {
     def letInfix[In: Type, Out: Type]: ParserOf[Out] =
       let[In, Out](P(varName ~ "=" ~ expr.get[In]))
 
+    def choose[Out: Type]: ParserOf[Out] =
+      function2("choose", weightedDrawing, weightedDrawing).map { case (drawing1, drawing2) =>
+        b.choose(drawing1, drawing2)
+      }
+
+    def weightedDrawing[Out: Type]: Parser[Weighted[DrawingExpr[E, Out]]] =
+      P(double ~ "->" ~ expr.get[Out]).map { case (w, drawing) => Weighted(w, drawing) }
+
     def polymorphicExpr[A: Type]: ParserOf[A] =
       P(vars.get[A]
         | const
@@ -154,6 +162,7 @@ object DrawingParserImpl {
         | add[A]
         | mul[A]
         | slowDown[A]
+        | choose[A]
         | letFunc[Double, A]
         | letFunc[Point, A]
         | letInfix[Double, A]

@@ -1,10 +1,11 @@
 package evolution.drawing.algebra.interpreter
 
+import cats.data.NonEmptyList
 import cats.kernel.Group
 import cats.syntax.group._
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.drawing.algebra.{DrawingAlgebra, Type, TypeAlg}
+import evolution.drawing.algebra.{DrawingAlgebra, Type, TypeAlg, Weighted}
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
@@ -146,4 +147,11 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
           alg.slowDownBy(drawingEvo.run, alg.map(byEvo.run)(_.toInt))
       })
     }
+  override def choose[E, T: Type](drawing1: Weighted[CtxEvolution[E, T]], drawing2: Weighted[CtxEvolution[E, T]]): CtxEvolution[E, T] = {
+    ctx =>
+      Dynamic(new Evolution[T] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
+          alg.chooseEvo(drawing1.map(ctxEco => ctxEco(ctx).evolution.run), drawing2.map(ctxEco => ctxEco(ctx).evolution.run))
+      })
+  }
 }

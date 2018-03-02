@@ -20,7 +20,15 @@ class SerializerSpec
         Point.zero,
         point(rnd(const(-1), const(1)), rnd(const(-1), const(1)))
       )
-      drawing.run(Serializer)(Nil) shouldBe "integrate(point(0.0,0.0),point(rnd(-1.0,1.0),rnd(-1.0,1.0)))"
+      drawing.run(Serializer)(Nil) shouldBe "integrate(point(0.0, 0.0), point(rnd(-1.0, 1.0), rnd(-1.0, 1.0)))"
+    }
+
+    "serialize a choose expression" in {
+      val drawing = choose[Point](
+        Weighted(1, const(Point.zero)),
+        Weighted(1.5, point(const(0), rnd(const(-1), const(1))))
+      )
+      drawing.run(Serializer)(Nil) shouldBe "choose(1.0 -> point(0.0, 0.0), 1.5 -> point(0.0, rnd(-1.0, 1.0)))"
     }
   }
 }

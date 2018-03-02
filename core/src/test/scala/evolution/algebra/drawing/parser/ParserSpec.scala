@@ -17,20 +17,20 @@ class ParserSpec
 
   "A Parser" should {
     "parse a rnd expression" in {
-      assertParse("rnd(0.1,1)", rnd(const(0.1), const(1)))
-      assertParse("rnd(.1,1)", rnd(const(0.1), const(1)))
-      assertParse("rnd(.1,1.001)", rnd(const(0.1), const(1.001)))
-      assertParse("rnd(-.1,1.001)", rnd(const(-0.1), const(1.001)))
+      assertParse("rnd(0.1, 1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(.1, 1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(.1, 1.001)", rnd(const(0.1), const(1.001)))
+      assertParse("rnd(-.1, 1.001)", rnd(const(-0.1), const(1.001)))
     }
     "parse an add expression" in {
-      assertParse("add(0.1,1.0)", add(const(0.1), const(1.0)))
+      assertParse("add(0.1, 1.0)", add(const(0.1), const(1.0)))
     }
     "parse an add expression in a point" in {
-      assertParse("point(0,add(0.1,1.0))", point(const(0), add(const(0.1), const(1.0))))
+      assertParse("point(0, add(0.1, 1.0))", point(const(0), add(const(0.1), const(1.0))))
     }
     "ignore whitespaces" in {
       assertParse("rnd(0.1, 1)", rnd(const(0.1), const(1)))
-      assertParse("rnd(\n.1,\n1)", rnd(const(0.1), const(1)))
+      assertParse("rnd(\n.1, \n1)", rnd(const(0.1), const(1)))
       assertParse(
         "\n\nlet(x\n  ,\n  .1  \n , $x   \n)",
         let("x", const(.1))(_ => var0)
@@ -81,20 +81,27 @@ class ParserSpec
     }
     "parse let binding" in {
       assertParse("let(x,1,$x)", let("x", const(1.0))(_ => var0))
-      assertDoubleParse[Point]("let(x,1.0,point($x,$x))")
-      assertDoubleParse[Point]("let(x,1.0,let(y,1.0,point($x,$y)))")
+      assertDoubleParse[Point]("let(x, 1.0, point($x, $x))")
+      assertDoubleParse[Point]("let(x, 1.0, let(y, 1.0, point($x, $y)))")
     }
 
     "parse let binding with infix notation" in {
       assertParse("x = 1 $x", let("x", const(1.0))(_ => var0))
       assertParse(
-        " x = 1 y = point($x,$x) $y ",
+        " x = 1 y = point($x, $x) $y ",
         let("x", const(1.0))(b1 => b1.let("y", b1.point(var0, var0))(_ => b1.var0))
       )
     }
 
     "parse an inverse with infix notation" in {
       assertParse("x = 1 -$x", let("x", const(1.0))(b1 => b1.inverse(var0)))
+    }
+
+    "parse a choose expression" in {
+      assertParse(
+        "choose(1 -> 2, 2 -> rnd(-1, 1))",
+        choose(Weighted(1, const(2.0)), Weighted(2, rnd(const(-1), const(1))))
+      )
     }
 
     "do not parse partial drawings" in {

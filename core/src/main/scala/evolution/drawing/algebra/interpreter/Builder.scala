@@ -1,5 +1,6 @@
 package evolution.drawing.algebra.interpreter
 
+import cats.data.NonEmptyList
 import evolution.drawing.algebra.{DrawingExpr, _}
 import evolution.geometry.Point
 
@@ -65,10 +66,17 @@ final class Builder[E[_[_, _]]] {
       alg.shift[E[F], Out, In](expr.run(alg))
   }
 
-  def let[In, Out](name: String, value: DrawingExpr[E, In])(expr: NextBuilder[In] => NextDrawingExpr[In, Out]): DrawingExpr[E, Out] = new DrawingExpr[E, Out] {
-    override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[E[F], Out] =
-      alg.let[E[F], In, Out](name, value.run(alg))(expr(withVar[In]).run(alg))
-  }
+  def let[In, Out](name: String, value: DrawingExpr[E, In])(expr: NextBuilder[In] => NextDrawingExpr[In, Out]): DrawingExpr[E, Out] =
+    new DrawingExpr[E, Out] {
+      override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[E[F], Out] =
+        alg.let[E[F], In, Out](name, value.run(alg))(expr(withVar[In]).run(alg))
+    }
+
+  def choose[T: Type](drawing1: Weighted[DrawingExpr[E, T]], drawing2: Weighted[DrawingExpr[E, T]]): DrawingExpr[E, T] =
+    new DrawingExpr[E, T] {
+      override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
+        alg.choose(drawing1.map(_.run(alg)), drawing2.map(_.run(alg)))
+    }
 }
 
 object Builder {
