@@ -145,12 +145,14 @@ object DrawingParserImpl {
       let[In, Out](P(varName ~ "=" ~ expr.get[In]))
 
     def choose[Out: Type]: ParserOf[Out] =
-      function2("choose", weightedDrawing, weightedDrawing).map { case (drawing1, drawing2) =>
-        b.choose(drawing1, drawing2)
+      function3("choose", expr.get[Double], expr.get[Out], expr.get[Out]).map { case (probability, drawing1, drawing2) =>
+        b.choose(probability, drawing1, drawing2)
       }
 
-    def weightedDrawing[Out: Type]: Parser[Weighted[DrawingExpr[E, Out]]] =
-      P(double ~ "->" ~ expr.get[Out]).map { case (w, drawing) => Weighted(w, drawing) }
+    def dist: ParserOf[Double] =
+      function3("dist", expr.get[Double], expr.get[Double], expr.get[Double]).map { case (probability, drawing1, drawing2) =>
+        b.dist(probability, drawing1, drawing2)
+      }
 
     def polymorphicExpr[A: Type]: ParserOf[A] =
       P(vars.get[A]
@@ -170,7 +172,7 @@ object DrawingParserImpl {
       )
 
     def expr: Parsers[E] = Parsers[E](
-      whitespaceWrap(P(rnd | polymorphicExpr[Double])),
+      whitespaceWrap(P(rnd | dist | polymorphicExpr[Double])),
       whitespaceWrap(P(cartesian | polar | polymorphicExpr[Point]))
     )
   }

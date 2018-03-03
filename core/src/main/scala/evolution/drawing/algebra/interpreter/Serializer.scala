@@ -31,10 +31,8 @@ object Serializer extends DrawingAlgebra[CtxString] {
     ctx => s"let($name, ${value(ctx)}, ${expr(name :: ctx)})"
   override def slowDown[E, T: Type](by: CtxString[E, Double], drawing: CtxString[E, T]): CtxString[E, T] =
     ctx => s"slowDown(${by(ctx)}, ${drawing(ctx)})"
-  override def choose[E, T: Type](drawing1: Weighted[CtxString[E, T]], drawing2: Weighted[CtxString[E, T]]): CtxString[E, T] = {
-    ctx => s"choose(${weightedDrawing(drawing1)(ctx)}, ${weightedDrawing(drawing2)(ctx)})"
-  }
-
-  private def weightedDrawing[E, T](weightedDrawing: Weighted[CtxString[E, T]]): CtxString[E, T] =
-    ctx => s"${weightedDrawing.weight.toString} -> ${weightedDrawing.value(ctx)}"
+  override def choose[E, T: Type](p: CtxString[E, Double], drawing1: CtxString[E, T], drawing2: CtxString[E, T]): CtxString[E, T] =
+    ctx => s"choose(${p(ctx)}, ${drawing1(ctx)}, ${drawing2(ctx)})"
+  override def dist[E](probability: CtxString[E, Double], length1: CtxString[E, Double], length2: CtxString[E, Double]): CtxString[E, Double] =
+    ctx => s"dist(${probability(ctx)}, ${length1(ctx)}, ${length2(ctx)})"
 }

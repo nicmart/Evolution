@@ -23,11 +23,8 @@ trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def integrate[E, T: Type](start: T, f: F[E, T]): F[E, T]
   def derive[E, T: Type](f: F[E, T]): F[E, T]
   def slowDown[E, T: Type](by: F[E, Double], drawing: F[E, T]): F[E, T]
-  def choose[E, T: Type](drawing1: Weighted[F[E, T]], drawing2: Weighted[F[E, T]]): F[E, T]
-}
-
-case class Weighted[T](weight: Double, value: T) {
-  def map[S](f: T => S): Weighted[S] = Weighted[S](weight, f(value))
+  def choose[E, T: Type](dist: F[E, Double], drawing1: F[E, T], drawing2: F[E, T]): F[E, T]
+  def dist[E](probability: F[E, Double], length1: F[E, Double], length2: F[E, Double]): F[E, Double]
 }
 
 trait DrawingExpr[E[_[_, _]], +A] {

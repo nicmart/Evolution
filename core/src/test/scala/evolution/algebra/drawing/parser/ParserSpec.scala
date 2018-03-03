@@ -99,8 +99,8 @@ class ParserSpec
 
     "parse a choose expression" in {
       assertParse(
-        "choose(1 -> 2, 2 -> rnd(-1, 1))",
-        choose(Weighted(1, const(2.0)), Weighted(2, rnd(const(-1), const(1))))
+        "choose(0.5, rnd(-1, 1), 0)",
+        choose(const(0.5), rnd(const(-1.0), const(1.0)), const(0.0))
       )
     }
 

@@ -5,7 +5,7 @@ import cats.kernel.Group
 import cats.syntax.group._
 import evolution.algebra
 import evolution.algebra.Evolution
-import evolution.drawing.algebra.{DrawingAlgebra, Type, TypeAlg, Weighted}
+import evolution.drawing.algebra.{DrawingAlgebra, Type}
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 
@@ -147,11 +147,27 @@ object ToEvolution extends DrawingAlgebra[CtxEvolution] {
           alg.slowDownBy(drawingEvo.run, alg.map(byEvo.run)(_.toInt))
       })
     }
-  override def choose[E, T: Type](drawing1: Weighted[CtxEvolution[E, T]], drawing2: Weighted[CtxEvolution[E, T]]): CtxEvolution[E, T] = {
+
+  override def choose[E, T: Type](p: CtxEvolution[E, Double], drawing1: CtxEvolution[E, T], drawing2: CtxEvolution[E, T]): CtxEvolution[E, T] = {
     ctx =>
       Dynamic(new Evolution[T] {
         override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[T] =
-          alg.chooseEvo(drawing1.map(ctxEco => ctxEco(ctx).evolution.run), drawing2.map(ctxEco => ctxEco(ctx).evolution.run))
+          alg.chooseBy(
+            p(ctx).evolution.run.map(_ < .5),
+            drawing1(ctx).evolution.run,
+            drawing2(ctx).evolution.run
+          )
       })
   }
+
+  override def dist[E](p: CtxEvolution[E, Double], length1: CtxEvolution[E, Double], length2: CtxEvolution[E, Double]): CtxEvolution[E, Double] =
+    ctx =>
+      Dynamic(new Evolution[Double] {
+        override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Double] =
+          alg.dist(
+            p(ctx).evolution.run,
+            length1(ctx).evolution.run,
+            length2(ctx).evolution.run
+          )
+      })
 }

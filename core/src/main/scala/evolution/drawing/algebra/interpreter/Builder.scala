@@ -72,10 +72,16 @@ final class Builder[E[_[_, _]]] {
         alg.let[E[F], In, Out](name, value.run(alg))(expr(withVar[In]).run(alg))
     }
 
-  def choose[T: Type](drawing1: Weighted[DrawingExpr[E, T]], drawing2: Weighted[DrawingExpr[E, T]]): DrawingExpr[E, T] =
+  def choose[T: Type](p: DrawingExpr[E, Double], drawing1: DrawingExpr[E, T], drawing2: DrawingExpr[E, T]): DrawingExpr[E, T] =
     new DrawingExpr[E, T] {
       override def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], T] =
-        alg.choose(drawing1.map(_.run(alg)), drawing2.map(_.run(alg)))
+        alg.choose(p.run(alg), drawing1.run(alg), drawing2.run(alg))
+    }
+
+  def dist(weight: DrawingExpr[E, Double], length1: DrawingExpr[E, Double], length2: DrawingExpr[E, Double]): DrawingExpr[E, Double] =
+    new DrawingExpr[E, Double] {
+      override def run[F[- _, + _]](alg: DrawingAlgebra[F]): F[E[F], Double] =
+        alg.dist(weight.run(alg), length1.run(alg), length2.run(alg))
     }
 }
 

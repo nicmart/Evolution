@@ -2,8 +2,6 @@ package evolution.algebra.interpreter
 
 import evolution.algebra.FullAlgebra
 import evolution.algebra.representation.RNGRepr
-import evolution.drawing.algebra.Weighted
-import evolution.random.RNG
 
 final class RNGInterpreter extends FullAlgebra[RNGRepr] {
   /**
@@ -89,18 +87,17 @@ final class RNGInterpreter extends FullAlgebra[RNGRepr] {
     }
   }
 
-  override def chooseEvo[A](evo1: Weighted[RNGRepr[A]], evo2: Weighted[RNGRepr[A]]): RNGRepr[A] = {
-    val totalWeight = evo1.weight + evo2.weight
-    val cut = (evo1.weight / totalWeight) * (Int.MaxValue.toDouble - Int.MinValue) + Int.MinValue
+  override def chooseBy[A](choiceEvo: RNGRepr[Boolean], evo1: RNGRepr[A], evo2: RNGRepr[A]): RNGRepr[A] = {
     RNGRepr { rng =>
-      val (n, rng2) = rng.nextInt
-      if (n < cut) {
-        val (rng3, nextOpt) = evo1.value.run(rng2)
-        (rng3, nextOpt.map { case (a, next) => (a, chooseEvo(evo1.map(_ => next), evo2)) })
-      }
-      else {
-        val (rng3, nextOpt) = evo2.value.run(rng2)
-        (rng3, nextOpt.map { case (a, next) => (a, chooseEvo(evo1, evo2.map(_ => next))) })
+      val (rng2, choiceOpt2) = choiceEvo.run(rng)
+      choiceOpt2 match {
+        case None => (rng2, None)
+        case Some((true, choiceEvo2)) =>
+          val (rng3, evo12Opt) = evo1.run(rng2)
+          (rng3, evo12Opt.map { case (a, evo12) => (a, chooseBy(choiceEvo2, evo12, evo2)) })
+        case Some((false, choiceEvo2)) =>
+          val (rng3, evo22Opt) = evo2.run(rng2)
+          (rng3, evo22Opt.map { case (a, evo22) => (a, chooseBy(choiceEvo2, evo1, evo22)) })
       }
     }
   }
