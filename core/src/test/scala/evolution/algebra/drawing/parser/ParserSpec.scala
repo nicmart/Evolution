@@ -93,6 +93,11 @@ class ParserSpec
       )
     }
 
+    "parse let binding when a variable is the prefix of another" in {
+      assertParse("x = 1 xx = 2 $xx", let("x", const(1.0))(b1 => b1.let("xx", b1.const(2.0))(b2 => b1.var0)))
+      assertParse("xx = 1 x = 2 $xx", let("xx", const(1.0))(b1 => b1.let("x", b1.const(2.0))(b2 => b1.shift(var0))))
+    }
+
     "parse an inverse with infix notation" in {
       assertParse("x = 1 -$x", let("x", const(1.0))(b1 => b1.inverse(var0)))
     }
