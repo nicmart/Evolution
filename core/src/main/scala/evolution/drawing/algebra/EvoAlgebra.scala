@@ -28,16 +28,10 @@ class Builder[W] extends EvoAlgebra[W, EvoExpr[?, W]] {
   override def map[A, B](fa: EvoExpr[A, W])(f: A => B): EvoExpr[B, W] = ???
 }
 
-class Optimiser[W] extends EvoAlgebra[W, EvoExpr[?, W]] {
-  private val b = new Builder[W]
-  override def constant[A](a: A): EvoExpr[A, W] = b.constant(a)
-  override def autonomous[A](f: W => (W, Option[A])): EvoExpr[A, W] = b.autonomous(f)
-  override def state[A, S](start: S, f: S => Option[(S, A)]): EvoExpr[A, W] = b.state(start, f)
-  override def deterministic[A](f: Deterministic[A]): EvoExpr[A, W] = b.deterministic(f)
-  override def full[A](f: Full[W, A]): EvoExpr[A, W] = b.full(f)
-  override def map[A, B](fa: EvoExpr[A, W])(f: A => B): EvoExpr[B, W] =
-    fa.run[Optimiser.Repr[?, B, W]](new Optimiser.MapOptimiser)(f)
-}
+//class Optimiser[W] extends Builder[W] {
+//  override def map[A, B](fa: EvoExpr[A, W])(f: A => B): EvoExpr[B, W] =
+//    fa.run(new Optimiser.MapOptimiser)(f)
+//}
 
 object Optimiser {
   type Repr[A, B, W] = (A => B) => EvoExpr[B, W]

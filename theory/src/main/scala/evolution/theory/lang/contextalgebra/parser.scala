@@ -1,6 +1,5 @@
 package evolution.theory.lang.contextalgebra
 
-import evolution.theory.lang.contextalgebra.parser.expr
 import fastparse.{WhitespaceApi, noApi}
 
 object parser {
@@ -115,25 +114,26 @@ object parser {
 
   case class Parsers[E](int: Parser[Term[E, Int]], bool: Parser[Term[E, Boolean]])
     extends TypeAlg[λ[X => Parser[Term[E, X]]]] {
-    def pushVar[T: Type](varName: String): Parsers[(T, E)] = {
-      type F[A, B] = Parser[Term[(A, E), B]]
-      val pushedParsers = PairTypeAlg[F](
-        P(var0[E, Int](varName) | varS[E, Int, Int](int)),
-        varS[E, Boolean, Int](bool),
-        varS[E, Int, Boolean](int),
-        P(var0[E, Boolean](varName) | varS[E, Boolean, Boolean](bool))
-      )
-      Parsers(
-        PairType.get[T, Int].run[F](pushedParsers),
-        PairType.get[T, Boolean].run[F](pushedParsers)
-      )
-    }
+    def pushVar[T: Type](varName: String): Parsers[(T, E)] = ???
+//    {
+//      type F[A, B] = Parser[Term[(A, E), B]]
+//      val pushedParsers = PairTypeAlg[F](
+//        P(var0[E, Int](varName) | varS[E, Int, Int](int)),
+//        varS[E, Boolean, Int](bool),
+//        varS[E, Int, Boolean](int),
+//        P(var0[E, Boolean](varName) | varS[E, Boolean, Boolean](bool))
+//      )
+//      Parsers(
+//        PairType.get[T, Int].run[F](pushedParsers),
+//        PairType.get[T, Boolean].run[F](pushedParsers)
+//      )
+//    }
 
     def get[T: Type]: Parser[Term[E, T]] =
       Type[T].run[λ[X => Parser[Term[E, X]]]](this)
 
     def getOrFail[T]: Parser[Term[E, T]] =
-      TypeUndef[T].run(new TypeAlgUndef[λ[X => Parser[Term[E, X]]]] {
+      TypeUndef[T].run[λ[X => Parser[Term[E, X]]]](new TypeAlgUndef[λ[X => Parser[Term[E, X]]]] {
         def undefined[S]: Parser[Term[E, S]] = Fail
         def int: Parser[Term[E, Int]] = this.int
         def bool: Parser[Term[E, Boolean]] = this.bool
@@ -146,9 +146,18 @@ object parser {
 
   type ParserOf[E, A] = Parser[Term[E, A]]
 
+  /**
+    * This was a try to encode the parser as an algebra, since the structure is similar.
+    * The types don't quite match though, so some work has to be done, but I think there is a way
+    * to exploit this structure similarity
+    * @param vars
+    * @tparam E
+    */
   class ParserAlg[E](vars: Parsers[E]) extends FullLang[E, ParserOf] {
     private val builder: FullLang[E, Term] = Builder.Alg.get[E]
     def int(n: Int): ParserOf[E, Int] =
+      // Here we already see what the problem is. All the input values, also the "static" ones, should be parsers.
+      // Maybe doubling the family of types in the language ("static" ones and "F" ones) would solve the problem
       P(CharIn('0' to '9').rep(1).!.map(_.toInt)).map(builder.int)
     def bool(b: Boolean): ParserOf[E, Boolean] =
       P( P("true").map(_ => builder.bool(true)) | P("false").map(_ => builder.bool(false)) )
@@ -167,73 +176,60 @@ object parser {
         expr.map(e => builder.let(name, v)(e))
       } ~ ")")
 
-    private def expr: Parsers[E] = Parsers[E](
+    // This parsers are "summing" the types of all the possible expressions of each type
+    def intExpr: ParserOf[E, Int] = ???
+    //P(int | add | polymorphicExpr[E, Int] )
+
+    def boolExpr: ParserOf[E, Boolean] = ???
+    //P(bool | polymorphicExpr[E, Boolean] )
+
+    def expr: Parsers[E] = Parsers[E](
       intExpr,
       boolExpr
     )
-
-    private def polymorphicExpr[A: Type]: Parser[Term[E, A]] =
-      P( vars.get[A] | let[Int, A] | let[Boolean, A] | ifElse[A] )
-
-    private def intExpr: Parser[Term[E, Int]] =
-      P(int | add | polymorphicExpr[E, Int] )
-
-    private def boolExpr: Parser[Term[E, Boolean]] =
-      P(bool | polymorphicExpr[E, Boolean] )
-  }
-
-  def int[E]: Parser[Term[E, Int]] =
-    P(CharIn('0' to '9').rep(1).!.map(_.toInt)).map(Builder.int)
-
-  def bool[E]: Parser[Term[E, Boolean]] =
-    P( P("true").map(_ => builder.bool(true)) | P("false").map(_ => builder.bool(false)) )
-
+//
+//    private def polymorphicExpr[A: Type]: Parser[Term[E, A]] =
+//      P( vars.get[A] | let[Int, A] | let[Boolean, A] | ifElse[A] )
+//
+    }
+//
+//  def int[E]: Parser[Term[E, Int]] =
+//    P(CharIn('0' to '9').rep(1).!.map(_.toInt)).map(Builder.int)
+//
+//  def bool[E]: Parser[Term[E, Boolean]] =
+//    P( P("true").map(_ => builder.bool(true)) | P("false").map(_ => builder.bool(false)) )
+//
   val varName: Parser[String] =
     P(CharsWhileIn('a' to 'z').!)
 
-  def add[E]: Parser[Term[E, Int]] =
-    function2("add", expr(vars).int, expr(vars).int).map { case (n, m) =>  Builder.add(n, m) }
-
-  def ifElse[E, A: Type]: Parser[Term[E, A]] =
-    function3("if", expr(vars).bool, expr(vars).get[A], expr(vars).get[A]).map {
-      case (cond, ifTrue, ifFalse) => Builder.ifElse(cond, ifTrue, ifFalse)
-    }
-
-  def var0[E, A](varName: String): Parser[Term[(A, E), A]] =
-    P("$" ~ varName).map(_ => Builder.var0)
-
-  def varS[E, A, B](current: Parser[Term[E, A]]): Parser[Term[(B, E), A]] =
-    current.map(t => Builder.varS(t))
-
-  def let[E, A: Type, B: Type]: Parser[Term[E, B]] =
-    P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[A]  ~ "," ~ "").flatMap { case (name, value) =>
-      expr(vars.pushVar[A](name)).get[B].map(e => Builder.let(name, value)(e))
-    } ~ ")")
-
-  def polymorphicExpr[E, A: Type]: Parser[Term[E, A]] =
-    P( vars.get[A] | let[E, Int, A] | let[E, Boolean, A] | ifElse[E, A] )
-
-  def intExpr[E]: Parser[Term[E, Int]] =
-    P(int | add | polymorphicExpr[E, Int] )
-
-  def boolExpr[E]: Parser[Term[E, Boolean]] =
-    P(bool | polymorphicExpr[E, Boolean] )
-
-  def whitespaceWrap[T](p: Parser[T]): Parser[T] =
-    P(Config.whitespaces ~ p ~ Config.whitespaces)
-
+//  def ifElse[E, A: Type]: Parser[Term[E, A]] =
+//    function3("if", expr(vars).bool, expr(vars).get[A], expr(vars).get[A]).map {
+//      case (cond, ifTrue, ifFalse) => Builder.ifElse(cond, ifTrue, ifFalse)
+//    }
+//
+//  def var0[E, A](varName: String): Parser[Term[(A, E), A]] =
+//    P("$" ~ varName).map(_ => Builder.var0)
+//
+//  def varS[E, A, B](current: Parser[Term[E, A]]): Parser[Term[(B, E), A]] =
+//    current.map(t => Builder.varS(t))
+//
+//  def let[E, A: Type, B: Type]: Parser[Term[E, B]] =
+//    P(P("let" ~ "(" ~ varName ~ "," ~ expr(vars).get[A]  ~ "," ~ "").flatMap { case (name, value) =>
+//      expr(vars.pushVar[A](name)).get[B].map(e => Builder.let(name, value)(e))
+//    } ~ ")")
+//
+//  def polymorphicExpr[E, A: Type]: Parser[Term[E, A]] =
+//    P( vars.get[A] | let[E, Int, A] | let[E, Boolean, A] | ifElse[E, A] )
+//
+//
+//  def whitespaceWrap[T](p: Parser[T]): Parser[T] =
+//    P(Config.whitespaces ~ p ~ Config.whitespaces)
+//
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
     P(funcName ~ "(" ~ parser ~ ")")
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
   def function3[A, B, C](funcName: String, parser1: Parser[A], parser2: Parser[B], parser3: Parser[C]): Parser[(A, B, C)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
-
-  def expr[E](vars: => Parsers[E]): Parsers[E] = Parsers[E](
-    intExpr[E](vars),
-    boolExpr[E](vars)
-  )
-
-  val initialParser: Parsers[Unit] = expr(Parsers.empty)
 }
 

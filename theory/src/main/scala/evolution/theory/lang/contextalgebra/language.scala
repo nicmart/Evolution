@@ -29,7 +29,7 @@ class Builder[E] extends FullLang[E, Term] {
   override def bool(b: Boolean): Term[E, Boolean] =
     new Term[E, Boolean] { override def run[F[_, _]](alg: LangAlg[F]): F[E, Boolean] = alg.get[E].bool(b) }
   override def add(n: Term[E, Int], m: Term[E, Int]): Term[E, Int] =
-    new Term[E, Int] { override def run[F[_, _]](alg: LangAlg[F]): F[E, Int] = alg.get[E](n.run(alg), m.run(alg)) }
+    new Term[E, Int] { override def run[F[_, _]](alg: LangAlg[F]): F[E, Int] = alg.get[E].add(n.run(alg), m.run(alg)) }
   override def ifElse[A](condition: Term[E, Boolean], ifTrue: Term[E, A], ifFalse: Term[E, A]): Term[E, A] =
     new Term[E, A] { override def run[F[_, _]](alg: LangAlg[F]): F[E, A] = alg.get[E].ifElse(condition.run(alg), ifTrue.run(alg), ifFalse.run(alg)) }
   override def var0[A]: Term[(A, E), A] =
@@ -39,6 +39,7 @@ class Builder[E] extends FullLang[E, Term] {
   override def varS[A, B](e: Term[E, A]): Term[(B, E), A] =
     new Term[(B, E), A] { override def run[F[_, _]](alg: LangAlg[F]): F[(B,E), A] = alg.get[E].varS(e.run(alg)) }
 }
+
 
 object Builder {
   object Alg extends LangAlg[Term] {
