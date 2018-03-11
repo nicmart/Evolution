@@ -3,16 +3,16 @@ package evolution.drawing.algebra
 import cats.data.NonEmptyList
 import cats.kernel.{Group, Semigroup}
 import cats.implicits._
-import evolution.drawing.algebra.TypeAlg.Pair
-import evolution.geometry.Point
+import _root_.evolution.geometry.Point
+import TypeAlg.Pair
 
-trait BindingAlgebra[F[-_, +_]] {
+trait BindingAlgebra[F[_, _]] {
   def var0[E, A]: F[(F[E, A], E), A]
   def shift[E, A, B](expr: F[E, A]): F[(F[E, B], E), A]
   def let[E, A, B](name: String, value: F[E, A])(expr: F[(F[E, A], E), B]): F[E, B]
 }
 
-trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
+trait DrawingAlgebra[F[_, _]] extends BindingAlgebra[F] {
   def const[E, T: Type](x: T): F[E, T]
   def mul[E, T: Type](k: F[E, Double], t: F[E, T]): F[E, T]
   def add[E, T: Type](a: F[E, T], b: F[E, T]): F[E, T]
@@ -27,8 +27,8 @@ trait DrawingAlgebra[F[-_, +_]] extends BindingAlgebra[F] {
   def dist[E](probability: F[E, Double], length1: F[E, Double], length2: F[E, Double]): F[E, Double]
 }
 
-trait DrawingExpr[E[_[_, _]], +A] {
-  def run[F[-_, +_]](alg: DrawingAlgebra[F]): F[E[F], A]
+trait DrawingExpr[E[_[_, _]], A] {
+  def run[F[_, _]](alg: DrawingAlgebra[F]): F[E[F], A]
 }
 
 trait TypeAlg[F[_]] {
@@ -77,7 +77,7 @@ object Type {
     override def run[F[_]](alg: TypeAlg[F]): F[Point] = alg.point
   }
 
-  def group[T](implicit t: Type[T]): Group[T] =
+  implicit def group[T](implicit t: Type[T]): Group[T] =
     t.run(TypeAlg(Group[Double], Group[Point]))
 }
 

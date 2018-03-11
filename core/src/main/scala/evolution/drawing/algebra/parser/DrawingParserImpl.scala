@@ -1,8 +1,8 @@
 package evolution.drawing.algebra.parser
 
 import evolution.drawing.algebra._
-import evolution.drawing.algebra.interpreter.Builder
-import evolution.geometry.Point
+import _root_.evolution.drawing.algebra.interpreter.Builder
+import _root_.evolution.geometry.Point
 import fastparse.{WhitespaceApi, all, core}
 
 object DrawingParserImpl {

@@ -1,10 +1,10 @@
 package evolution.drawing.algebra.parser
 
 import evolution.drawing.algebra._
-import evolution.geometry.Point
+import _root_.evolution.geometry.Point
 import fastparse.{WhitespaceApi, all, core}
 
-trait DrawingParser[+A] {
+trait DrawingParser[A] {
   def parse(s: String): Either[String, DrawingExpr[Empty, A]]
 }
 

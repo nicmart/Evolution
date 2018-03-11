@@ -2,7 +2,6 @@ package evolution.drawing.algebra.interpreter
 
 import cats.data.NonEmptyList
 import evolution.drawing.algebra._
-import evolution.geometry.Point
 
 object Serializer extends DrawingAlgebra[CtxString] {
   override def const[E, T: Type](x: T): List[String] => String =

@@ -10,9 +10,9 @@ import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import evolution.app.codec.config.DrawingJsonCodec
-import evolution.drawing.algebra._
 import io.circe.generic.auto._
 import evolution.app.react.component.config.instances
+import evolution.drawing.algebra.Drawing
 import evolution.drawing.algebra.interpreter.{Serializer, ToEvolution}
 import evolution.drawing.algebra.interpreter.Builder.start._
 import evolution.drawing.algebra.parser.DrawingParser.PointDrawingParser
