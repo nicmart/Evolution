@@ -1,6 +1,6 @@
 package evolution.theory.lang.list
 
-import evolution.theory.lang.list.Expr.{ExprF, Fn}
+import evolution.theory.lang.list.Expr.{ExprF, Next}
 
 trait BindingLang {
   type ~>[A, B]
@@ -31,11 +31,11 @@ object Lang {
 }
 
 trait Expr[A[F[_], C[_], ~>[_, _]]] { self =>
+  import Expr._
   def run(alg: Lang): alg.Apply[A]
-  def next[E[F[_], C[_], ~>[_, _]]]: Expr[Fn[E, A]#T] = new Expr[Fn[E, A]#T] {
-    override def run(alg: Lang): alg.~>[alg.Apply[E], alg.Apply[A]] =
-      ???
-      //self.run(alg.next[alg.Apply[E]])
+  def next[E[F[_], C[_], ~>[_, _]]]: Expr[Next[E, A]#T] = new Expr[Next[E, A]#T] {
+    override def run(alg: Lang): alg.Apply[Next[E, A]#T] =
+      self.run(alg.next[alg.Apply[E]])
   }
 }
 
@@ -44,6 +44,12 @@ object Expr {
     final type FT[F[_], C[_], ~>[_, _]] = F[A]
     final type CT[F[_], C[_], ~>[_, _]] = C[A]
     final type Self[F[_], C[_], ~>[_, _]] = A
+    trait Next[From[F[_], C[_], ~>[_, _]]] {
+      final type T[F[_], C[_], ~>[_, _]] = F[A] ~> From[F, C, ~>]
+    }
+  }
+  trait Next[From[F[_], C[_], ~>[_, _]], To[F[_], C[_], ~>[_, _]]] {
+    final type T[F[_], C[_], ~>[_, _]] = To[λ[X => From[F, C, ~>] ~> F[X]], λ[X => From[F, C, ~>] ~> C[X]], ~>]
   }
   trait Fn[From[F[_], C[_], ~>[_, _]], To[F[_], C[_], ~>[_, _]]] {
     final type T[F[_], C[_], ~>[_, _]] = From[F, C, ~>] ~> To[F, C, ~>]
@@ -76,7 +82,7 @@ class Expressions {
   def var0[A]: ExprFn[A, A] =
     new ExprFn[A, A] {
       override def run(alg: Lang): alg.Apply[Fn[T[A]#Self, T[A]#Self]#T] =
-        alg.var0
+        alg.var0[A]
     }
 
   def fix[A](expr: ExprFn[A, A]): ExprPlain[A] =
@@ -97,8 +103,12 @@ class Expressions {
 //        alg.mapCons(fa1.run(alg))(f.run(alg))
 //    }
 //
-//  def constant[A](a: A): ExprF[A] =
-//    fix(next[A].cons(a, var0))
+  def constant[A](a: A): ExprF[A] = new ExprF[A] {
+    override def run(alg: Lang): alg.Apply[T[A]#FT] = {
+      import alg._
+      alg.fix(alg.next[F[A]].cons(varS[C[A], F[A]](alg.value(a)), alg.var0[F[A]]))
+    }
+  }
 }
 
 trait Serializer extends Lang {
