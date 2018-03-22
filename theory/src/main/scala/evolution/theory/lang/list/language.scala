@@ -20,6 +20,9 @@ trait Lang extends BindingLang { self =>
   def cons[A](a: C[A], tail: F[A]): F[A]
   def mapEmpty[A](fa1: F[A], fa2: F[A]): F[A]
   def mapCons[A, B](fa1: F[A])(f: C[A] ~> F[A] ~> F[B]): F[B]
+
+  def mapC[A, B](ca: C[A])(f: A => B): C[B]
+  def mapF[A, B](ca: F[A])(f: A => B): F[B]
 }
 
 object Lang {
@@ -66,48 +69,24 @@ trait ValueExpr[A] {
   def run(alg: Lang): alg.C[A]
 }
 
-class Expressions {
+class Expressions(val lang: Lang) {
+  import lang._
   import Expr._
 
-  def value[A](a: A): ExprC[A] = new ExprC[A] {
-    override def run(alg: Lang): alg.C[A] = alg.value(a)
-  }
+  def nextExpressions[X]: Expressions = new Expressions(lang.next[X])
 
-  def cons[A](a: ExprC[A], tail: ExprF[A]): ExprF[A] =
-    new ExprF[A] {
-      override def run(alg: Lang): alg.F[A] =
-        alg.cons(a.run(alg), tail.run(alg))
-    }
+  def constant[A](a: A): F[A] =
+    fix(next[F[A]].cons[A](varS(value(a)), var0))
 
-  def var0[A]: ExprFn[A, A] =
-    new ExprFn[A, A] {
-      override def run(alg: Lang): alg.Apply[Fn[T[A]#Self, T[A]#Self]#T] =
-        alg.var0[A]
-    }
-
-  def fix[A](expr: ExprFn[A, A]): ExprPlain[A] =
-    new ExprPlain[A] {
-      override def run(alg: Lang): A =
-        alg.fix(expr.run(alg))
-    }
-
-  def mapEmpty[A](fa1: ExprF[A], fa2: ExprF[A]): ExprF[A] =
-    new ExprF[A] {
-      override def run(alg: Lang): alg.F[A] =
-        alg.mapEmpty(fa1.run(alg), fa2.run(alg))
-    }
-//
-//  def mapCons[A, B](fa1: Expr[E, A])(f: ExprCons[A, B]): Expr[E, B] =
-//    new Expr[E, B] {
-//      override def run(alg: Lang): alg.~>[E[alg.F], alg.F[B]] =
-//        alg.mapCons(fa1.run(alg))(f.run(alg))
-//    }
-//
-  def constant[A](a: A): ExprF[A] = new ExprF[A] {
-    override def run(alg: Lang): alg.Apply[T[A]#FT] = {
-      import alg._
-      alg.fix(alg.next[F[A]].cons(varS[C[A], F[A]](alg.value(a)), alg.var0[F[A]]))
-    }
+  def integrate(v: F[Double]): C[Double] ~> F[Double] = {
+    val b1 = next[C[Double]]
+    val b2 = b1.next[C[Double] ~> F[Double]]
+    val b3 = b2.next[C[Double] ~> F[Double]]
+    // Inside fix we need (C[D] ~> F[D]) ~> (C[D] ~> F[D])
+    // Inside fix we need (C[D] ~> F[D]) ~> C[D] ~> F[D]
+    // The F[] for mapCons must then be (C[D] ~> F[D]) ~> C[D] ~> F[_]
+    // That means we first push C[D], and then (C[D] ~> F[D])
+    fix[C[Double] ~> F[Double]](b2.mapCons[Double, Double](???)(???))
   }
 }
 
