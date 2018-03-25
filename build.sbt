@@ -79,7 +79,8 @@ lazy val theory = (project in file("theory"))
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
-      "com.lihaoyi" %%% "fastparse" % "1.0.0"
+      "com.lihaoyi" %%% "fastparse" % "1.0.0",
+      "com.chuusai" %%% "shapeless" % "2.3.2"
     )
   )
 
