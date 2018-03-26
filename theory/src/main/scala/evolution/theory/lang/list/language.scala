@@ -61,18 +61,21 @@ class Expressions(val lang: Lang) {
     // b1 works on F[Double] ~> *
     val b1 = next[F[Double]]
     // This compiles
-    val y: F[Double] ~> Env[F[Double]] = b1.x
+    val y1: F[Double] ~> Env[F[Double]] = b1.x
+    val y11: b1.Env[F[Double]] = b1.x
     // b2 works on C[Double] ~> (F[Double] ~> *)
     val b2 = b1.next[C[Double]]
-    // This does not compile
-    //val y2: C[Double] ~> (F[Double] ~> Env[F[Double]]) = b2.x
-    //val y2: b1.C[Double] ~> b1.Env[b1.C[Double]] = b2.x
+    // This compiles
+    val y2: C[Double] ~> b1.Env[C[Double]] = b2.x
+    val y21: C[Double] ~> (F[Double] ~> Env[C[Double]]) = b2.x
     // b3 works on (C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> *))
     // In b3, b2.var0[C[Double] ~> (F[Double] ~> F[Double])] is integrate
     // b3.x
     // b2.varS(b1.var0[C[Double]]) is the "from" b2.varS(b2.x)
     // b2.varS(b1.varS(var0[F[Double]])) is the speed (b2.varS(b1.varS(b1.x)))
     val b3 = b2.next[C[Double] ~> (F[Double] ~> F[Double])]
+    //val y3: (C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> Env[C[Double]])) = b3.x
+    val y3: (C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> Env[C[Double] ~> (F[Double] ~> F[Double])])) = b3.x
     //val integrateVar = b3.x
     //val fromVar = b2.varS[C[Double] ~> C[Double], C[Double] ~> (F[Double] ~> F[Double])](b1.var0[C[Double]])
 
