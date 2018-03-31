@@ -16,9 +16,10 @@ lazy val commonSettings = List(
 )
 
 lazy val core = crossProject.
-    crossType(CrossType.Pure).
-    in(file("core")).
+    crossType(CrossType.Full).
+    //in(file("core")).
     settings(
+        name := "core",
         inThisBuild(commonSettings),
         libraryDependencies ++= Seq(
             "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
