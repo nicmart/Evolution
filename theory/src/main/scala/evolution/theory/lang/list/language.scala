@@ -1,12 +1,14 @@
 package evolution.theory.lang.list
 
-import shapeless.HList
+import scala.language.higherKinds
 
 trait BindingLang {
   type ~>[A, B]
   type Env[A]
   def var0[A]: A ~> Env[A]
   def varS[A, B](expr: A): B ~> Env[A]
+  def ap[A, B](f: A ~> B)(a: A): B
+  def ap2[A, B, C](f: A ~> (B ~> C))(a: A, b: B): C = ap(ap(f)(a))(b)
   def fix[A](f: A ~> Env[A]): A
 }
 
@@ -46,18 +48,16 @@ object Lang {
   }
 }
 
-class Expressions(val lang: Lang) {
+class Expressions(val lang: Lang { type Env[A] = A }) {
   import lang._
 
-  def constant[A](a: A): F[A] =
-    fix(next[F[A]].cons[A](varS(value(a)), var0))
+  def constant[A](a: A): F[A] = {
+    val b1 = next[F[A]]
+    fix(b1.cons[A](varS(value(a)), b1.x))
+  }
+
 
   def integrate: C[Double] ~> (F[Double] ~> F[Double]) = {
-    // Inside fix we need (C[D] ~> F[D] ~> F[D]) ~> (C[D] ~> F[D] ~> F[D])
-    // Inside fix we need (C[D] ~> F[D] ~> F[D]) ~> C[D] ~> F[D] ~> F[D]
-    // The F[] for mapCons must then be (C[D] ~> F[D] ~> F[D]) ~> C[D] ~> F[D] ~> F[_]
-    // That means we first push F[D], then C[D], and then (C[D] ~> F[D] ~> F[D])
-
     // b1 works on F[Double] ~> *
     val b1 = next[F[Double]]
     // This compiles
@@ -79,12 +79,20 @@ class Expressions(val lang: Lang) {
     //val integrateVar = b3.x
     //val fromVar = b2.varS[C[Double] ~> C[Double], C[Double] ~> (F[Double] ~> F[Double])](b1.var0[C[Double]])
 
+    // Inside fix we need (C[D] ~> (F[D] ~> F[D])) ~> Env[(C[D] ~> F[D] ~> F[D])]
+    // Inside fix we need (C[D] ~> (F[D] ~> F[D])) ~> (C[D] ~> (F[D] ~> F[D]))
+    // The F[] for mapCons must then be (C[D] ~> F[D] ~> F[D]) ~> C[D] ~> F[D] ~> F[_]
+    // That means we first push F[D], then C[D], and then (C[D] ~> F[D] ~> F[D])
+
+    val b11 = next[C[Double] ~> (F[Double] ~> F[Double])]
+    //val b21 = b11.next[]
+
     fix[C[Double] ~> (F[Double] ~> F[Double])](
       // MapCons here needs a C[Double] ~> (F[Double] ~> F[Double])  as "first argument"
       // and a C[D] ~> F[D] ~> F[D] as "second argument", BUT here C and F are the ones in b3, oh no!!!
 
-      //b3.mapCons[Double, Double](b2.varS[](b2.x))(???)
-      ???
+      b3.mapCons[Double, Double](???)(???)
+      //ap2[C[Double], F[Double], F[Double]](b3.mapCons[Double, Double](???)(???))(???, ???)
     )
   }
 }
