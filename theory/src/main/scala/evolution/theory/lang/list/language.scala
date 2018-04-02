@@ -6,21 +6,23 @@ trait BindingLang {
   type ~>[A, B]
   type Env[A]
   def var0[A]: A ~> Env[A]
-  def varS[A, B](expr: A): B ~> Env[A]
+  def varS[A, B](expr: Env[A]): B ~> Env[A]
   def ap[A, B](f: A ~> B)(a: A): B
   def ap2[A, B, C](f: A ~> (B ~> C))(a: A, b: B): C = ap(ap(f)(a))(b)
   def fix[A](f: A ~> Env[A]): A
 }
 
 trait Lang extends BindingLang { self =>
-  type F[A]
-  type C[A]
+  type F0[A]
+  type C0[A]
+  final type F[A] = Env[F0[A]]
+  final type C[A] = Env[C0[A]]
   def next[X]: LangNext[X]
   def value[A](a: A): C[A]
   def empty[A]: F[A]
   def cons[A](a: C[A], tail: F[A]): F[A]
   def mapEmpty[A](fa1: F[A], fa2: F[A]): F[A]
-  def mapCons[A, B](fa1: F[A])(f: C[A] ~> (F[A] ~> F[B])): F[B]
+  def mapCons[A, B](fa1: F[A])(f: C0[A] ~> (F0[A] ~> F[B])): F[B]
 
   def mapC[A, B](ca: C[A])(f: A => B): C[B]
   def mapF[A, B](ca: F[A])(f: A => B): F[B]
@@ -28,9 +30,10 @@ trait Lang extends BindingLang { self =>
   trait LangNext[X] extends Lang {
     final type Env[A] = X ~> self.Env[A]
     final type ~>[A, B] = self.~>[A, B]
-    final type F[A] = Env[self.F[A]]
-    final type C[A] = Env[self.C[A]]
-    val x: Env[X]
+    final type F0[A] = self.F0[A]
+    final type C0[A] = self.C0[A]
+    val x: Env[X] = self.var0[X]
+    def up[A](a: self.Env[A]): Env[A] = self.varS[A, X](a)
     // note that, assuming Lang.Env[A] = A, then
     // Lang.var0[F[A]]: F[A] ~> F[A]
     // LangNext[Lang.F[A]].F[A]
@@ -41,14 +44,12 @@ trait Lang extends BindingLang { self =>
 }
 
 object Lang {
-  type Aux[FF[_], CC[_], ~~>[_, _]] = Lang {
-    type F[A] = FF[A]
-    type C[A] = CC[A]
-    type ~>[A, B] = ~~>[A, B]
+  trait Base extends Lang {
+    type Env[A] = A
   }
 }
 
-class Expressions(val lang: Lang { type Env[A] = A }) {
+class Expressions(val lang: Lang.Base) {
   import lang._
 
   def constant[A](a: A): F[A] = {
@@ -87,11 +88,24 @@ class Expressions(val lang: Lang { type Env[A] = A }) {
     val b11 = next[C[Double] ~> (F[Double] ~> F[Double])]
     //val b21 = b11.next[]
 
+    b1.mapCons(b1.x)(???)
+    b2.mapCons[Double, Double](b2.up(b1.x))(???)
+
+    // tail of mapCons
+    val b4 = b3.next[F[Double]]
+    // head of mapCons
+    val b5 = b4.next[C[Double]]
+
     fix[C[Double] ~> (F[Double] ~> F[Double])](
       // MapCons here needs a C[Double] ~> (F[Double] ~> F[Double])  as "first argument"
       // and a C[D] ~> F[D] ~> F[D] as "second argument", BUT here C and F are the ones in b3, oh no!!!
 
-      b3.mapCons[Double, Double](???)(???)
+      b3.mapCons(b3.up(b2.up(b1.x)))(
+        b5.cons[Double](
+          b5.up(b4.up(b3.up(b2.x))),
+          b5.up(b4.x)
+        )
+      )
       //ap2[C[Double], F[Double], F[Double]](b3.mapCons[Double, Double](???)(???))(???, ???)
     )
   }
@@ -99,7 +113,7 @@ class Expressions(val lang: Lang { type Env[A] = A }) {
 
 trait Serializer extends Lang {
   type ~>[A, B] = A => B
-  type F[A] = String
+  type F0[A] = String
   def var0[E, A]: ((A, E)) => A =
     { case (a, e) => a }
   def varS[E, A, B](expr: E => A): ((B, E)) => A =
