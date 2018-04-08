@@ -1,4 +1,4 @@
-package evolution.theory.lang.list
+package evolution.theory.lang.abstractfunc
 
 import scala.language.higherKinds
 
@@ -38,12 +38,6 @@ trait Lang extends BindingLang { self =>
     final type C0[A] = self.C0[A]
     val x: Env[X] = self.var0[X]
     def up[A](a: self.Env[A]): Env[A] = self.varS[A, X](a)
-    // note that, assuming Lang.Env[A] = A, then
-    // Lang.var0[F[A]]: F[A] ~> F[A]
-    // LangNext[Lang.F[A]].F[A]
-    //   = LangNext.Env[Lang.F[A]]
-    //   = Lang.F[A] ~> Lang.F[A]
-    // So var0[F[A]]: LangNext.F[A]
   }
 }
 
@@ -57,18 +51,18 @@ class Expressions(val lang: Lang.Base) {
   import lang._
 
   def constant[A](a: A): F[A] = {
-    val b1 = next[F[A]]
+    val b1 = next[F0[A]]
     fix(b1.cons[A](varS(value(a)), b1.x))
   }
 
 
   def integrate: C[Double] ~> (F[Double] ~> F[Double]) = {
     // velocity evolution
-    val b1 = next[F[Double]]
+    val b1 = next[F0[Double]]
     // from constant
-    val b2 = b1.next[C[Double]]
+    val b2 = b1.next[C0[Double]]
     // integrate recursive call
-    val b3 = b2.next[C[Double] ~> (F[Double] ~> F[Double])]
+    val b3 = b2.next[C0[Double] ~> (F0[Double] ~> F0[Double])]
 
     val y3: (C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> Env[C[Double] ~> (F[Double] ~> F[Double])])) = b3.x
 
@@ -98,7 +92,6 @@ class Expressions(val lang: Lang.Base) {
           )
         )
       )
-      //ap2[C[Double], F[Double], F[Double]](b3.mapCons[Double, Double](???)(???))(???, ???)
     )
   }
 }
