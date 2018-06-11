@@ -1,6 +1,6 @@
 package evolution.theory.lang.abstractfunc
 
-import evolution.theory.lang.abstractfunc.Types.{Id, LazyStream, StringConst, UnitConst}
+import evolution.theory.lang.abstractfunc.Types._
 import evolution.theory.lang.patternmatching.Const.{Annotation, Constant, Unknown}
 import evolution.theory.lang.patternmatching.{Lang, TwoWayMap}
 
@@ -43,7 +43,9 @@ object Types {
   type LazyStream[A] = () => Stream[A]
   type StringConst[A] = String
   type Id[A] = A
-  type UnitConst[A] = Unit
+  type ConstUnit[A] = Unit
+  type ConstBool[A] = Boolean
+  type Const[A, B] = B
 }
 
 object StringInterpreter extends ListAlgebra[StringConst, StringConst] {
@@ -65,9 +67,9 @@ object TwoWayMap {
     override def to[A](r: F[A]): F[A] = r
     override def from[A](t: F[A]): F[A] = t
   }
-  def unity[F[_]]: TwoWayMap[F, UnitConst] = new TwoWayMap[F, UnitConst] {
-    override def to[A](r: F[A]): UnitConst[A] = ()
-    override def from[A](t: UnitConst[A]): F[A] = ???
+  def unity[F[_]]: TwoWayMap[F, ConstUnit] = new TwoWayMap[F, ConstUnit] {
+    override def to[A](r: F[A]): ConstUnit[A] = ()
+    override def from[A](t: ConstUnit[A]): F[A] = ???
   }
 }
 
@@ -93,7 +95,9 @@ class TwoWaySMapLAng[F[_], S1[_], S2[_]](map: TwoWayMap[S1, S2], alg: ListAlgebr
 }
 
 object MapEmpty {
-  sealed trait Annotation[F[_], A]
+  sealed trait Annotation[F[_], A] {
+    def observe[S[_]](alg: ListAlgebra[F, S]): F[A] = new Annotate(alg).from(this)
+  }
   case class Empty[F[_], A]() extends Annotation[F, A]
   case class Unknown[F[_], A](fa: F[A]) extends Annotation[F, A]
 
@@ -108,10 +112,31 @@ object MapEmpty {
   class Annotator[F[_], S[_]](alg: ListAlgebra[F, S])
       extends TwoWayMapLang[F, Annotation[F, ?], S](new Annotate(alg), alg) {
     override def empty[A]: Annotation[F, A] = Empty()
+    override def flatMap[A, B](fa: Annotation[F, A])(f: FMap[A, B]): Annotation[F, B] =
+      fa match {
+        case Empty()                      => Empty()
+        case _ if f.run(EmptyChecker)(()) => Empty()
+        case _                            => super.flatMap(fa)(f)
+      }
+    override def fix[A](f: A ~> A): Annotation[F, A] =
+      if (f.run(EmptyChecker)(false)) Empty()
+      else super.fix(f)
+  }
+
+  object EmptyChecker extends ListAlgebra[ConstBool, ConstUnit] {
+    override def value[A](a: A): Unit = ()
+    override def empty[A]: Boolean = true
+    override def cons[A](head: Unit, tail: Boolean): Boolean = false
+    override def flatMap[A, B](fa: Boolean)(f: FMap[A, B]): Boolean =
+      if (fa) true
+      else f.run(this)(())
+    override def fix[A](f: A ~> A): Boolean =
+      f.run(this)(false)
   }
 
   class Optimizer[F[_], S[_]](alg: ListAlgebra[F, S]) extends TwoWayMapLang[F, F, S](TwoWayMap.identity[F], alg) {
     override def flatMap[A, B](fa: F[A])(f: FMap[A, B]): F[B] =
-      f.run(new Annotator(alg))(???)
+      if (f.run(EmptyChecker)(())) alg.empty
+      else alg.flatMap(fa)(f)
   }
 }

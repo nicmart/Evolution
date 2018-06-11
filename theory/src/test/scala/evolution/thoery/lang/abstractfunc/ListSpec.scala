@@ -14,11 +14,28 @@ class ListSpec extends FlatSpec with Matchers {
   }
 
   it should "flatmap" in {
-    def emptyStream[F[_], S[_]](alg: ListAlgebra[F, S]): F[Int] =
+    def constantStreamFlatmappedToEmpty[F[_], S[_]](alg: ListAlgebra[F, S]): F[Int] =
       flatMap(const(1)(alg), flatMapToEmpty[Int, Int])(alg)
-    //val stream = emptyStream(LazyStreamInterpreter)()
-    //stream.take(10) shouldBe Stream.empty
-    emptyStream(StringInterpreter) shouldBe "flatMap(fix($self => 1::$self))(x => Nil)"
+
+    def recursiveStreamMappedToEmpty[F[_], S[_]](alg: ListAlgebra[F, S]): F[Int] =
+      alg.fix(recursiveEmpty)
+
+    def constantStreamFlatmappedToEmptyTwice[F[_], S[_]](alg: ListAlgebra[F, S]): F[Int] =
+      flatMap(const(1)(alg), flatMapToFlatMapToEmpty[Int, Int])(alg)
+
+    constantStreamFlatmappedToEmpty(StringInterpreter) shouldBe "flatMap(fix($self => 1::$self))(x => Nil)"
+    constantStreamFlatmappedToEmpty(new MapEmpty.Annotator(StringInterpreter)).observe(StringInterpreter) shouldBe "Nil"
+
+    constantStreamFlatmappedToEmptyTwice(StringInterpreter) shouldBe "flatMap(fix($self => 1::$self))(x => flatMap(x::Nil)(x => Nil))"
+    constantStreamFlatmappedToEmptyTwice(new MapEmpty.Annotator(StringInterpreter))
+      .observe(StringInterpreter) shouldBe "Nil"
+
+    recursiveStreamMappedToEmpty(StringInterpreter) shouldBe "fix($self => Nil)"
+    recursiveStreamMappedToEmpty(new MapEmpty.Annotator(StringInterpreter)).observe(StringInterpreter) shouldBe "Nil"
+
+    val stream =
+      constantStreamFlatmappedToEmpty(new MapEmpty.Annotator(LazyStreamInterpreter)).observe(LazyStreamInterpreter)()
+    stream.take(10) shouldBe Stream.empty
   }
 
   def flatMap[A, B, F[_], S[_]](fa: F[A], f: FMap[A, B])(alg: ListAlgebra[F, S]): F[B] =
@@ -31,8 +48,18 @@ class ListSpec extends FlatSpec with Matchers {
     })
   }
 
+  def recursiveEmpty[A, B]: A ~> B = new ~>[A, B] {
+    override def run[F[_], S[_]](alg: ListAlgebra[F, S]): F[A] => F[B] =
+      _ => alg.empty
+  }
+
   def flatMapToEmpty[A, B]: FMap[A, B] = new FMap[A, B] {
     override def run[F[_], S[_]](alg: ListAlgebra[F, S]): S[A] => F[B] =
       _ => alg.empty
+  }
+
+  def flatMapToFlatMapToEmpty[A, B]: FMap[A, B] = new FMap[A, B] {
+    override def run[F[_], S[_]](alg: ListAlgebra[F, S]): S[A] => F[B] =
+      sa => alg.flatMap(alg.cons(sa, alg.empty))(flatMapToEmpty)
   }
 }
