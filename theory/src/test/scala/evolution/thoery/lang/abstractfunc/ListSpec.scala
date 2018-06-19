@@ -38,27 +38,27 @@ class ListSpec extends FlatSpec with Matchers {
     stream.take(10) shouldBe Stream.empty
   }
 
-  def flatMap[A, B, F[_], S[_]](fa: F[A], f: FMap[A, B])(alg: ListAlgebra[F, S]): F[B] =
+  def flatMap[A, B, F[_], S[_]](fa: F[A], f: SFFunc1[A, B])(alg: ListAlgebra[F, S]): F[B] =
     alg.flatMap(fa)(f)
 
   def const[A, F[_], S[_]](a: A)(alg: ListAlgebra[F, S]): F[A] = {
-    alg.fix(new ~>[A, A] {
+    alg.fix(new FFunc1[A, A] {
       override def run[F2[_], S2[_]](alg: ListAlgebra[F2, S2]): F2[A] => F2[A] =
         self => alg.cons(alg.value(a), self)
     })
   }
 
-  def recursiveEmpty[A, B]: A ~> B = new ~>[A, B] {
+  def recursiveEmpty[A, B]: A FFunc1 B = new FFunc1[A, B] {
     override def run[F[_], S[_]](alg: ListAlgebra[F, S]): F[A] => F[B] =
       _ => alg.empty
   }
 
-  def flatMapToEmpty[A, B]: FMap[A, B] = new FMap[A, B] {
+  def flatMapToEmpty[A, B]: SFFunc1[A, B] = new SFFunc1[A, B] {
     override def run[F[_], S[_]](alg: ListAlgebra[F, S]): S[A] => F[B] =
       _ => alg.empty
   }
 
-  def flatMapToFlatMapToEmpty[A, B]: FMap[A, B] = new FMap[A, B] {
+  def flatMapToFlatMapToEmpty[A, B]: SFFunc1[A, B] = new SFFunc1[A, B] {
     override def run[F[_], S[_]](alg: ListAlgebra[F, S]): S[A] => F[B] =
       sa => alg.flatMap(alg.cons(sa, alg.empty))(flatMapToEmpty)
   }

@@ -54,55 +54,13 @@ class Expressions(val lang: Lang.Base) {
     val b1 = next[F0[A]]
     fix(b1.cons[A](varS(value(a)), b1.x))
   }
-
-
-  def integrate: C[Double] ~> (F[Double] ~> F[Double]) = {
-    // velocity evolution
-    val b1 = next[F0[Double]]
-    // from constant
-    val b2 = b1.next[C0[Double]]
-    // integrate recursive call
-    val b3 = b2.next[C0[Double] ~> (F0[Double] ~> F0[Double])]
-
-    val y3: (C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> Env[C[Double] ~> (F[Double] ~> F[Double])])) = b3.x
-
-    // tail of mapCons
-    val b4 = b3.next[F[Double]]
-    // head of mapCons
-    val b5 = b4.next[C[Double]]
-
-    type LastEnv[X] = C[Double] ~> (F[Double] ~> ((C[Double] ~> (F[Double] ~> F[Double])) ~> (C[Double] ~> (F[Double] ~> Env[X]))))
-
-    val from: LastEnv[C[Double]] =
-      b5.up(b4.up(b3.up(b2.x)))
-    val vhead: LastEnv[C[Double]] = b5.x
-    val vtail: LastEnv[F[Double]] = b5.up(b4.x)
-    val integrateRec: LastEnv[C[Double] ~> (F[Double] ~> F[Double])] = b5.up(b4.up(b3.x))
-
-    fix[C[Double] ~> (F[Double] ~> F[Double])](
-      // MapCons here needs a C[Double] ~> (F[Double] ~> F[Double])  as "first argument"
-      // and a C[D] ~> F[D] ~> F[D] as "second argument", BUT here C and F are the ones in b3, oh no!!!
-
-      b3.mapCons(b3.up(b2.up(b1.x)))(
-        b5.cons(
-          from,
-          b5.ap2(integrateRec)(
-            b5.map2C(vhead, from)(_ + _),
-            vtail
-          )
-        )
-      )
-    )
-  }
 }
 
 trait Serializer extends Lang {
   type ~>[A, B] = A => B
   type F0[A] = String
-  def var0[E, A]: ((A, E)) => A =
-    { case (a, e) => a }
-  def varS[E, A, B](expr: E => A): ((B, E)) => A =
-    { case (b, e) => expr(e) }
+  def var0[E, A]: ((A, E)) => A = { case (a, e) => a }
+  def varS[E, A, B](expr: E => A): ((B, E)) => A = { case (b, e) => expr(e) }
   def fix[E, A](f: (A, E) => A): E => A =
     e => f(fix(f)(e), e)
   def empty[E, A]: E => String =
