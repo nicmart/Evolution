@@ -1,5 +1,9 @@
 package evolution.drawing.algebra.evo
 
+/**
+  * Attempt to classify different kind of Evolution Representation, where the usual, and least performant,
+  * definition is `Full`
+  */
 trait EvoAlgebra[W, F[_]] {
   def constant[A](a: A): F[A]
   def autonomous[A](f: W => (W, Option[A])): F[A]

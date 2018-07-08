@@ -23,7 +23,25 @@ trait DrawingAlgebra[F[_, _]] extends BindingAlgebra[F] {
   def integrate[E, T: Type](start: T, f: F[E, T]): F[E, T]
   def derive[E, T: Type](f: F[E, T]): F[E, T]
   def slowDown[E, T: Type](by: F[E, Double], drawing: F[E, T]): F[E, T]
+
+  /**
+    * 1. Draw a double `d` from `dist`
+    * 2. If `d` < 0.5 draw a T from `drawing1`
+    * 3. Draw a T from `drawing2` otherwise
+    */
   def choose[E, T: Type](dist: F[E, Double], drawing1: F[E, T], drawing2: F[E, T]): F[E, T]
+
+  /**
+    * Build an evolution of 0.0s or 1.0s defined in this way:
+    * 1. draw a probability `p` from `probability`
+    * 2. With probability `p` choose `length1`, `length2` otherwise
+    * 3. If `length1` was chosen, draw `l` from `length1` and return `l`s 0.0s
+    * 4. If `length2` was chosen, draw `l` from `length2` and return `l`s 1.0s
+    * 5. GOTO 1
+    *
+    * The originating idea was to be able to use `choose` for example to alternate `drawing1` and `drawing2` every
+    * 100 iterations
+    */
   def dist[E](probability: F[E, Double], length1: F[E, Double], length2: F[E, Double]): F[E, Double]
 }
 
