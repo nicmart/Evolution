@@ -77,8 +77,8 @@ object Type {
     override def run[F[_]](alg: TypeAlg[F]): F[Point] = alg.point
   }
 
-  implicit def group[T](implicit t: Type[T]): Group[T] =
-    t.run(TypeAlg(Group[Double], Group[Point]))
+  implicit def group[T](implicit t: Type[T], groupDouble: Group[Double], groupPoint: Group[Point]): Group[T] =
+    t.run(TypeAlg(groupDouble, groupPoint))
 }
 
 trait TypesPair[A, B] {

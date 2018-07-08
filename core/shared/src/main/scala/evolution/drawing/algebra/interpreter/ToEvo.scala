@@ -6,8 +6,10 @@ import evolution.drawing.algebra.{DrawingAlgebra, Type}
 import Type._
 import evolution.drawing.algebra.evo.{EvoAlgebra, EvoExpr}
 import evolution.drawing.algebra.interpreter.ToEvo.Repr
-import cats.syntax.all._
+import cats.syntax.group._
+import cats.implicits._
 import evolution.geometry.Point
+import evolution.geometry.Point._
 
 object ToEvo {
   type Repr[E, A] = E => EvoExpr[Long, A]
@@ -19,16 +21,28 @@ class ToEvo extends DrawingAlgebra[Repr] {
     _ => builder.constant(x)
   override def mul[E, T: Type](k: Repr[E, Double], t: Repr[E, T]): Repr[E, T] = {
     Type[T].foldF[Repr[E, ?], Repr[E, ?]](t)(
-      doubleRepr => e => builder.zipWith(k(e), doubleRepr(e)) { (double1, double2) => double1 * double2 },
-      pointRepr => e => builder.zipWith(k(e), pointRepr(e)) { (d, point) => point * d }
+      doubleRepr =>
+        e =>
+          builder.zipWith(k(e), doubleRepr(e)) { (double1, double2) =>
+            double1 * double2
+      },
+      pointRepr =>
+        e =>
+          builder.zipWith(k(e), pointRepr(e)) { (d, point) =>
+            point * d
+      }
     )
   }
-  override def add[E, T: Type](a: Repr[E, T], b: Repr[E, T]): Repr[E, T] = {
-    e => builder.zipWith(a(e), b(e)) { (t1, t2) => t1 |+| t2 }
+  override def add[E, T: Type](a: Repr[E, T], b: Repr[E, T]): Repr[E, T] = { e =>
+    val g = Group[T]
+    builder.zipWith(a(e), b(e)) { (t1, t2) =>
+      g.combine(t1, t2)
+    }
   }
   override def inverse[E, T: Type](a: Repr[E, T]): Repr[E, T] = {
     val group = Type.group[T]
-    e => builder.map(a(e))(t => group.inverse(t))
+    e =>
+      builder.map(a(e))(t => group.inverse(t))
   }
   override def rnd[E](from: Repr[E, Double], to: Repr[E, Double]): Repr[E, Double] = ???
   override def point[E](x: Repr[E, Double], y: Repr[E, Double]): Repr[E, Point] = ???
@@ -37,7 +51,11 @@ class ToEvo extends DrawingAlgebra[Repr] {
   override def derive[E, T: Type](f: Repr[E, T]): Repr[E, T] = ???
   override def slowDown[E, T: Type](by: Repr[E, Double], drawing: Repr[E, T]): Repr[E, T] = ???
   override def choose[E, T: Type](dist: Repr[E, Double], drawing1: Repr[E, T], drawing2: Repr[E, T]): Repr[E, T] = ???
-  override def dist[E](probability: Repr[E, Double], length1: Repr[E, Double], length2: Repr[E, Double]): Repr[E, Double] = ???
+  override def dist[E](
+    probability: Repr[E, Double],
+    length1: Repr[E, Double],
+    length2: Repr[E, Double]
+  ): Repr[E, Double] = ???
   override def var0[E, A]: Repr[(Repr[E, A], E), A] = ???
   override def shift[E, A, B](expr: Repr[E, A]): Repr[(Repr[E, B], E), A] = ???
   override def let[E, A, B](name: String, value: Repr[E, A])(expr: Repr[(Repr[E, A], E), B]): Repr[E, B] = ???
