@@ -1,4 +1,4 @@
-package evolution.drawing.algebra
+package evolution.primitive.algebra
 
 import cats.data.NonEmptyList
 import cats.kernel.{Group, Semigroup}
@@ -10,43 +10,34 @@ trait BindingAlgebra[F[_]] {
   def var0[A]: F[A]
   def shift[A](expr: F[A]): F[A]
   def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
+  def fix[A](expr: F[A]): F[A]
 }
 
-trait DrawingAlgebra[F[_]] {
-  def const[T: Type](x: T): F[T]
-  def mul[T: Type](k: F[Double], t: F[T]): F[T]
-  def add[T: Type](a: F[T], b: F[T]): F[T]
-  def inverse[T: Type](a: F[T]): F[T]
-  def rnd(from: F[Double], to: F[Double]): F[Double]
-  def point(x: F[Double], y: F[Double]): F[Point]
-  def polar(r: F[Double], w: F[Double]): F[Point]
-  def integrate[T: Type](start: T, f: F[T]): F[T]
-  def derive[T: Type](f: F[T]): F[T]
-  def slowDown[T: Type](by: F[Double], drawing: F[T]): F[T]
+trait CoreDrawingAlgebra[S[_], F[_]] {
+  def empty[A]: F[A]
+  def cons[A](head: S[A], tail: F[A]): F[A]
+  def mapEmpty[A](eva: F[A])(eva2: F[A]): F[A]
+  def mapCons[A, B](eva: F[A])(f: F[B]): F[B]
+}
 
-  /**
-    * 1. Draw a double `d` from `dist`
-    * 2. If `d` < 0.5 draw a T from `drawing1`
-    * 3. Draw a T from `drawing2` otherwise
-    */
-  def choose[T: Type](dist: F[Double], drawing1: F[T], drawing2: F[T]): F[T]
+trait ScalarAlgebra[S[_]] {
+  def double(d: Double): S[Double]
+  def point(p: Point): S[Point]
+}
 
-  /**
-    * Build an evolution of 0.0s or 1.0s defined in this way:
-    * 1. draw a probability `p` from `probability`
-    * 2. With probability `p` choose `length1`, `length2` otherwise
-    * 3. If `length1` was chosen, draw `l` from `length1` and return `l`s 0.0s
-    * 4. If `length2` was chosen, draw `l` from `length2` and return `l`s 1.0s
-    * 5. GOTO 1
-    *
-    * The originating idea was to be able to use `choose` for example to alternate `drawing1` and `drawing2` every
-    * 100 iterations
-    */
-  def dist(probability: F[Double], length1: F[Double], length2: F[Double]): F[Double]
+trait DrawingAlgebra[S[_], F[_]] {
+  val drawing: CoreDrawingAlgebra[S, F]
+  val scalar: ScalarAlgebra[S]
+  val bindS: BindingAlgebra[S]
+  val bindF: BindingAlgebra[F]
 }
 
 trait DrawingExpr[A] {
-  def run[F[_]](alg: DrawingAlgebra[F]): F[A]
+  def run[S[_], F[_]](alg: DrawingAlgebra[S, F]): F[A]
+}
+
+trait ScalarExpr[A] {
+  def run[S[_], F[_]](alg: DrawingAlgebra[S, F]): S[A]
 }
 
 trait TypeAlg[F[_]] {
