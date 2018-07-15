@@ -8,12 +8,9 @@ import org.scalatest.prop.PropertyChecks
 import evolution.drawing.algebra.parser.{DrawingParser}
 import evolution.geometry.Point
 
-class ParserSpec
-  extends WordSpec
-    with Matchers
-    with PropertyChecks {
+class ParserSpec extends WordSpec with Matchers with PropertyChecks {
 
-  import Builder.start._
+  import Builder._
 
   "A Parser" should {
     "parse a rnd expression" in {
@@ -31,18 +28,12 @@ class ParserSpec
     "ignore whitespaces" in {
       assertParse("rnd(0.1, 1)", rnd(const(0.1), const(1)))
       assertParse("rnd(\n.1, \n1)", rnd(const(0.1), const(1)))
-      assertParse(
-        "\n\nlet(x\n  ,\n  .1  \n , $x   \n)",
-        let("x", const(.1))(_ => var0)
-      )
+      assertParse("\n\nlet(x\n  ,\n  .1  \n , $x   \n)", let("x", const(.1))(var0))
       assertParse[Double](
         "\n\nlet\n(\nx\n,\n.1\n,\n let \n ( \n y\n,\n.1\n,\n$y\n)\n)\n",
-        let("x", const(.1))(b1 => b1.let("y", b1.const(.1))(_ => b1.var0))
+        let("x", const(.1))(let("y", const(.1))(var0))
       )
-      assertParse(
-        "point(1,rnd(1,1\n)\n)\n",
-        point(const(1.0), rnd(const(1), const(1)))
-      )
+      assertParse("point(1,rnd(1,1\n)\n)\n", point(const(1.0), rnd(const(1), const(1))))
     }
     "parse a const expression" in {
       assertParse("0.1", const(0.1))
@@ -51,10 +42,7 @@ class ParserSpec
     }
     "parse an integrate of a double expression" in {
       assertParse("integrate(.1,.1)", integrate(.1, const(0.1)))
-      assertParse(
-        "integrate(.1,integrate(0,.1))",
-        integrate(.1, integrate(0.0, const(0.1)))
-      )
+      assertParse("integrate(.1,integrate(0,.1))", integrate(.1, integrate(0.0, const(0.1))))
     }
     "parse a derive Double expression" in {
       assertParse("derive(1)", derive(const(1.0)))
@@ -67,46 +55,35 @@ class ParserSpec
     }
     "parse a point expression" in {
       assertParse("point(.1,.1)", point(const(.1), const(0.1)))
-      assertParse(
-        "point(.1,integrate(0,.1))",
-        point(const(.1), integrate(0, const(0.1)))
-      )
+      assertParse("point(.1,integrate(0,.1))", point(const(.1), integrate(0, const(0.1))))
     }
     "parse a polar expression" in {
       assertParse("polar(.1,.1)", polar(const(.1), const(0.1)))
-      assertParse(
-        "polar(.1,integrate(0,.1))",
-        polar(const(.1), integrate(0, const(0.1)))
-      )
+      assertParse("polar(.1,integrate(0,.1))", polar(const(.1), integrate(0, const(0.1))))
     }
     "parse let binding" in {
-      assertParse("let(x,1,$x)", let("x", const(1.0))(_ => var0))
+      assertParse("let(x,1,$x)", let("x", const(1.0))(var0))
       assertDoubleParse[Point]("let(x, 1.0, point($x, $x))")
       assertDoubleParse[Point]("let(x, 1.0, let(y, 1.0, point($x, $y)))")
     }
 
     "parse let binding with infix notation" in {
-      assertParse("x = 1 $x", let("x", const(1.0))(_ => var0))
-      assertParse(
-        " x = 1 y = point($x, $x) $y ",
-        let("x", const(1.0))(b1 => b1.let("y", b1.point(var0, var0))(_ => b1.var0))
-      )
+      assertParse("x = 1 $x", let("x", const(1.0))(var0))
+      //TODO Why here we need a type param?
+      assertParse[Point](" x = 1 y = point($x, $x) $y ", let("x", const(1.0))(let("y", point(var0, var0))(var0)))
     }
 
     "parse let binding when a variable is the prefix of another" in {
-      assertParse("x = 1 xx = 2 $xx", let("x", const(1.0))(b1 => b1.let("xx", b1.const(2.0))(b2 => b1.var0)))
-      assertParse("xx = 1 x = 2 $xx", let("xx", const(1.0))(b1 => b1.let("x", b1.const(2.0))(b2 => b1.shift(var0))))
+      assertParse("x = 1 xx = 2 $xx", let("x", const(1.0))(let("xx", const(2.0))(var0)))
+      assertParse("xx = 1 x = 2 $xx", let("xx", const(1.0))(let("x", const(2.0))(shift(var0))))
     }
 
     "parse an inverse with infix notation" in {
-      assertParse("x = 1 -$x", let("x", const(1.0))(b1 => b1.inverse(var0)))
+      assertParse("x = 1 -$x", let("x", const(1.0))(inverse(var0[Double])))
     }
 
     "parse a choose expression" in {
-      assertParse(
-        "choose(0.5, rnd(-1, 1), 0)",
-        choose(const(0.5), rnd(const(-1.0), const(1.0)), const(0.0))
-      )
+      assertParse("choose(0.5, rnd(-1, 1), 0)", choose(const(0.5), rnd(const(-1.0), const(1.0)), const(0.0)))
     }
 
     "do not parse partial drawings" in {
@@ -114,7 +91,7 @@ class ParserSpec
     }
   }
 
-  private def assertParse[T](serializedDrawing: String, expected: DrawingExpr[Empty, T])(implicit parser: DrawingParser[T]) = {
+  private def assertParse[T](serializedDrawing: String, expected: DrawingExpr[T])(implicit parser: DrawingParser[T]) = {
     val actual = parser.parse(serializedDrawing)
     actual.map(_.run(Serializer)(Nil)) shouldBe Right(expected.run(Serializer)(Nil))
   }

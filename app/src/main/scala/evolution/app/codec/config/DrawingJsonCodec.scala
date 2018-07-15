@@ -1,20 +1,17 @@
 package evolution.app.codec.config
 
 import evolution.app.codec.JsonCodec
-import evolution.drawing.algebra.{Drawing, DrawingAlgebra, Type}
+import evolution.drawing.algebra.{DrawingAlgebra, DrawingExpr, Type}
 import evolution.drawing.algebra.parser.DrawingParser
 import io.circe.Json
 import DrawingJsonCodec._
 import evolution.drawing.algebra.interpreter.CtxString
 
-class DrawingJsonCodec[T: Type](
-  parser: DrawingParser[T],
-  serializer: DrawingAlgebra[CtxString]
-) extends JsonCodec[Drawing[Unit, T]]
-{
-  override def encode(t: Drawing[Unit, T]): Json =
+class DrawingJsonCodec[T: Type](parser: DrawingParser[T], serializer: DrawingAlgebra[CtxString])
+    extends JsonCodec[DrawingExpr[T]] {
+  override def encode(t: DrawingExpr[T]): Json =
     Json.fromString(t.run[CtxString](serializer)(Nil))
-  override def decode(r: Json): Option[Drawing[Unit, T]] =
+  override def decode(r: Json): Option[DrawingExpr[T]] =
     for {
       serialized <- r.asString
       drawing <- {
