@@ -3,6 +3,7 @@ package evolution.primitive.algebra.parser
 import evolution.primitive.algebra._
 import _root_.evolution.primitive.algebra.interpreter.Builder
 import _root_.evolution.geometry.Point
+import evolution.primitive.algebra.parser.DrawingParserImpl.StaticParsers.varName
 import fastparse.{WhitespaceApi, all, core}
 
 object DrawingParserImpl {
@@ -40,6 +41,8 @@ object DrawingParserImpl {
       P(letter.rep(1).!)
     }
 
+    def varUsage(varName: String): Parser[String] = P("$" ~ varName.!)
+
     def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
       P(funcName ~ "(" ~ parser ~ ")")
     def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
@@ -59,136 +62,120 @@ object DrawingParserImpl {
       P(Config.whitespaces ~ p ~ Config.whitespaces)
   }
 
-  case class Parsers(double: Parser[DrawingExpr[Double]], point: Parser[DrawingExpr[Point]])
-      extends TypeAlg[λ[X => Parser[DrawingExpr[X]]]] {
-    def get[T: Type]: Parser[DrawingExpr[T]] =
-      Type[T].run[λ[X => Parser[DrawingExpr[X]]]](this)
+  case class Parsers[G[_]](double: Parser[G[Double]], point: Parser[G[Point]]) extends TypeAlg[λ[X => Parser[G[X]]]] {
+    def get[T: Type]: Parser[G[T]] =
+      Type[T].run[λ[X => Parser[G[X]]]](this)
   }
 
   import StaticParsers._
 
-  private class ByEnvParsers(vars: Parsers) {
-    type P[A, B] = Parser[DrawingExpr[B]]
-    type ParserOf[T] = Parser[DrawingExpr[T]]
-    type ScalarParserOf[T] = Parser[ScalarExpr[T]]
-    val b = Builder
+  class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F], current: Parser[F]) {
+    def var0[A](varName: String): Parser[F[A]] =
+      P("$" ~ varName ~ !varName).map(_ => alg.var0)
 
-    def withVar[In: Type](varname: String): ByEnvParsers =
-      new ByEnvParsers(pushVar[In](varname, vars))
-    private def pushVar[T: Type](varName: String, vars: Parsers): Parsers = {
-      val pushedParsers: TypeAlg.Pair[P] = PairAlg[P](
-        P(var0[Double](varName) | shift(vars.double)),
-        shift(vars.point),
-        shift(vars.double),
-        P(var0[Point](varName) | shift(vars.point))
-      )
-      Parsers(TypesPair.get[T, Double].run[P](pushedParsers), TypesPair.get[T, Point].run[P](pushedParsers))
-    }
-
-    def constScalar[T: Type]: ScalarParserOf[T] =
-      literal[T].map(t => Type[T].fold(t)(b.double, b.point))
-
-    def const[T: Type]: ParserOf[T] =
-      constScalar[T].map(t => b.const(t))
-
-    def cartesian: ParserOf[Point] =
-      function2("point", expr.get[Double], expr.get[Double]).map {
-        case (x, y) => b.point(x, y)
-      }
-
-    def polar: ParserOf[Point] =
-      function2("polar", expr.get[Double], expr.get[Double]).map {
-        case (x, y) => b.polar(x, y)
-      }
-
-    def rnd: ParserOf[Double] =
-      function2("rnd", expr.get[Double], expr.get[Double]).map { case (x, y) => b.rnd(x, y) }
-
-    def add[T: Type]: ParserOf[T] =
-      function2("add", expr.get[T], expr.get[T]).map { case (x, y) => b.add(x, y) }
-
-    def inverseFunc[T: Type]: ParserOf[T] =
-      function1("inverse", expr.get[T]).map { x =>
-        b.inverse(x)
-      }
-
-    def inversePrefix[T: Type]: ParserOf[T] =
-      prefix("-", expr.get[T]).map { x =>
-        b.inverse(x)
-      }
-
-    def mul[T: Type]: ParserOf[T] =
-      function2("mul", expr.get[Double], expr.get[T]).map { case (x, y) => b.mul(x, y) }
-
-    def integrate[T: Type]: ParserOf[T] =
-      function2("integrate", literal[T], expr.get[T]).map {
-        case (s, f) => b.integrate(s, f)
-      }
-
-    def derive[T: Type]: ParserOf[T] =
-      function1("derive", expr.get[T]).map { f =>
-        b.derive(f)
-      }
-
-    def slowDown[T: Type]: ParserOf[T] =
-      function2("slowDown", expr.get[Double], expr.get[T]).map { case (x, y) => b.slowDown(x, y) }
-
-    def var0[A](name: String): ParserOf[A] =
-      P("$" ~ name ~ !varName).map(_ => b.var0)
-
-    def shift[Out, In](current: ParserOf[Out]): ParserOf[Out] =
-      current.map(t => b.shift(t))
-
-    def let[In: Type, Out: Type](assignmentParser: Parser[(String, DrawingExpr[In])]): ParserOf[Out] =
-      assignmentParser.flatMap {
-        case (name, value) => whitespaceWrap(withVar[In](name).expr.get[Out].map(e => b.let(name, value)(e)))
-      }
-
-    def letFunc[In: Type, Out: Type]: ParserOf[Out] =
-      P(let[In, Out](P("let" ~ "(" ~ varName ~ "," ~ expr.get[In] ~ "," ~ "")) ~ ")")
-
-    def letInfix[In: Type, Out: Type]: ParserOf[Out] =
-      let[In, Out](P(varName ~ "=" ~ expr.get[In]))
-
-    def choose[Out: Type]: ParserOf[Out] =
-      function3("choose", expr.get[Double], expr.get[Out], expr.get[Out]).map {
-        case (probability, drawing1, drawing2) =>
-          b.choose(probability, drawing1, drawing2)
-      }
-
-    def dist: ParserOf[Double] =
-      function3("dist", expr.get[Double], expr.get[Double], expr.get[Double]).map {
-        case (probability, drawing1, drawing2) =>
-          b.dist(probability, drawing1, drawing2)
-      }
-
-    def polymorphicExpr[A: Type]: ParserOf[A] =
-      P(
-        vars.get[A]
-          | const
-          | derive
-          | integrate
-          | inverseFunc[A]
-          | inversePrefix[A]
-          | add[A]
-          | mul[A]
-          | slowDown[A]
-          | choose[A]
-          | letFunc[Double, A]
-          | letFunc[Point, A]
-          | letInfix[Double, A]
-          | letInfix[Point, A]
-      )
-
-    def expr: Parsers = Parsers(
-      whitespaceWrap(P(rnd | dist | polymorphicExpr[Double])),
-      whitespaceWrap(P(cartesian | polar | polymorphicExpr[Point]))
-    )
+    def shift[A]: Parser[F[A]]
   }
 
-  private def finalizeParsers(parsers: Parsers): Parsers =
-    Parsers(P(Start ~ parsers.get[Double] ~ End), P(Start ~ parsers.get[Point] ~ End))
+  class ParserModule[S[_], F[_]](alg: DrawingAlgebra[S, F]) {
 
-  val initialParsers: Parsers =
-    finalizeParsers(new ByEnvParsers(Parsers(Fail, Fail)).expr)
+    private class ByEnvParsers(scalarVariables: Parsers[S], evolutionVariables: Parsers[F]) {
+      type P[A, B] = Parser[DrawingExpr[B]]
+      type ParserOf[T] = Parser[DrawingExpr[T]]
+      type ScalarParserOf[T] = Parser[ScalarExpr[T]]
+      val b = Builder
+
+      def withVar[In: Type](varname: String): ByEnvParsers =
+        new ByEnvParsers(pushVar[In](varname, scalarVariables))
+      private def pushVar[T: Type](varName: String, vars: Parsers): Parsers = {
+        val pushedParsers: TypeAlg.Pair[P] = PairAlg[P](
+          P(var0[Double](varName) | shift(vars.double)),
+          shift(vars.point),
+          shift(vars.double),
+          P(var0[Point](varName) | shift(vars.point))
+        )
+        Parsers(TypesPair.get[T, Double].run[P](pushedParsers), TypesPair.get[T, Point].run[P](pushedParsers))
+      }
+
+      def scalar[T: Type]: Parser[S[T]] =
+        literal[T].map(t => Type[T].fold(t)(alg.scalar.double, alg.scalar.point))
+
+      def cons[T: Type]: Parser[F[T]] =
+        function2("cons", scalarExpr.get[T], evolutionExpr.get[T]).map {
+          case (head, tail) => alg.drawing.cons(head, tail)
+        }
+
+      def empty[T: Type]: Parser[F[T]] =
+        P("nil").map(_ => alg.drawing.empty)
+
+      def mapEmpty[T: Type]: Parser[F[T]] =
+        function2("mapEmpty", evolutionExpr.get[T], evolutionExpr.get[T]).map {
+          case (drawing1, drawing2) => alg.drawing.mapEmpty(drawing1)(drawing2)
+        }
+
+      def mapCons[T: Type, U: Type]: Parser[F[U]] =
+        function2("mapCons", evolutionExpr.get[T], evolutionExpr.get[U]).map {
+          case (drawing1, drawing2) => alg.drawing.mapCons(drawing1)(drawing2)
+        }
+
+      def var0[A](name: String): ParserOf[A] =
+        P("$" ~ name ~ !varName).map(_ => b.var0)
+
+      def shift[Out, In](current: ParserOf[Out]): ParserOf[Out] =
+        current.map(t => b.shift(t))
+
+      def let[In: Type, Out: Type](assignmentParser: Parser[(String, DrawingExpr[In])]): ParserOf[Out] =
+        assignmentParser.flatMap {
+          case (name, value) => whitespaceWrap(withVar[In](name).expr.get[Out].map(e => b.let(name, value)(e)))
+        }
+
+      def letFunc[In: Type, Out: Type]: ParserOf[Out] =
+        P(let[In, Out](P("let" ~ "(" ~ varName ~ "," ~ expr.get[In] ~ "," ~ "")) ~ ")")
+
+      def letInfix[In: Type, Out: Type]: ParserOf[Out] =
+        let[In, Out](P(varName ~ "=" ~ expr.get[In]))
+
+      def choose[Out: Type]: ParserOf[Out] =
+        function3("choose", expr.get[Double], expr.get[Out], expr.get[Out]).map {
+          case (probability, drawing1, drawing2) =>
+            b.choose(probability, drawing1, drawing2)
+        }
+
+      def dist: ParserOf[Double] =
+        function3("dist", expr.get[Double], expr.get[Double], expr.get[Double]).map {
+          case (probability, drawing1, drawing2) =>
+            b.dist(probability, drawing1, drawing2)
+        }
+
+      def polymorphicExpr[A: Type]: ParserOf[A] =
+        P(
+          scalarVariables.get[A]
+            | const
+            | derive
+            | integrate
+            | inverseFunc[A]
+            | inversePrefix[A]
+            | add[A]
+            | mul[A]
+            | slowDown[A]
+            | choose[A]
+            | letFunc[Double, A]
+            | letFunc[Point, A]
+            | letInfix[Double, A]
+            | letInfix[Point, A]
+        )
+
+      def evolutionExpr: Parsers[F] = Parsers[F](
+        whitespaceWrap(P(rnd | dist | polymorphicExpr[Double])),
+        whitespaceWrap(P(cartesian | polar | polymorphicExpr[Point]))
+      )
+
+      def scalarExpr: Parsers[S] = Parsers[S](???, ???)
+    }
+
+    private def finalizeParsers(parsers: Parsers): Parsers =
+      Parsers(P(Start ~ parsers.get[Double] ~ End), P(Start ~ parsers.get[Point] ~ End))
+
+    val initialParsers: Parsers =
+      finalizeParsers(new ByEnvParsers(Parsers(Fail, Fail)).expr)
+  }
 }
