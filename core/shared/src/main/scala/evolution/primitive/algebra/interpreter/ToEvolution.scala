@@ -48,7 +48,7 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
       case h :: tail => expr(tail)
     }
     override def let[A, B](name: String, value: CtxF[F, A])(expr: CtxF[F, B]): CtxF[F, B] =
-      ctx => expr(value(ctx) :: ctx)
+      ctx => expr((() => value(ctx)) :: ctx)
 
     override def fix[A](expr: CtxF[F, A]): CtxF[F, A] =
       ctx => expr((() => expr(ctx)) :: ctx)

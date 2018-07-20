@@ -12,7 +12,7 @@ trait BindingAlgebra[F[_]] {
   def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
 }
 
-trait DrawingAlgebra[F[_]] {
+trait DrawingAlgebra[F[_]] extends BindingAlgebra[F] {
   def const[T: Type](x: T): F[T]
   def mul[T: Type](k: F[Double], t: F[T]): F[T]
   def add[T: Type](a: F[T], b: F[T]): F[T]
