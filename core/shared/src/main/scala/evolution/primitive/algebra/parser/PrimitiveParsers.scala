@@ -31,16 +31,22 @@ object PrimitiveParsers {
   def varUsage(varName: String): Parser[String] = P("$" ~ varName.!)
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
-    P(funcName ~ "(" ~ parser ~ ")")
+    P(funcName ~/ "(" ~ parser ~ ")")
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
-    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
+    P(funcName ~/ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
   def function3[A, B, C](
     funcName: String,
     parser1: Parser[A],
     parser2: Parser[B],
     parser3: Parser[C]
   ): Parser[(A, B, C)] =
-    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+
+  /**
+    * A function with two parameters list, where the second one can depend on the first
+    */
+  def functionFlatMap[A, B](func: Parser[A], f: A => Parser[B]): Parser[B] =
+    func.flatMap(a => P("(" ~ f(a) ~ ")"))
   def prefix[A](operator: String, parser: Parser[A]): Parser[A] =
     P(operator ~ parser)
   def infix[A, B](operator: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
