@@ -17,13 +17,21 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
   def shift[A](current: Parser[F[A]]): Parser[F[A]] =
     current.map(fa => alg.shift(fa))
 
-  def let[Out](original: Parser[F[Out]]): Parser[F[Out]] = {
-    val lValueWithSyntaxParser = P("let" ~ "(" ~ varName ~ ",")
-    val rValueWithSyntaxParser = P(let(original) ~ "," ~ "")
-
-    original | P(
-      letParser(lValueWithSyntaxParser, rValueWithSyntaxParser, name => let(let(original).map(alg.shift) | var0(name))) ~ ")"
+  def decorateWithLet[Out](
+    original: (Parser[F[Out]], Parser[F[Out]]) => Parser[F[Out]],
+    base: Parser[F[Out]]
+  ): Parser[F[Out]] =
+    nonRecursiveLet(
+      original(base | P(decorateWithLet(original, base)), P(decorateWithLet(original, base))),
+      name => original(base | var0(name), decorateWithLet(original, base | var0(name)))
     )
+
+  def nonRecursiveLet[Out](inner: Parser[F[Out]], withName: String => Parser[F[Out]]): Parser[F[Out]] = {
+    val lValueWithSyntaxParser = P("let" ~/ "(" ~ varName ~/ ",")
+    val rValueWithSyntaxParser = P(inner ~/ "," ~/ "")
+    //let[Out](p => var0[Out](name) | p.map(alg.shift))
+
+    letParser(lValueWithSyntaxParser, rValueWithSyntaxParser, withName) ~ ")"
   }
 
   def expr[A](current: Parser[F[A]]): Parser[F[A]] = ???
@@ -33,7 +41,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     rValueParser: Parser[F[In]],
     bodyParser: String => Parser[F[Out]]
   ): Parser[F[Out]] =
-    P(lValueParser ~ rValueParser).flatMap {
+    P(lValueParser ~/ rValueParser).flatMap {
       case (name, value) => whitespaceWrap(bodyParser(name).map(e => alg.let(name, value)(e)))
     }
 }

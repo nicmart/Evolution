@@ -32,8 +32,9 @@ object PrimitiveParsers {
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
     P(funcName ~/ "(" ~ parser ~ ")")
+  // TODO Remove the CUT to allow overloading. Find a solution to the problem
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
-    P(funcName ~/ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
+    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
   def function3[A, B, C](
     funcName: String,
     parser1: Parser[A],
