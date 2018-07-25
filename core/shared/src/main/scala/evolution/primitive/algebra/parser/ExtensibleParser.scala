@@ -21,20 +21,13 @@ object ExtensibleParser {
     ExtensibleParser(leaf, _ => Fail)
 }
 
-case class ExtParser[T, F[_]](leaf: Parser[F[T]], composite: HOExtensibleParser[F] => Parser[F[T]]) {
-  def mapLeaf(f: Parser[F[T]] => Parser[F[T]]): ExtParser[T, F] =
+case class ExtParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
+  def mapLeaf(f: Parser[T] => Parser[T]): ExtParser[C, T] =
     ExtParser(f(leaf), composite)
-  def addLeaf(newLeaf: Parser[F[T]]): ExtParser[T, F] =
+  def addLeaf(newLeaf: Parser[T]): ExtParser[C, T] =
     mapLeaf(previousLeaf => previousLeaf | newLeaf)
-  def addComposite(newComposite: HOExtensibleParser[F] => Parser[F[T]]): ExtParser[T, F] =
+  def addComposite(newComposite: C => Parser[T]): ExtParser[C, T] =
     ExtParser(leaf, e => P(composite(e) | newComposite(e)))
-  def extendWith(other: ExtParser[T, F]): ExtParser[T, F] =
+  def extendWith(other: ExtParser[C, T]): ExtParser[C, T] =
     addLeaf(other.leaf).addComposite(other.composite)
-}
-
-case class HOExtensibleParser[F[_]](double: ExtParser[Double, F], string: ExtParser[String, F]) {
-  def doubleExpr: Parser[F[Double]] = P(double.leaf | double.composite(this))
-  def stringExpr: Parser[F[String]] = P(string.leaf | string.composite(this))
-  def extendWith(parser: HOExtensibleParser[F]): HOExtensibleParser[F] =
-    HOExtensibleParser(double.extendWith(parser.double), string.extendWith(parser.string))
 }
