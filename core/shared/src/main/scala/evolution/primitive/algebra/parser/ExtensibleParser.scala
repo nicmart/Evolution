@@ -22,6 +22,8 @@ object ExtensibleParser {
 }
 
 case class ExtParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
+  def expr(container: C): Parser[T] =
+    P(leaf | composite(container))
   def mapLeaf(f: Parser[T] => Parser[T]): ExtParser[C, T] =
     ExtParser(f(leaf), composite)
   def addLeaf(newLeaf: Parser[T]): ExtParser[C, T] =
@@ -30,4 +32,11 @@ case class ExtParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
     ExtParser(leaf, e => P(composite(e) | newComposite(e)))
   def extendWith(other: ExtParser[C, T]): ExtParser[C, T] =
     addLeaf(other.leaf).addComposite(other.composite)
+}
+
+class SimpleExtParser[T](leaf: Parser[T], composite: SimpleExtParser[T] => Parser[T])
+    extends ExtParser[SimpleExtParser[T], T](leaf, composite)
+
+object ExtParser {
+  def fail[C, T]: ExtParser[C, T] = ExtParser(Fail, _ => Fail)
 }
