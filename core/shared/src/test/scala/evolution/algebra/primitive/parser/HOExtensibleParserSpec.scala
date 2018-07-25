@@ -1,7 +1,7 @@
 package evolution.algebra.primitive.parser
 
 import evolution.data.HasValue
-import evolution.primitive.algebra.parser.{ExtParser, ExtensibleParser, ParserConfig}
+import evolution.primitive.algebra.parser.{ExtensibleParser, ParserConfig}
 import org.scalatest.{Matchers, WordSpec}
 
 class HOExtensibleParserSpec extends WordSpec with Matchers {
@@ -33,18 +33,20 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
   def unsafeParse[T](expression: String, parser: Parser[T]): T =
     parser.parse(expression).get.value
 
-  type Has[T, A] = HasValue[T, ExtParser[T, Expression[A]]]
-  type HasString[T] = HasValue[T, ExtParser[T, Expression[String]]]
-  type HasDouble[T] = HasValue[T, ExtParser[T, Expression[Double]]]
+  type Has[T, A] = HasValue[T, ExtensibleParser[T, Expression[A]]]
+  type HasString[T] = HasValue[T, ExtensibleParser[T, Expression[String]]]
+  type HasDouble[T] = HasValue[T, ExtensibleParser[T, Expression[Double]]]
 
   implicit class ParsersOps[C](container: C) {
-    def extensibleParser[T, F[_]](implicit hasValue: HasValue[C, ExtParser[C, F[T]]]): ExtParser[C, F[T]] =
+    def extensibleParser[T, F[_]](
+      implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]
+    ): ExtensibleParser[C, F[T]] =
       hasValue.get(container)
     def withExtensibleParser[T, F[_]](
-      parser: ExtParser[C, F[T]]
-    )(implicit hasValue: HasValue[C, ExtParser[C, F[T]]]): C =
+      parser: ExtensibleParser[C, F[T]]
+    )(implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): C =
       hasValue.set(container, parser)
-    def parser[T, F[_]](implicit hasValue: HasValue[C, ExtParser[C, F[T]]]): Parser[F[T]] =
+    def parser[T, F[_]](implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): Parser[F[T]] =
       hasValue.get(container).expr(container)
   }
 
@@ -64,11 +66,8 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
   def varN[A](n: Int): Expression[A] = push(n, Var0())
 
   lazy val doubleParser: Parser[Expression[Double]] = double.map(Num.apply)
-  lazy val doubleExtensibleParser: ExtensibleParser[Expression[Double]] = ExtensibleParser(doubleParser)
-
   lazy val stringParser: Parser[Expression[String]] =
     P("\"" ~/ CharIn('a' to 'z').rep.! ~/ "\"").map(Str.apply)
-  lazy val stringExtensibleParser = ExtensibleParser(stringParser)
 
   def additionParser[C: HasDouble](innerParsers: C): Parser[Expression[Double]] =
     P(function2("add", innerParsers.parser[Double, Expression], innerParsers.parser[Double, Expression]).map {
@@ -93,21 +92,21 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
       case (name, valueExpr) => body(name).map(bodyExpr => Let(name, valueExpr, bodyExpr))
     })
 
-  def extensibleAddition[C: HasDouble]: ExtParser[C, Expression[Double]] =
-    ExtParser(doubleParser, additionParser[C])
-  def extensibleConcatenation[C: HasString]: ExtParser[C, Expression[String]] =
-    ExtParser(stringParser, concatParser[C])
-  def extensibleLengthParser[C: HasString]: ExtParser[C, Expression[Double]] =
-    ExtParser(doubleParser, lengthParser[C])
-  def extensibleToStringParser[C: HasDouble]: ExtParser[C, Expression[String]] =
-    ExtParser(stringParser, toStringParser[C])
+  def extensibleAddition[C: HasDouble]: ExtensibleParser[C, Expression[Double]] =
+    ExtensibleParser(doubleParser, additionParser[C])
+  def extensibleConcatenation[C: HasString]: ExtensibleParser[C, Expression[String]] =
+    ExtensibleParser(stringParser, concatParser[C])
+  def extensibleLengthParser[C: HasString]: ExtensibleParser[C, Expression[Double]] =
+    ExtensibleParser(doubleParser, lengthParser[C])
+  def extensibleToStringParser[C: HasDouble]: ExtensibleParser[C, Expression[String]] =
+    ExtensibleParser(stringParser, toStringParser[C])
 
   def extensibleLetBindingFor[C, VarType, ResultType](
     implicit
     hasVar: Has[C, VarType],
     hasRes: Has[C, ResultType]
-  ): ExtParser[C, Expression[ResultType]] =
-    ExtParser(
+  ): ExtensibleParser[C, Expression[ResultType]] =
+    ExtensibleParser(
       Fail,
       self =>
         letSyntax(
@@ -117,32 +116,32 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
     )
 
   case class HOExtensibleParser(
-    double: ExtParser[HOExtensibleParser, Expression[Double]],
-    string: ExtParser[HOExtensibleParser, Expression[String]]
+    double: ExtensibleParser[HOExtensibleParser, Expression[Double]],
+    string: ExtensibleParser[HOExtensibleParser, Expression[String]]
   )
 
   object HOExtensibleParser {
-    implicit val hasDouble: HasValue[HOExtensibleParser, ExtParser[HOExtensibleParser, Expression[Double]]] =
-      new HasValue[HOExtensibleParser, ExtParser[HOExtensibleParser, Expression[Double]]] {
-        override def get(x: HOExtensibleParser): ExtParser[HOExtensibleParser, Expression[Double]] = x.double
+    implicit val hasDouble: HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[Double]]] =
+      new HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[Double]]] {
+        override def get(x: HOExtensibleParser): ExtensibleParser[HOExtensibleParser, Expression[Double]] = x.double
         override def set(
           x: HOExtensibleParser,
-          v: ExtParser[HOExtensibleParser, Expression[Double]]
+          v: ExtensibleParser[HOExtensibleParser, Expression[Double]]
         ): HOExtensibleParser =
           x.copy(double = v)
       }
-    implicit val hasString: HasValue[HOExtensibleParser, ExtParser[HOExtensibleParser, Expression[String]]] =
-      new HasValue[HOExtensibleParser, ExtParser[HOExtensibleParser, Expression[String]]] {
-        override def get(x: HOExtensibleParser): ExtParser[HOExtensibleParser, Expression[String]] = x.string
+    implicit val hasString: HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[String]]] =
+      new HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[String]]] {
+        override def get(x: HOExtensibleParser): ExtensibleParser[HOExtensibleParser, Expression[String]] = x.string
         override def set(
           x: HOExtensibleParser,
-          v: ExtParser[HOExtensibleParser, Expression[String]]
+          v: ExtensibleParser[HOExtensibleParser, Expression[String]]
         ): HOExtensibleParser =
           x.copy(string = v)
       }
   }
 
-  val emptyParser = HOExtensibleParser(ExtParser.fail, ExtParser.fail)
+  val emptyParser = HOExtensibleParser(ExtensibleParser.fail, ExtensibleParser.fail)
 
   def fullExtensibleParser[C: HasDouble: HasString](container: C) =
     container
