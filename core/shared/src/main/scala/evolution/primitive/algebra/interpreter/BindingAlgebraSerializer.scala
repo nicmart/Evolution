@@ -10,7 +10,7 @@ object BindingAlgebraSerializer extends BindingAlgebra[CtxString] {
     case head :: tail => expr(tail)
   }
   override def let[A, B](name: String, value: CtxString[A])(expr: CtxString[B]): CtxString[B] =
-    ctx => s"let($name, ${value(ctx)}, ${expr(s"$$$name" :: ctx)})"
+    ctx => s"let($name, ${value(ctx)})(${expr(s"$$$name" :: ctx)})"
 
   override def fix[A](expr: CtxString[A]): CtxString[A] =
     ctx => s"fix(self -> ${expr("$self" :: ctx)})"

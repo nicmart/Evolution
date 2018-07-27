@@ -39,6 +39,13 @@ trait HasValue[X, V] {
   def set(x: X, v: V): X
 }
 
+object HasValue {
+  def instance[X, V](_get: X => V, _set: (X, V) => X): HasValue[X, V] = new HasValue[X, V] {
+    override def get(x: X): V = _get(x)
+    override def set(x: X, v: V): X = _set(x, v)
+  }
+}
+
 case class HasValueOps[X](x: X) extends AnyVal {
   def get[V](implicit hasValue: HasValue[X, V]): V = hasValue.get(x)
   def set[V](v: V)(implicit hasValue: HasValue[X, V]): X = hasValue.set(x, v)

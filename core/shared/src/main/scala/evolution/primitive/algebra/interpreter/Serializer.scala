@@ -1,6 +1,5 @@
 package evolution.primitive.algebra.interpreter
 
-import cats.data.NonEmptyList
 import evolution.geometry.Point
 import evolution.primitive.algebra._
 

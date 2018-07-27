@@ -2,6 +2,7 @@ package evolution.primitive.algebra.parser
 
 import fastparse.noApi._
 import ParserConfig.White._
+import evolution.data.HasValue
 
 case class ExtensibleParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
   def expr(container: C): Parser[T] =
@@ -17,5 +18,6 @@ case class ExtensibleParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
 }
 
 object ExtensibleParser {
+  type HasParser[C, T] = HasValue[C, ExtensibleParser[C, T]]
   def fail[C, T]: ExtensibleParser[C, T] = ExtensibleParser(Fail, _ => Fail)
 }

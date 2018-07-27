@@ -1,7 +1,7 @@
 package evolution.algebra.primitive.parser
 
 import evolution.data.HasValue
-import evolution.primitive.algebra.parser.{ExtensibleParser, ParserConfig}
+import evolution.primitive.algebra.parser.{ExtensibleParser, ParserConfig, ParsersContainerOps}
 import org.scalatest.{Matchers, WordSpec}
 
 class HOExtensibleParserSpec extends WordSpec with Matchers {
@@ -36,19 +36,6 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
   type Has[T, A] = HasValue[T, ExtensibleParser[T, Expression[A]]]
   type HasString[T] = HasValue[T, ExtensibleParser[T, Expression[String]]]
   type HasDouble[T] = HasValue[T, ExtensibleParser[T, Expression[Double]]]
-
-  implicit class ParsersOps[C](container: C) {
-    def extensibleParser[T, F[_]](
-      implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]
-    ): ExtensibleParser[C, F[T]] =
-      hasValue.get(container)
-    def withExtensibleParser[T, F[_]](
-      parser: ExtensibleParser[C, F[T]]
-    )(implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): C =
-      hasValue.set(container, parser)
-    def parser[T, F[_]](implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): Parser[F[T]] =
-      hasValue.get(container).expr(container)
-  }
 
   sealed trait Expression[T]
   case class Num(d: Double) extends Expression[Double]
@@ -120,25 +107,15 @@ class HOExtensibleParserSpec extends WordSpec with Matchers {
     string: ExtensibleParser[HOExtensibleParser, Expression[String]]
   )
 
+  implicit def parserOps[C](container: C): ParsersContainerOps[C] =
+    new ParsersContainerOps(container)
+
   object HOExtensibleParser {
-    implicit val hasDouble: HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[Double]]] =
-      new HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[Double]]] {
-        override def get(x: HOExtensibleParser): ExtensibleParser[HOExtensibleParser, Expression[Double]] = x.double
-        override def set(
-          x: HOExtensibleParser,
-          v: ExtensibleParser[HOExtensibleParser, Expression[Double]]
-        ): HOExtensibleParser =
-          x.copy(double = v)
-      }
     implicit val hasString: HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[String]]] =
-      new HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[String]]] {
-        override def get(x: HOExtensibleParser): ExtensibleParser[HOExtensibleParser, Expression[String]] = x.string
-        override def set(
-          x: HOExtensibleParser,
-          v: ExtensibleParser[HOExtensibleParser, Expression[String]]
-        ): HOExtensibleParser =
-          x.copy(string = v)
-      }
+      HasValue.instance(_.string, (x, v) => x.copy(string = v))
+
+    implicit val hasDouble: HasValue[HOExtensibleParser, ExtensibleParser[HOExtensibleParser, Expression[Double]]] =
+      HasValue.instance(_.double, (x, v) => x.copy(double = v))
   }
 
   val emptyParser = HOExtensibleParser(ExtensibleParser.fail, ExtensibleParser.fail)
