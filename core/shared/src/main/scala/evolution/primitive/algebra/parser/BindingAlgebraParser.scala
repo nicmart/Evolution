@@ -25,7 +25,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     )
 
   private def addVarNameFor[T, C](name: String, container: C)(implicit has: HasParser[C, F[T]]): C =
-    container.withExtensibleParser[T, F](container.extensibleParser[T, F].mapLeaf { leaf =>
+    container.withExtensibleParser[T, F](container.extensibleParser[T, F].transformLeaf { leaf =>
       leaf.map(expr => alg.shift(expr)) | var0(name)
     })
 

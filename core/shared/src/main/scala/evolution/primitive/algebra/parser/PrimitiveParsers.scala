@@ -4,7 +4,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.{Type, TypeAlg}
 import fastparse.all
 
-object PrimitiveParsers {
+trait PrimitiveParsers {
   import ParserConfig.White._
   import fastparse.noApi._
 
@@ -55,3 +55,5 @@ object PrimitiveParsers {
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(ParserConfig.whitespaces ~ p ~ ParserConfig.whitespaces)
 }
+
+object PrimitiveParsers extends PrimitiveParsers

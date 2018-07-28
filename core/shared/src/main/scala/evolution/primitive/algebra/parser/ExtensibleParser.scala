@@ -7,10 +7,14 @@ import evolution.data.HasValue
 case class ExtensibleParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
   def expr(container: C): Parser[T] =
     P(leaf | composite(container))
-  def mapLeaf(f: Parser[T] => Parser[T]): ExtensibleParser[C, T] =
+  def map[U](f: T => U): ExtensibleParser[C, U] =
+    ExtensibleParser(leaf.map(f), c => composite(c).map(f))
+  def contramap[C2](f: C2 => C): ExtensibleParser[C2, T] =
+    ExtensibleParser(leaf, f andThen composite)
+  def transformLeaf(f: Parser[T] => Parser[T]): ExtensibleParser[C, T] =
     ExtensibleParser(f(leaf), composite)
   def addLeaf(newLeaf: Parser[T]): ExtensibleParser[C, T] =
-    mapLeaf(previousLeaf => previousLeaf | newLeaf)
+    transformLeaf(previousLeaf => previousLeaf | newLeaf)
   def addComposite(newComposite: C => Parser[T]): ExtensibleParser[C, T] =
     ExtensibleParser(leaf, e => P(composite(e) | newComposite(e)))
   def extendWith(other: ExtensibleParser[C, T]): ExtensibleParser[C, T] =

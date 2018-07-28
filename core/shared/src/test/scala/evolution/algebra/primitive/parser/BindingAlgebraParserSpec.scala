@@ -10,7 +10,7 @@ import fastparse.{core, noApi}
 import fastparse.noApi.Parser
 import org.scalatest.{Matchers, WordSpec}
 
-class BindingAlgebraParserSpec extends WordSpec with Matchers {
+class BindingAlgebraParserSpec extends WordSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import fastparse.noApi._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
@@ -80,7 +80,7 @@ class BindingAlgebraParserSpec extends WordSpec with Matchers {
     val extensibleParser: ExtensibleParser[Container, CtxString[Double]] =
       bindingParser.parser[Container, Double, Double]
     val letWithDouble: ExtensibleParser[Container, CtxString[Double]] =
-      extensibleParser.mapLeaf(p => P(doubleParser | p))
+      extensibleParser.transformLeaf(p => P(doubleParser | p))
     val letWithDoubleContainer = Container.empty.withExtensibleParser(letWithDouble)
     val letWithAdditionContainer = Container.empty.withExtensibleParser(letWithDouble.extendWith(extensibleAddition))
   }
