@@ -4,13 +4,13 @@ import evolution.data.HasValue
 import fastparse.noApi.Parser
 
 class ParsersContainerOps[C](container: C) {
-  def extensibleParser[T, F[_]](implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): ExtensibleParser[C, F[T]] =
+  def extensibleParser[T](implicit hasValue: HasValue[C, ExtensibleParser[C, T]]): ExtensibleParser[C, T] =
     hasValue.get(container)
-  def withExtensibleParser[T, F[_]](
-    parser: ExtensibleParser[C, F[T]]
-  )(implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): C =
+  def withExtensibleParser[T](
+    parser: ExtensibleParser[C, T]
+  )(implicit hasValue: HasValue[C, ExtensibleParser[C, T]]): C =
     hasValue.set(container, parser)
-  def parser[T, F[_]](implicit hasValue: HasValue[C, ExtensibleParser[C, F[T]]]): Parser[F[T]] =
+  def parser[T](implicit hasValue: HasValue[C, ExtensibleParser[C, T]]): Parser[T] =
     hasValue.get(container).expr(container)
 }
 

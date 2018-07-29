@@ -4,6 +4,7 @@ import evolution.data.HasValue
 import evolution.primitive.algebra.parser.{ExtensibleParser, ParserConfig, ParsersContainerOps}
 import org.scalatest.{FreeSpec, Matchers, WordSpec}
 
+// TODO this should become an integration test for the full algebra parser
 class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
@@ -14,39 +15,39 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
       val serializedExpression = """add(length("abc"), 2)"""
       val expectedExpression = Add(Length(Str("abc")), Num(2))
       val parser = emptyParser
-        .withExtensibleParser[Double, Expression](
+        .withExtensibleParser(
           doubleExpr
             .extendWith(additionExpr[HOExtensibleParser])
             .extendWith(lengthExpr)
         )
-        .withExtensibleParser[String, Expression](
+        .withExtensibleParser(
           stringExpr
             .extendWith(concatenationExpr[HOExtensibleParser])
             .extendWith(concatenationExpr)
         )
-      unsafeParse(serializedExpression, parser.parser[Double, Expression]) shouldBe expectedExpression
+      unsafeParse(serializedExpression, parser.parser[Expression[Double]]) shouldBe expectedExpression
     }
 
     "parse a an expression with let bindings" - {
       "string variable and numeric result" in {
         val serializedExpression = """add(length("abc"), let(x, "a")(length($x))))"""
         val expectedExpression = Add(Length(Str("abc")), Let("x", Str("a"), Length(Var0())))
-        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Double, Expression]) shouldBe expectedExpression
+        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Expression[Double]]) shouldBe expectedExpression
       }
       "numeric variable and numeric result" in {
         val serializedExpression = """add(length("abc"), let(x, 12)(13)))"""
         val expectedExpression = Add(Length(Str("abc")), Let("x", Num(12), VarS(Num(13))))
-        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Double, Expression]) shouldBe expectedExpression
+        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Expression[Double]]) shouldBe expectedExpression
       }
       "string variable and string result" in {
         val serializedExpression = """concat("abc", let(x, "a")("ah"))"""
         val expectedExpression = Concat(Str("abc"), Let("x", Str("a"), VarS(Str("ah"))))
-        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[String, Expression]) shouldBe expectedExpression
+        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Expression[String]]) shouldBe expectedExpression
       }
       "numeric variable and string result" in {
         val serializedExpression = """concat("abc", let(x, 12)(toString($x)))"""
         val expectedExpression = Concat(Str("abc"), Let("x", Num(12), ToString(Var0())))
-        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[String, Expression]) shouldBe expectedExpression
+        unsafeParse(serializedExpression, fullExtensibleParser(emptyParser).parser[Expression[String]]) shouldBe expectedExpression
       }
     }
   }
@@ -83,16 +84,16 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
     ExtensibleParser(stringParser, _ => Fail)
   def additionExpr[C: HasDouble]: ExtensibleParser[C, Expression[Double]] =
     extensibleBinaryOpParser[Expression[Double]]("add", Add)
-      .contramap[C](c => c.parser[Double, Expression])
+      .contramap[C](c => c.parser[Expression[Double]])
   def concatenationExpr[C: HasString]: ExtensibleParser[C, Expression[String]] =
     extensibleBinaryOpParser[Expression[String]]("concat", Concat)
-      .contramap[C](c => c.parser[String, Expression])
+      .contramap[C](c => c.parser[Expression[String]])
   def lengthExpr[C: HasString]: ExtensibleParser[C, Expression[Double]] =
     extensibleUnaryOpParser[Expression[String], Expression[Double]]("length", Length)
-      .contramap[C](c => c.parser[String, Expression])
+      .contramap[C](c => c.parser[Expression[String]])
   def toStringExpr[C: HasDouble]: ExtensibleParser[C, Expression[String]] =
     extensibleUnaryOpParser[Expression[Double], Expression[String]]("toString", ToString)
-      .contramap[C](c => c.parser[Double, Expression])
+      .contramap[C](c => c.parser[Expression[Double]])
 
   def extensibleLetBindingFor[C, VarType, ResultType](
     implicit
@@ -103,8 +104,8 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
       Fail,
       self =>
         letParser[Expression[VarType], Expression[ResultType]](
-          self.parser[VarType, Expression],
-          name => addVarNameFor[VarType, C](name, self).parser[ResultType, Expression],
+          self.parser[Expression[VarType]],
+          name => addVarNameFor[VarType, C](name, self).parser[Expression[ResultType]],
           Let.apply
       )
     )
@@ -129,26 +130,26 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
 
   def fullExtensibleParser[C: HasDouble: HasString](container: C): C =
     container
-      .withExtensibleParser[Double, Expression](
+      .withExtensibleParser(
         doubleExpr
           .extendWith(additionExpr)
           .extendWith(lengthExpr)
           .extendWith(extensibleLetBindingFor[C, Double, Double])
           .extendWith(extensibleLetBindingFor[C, String, Double])
       )
-      .withExtensibleParser[String, Expression] {
+      .withExtensibleParser(
         stringExpr
           .extendWith(concatenationExpr)
           .extendWith(toStringExpr)
           .extendWith(extensibleLetBindingFor[C, Double, String])
           .extendWith(extensibleLetBindingFor[C, String, String])
-      }
+      )
 
   def var0[A](varName: String): Parser[Expression[A]] =
     varUsage(varName).map(_ => Var0())
 
   def addVarNameFor[T, C](name: String, container: C)(implicit has: Has[C, T]): C =
-    container.withExtensibleParser(container.extensibleParser[T, Expression].transformLeaf { leaf =>
+    container.withExtensibleParser[Expression[T]](container.extensibleParser.transformLeaf { leaf =>
       leaf.map(expr => VarS(expr)) | var0(name)
     })
 }
