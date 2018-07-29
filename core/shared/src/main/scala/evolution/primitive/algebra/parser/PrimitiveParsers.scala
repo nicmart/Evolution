@@ -1,7 +1,6 @@
 package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
-import evolution.primitive.algebra.{Type, TypeAlg}
 import fastparse.all
 
 trait PrimitiveParsers {
@@ -20,8 +19,8 @@ trait PrimitiveParsers {
   val point: Parser[Point] =
     function2("point", double, double).map { case (x, y) => Point(x, y) }
 
-  def literal[T: Type]: Parser[T] =
-    Type[T].run(TypeAlg(double, point))
+  lazy val stringLiteral: Parser[String] =
+    P("\"" ~/ CharIn('a' to 'z').rep.! ~/ "\"")
 
   val varName: Parser[String] = {
     val letter = P(CharIn('a' to 'z') | CharIn('A' to 'Z') | CharIn(Seq('_', '-')) | CharIn('0' to '9'))

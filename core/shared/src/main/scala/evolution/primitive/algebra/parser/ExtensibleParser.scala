@@ -23,5 +23,9 @@ case class ExtensibleParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
 
 object ExtensibleParser {
   type HasParser[C, T] = HasValue[C, ExtensibleParser[C, T]]
+  object HasParser {
+    def instance[C, T](_get: C => ExtensibleParser[C, T], _set: (C, ExtensibleParser[C, T]) => C): HasParser[C, T] =
+      HasValue.instance(_get, _set)
+  }
   def fail[C, T]: ExtensibleParser[C, T] = ExtensibleParser(Fail, _ => Fail)
 }

@@ -38,9 +38,8 @@ class ExtensibleParserSpec extends WordSpec with Matchers with CommonTestParsers
   def unsafeParse(
     expression: String,
     extensibleParser: ExtensibleParser[Container, NumberExpression]
-  ): NumberExpression = {
-    extensibleParser.expr(Container(extensibleParser)).parse(expression).get.value
-  }
+  ): NumberExpression =
+    unsafeParse(expression, extensibleParser.expr(Container(extensibleParser)))
 
   sealed trait NumberExpression
   case class Lit(d: Double) extends NumberExpression

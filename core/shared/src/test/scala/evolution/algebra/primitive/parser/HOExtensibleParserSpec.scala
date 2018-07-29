@@ -52,9 +52,6 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
     }
   }
 
-  def unsafeParse[T](expression: String, parser: Parser[T]): T =
-    parser.parse(expression).get.value
-
   type Has[T, A] = HasValue[T, ExtensibleParser[T, Expression[A]]]
   type HasString[T] = HasValue[T, ExtensibleParser[T, Expression[String]]]
   type HasDouble[T] = HasValue[T, ExtensibleParser[T, Expression[Double]]]
@@ -76,7 +73,7 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
 
   lazy val doubleParser: Parser[Expression[Double]] = double.map(Num.apply)
   lazy val stringParser: Parser[Expression[String]] =
-    P("\"" ~/ CharIn('a' to 'z').rep.! ~/ "\"").map(Str.apply)
+    stringLiteral.map(Str.apply)
 
   def doubleExpr[C]: ExtensibleParser[C, Expression[Double]] =
     ExtensibleParser(doubleParser, _ => Fail)

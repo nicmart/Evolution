@@ -32,4 +32,8 @@ trait CommonTestParsers extends PrimitiveParsers {
     functionFlatMap[(String, A), B](function2("let", varName, assignment), {
       case (name, valueExpr) => body(name).map(bodyExpr => let(name, valueExpr, bodyExpr))
     })
+
+  def unsafeParse[T](expression: String, parser: Parser[T]): T =
+    parser.parse(expression).get.value
+
 }
