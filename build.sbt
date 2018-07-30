@@ -88,3 +88,5 @@ lazy val theory = (project in file("theory"))
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
+
+addCompilerPlugin("io.tryp" % "splain" % "0.3.1" cross CrossVersion.patch)
