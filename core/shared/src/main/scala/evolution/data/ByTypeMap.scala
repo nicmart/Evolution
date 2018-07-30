@@ -44,6 +44,9 @@ object HasValue {
     override def get(x: X): V = _get(x)
     override def set(x: X, v: V): X = _set(x, v)
   }
+
+//  implicit def isTransitive[A, B, V](implicit aHasB: HasValue[A, B], bHasV: HasValue[B, V]): HasValue[A, V] =
+//    instance(a => bHasV.get(aHasB.get(a)), (a, v) => aHasB.set(a, bHasV.set(aHasB.get(a), v)))
 }
 
 case class HasValueOps[X](x: X) extends AnyVal {
