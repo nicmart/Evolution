@@ -4,61 +4,66 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.DrawingAlgebra
 import evolution.primitive.algebra.parser.ExtensibleParser.HasParser
 
-class DrawingAlgebraParser[S[_], F[_]](alg: DrawingAlgebra[S, F]) {
-  private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[S, F] =
-    new CoreDrawingAlgebraParser[S, F](alg.drawing)
-  private val bindingAlgebraParserS: BindingAlgebraParser[S] =
-    new BindingAlgebraParser[S](alg.bindS)
-  private val bindingAlgebraParserF: BindingAlgebraParser[F] =
-    new BindingAlgebraParser[F](alg.bindF)
-  private val scalarAlgebraParser: ScalarAlgebraParser[S] =
-    new ScalarAlgebraParser[S](alg.scalar)
+class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
+  type RS[A] = R[S[A]]
+  type RF[A] = R[F[A]]
+  private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[RS, RF] =
+    new CoreDrawingAlgebraParser[RS, RF](alg.drawing)
+  private val bindingAlgebraParser: BindingAlgebraParser[R] =
+    new BindingAlgebraParser[R](alg.bind)
+  private val scalarAlgebraParser: ScalarAlgebraParser[RS] =
+    new ScalarAlgebraParser[RS](alg.scalar)
 
   def buildContainer[C](container: C)(
     implicit
-    doubleS: HasParser[C, S[Double]],
-    doubleF: HasParser[C, F[Double]],
-    pointS: HasParser[C, S[Point]],
-    pointF: HasParser[C, F[Point]],
+    doubleS: HasParser[C, RS[Double]],
+    doubleF: HasParser[C, RF[Double]],
+    pointS: HasParser[C, RS[Point]],
+    pointF: HasParser[C, RF[Point]],
   ): C = {
     val withDrawings = coreDrawingAlgebraParser.buildContainer2[C, Double, Point](container)
     val withScalars = scalarAlgebraParser.buildContainer[C, Double](withDrawings)
-    val withLetBindingsForF = bindingAlgebraParserF.buildContainer2[C, Double, Point](withScalars)
-    val withLetBindingsForS = bindingAlgebraParserF.buildContainer2[C, Double, Point](withLetBindingsForF)
-    withLetBindingsForS
+    val withLetBindings = bindingAlgebraParser.buildContainer4[C, F[Double], F[Point], S[Double], S[Point]](withScalars)
+    withLetBindings
   }
 }
 
-case class DrawingAlgebraParserContainer[S[_], F[_]](
-  doubleParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F], S[Double]],
-  doubleParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F], F[Double]],
-  pointParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F], S[Point]],
-  pointParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F], F[Point]]
+case class DrawingAlgebraParserContainer[S[_], F[_], R[_]](
+  doubleParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[S[Double]]],
+  doubleParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]],
+  pointParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]],
+  pointParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[F[Point]]]
 )
 
 object DrawingAlgebraParserContainer {
-  implicit def ops[S[_], F[_]](
-    container: DrawingAlgebraParserContainer[S, F]
-  ): ParsersContainerOps[DrawingAlgebraParserContainer[S, F]] =
-    new ParsersContainerOps[DrawingAlgebraParserContainer[S, F]](container)
+  implicit def ops[S[_], F[_], R[_]](
+    container: DrawingAlgebraParserContainer[S, F, R]
+  ): ParsersContainerOps[DrawingAlgebraParserContainer[S, F, R]] =
+    new ParsersContainerOps[DrawingAlgebraParserContainer[S, F, R]](container)
 
-  def empty[S[_], F[_]]: DrawingAlgebraParserContainer[S, F] =
-    DrawingAlgebraParserContainer[S, F](
+  def empty[S[_], F[_], R[_]]: DrawingAlgebraParserContainer[S, F, R] =
+    DrawingAlgebraParserContainer[S, F, R](
       ExtensibleParser.fail,
       ExtensibleParser.fail,
       ExtensibleParser.fail,
       ExtensibleParser.fail
     )
-  implicit def hasDoubleFParser[S[_], F[_]]: HasParser[DrawingAlgebraParserContainer[S, F], F[Double]] =
+  implicit def hasDoubleFParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]] =
     HasParser
-      .instance[DrawingAlgebraParserContainer[S, F], F[Double]](_.doubleParserF, (c, p) => c.copy(doubleParserF = p))
-  implicit def hasDoubleSParser[S[_], F[_]]: HasParser[DrawingAlgebraParserContainer[S, F], S[Double]] =
+      .instance[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]](
+        _.doubleParserF,
+        (c, p) => c.copy(doubleParserF = p)
+      )
+  implicit def hasDoubleSParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[S[Double]]] =
     HasParser
-      .instance[DrawingAlgebraParserContainer[S, F], S[Double]](_.doubleParserS, (c, p) => c.copy(doubleParserS = p))
-  implicit def hasPointFParser[S[_], F[_]]: HasParser[DrawingAlgebraParserContainer[S, F], F[Point]] =
+      .instance[DrawingAlgebraParserContainer[S, F, R], R[S[Double]]](
+        _.doubleParserS,
+        (c, p) => c.copy(doubleParserS = p)
+      )
+  implicit def hasPointFParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[F[Point]]] =
     HasParser
-      .instance[DrawingAlgebraParserContainer[S, F], F[Point]](_.pointParserF, (c, p) => c.copy(pointParserF = p))
-  implicit def hasPointSParser[S[_], F[_]]: HasParser[DrawingAlgebraParserContainer[S, F], S[Point]] =
+      .instance[DrawingAlgebraParserContainer[S, F, R], R[F[Point]]](_.pointParserF, (c, p) => c.copy(pointParserF = p))
+  implicit def hasPointSParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]] =
     HasParser
-      .instance[DrawingAlgebraParserContainer[S, F], S[Point]](_.pointParserS, (c, p) => c.copy(pointParserS = p))
+      .instance[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]](_.pointParserS, (c, p) => c.copy(pointParserS = p))
 }

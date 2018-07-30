@@ -22,17 +22,10 @@ trait ScalarAlgebra[S[_]] {
   def point(p: Point): S[Point]
 }
 
-trait DrawingAlgebra[S[_], F[_]] {
-  val drawing: CoreDrawingAlgebra[S, F]
-  val scalar: ScalarAlgebra[S]
-  val bindS: BindingAlgebra[S]
-  val bindF: BindingAlgebra[F]
-}
-
-trait DrawingExpr[A] {
-  def run[S[_], F[_]](alg: DrawingAlgebra[S, F]): F[A]
-}
-
-trait ScalarExpr[A] {
-  def run[S[_], F[_]](alg: DrawingAlgebra[S, F]): S[A]
+trait DrawingAlgebra[S[_], F[_], R[_]] {
+  type RS[T] = R[S[T]]
+  type RF[T] = R[F[T]]
+  val drawing: CoreDrawingAlgebra[RS, RF]
+  val scalar: ScalarAlgebra[RS]
+  val bind: BindingAlgebra[R]
 }

@@ -56,6 +56,12 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
+      // TODO change this test with an ADT, we are losing info about the nesting of variables
+      "nested 2" in {
+        val serializedExpression = "x -> y -> $y"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+
       "inside let expressions" in {
         val serializedExpression = "let(x, 1.0)(y -> $x)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression

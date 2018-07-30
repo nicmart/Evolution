@@ -29,6 +29,31 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
       .addExtensibleParser(parser[C, T2, T1])
       .addExtensibleParser(parser[C, T2, T2])
 
+  def buildContainer4[C, T1, T2, T3, T4](container: C)(
+    implicit
+    hasT1: HasParser[C, F[T1]],
+    hasT2: HasParser[C, F[T2]],
+    hasT3: HasParser[C, F[T3]],
+    hasT4: HasParser[C, F[T4]]
+  ): C =
+    container
+      .addExtensibleParser(parser[C, T1, T1])
+      .addExtensibleParser(parser[C, T1, T2])
+      .addExtensibleParser(parser[C, T1, T3])
+      .addExtensibleParser(parser[C, T1, T4])
+      .addExtensibleParser(parser[C, T2, T1])
+      .addExtensibleParser(parser[C, T2, T2])
+      .addExtensibleParser(parser[C, T2, T3])
+      .addExtensibleParser(parser[C, T2, T4])
+      .addExtensibleParser(parser[C, T3, T1])
+      .addExtensibleParser(parser[C, T3, T2])
+      .addExtensibleParser(parser[C, T3, T3])
+      .addExtensibleParser(parser[C, T3, T4])
+      .addExtensibleParser(parser[C, T4, T1])
+      .addExtensibleParser(parser[C, T4, T2])
+      .addExtensibleParser(parser[C, T4, T3])
+      .addExtensibleParser(parser[C, T4, T4])
+
   def parser[C, Var, Out](
     implicit
     hasVar: HasParser[C, F[Var]],
