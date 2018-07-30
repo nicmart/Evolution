@@ -35,7 +35,8 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     hasOut: HasParser[C, F[Out]]
   ): ExtensibleParser[C, F[Out]] =
     letExtensibleParser[C, Var, Out]
-      .extendWith(lambdaExtensibleParser[C, Var, Out])
+      .extendWith(extensibleLambdaParser[C, Var, Out])
+      .extendWith(extensibleFixParser[C, Out])
 
   private def addVarUsage[T, C](name: String, container: C)(implicit has: HasParser[C, F[T]]): C =
     container.withExtensibleParser[F[T]](container.extensibleParser.transformLeaf { leaf =>
@@ -60,7 +61,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
       case (name, valueExpr) => body(name).map(bodyExpr => alg.let(name, valueExpr)(bodyExpr))
     })
 
-  private def lambdaExtensibleParser[C, Var, Out](
+  private def extensibleLambdaParser[C, Var, Out](
     implicit
     hasVar: HasParser[C, F[Var]],
     hasOut: HasParser[C, F[Out]]
@@ -69,4 +70,10 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
 
   private def lambdaParser[T](body: String => Parser[F[T]]): Parser[F[T]] =
     P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
+
+  private def fixParser[T](parser: Parser[F[T]]): Parser[F[T]] =
+    function1[F[T]]("fix", parser).map(alg.fix)
+
+  private def extensibleFixParser[C, T](implicit hasT: HasParser[C, F[T]]): ExtensibleParser[C, F[T]] =
+    ExtensibleParser(Fail, c => fixParser[T](c.parser[F[T]]))
 }
