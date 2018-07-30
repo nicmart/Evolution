@@ -15,7 +15,8 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     implicit
     hasVar: HasParser[C, F[T]]
   ): C =
-    container.addExtensibleParser(parser[C, T, T])
+    container
+      .addExtensibleParser(parser[C, T, T])
 
   def buildContainer2[C, T1, T2](container: C)(
     implicit
@@ -33,21 +34,39 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     hasVar: HasParser[C, F[Var]],
     hasOut: HasParser[C, F[Out]]
   ): ExtensibleParser[C, F[Out]] =
-    ExtensibleParser(
-      Fail,
-      self => letParser(self.parser[F[Var]], name => addVarUsage[Var, C](name, self).parser[F[Out]])
-    )
+    letExtensibleParser[C, Var, Out]
+      .extendWith(lambdaExtensibleParser[C, Var, Out])
 
   private def addVarUsage[T, C](name: String, container: C)(implicit has: HasParser[C, F[T]]): C =
     container.withExtensibleParser[F[T]](container.extensibleParser.transformLeaf { leaf =>
-      leaf.map(expr => alg.shift(expr)) | var0(name)
+      var0[T](name) | leaf.map(expr => alg.shift(expr))
     })
 
   private def var0[A](varName: String): Parser[F[A]] =
     varUsage(varName).map(_ => alg.var0)
 
+  private def letExtensibleParser[C, Var, Out](
+    implicit
+    hasVar: HasParser[C, F[Var]],
+    hasOut: HasParser[C, F[Out]]
+  ): ExtensibleParser[C, F[Out]] =
+    ExtensibleParser(
+      Fail,
+      self => letParser(self.parser[F[Var]], name => addVarUsage[Var, C](name, self).parser[F[Out]])
+    )
+
   private def letParser[A, B](assignment: Parser[F[A]], body: String => Parser[F[B]]): Parser[F[B]] =
     functionFlatMap[(String, F[A]), F[B]](function2("let", varName, assignment), {
       case (name, valueExpr) => body(name).map(bodyExpr => alg.let(name, valueExpr)(bodyExpr))
     })
+
+  private def lambdaExtensibleParser[C, Var, Out](
+    implicit
+    hasVar: HasParser[C, F[Var]],
+    hasOut: HasParser[C, F[Out]]
+  ): ExtensibleParser[C, F[Out]] =
+    ExtensibleParser(Fail, self => lambdaParser(name => addVarUsage[Var, C](name, self).parser[F[Out]]))
+
+  private def lambdaParser[T](body: String => Parser[F[T]]): Parser[F[T]] =
+    P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
 }

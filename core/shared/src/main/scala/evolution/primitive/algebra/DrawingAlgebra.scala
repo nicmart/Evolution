@@ -6,6 +6,7 @@ trait BindingAlgebra[F[_]] {
   def var0[A]: F[A]
   def shift[A](expr: F[A]): F[A]
   def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
+  def lambda[A, B](name: String, expr: F[B]): F[B]
   def fix[A](expr: F[A]): F[A]
 }
 

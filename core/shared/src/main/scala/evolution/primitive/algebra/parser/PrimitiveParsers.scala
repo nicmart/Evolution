@@ -23,7 +23,7 @@ trait PrimitiveParsers {
     P("\"" ~/ CharIn('a' to 'z').rep.! ~/ "\"")
 
   val varName: Parser[String] = {
-    val letter = P(CharIn('a' to 'z') | CharIn('A' to 'Z') | CharIn(Seq('_', '-')) | CharIn('0' to '9'))
+    val letter = P(CharIn('a' to 'z') | CharIn('A' to 'Z') | CharIn('0' to '9'))
     P(letter.rep(1).!)
   }
 

@@ -3,34 +3,53 @@ package evolution.algebra.primitive.parser
 import evolution.data.HasValue
 import evolution.drawing.algebra.interpreter.CtxString
 import evolution.primitive.algebra.BindingAlgebra
-import evolution.primitive.algebra.interpreter.{BindingAlgebraSerializer, DebugAlgebraSerializer}
+import evolution.primitive.algebra.interpreter.BindingAlgebraSerializer
 import evolution.primitive.algebra.parser.{BindingAlgebraParser, ExtensibleParser, ParserConfig, ParsersContainerOps}
 import ExtensibleParser._
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{FreeSpec, Matchers, WordSpec}
 
-class BindingAlgebraParserSpec extends WordSpec with Matchers with CommonTestParsers {
+class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import fastparse.noApi._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
 
-  "A Binding Algebra Parser" should {
-    "parse a simple let expression" in {
-      val serializedExpression = "let(x, 10.0)($x)"
-      unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
-    }
-
-    "parse a nested let expression" in {
-      val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, 2.0)($x))"
-      unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
-    }
-
-    "parse a double nested let expression" in {
-      val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, let(u, $x)($u))($x))"
-      def expectedExpression[F[_]](alg: BindingAlgebra[F], double: Double => F[Double]): F[Double] = {
-        import alg._
-        let("x", let("y", double(1.0))(var0))(let("z", let("u", shift(var0))(var0))(var0))
+  "A Binding Algebra Parser should parse" - {
+    "let expressions" - {
+      "simple ones" in {
+        val serializedExpression = "let(x, 10.0)($x)"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
-      unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+
+      "nested ones" in {
+        val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, 2.0)($x))"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+
+      "multi-nested ones" in {
+        val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, let(u, $x)($u))($x))"
+        def expectedExpression[F[_]](alg: BindingAlgebra[F], double: Double => F[Double]): F[Double] = {
+          import alg._
+          let("x", let("y", double(1.0))(var0))(let("z", let("u", shift(var0))(var0))(var0))
+        }
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+    }
+
+    "lambda expressions that are" - {
+      "constant" in {
+        val serializedExpression = "x -> 1.0"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+
+      "identity" in {
+        val serializedExpression = "x -> $x"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+
+      "nested" in {
+        val serializedExpression = "x -> y -> $x"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
     }
   }
 

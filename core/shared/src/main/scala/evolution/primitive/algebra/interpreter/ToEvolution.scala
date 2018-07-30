@@ -39,6 +39,8 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
 
     override def fix[A](expr: CtxScalar[A]): CtxScalar[A] =
       ctx => expr((() => expr(ctx)) :: ctx)
+
+    override def lambda[A, B](name: String, expr: CtxScalar[B]): CtxScalar[B] = expr
   }
   override val bindF: BindingAlgebra[CtxF[F, ?]] = new BindingAlgebra[CtxF[F, ?]] {
     override def var0[A]: CtxF[F, A] = {
@@ -52,5 +54,7 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
 
     override def fix[A](expr: CtxF[F, A]): CtxF[F, A] =
       ctx => expr((() => expr(ctx)) :: ctx)
+
+    override def lambda[A, B](name: String, expr: CtxF[F, B]): CtxF[F, B] = expr
   }
 }

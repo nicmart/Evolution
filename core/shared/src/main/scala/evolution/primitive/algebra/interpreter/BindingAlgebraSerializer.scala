@@ -14,14 +14,7 @@ object BindingAlgebraSerializer extends BindingAlgebra[CtxString] {
 
   override def fix[A](expr: CtxString[A]): CtxString[A] =
     ctx => s"fix(self -> ${expr("$self" :: ctx)})"
-}
 
-object DebugAlgebraSerializer extends BindingAlgebra[CtxString] {
-  override def var0[A]: CtxString[A] = _ => "var0"
-  override def shift[A](expr: CtxString[A]): CtxString[A] = ctx => s"shift(${expr(ctx)})"
-  override def let[A, B](name: String, value: CtxString[A])(expr: CtxString[B]): CtxString[B] =
-    ctx => s"let($name, ${value(ctx)}, ${expr(ctx)})"
-
-  override def fix[A](expr: CtxString[A]): CtxString[A] =
-    ctx => s"fix(self -> ${expr("$self" :: ctx)})"
+  override def lambda[A, B](name: String, expr: CtxString[B]): CtxString[B] =
+    ctx => s"$name -> ${expr(s"$$$name" :: ctx)}"
 }
