@@ -20,6 +20,7 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
     doubleF: HasParser[C, RF[Double]],
     pointS: HasParser[C, RS[Point]],
     pointF: HasParser[C, RF[Point]],
+    hasShift: HasShift[C, R]
   ): C = {
     val withDrawings = coreDrawingAlgebraParser.buildContainer2[C, Double, Point](container)
     val withScalars = scalarAlgebraParser.buildContainer[C, Double](withDrawings)
