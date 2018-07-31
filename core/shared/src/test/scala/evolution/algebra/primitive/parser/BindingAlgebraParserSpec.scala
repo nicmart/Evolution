@@ -4,7 +4,7 @@ import evolution.data.HasValue
 import evolution.drawing.algebra.interpreter.CtxString
 import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.interpreter.BindingAlgebraSerializer
-import evolution.primitive.algebra.parser.{BindingAlgebraParser, ExtensibleParser, ParserConfig, ParsersContainerOps}
+import evolution.primitive.algebra.parser._
 import ExtensibleParser._
 import org.scalatest.{FreeSpec, Matchers, WordSpec}
 
@@ -99,6 +99,8 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     implicit val hasDouble: HasParser[Container, CtxString[Double]] =
       HasValue.instance(_.double, (c, p) => c.copy(double = p))
     implicit def ops(c: Container): ParsersContainerOps[Container] = new ParsersContainerOps(c)
+    implicit val hasShift: HasShift[Container, CtxString] =
+      HasShift.instance((c, alg) => c.copy(double = c.double.transformLeaf(p => p.map(alg.shift))))
   }
 
   lazy val container: Container = bindingParser.buildContainer1[Container, Double](Container.start)

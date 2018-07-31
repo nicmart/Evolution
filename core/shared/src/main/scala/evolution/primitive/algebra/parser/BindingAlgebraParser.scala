@@ -6,6 +6,7 @@ import fastparse.noApi.Parser
 import ExtensibleParser._
 import ParsersContainerOps._
 
+//TODO Can we find a way to avoid to shift leaves that are not variables?
 class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
   import ParserConfig.White._
   import fastparse.noApi._
@@ -70,8 +71,10 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
   private def addVarUsage[T, C](
     name: String,
     container: C
-  )(implicit has: HasParser[C, F[T]], hasShift: HasShift[C, F]): C =
-    container.withExtensibleParser[F[T]](hasShift.shift(container, alg).extensibleParser.addLeaf(var0[T](name)))
+  )(implicit has: HasParser[C, F[T]], hasShift: HasShift[C, F]): C = {
+    val shiftedContainer = hasShift.shift(container, alg)
+    shiftedContainer.withExtensibleParser[F[T]](shiftedContainer.extensibleParser.addLeaf(var0[T](name)))
+  }
 
   private def var0[A](varName: String): Parser[F[A]] =
     varUsage(varName).map(_ => alg.var0)
@@ -95,7 +98,8 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
   private def extensibleLambdaParser[C, Var, Out](
     implicit
     hasVar: HasParser[C, F[Var]],
-    hasOut: HasParser[C, F[Out]]
+    hasOut: HasParser[C, F[Out]],
+    hasShift: HasShift[C, F]
   ): ExtensibleParser[C, F[Out]] =
     ExtensibleParser(Fail, self => lambdaParser(name => addVarUsage[Var, C](name, self).parser[F[Out]]))
 

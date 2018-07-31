@@ -30,7 +30,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
 
       "recursive" in {
         val serializedExpression = "fix(x -> cons(1, $x))"
-        val expected = Fix(Lambda("x", DrawingB(Cons(ScalarB(DoubleScalar(1)), Var0[Drawing[Double]]()))))
+        val expected = Fix(Lambda("x", DrawingB(Cons(Shift(ScalarB(DoubleScalar(1))), Var0[Drawing[Double]]()))))
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
       }
 
@@ -39,14 +39,12 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val expected = DrawingB(
           MapCons(
             DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(ScalarB(DoubleScalar(1.0)), Var0[Drawing[Double]]()))))
+            Lambda("h", Lambda("t", DrawingB(Cons(Shift(Shift(ScalarB(DoubleScalar(1.0)))), Var0[Drawing[Double]]()))))
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
       }
 
-      // Problem here, where we need a lambda S[Double] => F[Double] => F[Double],
-      // but currently a binding algebra stays inside the same type family
       "mapCons with mixed lambdas" in {
         val serializedExpression = "mapCons(empty, h -> t -> cons($h, $t))"
         val expected = DrawingB(
@@ -59,24 +57,56 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       }
     }
 
-//    "point drawings" - {
-//      "empty" in {
-//        val serializedExpression = "empty"
-//        unsafeParse(serializedExpression, container.parser[Drawing[Point]]) shouldBe Empty[Point]()
-//      }
-//
-//      "cons" in {
-//        val serializedExpression = "cons(point(0, 0), cons(point(1, 2), empty))"
-//        val expected = Cons(PointScalar(Point(0, 0)), Cons(PointScalar(Point(1, 2)), Empty()))
-//        unsafeParse(serializedExpression, container.parser[Drawing[Point]]) shouldBe expected
-//      }
-//
-//      "recursive" in {
-//        val serializedExpression = "fix(x -> cons(point(0, 0), $x))"
-//        val expected = FixF(LambdaF("x", Cons(PointScalar(Point(0, 0)), Var0F[Point]())))
-//        unsafeParse(serializedExpression, container.parser[Drawing[Point]]) shouldBe expected
-//      }
-//    }
+    "point drawings" - {
+      "empty" in {
+        val serializedExpression = "empty"
+        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe DrawingB(Empty[Point]())
+      }
+
+      "cons" in {
+        val serializedExpression = "cons(point(0,0), cons(point(1,1), empty))"
+        val expected =
+          DrawingB(
+            Cons(
+              ScalarB(PointScalar(Point(0, 0))),
+              DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), DrawingB(Empty())))
+            )
+          )
+        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+      }
+
+      "recursive" in {
+        val serializedExpression = "fix(x -> cons(point(1, 1), $x))"
+        val expected =
+          Fix(Lambda("x", DrawingB(Cons(Shift(ScalarB(PointScalar(Point(1, 1)))), Var0[Drawing[Point]]()))))
+        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+      }
+
+      "mapCons" in {
+        val serializedExpression = "mapCons(empty, h -> t -> cons(point(0, 0), $t))"
+        val expected = DrawingB(
+          MapCons(
+            DrawingB(Empty()),
+            Lambda(
+              "h",
+              Lambda("t", DrawingB(Cons(Shift(Shift(ScalarB(PointScalar(Point(0, 0))))), Var0[Drawing[Point]]())))
+            )
+          )
+        )
+        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+      }
+
+      "mapCons with mixed lambdas" in {
+        val serializedExpression = "mapCons(empty, h -> t -> cons($h, $t))"
+        val expected = DrawingB(
+          MapCons(
+            DrawingB(Empty()),
+            Lambda("h", Lambda("t", DrawingB(Cons(Shift(Var0[Scalar[Point]]()), Var0[Drawing[Point]]()))))
+          )
+        )
+        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+      }
+    }
   }
 
   sealed trait Binding[A]

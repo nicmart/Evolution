@@ -4,6 +4,7 @@ import fastparse.noApi._
 import ParserConfig.White._
 import evolution.data.HasValue
 
+//TODO Can we find a way to avoid to thousands of Fail parsers? Some ADT?
 case class ExtensibleParser[C, T](leaf: Parser[T], composite: C => Parser[T]) {
   def expr(container: C): Parser[T] =
     P(leaf | composite(container))
