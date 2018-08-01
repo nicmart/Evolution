@@ -98,16 +98,16 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
 
   lazy val coreAlgebraParser = new CoreDrawingAlgebraParser(TestCoreDrawingAlgebraInterpreter)
   def doubleScalarParser[C]: ExtensibleParser[C, Scalar[Double]] =
-    ExtensibleParser(double.map(d => DoubleScalar(d)), _ => Fail)
+    ExtensibleParser.Leaf(double.map(d => DoubleScalar(d)))
   def stringScalarParser[C]: ExtensibleParser[C, Scalar[String]] =
-    ExtensibleParser(stringLiteral.map(s => StringScalar(s)), _ => Fail)
+    ExtensibleParser.Leaf(stringLiteral.map(s => StringScalar(s)))
 
   lazy val literalContainer: Container[Scalar, Drawing] =
     Container(
       doubleScalarParser[Container[Scalar, Drawing]],
-      ExtensibleParser.fail,
+      ExtensibleParser.Empty(),
       stringScalarParser[Container[Scalar, Drawing]],
-      ExtensibleParser.fail
+      ExtensibleParser.Empty()
     )
 
   lazy val container: Container[Scalar, Drawing] =

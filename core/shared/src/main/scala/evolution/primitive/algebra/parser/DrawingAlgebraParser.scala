@@ -47,10 +47,10 @@ object DrawingAlgebraParserContainer {
 
   def empty[S[_], F[_], R[_]]: DrawingAlgebraParserContainer[S, F, R] =
     DrawingAlgebraParserContainer[S, F, R](
-      ExtensibleParser.fail,
-      ExtensibleParser.fail,
-      ExtensibleParser.fail,
-      ExtensibleParser.fail
+      ExtensibleParser.Empty(),
+      ExtensibleParser.Empty(),
+      ExtensibleParser.Empty(),
+      ExtensibleParser.Empty()
     )
   implicit def hasDoubleFParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]] =
     HasParser

@@ -85,8 +85,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     hasOut: HasParser[C, F[Out]],
     hasShift: HasShift[C, F]
   ): ExtensibleParser[C, F[Out]] =
-    ExtensibleParser(
-      Fail,
+    ExtensibleParser.Composite(
       self => letParser(self.parser[F[Var]], name => addVarUsage[Var, C](name, self).parser[F[Out]])
     )
 
@@ -101,7 +100,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     hasOut: HasParser[C, F[Out]],
     hasShift: HasShift[C, F]
   ): ExtensibleParser[C, F[Out]] =
-    ExtensibleParser(Fail, self => lambdaParser(name => addVarUsage[Var, C](name, self).parser[F[Out]]))
+    ExtensibleParser.Composite(self => lambdaParser(name => addVarUsage[Var, C](name, self).parser[F[Out]]))
 
   private def lambdaParser[T](body: String => Parser[F[T]]): Parser[F[T]] =
     P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
@@ -110,7 +109,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     function1[F[T]]("fix", parser).map(alg.fix)
 
   private def extensibleFixParser[C, T](implicit hasT: HasParser[C, F[T]]): ExtensibleParser[C, F[T]] =
-    ExtensibleParser(Fail, c => fixParser[T](c.parser[F[T]]))
+    ExtensibleParser.Composite(c => fixParser[T](c.parser[F[T]]))
 }
 
 trait HasShift[C, F[_]] {

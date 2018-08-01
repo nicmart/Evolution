@@ -87,7 +87,7 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
   private lazy val bindingParser = new BindingAlgebraParser[CtxString](BindingAlgebraSerializer)
   private lazy val doubleParser: Parser[CtxString[Double]] = double.map(d => _ => d.toString)
   private lazy val doubleExtensibleParser: ExtensibleParser[Container, CtxString[Double]] =
-    ExtensibleParser(doubleParser, _ => Fail)
+    Leaf(doubleParser)
 
   def extensibleAddition: ExtensibleParser[Container, CtxString[Double]] =
     extensibleBinaryOpParser[CtxString[Double]]("add", (a, b) => ctx => s"add(${a(ctx)}, ${b(ctx)})")

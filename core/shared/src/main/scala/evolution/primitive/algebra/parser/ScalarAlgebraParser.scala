@@ -20,10 +20,10 @@ class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
       .addExtensibleParser(extensibleParserPoint)
 
   private def extensibleParserDouble[C]: ExtensibleParser[C, S[Double]] =
-    ExtensibleParser(double.map(alg.double), _ => Fail)
+    ExtensibleParser.Leaf(double.map(alg.double))
 
   private def extensibleParserPoint[C]: ExtensibleParser[C, S[Point]] =
-    ExtensibleParser(function2("point", double, double).map { case (x, y) => alg.point(Point(x, y)) }, _ => Fail)
+    ExtensibleParser.Leaf(function2("point", double, double).map { case (x, y) => alg.point(Point(x, y)) })
 }
 
 case class ScalarParserContainer[S[_]](
@@ -33,7 +33,7 @@ case class ScalarParserContainer[S[_]](
 
 object ScalarParserContainer {
   def empty[S[_]]: ScalarParserContainer[S] =
-    ScalarParserContainer[S](ExtensibleParser.fail, ExtensibleParser.fail)
+    ScalarParserContainer[S](ExtensibleParser.Empty(), ExtensibleParser.Empty())
   implicit def hasDouble[S[_]]: HasParser[ScalarParserContainer[S], S[Double]] =
     HasParser.instance(_.doubleParser, (c, p) => c.copy(doubleParser = p))
   implicit def hasPoint[S[_]]: HasParser[ScalarParserContainer[S], S[Point]] =

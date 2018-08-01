@@ -57,8 +57,7 @@ class CoreDrawingAlgebraParser[S[_], F[_]](alg: CoreDrawingAlgebra[S, F]) {
     hasParserFIn: HasParser[C, F[In]],
     hasParserFOut: HasParser[C, F[Out]]
   ): ExtensibleParser[C, F[Out]] = {
-    ExtensibleParser(
-      Fail,
+    ExtensibleParser.Composite(
       c =>
         function2("mapCons", c.parser[F[In]], c.parser[F[Out]])
           .map[F[Out]] { case (in, out) => alg.mapCons(in)(out) }
@@ -69,22 +68,20 @@ class CoreDrawingAlgebraParser[S[_], F[_]](alg: CoreDrawingAlgebra[S, F]) {
     implicit
     hasParserF: HasParser[C, F[T]]
   ): ExtensibleParser[C, F[T]] = {
-    ExtensibleParser(
-      Fail,
+    ExtensibleParser.Composite(
       c =>
         function2("mapEmpty", c.parser[F[T]], c.parser[F[T]])
           .map[F[T]] { case (in, out) => alg.mapEmpty(in)(out) }
     )
   }
 
-  private def empty[C, T]: ExtensibleParser[C, F[T]] = ExtensibleParser(P("empty").map(_ => alg.empty), _ => Fail)
+  private def empty[C, T]: ExtensibleParser[C, F[T]] = ExtensibleParser.Leaf(P("empty").map(_ => alg.empty))
 
   private def cons[C, T](
     implicit hasParserS: HasParser[C, S[T]],
     hasParserF: HasParser[C, F[T]]
   ): ExtensibleParser[C, F[T]] = {
-    ExtensibleParser(
-      Fail,
+    ExtensibleParser.Composite(
       c => function2("cons", c.parser[S[T]], c.parser[F[T]]).map[F[T]] { case (h, t) => alg.cons(h, t) }
     )
   }

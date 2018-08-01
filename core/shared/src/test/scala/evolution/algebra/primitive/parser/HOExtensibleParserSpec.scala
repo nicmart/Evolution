@@ -76,9 +76,9 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
     stringLiteral.map(Str.apply)
 
   def doubleExpr[C]: ExtensibleParser[C, Expression[Double]] =
-    ExtensibleParser(doubleParser, _ => Fail)
+    ExtensibleParser.Leaf(doubleParser)
   def stringExpr[C]: ExtensibleParser[C, Expression[String]] =
-    ExtensibleParser(stringParser, _ => Fail)
+    ExtensibleParser.Leaf(stringParser)
   def additionExpr[C: HasDouble]: ExtensibleParser[C, Expression[Double]] =
     extensibleBinaryOpParser[Expression[Double]]("add", Add)
       .contramap[C](c => c.parser[Expression[Double]])
@@ -97,8 +97,7 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
     hasVar: Has[C, VarType],
     hasRes: Has[C, ResultType]
   ): ExtensibleParser[C, Expression[ResultType]] =
-    ExtensibleParser(
-      Fail,
+    ExtensibleParser.Composite(
       self =>
         letParser[Expression[VarType], Expression[ResultType]](
           self.parser[Expression[VarType]],
@@ -123,7 +122,7 @@ class HOExtensibleParserSpec extends FreeSpec with Matchers with CommonTestParse
       HasValue.instance(_.double, (x, v) => x.copy(double = v))
   }
 
-  val emptyParser = HOExtensibleParser(ExtensibleParser.fail, ExtensibleParser.fail)
+  val emptyParser = HOExtensibleParser(ExtensibleParser.Empty(), ExtensibleParser.Empty())
 
   def fullExtensibleParser[C: HasDouble: HasString](container: C): C =
     container
