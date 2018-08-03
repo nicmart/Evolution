@@ -17,7 +17,7 @@ object Serializer extends DrawingAlgebra[ConstString, ConstString, CtxString] {
     }
   override val scalar: ScalarAlgebra[RS] = new ScalarAlgebra[RS] {
     override def double(d: Double): CtxString[Double] = _ => d.toString
-    override def point(p: Point): CtxString[Point] = _ => p.toString
+    override def point(p: Point): CtxString[Point] = _ => s"point(${p.x}, ${p.y})"
   }
   override val bind: BindingAlgebra[CtxString] = BindingAlgebraSerializer
 }

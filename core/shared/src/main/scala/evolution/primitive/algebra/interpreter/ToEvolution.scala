@@ -35,7 +35,7 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
       ctx => expr((() => value(ctx)) :: ctx)
 
     override def fix[A](expr: Ctx[A]): Ctx[A] =
-      ctx => expr((() => expr(ctx)) :: ctx)
+      ctx => expr((() => fix(expr)(ctx)) :: ctx)
 
     override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[B] = expr
   }
