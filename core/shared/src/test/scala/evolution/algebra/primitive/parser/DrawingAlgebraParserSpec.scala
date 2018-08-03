@@ -1,18 +1,11 @@
 package evolution.algebra.primitive.parser
 
 import evolution.geometry.Point
-import evolution.primitive.algebra.interpreter.Id
 import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, DrawingAlgebra, ScalarAlgebra}
-import evolution.primitive.algebra.parser.{DrawingAlgebraParser, DrawingAlgebraParserContainer, ParserConfig}
+import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import org.scalatest.{FreeSpec, Matchers}
-import evolution.primitive.algebra.parser.PrimitiveParsers._
 
 class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
-  import ParserConfig.White._
-  import evolution.primitive.algebra.parser.PrimitiveParsers._
-  import fastparse.noApi._
-  import Drawing._
-  import Scalar._
   import Binding._, Drawing._, Scalar._
   "A drawingAlgebraParser should parse" - {
     "double drawings" - {
@@ -157,6 +150,6 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
   }
 
   lazy val parser = new DrawingAlgebraParser[Scalar, Drawing, Binding](TestInterpreter)
-  lazy val container: DrawingAlgebraParserContainer[Scalar, Drawing, Binding] =
-    parser.buildContainer(DrawingAlgebraParserContainer.empty[Scalar, Drawing, Binding])
+  lazy val container: DrawingAlgebraParser.Container[Scalar, Drawing, Binding] =
+    parser.buildContainer(DrawingAlgebraParser.Container.empty[Scalar, Drawing, Binding])
 }
