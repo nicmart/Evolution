@@ -2,7 +2,7 @@ package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
 import evolution.primitive.algebra.DrawingAlgebra
-import evolution.primitive.algebra.parser.ExtensibleParser.HasParser
+import evolution.primitive.algebra.parser.DependentParser.HasParser
 
 class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
   type RS[A] = R[S[A]]
@@ -20,7 +20,7 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
     doubleF: HasParser[C, RF[Double]],
     pointS: HasParser[C, RS[Point]],
     pointF: HasParser[C, RF[Point]],
-    hasShift: HasShift[C, R]
+    hasVariables: HasVariables[C]
   ): C = {
     val withDrawings = coreDrawingAlgebraParser.buildContainer2[C, Double, Point](container)
     val withScalars = scalarAlgebraParser.buildContainer[C, Double](withDrawings)
@@ -30,11 +30,15 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
 }
 
 case class DrawingAlgebraParserContainer[S[_], F[_], R[_]](
-  doubleParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[S[Double]]],
-  doubleParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]],
-  pointParserS: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]],
-  pointParserF: ExtensibleParser[DrawingAlgebraParserContainer[S, F, R], R[F[Point]]]
-)
+  doubleParserS: DependentParser[DrawingAlgebraParserContainer[S, F, R], R[S[Double]]],
+  doubleParserF: DependentParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]],
+  pointParserS: DependentParser[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]],
+  pointParserF: DependentParser[DrawingAlgebraParserContainer[S, F, R], R[F[Point]]],
+  variables: List[String]
+) {
+  def addVariable(name: String): DrawingAlgebraParserContainer[S, F, R] =
+    copy(variables = name :: variables)
+}
 
 object DrawingAlgebraParserContainer {
   import ParserConfig.White._
@@ -47,10 +51,11 @@ object DrawingAlgebraParserContainer {
 
   def empty[S[_], F[_], R[_]]: DrawingAlgebraParserContainer[S, F, R] =
     DrawingAlgebraParserContainer[S, F, R](
-      ExtensibleParser.Empty(),
-      ExtensibleParser.Empty(),
-      ExtensibleParser.Empty(),
-      ExtensibleParser.Empty()
+      DependentParser.empty,
+      DependentParser.empty,
+      DependentParser.empty,
+      DependentParser.empty,
+      List.empty
     )
   implicit def hasDoubleFParser[S[_], F[_], R[_]]: HasParser[DrawingAlgebraParserContainer[S, F, R], R[F[Double]]] =
     HasParser
@@ -74,13 +79,6 @@ object DrawingAlgebraParserContainer {
     HasParser
       .instance[DrawingAlgebraParserContainer[S, F, R], R[S[Point]]](_.pointParserS, (c, p) => c.copy(pointParserS = p))
 
-  implicit def hasShift[S[_], F[_], R[_]]: HasShift[DrawingAlgebraParserContainer[S, F, R], R] =
-    HasShift.instance[DrawingAlgebraParserContainer[S, F, R], R] { (container, algebra) =>
-      DrawingAlgebraParserContainer[S, F, R](
-        doubleParserS = container.doubleParserS.transformLeaf(p => p.map(algebra.shift)),
-        doubleParserF = container.doubleParserF.transformLeaf(p => p.map(algebra.shift)),
-        pointParserS = container.pointParserS.transformLeaf(p => p.map(algebra.shift)),
-        pointParserF = container.pointParserF.transformLeaf(p => p.map(algebra.shift))
-      )
-    }
+  implicit def hasVariables[S[_], F[_], R[_]]: HasVariables[DrawingAlgebraParserContainer[S, F, R]] =
+    HasVariables.instance[DrawingAlgebraParserContainer[S, F, R]](_.variables, (name, c) => c.addVariable(name))
 }

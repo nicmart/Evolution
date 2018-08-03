@@ -2,8 +2,8 @@ package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
 import evolution.primitive.algebra.ScalarAlgebra
-import evolution.primitive.algebra.parser.ExtensibleParser.HasParser
 import ParsersContainerOps._
+import evolution.primitive.algebra.parser.DependentParser.HasParser
 
 class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
   import ParserConfig.White._
@@ -16,24 +16,24 @@ class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
     hasPoint: HasParser[C, S[Point]]
   ): C =
     container
-      .addExtensibleParser(extensibleParserDouble)
-      .addExtensibleParser(extensibleParserPoint)
+      .addParser(dependentDoubleParser)
+      .addParser(dependentPointParser)
 
-  private def extensibleParserDouble[C]: ExtensibleParser[C, S[Double]] =
-    ExtensibleParser.Leaf(double.map(alg.double))
+  private def dependentDoubleParser[C]: DependentParser[C, S[Double]] =
+    DependentParser(_ => double.map(alg.double))
 
-  private def extensibleParserPoint[C]: ExtensibleParser[C, S[Point]] =
-    ExtensibleParser.Leaf(function2("point", double, double).map { case (x, y) => alg.point(Point(x, y)) })
+  private def dependentPointParser[C]: DependentParser[C, S[Point]] =
+    DependentParser(_ => function2("point", double, double).map { case (x, y) => alg.point(Point(x, y)) })
 }
 
 case class ScalarParserContainer[S[_]](
-  doubleParser: ExtensibleParser[ScalarParserContainer[S], S[Double]],
-  pointParser: ExtensibleParser[ScalarParserContainer[S], S[Point]]
+  doubleParser: DependentParser[ScalarParserContainer[S], S[Double]],
+  pointParser: DependentParser[ScalarParserContainer[S], S[Point]]
 )
 
 object ScalarParserContainer {
   def empty[S[_]]: ScalarParserContainer[S] =
-    ScalarParserContainer[S](ExtensibleParser.Empty(), ExtensibleParser.Empty())
+    ScalarParserContainer[S](DependentParser.empty, DependentParser.empty)
   implicit def hasDouble[S[_]]: HasParser[ScalarParserContainer[S], S[Double]] =
     HasParser.instance(_.doubleParser, (c, p) => c.copy(doubleParser = p))
   implicit def hasPoint[S[_]]: HasParser[ScalarParserContainer[S], S[Point]] =

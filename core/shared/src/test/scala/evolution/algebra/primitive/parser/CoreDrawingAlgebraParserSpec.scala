@@ -3,9 +3,9 @@ package evolution.algebra.primitive.parser
 import evolution.data.HasValue
 import evolution.geometry.Point
 import evolution.primitive.algebra.CoreDrawingAlgebra
-import evolution.primitive.algebra.parser.ExtensibleParser.HasParser
+import evolution.primitive.algebra.parser.DependentParser.HasParser
 import evolution.primitive.algebra.parser.ParsersContainerOps._
-import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, ExtensibleParser, ParserConfig}
+import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, DependentParser, ParserConfig}
 import org.scalatest.{FreeSpec, Matchers}
 
 class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
@@ -68,10 +68,10 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
   }
 
   case class Container[S[_], F[_]](
-    doubleParserS: ExtensibleParser[Container[S, F], S[Double]],
-    doubleParserF: ExtensibleParser[Container[S, F], F[Double]],
-    stringParserS: ExtensibleParser[Container[S, F], S[String]],
-    stringParserF: ExtensibleParser[Container[S, F], F[String]]
+    doubleParserS: DependentParser[Container[S, F], S[Double]],
+    doubleParserF: DependentParser[Container[S, F], F[Double]],
+    stringParserS: DependentParser[Container[S, F], S[String]],
+    stringParserF: DependentParser[Container[S, F], F[String]]
   )
   object Container {
     implicit def hasDoubleFParser[S[_], F[_]]: HasParser[Container[S, F], F[Double]] =
@@ -97,17 +97,17 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
   }
 
   lazy val coreAlgebraParser = new CoreDrawingAlgebraParser(TestCoreDrawingAlgebraInterpreter)
-  def doubleScalarParser[C]: ExtensibleParser[C, Scalar[Double]] =
-    ExtensibleParser.Leaf(double.map(d => DoubleScalar(d)))
-  def stringScalarParser[C]: ExtensibleParser[C, Scalar[String]] =
-    ExtensibleParser.Leaf(stringLiteral.map(s => StringScalar(s)))
+  def doubleScalarParser[C]: DependentParser[C, Scalar[Double]] =
+    DependentParser(_ => double.map(d => DoubleScalar(d)))
+  def stringScalarParser[C]: DependentParser[C, Scalar[String]] =
+    DependentParser(_ => stringLiteral.map(s => StringScalar(s)))
 
   lazy val literalContainer: Container[Scalar, Drawing] =
     Container(
       doubleScalarParser[Container[Scalar, Drawing]],
-      ExtensibleParser.Empty(),
+      DependentParser.empty,
       stringScalarParser[Container[Scalar, Drawing]],
-      ExtensibleParser.Empty()
+      DependentParser.empty
     )
 
   lazy val container: Container[Scalar, Drawing] =

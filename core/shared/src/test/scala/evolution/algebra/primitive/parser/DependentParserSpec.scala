@@ -1,15 +1,15 @@
 package evolution.algebra.primitive.parser
 
-import evolution.primitive.algebra.parser.{ExtensibleParser, ParserConfig}
+import evolution.primitive.algebra.parser.{DependentParser, ParserConfig}
 import fastparse.noApi
 import org.scalatest.{Matchers, WordSpec}
 
-class ExtensibleParserSpec extends WordSpec with Matchers with CommonTestParsers {
+class DependentParserSpec extends WordSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
   import fastparse.noApi._
 
-  "An extensible parser" should {
+  "A dependent parser" should {
     "parse non-composite expressions" in {
       val serializedExpression = "1"
       val expectedExpression = Lit(1)
@@ -35,31 +35,28 @@ class ExtensibleParserSpec extends WordSpec with Matchers with CommonTestParsers
     }
   }
 
-  def unsafeParse(
-    expression: String,
-    extensibleParser: ExtensibleParser[Container, NumberExpression]
-  ): NumberExpression =
-    unsafeParse(expression, extensibleParser.expr(Container(extensibleParser)))
+  def unsafeParse(expression: String, dependentParser: DependentParser[Container, NumberExpression]): NumberExpression =
+    unsafeParse(expression, dependentParser.parser(Container(dependentParser)))
 
   sealed trait NumberExpression
   case class Lit(d: Double) extends NumberExpression
   case class Add(a: NumberExpression, b: NumberExpression) extends NumberExpression
   case class Mul(a: NumberExpression, b: NumberExpression) extends NumberExpression
 
-  case class Container(extensibleParser: ExtensibleParser[Container, NumberExpression]) {
-    def expr: Parser[NumberExpression] = extensibleParser.expr(this)
+  case class Container(dependentParser: DependentParser[Container, NumberExpression]) {
+    def expr: Parser[NumberExpression] = P(dependentParser.parser(this))
   }
 
-  lazy val doubleExpr: ExtensibleParser[Container, NumberExpression] =
-    extensibleDoubleParser[NumberExpression](Lit)
+  lazy val doubleExpr: DependentParser[Container, NumberExpression] =
+    dependentDoubleParser[NumberExpression](Lit)
       .contramap[Container](_.expr)
-  lazy val additionExpr: ExtensibleParser[Container, NumberExpression] =
-    extensibleBinaryOpParser[NumberExpression]("add", Add)
+  lazy val additionExpr: DependentParser[Container, NumberExpression] =
+    dependentBinaryOpParser[NumberExpression]("add", Add)
       .contramap[Container](_.expr)
-      .extendWith(doubleExpr)
-  lazy val multExpr: ExtensibleParser[Container, NumberExpression] =
-    extensibleBinaryOpParser[NumberExpression]("mul", Mul)
+      .or(doubleExpr)
+  lazy val multExpr: DependentParser[Container, NumberExpression] =
+    dependentBinaryOpParser[NumberExpression]("mul", Mul)
       .contramap[Container](_.expr)
-  lazy val addAndMultExpr: ExtensibleParser[Container, NumberExpression] =
-    additionExpr.extendWith(multExpr)
+  lazy val addAndMultExpr: DependentParser[Container, NumberExpression] =
+    additionExpr.or(multExpr)
 }

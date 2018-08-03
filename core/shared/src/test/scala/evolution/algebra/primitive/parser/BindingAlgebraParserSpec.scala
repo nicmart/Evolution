@@ -4,8 +4,8 @@ import evolution.data.HasValue
 import evolution.drawing.algebra.interpreter.CtxString
 import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.interpreter.BindingAlgebraSerializer
+import evolution.primitive.algebra.parser.DependentParser.HasParser
 import evolution.primitive.algebra.parser._
-import ExtensibleParser._
 import org.scalatest.{FreeSpec, Matchers, WordSpec}
 
 class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
@@ -86,21 +86,23 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
 
   private lazy val bindingParser = new BindingAlgebraParser[CtxString](BindingAlgebraSerializer)
   private lazy val doubleParser: Parser[CtxString[Double]] = double.map(d => _ => d.toString)
-  private lazy val doubleExtensibleParser: ExtensibleParser[Container, CtxString[Double]] =
-    Leaf(doubleParser)
+  private lazy val dependentDoubleParser: DependentParser[Container, CtxString[Double]] =
+    DependentParser(_ => doubleParser)
 
-  def extensibleAddition: ExtensibleParser[Container, CtxString[Double]] =
-    extensibleBinaryOpParser[CtxString[Double]]("add", (a, b) => ctx => s"add(${a(ctx)}, ${b(ctx)})")
+  def dependentAddition: DependentParser[Container, CtxString[Double]] =
+    dependentBinaryOpParser[CtxString[Double]]("add", (a, b) => ctx => s"add(${a(ctx)}, ${b(ctx)})")
       .contramap[Container](_.parser[CtxString[Double]])
 
-  case class Container(double: ExtensibleParser[Container, CtxString[Double]])
+  case class Container(double: DependentParser[Container, CtxString[Double]], variables: List[String]) {
+    def addVariable(name: String): Container = copy(variables = name :: variables)
+  }
   object Container {
-    val start = Container(doubleExtensibleParser)
+    val start = Container(dependentDoubleParser, Nil)
     implicit val hasDouble: HasParser[Container, CtxString[Double]] =
       HasValue.instance(_.double, (c, p) => c.copy(double = p))
     implicit def ops(c: Container): ParsersContainerOps[Container] = new ParsersContainerOps(c)
-    implicit val hasShift: HasShift[Container, CtxString] =
-      HasShift.instance((c, alg) => c.copy(double = c.double.transformLeaf(p => p.map(alg.shift))))
+    implicit val hasVariables: HasVariables[Container] =
+      HasVariables.instance[Container](_.variables, (name, c) => c.addVariable(name))
   }
 
   lazy val container: Container = bindingParser.buildContainer1[Container, Double](Container.start)

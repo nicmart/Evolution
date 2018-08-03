@@ -30,7 +30,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
 
       "recursive" in {
         val serializedExpression = "fix(x -> cons(1, $x))"
-        val expected = Fix(Lambda("x", DrawingB(Cons(Shift(ScalarB(DoubleScalar(1))), Var0[Drawing[Double]]()))))
+        val expected = Fix(Lambda("x", DrawingB(Cons(ScalarB(DoubleScalar(1)), Var0[Drawing[Double]]()))))
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
       }
 
@@ -39,7 +39,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val expected = DrawingB(
           MapCons(
             DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(Shift(Shift(ScalarB(DoubleScalar(1.0)))), Var0[Drawing[Double]]()))))
+            Lambda("h", Lambda("t", DrawingB(Cons(ScalarB(DoubleScalar(1.0)), Var0[Drawing[Double]]()))))
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
@@ -78,7 +78,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       "recursive" in {
         val serializedExpression = "fix(x -> cons(point(1, 1), $x))"
         val expected =
-          Fix(Lambda("x", DrawingB(Cons(Shift(ScalarB(PointScalar(Point(1, 1)))), Var0[Drawing[Point]]()))))
+          Fix(Lambda("x", DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]()))))
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
       }
 
@@ -87,10 +87,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val expected = DrawingB(
           MapCons(
             DrawingB(Empty()),
-            Lambda(
-              "h",
-              Lambda("t", DrawingB(Cons(Shift(Shift(ScalarB(PointScalar(Point(0, 0))))), Var0[Drawing[Point]]())))
-            )
+            Lambda("h", Lambda("t", DrawingB(Cons(ScalarB(PointScalar(Point(0, 0))), Var0[Drawing[Point]]()))))
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
