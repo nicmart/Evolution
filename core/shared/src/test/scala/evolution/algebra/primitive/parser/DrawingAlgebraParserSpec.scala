@@ -138,6 +138,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     override val scalar: ScalarAlgebra[BScalar] = new ScalarAlgebra[BScalar] {
       override def double(d: Double): BScalar[Double] = ScalarB(Scalar.DoubleScalar(d))
       override def point(p: Point): BScalar[Point] = ScalarB(Scalar.PointScalar(p))
+      override def add(a: BScalar[Point], b: BScalar[Point]): BScalar[Point] = ???
     }
     override val bind: BindingAlgebra[Binding] = new BindingAlgebra[Binding] {
       override def var0[A]: Binding[A] = Binding.Var0()
@@ -146,6 +147,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         Binding.Let(name, value, expr)
       override def lambda[A, B](name: String, expr: Binding[B]): Binding[B] = Binding.Lambda(name, expr)
       override def fix[A](expr: Binding[A]): Binding[A] = Binding.Fix(expr)
+      override def app[A, B](f: Binding[A], b: Binding[B]): Binding[A] = ???
     }
   }
 

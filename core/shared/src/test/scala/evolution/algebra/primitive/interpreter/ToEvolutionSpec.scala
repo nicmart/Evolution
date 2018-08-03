@@ -27,5 +27,14 @@ class ToEvolutionSpec extends FreeSpec with Matchers {
       val stream = rngRepr(Nil).unfold(RNG(0))
       stream.take(10).toList shouldBe List.fill(10)(1.0)
     }
+
+    "should correctly create recursive evolutions 3" in {
+      val interpreter = new ToEvolution[Stream](new StreamInterpreter)
+      import interpreter.drawing._, interpreter.scalar._, interpreter.bind._
+      val stream: Ctx[Stream[Double]] = {
+        fix(lambda("x", cons(double(1), var0[Stream[Double]])))
+      }
+      stream(Nil).take(10).toList shouldBe List.fill(10)(1.0)
+    }
   }
 }

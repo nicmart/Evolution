@@ -64,6 +64,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     dependentLetParser[C, Var, Out]
       .or(dependentVariableParser)
       .or(dependentLambdaParser[C, Var, Out])
+      .or(dependentAppParser[C, Out, Var])
       .or(dependentFixParser[C, Out])
 
   private def var0[A](varName: String): Parser[F[A]] =
@@ -106,6 +107,15 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
 
   private def dependentFixParser[C, T](implicit hasT: HasParser[C, F[T]]): DependentParser[C, F[T]] =
     DependentParser(c => fixParser[T](c.parser[F[T]]))
+
+  private def appParser[A, B](functionParser: Parser[F[A]], argParser: Parser[F[B]]): Parser[F[A]] =
+    function2("app", functionParser, argParser).map { case (f, arg) => alg.app[A, B](f, arg) }
+
+  private def dependentAppParser[C, A, B](
+    implicit hasA: HasParser[C, F[A]],
+    hasB: HasParser[C, F[B]]
+  ): DependentParser[C, F[A]] =
+    DependentParser(c => appParser(c.parser[F[A]], c.parser[F[B]]))
 }
 
 trait HasVariables[C] {

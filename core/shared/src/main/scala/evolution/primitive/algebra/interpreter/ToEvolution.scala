@@ -23,6 +23,7 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
   override val scalar: ScalarAlgebra[Ctx] = new ScalarAlgebra[Ctx] {
     override def double(d: Double): Ctx[Double] = _ => d
     override def point(p: Point): Ctx[Point] = _ => p
+    override def add(a: Ctx[Point], b: Ctx[Point]): Ctx[Point] = ctx => a(ctx) + b(ctx)
   }
   override val bind: BindingAlgebra[Ctx] = new BindingAlgebra[Ctx] {
     override def var0[A]: Ctx[A] = {
@@ -38,5 +39,7 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
       ctx => expr((() => fix(expr)(ctx)) :: ctx)
 
     override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[B] = expr
+
+    override def app[A, B](f: Ctx[A], b: Ctx[B]): Ctx[A] = ctx => f((() => b(ctx)) :: ctx)
   }
 }
