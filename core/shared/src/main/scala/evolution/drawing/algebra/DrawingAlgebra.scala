@@ -6,30 +6,30 @@ import cats.implicits._
 import _root_.evolution.geometry.Point
 import TypeAlg.Pair
 
-trait BindingAlgebra[F[_, _]] {
-  def var0[E, A]: F[(F[E, A], E), A]
-  def shift[E, A, B](expr: F[E, A]): F[(F[E, B], E), A]
-  def let[E, A, B](name: String, value: F[E, A])(expr: F[(F[E, A], E), B]): F[E, B]
+trait BindingAlgebra[F[_]] {
+  def var0[A]: F[A]
+  def shift[A](expr: F[A]): F[A]
+  def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
 }
 
-trait DrawingAlgebra[F[_, _]] extends BindingAlgebra[F] {
-  def const[E, T: Type](x: T): F[E, T]
-  def mul[E, T: Type](k: F[E, Double], t: F[E, T]): F[E, T]
-  def add[E, T: Type](a: F[E, T], b: F[E, T]): F[E, T]
-  def inverse[E, T: Type](a: F[E, T]): F[E, T]
-  def rnd[E](from: F[E, Double], to: F[E, Double]): F[E, Double]
-  def point[E](x: F[E, Double], y: F[E, Double]): F[E, Point]
-  def polar[E](r: F[E, Double], w: F[E, Double]): F[E, Point]
-  def integrate[E, T: Type](start: T, f: F[E, T]): F[E, T]
-  def derive[E, T: Type](f: F[E, T]): F[E, T]
-  def slowDown[E, T: Type](by: F[E, Double], drawing: F[E, T]): F[E, T]
+trait DrawingAlgebra[F[_]] extends BindingAlgebra[F] {
+  def const[T: Type](x: T): F[T]
+  def mul[T: Type](k: F[Double], t: F[T]): F[T]
+  def add[T: Type](a: F[T], b: F[T]): F[T]
+  def inverse[T: Type](a: F[T]): F[T]
+  def rnd(from: F[Double], to: F[Double]): F[Double]
+  def point(x: F[Double], y: F[Double]): F[Point]
+  def polar(r: F[Double], w: F[Double]): F[Point]
+  def integrate[T: Type](start: T, f: F[T]): F[T]
+  def derive[T: Type](f: F[T]): F[T]
+  def slowDown[T: Type](by: F[Double], drawing: F[T]): F[T]
 
   /**
     * 1. Draw a double `d` from `dist`
     * 2. If `d` < 0.5 draw a T from `drawing1`
     * 3. Draw a T from `drawing2` otherwise
     */
-  def choose[E, T: Type](dist: F[E, Double], drawing1: F[E, T], drawing2: F[E, T]): F[E, T]
+  def choose[T: Type](dist: F[Double], drawing1: F[T], drawing2: F[T]): F[T]
 
   /**
     * Build an evolution of 0.0s or 1.0s defined in this way:
@@ -42,11 +42,11 @@ trait DrawingAlgebra[F[_, _]] extends BindingAlgebra[F] {
     * The originating idea was to be able to use `choose` for example to alternate `drawing1` and `drawing2` every
     * 100 iterations
     */
-  def dist[E](probability: F[E, Double], length1: F[E, Double], length2: F[E, Double]): F[E, Double]
+  def dist(probability: F[Double], length1: F[Double], length2: F[Double]): F[Double]
 }
 
-trait DrawingExpr[E[_[_, _]], A] {
-  def run[F[_, _]](alg: DrawingAlgebra[F]): F[E[F], A]
+trait DrawingExpr[A] {
+  def run[F[_]](alg: DrawingAlgebra[F]): F[A]
 }
 
 trait TypeAlg[F[_]] {

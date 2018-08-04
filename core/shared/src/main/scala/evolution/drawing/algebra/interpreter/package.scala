@@ -4,9 +4,8 @@ import _root_.evolution.algebra
 import _root_.evolution.algebra.Evolution
 
 package object interpreter {
-  type ConstString[-E, +A] = String
-  type CtxString[-E, +A] = List[String] => String
-  type CtxEvolution[-E, +A] = E => StaticOrDynamicEvolution[A]
+  type CtxString[A] = List[String] => String
+  type CtxEvolution[+A] = List[Any] => StaticOrDynamicEvolution[A]
 
   sealed trait StaticOrDynamicEvolution[+A] {
     def evolution: Evolution[A]
