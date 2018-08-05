@@ -1,5 +1,6 @@
 package evolution.algebra.primitive.parser
 
+import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, DrawingAlgebra, ScalarAlgebra}
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
@@ -137,8 +138,8 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     }
     override val scalar: ScalarAlgebra[BScalar] = new ScalarAlgebra[BScalar] {
       override def double(d: Double): BScalar[Double] = ScalarB(Scalar.DoubleScalar(d))
-      override def point(p: Point): BScalar[Point] = ScalarB(Scalar.PointScalar(p))
-      override def add(a: BScalar[Point], b: BScalar[Point]): BScalar[Point] = ???
+      override def point(x: Double, y: Double): BScalar[Point] = ScalarB(Scalar.PointScalar(Point(x, y)))
+      override def add[T: Semigroup](a: BScalar[T], b: BScalar[T]): BScalar[T] = ???
     }
     override val bind: BindingAlgebra[Binding] = new BindingAlgebra[Binding] {
       override def var0[A]: Binding[A] = Binding.Var0()

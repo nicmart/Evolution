@@ -1,6 +1,8 @@
 package evolution.primitive.algebra
 
 import _root_.evolution.geometry.Point
+import cats.kernel.Semigroup
+import cats.syntax.semigroup._
 
 trait BindingAlgebra[F[_]] {
   def var0[A]: F[A]
@@ -20,8 +22,8 @@ trait CoreDrawingAlgebra[S[_], F[_]] {
 
 trait ScalarAlgebra[S[_]] {
   def double(d: Double): S[Double]
-  def point(p: Point): S[Point]
-  def add(a: S[Point], b: S[Point]): S[Point]
+  def point(x: Double, y: Double): S[Point]
+  def add[T: Semigroup](a: S[T], b: S[T]): S[T]
 }
 
 trait DrawingAlgebra[S[_], F[_], R[_]] {

@@ -1,5 +1,7 @@
 package evolution.primitive.algebra.interpreter
 
+import cats.kernel.Semigroup
+import cats.syntax.semigroup._
 import evolution.algebra.EvolutionCoreAlgebra
 import evolution.primitive.algebra._
 import evolution.geometry.Point
@@ -22,24 +24,8 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
     }
   override val scalar: ScalarAlgebra[Ctx] = new ScalarAlgebra[Ctx] {
     override def double(d: Double): Ctx[Double] = _ => d
-    override def point(p: Point): Ctx[Point] = _ => p
-    override def add(a: Ctx[Point], b: Ctx[Point]): Ctx[Point] = ctx => a(ctx) + b(ctx)
+    override def point(x: Double, y: Double): Ctx[Point] = _ => Point(x, y)
+    override def add[T: Semigroup](a: Ctx[T], b: Ctx[T]): Ctx[T] = ctx => a(ctx) |+| b(ctx)
   }
-  override val bind: BindingAlgebra[Ctx] = new BindingAlgebra[Ctx] {
-    override def var0[A]: Ctx[A] = {
-      case h :: tail => h().asInstanceOf[A]
-    }
-    override def shift[A](expr: Ctx[A]): Ctx[A] = {
-      case h :: tail => expr(tail)
-    }
-    override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
-      ctx => expr((() => value(ctx)) :: ctx)
-
-    override def fix[A](expr: Ctx[A]): Ctx[A] =
-      ctx => expr((() => fix(expr)(ctx)) :: ctx)
-
-    override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[B] = expr
-
-    override def app[A, B](f: Ctx[A], b: Ctx[B]): Ctx[A] = ctx => f((() => b(ctx)) :: ctx)
-  }
+  override val bind: BindingAlgebra[Ctx] = BindingAlgebraDebugEvaluator
 }

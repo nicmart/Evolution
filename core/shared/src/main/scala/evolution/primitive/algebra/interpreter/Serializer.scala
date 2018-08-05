@@ -1,5 +1,6 @@
 package evolution.primitive.algebra.interpreter
 
+import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra._
 
@@ -17,8 +18,8 @@ object Serializer extends DrawingAlgebra[ConstString, ConstString, CtxString] {
     }
   override val scalar: ScalarAlgebra[RS] = new ScalarAlgebra[RS] {
     override def double(d: Double): CtxString[Double] = _ => d.toString
-    override def point(p: Point): CtxString[Point] = _ => s"point(${p.x}, ${p.y})"
-    override def add(a: CtxString[Point], b: CtxString[Point]): CtxString[Point] = ctx => s"add(${a(ctx)}, ${b(ctx)})"
+    override def point(x: Double, y: Double): CtxString[Point] = _ => s"point($x, $y)"
+    override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] = ctx => s"add(${a(ctx)}, ${b(ctx)})"
   }
   override val bind: BindingAlgebra[CtxString] = BindingAlgebraSerializer
 }

@@ -3,6 +3,8 @@ package evolution.primitive.algebra.parser
 import evolution.geometry.Point
 import evolution.primitive.algebra.ScalarAlgebra
 import ParsersContainerOps._
+import cats.kernel.Semigroup
+import cats.instances.double._
 import evolution.primitive.algebra.parser.DependentParser.HasParser
 
 class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
@@ -18,16 +20,17 @@ class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
     container
       .addParser(dependentDoubleParser)
       .addParser(dependentPointParser)
-      .addParser(dependentAddParser)
+      .addParser(dependentAddParser[C, Double])
+      .addParser(dependentAddParser[C, Point])
 
   private def dependentDoubleParser[C]: DependentParser[C, S[Double]] =
     DependentParser(_ => double.map(alg.double))
 
   private def dependentPointParser[C]: DependentParser[C, S[Point]] =
-    DependentParser(_ => function2("point", double, double).map { case (x, y) => alg.point(Point(x, y)) })
+    DependentParser(_ => function2("point", double, double).map { case (x, y) => alg.point(x, y) })
 
-  private def dependentAddParser[C](implicit hasParser: HasParser[C, S[Point]]): DependentParser[C, S[Point]] =
-    DependentParser(c => function2("add", c.parser[S[Point]], c.parser[S[Point]]).map { case (a, b) => alg.add(a, b) })
+  private def dependentAddParser[C, T: Semigroup](implicit hasParser: HasParser[C, S[T]]): DependentParser[C, S[T]] =
+    DependentParser(c => function2("add", c.parser[S[T]], c.parser[S[T]]).map { case (a, b) => alg.add(a, b) })
 }
 
 case class ScalarParserContainer[S[_]](

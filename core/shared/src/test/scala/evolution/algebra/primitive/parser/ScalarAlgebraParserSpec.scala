@@ -1,5 +1,6 @@
 package evolution.algebra.primitive.parser
 
+import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.ScalarAlgebra
 import evolution.primitive.algebra.parser.{ParserConfig, ScalarAlgebraParser, ScalarParserContainer}
@@ -30,7 +31,8 @@ class ScalarAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPars
 
   object ScalarTestInterpreter extends ScalarAlgebra[Scalar] {
     override def double(d: Double): Scalar[Double] = DoubleScalar(d)
-    override def point(point: Point): Scalar[Point] = PointScalar(point)
+    override def point(x: Double, y: Double): Scalar[Point] = PointScalar(Point(x, y))
+    override def add[T: Semigroup](a: Scalar[T], b: Scalar[T]): Scalar[T] = ???
   }
 
   sealed trait Scalar[A]
