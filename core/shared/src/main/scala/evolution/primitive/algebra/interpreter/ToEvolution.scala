@@ -8,18 +8,18 @@ import evolution.geometry.Point
 
 class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends DrawingAlgebra[Id, F, Ctx] {
   type CtxF[T] = Ctx[F[T]]
-  override val drawing: CoreDrawingAlgebra[Ctx, CtxF] =
-    new CoreDrawingAlgebra[Ctx, CtxF] {
+  override val drawing: CoreDrawingAlgebra[Id, F, Ctx] =
+    new CoreDrawingAlgebra[Id, F, Ctx] {
       override def empty[A]: Ctx[F[A]] =
         _ => evolutionAlg.empty
       override def cons[A](head: Ctx[A], tail: Ctx[F[A]]): Ctx[F[A]] =
         ctx => evolutionAlg.cons(head(ctx), tail(ctx))
       override def mapEmpty[A](eva: Ctx[F[A]])(eva2: Ctx[F[A]]): Ctx[F[A]] =
         ctx => evolutionAlg.mapEmpty(eva(ctx))(eva2(ctx))
-      override def mapCons[A, B](eva: Ctx[F[A]])(f: Ctx[F[B]]): Ctx[F[B]] =
+      override def mapCons[A, B](eva: Ctx[F[A]])(f: Ctx[A => F[A] => F[B]]): Ctx[F[B]] =
         ctx =>
           evolutionAlg.mapCons(eva(ctx)) { (a: A, tail: F[A]) =>
-            f((() => a) :: (() => tail) :: ctx)
+            f(ctx)(a)(tail)
         }
     }
   override val scalar: ScalarAlgebra[Ctx] = new ScalarAlgebra[Ctx] {

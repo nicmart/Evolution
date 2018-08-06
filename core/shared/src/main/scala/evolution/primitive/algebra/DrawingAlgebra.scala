@@ -4,13 +4,13 @@ import _root_.evolution.geometry.Point
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
 
-trait BindingAlgebra[F[_]] {
-  def var0[A]: F[A]
-  def shift[A](expr: F[A]): F[A]
-  def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
-  def lambda[A, B](name: String, expr: F[B]): F[A => B]
-  def app[A, B](f: F[A => B], a: F[A]): F[B]
-  def fix[A](expr: F[A => A]): F[A]
+trait BindingAlgebra[R[_]] {
+  def var0[A]: R[A]
+  def shift[A](expr: R[A]): R[A]
+  def let[A, B](name: String, value: R[A])(expr: R[B]): R[B]
+  def lambda[A, B](name: String, expr: R[B]): R[A => B]
+  def app[A, B](f: R[A => B], a: R[A]): R[B]
+  def fix[A](expr: R[A => A]): R[A]
 }
 
 trait CoreDrawingAlgebra[S[_], F[_], R[_]] {
@@ -29,7 +29,7 @@ trait ScalarAlgebra[S[_]] {
 trait DrawingAlgebra[S[_], F[_], R[_]] {
   type RS[T] = R[S[T]]
   type RF[T] = R[F[T]]
-  val drawing: CoreDrawingAlgebra[RS, RF]
+  val drawing: CoreDrawingAlgebra[S, F, R]
   val scalar: ScalarAlgebra[RS]
   val bind: BindingAlgebra[R]
 }

@@ -37,8 +37,14 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val serializedExpression = "mapCons(empty, h -> t -> cons(1, $t))"
         val expected = DrawingB(
           MapCons(
-            DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(ScalarB(DoubleScalar(1.0)), Var0[Drawing[Double]]()))))
+            DrawingB[Double](Empty()),
+            Lambda[Scalar[Double], Drawing[Double] => Drawing[Double]](
+              "h",
+              Lambda[Drawing[Double], Drawing[Double]](
+                "t",
+                DrawingB(Cons(ScalarB(DoubleScalar(1.0)), Var0[Drawing[Double]]()))
+              )
+            )
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
@@ -48,8 +54,14 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val serializedExpression = "mapCons(empty, h -> t -> cons($h, $t))"
         val expected = DrawingB(
           MapCons(
-            DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(Shift(Var0[Scalar[Double]]()), Var0[Drawing[Double]]()))))
+            DrawingB(Empty[Double]()),
+            Lambda[Scalar[Double], Drawing[Double] => Drawing[Double]](
+              "h",
+              Lambda[Drawing[Double], Drawing[Double]](
+                "t",
+                DrawingB(Cons(Shift(Var0[Scalar[Double]]()), Var0[Drawing[Double]]()))
+              )
+            )
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
@@ -77,7 +89,12 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       "recursive" in {
         val serializedExpression = "fix(x -> cons(point(1, 1), $x))"
         val expected =
-          Fix(Lambda("x", DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]()))))
+          Fix(
+            Lambda[Drawing[Point], Drawing[Point]](
+              "x",
+              DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]()))
+            )
+          )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
       }
 
@@ -86,7 +103,13 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val expected = DrawingB(
           MapCons(
             DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(ScalarB(PointScalar(Point(0, 0))), Var0[Drawing[Point]]()))))
+            Lambda[Scalar[Point], Drawing[Point] => Drawing[Point]](
+              "h",
+              Lambda[Drawing[Point], Drawing[Point]](
+                "t",
+                DrawingB(Cons(ScalarB(PointScalar(Point(0, 0))), Var0[Drawing[Point]]()))
+              )
+            )
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
@@ -97,7 +120,10 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         val expected = DrawingB(
           MapCons(
             DrawingB(Empty()),
-            Lambda("h", Lambda("t", DrawingB(Cons(Shift(Var0[Scalar[Point]]()), Var0[Drawing[Point]]()))))
+            Lambda[Scalar[Point], Drawing[Point] => Drawing[Point]](
+              "h",
+              Lambda("t", DrawingB(Cons(Shift(Var0[Scalar[Point]]()), Var0[Drawing[Point]]())))
+            )
           )
         )
         unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
@@ -131,16 +157,20 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     case class Empty[A]() extends Drawing[A]
     case class Cons[A](head: Binding[Scalar[A]], tail: Binding[Drawing[A]]) extends Drawing[A]
     case class MapEmpty[A](eva: Binding[Drawing[A]], eva2: Binding[Drawing[A]]) extends Drawing[A]
-    case class MapCons[A, B](eva: Binding[Drawing[A]], f: Binding[Drawing[B]]) extends Drawing[B]
+    case class MapCons[A, B](eva: Binding[Drawing[A]], f: Binding[Scalar[A] => Drawing[A] => Drawing[B]])
+        extends Drawing[B]
   }
 
   object TestInterpreter extends DrawingAlgebra[Scalar, Drawing, Binding] {
-    override val drawing: CoreDrawingAlgebra[BScalar, BDrawing] = new CoreDrawingAlgebra[BScalar, BDrawing] {
-      override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())
-      override def cons[A](head: BScalar[A], tail: BDrawing[A]): BDrawing[A] = DrawingB(Drawing.Cons(head, tail))
-      override def mapEmpty[A](eva: BDrawing[A])(eva2: BDrawing[A]): BDrawing[A] = DrawingB(Drawing.MapEmpty(eva, eva2))
-      override def mapCons[A, B](eva: BDrawing[A])(f: BDrawing[B]): BDrawing[B] = DrawingB(Drawing.MapCons(eva, f))
-    }
+    override val drawing: CoreDrawingAlgebra[Scalar, Drawing, Binding] =
+      new CoreDrawingAlgebra[Scalar, Drawing, Binding] {
+        override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())
+        override def cons[A](head: BScalar[A], tail: BDrawing[A]): BDrawing[A] = DrawingB(Drawing.Cons(head, tail))
+        override def mapEmpty[A](eva: BDrawing[A])(eva2: BDrawing[A]): BDrawing[A] =
+          DrawingB(Drawing.MapEmpty(eva, eva2))
+        override def mapCons[A, B](eva: BDrawing[A])(f: Binding[Scalar[A] => Drawing[A] => Drawing[B]]): BDrawing[B] =
+          DrawingB(Drawing.MapCons(eva, f))
+      }
     override val scalar: ScalarAlgebra[BScalar] = new ScalarAlgebra[BScalar] {
       override def double(d: Double): BScalar[Double] = ScalarB(Scalar.DoubleScalar(d))
       override def point(x: Double, y: Double): BScalar[Point] = ScalarB(Scalar.PointScalar(Point(x, y)))

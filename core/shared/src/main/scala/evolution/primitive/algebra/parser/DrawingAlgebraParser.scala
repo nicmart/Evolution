@@ -8,8 +8,8 @@ import fastparse.noApi._
 class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
   type RS[A] = R[S[A]]
   type RF[A] = R[F[A]]
-  private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[RS, RF] =
-    new CoreDrawingAlgebraParser[RS, RF](alg.drawing)
+  private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[S, F, R] =
+    new CoreDrawingAlgebraParser[S, F, R](alg.drawing)
   private val bindingAlgebraParser: BindingAlgebraParser[R] =
     new BindingAlgebraParser[R](alg.bind)
   private val scalarAlgebraParser: ScalarAlgebraParser[RS] =
