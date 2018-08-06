@@ -8,16 +8,16 @@ trait BindingAlgebra[F[_]] {
   def var0[A]: F[A]
   def shift[A](expr: F[A]): F[A]
   def let[A, B](name: String, value: F[A])(expr: F[B]): F[B]
-  def lambda[A, B](name: String, expr: F[B]): F[B]
-  def app[A, B](f: F[A], b: F[B]): F[A]
-  def fix[A](expr: F[A]): F[A]
+  def lambda[A, B](name: String, expr: F[B]): F[A => B]
+  def app[A, B](f: F[A => B], a: F[A]): F[B]
+  def fix[A](expr: F[A => A]): F[A]
 }
 
-trait CoreDrawingAlgebra[S[_], F[_]] {
-  def empty[A]: F[A]
-  def cons[A](head: S[A], tail: F[A]): F[A]
-  def mapEmpty[A](eva: F[A])(eva2: F[A]): F[A]
-  def mapCons[A, B](eva: F[A])(f: F[B]): F[B]
+trait CoreDrawingAlgebra[S[_], F[_], R[_]] {
+  def empty[A]: R[F[A]]
+  def cons[A](head: R[S[A]], tail: R[F[A]]): R[F[A]]
+  def mapEmpty[A](eva: R[F[A]])(eva2: R[F[A]]): R[F[A]]
+  def mapCons[A, B](eva: R[F[A]])(f: R[S[A] => F[A] => F[B]]): R[F[B]]
 }
 
 trait ScalarAlgebra[S[_]] {
