@@ -63,8 +63,8 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
   ): DependentParser[C, F[Out]] =
     dependentLetParser[C, Var, Out]
       .or(dependentVariableParser)
-      .or(dependentLambdaParser[C, Var, Out])
-      .or(dependentAppParser[C, Out, Var])
+      //.or(dependentLambdaParser[C, Var, Out])
+      .or(dependentAppParser[C, Var, Out])
       .or(dependentFixParser[C, Out])
 
   private def var0[A](varName: String): Parser[F[A]] =
@@ -93,29 +93,44 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
 
   private def dependentLambdaParser[C, Var, Out](
     implicit
-    hasVar: HasParser[C, F[Var]],
     hasOut: HasParser[C, F[Out]],
     hasVariables: HasVariables[C]
-  ): DependentParser[C, F[Out]] =
-    DependentParser(container => lambdaParser(name => container.addVar(name).parser[F[Out]]))
+  ): DependentParser[C, F[Var => Out]] =
+    DependentParser(container => lambdaParser[Var, Out](name => container.addVar(name).parser[F[Out]]))
 
-  private def lambdaParser[T](body: String => Parser[F[T]]): Parser[F[T]] = ???
-  //P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
+  private def lambdaParser[A, B](body: String => Parser[F[B]]): Parser[F[A => B]] =
+    P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
 
-  private def fixParser[T](parser: Parser[F[T]]): Parser[F[T]] = ???
-  //function1[F[T]]("fix", parser).map(alg.fix)
+  private def fixParser[T](parser: Parser[F[T]]): Parser[F[T]] =
+    function1[F[T]]("fix", P("self" ~ "->" ~ parser)).map(alg.fix)
 
-  private def dependentFixParser[C, T](implicit hasT: HasParser[C, F[T]]): DependentParser[C, F[T]] =
-    DependentParser(c => fixParser[T](c.parser[F[T]]))
+  private def dependentFixParser[C, T](
+    implicit hasT: HasParser[C, F[T]],
+    hasVariables: HasVariables[C]
+  ): DependentParser[C, F[T]] =
+    DependentParser(c => fixParser[T](c.addVar("self").parser[F[T]]))
 
-  private def appParser[A, B](functionParser: Parser[F[A]], argParser: Parser[F[B]]): Parser[F[A]] = ???
-//    function2("app", functionParser, argParser).map { case (f, arg) => alg.app[A, B](f, arg) }
+  private def appParser[A, B](functionParser: Parser[F[A => B]], argParser: Parser[F[A]]): Parser[F[B]] =
+    function2("app", functionParser, argParser).map { case (f, arg) => alg.app[A, B](f, arg) }
 
   private def dependentAppParser[C, A, B](
-    implicit hasA: HasParser[C, F[A]],
-    hasB: HasParser[C, F[B]]
-  ): DependentParser[C, F[A]] =
-    DependentParser(c => appParser(c.parser[F[A]], c.parser[F[B]]))
+    implicit
+    hasA: HasParser[C, F[A]],
+    hasB: HasParser[C, F[B]],
+    hasVariables: HasVariables[C]
+  ): DependentParser[C, F[B]] = {
+    val lambda = dependentLambdaParser[C, A, B]
+    DependentParser(c => appParser[A, B](lambda.parser(c), c.parser[F[A]]))
+  }
+
+//  implicit def hasFunctions[C, Var, Out](
+//    implicit hasVariables: HasVariables[C],
+//    hasOut: HasParser[C, F[Out]]
+//  ): HasParser[C, F[Var => Out]] =
+//    new HasParser[C, F[Var => Out]] {
+//      override def get(x: C): DependentParser[C, F[Var => Out]] = dependentLambdaParser[C, Var, Out]
+//      override def set(x: C, v: DependentParser[C, F[Var => Out]]): C = ???
+//    }
 }
 
 trait HasVariables[C] {

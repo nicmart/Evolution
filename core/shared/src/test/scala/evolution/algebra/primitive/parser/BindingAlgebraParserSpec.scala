@@ -11,7 +11,6 @@ import org.scalatest.{FreeSpec, Matchers, WordSpec}
 class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import fastparse.noApi._
-  import evolution.primitive.algebra.parser.PrimitiveParsers._
 
   "A Binding Algebra Parser should parse" - {
     "let expressions that are" - {
@@ -34,48 +33,50 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
+      // TODO HERE expose the lambda parser somehow
       "inside a lambda" in {
-        val serializedExpression = "x -> let(y, 1.0)($x)"
+        val serializedExpression = "app(x -> let(y, 1.0)($x), 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
     }
 
+    // TODO HERE expose the lambda parser somehow
     "lambda expressions that are" - {
       "constant" in {
-        val serializedExpression = "x -> 1.0"
+        val serializedExpression = "app(x -> 1.0, 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
       "identity" in {
-        val serializedExpression = "x -> $x"
+        val serializedExpression = "app(x -> $x, 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
       "nested" in {
-        val serializedExpression = "x -> y -> $x"
-        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
-      }
-
-      // TODO change this test with an ADT, we are losing info about the nesting of variables
-      "nested 2" in {
-        val serializedExpression = "x -> y -> $y"
+        val serializedExpression = "app(x -> app(y -> $x, 1.0), 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
       "inside let expressions" in {
-        val serializedExpression = "let(x, 1.0)(y -> $x)"
+        val serializedExpression = "let(x, 1.0)(app(y -> $x, 1.0))"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
     }
 
     "fix expressions that are" - {
       "constant" in {
-        val serializedExpression = "fix(1.0)"
+        val serializedExpression = "fix(self -> 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
 
-      "constant lambdas" in {
-        val serializedExpression = "fix(x -> 1.0)"
+      "identities" in {
+        val serializedExpression = "fix(self -> $self)"
+        unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
+      }
+
+      // We need to make this work
+      "fixed points of HOF" ignore {
+        val serializedExpression = "app( , 1.0)"
         unsafeParse(serializedExpression, container.parser[CtxString[Double]]) shouldBe serializedExpression
       }
     }
