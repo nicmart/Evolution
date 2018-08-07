@@ -54,7 +54,7 @@ object dsl extends DrawingDefinition[Point] {
     override def run[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]): R[F[Point]] = {
       import alg.drawing._, alg.bind._
       import alg.scalar._
-      fix(lambda("x", cons(point(Point(0, 0)), var0[F[Point]])))
+      fix(cons(point(0, 0), var0[F[Point]]))
     }
   }
 
