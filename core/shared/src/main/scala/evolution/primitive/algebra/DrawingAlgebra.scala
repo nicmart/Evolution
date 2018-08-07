@@ -10,7 +10,7 @@ trait BindingAlgebra[R[_]] {
   def let[A, B](name: String, value: R[A])(expr: R[B]): R[B]
   def lambda[A, B](name: String, expr: R[B]): R[A => B]
   def app[A, B](f: R[A => B], a: R[A]): R[B]
-  def fix[A](expr: R[A => A]): R[A]
+  def fix[A](expr: R[A]): R[A]
 }
 
 trait CoreDrawingAlgebra[S[_], F[_], R[_]] {

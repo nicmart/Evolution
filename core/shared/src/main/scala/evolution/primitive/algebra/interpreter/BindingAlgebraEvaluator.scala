@@ -11,8 +11,8 @@ object BindingAlgebraEvaluator extends BindingAlgebra[Ctx] {
   override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
     ctx => expr((() => value(ctx)) :: ctx)
 
-  override def fix[A](expr: Ctx[A => A]): Ctx[A] =
-    ctx => expr(ctx)(fix(expr)(ctx))
+  override def fix[A](expr: Ctx[A]): Ctx[A] =
+    ctx => expr((() => fix(expr)(ctx)) :: ctx)
 
   override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] = ctx => a => expr((() => a) :: ctx)
 
@@ -26,7 +26,7 @@ object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx] {
   override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
     debug(s"let $name", b.let[A, B](name, value)(expr))
 
-  override def fix[A](expr: Ctx[A => A]): Ctx[A] = debug[A]("fix", b.fix(expr))
+  override def fix[A](expr: Ctx[A]): Ctx[A] = debug[A]("fix", b.fix(expr))
 
   override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] =
     debug(s"lambda $name", b.lambda[A, B](name, expr))

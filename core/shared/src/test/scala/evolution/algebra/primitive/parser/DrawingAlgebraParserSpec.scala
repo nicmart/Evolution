@@ -137,7 +137,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     case class Shift[A](expr: Binding[A]) extends Binding[A]
     case class Let[A, B](name: String, value: Binding[A], body: Binding[B]) extends Binding[B]
     case class Lambda[A, B](name: String, expr: Binding[B]) extends Binding[A => B]
-    case class Fix[A](expr: Binding[A => A]) extends Binding[A]
+    case class Fix[A](expr: Binding[A]) extends Binding[A]
 
     case class ScalarB[A](s: Scalar[A]) extends Binding[Scalar[A]]
     case class DrawingB[A](s: Drawing[A]) extends Binding[Drawing[A]]
@@ -182,7 +182,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       override def let[A, B](name: String, value: Binding[A])(expr: Binding[B]): Binding[B] =
         Binding.Let(name, value, expr)
       override def lambda[A, B](name: String, expr: Binding[B]): Binding[A => B] = Binding.Lambda(name, expr)
-      override def fix[A](expr: Binding[A => A]): Binding[A] = Binding.Fix(expr)
+      override def fix[A](expr: Binding[A]): Binding[A] = Binding.Fix(expr)
       override def app[A, B](f: Binding[A => B], a: Binding[A]): Binding[B] = ???
     }
   }

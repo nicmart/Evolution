@@ -42,13 +42,13 @@ class BindingAlgebraEvaluatorSpec extends FreeSpec with Matchers {
   }
 
   "a fix expression" - {
-    "evaluates recursively" ignore {
-      def factorial(f: Int => Int): Int => Int = n => if (n <= 0) 1 else n * f(n - 1)
-      def f(n: Int): Int = factorial(x => f(x))(n)
-      val expr = fix[Int => Int](value[(Int => Int) => Int => Int](factorial))
-      //expr(Nil)(0) shouldBe 1
-      f(0) shouldBe 1
-      f(3) shouldBe 6
+    "evaluates recursively" in {
+      def factorial(ctx: List[() => Any]): Int => Int =
+        n => if (n <= 0) 1 else n * var0[Int => Int](ctx)(n - 1)
+
+      val expr = fix[Int => Int](factorial)
+      expr(Nil)(0) shouldBe 1
+      expr(Nil)(4) shouldBe 24
     }
   }
 
