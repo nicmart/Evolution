@@ -2,7 +2,6 @@ package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
 import evolution.primitive.algebra.DrawingAlgebra
-import evolution.primitive.algebra.parser.DependentParser.HasParser
 import fastparse.noApi._
 
 class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
@@ -17,12 +16,13 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
 
   def buildContainer[C](container: C)(
     implicit
-    doubleS: HasParser[C, RS[Double]],
-    doubleF: HasParser[C, RF[Double]],
-    pointS: HasParser[C, RS[Point]],
-    pointF: HasParser[C, RF[Point]],
+    doubleS: HasParser[C, RS, Double],
+    doubleF: HasParser[C, RF, Double],
+    pointS: HasParser[C, RS, Point],
+    pointF: HasParser[C, RF, Point],
     hasVariables: HasVariables[C]
   ): C = {
+    import HasParser.PushRight._
     val withDrawings = coreDrawingAlgebraParser.buildContainer2[C, Double, Point](container)
     val withScalars = scalarAlgebraParser.buildContainer[C, Double](withDrawings)
     val withLetBindings = bindingAlgebraParser.buildContainer4[C, F[Double], F[Point], S[Double], S[Point]](withScalars)
@@ -68,27 +68,33 @@ object DrawingAlgebraParser {
         DependentParser.empty,
         List.empty
       )
-    implicit def hasDoubleFParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], R[F[Double]]] =
+    implicit def hasDoubleFParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], Lambda[T => R[F[T]]], Double] =
       HasParser
-        .instance[Container[S, F, R], R[F[Double]]](
+        .instance[Container[S, F, R], Lambda[T => R[F[T]]], Double](
           _.dependentDoubleParserF,
           (c, p) => c.copy(dependentDoubleParserF = p)
         )
 
-    implicit def hasDoubleSParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], R[S[Double]]] =
+    implicit def hasDoubleSParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], Lambda[T => R[S[T]]], Double] =
       HasParser
-        .instance[Container[S, F, R], R[S[Double]]](
+        .instance[Container[S, F, R], Lambda[T => R[S[T]]], Double](
           _.dependentDoubleParserS,
           (c, p) => c.copy(dependentDoubleParserS = p)
         )
 
-    implicit def hasPointFParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], R[F[Point]]] =
+    implicit def hasPointFParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], Lambda[T => R[F[T]]], Point] =
       HasParser
-        .instance[Container[S, F, R], R[F[Point]]](_.dependentPointParserF, (c, p) => c.copy(dependentPointParserF = p))
+        .instance[Container[S, F, R], Lambda[T => R[F[T]]], Point](
+          _.dependentPointParserF,
+          (c, p) => c.copy(dependentPointParserF = p)
+        )
 
-    implicit def hasPointSParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], R[S[Point]]] =
+    implicit def hasPointSParser[S[_], F[_], R[_]]: HasParser[Container[S, F, R], Lambda[T => R[S[T]]], Point] =
       HasParser
-        .instance[Container[S, F, R], R[S[Point]]](_.dependentPointParserS, (c, p) => c.copy(dependentPointParserS = p))
+        .instance[Container[S, F, R], Lambda[T => R[S[T]]], Point](
+          _.dependentPointParserS,
+          (c, p) => c.copy(dependentPointParserS = p)
+        )
 
     implicit def hasVariables[S[_], F[_], R[_]]: HasVariables[Container[S, F, R]] =
       HasVariables.instance[Container[S, F, R]](_.variables, (name, c) => c.addVariable(name))

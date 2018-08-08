@@ -2,7 +2,6 @@ package evolution.primitive.algebra.parser
 
 import fastparse.noApi._
 import ParserConfig.White._
-import evolution.data.HasValue
 
 final case class DependentParser[C, A](parser: C => Parser[A]) {
   def map[B](f: A => B): DependentParser[C, B] = DependentParser(c => parser(c).map(f))
@@ -16,9 +15,27 @@ final case class DependentParser[C, A](parser: C => Parser[A]) {
 
 object DependentParser {
   def empty[C, T]: DependentParser[C, T] = DependentParser(_ => Fail)
-  type HasParser[C, T] = HasValue[C, DependentParser[C, T]]
-  object HasParser {
-    def instance[C, T](_get: C => DependentParser[C, T], _set: (C, DependentParser[C, T]) => C): HasParser[C, T] =
-      HasValue.instance(_get, _set)
+}
+
+trait HasParser[C, F[_], T] {
+  def get(c: C): DependentParser[C, F[T]]
+  def set(c: C, parser: DependentParser[C, F[T]]): C
+}
+
+object HasParser {
+  def instance[C, F[_], T](
+    _get: C => DependentParser[C, F[T]],
+    _set: (C, DependentParser[C, F[T]]) => C
+  ): HasParser[C, F, T] =
+    new HasParser[C, F, T] {
+      override def get(c: C): DependentParser[C, F[T]] = _get(c)
+      override def set(c: C, parser: DependentParser[C, F[T]]): C = _set(c, parser)
+    }
+
+  object PushRight {
+    implicit def pushRight[C, F1[_], F2[_], T](
+      implicit p1: HasParser[C, Lambda[X => F1[F2[X]]], T]
+    ): HasParser[C, F1, F2[T]] =
+      HasParser.instance[C, F1, F2[T]](p1.get, p1.set)
   }
 }

@@ -5,7 +5,6 @@ import evolution.primitive.algebra.ScalarAlgebra
 import ParsersContainerOps._
 import cats.kernel.Semigroup
 import cats.instances.double._
-import evolution.primitive.algebra.parser.DependentParser.HasParser
 
 class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
   import ParserConfig.White._
@@ -14,14 +13,14 @@ class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
 
   def buildContainer[C, T](container: C)(
     implicit
-    hasDouble: HasParser[C, S[Double]],
-    hasPoint: HasParser[C, S[Point]]
+    hasDouble: HasParser[C, S, Double],
+    hasPoint: HasParser[C, S, Point]
   ): C =
     container
-      .addParser(dependentDoubleParser)
-      .addParser(dependentPointParser)
-      .addParser(dependentAddParser[C, Double])
-      .addParser(dependentAddParser[C, Point])
+      .addParser[S, Double](dependentDoubleParser)
+      .addParser[S, Point](dependentPointParser)
+      .addParser[S, Double](dependentAddParser[C, Double])
+      .addParser[S, Point](dependentAddParser[C, Point])
 
   private def dependentDoubleParser[C]: DependentParser[C, S[Double]] =
     DependentParser(_ => double.map(alg.double))
@@ -29,8 +28,8 @@ class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
   private def dependentPointParser[C]: DependentParser[C, S[Point]] =
     DependentParser(_ => function2("point", double, double).map { case (x, y) => alg.point(x, y) })
 
-  private def dependentAddParser[C, T: Semigroup](implicit hasParser: HasParser[C, S[T]]): DependentParser[C, S[T]] =
-    DependentParser(c => function2("add", c.parser[S[T]], c.parser[S[T]]).map { case (a, b) => alg.add(a, b) })
+  private def dependentAddParser[C, T: Semigroup](implicit hasParser: HasParser[C, S, T]): DependentParser[C, S[T]] =
+    DependentParser(c => function2("add", c.parser[S, T], c.parser[S, T]).map { case (a, b) => alg.add(a, b) })
 }
 
 case class ScalarParserContainer[S[_]](
@@ -41,8 +40,8 @@ case class ScalarParserContainer[S[_]](
 object ScalarParserContainer {
   def empty[S[_]]: ScalarParserContainer[S] =
     ScalarParserContainer[S](DependentParser.empty, DependentParser.empty)
-  implicit def hasDouble[S[_]]: HasParser[ScalarParserContainer[S], S[Double]] =
+  implicit def hasDouble[S[_]]: HasParser[ScalarParserContainer[S], S, Double] =
     HasParser.instance(_.doubleParser, (c, p) => c.copy(doubleParser = p))
-  implicit def hasPoint[S[_]]: HasParser[ScalarParserContainer[S], S[Point]] =
+  implicit def hasPoint[S[_]]: HasParser[ScalarParserContainer[S], S, Point] =
     HasParser.instance(_.pointParser, (c, p) => c.copy(pointParser = p))
 }

@@ -12,14 +12,14 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
     "double drawings" - {
       "empty" in {
         val serializedExpression = "empty"
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe DrawingB(Empty[Double]())
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe DrawingB(Empty[Double]())
       }
 
       "cons" in {
         val serializedExpression = "cons(1, cons(2, empty))"
         val expected =
           DrawingB(Cons(ScalarB(DoubleScalar(1)), DrawingB(Cons(ScalarB(DoubleScalar(2)), DrawingB(Empty())))))
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
 
       "recursive" in {
@@ -30,7 +30,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
             DrawingB(Cons(ScalarB(DoubleScalar(1)), Var0[Drawing[Double]]()))
           )
         )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
 
       "mapCons" in {
@@ -47,7 +47,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
             )
           )
         )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
 
       "mapCons with mixed lambdas" in {
@@ -64,14 +64,14 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
             )
           )
         )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
     }
 
     "point drawings" - {
       "empty" in {
         val serializedExpression = "empty"
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe DrawingB(Empty[Point]())
+        unsafeParse(serializedExpression, container.parser[BDrawing, Point]) shouldBe DrawingB(Empty[Point]())
       }
 
       "cons" in {
@@ -83,7 +83,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
               DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), DrawingB(Empty())))
             )
           )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Point]) shouldBe expected
       }
 
       "recursive" in {
@@ -95,7 +95,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
               DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]()))
             )
           )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Point]) shouldBe expected
       }
 
       "mapCons" in {
@@ -112,7 +112,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
             )
           )
         )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Point]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Point]) shouldBe expected
       }
 
       "mapCons with mixed lambdas" in {
@@ -126,7 +126,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
             )
           )
         )
-        unsafeParse(serializedExpression, container.parser[Binding[Drawing[Double]]]) shouldBe expected
+        unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
     }
   }

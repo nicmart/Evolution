@@ -15,17 +15,17 @@ class ScalarAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPars
   "A ScalarAlgebraParser should parse" - {
     "double literals" in {
       val serializedExpression = "1.0"
-      unsafeParse(serializedExpression, container.parser[Scalar[Double]]) shouldBe DoubleScalar(1.0)
+      unsafeParse(serializedExpression, container.parser[Scalar, Double]) shouldBe DoubleScalar(1.0)
     }
 
     "negative double literals" in {
       val serializedExpression = "-2.0"
-      unsafeParse(serializedExpression, container.parser[Scalar[Double]]) shouldBe DoubleScalar(-2.0)
+      unsafeParse(serializedExpression, container.parser[Scalar, Double]) shouldBe DoubleScalar(-2.0)
     }
 
     "point literals" in {
       val serializedExpression = "point(1.0, -2.51)"
-      unsafeParse(serializedExpression, container.parser[Scalar[Point]]) shouldBe PointScalar(Point(1.0, -2.51))
+      unsafeParse(serializedExpression, container.parser[Scalar, Point]) shouldBe PointScalar(Point(1.0, -2.51))
     }
   }
 

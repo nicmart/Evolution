@@ -4,9 +4,8 @@ import cats.Id
 import evolution.data.HasValue
 import evolution.geometry.Point
 import evolution.primitive.algebra.CoreDrawingAlgebra
-import evolution.primitive.algebra.parser.DependentParser.HasParser
 import evolution.primitive.algebra.parser.ParsersContainerOps._
-import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, DependentParser, ParserConfig}
+import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, DependentParser, HasParser, ParserConfig}
 import org.scalatest.{FreeSpec, Matchers}
 
 class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
@@ -18,12 +17,12 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
     "should parse" - {
       "an empty expression" in {
         val serializedExpression = "empty"
-        unsafeParse(serializedExpression, container.parser[Drawing[Double]]) shouldBe Empty[Double]()
+        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe Empty[Double]()
       }
 
       "a cons expression" in {
         val serializedExpression = "cons(1, empty)"
-        unsafeParse(serializedExpression, container.parser[Drawing[Double]]) shouldBe Cons(
+        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe Cons(
           DoubleScalar(1),
           Empty[Double]()
         )
@@ -31,19 +30,19 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
 
       "a nested cons expression" in {
         val serializedExpression = "cons(1, cons(2, cons(3, empty)))"
-        unsafeParse(serializedExpression, container.parser[Drawing[Double]]) shouldBe
+        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe
           Cons(DoubleScalar(1), Cons(DoubleScalar(2), Cons(DoubleScalar(3), Empty[Double]())))
       }
 
       "a mapEmpty expression" in {
         val serializedExpression = """mapEmpty(cons(1, empty),cons(2, empty))"""
-        unsafeParse(serializedExpression, container.parser[Drawing[Double]]) shouldBe
+        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe
           MapEmpty(Cons(DoubleScalar(1), Empty[Double]()), Cons(DoubleScalar(2), Empty[Double]()))
       }
 
       "a mapCons expression" in {
         val serializedExpression = """mapCons(cons(1, empty),cons("abc", empty))"""
-        unsafeParse(serializedExpression, container.parser[Drawing[String]]) shouldBe
+        unsafeParse(serializedExpression, container.parser[Drawing, String]) shouldBe
           MapCons[Double, String](Cons(DoubleScalar(1), Empty()), _ => _ => Cons(StringScalar("abc"), Empty()))
       }
     }
@@ -75,23 +74,23 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
     stringParserF: DependentParser[Container[S, F], F[String]]
   )
   object Container {
-    implicit def hasDoubleFParser[S[_], F[_]]: HasParser[Container[S, F], F[Double]] =
-      HasParser.instance[Container[S, F], F[Double]](
+    implicit def hasDoubleFParser[S[_], F[_]]: HasParser[Container[S, F], F, Double] =
+      HasParser.instance[Container[S, F], F, Double](
         _.doubleParserF,
         (c, p) => Container[S, F](c.doubleParserS, p, c.stringParserS, c.stringParserF)
       )
-    implicit def hasDoubleSParser[S[_], F[_]]: HasParser[Container[S, F], S[Double]] =
-      HasParser.instance[Container[S, F], S[Double]](
+    implicit def hasDoubleSParser[S[_], F[_]]: HasParser[Container[S, F], S, Double] =
+      HasParser.instance[Container[S, F], S, Double](
         _.doubleParserS,
         (c, p) => Container[S, F](p, c.doubleParserF, c.stringParserS, c.stringParserF)
       )
-    implicit def hasStringFParser[S[_], F[_]]: HasParser[Container[S, F], F[String]] =
-      HasParser.instance[Container[S, F], F[String]](
+    implicit def hasStringFParser[S[_], F[_]]: HasParser[Container[S, F], F, String] =
+      HasParser.instance[Container[S, F], F, String](
         _.stringParserF,
         (c, p) => Container[S, F](c.doubleParserS, c.doubleParserF, c.stringParserS, p)
       )
-    implicit def hasStringSParser[S[_], F[_]]: HasParser[Container[S, F], S[String]] =
-      HasParser.instance[Container[S, F], S[String]](
+    implicit def hasStringSParser[S[_], F[_]]: HasParser[Container[S, F], S, String] =
+      HasParser.instance[Container[S, F], S, String](
         _.stringParserS,
         (c, p) => Container[S, F](c.doubleParserS, c.doubleParserF, p, c.stringParserF)
       )
