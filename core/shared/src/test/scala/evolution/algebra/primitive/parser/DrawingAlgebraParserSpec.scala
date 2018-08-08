@@ -23,7 +23,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       }
 
       "recursive" in {
-        val serializedExpression = "fix(x -> cons(1, $x))"
+        val serializedExpression = "fix(self -> cons(1, $self))"
         val expected = Fix(
           Lambda[Drawing[Double], Drawing[Double]](
             "x",

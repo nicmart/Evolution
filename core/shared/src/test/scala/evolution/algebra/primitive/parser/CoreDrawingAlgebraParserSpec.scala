@@ -41,7 +41,7 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
       }
 
       "a mapCons expression" in {
-        val serializedExpression = """mapCons(cons(1, empty),cons("abc", empty))"""
+        val serializedExpression = """mapCons(cons(1, empty),x -> cons("abc", empty))"""
         unsafeParse(serializedExpression, container.parser[Drawing, String]) shouldBe
           MapCons[Double, String](Cons(DoubleScalar(1), Empty()), _ => _ => Cons(StringScalar("abc"), Empty()))
       }
