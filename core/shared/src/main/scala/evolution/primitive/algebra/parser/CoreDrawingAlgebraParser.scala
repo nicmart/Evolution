@@ -14,7 +14,8 @@ class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R
   def buildContainer1[C, T](container: C)(
     implicit
     hasParserS: HasParser[C, RS, T],
-    hasParserF: HasParser[C, RF, T]
+    hasParserF: HasParser[C, RF, T],
+    hasParserFunc: HasParser[C, R, S[T] => F[T] => F[T]]
   ): C =
     container
       .addParser[RF, T](parser1[C, T])
@@ -25,7 +26,11 @@ class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R
     hasParser1S: HasParser[C, RS, T1],
     hasParser1F: HasParser[C, RF, T1],
     hasParser2S: HasParser[C, RS, T2],
-    hasParser2F: HasParser[C, RF, T2]
+    hasParser2F: HasParser[C, RF, T2],
+    hasParserFunc11: HasParser[C, R, S[T1] => F[T1] => F[T1]],
+    hasParserFunc12: HasParser[C, R, S[T1] => F[T1] => F[T2]],
+    hasParserFunc21: HasParser[C, R, S[T2] => F[T2] => F[T1]],
+    hasParserFunc22: HasParser[C, R, S[T2] => F[T2] => F[T2]]
   ): C =
     container
       .addParser[RF, T1](parser2[C, T1, T1])
@@ -36,33 +41,37 @@ class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R
   private def parser1[C, T](
     implicit
     hasParserS: HasParser[C, RS, T],
-    hasParserF: HasParser[C, RF, T]
+    hasParserF: HasParser[C, RF, T],
+    hasParserFunc: HasParser[C, R, S[T] => F[T] => F[T]]
   ): DependentParser[C, R[F[T]]] =
     empty[C, T]
       .or(cons[C, T])
       .or(mapEmptyParser[C, T])
+      .or(mapConsParser[C, T, T])
 
   private def parser2[C, T1, T2](
     implicit
     hasParser1S: HasParser[C, RS, T1],
     hasParser1F: HasParser[C, RF, T1],
     hasParser2S: HasParser[C, RS, T2],
-    hasParser2F: HasParser[C, RF, T2]
-  ): DependentParser[C, R[F[T2]]] =
+    hasParser2F: HasParser[C, RF, T2],
+    hasParserFunc12: HasParser[C, R, S[T1] => F[T1] => F[T2]],
+    hasParserFunc22: HasParser[C, R, S[T2] => F[T2] => F[T2]]
+  ): DependentParser[C, R[F[T2]]] = {
     parser1[C, T2]
       .or(mapConsParser[C, T1, T2])
       .or(mapConsParser[C, T2, T2])
+  }
 
   private def mapConsParser[C, In, Out](
     implicit
     hasParserFIn: HasParser[C, RF, In],
-    hasParserFOut: HasParser[C, RF, Out]
+    hasParserFunc: HasParser[C, R, S[In] => F[In] => F[Out]]
   ): DependentParser[C, R[F[Out]]] = {
     DependentParser(
       c =>
-        function2("mapCons", c.parser[RF, In], c.parser[RF, Out])
-        // TODO here we need a  function
-          .map[R[F[Out]]] { case (in, out) => alg.mapCons(in)(???) }
+        function2("mapCons", c.parser[RF, In], c.parser[R, S[In] => F[In] => F[Out]])
+          .map[R[F[Out]]] { case (in, out) => alg.mapCons(in)(out) }
     )
   }
 

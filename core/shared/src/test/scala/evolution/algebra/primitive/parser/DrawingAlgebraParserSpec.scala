@@ -24,12 +24,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
 
       "recursive" in {
         val serializedExpression = "fix(self -> cons(1, $self))"
-        val expected = Fix(
-          Lambda[Drawing[Double], Drawing[Double]](
-            "x",
-            DrawingB(Cons(ScalarB(DoubleScalar(1)), Var0[Drawing[Double]]()))
-          )
-        )
+        val expected = Fix(DrawingB(Cons(ScalarB(DoubleScalar(1)), Var0[Drawing[Double]]())))
         unsafeParse(serializedExpression, container.parser[BDrawing, Double]) shouldBe expected
       }
 
@@ -87,14 +82,9 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       }
 
       "recursive" in {
-        val serializedExpression = "fix(x -> cons(point(1, 1), $x))"
+        val serializedExpression = "fix(self -> cons(point(1, 1), $self))"
         val expected =
-          Fix(
-            Lambda[Drawing[Point], Drawing[Point]](
-              "x",
-              DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]()))
-            )
-          )
+          Fix(DrawingB(Cons(ScalarB(PointScalar(Point(1, 1))), Var0[Drawing[Point]]())))
         unsafeParse(serializedExpression, container.parser[BDrawing, Point]) shouldBe expected
       }
 
@@ -188,6 +178,5 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
   }
 
   lazy val parser = new DrawingAlgebraParser[Scalar, Drawing, Binding](TestInterpreter)
-  lazy val container: DrawingAlgebraParser.Container[Scalar, Drawing, Binding] =
-    parser.buildContainer(DrawingAlgebraParser.Container.empty[Scalar, Drawing, Binding])
+  lazy val container: DrawingAlgebraParser.Container[Scalar, Drawing, Binding] = parser.container
 }

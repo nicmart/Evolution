@@ -6,9 +6,9 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.CoreDrawingAlgebra
 import evolution.primitive.algebra.parser.ParsersContainerOps._
 import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, DependentParser, HasParser, ParserConfig}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Inside, Matchers}
 
-class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
+class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
   import ParserConfig.White._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
   import fastparse.noApi._
@@ -41,9 +41,11 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
       }
 
       "a mapCons expression" in {
-        val serializedExpression = """mapCons(cons(1, empty),x -> cons("abc", empty))"""
-        unsafeParse(serializedExpression, container.parser[Drawing, String]) shouldBe
-          MapCons[Double, String](Cons(DoubleScalar(1), Empty()), _ => _ => Cons(StringScalar("abc"), Empty()))
+        val serializedExpression = """mapCons(cons(1, empty), cons("abc", empty))"""
+        val parsedExpression: MapCons[Double, String] =
+          unsafeParse(serializedExpression, container.parser[Drawing, String]).asInstanceOf[MapCons[Double, String]]
+        parsedExpression.eva shouldBe Cons(DoubleScalar(1), Empty())
+        parsedExpression.f(DoubleScalar(1232132))(Empty[Double]()) shouldBe Cons(StringScalar("abc"), Empty())
       }
     }
   }
@@ -94,6 +96,14 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
         _.stringParserS,
         (c, p) => Container[S, F](c.doubleParserS, c.doubleParserF, p, c.stringParserF)
       )
+
+    implicit def hasFunctionParser[S[_], F[_], T1, T2](
+      implicit hasFT2: HasParser[Container[S, F], F, T2]
+    ): HasParser[Container[S, F], Id, S[T1] => F[T1] => F[T2]] =
+      HasParser.instance[Container[S, F], Id, S[T1] => F[T1] => F[T2]](
+        c => hasFT2.get(c).map[S[T1] => F[T1] => F[T2]](ft2 => _ => _ => ft2),
+        (a, b) => ???
+      )
   }
 
   lazy val coreAlgebraParser = new CoreDrawingAlgebraParser(TestCoreDrawingAlgebraInterpreter)
@@ -110,6 +120,8 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
       DependentParser.empty
     )
 
-  lazy val container: Container[Scalar, Drawing] =
+  lazy val container: Container[Scalar, Drawing] = {
+    import Container._
     coreAlgebraParser.buildContainer2[Container[Scalar, Drawing], Double, String](literalContainer)
+  }
 }

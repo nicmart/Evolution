@@ -2,6 +2,7 @@ package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
 import evolution.primitive.algebra.DrawingAlgebra
+import evolution.primitive.algebra.parser.DrawingAlgebraParser.Container
 import fastparse.noApi._
 
 class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
@@ -20,6 +21,10 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
     doubleF: HasParser[C, RF, Double],
     pointS: HasParser[C, RS, Point],
     pointF: HasParser[C, RF, Point],
+    hasParserFunc11: HasParser[C, R, S[Double] => F[Double] => F[Double]],
+    hasParserFunc12: HasParser[C, R, S[Double] => F[Double] => F[Point]],
+    hasParserFunc21: HasParser[C, R, S[Point] => F[Point] => F[Double]],
+    hasParserFunc22: HasParser[C, R, S[Point] => F[Point] => F[Point]],
     hasVariables: HasVariables[C]
   ): C = {
     import HasParser.PushRight._
@@ -29,8 +34,13 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]) {
     withLetBindings
   }
 
+  // TODO this is rubbish
   def container: DrawingAlgebraParser.Container[S, F, R] = {
-    import DrawingAlgebraParser.Container._
+    import DrawingAlgebraParser.Container._, bindingAlgebraParser._, HasParser.PushRight._
+    implicit val p1 = implicitly[HasParser[Container[S, F, R], R, F[Double] => F[Double]]]
+    implicit val p2 = implicitly[HasParser[Container[S, F, R], R, F[Point] => F[Double]]]
+    implicit val p3 = implicitly[HasParser[Container[S, F, R], R, F[Double] => F[Point]]]
+    implicit val p4 = implicitly[HasParser[Container[S, F, R], R, F[Point] => F[Point]]]
     buildContainer(DrawingAlgebraParser.Container.empty[S, F, R])
   }
 }
@@ -98,5 +108,6 @@ object DrawingAlgebraParser {
 
     implicit def hasVariables[S[_], F[_], R[_]]: HasVariables[Container[S, F, R]] =
       HasVariables.instance[Container[S, F, R]](_.variables, (name, c) => c.addVariable(name))
+
   }
 }
