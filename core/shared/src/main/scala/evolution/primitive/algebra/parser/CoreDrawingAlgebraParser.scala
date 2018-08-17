@@ -11,6 +11,7 @@ class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R
   import fastparse.noApi._
   import PrimitiveParsers._
 
+  // Only the "buildContainer"s method need build capability
   def buildContainer1[C, T](container: C)(
     implicit
     hasParserS: HasParser[C, RS, T],
