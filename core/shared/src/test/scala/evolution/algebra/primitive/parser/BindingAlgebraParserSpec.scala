@@ -56,6 +56,11 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         unsafeParse(serializedExpression, container.parser[CtxString, Double]) shouldBe serializedExpression
       }
 
+      "with multiple variables" in {
+        val serializedExpression = "app(app(x -> y -> $x, 1.0), 1.0)"
+        unsafeParse(serializedExpression, container.parser[CtxString, Double]) shouldBe serializedExpression
+      }
+
       "inside let expressions" in {
         val serializedExpression = "let(x, 1.0)(app(y -> $x, 1.0))"
         unsafeParse(serializedExpression, container.parser[CtxString, Double]) shouldBe serializedExpression

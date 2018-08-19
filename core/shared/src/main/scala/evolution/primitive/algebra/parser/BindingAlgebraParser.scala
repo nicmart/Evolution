@@ -118,10 +118,15 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
     hasB: HasParser[C, F, B],
     hasVariables: HasVariables[C]
   ): DependentParser[C, F[B]] = {
-    val lambda = dependentLambdaParser[C, A, B]
+    // A Lambda could alse be an app of an higher-order lambda...
+    val lambda: DependentParser[C, F[A => B]] = dependentLambdaParser[C, A, B]
+    val lambdaAFromApp: DependentParser[C, F[A => B]] = dependentAppParser[C, A, A => B]
+    val lambdaBFromApp: DependentParser[C, F[A => B]] = dependentAppParser[C, B, A => B]
+
     DependentParser(c => appParser[A, B](lambda.parser(c), c.parser[F, A]))
   }
 
+  // TODO Find a better solution to this
   implicit def hasFunctions[C, Var, Out](
     implicit hasVariables: HasVariables[C],
     hasOut: HasParser[C, F, Out]

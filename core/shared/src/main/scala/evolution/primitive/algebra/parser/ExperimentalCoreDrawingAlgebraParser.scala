@@ -46,6 +46,14 @@ class ExperimentalCoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlg
     )
   }
 
+  trait PS {
+    type T
+    def all: List[PS]
+    def parserF: DependentParser[PS, RF[T]]
+    def parserS: DependentParser[PS, RS[T]]
+    def parserFunc(other: PS): DependentParser[PS, R[S[other.T] => F[other.T] => F[T]]]
+  }
+
   trait ParserSet {
     type T
     def all: List[ParserSet]
@@ -75,5 +83,31 @@ class ExperimentalCoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlg
 
   object ParserSet {
     type Aux[X] = ParserSet { type T = X }
+  }
+}
+
+trait Expressions[S[_], F[_], R[_]] {
+  type T
+
+  def exprF: R[F[T]]
+  def exprS: R[S[T]]
+  def exprFunc(other: Expressions[S, F, R]): R[S[other.T] => F[other.T] => F[T]]
+}
+
+trait Grammar[S[_], F[_], R[_]] extends Expressions[S, F, R] {
+  def alg: CoreDrawingAlgebra[S, F, R]
+  def or[T](rs: R[T]*): R[T]
+  type T
+
+  def all: List[Expressions[S, F, R]]
+  def exprF: R[F[T]] = or(alg.empty, alg.cons(exprS, exprF), alg.mapEmpty(exprF)(exprF), allMapConsExpressions)
+
+  private def allMapConsExpressions: R[F[T]] = {
+    val allMapConsExpressions = all.map { otherExpressions =>
+      val exprFunction = exprFunc(otherExpressions)
+      alg.mapCons[otherExpressions.T, T](otherExpressions.exprF)(exprFunction)
+    }
+
+    allMapConsExpressions.reduceLeft(or(_, _))
   }
 }
