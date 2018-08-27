@@ -1,113 +1,105 @@
 package evolution.primitive.algebra.parser
 
+import cats.{Eval, MonoidK, SemigroupK}
 import evolution.primitive.algebra.CoreDrawingAlgebra
+import evolution.primitive.algebra.parser.ExperimentalCoreDrawingAlgebraParser.Compose
 import evolution.primitive.algebra.parser.ParsersContainerOps._
+import ParserConfig.White._
+import PrimitiveParsers._
+import fastparse.noApi
+import fastparse.noApi._
 
 import scala.collection.immutable
 
-class ExperimentalCoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R]) {
-  final type RF[T] = R[F[T]]
-  final type RS[T] = R[S[T]]
-  import ParserConfig.White._
-  import PrimitiveParsers._
-  import fastparse.noApi._
+class ExperimentalCoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
+    extends CoreDrawingAlgebra[S, F, Lambda[T => Parser[R[T]]]] {
 
-  def parserSet[A]: ParserSet.Aux[A] = new ParserSet {
-    override type T = A
-    override def all: List[ParserSet] = ???
+  override def empty[A]: Parser[R[F[A]]] =
+    P("empty").map(_ => alg.empty)
+
+  override def cons[A](head: Parser[R[S[A]]], tail: Parser[R[F[A]]]): Parser[R[F[A]]] =
+    function2("cons", head, tail).map[R[F[A]]] { case (h, t) => alg.cons(h, t) }
+
+  override def mapEmpty[A](eva: Parser[R[F[A]]])(eva2: Parser[R[F[A]]]): Parser[R[F[A]]] =
+    function2("mapEmpty", eva, eva2)
+      .map[R[F[A]]] { case (in, out) => alg.mapEmpty(in)(out) }
+
+  override def mapCons[A, B](eva: Parser[R[F[A]]])(f: Parser[R[S[A] => F[A] => F[B]]]): Parser[R[F[B]]] =
+    function2("mapCons", eva, f)
+      .map[R[F[B]]] { case (in, out) => alg.mapCons(in)(out) }
+}
+
+object ExperimentalCoreDrawingAlgebraParser {
+  type Compose[A[_], B[_], T] = A[B[T]]
+
+  def monoidK[R[_]]: MonoidK[Lambda[T => Eval[Parser[R[T]]]]] = new MonoidK[Lambda[T => Eval[Parser[R[T]]]]] {
+    override def empty[A]: Eval[Parser[R[A]]] = Eval.now(Fail)
+    override def combineK[A](x: Eval[Parser[R[A]]], y: Eval[Parser[R[A]]]): Eval[Parser[R[A]]] =
+      Eval.now(P(x.value | y.value))
   }
 
-  private def mapConsParser[C, In, Out](
-    inParser: => DependentParser[C, RF[In]],
-    fParser: => DependentParser[C, R[S[In] => F[In] => F[Out]]]
-  ): DependentParser[C, R[F[Out]]] =
-    DependentParser(
-      c =>
-        function2("mapCons", inParser.parser(c), fParser.parser(c))
-          .map[R[F[Out]]] { case (in, out) => alg.mapCons(in)(out) }
-    )
-
-  private def mapEmptyParser[C, T](parser: DependentParser[C, RF[T]]): DependentParser[C, R[F[T]]] = {
-    DependentParser(
-      c =>
-        function2("mapEmpty", parser.parser(c), parser.parser(c))
-          .map[R[F[T]]] { case (in, out) => alg.mapEmpty(in)(out) }
-    )
-  }
-
-  private def empty[C, T]: DependentParser[C, R[F[T]]] = DependentParser(_ => P("empty").map(_ => alg.empty))
-
-  private def cons[C, T](
-    head: DependentParser[C, RS[T]],
-    tail: DependentParser[C, RF[T]]
-  ): DependentParser[C, R[F[T]]] = {
-    DependentParser(
-      c => function2("cons", head.parser(c), tail.parser(c)).map[R[F[T]]] { case (h, t) => alg.cons(h, t) }
-    )
-  }
-
-  trait PS {
-    type T
-    def all: List[PS]
-    def parserF: DependentParser[PS, RF[T]]
-    def parserS: DependentParser[PS, RS[T]]
-    def parserFunc(other: PS): DependentParser[PS, R[S[other.T] => F[other.T] => F[T]]]
-  }
-
-  trait ParserSet {
-    type T
-    def all: List[ParserSet]
-
-    def parserF: DependentParser[ParserSet, RF[T]] =
-      empty
-        .or(cons(parserS, parserF))
-        .or(mapEmptyParser(parserF))
-        .or(combinedMapConsParser)
-
-    def parserS: DependentParser[ParserSet, RS[T]] =
-      DependentParser.empty
-
-    def parserFunc(other: ParserSet): DependentParser[ParserSet, R[S[other.T] => F[other.T] => F[T]]] =
-      DependentParser.empty
-
-    private def combinedMapConsParser: DependentParser[ParserSet, RF[T]] = {
-      val allMapConsParsers: List[DependentParser[ParserSet, RF[T]]] = for {
-        parserSet <- all
-        parserForFunction = parserFunc(parserSet)
-        parserForMapCons = mapConsParser(parserSet.parserF, parserForFunction)
-      } yield parserForMapCons
-
-      allMapConsParsers.reduceLeft(_.or(_))
-    }
-  }
-
-  object ParserSet {
-    type Aux[X] = ParserSet { type T = X }
+  def or[R[_], T](rs: List[Eval[Parser[R[T]]]]): Parser[R[T]] = rs match {
+    case Nil => Fail
+    case head :: tail => P(head.value | or(tail))
   }
 }
 
 trait Expressions[S[_], F[_], R[_]] {
   type T
 
-  def exprF: R[F[T]]
-  def exprS: R[S[T]]
-  def exprFunc(other: Expressions[S, F, R]): R[S[other.T] => F[other.T] => F[T]]
+  def exprF(self: Expressions.Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[F[T]]
+  def exprS(self: Expressions.Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[S[T]]
+  def exprFunc(self: Expressions.Aux[S, F, R, T], other: Expressions[S, F, R]): R[S[other.T] => F[other.T] => F[T]]
 }
 
-trait Grammar[S[_], F[_], R[_]] extends Expressions[S, F, R] {
-  def alg: CoreDrawingAlgebra[S, F, R]
-  def or[T](rs: R[T]*): R[T]
-  type T
+object Expressions {
+  type Aux[S[_], F[_], R[_], U] = Expressions[S, F, R] { type T = U }
+  def empty[S[_], F[_], R[_]: MonoidK, X]: Expressions.Aux[S, F, R, X] = new Expressions[S, F, R] {
+    type T = X
+    private val monoidK: MonoidK[R] = MonoidK[R]
+    override def exprF(self: Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[F[T]] = monoidK.algebra[F[T]].empty
+    override def exprS(self: Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[S[T]] = monoidK.algebra[S[T]].empty
+    override def exprFunc(self: Aux[S, F, R, T], other: Expressions[S, F, R]): R[S[other.T] => F[other.T] => F[T]] =
+      monoidK.algebra[S[other.T] => F[other.T] => F[T]].empty
+  }
+}
 
-  def all: List[Expressions[S, F, R]]
-  def exprF: R[F[T]] = or(alg.empty, alg.cons(exprS, exprF), alg.mapEmpty(exprF)(exprF), allMapConsExpressions)
+class Grammar[S[_], F[_], R[_], X](alg: CoreDrawingAlgebra[S, F, R], monoidK: MonoidK[Lambda[T => Eval[R[T]]]])
+    extends Expressions[S, F, R] {
+  import Eval.later
+  final type T = X
 
-  private def allMapConsExpressions: R[F[T]] = {
+  override def exprF(self: Expressions.Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[F[T]] =
+    or[F[T]](
+      List(
+        later(self.exprF(self, all)),
+        later(alg.empty),
+        later(alg.cons(exprS(self, all), exprF(self, all))),
+        later(alg.mapEmpty(exprF(self, all))(exprF(self, all))),
+        later(allMapConsExpressions(self, all))
+      )
+    ).value
+
+  override def exprS(self: Expressions.Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[S[T]] =
+    self.exprS(self, all)
+
+  override def exprFunc(
+    self: Expressions.Aux[S, F, R, T],
+    other: Expressions[S, F, R]
+  ): R[S[other.T] => F[other.T] => F[T]] =
+    self.exprFunc(self, other)
+
+  private def allMapConsExpressions(self: Expressions.Aux[S, F, R, T], all: List[Expressions[S, F, R]]): R[F[T]] = {
     val allMapConsExpressions = all.map { otherExpressions =>
-      val exprFunction = exprFunc(otherExpressions)
-      alg.mapCons[otherExpressions.T, T](otherExpressions.exprF)(exprFunction)
+      val exprFunction = exprFunc(self, otherExpressions)
+      later(alg.mapCons[otherExpressions.T, T](otherExpressions.exprF(otherExpressions, all))(exprFunction))
     }
 
-    allMapConsExpressions.reduceLeft(or(_, _))
+    or(allMapConsExpressions).value
+  }
+
+  private def or[T](expressions: List[Eval[R[T]]]): Eval[R[T]] = expressions match {
+    case Nil => monoidK.empty[T]
+    case head :: tail => monoidK.combineK(head, or(tail))
   }
 }
