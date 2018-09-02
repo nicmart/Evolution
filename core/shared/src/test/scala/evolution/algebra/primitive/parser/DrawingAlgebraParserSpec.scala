@@ -9,6 +9,7 @@ import org.scalatest.{FreeSpec, Matchers}
 class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import Binding._, Drawing._, Scalar._
   "A drawingAlgebraParser should parse" - {
+    pending
     "double drawings" - {
       "empty" in {
         val serializedExpression = "empty"

@@ -12,6 +12,7 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
   import fastparse.noApi._
 
   "A Binding Algebra Parser should parse" - {
+    pending
     "let expressions that are" - {
       "simple" in {
         val serializedExpression = "let(x, 10.0)($x)"
