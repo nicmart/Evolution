@@ -20,29 +20,28 @@ class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers wi
       }
 
       "a cons expression" in {
-        pending
         val serializedExpression = "cons(1, empty)"
         unsafeParseEvolution(serializedExpression, DoubleType) shouldBe Cons(DoubleScalar(1), Empty[Double]())
       }
 
       "a nested cons expression" in {
         val serializedExpression = "cons(1, cons(2, cons(3, empty)))"
-//        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe
-//          Cons(DoubleScalar(1), Cons(DoubleScalar(2), Cons(DoubleScalar(3), Empty[Double]())))
+        unsafeParseEvolution(serializedExpression, DoubleType) shouldBe
+          Cons(DoubleScalar(1), Cons(DoubleScalar(2), Cons(DoubleScalar(3), Empty[Double]())))
       }
 
       "a mapEmpty expression" in {
         val serializedExpression = """mapEmpty(cons(1, empty),cons(2, empty))"""
-//        unsafeParse(serializedExpression, container.parser[Drawing, Double]) shouldBe
-//          MapEmpty(Cons(DoubleScalar(1), Empty[Double]()), Cons(DoubleScalar(2), Empty[Double]()))
+        unsafeParseEvolution(serializedExpression, DoubleType) shouldBe
+          MapEmpty(Cons(DoubleScalar(1), Empty[Double]()), Cons(DoubleScalar(2), Empty[Double]()))
       }
 
       "a mapCons expression" in {
         val serializedExpression = """mapCons(cons(1, empty), cons("abc", empty))"""
-//        val parsedExpression: MapCons[Double, String] =
-//          unsafeParse(serializedExpression, container.parser[Drawing, String]).asInstanceOf[MapCons[Double, String]]
-//        parsedExpression.eva shouldBe Cons(DoubleScalar(1), Empty())
-//        parsedExpression.f(DoubleScalar(1232132))(Empty[Double]()) shouldBe Cons(StringScalar("abc"), Empty())
+        val parsedExpression: MapCons[Double, String] =
+          unsafeParseEvolution(serializedExpression, StringType).asInstanceOf[MapCons[Double, String]]
+        parsedExpression.eva shouldBe Cons(DoubleScalar(1), Empty())
+        parsedExpression.f(DoubleScalar(1232132))(Empty[Double]()) shouldBe Cons(StringScalar("abc"), Empty())
       }
     }
   }
@@ -66,25 +65,30 @@ class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers wi
     override def mapCons[A, B](eva: Drawing[A])(f: Scalar[A] => Drawing[A] => Drawing[B]): Drawing[B] = MapCons(eva, f)
   }
 
+  // Interesting, this is analogous/dual of BasicExpressions
+  // The type parameter moved from the method to the trait
   sealed trait TestType[T] {
-    def extractStatic(expressions: TestExpressions): Parser[Scalar[T]]
-    def extractEvolution(expressions: TestExpressions): Parser[Drawing[T]]
+    def extractStatic(expressions: BasicExpressions): Parser[Scalar[T]]
+    def extractEvolution(expressions: BasicExpressions): Parser[Drawing[T]]
+    // Clarify this bit
     def extractMapConsFunction[S](
-      expressions: TestExpressions,
+      expressions: Expressions[Scalar, Drawing, Parser, TestType],
       from: TestType[S]
     ): Parser[Scalar[S] => Drawing[S] => Drawing[T]] =
-      extractEvolution(expressions).map(evolution => _ => _ => evolution)
-  }
-  object DoubleType extends TestType[Double] {
-    override def extractStatic(expressions: TestExpressions): Parser[Scalar[Double]] = expressions.staticDouble
-    override def extractEvolution(expressions: TestExpressions): Parser[Drawing[Double]] = expressions.evolutionDouble
-  }
-  object StringType extends TestType[String] {
-    override def extractStatic(expressions: TestExpressions): Parser[Scalar[String]] = expressions.staticString
-    override def extractEvolution(expressions: TestExpressions): Parser[Drawing[String]] = expressions.evolutionString
+      expressions.evolution(this).map(evolution => _ => _ => evolution)
   }
 
-  case class TestExpressions(
+  object DoubleType extends TestType[Double] {
+    override def extractStatic(expressions: BasicExpressions): Parser[Scalar[Double]] = expressions.staticDouble
+    override def extractEvolution(expressions: BasicExpressions): Parser[Drawing[Double]] = expressions.evolutionDouble
+  }
+  object StringType extends TestType[String] {
+    override def extractStatic(expressions: BasicExpressions): Parser[Scalar[String]] = expressions.staticString
+    override def extractEvolution(expressions: BasicExpressions): Parser[Drawing[String]] = expressions.evolutionString
+  }
+
+  case class BasicExpressions(
+    self: Expressions[Scalar, Drawing, Parser, TestType],
     staticDouble: Parser[Scalar[Double]],
     staticString: Parser[Scalar[String]],
     evolutionDouble: Parser[Drawing[Double]],
@@ -92,14 +96,17 @@ class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers wi
   ) extends Expressions[Scalar, Drawing, Parser, TestType] {
     override def static[T](t: TestType[T]): Parser[Scalar[T]] = t.extractStatic(this)
     override def evolution[T](t: TestType[T]): Parser[Drawing[T]] = t.extractEvolution(this)
+    // The problem is here, inside mapCons we have "this", that does not contain "cons()" and the others
     override def mapConsFunction[T1, T2](
       t1: TestType[T1],
       t2: TestType[T2]
-    ): Parser[Scalar[T1] => Drawing[T1] => Drawing[T2]] = t2.extractMapConsFunction(this, t1)
+    ): Parser[Scalar[T1] => Drawing[T1] => Drawing[T2]] = t2.extractMapConsFunction(self, t1)
   }
 
-  val expressions0 =
-    TestExpressions(double.map(d => DoubleScalar(d)), stringLiteral.map(d => StringScalar(d)), Fail, Fail)
+  type TestExpressions = Expressions[Scalar, Drawing, Parser, TestType]
+
+  def expressions0(expressions: TestExpressions): TestExpressions =
+    BasicExpressions(expressions, double.map(d => DoubleScalar(d)), stringLiteral.map(d => StringScalar(d)), Fail, Fail)
 
   val orMonoid: MonoidK[Lambda[T => Eval[Parser[T]]]] = new MonoidK[Lambda[T => Eval[Parser[T]]]] {
     override def empty[A]: Eval[Parser[A]] = Eval.now(Fail)
@@ -107,13 +114,16 @@ class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers wi
       Eval.now(P(x.value | y.value))
   }
 
-  val grammar = new Grammar[Scalar, Drawing, Parser, TestType](
+  def grammar(expressions: TestExpressions): TestExpressions = new Grammar[Scalar, Drawing, Parser, TestType](
     new CoreDrawingSyntax(TestCoreDrawingAlgebraInterpreter),
-    expressions0,
+    expressions,
     orMonoid,
     List(DoubleType, StringType)
   )
 
+  val combinedExpressions: TestExpressions =
+    Expressions.fixMultipleExpressions[Scalar, Drawing, Parser, TestType](orMonoid, List(expressions0, grammar))
+
   def unsafeParseEvolution[T](expression: String, t: TestType[T]): Drawing[T] =
-    grammar.evolution(t).parse(expression).get.value
+    combinedExpressions.evolution(t).parse(expression).get.value
 }
