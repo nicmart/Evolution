@@ -65,6 +65,15 @@ trait Expressions[S[_], F[_], R[_], Type[_]] {
   def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]]
 }
 
+class EmptyExpressions[S[_], F[_], R[_], Type[_]](monoid: MonoidK[R]) extends Expressions[S, F, R, Type] {
+  override def static[T](t: Type[T]): R[S[T]] =
+    monoid.empty[S[T]]
+  override def evolution[T](t: Type[T]): R[F[T]] =
+    monoid.empty[F[T]]
+  override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
+    monoid.empty[S[T1] => F[T1] => F[T2]]
+}
+
 object Expressions {
   def fix[S[_], F[_], R[_], Type[_]](
     orMonoid: MonoidK[Lambda[T => Eval[R[T]]]],

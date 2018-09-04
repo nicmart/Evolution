@@ -9,7 +9,7 @@ import fastparse.noApi._
 import ParserConfig.White._
 import fastparse.noApi
 
-class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
+class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
   import Drawing._
   import ParserConfig.White._
   "A CoreDrawingAlgebraParser" - {
@@ -67,62 +67,57 @@ class ExperimentalCoreDrawingAlgebraParserSpec extends FreeSpec with Matchers wi
 
   // Interesting, this is analogous/dual of BasicExpressions
   // The type parameter moved from the method to the trait
-  sealed trait TestType[T] {
-    def extractStatic(expressions: BasicExpressions): Parser[Scalar[T]]
-    def extractEvolution(expressions: BasicExpressions): Parser[Drawing[T]]
-    // Clarify this bit
-    def extractMapConsFunction[S](
-      expressions: Expressions[Scalar, Drawing, Parser, TestType],
-      from: TestType[S]
-    ): Parser[Scalar[S] => Drawing[S] => Drawing[T]] =
-      expressions.evolution(this).map(evolution => _ => _ => evolution)
-  }
+  sealed trait TestType[T]
+  object DoubleType extends TestType[Double]
+  object StringType extends TestType[String]
 
-  object DoubleType extends TestType[Double] {
-    override def extractStatic(expressions: BasicExpressions): Parser[Scalar[Double]] = expressions.staticDouble
-    override def extractEvolution(expressions: BasicExpressions): Parser[Drawing[Double]] = expressions.evolutionDouble
-  }
-  object StringType extends TestType[String] {
-    override def extractStatic(expressions: BasicExpressions): Parser[Scalar[String]] = expressions.staticString
-    override def extractEvolution(expressions: BasicExpressions): Parser[Drawing[String]] = expressions.evolutionString
-  }
-
-  case class BasicExpressions(
-    self: Expressions[Scalar, Drawing, Parser, TestType],
-    staticDouble: Parser[Scalar[Double]],
-    staticString: Parser[Scalar[String]],
-    evolutionDouble: Parser[Drawing[Double]],
-    evolutionString: Parser[Drawing[String]]
-  ) extends Expressions[Scalar, Drawing, Parser, TestType] {
-    override def static[T](t: TestType[T]): Parser[Scalar[T]] = t.extractStatic(this)
-    override def evolution[T](t: TestType[T]): Parser[Drawing[T]] = t.extractEvolution(this)
-    // The problem is here, inside mapCons we have "this", that does not contain "cons()" and the others
-    override def mapConsFunction[T1, T2](
-      t1: TestType[T1],
-      t2: TestType[T2]
-    ): Parser[Scalar[T1] => Drawing[T1] => Drawing[T2]] = t2.extractMapConsFunction(self, t1)
+  object BasicExpressions extends EmptyExpressions[Scalar, Drawing, Parser, TestType](parserMonoidK) {
+    override def static[T](t: TestType[T]): Parser[Scalar[T]] = t match {
+      case DoubleType => staticDouble
+      case StringType => staticString
+    }
+    def staticDouble: Parser[Scalar[Double]] = double.map(d => DoubleScalar(d))
+    def staticString: Parser[Scalar[String]] = stringLiteral.map(d => StringScalar(d))
   }
 
   type TestExpressions = Expressions[Scalar, Drawing, Parser, TestType]
 
   def expressions0(expressions: TestExpressions): TestExpressions =
-    BasicExpressions(expressions, double.map(d => DoubleScalar(d)), stringLiteral.map(d => StringScalar(d)), Fail, Fail)
+    BasicExpressions
 
-  val orMonoid: MonoidK[Lambda[T => Eval[Parser[T]]]] = new MonoidK[Lambda[T => Eval[Parser[T]]]] {
+  def grammar(expressions: TestExpressions): TestExpressions =
+    new Grammar[Scalar, Drawing, Parser, TestType](
+      new CoreDrawingSyntax(TestCoreDrawingAlgebraInterpreter),
+      expressions,
+      lazyParserMonoidK,
+      List(DoubleType, StringType)
+    )
+
+  def mapConsExpression(expressions: TestExpressions): TestExpressions =
+    new EmptyExpressions[Scalar, Drawing, Parser, TestType](parserMonoidK) {
+      override def mapConsFunction[T1, T2](
+        t1: TestType[T1],
+        t2: TestType[T2]
+      ): Parser[Scalar[T1] => Drawing[T1] => Drawing[T2]] =
+        expressions.evolution(t2).map(evolution => _ => _ => evolution)
+    }
+
+  lazy val parserMonoidK: MonoidK[Parser] = new MonoidK[Parser] {
+    override def empty[A]: noApi.Parser[A] = Fail
+    override def combineK[A](x: Parser[A], y: Parser[A]): Parser[A] = P(x | y)
+  }
+
+  lazy val lazyParserMonoidK: MonoidK[λ[α => Eval[Parser[α]]]] = new MonoidK[λ[α => Eval[Parser[α]]]] {
     override def empty[A]: Eval[Parser[A]] = Eval.now(Fail)
     override def combineK[A](x: Eval[Parser[A]], y: Eval[Parser[A]]): Eval[Parser[A]] =
       Eval.now(P(x.value | y.value))
   }
 
-  def grammar(expressions: TestExpressions): TestExpressions = new Grammar[Scalar, Drawing, Parser, TestType](
-    new CoreDrawingSyntax(TestCoreDrawingAlgebraInterpreter),
-    expressions,
-    orMonoid,
-    List(DoubleType, StringType)
-  )
-
   val combinedExpressions: TestExpressions =
-    Expressions.fixMultipleExpressions[Scalar, Drawing, Parser, TestType](orMonoid, List(expressions0, grammar))
+    Expressions.fixMultipleExpressions[Scalar, Drawing, Parser, TestType](
+      lazyParserMonoidK,
+      List(expressions0, mapConsExpression, grammar)
+    )
 
   def unsafeParseEvolution[T](expression: String, t: TestType[T]): Drawing[T] =
     combinedExpressions.evolution(t).parse(expression).get.value
