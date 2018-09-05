@@ -7,7 +7,7 @@ import PrimitiveParsers._
 import fastparse.noApi._
 
 class CoreDrawingSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
-    extends CoreDrawingAlgebra[S, F, Lambda[T => Parser[R[T]]]] {
+    extends CoreDrawingAlgebra[S, F, λ[α => Parser[R[α]]]] {
 
   override def empty[A]: Parser[R[F[A]]] =
     P("empty").map(_ => alg.empty)
@@ -24,11 +24,27 @@ class CoreDrawingSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
       .map[R[F[B]]] { case (in, out) => alg.mapCons(in)(out) }
 }
 
+class LazyCoreDrawingAlgebra[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
+    extends CoreDrawingAlgebra[S, F, λ[α => Eval[R[α]]]] {
+
+  override def empty[A]: Eval[R[F[A]]] =
+    Eval.later(alg.empty)
+
+  override def cons[A](head: Eval[R[S[A]]], tail: Eval[R[F[A]]]): Eval[R[F[A]]] =
+    Eval.later(alg.cons(head.value, tail.value))
+
+  override def mapEmpty[A](eva: Eval[R[F[A]]])(eva2: Eval[R[F[A]]]): Eval[R[F[A]]] =
+    Eval.later(alg.mapEmpty(eva.value)(eva2.value))
+
+  override def mapCons[A, B](eva: Eval[R[F[A]]])(f: Eval[R[S[A] => F[A] => F[B]]]): Eval[R[F[B]]] =
+    Eval.later(alg.mapCons(eva.value)(f.value))
+}
+
 // Shall we expect Eval already inside R?
 class Grammar[S[_], F[_], R[_], Type[_]](
+  self: => Expressions[S, F, R, Type],
   syntax: CoreDrawingAlgebra[S, F, R],
-  self: Expressions[S, F, R, Type],
-  orMonoid: MonoidK[Lambda[T => Eval[R[T]]]],
+  orMonoid: MonoidK[R],
   types: List[Type[_]]
 ) extends Expressions[S, F, R, Type] {
 
@@ -36,27 +52,25 @@ class Grammar[S[_], F[_], R[_], Type[_]](
 
   override def evolution[T](t: Type[T]): R[F[T]] =
     or(
-      Eval.later(syntax.empty[T]),
-      Eval.later(syntax.cons(self.static(t), self.evolution(t))),
-      Eval.later(syntax.mapEmpty(self.evolution(t))(self.evolution(t))),
-      Eval.later(or(allMapConsExpressions(t): _*))
+      syntax.empty[T],
+      syntax.cons(self.static(t), self.evolution(t)),
+      syntax.mapEmpty(self.evolution(t))(self.evolution(t)),
+      or(allMapConsExpressions(t): _*)
     )
 
   override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
     failure
 
-  private def or[T](expressions: Eval[R[T]]*): R[T] =
-    expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T]).value
+  private def or[T](expressions: R[T]*): R[T] =
+    expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T])
 
   private def mapConsExpression[T1, T2](t1: Type[T1], t2: Type[T2]): R[F[T2]] =
     syntax.mapCons(self.evolution(t1))(self.mapConsFunction(t1, t2))
 
-  private def allMapConsExpressions[T](t: Type[T]): Seq[Eval[R[F[T]]]] =
-    types.map { s =>
-      Eval.later(mapConsExpression(s, t))
-    }
+  private def allMapConsExpressions[T](t: Type[T]): Seq[R[F[T]]] =
+    types.map(s => mapConsExpression(s, t))
 
-  private def failure[T]: R[T] = orMonoid.empty[T].value
+  private def failure[T]: R[T] = orMonoid.empty[T]
 }
 
 trait Expressions[S[_], F[_], R[_], Type[_]] {
@@ -76,28 +90,27 @@ class EmptyExpressions[S[_], F[_], R[_], Type[_]](monoid: MonoidK[R]) extends Ex
 
 object Expressions {
   def fix[S[_], F[_], R[_], Type[_]](
-    orMonoid: MonoidK[Lambda[T => Eval[R[T]]]],
-    dependentExpressions: Expressions[S, F, R, Type] => Expressions[S, F, R, Type]
+    dependentExpressions: Eval[Expressions[S, F, R, Type]] => Expressions[S, F, R, Type]
   ): Expressions[S, F, R, Type] =
-    dependentExpressions(new LazyExpressions(fix[S, F, R, Type](orMonoid, dependentExpressions)))
+    dependentExpressions(Eval.later(fix[S, F, R, Type](dependentExpressions)))
 
   def fixMultipleExpressions[S[_], F[_], R[_], Type[_]](
-    orMonoid: MonoidK[Lambda[T => Eval[R[T]]]],
-    multipleDependentExpressions: List[Expressions[S, F, R, Type] => Expressions[S, F, R, Type]]
+    orMonoid: MonoidK[R],
+    multipleDependentExpressions: List[Eval[Expressions[S, F, R, Type]] => Expressions[S, F, R, Type]]
   ): Expressions[S, F, R, Type] = {
 
-    def dependentExpressions(expressions: Expressions[S, F, R, Type]): Expressions[S, F, R, Type] =
+    def dependentExpressions(expressions: Eval[Expressions[S, F, R, Type]]): Expressions[S, F, R, Type] =
       OrExpressions[S, F, R, Type](
         orMonoid,
         multipleDependentExpressions.map(dependentExpression => dependentExpression(expressions))
       )
 
-    fix[S, F, R, Type](orMonoid, dependentExpressions)
+    fix[S, F, R, Type](dependentExpressions)
   }
 }
 
 case class OrExpressions[S[_], F[_], R[_], Type[_]](
-  orMonoid: MonoidK[Lambda[T => Eval[R[T]]]],
+  orMonoid: MonoidK[R],
   multipleExpressions: List[Expressions[S, F, R, Type]]
 ) extends Expressions[S, F, R, Type] {
   override def static[T](t: Type[T]): R[S[T]] =
@@ -109,9 +122,8 @@ case class OrExpressions[S[_], F[_], R[_], Type[_]](
 
   private def combine[T](f: Expressions[S, F, R, Type] => R[T]): R[T] =
     multipleExpressions
-      .map(expressions => Eval.later(f(expressions)))
+      .map(f)
       .foldLeft(orMonoid.empty[T])(orMonoid.combineK)
-      .value
 }
 
 class LazyExpressions[S[_], F[_], R[_], Type[_]](expressions: => Expressions[S, F, R, Type])
