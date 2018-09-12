@@ -1,6 +1,6 @@
 package evolution.algebra.primitive.parser
 
-import cats.{Eval, Id, MonoidK}
+import cats.{Defer, Eval, Id, MonoidK}
 import evolution.primitive.algebra.CoreDrawingAlgebra
 import evolution.primitive.algebra.parser.ParsersContainerOps._
 import evolution.primitive.algebra.parser._
@@ -117,9 +117,15 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
       Eval.now(P(x.value | y.value))
   }
 
+  lazy val lazyParserDefer: Defer[LazyParser] = new Defer[LazyParser] {
+    override def defer[A](fa: => LazyParser[A]): LazyParser[A] =
+      Eval.now(P(fa.value))
+  }
+
   val combinedExpressions: TestExpressions =
     Expressions.fixMultipleExpressions[Scalar, Drawing, LazyParser, TestType](
       lazyParserMonoidK,
+      lazyParserDefer,
       List(expressions0, mapConsExpression, grammar)
     )
 

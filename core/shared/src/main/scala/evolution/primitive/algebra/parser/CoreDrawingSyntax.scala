@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.parser
 
-import cats.{Eval, MonoidK}
+import cats.{Defer, Eval, MonoidK}
 import evolution.primitive.algebra.CoreDrawingAlgebra
 import ParserConfig.White._
 import PrimitiveParsers._
@@ -96,12 +96,14 @@ object Expressions {
 
   def fixMultipleExpressions[S[_], F[_], R[_], Type[_]](
     orMonoid: MonoidK[R],
+    defer: Defer[R],
     multipleDependentExpressions: List[Eval[Expressions[S, F, R, Type]] => Expressions[S, F, R, Type]]
   ): Expressions[S, F, R, Type] = {
 
     def dependentExpressions(expressions: Eval[Expressions[S, F, R, Type]]): Expressions[S, F, R, Type] =
       OrExpressions[S, F, R, Type](
         orMonoid,
+        defer,
         multipleDependentExpressions.map(dependentExpression => dependentExpression(expressions))
       )
 
@@ -111,6 +113,7 @@ object Expressions {
 
 case class OrExpressions[S[_], F[_], R[_], Type[_]](
   orMonoid: MonoidK[R],
+  defer: Defer[R],
   multipleExpressions: List[Expressions[S, F, R, Type]]
 ) extends Expressions[S, F, R, Type] {
   override def static[T](t: Type[T]): R[S[T]] =
@@ -122,7 +125,7 @@ case class OrExpressions[S[_], F[_], R[_], Type[_]](
 
   private def combine[T](f: Expressions[S, F, R, Type] => R[T]): R[T] =
     multipleExpressions
-      .map(f)
+      .map(expression => defer.defer(f(expression)))
       .foldLeft(orMonoid.empty[T])(orMonoid.combineK)
 }
 
