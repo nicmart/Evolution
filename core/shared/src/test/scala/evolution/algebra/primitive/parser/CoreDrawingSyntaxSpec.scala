@@ -86,24 +86,24 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
   lazy val syntax: CoreDrawingAlgebra[Scalar, Drawing, LazyParser] =
     new LazyCoreDrawingAlgebra[Scalar, Drawing, Parser](new CoreDrawingSyntax(TestCoreDrawingAlgebraInterpreter))
 
-  def expressions0(expressions: Eval[TestExpressions]): TestExpressions =
+  def expressions0(expressions: TestExpressions): TestExpressions =
     BasicExpressions
 
-  def grammar(expressions: Eval[TestExpressions]): TestExpressions =
+  def grammar(expressions: TestExpressions): TestExpressions =
     new Grammar[Scalar, Drawing, LazyParser, TestType](
-      expressions.value,
+      expressions,
       syntax,
       lazyParserMonoidK,
       List(DoubleType, StringType)
     )
 
-  def mapConsExpression(expressions: Eval[TestExpressions]): TestExpressions =
+  def mapConsExpression(expressions: TestExpressions): TestExpressions =
     new EmptyExpressions[Scalar, Drawing, LazyParser, TestType](lazyParserMonoidK) {
       override def mapConsFunction[T1, T2](
         t1: TestType[T1],
         t2: TestType[T2]
       ): LazyParser[Scalar[T1] => Drawing[T1] => Drawing[T2]] =
-        Eval.later(expressions.value.evolution(t2).value.map(evolution => _ => _ => evolution))
+        Eval.later(expressions.evolution(t2).value.map(evolution => _ => _ => evolution))
     }
 
   lazy val parserMonoidK: MonoidK[Parser] = new MonoidK[Parser] {

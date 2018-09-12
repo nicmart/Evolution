@@ -90,17 +90,17 @@ class EmptyExpressions[S[_], F[_], R[_], Type[_]](monoid: MonoidK[R]) extends Ex
 
 object Expressions {
   def fix[S[_], F[_], R[_], Type[_]](
-    dependentExpressions: Eval[Expressions[S, F, R, Type]] => Expressions[S, F, R, Type]
+    dependentExpressions: Expressions[S, F, R, Type] => Expressions[S, F, R, Type]
   ): Expressions[S, F, R, Type] =
-    dependentExpressions(Eval.later(fix[S, F, R, Type](dependentExpressions)))
+    dependentExpressions(new LazyExpressions(fix[S, F, R, Type](dependentExpressions)))
 
   def fixMultipleExpressions[S[_], F[_], R[_], Type[_]](
     orMonoid: MonoidK[R],
     defer: Defer[R],
-    multipleDependentExpressions: List[Eval[Expressions[S, F, R, Type]] => Expressions[S, F, R, Type]]
+    multipleDependentExpressions: List[Expressions[S, F, R, Type] => Expressions[S, F, R, Type]]
   ): Expressions[S, F, R, Type] = {
 
-    def dependentExpressions(expressions: Eval[Expressions[S, F, R, Type]]): Expressions[S, F, R, Type] =
+    def dependentExpressions(expressions: Expressions[S, F, R, Type]): Expressions[S, F, R, Type] =
       OrExpressions[S, F, R, Type](
         orMonoid,
         defer,
