@@ -23,8 +23,8 @@ lazy val core = crossProject.
         inThisBuild(commonSettings),
         libraryDependencies ++= Seq(
             "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
-            "org.typelevel" %%% "cats" % "0.9.0",
-            "com.chuusai" %%% "shapeless" % "2.3.2",
+            "org.typelevel" %%% "cats-core" % "1.3.1",
+            "com.chuusai" %%% "shapeless" % "2.3.3",
             "org.scalacheck" %%% "scalacheck" % "1.13.4" % Test,
             "com.lihaoyi" %%% "fastparse" % "1.0.0",
             compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4" cross CrossVersion.binary)
@@ -48,9 +48,9 @@ lazy val jsApp = project.
             "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.1",
             "com.github.japgolly.scalajs-react" %%% "test" % "1.1.1" % "test",
             "com.lihaoyi" %%% "scalatags" % "0.6.2",
-            "io.circe" %%% "circe-core" % "0.8.0",
-            "io.circe" %%% "circe-generic" % "0.8.0",
-            "io.circe" %%% "circe-parser" % "0.8.0"
+            "io.circe" %%% "circe-core" % "0.9.3",
+            "io.circe" %%% "circe-generic" % "0.9.3",
+            "io.circe" %%% "circe-parser" % "0.9.3"
         ),
         jsDependencies ++= Seq(
             "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
@@ -81,7 +81,7 @@ lazy val theory = (project in file("theory"))
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
       "com.lihaoyi" %%% "fastparse" % "1.0.0",
-      "com.chuusai" %%% "shapeless" % "2.3.2"
+      "com.chuusai" %%% "shapeless" % "2.3.3"
     )
   )
 
