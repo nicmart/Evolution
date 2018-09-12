@@ -1,8 +1,7 @@
 package evolution.algebra.primitive.parser
 
-import cats.{Defer, Eval, Id, MonoidK}
+import cats.{Defer, Id, MonoidK}
 import evolution.primitive.algebra.CoreDrawingAlgebra
-import evolution.primitive.algebra.parser.ParsersContainerOps._
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Inside, Matchers}
 import fastparse.noApi._
@@ -71,39 +70,33 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
   object DoubleType extends TestType[Double]
   object StringType extends TestType[String]
 
-  object BasicExpressions extends EmptyExpressions[Scalar, Drawing, LazyParser, TestType](lazyParserMonoidK) {
-    override def static[T](t: TestType[T]): LazyParser[Scalar[T]] = t match {
+  object BasicExpressions extends EmptyExpressions[Scalar, Drawing, Parser, TestType](parserMonoidK) {
+    override def static[T](t: TestType[T]): Parser[Scalar[T]] = t match {
       case DoubleType => staticDouble
       case StringType => staticString
     }
-    def staticDouble: LazyParser[Scalar[Double]] = Eval.later(double.map(d => DoubleScalar(d)))
-    def staticString: LazyParser[Scalar[String]] = Eval.later(stringLiteral.map(d => StringScalar(d)))
+    def staticDouble: Parser[Scalar[Double]] = double.map(d => DoubleScalar(d))
+    def staticString: Parser[Scalar[String]] = stringLiteral.map(d => StringScalar(d))
   }
 
-  type TestExpressions = Expressions[Scalar, Drawing, LazyParser, TestType]
-  type LazyParser[T] = Eval[Parser[T]]
+  type TestExpressions = Expressions[Scalar, Drawing, Parser, TestType]
 
-  lazy val syntax: CoreDrawingAlgebra[Scalar, Drawing, LazyParser] =
-    new LazyCoreDrawingAlgebra[Scalar, Drawing, Parser](new CoreDrawingSyntax(TestCoreDrawingAlgebraInterpreter))
+  lazy val syntax: CoreDrawingAlgebra[Scalar, Drawing, Parser] =
+    new CoreDrawingSyntax[Scalar, Drawing, Id](TestCoreDrawingAlgebraInterpreter)
 
   def expressions0(expressions: TestExpressions): TestExpressions =
     BasicExpressions
 
   def grammar(expressions: TestExpressions): TestExpressions =
-    new Grammar[Scalar, Drawing, LazyParser, TestType](
-      expressions,
-      syntax,
-      lazyParserMonoidK,
-      List(DoubleType, StringType)
-    )
+    new Grammar[Scalar, Drawing, Parser, TestType](expressions, syntax, parserMonoidK, List(DoubleType, StringType))
 
   def mapConsExpression(expressions: TestExpressions): TestExpressions =
-    new EmptyExpressions[Scalar, Drawing, LazyParser, TestType](lazyParserMonoidK) {
+    new EmptyExpressions[Scalar, Drawing, Parser, TestType](parserMonoidK) {
       override def mapConsFunction[T1, T2](
         t1: TestType[T1],
         t2: TestType[T2]
-      ): LazyParser[Scalar[T1] => Drawing[T1] => Drawing[T2]] =
-        Eval.later(expressions.evolution(t2).value.map(evolution => _ => _ => evolution))
+      ): Parser[Scalar[T1] => Drawing[T1] => Drawing[T2]] =
+        expressions.evolution(t2).map(evolution => _ => _ => evolution)
     }
 
   lazy val parserMonoidK: MonoidK[Parser] = new MonoidK[Parser] {
@@ -111,24 +104,18 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
     override def combineK[A](x: Parser[A], y: Parser[A]): Parser[A] = P(x | y)
   }
 
-  lazy val lazyParserMonoidK: MonoidK[λ[α => Eval[Parser[α]]]] = new MonoidK[λ[α => Eval[Parser[α]]]] {
-    override def empty[A]: Eval[Parser[A]] = Eval.now(Fail)
-    override def combineK[A](x: Eval[Parser[A]], y: Eval[Parser[A]]): Eval[Parser[A]] =
-      Eval.now(P(x.value | y.value))
-  }
-
-  lazy val lazyParserDefer: Defer[LazyParser] = new Defer[LazyParser] {
-    override def defer[A](fa: => LazyParser[A]): LazyParser[A] =
-      Eval.now(P(fa.value))
+  lazy val parserDefer: Defer[Parser] = new Defer[Parser] {
+    override def defer[A](fa: => Parser[A]): Parser[A] =
+      P(fa)
   }
 
   val combinedExpressions: TestExpressions =
-    Expressions.fixMultipleExpressions[Scalar, Drawing, LazyParser, TestType](
-      lazyParserMonoidK,
-      lazyParserDefer,
+    Expressions.fixMultipleExpressions[Scalar, Drawing, Parser, TestType](
+      parserMonoidK,
+      parserDefer,
       List(expressions0, mapConsExpression, grammar)
     )
 
   def unsafeParseEvolution[T](expression: String, t: TestType[T]): Drawing[T] =
-    combinedExpressions.evolution(t).value.parse(expression).get.value
+    combinedExpressions.evolution(t).parse(expression).get.value
 }

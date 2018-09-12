@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.parser
 
-import cats.{Defer, Eval, MonoidK}
+import cats.{Defer, MonoidK}
 import evolution.primitive.algebra.CoreDrawingAlgebra
 import ParserConfig.White._
 import PrimitiveParsers._
@@ -24,25 +24,8 @@ class CoreDrawingSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
       .map[R[F[B]]] { case (in, out) => alg.mapCons(in)(out) }
 }
 
-class LazyCoreDrawingAlgebra[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
-    extends CoreDrawingAlgebra[S, F, λ[α => Eval[R[α]]]] {
-
-  override def empty[A]: Eval[R[F[A]]] =
-    Eval.later(alg.empty)
-
-  override def cons[A](head: Eval[R[S[A]]], tail: Eval[R[F[A]]]): Eval[R[F[A]]] =
-    Eval.later(alg.cons(head.value, tail.value))
-
-  override def mapEmpty[A](eva: Eval[R[F[A]]])(eva2: Eval[R[F[A]]]): Eval[R[F[A]]] =
-    Eval.later(alg.mapEmpty(eva.value)(eva2.value))
-
-  override def mapCons[A, B](eva: Eval[R[F[A]]])(f: Eval[R[S[A] => F[A] => F[B]]]): Eval[R[F[B]]] =
-    Eval.later(alg.mapCons(eva.value)(f.value))
-}
-
-// Shall we expect Eval already inside R?
 class Grammar[S[_], F[_], R[_], Type[_]](
-  self: => Expressions[S, F, R, Type],
+  self: Expressions[S, F, R, Type],
   syntax: CoreDrawingAlgebra[S, F, R],
   orMonoid: MonoidK[R],
   types: List[Type[_]]
