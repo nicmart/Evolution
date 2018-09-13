@@ -99,11 +99,13 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
         expressions.evolution(t2).map(evolution => _ => _ => evolution)
     }
 
+  // TODO move somewhere
   lazy val parserMonoidK: MonoidK[Parser] = new MonoidK[Parser] {
     override def empty[A]: noApi.Parser[A] = Fail
     override def combineK[A](x: Parser[A], y: Parser[A]): Parser[A] = P(x | y)
   }
 
+  // TODO move somewhere
   lazy val parserDefer: Defer[Parser] = new Defer[Parser] {
     override def defer[A](fa: => Parser[A]): Parser[A] =
       P(fa)
