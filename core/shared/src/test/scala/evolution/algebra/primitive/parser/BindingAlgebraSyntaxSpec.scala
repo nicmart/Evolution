@@ -106,9 +106,6 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
 
   type ByVarParser[A] = List[String] => Parser[Expr[A]]
 
-  trait Type[T]
-  case object DoubleType extends Type[Double]
-
   val byVarParserMonoidK: MonoidK[ByVarParser] = new MonoidK[ByVarParser] {
     override def empty[A]: ByVarParser[A] = _ => Fail
     override def combineK[A](x: ByVarParser[A], y: ByVarParser[A]): ByVarParser[A] = vars => P(x(vars) | y(vars))
@@ -124,56 +121,49 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     override def fix[A](expr: Expr[A => A]): Expr[A] = Fix(expr)
   }
 
-  val baseExpressions: BindingAlgebra.Expressions[ByVarParser, Type] =
-    new BindingAlgebra.Expressions[ByVarParser, Type] {
-      override def value[T](t: Type[T]): ByVarParser[T] = t match {
-        case DoubleType =>
-          _ =>
-            double.map(d => Value[Double](d))
-      }
+  val baseExpressions: BindingAlgebra.Expressions[ByVarParser] =
+    new BindingAlgebra.Expressions[ByVarParser] {
+      override def value[T](t: ByVarParser[T]): ByVarParser[T] = t
       override def func[T1, T2](t1: ByVarParser[T1], t2: ByVarParser[T2]): ByVarParser[T1 => T2] = _ => Fail
     }
+
+  val doubleParser: ByVarParser[Double] = _ => double.map(d => Value[Double](d))
 
   val syntax: BindingAlgebra[ByVarParser, Parser[String]] =
     new parser.BindingAlgebra.Syntax[Expr](testInterpreter)
 
   val varNameSyntax: Parser[String] = varName
 
-  def grammar(self: BindingAlgebra.Expressions[ByVarParser, Type]): BindingAlgebra.Expressions[ByVarParser, Type] =
-    new BindingAlgebra.Grammar[ByVarParser, Type, Parser[String]](
+  def grammar(self: BindingAlgebra.Expressions[ByVarParser]): BindingAlgebra.Expressions[ByVarParser] =
+    new BindingAlgebra.Grammar[ByVarParser, Parser[String]](
       self,
       syntax,
       varNameSyntax,
       byVarParserMonoidK,
-      List(DoubleType)
+      List(doubleParser)
     )
 
   val byVarParserDefer: Defer[ByVarParser] = new Defer[ByVarParser] {
     override def defer[A](fa: => ByVarParser[A]): ByVarParser[A] = vars => P(fa(vars))
   }
 
-  val expressions: BindingAlgebra.Expressions[ByVarParser, Type] =
-    BindingAlgebra.fixMultipleExpressions[ByVarParser, Type](
-      byVarParserMonoidK,
-      byVarParserDefer,
-      List(_ => baseExpressions, grammar)
-    )
+  val expressions: BindingAlgebra.Expressions[ByVarParser] =
+    BindingAlgebra
+      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(_ => baseExpressions, grammar))
 
   private def unsafeParseDouble(expression: String): Expr[Double] =
-    expressions.value(DoubleType)(Nil).parse(expression).get.value
+    expressions.value(doubleParser)(Nil).parse(expression).get.value
 
   private def unsafeParseLambda(expression: String): Expr[Double => Double] =
-    expressions.func(expressions.value(DoubleType), expressions.value(DoubleType))(Nil).parse(expression).get.value
+    expressions.func(expressions.value(doubleParser), expressions.value(doubleParser))(Nil).parse(expression).get.value
 
   private def unsafeParseHOLambda(expression: String): Expr[Double => Double => Double] =
     expressions
       .func(
-        expressions.value(DoubleType),
-        expressions.func(expressions.value(DoubleType), expressions.value(DoubleType))
+        expressions.value(doubleParser),
+        expressions.func(expressions.value(doubleParser), expressions.value(doubleParser))
       )(Nil)
       .parse(expression)
       .get
       .value
-
-  private lazy val doubleParser: Parser[CtxString[Double]] = double.map(d => _ => d.toString)
 }

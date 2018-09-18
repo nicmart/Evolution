@@ -55,15 +55,15 @@ object BindingAlgebra {
       vars => function1("fix", expr("self" :: vars)).map(alg.fix)
   }
 
-  class Grammar[R[_], Type[_], VarName](
-    self: Expressions[R, Type],
+  class Grammar[R[_], VarName](
+    self: Expressions[R],
     syntax: BindingAlgebra[R, VarName],
     varNameSyntax: VarName,
     orMonoid: MonoidK[R],
-    types: List[Type[_]]
-  ) extends Expressions[R, Type] {
+    all: List[R[_]]
+  ) extends Expressions[R] {
 
-    override def value[T](t: Type[T]): R[T] =
+    override def value[T](t: R[T]): R[T] =
       valueRec(self.value(t))
 
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
@@ -72,63 +72,58 @@ object BindingAlgebra {
     private def valueRec[T](t: R[T]): R[T] =
       or(syntax.var0, syntax.shift(t), syntax.fix(self.func(t, t)), allLetExpressions(t), allAppExpressions(t))
 
-    private def letExpression[T1, T2](t1: Type[T1], r2: R[T2]): R[T2] =
-      syntax.let(varNameSyntax, self.value(t1))(r2)
+    private def letExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
+      syntax.let(varNameSyntax, self.value(t1))(t2)
 
     private def allLetExpressions[T](t: R[T]): R[T] =
-      or(types.map(s => letExpression(s, t)): _*)
+      or(all.map(s => letExpression(s, t)): _*)
 
     private def appExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
       syntax.app(self.func(t1, t2), t1)
 
     private def allAppExpressions[T](t: R[T]): R[T] =
-      or(types.map(s => appExpression(self.value(s), t)): _*)
+      or(all.map(s => appExpression(self.value(s), t)): _*)
 
     private def or[T](expressions: R[T]*): R[T] =
       expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T])
   }
 
-  trait Expressions[R[_], Type[_]] {
-    def value[T](t: Type[T]): R[T]
+  trait Expressions[R[_]] {
+    def value[T](t: R[T]): R[T]
     def func[T1, T2](t1: R[T1], r2: R[T2]): R[T1 => T2]
   }
 
-  class OrExpressions[R[_], Type[_]](
-    orMonoid: MonoidK[R],
-    defer: Defer[R],
-    multipleExpressions: List[Expressions[R, Type]]
-  ) extends Expressions[R, Type] {
-    override def value[T](t: Type[T]): R[T] = combine(_.value(t))
+  class OrExpressions[R[_]](orMonoid: MonoidK[R], defer: Defer[R], multipleExpressions: List[Expressions[R]])
+      extends Expressions[R] {
+    override def value[T](t: R[T]): R[T] = combine(_.value(t))
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = combine(_.func(t1, t2))
 
-    private def combine[T](f: Expressions[R, Type] => R[T]): R[T] =
+    private def combine[T](f: Expressions[R] => R[T]): R[T] =
       multipleExpressions
         .map(expression => defer.defer(f(expression)))
         .foldLeft(orMonoid.empty[T])(orMonoid.combineK)
   }
 
-  class LazyExpressions[R[_], Type[_]](expressions: => Expressions[R, Type]) extends Expressions[R, Type] {
-    override def value[T](t: Type[T]): R[T] = expressions.value(t)
+  class LazyExpressions[R[_]](expressions: => Expressions[R]) extends Expressions[R] {
+    override def value[T](t: R[T]): R[T] = expressions.value(t)
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = expressions.func(t1, t2)
   }
 
-  class EmptyExpressions[R[_], Type[_]](monoid: MonoidK[R]) extends Expressions[R, Type] {
-    override def value[T](t: Type[T]): R[T] = monoid.empty[T]
+  class EmptyExpressions[R[_]](monoid: MonoidK[R]) extends Expressions[R] {
+    override def value[T](t: R[T]): R[T] = monoid.empty[T]
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = monoid.empty[T1 => T2]
   }
 
-  def fixExpressions[R[_], Type[_]](
-    dependentExpressions: Expressions[R, Type] => Expressions[R, Type]
-  ): Expressions[R, Type] =
+  def fixExpressions[R[_]](dependentExpressions: Expressions[R] => Expressions[R]): Expressions[R] =
     dependentExpressions(new LazyExpressions(fixExpressions(dependentExpressions)))
 
-  def fixMultipleExpressions[R[_], Type[_]](
+  def fixMultipleExpressions[R[_]](
     orMonoid: MonoidK[R],
     defer: Defer[R],
-    multipleDependentExpressions: List[Expressions[R, Type] => Expressions[R, Type]]
-  ): Expressions[R, Type] = {
+    multipleDependentExpressions: List[Expressions[R] => Expressions[R]]
+  ): Expressions[R] = {
 
-    def dependentExpressions(expressions: Expressions[R, Type]): Expressions[R, Type] =
+    def dependentExpressions(expressions: Expressions[R]): Expressions[R] =
       new OrExpressions(
         orMonoid,
         defer,
