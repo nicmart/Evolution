@@ -167,7 +167,8 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
       override def point(x: Double, y: Double): BScalar[Point] = ScalarB(Scalar.PointScalar(Point(x, y)))
       override def add[T: Semigroup](a: BScalar[T], b: BScalar[T]): BScalar[T] = ???
     }
-    override val bind: BindingAlgebra[Binding] = new BindingAlgebra[Binding] {
+    override val bind: BindingAlgebra[Binding, String] = new BindingAlgebra[Binding, String] {
+      override def varName(name: String): String = name
       override def var0[A]: Binding[A] = Binding.Var0()
       override def shift[A](expr: Binding[A]): Binding[A] = Binding.Shift(expr)
       override def let[A, B](name: String, value: Binding[A])(expr: Binding[B]): Binding[B] =

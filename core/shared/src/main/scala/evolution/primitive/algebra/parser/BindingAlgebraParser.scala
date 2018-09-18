@@ -3,7 +3,7 @@ package evolution.primitive.algebra.parser
 import evolution.primitive.algebra.BindingAlgebra
 import ParsersContainerOps._
 
-class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F]) {
+class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F, String]) {
   import ParserConfig.White._
   import fastparse.noApi._
   import PrimitiveParsers._

@@ -1,7 +1,9 @@
 package evolution.primitive.algebra.interpreter
 import evolution.primitive.algebra.BindingAlgebra
 
-object BindingAlgebraEvaluator extends BindingAlgebra[Ctx] {
+object BindingAlgebraEvaluator extends BindingAlgebra[Ctx, String] {
+  override def varName(name: String): String = name
+
   override def var0[A]: Ctx[A] = {
     case h :: tail => h().asInstanceOf[A]
   }
@@ -19,8 +21,9 @@ object BindingAlgebraEvaluator extends BindingAlgebra[Ctx] {
   override def app[A, B](f: Ctx[A => B], a: Ctx[A]): Ctx[B] = ctx => f(ctx)(a(ctx))
 }
 
-object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx] {
+object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx, String] {
   private val b = BindingAlgebraEvaluator
+  override def varName(name: String): String = name
   override def var0[A]: Ctx[A] = debug("var0", b.var0[A])
   override def shift[A](expr: Ctx[A]): Ctx[A] = debug("shift", b.shift[A](expr))
   override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =

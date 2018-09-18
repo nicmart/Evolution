@@ -4,12 +4,14 @@ import _root_.evolution.geometry.Point
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
 
-trait BindingAlgebra[R[_]] {
+trait BindingAlgebra[R[_], VarName] {
+  def varName(name: String): VarName
   def var0[A]: R[A]
   def shift[A](expr: R[A]): R[A]
-  def let[A, B](name: String, value: R[A])(expr: R[B]): R[B]
-  def lambda[A, B](name: String, expr: R[B]): R[A => B]
+  def let[A, B](name: VarName, value: R[A])(expr: R[B]): R[B]
+  def lambda[A, B](name: VarName, expr: R[B]): R[A => B]
   def app[A, B](f: R[A => B], a: R[A]): R[B]
+  // TODO why not a lambda here?
   def fix[A](expr: R[A]): R[A]
 }
 
@@ -31,5 +33,5 @@ trait DrawingAlgebra[S[_], F[_], R[_]] {
   type RF[T] = R[F[T]]
   val drawing: CoreDrawingAlgebra[S, F, R]
   val scalar: ScalarAlgebra[RS]
-  val bind: BindingAlgebra[R]
+  val bind: BindingAlgebra[R, String]
 }

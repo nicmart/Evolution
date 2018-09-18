@@ -26,7 +26,7 @@ class BindingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
 
       "multi-nested" in {
         val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, let(u, $x)($u))($x))"
-        def expectedExpression[F[_]](alg: BindingAlgebra[F], double: Double => F[Double]): F[Double] = {
+        def expectedExpression[F[_]](alg: BindingAlgebra[F, String], double: Double => F[Double]): F[Double] = {
           import alg._
           let("x", let("y", double(1.0))(var0))(let("z", let("u", shift(var0))(var0))(var0))
         }

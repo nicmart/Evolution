@@ -27,5 +27,5 @@ class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Drawing
     override def point(x: Double, y: Double): Ctx[Point] = _ => Point(x, y)
     override def add[T: Semigroup](a: Ctx[T], b: Ctx[T]): Ctx[T] = ctx => a(ctx) |+| b(ctx)
   }
-  override val bind: BindingAlgebra[Ctx] = BindingAlgebraDebugEvaluator
+  override val bind: BindingAlgebra[Ctx, String] = BindingAlgebraDebugEvaluator
 }
