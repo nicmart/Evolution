@@ -11,8 +11,8 @@ trait BindingAlgebra[R[_], VarName] {
   def let[A, B](name: VarName, value: R[A])(expr: R[B]): R[B]
   def lambda[A, B](name: VarName, expr: R[B]): R[A => B]
   def app[A, B](f: R[A => B], a: R[A]): R[B]
-  // TODO why not a lambda here?
-  def fix[A](expr: R[A]): R[A]
+  // TODO are we sure this does not prevent evaulations, because of intrinsic eagerness?
+  def fix[A](expr: R[A => A]): R[A]
 }
 
 trait CoreDrawingAlgebra[S[_], F[_], R[_]] {

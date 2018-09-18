@@ -75,22 +75,22 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
 
     "fix expressions that are" - {
       "constant" in {
-        val serializedExpression = "fix(1.0)"
-        val expected: Expr[Double] = Fix(Value(1.0))
+        val serializedExpression = "fix(lambda(x)(1.0))"
+        val expected: Expr[Double] = Fix(Lambda("x", Value(1.0)))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       "identities" in {
-        val serializedExpression = "fix($self)"
-        val expected: Expr[Double] = Fix(Var0())
+        val serializedExpression = "fix(lambda(x)($x))"
+        val expected: Expr[Double] = Fix(Lambda("x", Var0()))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       // We need to make this work
       "fixed points of HOF" in {
-        pending
-        val serializedExpression = "app( , 1.0)"
-        unsafeParseDouble(serializedExpression) shouldBe serializedExpression
+        val serializedExpression = "fix(lambda(f)($f))"
+        val expected: Expr[Double => Double] = Fix(Lambda[Double => Double, Double => Double]("f", Var0()))
+        unsafeParseDouble(serializedExpression) shouldBe expected
       }
     }
   }
@@ -102,7 +102,7 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
   case class Let[A, B](name: String, value: Expr[A], expr: Expr[B]) extends Expr[B]
   case class Lambda[A, B](name: String, expr: Expr[B]) extends Expr[A => B]
   case class App[A, B](f: Expr[A => B], a: Expr[A]) extends Expr[B]
-  case class Fix[A](expr: Expr[A]) extends Expr[A]
+  case class Fix[A](expr: Expr[A => A]) extends Expr[A]
 
   type ByVarParser[A] = List[String] => Parser[Expr[A]]
 
@@ -121,7 +121,7 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     override def let[A, B](name: String, value: Expr[A])(expr: Expr[B]): Expr[B] = Let(name, value, expr)
     override def lambda[A, B](name: String, expr: Expr[B]): Expr[A => B] = Lambda(name, expr)
     override def app[A, B](f: Expr[A => B], a: Expr[A]): Expr[B] = App(f, a)
-    override def fix[A](expr: Expr[A]): Expr[A] = Fix(expr)
+    override def fix[A](expr: Expr[A => A]): Expr[A] = Fix(expr)
   }
 
   val baseExpressions: BindingAlgebra.Expressions[ByVarParser, Type] =
@@ -131,7 +131,7 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
           _ =>
             double.map(d => Value[Double](d))
       }
-      override def func[T1, T2](t1: Type[T1], t2: ByVarParser[T2]): ByVarParser[T1 => T2] = _ => Fail
+      override def func[T1, T2](t1: ByVarParser[T1], t2: ByVarParser[T2]): ByVarParser[T1 => T2] = _ => Fail
     }
 
   val syntax: BindingAlgebra[ByVarParser, Parser[String]] =
@@ -163,11 +163,14 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     expressions.value(DoubleType)(Nil).parse(expression).get.value
 
   private def unsafeParseLambda(expression: String): Expr[Double => Double] =
-    expressions.func(DoubleType, expressions.value(DoubleType))(Nil).parse(expression).get.value
+    expressions.func(expressions.value(DoubleType), expressions.value(DoubleType))(Nil).parse(expression).get.value
 
   private def unsafeParseHOLambda(expression: String): Expr[Double => Double => Double] =
     expressions
-      .func(DoubleType, expressions.func(DoubleType, expressions.value(DoubleType)))(Nil)
+      .func(
+        expressions.value(DoubleType),
+        expressions.func(expressions.value(DoubleType), expressions.value(DoubleType))
+      )(Nil)
       .parse(expression)
       .get
       .value

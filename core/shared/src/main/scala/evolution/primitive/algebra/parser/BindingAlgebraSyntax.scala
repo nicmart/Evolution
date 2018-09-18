@@ -51,7 +51,7 @@ object BindingAlgebra {
           case (parsedFunction, parsedArgument) => alg.app(parsedFunction, parsedArgument)
       }
 
-    override def fix[A](expr: ByVarParser[A]): ByVarParser[A] =
+    override def fix[A](expr: ByVarParser[A => A]): ByVarParser[A] =
       vars => function1("fix", expr("self" :: vars)).map(alg.fix)
   }
 
@@ -66,11 +66,11 @@ object BindingAlgebra {
     override def value[T](t: Type[T]): R[T] =
       valueRec(self.value(t))
 
-    override def func[T1, T2](t1: Type[T1], r2: R[T2]): R[T1 => T2] =
-      or(syntax.lambda(varNameSyntax, r2), valueRec(self.func(t1, r2)))
+    override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
+      or(syntax.lambda(varNameSyntax, t2), valueRec(self.func(t1, t2)))
 
     private def valueRec[T](t: R[T]): R[T] =
-      or(syntax.var0, syntax.shift(t), syntax.fix(t), allLetExpressions(t), allAppExpressions(t))
+      or(syntax.var0, syntax.shift(t), syntax.fix(self.func(t, t)), allLetExpressions(t), allAppExpressions(t))
 
     private def letExpression[T1, T2](t1: Type[T1], r2: R[T2]): R[T2] =
       syntax.let(varNameSyntax, self.value(t1))(r2)
@@ -78,11 +78,11 @@ object BindingAlgebra {
     private def allLetExpressions[T](t: R[T]): R[T] =
       or(types.map(s => letExpression(s, t)): _*)
 
-    private def appExpression[T1, T2](t1: Type[T1], r2: R[T2]): R[T2] =
-      syntax.app(self.func(t1, r2), self.value(t1))
+    private def appExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
+      syntax.app(self.func(t1, t2), t1)
 
     private def allAppExpressions[T](t: R[T]): R[T] =
-      or(types.map(s => appExpression(s, t)): _*)
+      or(types.map(s => appExpression(self.value(s), t)): _*)
 
     private def or[T](expressions: R[T]*): R[T] =
       expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T])
@@ -90,7 +90,7 @@ object BindingAlgebra {
 
   trait Expressions[R[_], Type[_]] {
     def value[T](t: Type[T]): R[T]
-    def func[T1, T2](t1: Type[T1], r2: R[T2]): R[T1 => T2]
+    def func[T1, T2](t1: R[T1], r2: R[T2]): R[T1 => T2]
   }
 
   class OrExpressions[R[_], Type[_]](
@@ -99,7 +99,7 @@ object BindingAlgebra {
     multipleExpressions: List[Expressions[R, Type]]
   ) extends Expressions[R, Type] {
     override def value[T](t: Type[T]): R[T] = combine(_.value(t))
-    override def func[T1, T2](t1: Type[T1], r2: R[T2]): R[T1 => T2] = combine(_.func(t1, r2))
+    override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = combine(_.func(t1, t2))
 
     private def combine[T](f: Expressions[R, Type] => R[T]): R[T] =
       multipleExpressions
@@ -109,12 +109,12 @@ object BindingAlgebra {
 
   class LazyExpressions[R[_], Type[_]](expressions: => Expressions[R, Type]) extends Expressions[R, Type] {
     override def value[T](t: Type[T]): R[T] = expressions.value(t)
-    override def func[T1, T2](t1: Type[T1], r2: R[T2]): R[T1 => T2] = expressions.func(t1, r2)
+    override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = expressions.func(t1, t2)
   }
 
   class EmptyExpressions[R[_], Type[_]](monoid: MonoidK[R]) extends Expressions[R, Type] {
     override def value[T](t: Type[T]): R[T] = monoid.empty[T]
-    override def func[T1, T2](t1: Type[T1], r2: R[T2]): R[T1 => T2] = monoid.empty[T1 => T2]
+    override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = monoid.empty[T1 => T2]
   }
 
   def fixExpressions[R[_], Type[_]](

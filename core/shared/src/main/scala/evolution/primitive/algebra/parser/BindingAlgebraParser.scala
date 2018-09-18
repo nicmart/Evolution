@@ -101,7 +101,7 @@ class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F, String]) {
     P(varName ~ "->").flatMap(name => whitespaceWrap(body(name)).map(alg.lambda(name, _)))
 
   private def fixParser[T](parser: Parser[F[T]]): Parser[F[T]] =
-    function1[F[T]]("fix", P("self" ~ "->" ~ parser)).map(alg.fix)
+    ???
 
   private def dependentFixParser[C, T](
     implicit hasT: HasParser[C, F, T],

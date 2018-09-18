@@ -9,11 +9,12 @@ import cats.instances.double._
 
 class ToEvolutionSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
-    "should correctly create recursive evolutions" ignore {
+    "should correctly create recursive evolutions" in {
+      pending
       val interpreter = new ToEvolution[Stream](new StreamInterpreter)
       import interpreter.drawing._, interpreter.scalar._, interpreter.bind._
       val stream: Ctx[Stream[Double]] = {
-        fix(cons(double(1), var0[Stream[Double]]))
+        fix(lambda("x", cons(double(1), var0[Stream[Double]])))
       }
       stream(Nil).take(10).toList shouldBe List.fill(10)(1.0)
     }

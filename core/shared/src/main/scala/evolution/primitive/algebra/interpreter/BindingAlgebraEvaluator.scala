@@ -13,12 +13,16 @@ object BindingAlgebraEvaluator extends BindingAlgebra[Ctx, String] {
   override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
     ctx => expr((() => value(ctx)) :: ctx)
 
-  override def fix[A](expr: Ctx[A]): Ctx[A] =
-    ctx => expr((() => fix(expr)(ctx)) :: ctx)
+  //TODO When fix accepted simple Ctx[A], we did not have the eagerness problem
+  override def fix[A](expr: Ctx[A => A]): Ctx[A] =
+    ctx => expr(ctx)(defer(fix(expr))(ctx))
 
   override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] = ctx => a => expr((() => a) :: ctx)
 
   override def app[A, B](f: Ctx[A => B], a: Ctx[A]): Ctx[B] = ctx => f(ctx)(a(ctx))
+
+  private def defer[A](a: => Ctx[A]): Ctx[A] =
+    ctx => a(ctx)
 }
 
 object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx, String] {
@@ -29,7 +33,7 @@ object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx, String] {
   override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
     debug(s"let $name", b.let[A, B](name, value)(expr))
 
-  override def fix[A](expr: Ctx[A]): Ctx[A] = debug[A]("fix", b.fix(expr))
+  override def fix[A](expr: Ctx[A => A]): Ctx[A] = debug[A]("fix", b.fix(expr))
 
   override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] =
     debug(s"lambda $name", b.lambda[A, B](name, expr))
