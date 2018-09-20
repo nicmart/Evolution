@@ -1,49 +1,68 @@
 package evolution.primitive.algebra.interpreter
 import evolution.primitive.algebra.BindingAlgebra
 
-object BindingAlgebraEvaluator extends BindingAlgebra[Ctx, String] {
+object BindingAlgebraEvaluator extends BindingAlgebra[EvaluationResult, String] {
   override def varName(name: String): String = name
 
-  override def var0[A]: Ctx[A] = {
+  override def var0[A]: EvaluationResult[A] = Value {
     case h :: tail => h().asInstanceOf[A]
   }
-  override def shift[A](expr: Ctx[A]): Ctx[A] = {
-    case h :: tail => expr(tail)
+
+  override def shift[A](expr: EvaluationResult[A]): EvaluationResult[A] = Value {
+    case h :: tail => expr.get(tail)
   }
-  override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
-    ctx => expr((() => value(ctx)) :: ctx)
+  override def let[A, B](name: String, value: EvaluationResult[A])(expr: EvaluationResult[B]): EvaluationResult[B] = {
+    val ctxValue = value.get
+    val ctxExpr = expr.get
+    Value[B](ctx => ctxExpr((() => ctxValue(ctx)) :: ctx))
+  }
 
-  //TODO When fix accepted simple Ctx[A], we did not have the eagerness problem
-  override def fix[A](expr: Ctx[A => A]): Ctx[A] =
-    ctx => expr(ctx)(defer(fix(expr))(ctx))
+  override def fix[A](expr: EvaluationResult[A => A]): EvaluationResult[A] =
+    expr match {
+      case Lambda(term, _) => Value(fixTerm(term))
+      case _ => app(expr, fix(expr))
+    }
 
-  override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] = ctx => a => expr((() => a) :: ctx)
+  override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] = {
+    val ctxExpr = expr.get
+    Lambda(ctxExpr, ctx => a => ctxExpr((() => a) :: ctx))
+  }
 
-  override def app[A, B](f: Ctx[A => B], a: Ctx[A]): Ctx[B] = ctx => f(ctx)(a(ctx))
+  override def app[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]): EvaluationResult[B] =
+    Value(ctx => f.get(ctx)(a.get(ctx)))
 
-  private def defer[A](a: => Ctx[A]): Ctx[A] =
-    ctx => a(ctx)
+  private def fixTerm[A](expr: Ctx[A]): Ctx[A] =
+    ctx => expr((() => fixTerm(expr)(ctx)) :: ctx)
 }
 
-object BindingAlgebraDebugEvaluator extends BindingAlgebra[Ctx, String] {
+object BindingAlgebraDebugEvaluator extends BindingAlgebra[EvaluationResult, String] {
   private val b = BindingAlgebraEvaluator
   override def varName(name: String): String = name
-  override def var0[A]: Ctx[A] = debug("var0", b.var0[A])
-  override def shift[A](expr: Ctx[A]): Ctx[A] = debug("shift", b.shift[A](expr))
-  override def let[A, B](name: String, value: Ctx[A])(expr: Ctx[B]): Ctx[B] =
+  override def var0[A]: EvaluationResult[A] = debug("var0", b.var0[A])
+  override def shift[A](expr: EvaluationResult[A]): EvaluationResult[A] = debug("shift", b.shift[A](expr))
+  override def let[A, B](name: String, value: EvaluationResult[A])(expr: EvaluationResult[B]): EvaluationResult[B] =
     debug(s"let $name", b.let[A, B](name, value)(expr))
 
-  override def fix[A](expr: Ctx[A => A]): Ctx[A] = debug[A]("fix", b.fix(expr))
+  override def fix[A](expr: EvaluationResult[A => A]): EvaluationResult[A] = debug[A]("fix", b.fix(expr))
 
-  override def lambda[A, B](name: String, expr: Ctx[B]): Ctx[A => B] =
+  override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] =
     debug(s"lambda $name", b.lambda[A, B](name, expr))
 
-  override def app[A, B](f: Ctx[A => B], a: Ctx[A]): Ctx[B] = debug("app", b.app(f, a))
+  override def app[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]): EvaluationResult[B] =
+    debug("app", b.app(f, a))
 
-  def debug[A](name: String, expr: Ctx[A]): Ctx[A] = ctx => {
-    println(s"BEGIN $name evaluation with Ctx size ${ctx.size}")
-    val result = expr(ctx)
-    println(s"END $name evaluation end: ${result}")
-    result
-  }
+  // TODO
+  def debug[A](name: String, expr: EvaluationResult[A]): EvaluationResult[A] = expr
+//    ctx => {
+//      println(s"BEGIN $name evaluation with EvaluationResult size ${ctx.size}")
+//      val result = expr(ctx)
+//      println(s"END $name evaluation end: ${result}")
+//      result
+//    }
 }
+
+sealed trait EvaluationResult[T] {
+  def get: Ctx[T]
+}
+case class Lambda[A, B](term: Ctx[B], get: Ctx[A => B]) extends EvaluationResult[A => B]
+case class Value[A](get: Ctx[A]) extends EvaluationResult[A]
