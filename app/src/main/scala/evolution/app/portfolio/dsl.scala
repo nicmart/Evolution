@@ -47,14 +47,14 @@ object dsl extends DrawingDefinition[Point] {
     //config.run(new ToEvolution())(List.empty).evolution
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] =
-        config.run[Id, Evo, Ctx](new ToEvolution[Evo](alg))(List.empty)
+        config.run[Id, Evo, EvaluationResult](new ToEvolution[Evo](alg)).get(List.empty)
     }
   }
   val initialConfig: Config = new Config {
     override def run[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R]): R[F[Point]] = {
       import alg.drawing._, alg.bind._
       import alg.scalar._
-      fix(cons(point(0, 0), var0[F[Point]]))
+      fix(lambda("self", cons(point(0, 0), var0[F[Point]])))
     }
   }
 
