@@ -5,7 +5,6 @@ import ParserConfig.White._
 import fastparse.noApi._
 import PrimitiveParsers._
 import cats.{Defer, MonoidK}
-import fastparse.noApi
 
 object BindingAlgebra {
   class Syntax[R[_]](alg: BindingAlgebra[R, String])
@@ -107,11 +106,6 @@ object BindingAlgebra {
   class LazyExpressions[R[_]](expressions: => Expressions[R]) extends Expressions[R] {
     override def value[T](t: R[T]): R[T] = expressions.value(t)
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = expressions.func(t1, t2)
-  }
-
-  class EmptyExpressions[R[_]](monoid: MonoidK[R]) extends Expressions[R] {
-    override def value[T](t: R[T]): R[T] = monoid.empty[T]
-    override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = monoid.empty[T1 => T2]
   }
 
   def fixExpressions[R[_]](dependentExpressions: Expressions[R] => Expressions[R]): Expressions[R] =

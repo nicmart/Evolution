@@ -24,16 +24,16 @@ class CoreDrawingSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
       .map[R[F[B]]] { case (in, out) => alg.mapCons(in)(out) }
 }
 
-class Grammar[S[_], F[_], R[_], Type[_]](
-  self: Expressions[S, F, R, Type],
+class Grammar[S[_], F[_], R[_]](
+  self: Expressions[S, F, R],
   syntax: CoreDrawingAlgebra[S, F, R],
   orMonoid: MonoidK[R],
-  types: List[Type[_]]
-) extends Expressions[S, F, R, Type] {
+  types: List[Type[S, F, R, _]]
+) extends Expressions[S, F, R] {
 
-  override def static[T](t: Type[T]): R[S[T]] = failure
+  override def static[T](t: Type[S, F, R, T]): R[S[T]] = failure
 
-  override def evolution[T](t: Type[T]): R[F[T]] =
+  override def evolution[T](t: Type[S, F, R, T]): R[F[T]] =
     or(
       syntax.empty[T],
       syntax.cons(self.static(t), self.evolution(t)),
@@ -41,83 +41,73 @@ class Grammar[S[_], F[_], R[_], Type[_]](
       or(allMapConsExpressions(t): _*)
     )
 
-  override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
+  override def mapConsFunction[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[S[T1] => F[T1] => F[T2]] =
     failure
 
   private def or[T](expressions: R[T]*): R[T] =
     expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T])
 
-  private def mapConsExpression[T1, T2](t1: Type[T1], t2: Type[T2]): R[F[T2]] =
+  private def mapConsExpression[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[F[T2]] =
     syntax.mapCons(self.evolution(t1))(self.mapConsFunction(t1, t2))
 
-  private def allMapConsExpressions[T](t: Type[T]): Seq[R[F[T]]] =
+  private def allMapConsExpressions[T](t: Type[S, F, R, T]): Seq[R[F[T]]] =
     types.map(s => mapConsExpression(s, t))
 
   private def failure[T]: R[T] = orMonoid.empty[T]
 }
 
-trait Expressions[S[_], F[_], R[_], Type[_]] {
-  def static[T](t: Type[T]): R[S[T]]
-  def evolution[T](t: Type[T]): R[F[T]]
-  def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]]
+trait Expressions[S[_], F[_], R[_]] {
+  def static[T](t: Type[S, F, R, T]): R[S[T]]
+  def evolution[T](t: Type[S, F, R, T]): R[F[T]]
+  def mapConsFunction[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[S[T1] => F[T1] => F[T2]]
 }
 
-class EmptyExpressions[S[_], F[_], R[_], Type[_]](monoid: MonoidK[R]) extends Expressions[S, F, R, Type] {
-  override def static[T](t: Type[T]): R[S[T]] =
-    monoid.empty[S[T]]
-  override def evolution[T](t: Type[T]): R[F[T]] =
-    monoid.empty[F[T]]
-  override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
-    monoid.empty[S[T1] => F[T1] => F[T2]]
-}
+case class Type[S[_], F[_], R[_], T](static: R[S[T]], evolution: R[F[T]])
 
 object Expressions {
-  def fix[S[_], F[_], R[_], Type[_]](
-    dependentExpressions: Expressions[S, F, R, Type] => Expressions[S, F, R, Type]
-  ): Expressions[S, F, R, Type] =
-    dependentExpressions(new LazyExpressions(fix[S, F, R, Type](dependentExpressions)))
+  def fix[S[_], F[_], R[_]](dependentExpressions: Expressions[S, F, R] => Expressions[S, F, R]): Expressions[S, F, R] =
+    dependentExpressions(new LazyExpressions(fix[S, F, R](dependentExpressions)))
 
-  def fixMultipleExpressions[S[_], F[_], R[_], Type[_]](
+  def fixMultipleExpressions[S[_], F[_], R[_]](
     orMonoid: MonoidK[R],
     defer: Defer[R],
-    multipleDependentExpressions: List[Expressions[S, F, R, Type] => Expressions[S, F, R, Type]]
-  ): Expressions[S, F, R, Type] = {
+    multipleDependentExpressions: List[Expressions[S, F, R] => Expressions[S, F, R]]
+  ): Expressions[S, F, R] = {
 
-    def dependentExpressions(expressions: Expressions[S, F, R, Type]): Expressions[S, F, R, Type] =
-      OrExpressions[S, F, R, Type](
+    def dependentExpressions(expressions: Expressions[S, F, R]): Expressions[S, F, R] =
+      OrExpressions[S, F, R](
         orMonoid,
         defer,
         multipleDependentExpressions.map(dependentExpression => dependentExpression(expressions))
       )
 
-    fix[S, F, R, Type](dependentExpressions)
+    fix[S, F, R](dependentExpressions)
   }
 }
 
-case class OrExpressions[S[_], F[_], R[_], Type[_]](
+case class OrExpressions[S[_], F[_], R[_]](
   orMonoid: MonoidK[R],
   defer: Defer[R],
-  multipleExpressions: List[Expressions[S, F, R, Type]]
-) extends Expressions[S, F, R, Type] {
-  override def static[T](t: Type[T]): R[S[T]] =
+  multipleExpressions: List[Expressions[S, F, R]]
+) extends Expressions[S, F, R] {
+  override def static[T](t: Type[S, F, R, T]): R[S[T]] =
     combine[S[T]](_.static[T](t))
-  override def evolution[T](t: Type[T]): R[F[T]] =
+  override def evolution[T](t: Type[S, F, R, T]): R[F[T]] =
     combine[F[T]](_.evolution[T](t))
-  override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
+  override def mapConsFunction[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[S[T1] => F[T1] => F[T2]] =
     combine[S[T1] => F[T1] => F[T2]](_.mapConsFunction(t1, t2))
 
-  private def combine[T](f: Expressions[S, F, R, Type] => R[T]): R[T] =
+  private def combine[T](f: Expressions[S, F, R] => R[T]): R[T] =
     multipleExpressions
       .map(expression => defer.defer(f(expression)))
       .foldLeft(orMonoid.empty[T])(orMonoid.combineK)
 }
 
-class LazyExpressions[S[_], F[_], R[_], Type[_]](expressions: => Expressions[S, F, R, Type])
-    extends Expressions[S, F, R, Type] {
-  override def static[T](t: Type[T]): R[S[T]] =
+class LazyExpressions[S[_], F[_], R[_]](expressions: => Expressions[S, F, R]) extends Expressions[S, F, R] {
+  override def static[T](t: Type[S, F, R, T]): R[S[T]] =
     expressions.static(t)
-  override def evolution[T](t: Type[T]): R[F[T]] =
+  override def evolution[T](t: Type[S, F, R, T]): R[F[T]] =
     expressions.evolution(t)
-  override def mapConsFunction[T1, T2](t1: Type[T1], t2: Type[T2]): R[S[T1] => F[T1] => F[T2]] =
+  override def mapConsFunction[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[S[T1] => F[T1] => F[T2]] =
     expressions.mapConsFunction(t1, t2)
 }
