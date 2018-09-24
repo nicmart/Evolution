@@ -121,12 +121,6 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     override def fix[A](expr: Expr[A => A]): Expr[A] = Fix(expr)
   }
 
-  val baseExpressions: BindingAlgebra.Expressions[ByVarParser] =
-    new BindingAlgebra.Expressions[ByVarParser] {
-      override def value[T](t: ByVarParser[T]): ByVarParser[T] = t
-      override def func[T1, T2](t1: ByVarParser[T1], t2: ByVarParser[T2]): ByVarParser[T1 => T2] = _ => Fail
-    }
-
   val doubleParser: ByVarParser[Double] = _ => double.map(d => Value[Double](d))
 
   val syntax: BindingAlgebra[ByVarParser, Parser[String]] =
@@ -147,9 +141,13 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     override def defer[A](fa: => ByVarParser[A]): ByVarParser[A] = vars => P(fa(vars))
   }
 
+  val expressions2: BindingAlgebra.Expressions[ByVarParser] =
+    BindingAlgebra
+      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
+
   val expressions: BindingAlgebra.Expressions[ByVarParser] =
     BindingAlgebra
-      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(_ => baseExpressions, grammar))
+      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
 
   private def unsafeParseDouble(expression: String): Expr[Double] =
     expressions.value(doubleParser)(Nil).parse(expression).get.value

@@ -63,7 +63,7 @@ object BindingAlgebra {
   ) extends Expressions[R] {
 
     override def value[T](t: R[T]): R[T] =
-      valueRec(self.value(t))
+      or(t, valueRec(self.value(t)))
 
     override def func[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
       or(syntax.lambda(varNameSyntax, t2), valueRec(self.func(t1, t2)))
