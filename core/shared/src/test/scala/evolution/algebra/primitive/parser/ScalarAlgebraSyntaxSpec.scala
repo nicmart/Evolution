@@ -18,7 +18,6 @@ import fastparse.noApi._
 class ScalarAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers {
 
   "A ScalarAlgebraParser should parse" - {
-    pending
     "double literals" in {
       val serializedExpression = "1.0"
       unsafeParseDouble(serializedExpression) shouldBe DoubleScalar(1.0)
@@ -36,7 +35,7 @@ class ScalarAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPars
 
     "sum of doubles" in {
       val serializedExpression = "add(1.0, 2.0)"
-      unsafeParsePoint(serializedExpression) shouldBe Add(DoubleScalar(1.0), DoubleScalar(2))
+      unsafeParseDouble(serializedExpression) shouldBe Add(DoubleScalar(1.0), DoubleScalar(2))
     }
 
     "sum of points" in {

@@ -12,8 +12,6 @@ import cats.{Defer, MonoidK}
 
 object ScalarAlgebra {
 
-//double.map(alg.double)
-//function2("point", double, double).map { case (x, y) => alg.point(x, y) }
   class Syntax[S[_]](alg: ScalarAlgebra[S]) extends ScalarAlgebra[λ[α => Parser[S[α]]]] {
     override def double(d: Double): Parser[S[Double]] =
       P(d.toString).map(_ => alg.double(d))
@@ -23,19 +21,19 @@ object ScalarAlgebra {
       function2("add", a, b).map { case (parsedA, parsedB) => alg.add(parsedA, parsedB) }
   }
 
-  trait Expressions[S[_]] {
-    def get[T: Semigroup](self: S[T]): S[T]
-  }
-
-  class LazyExpressions[S[_]](expressions: => Expressions[S], defer: Defer[S]) extends Expressions[S] {
-    override def get[T: Semigroup](self: S[T]): S[T] = defer.defer(expressions.get(self))
-  }
-
   class Grammar[S[_]](self: Expressions[S], syntax: ScalarAlgebra[S], orMonoid: MonoidK[S]) extends Expressions[S] {
     override def get[T: Semigroup](t: S[T]): S[T] =
       or(t, syntax.add(self.get(t), self.get(t)))
 
     private def or[T](expressions: S[T]*): S[T] =
       expressions.foldLeft(orMonoid.empty[T])(orMonoid.combineK[T])
+  }
+
+  trait Expressions[S[_]] {
+    def get[T: Semigroup](self: S[T]): S[T]
+  }
+
+  class LazyExpressions[S[_]](expressions: => Expressions[S], defer: Defer[S]) extends Expressions[S] {
+    override def get[T: Semigroup](self: S[T]): S[T] = defer.defer(expressions.get(self))
   }
 }
