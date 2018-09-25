@@ -8,7 +8,7 @@ import fastparse.noApi._
 import ParserConfig.White._
 import fastparse.noApi
 
-class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
+class CoreDrawingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
   import Drawing._
   import ParserConfig.White._
   "A CoreDrawingAlgebraParser" - {
@@ -74,7 +74,7 @@ class CoreDrawingSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
     Type[Scalar, Drawing, Parser, String](stringLiteral.map(d => StringScalar(d)), Fail)
 
   lazy val syntax: CoreDrawingAlgebra[Scalar, Drawing, Parser] =
-    new CoreDrawingSyntax[Scalar, Drawing, Id](TestCoreDrawingAlgebraInterpreter)
+    new CoreDrawingAlgebraSyntax[Scalar, Drawing, Id](TestCoreDrawingAlgebraInterpreter)
 
   class BasicExpressions(self: TestExpressions) extends TestExpressions {
     override def static[T](t: TestType[T]): Parser[Scalar[T]] = t.static

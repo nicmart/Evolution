@@ -6,7 +6,7 @@ import ParserConfig.White._
 import fastparse.noApi._
 import PrimitiveParsers._
 
-class CoreDrawingSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
+class CoreDrawingAlgebraSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
     extends CoreDrawingAlgebra[S, F, λ[α => Parser[R[α]]]] {
 
   override def empty[A]: Parser[R[F[A]]] =

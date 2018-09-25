@@ -3,6 +3,7 @@ package evolution.primitive.algebra
 import _root_.evolution.geometry.Point
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
+import cats.~>
 
 trait BindingAlgebra[R[_], VarName] {
   def varName(name: String): VarName
@@ -11,7 +12,6 @@ trait BindingAlgebra[R[_], VarName] {
   def let[A, B](name: VarName, value: R[A])(expr: R[B]): R[B]
   def lambda[A, B](name: VarName, expr: R[B]): R[A => B]
   def app[A, B](f: R[A => B], a: R[A]): R[B]
-  // TODO are we sure this does not prevent evaulations, because of intrinsic eagerness?
   def fix[A](expr: R[A => A]): R[A]
 }
 
@@ -28,10 +28,53 @@ trait ScalarAlgebra[S[_]] {
   def add[T: Semigroup](a: S[T], b: S[T]): S[T]
 }
 
-trait DrawingAlgebra[S[_], F[_], R[_]] {
-  type RS[T] = R[S[T]]
-  type RF[T] = R[F[T]]
+trait DrawingAlgebra[S[_], F[_], R[_], VarName] {
+  final type RS[T] = R[S[T]]
+  final type RF[T] = R[F[T]]
   val drawing: CoreDrawingAlgebra[S, F, R]
   val scalar: ScalarAlgebra[RS]
-  val bind: BindingAlgebra[R, String]
+  val bind: BindingAlgebra[R, VarName]
+}
+
+class MappedBindingAlgebra[R1[_], R2[_], VarName](alg: BindingAlgebra[R1, VarName], to: R1 ~> R2, from: R2 ~> R1)
+    extends BindingAlgebra[R2, VarName] {
+  def varName(name: String): VarName =
+    alg.varName(name)
+  def var0[A]: R2[A] =
+    to(alg.var0)
+  def shift[A](expr: R2[A]): R2[A] =
+    to(alg.shift(from(expr)))
+  def let[A, B](name: VarName, value: R2[A])(expr: R2[B]): R2[B] =
+    to(alg.let(name, from(value))(from(expr)))
+  def lambda[A, B](name: VarName, expr: R2[B]): R2[A => B] =
+    to(alg.lambda(name, from(expr)))
+  def app[A, B](f: R2[A => B], a: R2[A]): R2[B] =
+    to(alg.app(from(f), from(a)))
+  def fix[A](expr: R2[A => A]): R2[A] =
+    to(alg.fix(from(expr)))
+}
+
+class MappedCoreDrawingAlgebra[S[_], F[_], R1[_], R2[_]](
+  alg: CoreDrawingAlgebra[S, F, R1],
+  to: R1 ~> R2,
+  from: R2 ~> R1
+) extends CoreDrawingAlgebra[S, F, R2] {
+  def empty[A]: R2[F[A]] =
+    to(alg.empty)
+  def cons[A](head: R2[S[A]], tail: R2[F[A]]): R2[F[A]] =
+    to(alg.cons(from(head), from(tail)))
+  def mapEmpty[A](eva: R2[F[A]])(eva2: R2[F[A]]): R2[F[A]] =
+    to(alg.mapEmpty(from(eva))(from(eva2)))
+  def mapCons[A, B](eva: R2[F[A]])(f: R2[S[A] => F[A] => F[B]]): R2[F[B]] =
+    to(alg.mapCons(from(eva))(from(f)))
+}
+
+class MappedScalarAlgebra[S1[_], S2[_]](alg: ScalarAlgebra[S1], to: S1 ~> S2, from: S2 ~> S1)
+    extends ScalarAlgebra[S2] {
+  def double(d: Double): S2[Double] =
+    to(alg.double(d))
+  def point(x: Double, y: Double): S2[Point] =
+    to(alg.point(x, y))
+  def add[T: Semigroup](a: S2[T], b: S2[T]): S2[T] =
+    to(alg.add(from(a), from(b)))
 }

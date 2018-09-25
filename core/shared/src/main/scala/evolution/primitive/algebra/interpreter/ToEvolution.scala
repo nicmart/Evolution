@@ -7,7 +7,8 @@ import evolution.primitive.algebra._
 import evolution.geometry.Point
 
 // Generic TODO: Make sure we do as much as possible outside the closures
-class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends DrawingAlgebra[Id, F, EvaluationResult] {
+class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F])
+    extends DrawingAlgebra[Id, F, EvaluationResult, String] {
   override val drawing: CoreDrawingAlgebra[Id, F, EvaluationResult] =
     new CoreDrawingAlgebra[Id, F, EvaluationResult] {
       override def empty[A]: EvaluationResult[F[A]] =

@@ -162,7 +162,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         extends Drawing[B]
   }
 
-  object TestInterpreter extends DrawingAlgebra[Scalar, Drawing, Binding] {
+  object TestInterpreter extends DrawingAlgebra[Scalar, Drawing, Binding, String] {
     override val drawing: CoreDrawingAlgebra[Scalar, Drawing, Binding] =
       new CoreDrawingAlgebra[Scalar, Drawing, Binding] {
         override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())

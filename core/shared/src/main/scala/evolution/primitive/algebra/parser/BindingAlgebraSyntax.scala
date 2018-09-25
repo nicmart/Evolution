@@ -7,25 +7,26 @@ import PrimitiveParsers._
 import cats.{Defer, MonoidK}
 
 object BindingAlgebra {
-  class Syntax[R[_]](alg: BindingAlgebra[R, String])
-      extends BindingAlgebra[λ[α => List[String] => Parser[R[α]]], Parser[String]] {
-    type ByVarParser[A] = List[String] => Parser[R[A]]
+  type ByVarParser[R[_], A] = List[String] => Parser[R[A]]
+  class Syntax[R[_]](alg: BindingAlgebra[R, String]) extends BindingAlgebra[ByVarParser[R, ?], Parser[String]] {
 
     override def varName(name: String): Parser[String] =
       P(name).!
 
-    override def var0[A]: ByVarParser[A] =
+    override def var0[A]: ByVarParser[R, A] =
       vars =>
         vars.headOption.fold[Parser[R[A]]](Fail) { currentVar =>
           varUsage(currentVar).map(_ => alg.var0)
       }
 
-    override def shift[A](expr: ByVarParser[A]): ByVarParser[A] = {
+    override def shift[A](expr: ByVarParser[R, A]): ByVarParser[R, A] = {
       case _ :: tail => expr(tail).map(alg.shift)
       case _ => Fail
     }
 
-    override def let[A, B](variableName: Parser[String], value: ByVarParser[A])(expr: ByVarParser[B]): ByVarParser[B] =
+    override def let[A, B](variableName: Parser[String], value: ByVarParser[R, A])(
+      expr: ByVarParser[R, B]
+    ): ByVarParser[R, B] =
       vars =>
         functionFlatMap[(String, R[A]), R[B]](function2("let", variableName, value(vars)), {
           case (parsedVariableName, parsedValue) =>
@@ -34,7 +35,7 @@ object BindingAlgebra {
             }
         })
 
-    override def lambda[A, B](variableName: Parser[String], expr: ByVarParser[B]): ByVarParser[A => B] =
+    override def lambda[A, B](variableName: Parser[String], expr: ByVarParser[R, B]): ByVarParser[R, A => B] =
       vars =>
         functionFlatMap[String, R[A => B]](
           function1("lambda", variableName),
@@ -44,13 +45,13 @@ object BindingAlgebra {
           }
       )
 
-    override def app[A, B](f: ByVarParser[A => B], a: ByVarParser[A]): ByVarParser[B] =
+    override def app[A, B](f: ByVarParser[R, A => B], a: ByVarParser[R, A]): ByVarParser[R, B] =
       vars =>
         function2("app", f(vars), a(vars)).map {
           case (parsedFunction, parsedArgument) => alg.app(parsedFunction, parsedArgument)
       }
 
-    override def fix[A](expr: ByVarParser[A => A]): ByVarParser[A] =
+    override def fix[A](expr: ByVarParser[R, A => A]): ByVarParser[R, A] =
       vars => function1("fix", expr("self" :: vars)).map(alg.fix)
   }
 

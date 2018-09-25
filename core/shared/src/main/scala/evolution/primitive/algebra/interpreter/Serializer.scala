@@ -4,7 +4,7 @@ import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra._
 
-object Serializer extends DrawingAlgebra[ConstString, ConstString, CtxString] {
+object Serializer extends DrawingAlgebra[ConstString, ConstString, CtxString, String] {
   override val drawing: CoreDrawingAlgebra[ConstString, ConstString, CtxString] =
     new CoreDrawingAlgebra[ConstString, ConstString, CtxString] {
       override def empty[A]: CtxString[A] =
