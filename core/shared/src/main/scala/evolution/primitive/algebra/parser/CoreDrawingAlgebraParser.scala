@@ -1,10 +1,9 @@
 package evolution.primitive.algebra.parser
-
-import evolution.primitive.algebra.CoreDrawingAlgebra
 import ParsersContainerOps._
 import PrimitiveParsers._
+import evolution.primitive.algebra.list.ListAlgebra
 
-class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R]) {
+class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: ListAlgebra[S, F, R]) {
   final type RF[T] = R[F[T]]
   final type RS[T] = R[S[T]]
   import ParserConfig.White._

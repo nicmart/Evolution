@@ -3,12 +3,12 @@ package evolution.algebra.primitive.parser
 import cats.Id
 import evolution.data.HasValue
 import evolution.geometry.Point
-import evolution.primitive.algebra.CoreDrawingAlgebra
+import evolution.primitive.algebra.list.ListAlgebra
 import evolution.primitive.algebra.parser.ParsersContainerOps._
 import evolution.primitive.algebra.parser.{CoreDrawingAlgebraParser, DependentParser, HasParser, ParserConfig}
 import org.scalatest.{FreeSpec, Inside, Matchers}
 
-class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
+class ListAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
   import ParserConfig.White._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
   import fastparse.noApi._
@@ -62,7 +62,7 @@ class CoreDrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTes
     case class MapCons[A, B](eva: Drawing[A], f: Scalar[A] => Drawing[A] => Drawing[B]) extends Drawing[B]
   }
 
-  object TestCoreDrawingAlgebraInterpreter extends CoreDrawingAlgebra[Scalar, Drawing, Id] {
+  object TestCoreDrawingAlgebraInterpreter extends ListAlgebra[Scalar, Drawing, Id] {
     override def empty[A]: Drawing[A] = Empty()
     override def cons[A](head: Scalar[A], tail: Drawing[A]): Drawing[A] = Cons(head, tail)
     override def mapEmpty[A](eva: Drawing[A])(eva2: Drawing[A]): Drawing[A] = MapEmpty(eva, eva2)

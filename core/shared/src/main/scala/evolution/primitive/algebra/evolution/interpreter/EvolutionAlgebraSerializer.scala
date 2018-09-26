@@ -4,11 +4,12 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.interpreter.{BindingAlgebraSerializer, ConstString, CtxString}
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra}
+import evolution.primitive.algebra.BindingAlgebra
+import evolution.primitive.algebra.list.ListAlgebra
 
 object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {
-  override val drawing: CoreDrawingAlgebra[ConstString, ConstString, CtxString] =
-    new CoreDrawingAlgebra[ConstString, ConstString, CtxString] {
+  override val drawing: ListAlgebra[ConstString, ConstString, CtxString] =
+    new ListAlgebra[ConstString, ConstString, CtxString] {
       override def empty[A]: CtxString[A] =
         _ => "empty"
       override def cons[A](head: CtxString[A], tail: CtxString[A]): CtxString[A] =

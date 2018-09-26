@@ -7,13 +7,14 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Id, Value}
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra}
+import evolution.primitive.algebra.BindingAlgebra
+import evolution.primitive.algebra.list.ListAlgebra
 
 // Generic TODO: Make sure we do as much as possible outside the closures
 class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F])
     extends EvolutionAlgebra[Id, F, EvaluationResult, String] {
-  override val drawing: CoreDrawingAlgebra[Id, F, EvaluationResult] =
-    new CoreDrawingAlgebra[Id, F, EvaluationResult] {
+  override val drawing: ListAlgebra[Id, F, EvaluationResult] =
+    new ListAlgebra[Id, F, EvaluationResult] {
       override def empty[A]: EvaluationResult[F[A]] =
         Value(_ => evolutionAlg.empty)
       override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[F[A]]): EvaluationResult[F[A]] =

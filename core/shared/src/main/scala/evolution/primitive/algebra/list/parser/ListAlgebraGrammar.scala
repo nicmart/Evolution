@@ -1,32 +1,10 @@
-package evolution.primitive.algebra.parser
-
+package evolution.primitive.algebra.list.parser
 import cats.{Defer, MonoidK}
-import evolution.primitive.algebra.CoreDrawingAlgebra
-import ParserConfig.White._
-import fastparse.noApi._
-import PrimitiveParsers._
+import evolution.primitive.algebra.list.ListAlgebra
 
-class CoreDrawingAlgebraSyntax[S[_], F[_], R[_]](alg: CoreDrawingAlgebra[S, F, R])
-    extends CoreDrawingAlgebra[S, F, λ[α => Parser[R[α]]]] {
-
-  override def empty[A]: Parser[R[F[A]]] =
-    P("empty").map(_ => alg.empty)
-
-  override def cons[A](head: Parser[R[S[A]]], tail: Parser[R[F[A]]]): Parser[R[F[A]]] =
-    function2("cons", head, tail).map[R[F[A]]] { case (h, t) => alg.cons(h, t) }
-
-  override def mapEmpty[A](eva: Parser[R[F[A]]])(eva2: Parser[R[F[A]]]): Parser[R[F[A]]] =
-    function2("mapEmpty", eva, eva2)
-      .map[R[F[A]]] { case (in, out) => alg.mapEmpty(in)(out) }
-
-  override def mapCons[A, B](eva: Parser[R[F[A]]])(f: Parser[R[S[A] => F[A] => F[B]]]): Parser[R[F[B]]] =
-    function2("mapCons", eva, f)
-      .map[R[F[B]]] { case (in, out) => alg.mapCons(in)(out) }
-}
-
-class Grammar[S[_], F[_], R[_]](
+class ListAlgebraGrammar[S[_], F[_], R[_]](
   self: Expressions[S, F, R],
-  syntax: CoreDrawingAlgebra[S, F, R],
+  syntax: ListAlgebra[S, F, R],
   orMonoid: MonoidK[R],
   types: List[Type[S, F, R, _]]
 ) extends Expressions[S, F, R] {
@@ -61,9 +39,6 @@ trait Expressions[S[_], F[_], R[_]] {
   def evolution[T](t: Type[S, F, R, T]): R[F[T]]
   def mapConsFunction[T1, T2](t1: Type[S, F, R, T1], t2: Type[S, F, R, T2]): R[S[T1] => F[T1] => F[T2]]
 }
-
-case class Type[S[_], F[_], R[_], T](static: R[S[T]], evolution: R[F[T]])
-
 object Expressions {
   def fix[S[_], F[_], R[_]](dependentExpressions: Expressions[S, F, R] => Expressions[S, F, R]): Expressions[S, F, R] =
     dependentExpressions(new LazyExpressions(fix[S, F, R](dependentExpressions)))
@@ -84,6 +59,8 @@ object Expressions {
     fix[S, F, R](dependentExpressions)
   }
 }
+
+case class Type[S[_], F[_], R[_], T](static: R[S[T]], evolution: R[F[T]])
 
 case class OrExpressions[S[_], F[_], R[_]](
   orMonoid: MonoidK[R],

@@ -1,14 +1,15 @@
 package evolution.algebra.primitive.parser
 
 import cats.{Defer, Id, MonoidK}
-import evolution.primitive.algebra.CoreDrawingAlgebra
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Inside, Matchers}
 import fastparse.noApi._
 import ParserConfig.White._
+import evolution.primitive.algebra.list.ListAlgebra
+import evolution.primitive.algebra.list.parser.{Expressions, ListAlgebraGrammar, ListAlgebraSyntax, Type}
 import fastparse.noApi
 
-class CoreDrawingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
+class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside {
   import Drawing._
   import ParserConfig.White._
   "A CoreDrawingAlgebraParser" - {
@@ -57,7 +58,7 @@ class CoreDrawingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTes
     case class MapCons[A, B](eva: Drawing[A], f: Scalar[A] => Drawing[A] => Drawing[B]) extends Drawing[B]
   }
 
-  object TestCoreDrawingAlgebraInterpreter extends CoreDrawingAlgebra[Scalar, Drawing, Id] {
+  object TestListAlgebraInterpreter$ extends ListAlgebra[Scalar, Drawing, Id] {
     override def empty[A]: Drawing[A] = Empty()
     override def cons[A](head: Scalar[A], tail: Drawing[A]): Drawing[A] = Cons(head, tail)
     override def mapEmpty[A](eva: Drawing[A])(eva2: Drawing[A]): Drawing[A] = MapEmpty(eva, eva2)
@@ -73,8 +74,8 @@ class CoreDrawingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTes
   val stringType: TestType[String] =
     Type[Scalar, Drawing, Parser, String](stringLiteral.map(d => StringScalar(d)), Fail)
 
-  lazy val syntax: CoreDrawingAlgebra[Scalar, Drawing, Parser] =
-    new CoreDrawingAlgebraSyntax[Scalar, Drawing, Id](TestCoreDrawingAlgebraInterpreter)
+  lazy val syntax: ListAlgebra[Scalar, Drawing, Parser] =
+    new ListAlgebraSyntax[Scalar, Drawing, Id](TestListAlgebraInterpreter$)
 
   class BasicExpressions(self: TestExpressions) extends TestExpressions {
     override def static[T](t: TestType[T]): Parser[Scalar[T]] = t.static
@@ -90,7 +91,7 @@ class CoreDrawingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTes
     new BasicExpressions(expressions)
 
   def grammar(expressions: TestExpressions): TestExpressions =
-    new Grammar[Scalar, Drawing, Parser](expressions, syntax, parserMonoidK, List(doubleType, stringType))
+    new ListAlgebraGrammar[Scalar, Drawing, Parser](expressions, syntax, parserMonoidK, List(doubleType, stringType))
 
   // TODO move somewhere
   lazy val parserMonoidK: MonoidK[Parser] = new MonoidK[Parser] {

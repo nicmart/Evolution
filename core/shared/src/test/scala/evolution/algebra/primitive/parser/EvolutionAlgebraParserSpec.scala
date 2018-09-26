@@ -4,7 +4,8 @@ import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra}
+import evolution.primitive.algebra.BindingAlgebra
+import evolution.primitive.algebra.list.ListAlgebra
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -165,8 +166,8 @@ class EvolutionAlgebraParserSpec extends FreeSpec with Matchers with CommonTestP
   }
 
   object TestInterpreter extends EvolutionAlgebra[Scalar, Drawing, Binding, String] {
-    override val drawing: CoreDrawingAlgebra[Scalar, Drawing, Binding] =
-      new CoreDrawingAlgebra[Scalar, Drawing, Binding] {
+    override val drawing: ListAlgebra[Scalar, Drawing, Binding] =
+      new ListAlgebra[Scalar, Drawing, Binding] {
         override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())
         override def cons[A](head: BScalar[A], tail: BDrawing[A]): BDrawing[A] = DrawingB(Drawing.Cons(head, tail))
         override def mapEmpty[A](eva: BDrawing[A])(eva2: BDrawing[A]): BDrawing[A] =
