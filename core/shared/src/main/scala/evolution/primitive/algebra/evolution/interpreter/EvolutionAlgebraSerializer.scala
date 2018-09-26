@@ -1,9 +1,10 @@
 package evolution.primitive.algebra.evolution.interpreter
 import cats.kernel.Semigroup
 import evolution.geometry.Point
+import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.interpreter.{BindingAlgebraSerializer, ConstString, CtxString}
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra}
 
 object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {
   override val drawing: CoreDrawingAlgebra[ConstString, ConstString, CtxString] =
@@ -17,7 +18,7 @@ object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstStr
       override def mapCons[A, B](eva: CtxString[A])(f: CtxString[String => String => String]): CtxString[B] =
         ctx => s"mapCons(${eva(ctx)})(h -> t -> ${f("h" :: "t" :: ctx)})"
     }
-  override val scalar: ScalarAlgebra[RS] = new ScalarAlgebra[RS] {
+  override val scalar: ConstantsAlgebra[RS] = new ConstantsAlgebra[RS] {
     override def double(d: Double): CtxString[Double] = _ => d.toString
     override def point(x: Double, y: Double): CtxString[Point] = _ => s"point($x, $y)"
     override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] = ctx => s"add(${a(ctx)}, ${b(ctx)})"

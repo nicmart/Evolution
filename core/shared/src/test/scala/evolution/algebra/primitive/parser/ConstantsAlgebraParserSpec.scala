@@ -2,12 +2,12 @@ package evolution.algebra.primitive.parser
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.ScalarAlgebra
-import evolution.primitive.algebra.parser.{ParserConfig, ScalarAlgebraParser, ScalarParserContainer}
+import evolution.primitive.algebra.constants.ConstantsAlgebra
+import evolution.primitive.algebra.parser.{ConstantsAlgebraParser, ParserConfig, ScalarParserContainer}
 import org.scalatest.{FreeSpec, Matchers}
 import evolution.primitive.algebra.parser.ParsersContainerOps._
 
-class ScalarAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
+class ConstantsAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import ParserConfig.White._
   import evolution.primitive.algebra.parser.PrimitiveParsers._
   import fastparse.noApi._
@@ -29,7 +29,7 @@ class ScalarAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPars
     }
   }
 
-  object ScalarTestInterpreter extends ScalarAlgebra[Scalar] {
+  object ConstantsTestInterpreter$ extends ConstantsAlgebra[Scalar] {
     override def double(d: Double): Scalar[Double] = DoubleScalar(d)
     override def point(x: Double, y: Double): Scalar[Point] = PointScalar(Point(x, y))
     override def add[T: Semigroup](a: Scalar[T], b: Scalar[T]): Scalar[T] = ???
@@ -39,7 +39,7 @@ class ScalarAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPars
   case class DoubleScalar(double: Double) extends Scalar[Double]
   case class PointScalar(point: Point) extends Scalar[Point]
 
-  lazy val parser = new ScalarAlgebraParser(ScalarTestInterpreter)
+  lazy val parser = new ConstantsAlgebraParser(ConstantsTestInterpreter$)
 
   lazy val container: ScalarParserContainer[Scalar] =
     parser.buildContainer(ScalarParserContainer.empty[Scalar])

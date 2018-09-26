@@ -2,8 +2,9 @@ package evolution.algebra.primitive.parser
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point
+import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra}
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -173,7 +174,7 @@ class EvolutionAlgebraParserSpec extends FreeSpec with Matchers with CommonTestP
         override def mapCons[A, B](eva: BDrawing[A])(f: Binding[Scalar[A] => Drawing[A] => Drawing[B]]): BDrawing[B] =
           DrawingB(Drawing.MapCons(eva, f))
       }
-    override val scalar: ScalarAlgebra[BScalar] = new ScalarAlgebra[BScalar] {
+    override val scalar: ConstantsAlgebra[BScalar] = new ConstantsAlgebra[BScalar] {
       override def double(d: Double): BScalar[Double] = ScalarB(Scalar.DoubleScalar(d))
       override def point(x: Double, y: Double): BScalar[Point] = ScalarB(Scalar.PointScalar(Point(x, y)))
       override def add[T: Semigroup](a: BScalar[T], b: BScalar[T]): BScalar[T] = ???

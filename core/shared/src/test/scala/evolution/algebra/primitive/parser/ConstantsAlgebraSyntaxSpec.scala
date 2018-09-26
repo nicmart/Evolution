@@ -3,19 +3,20 @@ package evolution.algebra.primitive.parser
 import cats.{Defer, MonoidK}
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.{ScalarAlgebra, parser}
+import evolution.primitive.algebra.parser
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import evolution.primitive.algebra.parser.PrimitiveParsers.function2
-import evolution.primitive.algebra.parser.{LazyExpressions, ParserConfig, ScalarAlgebra}
+import evolution.primitive.algebra.constants.parser._
 import fastparse.noApi.{Fail, P, Parser}
 import fastparse.noApi._
 import fastparse.noApi
 import fastparse.all
-import ParserConfig.White._
+import evolution.primitive.algebra.parser.ParserConfig.White._
+import evolution.primitive.algebra.constants.ConstantsAlgebra
 import fastparse.noApi._
 
-class ScalarAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers {
+class ConstantsAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers {
 
   "A ScalarAlgebraParser should parse" - {
     "double literals" in {
@@ -45,9 +46,9 @@ class ScalarAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPars
   }
 
   type ScalarParser[T] = Parser[Scalar[T]]
-  type TestExpressions = ScalarAlgebra.Expressions[ScalarParser]
+  type TestExpressions = Expressions[ScalarParser]
 
-  object ScalarTestInterpreter extends ScalarAlgebra[Scalar] {
+  object ConstantsTestInterpreter$ extends ConstantsAlgebra[Scalar] {
     override def double(d: Double): Scalar[Double] = DoubleScalar(d)
     override def point(x: Double, y: Double): Scalar[Point] = PointScalar(Point(x, y))
     override def add[T: Semigroup](a: Scalar[T], b: Scalar[T]): Scalar[T] = Add(a, b)
@@ -76,13 +77,14 @@ class ScalarAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPars
     override def defer[A](fa: => ScalarParser[A]): ScalarParser[A] = P(fa)
   }
 
-  val syntax: ScalarAlgebra.Syntax[Scalar] = new ScalarAlgebra.Syntax(ScalarTestInterpreter)
+  val syntax: ConstantsAlgebraSyntax[Scalar] =
+    new ConstantsAlgebraSyntax(ConstantsTestInterpreter$)
 
-  def grammar(self: ScalarAlgebra.Expressions[ScalarParser]): ScalarAlgebra.Expressions[ScalarParser] =
-    new ScalarAlgebra.Grammar[ScalarParser](self, syntax, parserMonoidK)
+  def grammar(self: Expressions[ScalarParser]): Expressions[ScalarParser] =
+    new ConstantsAlgebraGrammar[ScalarParser](self, syntax, parserMonoidK)
 
-  def expressions: ScalarAlgebra.Expressions[ScalarParser] =
-    grammar(new parser.ScalarAlgebra.LazyExpressions[ScalarParser](expressions, deferParser))
+  def expressions: Expressions[ScalarParser] =
+    grammar(new LazyExpressions[ScalarParser](expressions, deferParser))
 
   private def unsafeParseDouble(serializedExpression: String): Scalar[Double] =
     expressions.get(doubleParser).parse(serializedExpression).get.value

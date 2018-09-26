@@ -1,12 +1,12 @@
 package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
-import evolution.primitive.algebra.ScalarAlgebra
 import ParsersContainerOps._
 import cats.kernel.Semigroup
 import cats.instances.double._
+import evolution.primitive.algebra.constants.ConstantsAlgebra
 
-class ScalarAlgebraParser[S[_]](alg: ScalarAlgebra[S]) {
+class ConstantsAlgebraParser[S[_]](alg: ConstantsAlgebra[S]) {
   import ParserConfig.White._
   import fastparse.noApi._
   import PrimitiveParsers._
