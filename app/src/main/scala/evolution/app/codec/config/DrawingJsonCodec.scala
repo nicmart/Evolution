@@ -5,16 +5,16 @@ import evolution.app.portfolio.dsl.Config
 import evolution.geometry.Point
 import evolution.primitive.algebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.interpreter.Serializer
+import evolution.primitive.algebra.evolution.interpreter.EvolutionAlgebraSerializer
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import io.circe.Json
 
 object DrawingJsonCodec extends JsonCodec[Config] {
   override def encode(t: Config): Json =
-    Json.fromString(t.run(Serializer)(Nil))
+    Json.fromString(t.run(EvolutionAlgebraSerializer)(Nil))
   // TODO this is rubbish
   override def decode(r: Json): Option[Config] = {
-    val algabraParser = new DrawingAlgebraParser(Serializer)
+    val algabraParser = new DrawingAlgebraParser(EvolutionAlgebraSerializer)
     val container = algabraParser.container
     val stringParser = algabraParser.container.dependentPointParserF.parser(container)
     for {

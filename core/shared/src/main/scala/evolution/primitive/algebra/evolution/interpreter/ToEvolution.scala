@@ -1,11 +1,12 @@
-package evolution.primitive.algebra.interpreter
+package evolution.primitive.algebra.evolution.interpreter
 
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
 import evolution.algebra.EvolutionCoreAlgebra
 import evolution.geometry.Point
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Id, Value}
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
 
 // Generic TODO: Make sure we do as much as possible outside the closures
 class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F])

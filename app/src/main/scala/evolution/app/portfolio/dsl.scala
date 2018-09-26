@@ -10,6 +10,7 @@ import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
 import evolution.primitive.algebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraSerializer, ToEvolution}
 import evolution.primitive.algebra.interpreter._
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import fastparse.noApi
@@ -26,7 +27,7 @@ object dsl extends DrawingDefinition[Point] {
     // TODO improve this rubbish
     instance[Config]("drawing config") { (config2Snapshot, children) =>
       val stringSnapshot =
-        config2Snapshot.zoomState[String](config2 => config2.run(algebra.interpreter.Serializer)(Nil)) {
+        config2Snapshot.zoomState[String](config2 => config2.run(EvolutionAlgebraSerializer)(Nil)) {
           serialized => previousConfig =>
             new Config {
               override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {

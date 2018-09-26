@@ -1,10 +1,10 @@
 package evolution.algebra.primitive.interpreter
 import evolution.algebra.interpreter.{RNGInterpreter, StreamInterpreter}
-import evolution.primitive.algebra.interpreter.ToEvolution
 import evolution.random.RNG
 import org.scalatest.{FreeSpec, Matchers}
 import cats.instances.double._
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.evolution.interpreter.ToEvolution
 class ToEvolutionSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
