@@ -9,7 +9,7 @@ import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
 import evolution.primitive.algebra
-import evolution.primitive.algebra.DrawingAlgebra
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.interpreter._
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import fastparse.noApi
@@ -19,7 +19,7 @@ object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
   trait Config {
-    def run[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R, String]): R[F[Point]]
+    def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]]
   }
 
   override val configComponent: ConfigComponent[Config] = {
@@ -29,7 +29,7 @@ object dsl extends DrawingDefinition[Point] {
         config2Snapshot.zoomState[String](config2 => config2.run(algebra.interpreter.Serializer)(Nil)) {
           serialized => previousConfig =>
             new Config {
-              override def run[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R, String]): R[F[Point]] = {
+              override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
                 val algebraParser = new DrawingAlgebraParser[S, F, R](alg)
                 val parser: noApi.Parser[R[F[Point]]] = algebraParser.container.pointParserF
                 parser
@@ -51,7 +51,7 @@ object dsl extends DrawingDefinition[Point] {
     }
   }
   val initialConfig: Config = new Config {
-    override def run[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R, String]): R[F[Point]] = {
+    override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
       import alg.drawing._, alg.bind._
       import alg.scalar._
       fix(lambda("self", cons(point(0, 0), var0[F[Point]])))

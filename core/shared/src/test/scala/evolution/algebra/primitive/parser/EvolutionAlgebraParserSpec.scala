@@ -2,11 +2,12 @@ package evolution.algebra.primitive.parser
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, DrawingAlgebra, ScalarAlgebra}
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import org.scalatest.{FreeSpec, Matchers}
 
-class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
+class EvolutionAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParsers {
   import Binding._, Drawing._, Scalar._
   "A drawingAlgebraParser should parse" - {
     pending
@@ -162,7 +163,7 @@ class DrawingAlgebraParserSpec extends FreeSpec with Matchers with CommonTestPar
         extends Drawing[B]
   }
 
-  object TestInterpreter extends DrawingAlgebra[Scalar, Drawing, Binding, String] {
+  object TestInterpreter extends EvolutionAlgebra[Scalar, Drawing, Binding, String] {
     override val drawing: CoreDrawingAlgebra[Scalar, Drawing, Binding] =
       new CoreDrawingAlgebra[Scalar, Drawing, Binding] {
         override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())

@@ -1,11 +1,11 @@
 package evolution.primitive.algebra.parser
 
 import evolution.geometry.Point
-import evolution.primitive.algebra.DrawingAlgebra
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.parser.DrawingAlgebraParser.Container
 import fastparse.noApi._
 
-class DrawingAlgebraParser[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R, String]) {
+class DrawingAlgebraParser[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]) {
   type RS[A] = R[S[A]]
   type RF[A] = R[F[A]]
   private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[S, F, R] =

@@ -4,6 +4,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.portfolio.dsl.Config
 import evolution.geometry.Point
 import evolution.primitive.algebra
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.interpreter.Serializer
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import io.circe.Json
@@ -27,7 +28,7 @@ object DrawingJsonCodec extends JsonCodec[Config] {
         } else {
           println("Successful expression")
           Some(new Config {
-            override def run[S[_], F[_], R[_]](alg: algebra.DrawingAlgebra[S, F, R, String]): R[F[Point]] = {
+            override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
               val algebraParser = new DrawingAlgebraParser(alg)
               val parser = algebraParser.container.pointParserF
               parser.parse(serialized).get.value

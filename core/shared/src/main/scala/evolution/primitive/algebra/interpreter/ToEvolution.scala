@@ -3,12 +3,13 @@ package evolution.primitive.algebra.interpreter
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
 import evolution.algebra.EvolutionCoreAlgebra
-import evolution.primitive.algebra._
 import evolution.geometry.Point
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 
 // Generic TODO: Make sure we do as much as possible outside the closures
 class ToEvolution[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F])
-    extends DrawingAlgebra[Id, F, EvaluationResult, String] {
+    extends EvolutionAlgebra[Id, F, EvaluationResult, String] {
   override val drawing: CoreDrawingAlgebra[Id, F, EvaluationResult] =
     new CoreDrawingAlgebra[Id, F, EvaluationResult] {
       override def empty[A]: EvaluationResult[F[A]] =

@@ -6,7 +6,6 @@ import evolution.primitive.algebra.{
   ContextualCoreDrawingAlgebra,
   ContextualScalarAlgebra,
   CoreDrawingAlgebra,
-  DrawingAlgebra,
   MappedCoreDrawingAlgebra,
   MappedScalarAlgebra,
   ScalarAlgebra,
@@ -18,13 +17,14 @@ import fastparse.noApi._
 import PrimitiveParsers._
 import cats.arrow.FunctionK
 import cats.~>
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.parser.BindingAlgebra.ByVarParser
 import fastparse.noApi
 
 object DrawingAlgebra {
 
-  class Syntax[S[_], F[_], R[_]](alg: DrawingAlgebra[S, F, R, String])
-      extends DrawingAlgebra[S, F, ByVarParser[R, ?], Parser[String]] {
+  class Syntax[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String])
+      extends EvolutionAlgebra[S, F, ByVarParser[R, ?], Parser[String]] {
 
     override val drawing: CoreDrawingAlgebra[S, F, ByVarParser[R, ?]] =
       new ContextualCoreDrawingAlgebra[S, F, λ[α => Parser[R[α]]], List[String]](

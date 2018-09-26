@@ -2,9 +2,10 @@ package evolution.primitive.algebra.interpreter
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra._
+import evolution.primitive.algebra.{BindingAlgebra, CoreDrawingAlgebra, ScalarAlgebra}
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
 
-object Serializer extends DrawingAlgebra[ConstString, ConstString, CtxString, String] {
+object Serializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {
   override val drawing: CoreDrawingAlgebra[ConstString, ConstString, CtxString] =
     new CoreDrawingAlgebra[ConstString, ConstString, CtxString] {
       override def empty[A]: CtxString[A] =

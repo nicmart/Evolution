@@ -28,14 +28,6 @@ trait ScalarAlgebra[S[_]] {
   def add[T: Semigroup](a: S[T], b: S[T]): S[T]
 }
 
-trait DrawingAlgebra[S[_], F[_], R[_], VarName] {
-  final type RS[T] = R[S[T]]
-  final type RF[T] = R[F[T]]
-  val drawing: CoreDrawingAlgebra[S, F, R]
-  val scalar: ScalarAlgebra[RS]
-  val bind: BindingAlgebra[R, VarName]
-}
-
 class MappedBindingAlgebra[R1[_], R2[_], VarName](alg: BindingAlgebra[R1, VarName], to: R1 ~> R2, from: R2 ~> R1)
     extends BindingAlgebra[R2, VarName] {
   def varName(name: String): VarName =
