@@ -5,6 +5,7 @@ import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.parser.DrawingAlgebraParser.Container
 import fastparse.noApi._
 
+@deprecated
 class DrawingAlgebraParser[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]) {
   type RS[A] = R[S[A]]
   type RF[A] = R[F[A]]

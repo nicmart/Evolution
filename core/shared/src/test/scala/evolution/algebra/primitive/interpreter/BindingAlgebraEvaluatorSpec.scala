@@ -1,5 +1,5 @@
 package evolution.algebra.primitive.interpreter
-import evolution.primitive.algebra.interpreter._
+import evolution.primitive.algebra.binding.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Value}
 import org.scalatest.{FreeSpec, Matchers}
 
 class BindingAlgebraEvaluatorSpec extends FreeSpec with Matchers {
@@ -38,18 +38,6 @@ class BindingAlgebraEvaluatorSpec extends FreeSpec with Matchers {
     "evaluates to the substitution of the evaluations" in {
       val expr = let[Int, Int]("x", value(1))(var0)
       expr.get(Nil) shouldBe 1
-    }
-  }
-
-  "a fix expression" - {
-    "evaluates recursively" in {
-      pending
-      def factorial(ctx: List[() => Any]): Int => Int =
-        n => if (n <= 0) 1 else n * var0[Int => Int].get(ctx)(n - 1)
-
-//      val expr = fix[Int => Int](factorial)
-//      expr(Nil)(0) shouldBe 1
-//      expr(Nil)(4) shouldBe 24
     }
   }
 

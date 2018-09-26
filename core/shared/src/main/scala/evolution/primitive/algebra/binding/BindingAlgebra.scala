@@ -1,8 +1,4 @@
-package evolution.primitive.algebra
-
-import _root_.evolution.geometry.Point
-import cats.kernel.Semigroup
-import cats.syntax.semigroup._
+package evolution.primitive.algebra.binding
 import cats.~>
 
 trait BindingAlgebra[R[_], VarName] {

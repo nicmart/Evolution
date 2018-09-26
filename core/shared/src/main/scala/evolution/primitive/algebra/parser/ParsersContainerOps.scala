@@ -3,6 +3,7 @@ package evolution.primitive.algebra.parser
 import fastparse.noApi.Parser
 import ParsersContainerOps._
 
+@deprecated
 class ParsersContainerOps[C](container: C) {
   def dependentParser[F[_], T](implicit hasValue: HasParser[C, F, T]): DependentParser[C, F[T]] =
     hasValue.get(container)

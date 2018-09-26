@@ -6,6 +6,7 @@ import cats.kernel.Semigroup
 import cats.instances.double._
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 
+@deprecated
 class ConstantsAlgebraParser[S[_]](alg: ConstantsAlgebra[S]) {
   import ParserConfig.White._
   import fastparse.noApi._

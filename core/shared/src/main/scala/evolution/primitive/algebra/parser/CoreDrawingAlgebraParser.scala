@@ -3,6 +3,7 @@ import ParsersContainerOps._
 import PrimitiveParsers._
 import evolution.primitive.algebra.list.ListAlgebra
 
+@deprecated
 class CoreDrawingAlgebraParser[S[_], F[_], R[_]](alg: ListAlgebra[S, F, R]) {
   final type RF[T] = R[F[T]]
   final type RS[T] = R[S[T]]

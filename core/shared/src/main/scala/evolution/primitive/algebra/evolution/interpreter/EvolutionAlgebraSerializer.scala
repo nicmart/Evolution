@@ -1,10 +1,11 @@
 package evolution.primitive.algebra.evolution.interpreter
 import cats.kernel.Semigroup
 import evolution.geometry.Point
+import evolution.primitive.algebra.{ConstString, CtxString}
+import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.interpreter.BindingAlgebraSerializer
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.interpreter.{BindingAlgebraSerializer, ConstString, CtxString}
-import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.list.ListAlgebra
 
 object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {

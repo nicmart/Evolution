@@ -1,13 +1,14 @@
 package evolution.primitive.algebra.evolution.interpreter
 
+import cats.Id
 import cats.kernel.Semigroup
 import cats.syntax.semigroup._
 import evolution.algebra.EvolutionCoreAlgebra
 import evolution.geometry.Point
+import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Value}
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Id, Value}
-import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.list.ListAlgebra
 
 // Generic TODO: Make sure we do as much as possible outside the closures

@@ -1,5 +1,6 @@
 package evolution.app.portfolio
 
+import cats.Id
 import evolution.algebra._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
@@ -9,6 +10,7 @@ import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
 import evolution.primitive.algebra
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraSerializer, ToEvolution}
 import evolution.primitive.algebra.interpreter._

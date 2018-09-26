@@ -1,6 +1,6 @@
-package evolution.primitive.algebra.interpreter
-
-import evolution.primitive.algebra.BindingAlgebra
+package evolution.primitive.algebra.binding.interpreter
+import evolution.primitive.algebra.CtxString
+import evolution.primitive.algebra.binding.BindingAlgebra
 
 object BindingAlgebraSerializer extends BindingAlgebra[CtxString, String] {
   override def varName(name: String): String = name

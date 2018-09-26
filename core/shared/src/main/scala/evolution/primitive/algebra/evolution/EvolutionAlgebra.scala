@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.evolution
+import evolution.primitive.algebra.binding.BindingAlgebra
 import evolution.primitive.algebra.constants.ConstantsAlgebra
-import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.list.ListAlgebra
 
 trait EvolutionAlgebra[S[_], F[_], R[_], VarName] {

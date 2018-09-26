@@ -2,9 +2,9 @@ package evolution.algebra.primitive.parser
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point
+import evolution.primitive.algebra.binding.BindingAlgebra
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.BindingAlgebra
 import evolution.primitive.algebra.list.ListAlgebra
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import org.scalatest.{FreeSpec, Matchers}

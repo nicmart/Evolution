@@ -1,8 +1,8 @@
 package evolution.primitive.algebra.parser
-
-import evolution.primitive.algebra.BindingAlgebra
 import ParsersContainerOps._
+import evolution.primitive.algebra.binding.BindingAlgebra
 
+@deprecated
 class BindingAlgebraParser[F[_]](alg: BindingAlgebra[F, String]) {
   import ParserConfig.White._
   import fastparse.noApi._

@@ -1,11 +1,9 @@
 package evolution.algebra.primitive.parser
 
 import cats.{Defer, MonoidK}
-import evolution.drawing.algebra.interpreter.CtxString
-import evolution.primitive.algebra.{BindingAlgebra, parser}
-import evolution.primitive.algebra.interpreter.BindingAlgebraSerializer
-import evolution.primitive.algebra.parser.{BindingAlgebra, _}
-import fastparse.noApi
+import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.parser.{BindingAlgebraGrammar, BindingAlgebraSyntax, Expressions}
+import evolution.primitive.algebra.parser._
 import fastparse.noApi.Parser
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -124,12 +122,12 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
   val doubleParser: ByVarParser[Double] = _ => double.map(d => Value[Double](d))
 
   val syntax: BindingAlgebra[ByVarParser, Parser[String]] =
-    new parser.BindingAlgebra.Syntax[Expr](testInterpreter)
+    new BindingAlgebraSyntax[Expr](testInterpreter)
 
   val varNameSyntax: Parser[String] = varName
 
-  def grammar(self: BindingAlgebra.Expressions[ByVarParser]): BindingAlgebra.Expressions[ByVarParser] =
-    new BindingAlgebra.Grammar[ByVarParser, Parser[String]](
+  def grammar(self: Expressions[ByVarParser]): Expressions[ByVarParser] =
+    new BindingAlgebraGrammar[ByVarParser, Parser[String]](
       self,
       syntax,
       varNameSyntax,
@@ -141,12 +139,12 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
     override def defer[A](fa: => ByVarParser[A]): ByVarParser[A] = vars => P(fa(vars))
   }
 
-  val expressions2: BindingAlgebra.Expressions[ByVarParser] =
-    BindingAlgebra
+  val expressions2: Expressions[ByVarParser] =
+    BindingAlgebraGrammar
       .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
 
-  val expressions: BindingAlgebra.Expressions[ByVarParser] =
-    BindingAlgebra
+  val expressions: Expressions[ByVarParser] =
+    BindingAlgebraGrammar
       .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
 
   private def unsafeParseDouble(expression: String): Expr[Double] =
