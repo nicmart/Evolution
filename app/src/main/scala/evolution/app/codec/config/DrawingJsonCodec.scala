@@ -27,7 +27,7 @@ object DrawingJsonCodec extends JsonCodec[Config] {
         } else {
           println("Successful expression")
           Some(new Config {
-            override def run[S[_], F[_], R[_]](alg: algebra.DrawingAlgebra[S, F, R]): R[F[Point]] = {
+            override def run[S[_], F[_], R[_]](alg: algebra.DrawingAlgebra[S, F, R, String]): R[F[Point]] = {
               val algebraParser = new DrawingAlgebraParser(alg)
               val parser = algebraParser.container.pointParserF
               parser.parse(serialized).get.value

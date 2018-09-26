@@ -69,6 +69,17 @@ class MappedCoreDrawingAlgebra[S[_], F[_], R1[_], R2[_]](
     to(alg.mapCons(from(eva))(from(f)))
 }
 
+class ContextualCoreDrawingAlgebra[S[_], F[_], R[_], Ctx](alg: CoreDrawingAlgebra[S, F, R])
+    extends CoreDrawingAlgebra[S, F, λ[α => Ctx => R[α]]] {
+  override def empty[A]: Ctx => R[F[A]] = _ => alg.empty
+  override def cons[A](head: Ctx => R[S[A]], tail: Ctx => R[F[A]]): Ctx => R[F[A]] =
+    ctx => alg.cons(head(ctx), tail(ctx))
+  override def mapEmpty[A](eva: Ctx => R[F[A]])(eva2: Ctx => R[F[A]]): Ctx => R[F[A]] =
+    ctx => alg.mapEmpty(eva(ctx))(eva2(ctx))
+  override def mapCons[A, B](eva: Ctx => R[F[A]])(f: Ctx => R[S[A] => F[A] => F[B]]): Ctx => R[F[B]] =
+    ctx => alg.mapCons(eva(ctx))(f(ctx))
+}
+
 class MappedScalarAlgebra[S1[_], S2[_]](alg: ScalarAlgebra[S1], to: S1 ~> S2, from: S2 ~> S1)
     extends ScalarAlgebra[S2] {
   def double(d: Double): S2[Double] =
@@ -77,4 +88,11 @@ class MappedScalarAlgebra[S1[_], S2[_]](alg: ScalarAlgebra[S1], to: S1 ~> S2, fr
     to(alg.point(x, y))
   def add[T: Semigroup](a: S2[T], b: S2[T]): S2[T] =
     to(alg.add(from(a), from(b)))
+}
+
+class ContextualScalarAlgebra[S[_], Ctx](alg: ScalarAlgebra[S]) extends ScalarAlgebra[λ[α => Ctx => S[α]]] {
+  override def double(d: Double): Ctx => S[Double] = _ => alg.double(d)
+  override def point(x: Double, y: Double): Ctx => S[Point] = _ => alg.point(x, y)
+  override def add[T: Semigroup](a: Ctx => S[T], b: Ctx => S[T]): Ctx => S[T] =
+    ctx => alg.add(a(ctx), b(ctx))
 }
