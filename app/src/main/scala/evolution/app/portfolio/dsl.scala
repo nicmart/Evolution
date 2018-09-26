@@ -12,8 +12,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraSerializer, ToEvolution}
-import evolution.primitive.algebra.interpreter._
+import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraSerializer, EvolutionAlgebraEvaluator}
 import evolution.primitive.algebra.parser.DrawingAlgebraParser
 import fastparse.noApi
 import japgolly.scalajs.react.vdom.html_<^._
@@ -50,13 +49,13 @@ object dsl extends DrawingDefinition[Point] {
     //config.run(new ToEvolution())(List.empty).evolution
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] =
-        config.run[Id, Evo, EvaluationResult](new ToEvolution[Evo](alg)).get(List.empty)
+        config.run[Id, Evo, EvaluationResult](new EvolutionAlgebraEvaluator[Evo](alg)).get(List.empty)
     }
   }
   val initialConfig: Config = new Config {
     override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
       import alg.drawing._, alg.bind._
-      import alg.scalar._
+      import alg.constants._
       fix(lambda("self", cons(point(0, 0), var0[F[Point]])))
     }
   }

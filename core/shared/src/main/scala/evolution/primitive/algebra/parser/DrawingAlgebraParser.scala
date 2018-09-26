@@ -14,7 +14,7 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, Stri
   private val bindingAlgebraParser: BindingAlgebraParser[R] =
     new BindingAlgebraParser[R](alg.bind)
   private val scalarAlgebraParser: ConstantsAlgebraParser[RS] =
-    new ConstantsAlgebraParser[RS](alg.scalar)
+    new ConstantsAlgebraParser[RS](alg.constants)
 
   def buildContainer[C](container: C)(
     implicit
