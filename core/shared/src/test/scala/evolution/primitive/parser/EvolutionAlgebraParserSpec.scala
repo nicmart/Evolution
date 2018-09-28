@@ -166,7 +166,7 @@ class EvolutionAlgebraParserSpec extends FreeSpec with Matchers with CommonTestP
   }
 
   object TestInterpreter extends EvolutionAlgebra[Scalar, Drawing, Binding, String] {
-    override val drawing: ListAlgebra[Scalar, Drawing, Binding] =
+    override val list: ListAlgebra[Scalar, Drawing, Binding] =
       new ListAlgebra[Scalar, Drawing, Binding] {
         override def empty[A]: BDrawing[A] = DrawingB(Drawing.Empty())
         override def cons[A](head: BScalar[A], tail: BDrawing[A]): BDrawing[A] = DrawingB(Drawing.Cons(head, tail))

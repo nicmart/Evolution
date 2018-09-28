@@ -55,7 +55,7 @@ class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
     Type[Constant, ListExpr, Composed[Parser, Binding, ?], String](stringLiteral.map(d => Lift(Value(d))), Fail)
 
   lazy val syntax: ListAlgebra[Constant, ListExpr, Composed[Parser, Binding, ?]] =
-    new ListAlgebraSyntax[Constant, ListExpr, Binding](TestListAlgebraInterpreter)
+    new ListAlgebraSyntax[Constant, ListExpr, Binding](ListAlgebraTestInterpreter)
 
   class BasicExpressions(self: TestExpressions) extends TestExpressions {
     override def static[T](t: TestType[T]): Parser[Binding[Constant[T]]] = t.static

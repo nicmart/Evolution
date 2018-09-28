@@ -16,7 +16,7 @@ import evolution.primitive.algebra.list.interpreter.ListAlgebraEvaluator
 // Generic TODO: Make sure we do as much as possible outside the closures
 class EvolutionAlgebraEvaluator[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F])
     extends EvolutionAlgebra[Id, F, EvaluationResult, String] {
-  override val drawing: ListAlgebra[Id, F, EvaluationResult] = new ListAlgebraEvaluator(evolutionAlg)
+  override val list: ListAlgebra[Id, F, EvaluationResult] = new ListAlgebraEvaluator(evolutionAlg)
   override val constants: ConstantsAlgebra[EvaluationResult] = ConstantsAlgebraEvaluator
   override val bind: BindingAlgebra[EvaluationResult, String] = BindingAlgebraEvaluator
 }

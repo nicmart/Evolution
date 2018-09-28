@@ -1,4 +1,5 @@
 package evolution.primitive.algebra.evolution.parser
+import evolution.geometry.Point
 import evolution.primitive.algebra.ByVarParser
 import evolution.primitive.algebra.binding.BindingAlgebra
 import evolution.primitive.algebra.binding.parser.BindingAlgebraSyntax
@@ -12,12 +13,17 @@ import fastparse.noApi.Parser
 class EvolutionAlgebraSyntax[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String])
     extends EvolutionAlgebra[S, F, ByVarParser[R, ?], Parser[String]] {
 
-  override val drawing: ListAlgebra[S, F, ByVarParser[R, ?]] =
-    new ContextualListAlgebra[S, F, λ[α => Parser[R[α]]], List[String]](new ListAlgebraSyntax(alg.drawing))
+  private val constantsSyntax = new ConstantsAlgebraSyntax(alg.constants)
+
+  override val list: ListAlgebra[S, F, ByVarParser[R, ?]] =
+    new ContextualListAlgebra[S, F, λ[α => Parser[R[α]]], List[String]](new ListAlgebraSyntax(alg.list))
 
   override val constants: ConstantsAlgebra[λ[α => ByVarParser[R, S[α]]]] =
-    new ContextualConstantsAlgebra[λ[α => Parser[R[S[α]]]], List[String]](new ConstantsAlgebraSyntax(alg.constants))
+    new ContextualConstantsAlgebra[λ[α => Parser[R[S[α]]]], List[String]](constantsSyntax)
 
   override val bind: BindingAlgebra[ByVarParser[R, ?], Parser[String]] =
     new BindingAlgebraSyntax(alg.bind)
+
+  val doubleConstant: ByVarParser[R, S[Double]] = _ => constantsSyntax.anyDouble
+  val pointConstant: ByVarParser[R, S[Point]] = _ => constantsSyntax.anyPoint
 }

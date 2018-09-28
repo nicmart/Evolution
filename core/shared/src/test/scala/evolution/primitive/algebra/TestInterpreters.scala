@@ -53,7 +53,7 @@ trait TestInterpreters {
     override def add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]): Binding[Constant[T]] = Add(a, b)
   }
 
-  object TestListAlgebraInterpreter extends ListAlgebra[Constant, ListExpr, Binding] {
+  object ListAlgebraTestInterpreter extends ListAlgebra[Constant, ListExpr, Binding] {
     override def empty[A]: Binding[ListExpr[A]] = Empty[A]()
     override def cons[A](head: Binding[Constant[A]], tail: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       Cons(head, tail)
@@ -66,7 +66,7 @@ trait TestInterpreters {
   }
 
   object EvolutionAlgebraTestInterpreter extends EvolutionAlgebra[Constant, ListExpr, Binding, String] {
-    override val drawing: ListAlgebra[Constant, ListExpr, Binding] = TestListAlgebraInterpreter
+    override val list: ListAlgebra[Constant, ListExpr, Binding] = ListAlgebraTestInterpreter
     override val constants: ConstantsAlgebra[Composed[Binding, Constant, ?]] = ConstantsAlgebraTestInterpreter
     override val bind: BindingAlgebra[Binding, String] = BindingAlgebraTestInterpreter
   }

@@ -1,15 +1,16 @@
 package evolution.primitive.interpreter
-import evolution.algebra.interpreter.{RNGInterpreter, StreamInterpreter}
+import evolution.algebra.interpreter.StreamInterpreter
 import evolution.random.RNG
 import org.scalatest.{FreeSpec, Matchers}
 import cats.instances.double._
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.evolution.interpreter.EvolutionAlgebraEvaluator
+
 class EvolutionAlgebraEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
       def drawing[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Double]] = {
-        import alg.drawing._, alg.bind._, alg.constants._
+        import alg.list._, alg.bind._, alg.constants._
         fix(lambda("x", cons(double(1), var0[F[Double]])))
       }
       val stream = drawing(interpreter).get(Nil)
@@ -18,7 +19,7 @@ class EvolutionAlgebraEvaluatorSpec extends FreeSpec with Matchers {
 
     "should create an evolution of the sequence of integers" in {
       def drawing[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Double]] = {
-        import alg.drawing._, alg.bind._, alg.constants._
+        import alg.list._, alg.bind._, alg.constants._
         app[S[Double], F[Double]](
           fix(
             lambda(
@@ -37,7 +38,7 @@ class EvolutionAlgebraEvaluatorSpec extends FreeSpec with Matchers {
       def integrate[S[_], F[_], R[_]](
         alg: EvolutionAlgebra[S, F, R, String]
       ): R[S[Double] => F[Double] => F[Double]] = {
-        import alg.drawing._, alg.bind._, alg.constants._
+        import alg.list._, alg.bind._, alg.constants._
         def varN[T](n: Int): R[T] = if (n <= 0) var0[T] else shift(varN(n - 1))
 
         fix[S[Double] => F[Double] => F[Double]](
@@ -72,12 +73,12 @@ class EvolutionAlgebraEvaluatorSpec extends FreeSpec with Matchers {
       }
 
       def constant[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Double]] = {
-        import alg.drawing._, alg.bind._, alg.constants._
+        import alg.list._, alg.bind._, alg.constants._
         fix[F[Double]](lambda("self", cons(double(1), var0[F[Double]])))
       }
 
       def drawing[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Double]] = {
-        import alg.drawing._, alg.bind._, alg.constants._
+        import alg.list._, alg.bind._, alg.constants._
         app(app(integrate(alg), double(100)), constant(alg))
       }
 

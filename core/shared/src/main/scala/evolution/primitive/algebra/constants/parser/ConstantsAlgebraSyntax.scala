@@ -4,7 +4,7 @@ import cats.kernel.Semigroup
 import cats.{Defer, MonoidK}
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.ConstantsAlgebra
-import evolution.primitive.algebra.parser.ParserConfig
+import evolution.primitive.algebra.parser.{ParserConfig, PrimitiveParsers}
 import evolution.primitive.algebra.parser.PrimitiveParsers.function2
 import ParserConfig.White._
 import fastparse.noApi._
@@ -16,4 +16,9 @@ class ConstantsAlgebraSyntax[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAl
     function2("point", double(x), double(y)).map(_ => alg.point(x, y))
   override def add[T: Semigroup](a: Parser[S[T]], b: Parser[S[T]]): Parser[S[T]] =
     function2("add", a, b).map { case (parsedA, parsedB) => alg.add(parsedA, parsedB) }
+
+  val anyDouble: Parser[S[Double]] = PrimitiveParsers.double.map(alg.double)
+  val anyPoint: Parser[S[Point]] = function2("point", PrimitiveParsers.double, PrimitiveParsers.double).map {
+    case (x, y) => alg.point(x, y)
+  }
 }

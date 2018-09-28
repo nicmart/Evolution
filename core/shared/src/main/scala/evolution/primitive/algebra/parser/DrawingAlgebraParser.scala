@@ -10,7 +10,7 @@ class DrawingAlgebraParser[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, Stri
   type RS[A] = R[S[A]]
   type RF[A] = R[F[A]]
   private val coreDrawingAlgebraParser: CoreDrawingAlgebraParser[S, F, R] =
-    new CoreDrawingAlgebraParser[S, F, R](alg.drawing)
+    new CoreDrawingAlgebraParser[S, F, R](alg.list)
   private val bindingAlgebraParser: BindingAlgebraParser[R] =
     new BindingAlgebraParser[R](alg.bind)
   private val scalarAlgebraParser: ConstantsAlgebraParser[RS] =

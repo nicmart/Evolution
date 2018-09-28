@@ -1,9 +1,8 @@
 package evolution.primitive.algebra.binding
 
 import cats.{Defer, MonoidK}
-import evolution.primitive.algebra.TestInterpreters
+import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
 import evolution.primitive.parser.CommonTestParsers
-import evolution.primitive.algebra.binding.BindingAlgebra
 import evolution.primitive.algebra.binding.parser.{BindingAlgebraGrammar, BindingAlgebraSyntax, Expressions}
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Matchers}
@@ -95,23 +94,21 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
       }
     }
   }
-
-  type ByVarParser[A] = List[String] => Parser[Binding[A]]
-
-  val byVarParserMonoidK: MonoidK[ByVarParser] = new MonoidK[ByVarParser] {
-    override def empty[A]: ByVarParser[A] = _ => Fail
-    override def combineK[A](x: ByVarParser[A], y: ByVarParser[A]): ByVarParser[A] = vars => P(x(vars) | y(vars))
+  val byVarParserMonoidK: MonoidK[ByVarParser[Binding, ?]] = new MonoidK[ByVarParser[Binding, ?]] {
+    override def empty[A]: ByVarParser[Binding, A] = _ => Fail
+    override def combineK[A](x: ByVarParser[Binding, A], y: ByVarParser[Binding, A]): ByVarParser[Binding, A] =
+      vars => P(x(vars) | y(vars))
   }
 
-  val doubleParser: ByVarParser[Double] = _ => double.map(d => Lift[Double](d))
+  val doubleParser: ByVarParser[Binding, Double] = _ => double.map(d => Lift[Double](d))
 
-  val syntax: BindingAlgebra[ByVarParser, Parser[String]] =
+  val syntax: BindingAlgebra[ByVarParser[Binding, ?], Parser[String]] =
     new BindingAlgebraSyntax[Binding](BindingAlgebraTestInterpreter)
 
   val varNameSyntax: Parser[String] = varName
 
-  def grammar(self: Expressions[ByVarParser]): Expressions[ByVarParser] =
-    new BindingAlgebraGrammar[ByVarParser, Parser[String]](
+  def grammar(self: Expressions[ByVarParser[Binding, ?]]): Expressions[ByVarParser[Binding, ?]] =
+    new BindingAlgebraGrammar[ByVarParser[Binding, ?], Parser[String]](
       self,
       syntax,
       varNameSyntax,
@@ -119,17 +116,17 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
       List(doubleParser)
     )
 
-  val byVarParserDefer: Defer[ByVarParser] = new Defer[ByVarParser] {
-    override def defer[A](fa: => ByVarParser[A]): ByVarParser[A] = vars => P(fa(vars))
+  val byVarParserDefer: Defer[ByVarParser[Binding, ?]] = new Defer[ByVarParser[Binding, ?]] {
+    override def defer[A](fa: => ByVarParser[Binding, A]): ByVarParser[Binding, A] = vars => P(fa(vars))
   }
 
-  val expressions2: Expressions[ByVarParser] =
+  val expressions2: Expressions[ByVarParser[Binding, ?]] =
     BindingAlgebraGrammar
-      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
+      .fixMultipleExpressions[ByVarParser[Binding, ?]](byVarParserMonoidK, byVarParserDefer, List(grammar))
 
-  val expressions: Expressions[ByVarParser] =
+  val expressions: Expressions[ByVarParser[Binding, ?]] =
     BindingAlgebraGrammar
-      .fixMultipleExpressions[ByVarParser](byVarParserMonoidK, byVarParserDefer, List(grammar))
+      .fixMultipleExpressions[ByVarParser[Binding, ?]](byVarParserMonoidK, byVarParserDefer, List(grammar))
 
   private def unsafeParseDouble(expression: String): Binding[Double] =
     expressions.value(doubleParser)(Nil).parse(expression).get.value

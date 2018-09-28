@@ -9,7 +9,7 @@ import evolution.primitive.algebra.list.ListAlgebra
 import evolution.primitive.algebra.list.interpreter.ListAlgebraSerializer
 
 object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {
-  override val drawing: ListAlgebra[ConstString, ConstString, CtxString] = ListAlgebraSerializer
+  override val list: ListAlgebra[ConstString, ConstString, CtxString] = ListAlgebraSerializer
   override val constants: ConstantsAlgebra[RS] = ConstantsAlgebraSerializer
   override val bind: BindingAlgebra[CtxString, String] = BindingAlgebraSerializer
 }
