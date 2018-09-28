@@ -1,4 +1,4 @@
-package evolution.algebra.primitive.interpreter
+package evolution.primitive.interpreter
 import evolution.primitive.algebra.binding.interpreter.{BindingAlgebraEvaluator, EvaluationResult, Value}
 import org.scalatest.{FreeSpec, Matchers}
 

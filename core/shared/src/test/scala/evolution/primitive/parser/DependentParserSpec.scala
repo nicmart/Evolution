@@ -1,4 +1,4 @@
-package evolution.algebra.primitive.parser
+package evolution.primitive.parser
 
 import evolution.primitive.algebra.parser.{DependentParser, ParserConfig}
 import fastparse.noApi

@@ -1,4 +1,4 @@
-package evolution.algebra.primitive.parser
+package evolution.primitive.parser
 
 import cats.kernel.Semigroup
 import evolution.geometry.Point

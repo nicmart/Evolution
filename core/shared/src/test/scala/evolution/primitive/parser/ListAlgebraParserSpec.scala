@@ -1,4 +1,4 @@
-package evolution.algebra.primitive.parser
+package evolution.primitive.parser
 
 import cats.Id
 import evolution.data.HasValue

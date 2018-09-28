@@ -1,4 +1,4 @@
-package evolution.algebra.primitive.interpreter
+package evolution.primitive.interpreter
 import evolution.algebra.interpreter.{RNGInterpreter, StreamInterpreter}
 import evolution.random.RNG
 import org.scalatest.{FreeSpec, Matchers}
