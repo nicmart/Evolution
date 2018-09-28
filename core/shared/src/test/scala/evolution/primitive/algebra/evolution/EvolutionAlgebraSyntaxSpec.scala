@@ -37,7 +37,37 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
         parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
       }
 
-      "an evolution with a single point" in {}
+      "an evolution with a single point" in {
+        val serializedExpression = "cons(point(0, 1), empty)"
+        val expectedExpression = Lift(Cons(Point(0, 1), Empty[Point]()))
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
+
+      "an evolution with two doubles" in {
+        val serializedExpression = "cons(1, cons(2, empty))"
+        val expectedExpression = Lift(Cons(1.0, Cons(2.0, Empty[Double]())))
+        parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
+      }
+
+      "an evolution with two points" in {
+        val serializedExpression = "cons(point(0, 0), cons(point(1, 1), empty))"
+        val expectedExpression = Lift(Cons(Point(0, 0), Cons(Point(1, 1), Empty[Point]())))
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
+
+      "an evolution where there are sums of numbers" in {
+        val serializedExpression = "cons(add(1, 2), cons(add(3, add(4, 5)), empty))"
+        val expectedExpression =
+          Lift(Cons[Double](Add[Double](1, 2), Cons[Double](Add[Double](3, Add[Double](4, 5)), Empty[Double]())))
+        parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
+      }
+
+      "an evolution where there are sums of points" in {
+        val serializedExpression = "cons(add(point(1, 1), point(3, 4)), empty)"
+        val expectedExpression =
+          Lift(Cons[Point](Add[Point](Point(1, 1), Point(3, 4)), Empty[Point]()))
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
     }
   }
 
