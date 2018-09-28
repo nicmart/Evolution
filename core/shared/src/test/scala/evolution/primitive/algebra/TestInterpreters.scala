@@ -20,6 +20,7 @@ trait TestInterpreters {
 
   sealed trait Constant[A]
   case class Value[T](value: T) extends Constant[T]
+  case class PointConstant(x: Binding[Constant[Double]], y: Binding[Constant[Double]]) extends Constant[Point]
   case class Add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]) extends Constant[T]
 
   sealed trait ListExpr[A]
@@ -32,6 +33,7 @@ trait TestInterpreters {
   implicit def liftToConstant[T](t: T): Constant[T] = Value(t)
   implicit def liftToBinding[T](t: T): Binding[T] = Lift(t)
   implicit def liftListExprToBinding[T](t: ListExpr[T]): Binding[ListExpr[T]] = Lift(t)
+  implicit def liftConstantToBinding[T](t: Constant[T]): Binding[Constant[T]] = Lift(t)
   implicit def liftToBindingConstant[T](t: T): Binding[Constant[T]] = Lift(Value(t))
   def unlift[T](binding: Binding[T]): T = binding match {
     case Lift(t) => t
@@ -49,7 +51,8 @@ trait TestInterpreters {
 
   object ConstantsAlgebraTestInterpreter extends ConstantsAlgebra[Composed[Binding, Constant, ?]] {
     override def double(d: Double): Binding[Constant[Double]] = d
-    override def point(x: Double, y: Double): Binding[Constant[Point]] = Point(x, y)
+    override def point(x: Binding[Constant[Double]], y: Binding[Constant[Double]]): Binding[Constant[Point]] =
+      PointConstant(x, y)
     override def add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]): Binding[Constant[T]] = Add(a, b)
   }
 

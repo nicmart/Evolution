@@ -7,7 +7,8 @@ import cats.syntax.semigroup._
 
 object ConstantsAlgebraEvaluator extends ConstantsAlgebra[EvaluationResult] {
   override def double(d: Double): EvaluationResult[Double] = Value(_ => d)
-  override def point(x: Double, y: Double): EvaluationResult[Point] = Value(_ => Point(x, y))
+  override def point(x: EvaluationResult[Double], y: EvaluationResult[Double]): EvaluationResult[Point] =
+    Value(ctx => Point(x.get(ctx), y.get(ctx)))
   override def add[T: Semigroup](a: EvaluationResult[T], b: EvaluationResult[T]): EvaluationResult[T] =
     Value(ctx => a.get(ctx) |+| b.get(ctx))
 }

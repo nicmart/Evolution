@@ -27,7 +27,12 @@ class ConstantsAlgebraParser[S[_]](alg: ConstantsAlgebra[S]) {
     DependentParser(_ => double.map(alg.double))
 
   private def dependentPointParser[C]: DependentParser[C, S[Point]] =
-    DependentParser(_ => function2("point", double, double).map { case (x, y) => alg.point(x, y) })
+    DependentParser(
+      c =>
+        function2("point", dependentDoubleParser.parser(c), dependentDoubleParser.parser(c)).map {
+          case (x, y) => alg.point(x, y)
+      }
+    )
 
   private def dependentAddParser[C, T: Semigroup](implicit hasParser: HasParser[C, S, T]): DependentParser[C, S[T]] =
     DependentParser(c => function2("add", c.parser[S, T], c.parser[S, T]).map { case (a, b) => alg.add(a, b) })
