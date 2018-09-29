@@ -68,14 +68,21 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
           Lift(Cons[Point](Add[Point](PointConstant(1, 1), PointConstant(3, 4)), Empty[Point]()))
         parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
       }
+
+      "an evolution where there are sum of doubles inside point coordinates" in {
+        val serializedExpression = "cons(point(add(1, 2), 3), empty)"
+        val expectedExpression =
+          Lift(Cons[Point](PointConstant(Add(1.0, 2.0), 3.0), Empty[Point]()))
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
     }
   }
 
   def parseEvolutionOfDoubles(serializedExpression: String): Binding[ListExpr[Double]] =
-    expressions.evolutionOf(syntax.doubleConstant)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
+    expressions.evolutionOfDoubles(Nil).parse(serializedExpression).get.value
 
   def parseEvolutionOfPoints(serializedExpression: String): Binding[ListExpr[Point]] =
-    expressions.evolutionOf(syntax.pointConstant)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
+    expressions.evolutionOfPoints(Nil).parse(serializedExpression).get.value
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
@@ -92,7 +99,12 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
   }
 
   def grammar(self: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]]) =
-    new EvolutionAlgebraGrammar[Constant, ListExpr, BindingParser, Parser[String]](self, syntax, orMonoid)
+    new EvolutionAlgebraGrammar[Constant, ListExpr, BindingParser, Parser[String]](
+      self,
+      syntax,
+      orMonoid,
+      syntax.doubleConstant
+    )
 
   def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]] =
     grammar(new LazyEvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]](expressions, defer))
