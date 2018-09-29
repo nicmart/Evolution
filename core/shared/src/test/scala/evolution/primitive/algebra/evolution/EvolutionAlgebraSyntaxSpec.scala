@@ -75,6 +75,22 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
           Lift(Cons[Point](PointConstant(Add(1.0, 2.0), 3.0), Empty[Point]()))
         parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
       }
+
+      "an evolution with a mapCons" in {
+        val serializedExpression = "mapCons(empty, lambda(head)(lambda(tail)(empty)))"
+        val expectedExpression =
+          Lift(
+            MapCons(
+              Empty[Double](),
+              Lambda[Constant[Double], ListExpr[Double] => ListExpr[Double]](
+                "head",
+                Lambda[ListExpr[Double], ListExpr[Double]]("tail", Lift(Empty[Double]()))
+              )
+            )
+          )
+        pending
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
     }
   }
 
