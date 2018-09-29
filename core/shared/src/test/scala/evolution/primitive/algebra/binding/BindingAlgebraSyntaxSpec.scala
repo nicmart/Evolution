@@ -102,16 +102,14 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestPar
 
   val doubleParser: ByVarParser[Binding, Double] = _ => double.map(d => Lift[Double](d))
 
-  val syntax: BindingAlgebra[ByVarParser[Binding, ?], Parser[String]] =
+  val syntax =
     new BindingAlgebraSyntax[Binding](BindingAlgebraTestInterpreter)
-
-  val varNameSyntax: Parser[String] = varName
 
   def grammar(self: Expressions[ByVarParser[Binding, ?]]): Expressions[ByVarParser[Binding, ?]] =
     new BindingAlgebraGrammar[ByVarParser[Binding, ?], Parser[String]](
       self,
       syntax,
-      varNameSyntax,
+      syntax.variableIdentifier,
       byVarParserMonoidK,
       List(doubleParser)
     )
