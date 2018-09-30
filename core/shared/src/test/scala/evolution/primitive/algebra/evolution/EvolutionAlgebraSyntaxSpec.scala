@@ -18,6 +18,22 @@ import fastparse.noApi.{Fail, P, Parser}
 
 class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with TestInterpreters {
   "An Evolution Grammar" - {
+    "should parse constants" - {
+      "simple sum of doubles" in {
+        val serializedExpression = "add(1, 2)"
+        val expectedExpression =
+          Lift(Add[Double](1, 2))
+        parseConstantOfDoubles(serializedExpression) shouldBe expectedExpression
+      }
+
+      "nested sum of doubles" in {
+        val serializedExpression = "add(1, add(2, 3))"
+        val expectedExpression =
+          Lift(Add[Double](1, Add[Double](2, 3)))
+        parseConstantOfDoubles(serializedExpression) shouldBe expectedExpression
+      }
+    }
+
     "should parse" - {
       "an empty evolution of Doubles" in {
         val serializedExpression = "empty"
@@ -95,10 +111,16 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
   }
 
   def parseEvolutionOfDoubles(serializedExpression: String): Binding[ListExpr[Double]] =
-    expressions.evolutionOfDoubles(Nil).parse(serializedExpression).get.value
+    expressions.evolutionOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
 
   def parseEvolutionOfPoints(serializedExpression: String): Binding[ListExpr[Point]] =
-    expressions.evolutionOfPoints(Nil).parse(serializedExpression).get.value
+    expressions.evolutionOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
+
+  def parseConstantOfDoubles(serializedExpression: String): Binding[Constant[Double]] =
+    expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
+
+  def parseConstantOfPoints(serializedExpression: String): Binding[Constant[Point]] =
+    expressions.constantOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
@@ -119,7 +141,8 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
       self,
       syntax,
       orMonoid,
-      syntax.doubleConstant
+      syntax.doubleConstant,
+      varName
     )
 
   def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]] =
