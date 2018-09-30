@@ -104,7 +104,6 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
               )
             )
           )
-        pending
         parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
       }
     }
