@@ -8,7 +8,6 @@ import evolution.primitive.algebra.evolution.parser.{
   EvolutionAlgebraExpressions,
   EvolutionAlgebraGrammar,
   EvolutionAlgebraSyntax,
-  LazyEvolutionAlgebraExpressions
 }
 import evolution.primitive.parser.CommonTestParsers
 import org.scalatest.{FreeSpec, Matchers}
@@ -110,16 +109,33 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
   }
 
   def parseEvolutionOfDoubles(serializedExpression: String): Binding[ListExpr[Double]] =
-    expressions.evolutionOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
+    expressions.list
+      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil)
+      .parse(serializedExpression)
+      .get
+      .value
 
   def parseEvolutionOfPoints(serializedExpression: String): Binding[ListExpr[Point]] =
-    expressions.evolutionOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
+    expressions.list
+      .evolutionOf(expressions.constants.points)(Semigroup[Point])(Nil)
+      .parse(serializedExpression)
+      .get
+      .value
 
-  def parseConstantOfDoubles(serializedExpression: String): Binding[Constant[Double]] =
-    expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
+  def parseConstantOfDoubles(serializedExpression: String): Binding[Constant[Double]] = {
+    expressions.constants
+      .constantOf(expressions.constants.doubles)(Semigroup[Double])(Nil)
+      .parse(serializedExpression)
+      .get
+      .value
+  }
 
   def parseConstantOfPoints(serializedExpression: String): Binding[Constant[Point]] =
-    expressions.constantOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
+    expressions.constants
+      .constantOf(expressions.constants.points)(Semigroup[Point])(Nil)
+      .parse(serializedExpression)
+      .get
+      .value
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
@@ -135,15 +151,15 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
       ctx => P(fa(ctx))
   }
 
-  def grammar(self: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]]) =
+  def grammar(self: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser]) =
     new EvolutionAlgebraGrammar[Constant, ListExpr, BindingParser, Parser[String]](
       self,
       syntax,
-      orMonoid,
       syntax.doubleConstant,
-      varName
+      varName,
+      orMonoid
     )
 
-  def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]] =
-    grammar(new LazyEvolutionAlgebraExpressions[Constant, ListExpr, BindingParser, Parser[String]](expressions, defer))
+  def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser] =
+    grammar(new EvolutionAlgebraExpressions.Lazy[Constant, ListExpr, BindingParser](expressions, defer))
 }
