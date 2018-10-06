@@ -49,7 +49,7 @@ class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
   type TestType[T] = Type[Constant, ListExpr, Composed[Parser, Binding, ?], T]
 
   val doubleType: TestType[Double] =
-    Type[Constant, ListExpr, Composed[Parser, Binding, ?], Double](double.map(d => Lift(Value(d))), Fail)
+    Type[Constant, ListExpr, Composed[Parser, Binding, ?], Double](doubleLiteral.map(d => Lift(Value(d))), Fail)
 
   val stringType: TestType[String] =
     Type[Constant, ListExpr, Composed[Parser, Binding, ?], String](stringLiteral.map(d => Lift(Value(d))), Fail)

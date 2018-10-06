@@ -24,7 +24,7 @@ class ConstantsAlgebraParser[S[_]](alg: ConstantsAlgebra[S]) {
       .addParser[S, Point](dependentAddParser[C, Point])
 
   private def dependentDoubleParser[C]: DependentParser[C, S[Double]] =
-    DependentParser(_ => double.map(alg.double))
+    DependentParser(_ => doubleLiteral.map(alg.double))
 
   private def dependentPointParser[C]: DependentParser[C, S[Point]] =
     DependentParser(

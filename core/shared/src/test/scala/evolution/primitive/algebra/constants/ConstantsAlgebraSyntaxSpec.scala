@@ -44,12 +44,12 @@ class ConstantsAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestP
   type TestExpressions = Expressions[ConstantParser]
 
   val doubleParser: Parser[Binding[Constant[Double]]] =
-    double.map { d =>
+    doubleLiteral.map { d =>
       Lift(Value(d))
     }
 
   val pointParser: Parser[Binding[Constant[Point]]] =
-    function2("point", double, double).map { case (x, y) => Lift(Value(Point(x, y))) }
+    function2("point", doubleLiteral, doubleLiteral).map { case (x, y) => Lift(Value(Point(x, y))) }
 
   // TODO move somewhere
   lazy val parserMonoidK: MonoidK[ConstantParser] = new MonoidK[ConstantParser] {

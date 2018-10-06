@@ -13,11 +13,11 @@ trait PrimitiveParsers {
   val floatDigits: all.Parser[Unit] =
     P(digit.rep ~ "." ~ digit.rep(1))
 
-  val double: Parser[Double] =
+  val doubleLiteral: Parser[Double] =
     P("-".? ~ (floatDigits | digit.rep(1))).!.map(_.toDouble)
 
   val point: Parser[Point] =
-    function2("point", double, double).map { case (x, y) => Point(x, y) }
+    function2("point", doubleLiteral, doubleLiteral).map { case (x, y) => Point(x, y) }
 
   lazy val stringLiteral: Parser[String] =
     P("\"" ~/ CharIn('a' to 'z').rep.! ~/ "\"")

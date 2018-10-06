@@ -108,7 +108,7 @@ class ListAlgebraParserSpec extends FreeSpec with Matchers with CommonTestParser
 
   lazy val coreAlgebraParser = new CoreDrawingAlgebraParser(TestCoreDrawingAlgebraInterpreter)
   def doubleScalarParser[C]: DependentParser[C, Scalar[Double]] =
-    DependentParser(_ => double.map(d => DoubleScalar(d)))
+    DependentParser(_ => doubleLiteral.map(d => DoubleScalar(d)))
   def stringScalarParser[C]: DependentParser[C, Scalar[String]] =
     DependentParser(_ => stringLiteral.map(s => StringScalar(s)))
 

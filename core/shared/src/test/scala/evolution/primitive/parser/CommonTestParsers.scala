@@ -7,7 +7,7 @@ trait CommonTestParsers extends PrimitiveParsers {
   import ParserConfig.White._
   import fastparse.noApi._
 
-  def doubleParser[T](f: Double => T): Parser[T] = double.map(f)
+  def doubleParser[T](f: Double => T): Parser[T] = doubleLiteral.map(f)
 
   def dependentDoubleParser[T](f: Double => T): DependentParser[Unit, T] =
     DependentParser(_ => doubleParser(f))

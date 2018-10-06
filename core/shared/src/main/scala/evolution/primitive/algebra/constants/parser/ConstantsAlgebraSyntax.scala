@@ -17,6 +17,6 @@ class ConstantsAlgebraSyntax[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAl
   override def add[T: Semigroup](a: Parser[S[T]], b: Parser[S[T]]): Parser[S[T]] =
     function2("add", a, b).map { case (parsedA, parsedB) => alg.add(parsedA, parsedB) }
 
-  val anyDouble: Parser[S[Double]] = PrimitiveParsers.double.map(alg.double)
+  val anyDouble: Parser[S[Double]] = PrimitiveParsers.doubleLiteral.map(alg.double)
   val anyPoint: Parser[S[Point]] = point(anyDouble, anyDouble)
 }
