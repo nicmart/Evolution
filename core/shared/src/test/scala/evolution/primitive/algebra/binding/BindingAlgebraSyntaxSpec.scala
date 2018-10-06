@@ -2,12 +2,11 @@ package evolution.primitive.algebra.binding
 
 import cats.{Defer, MonoidK}
 import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
-import evolution.primitive.parser.CommonTestParsers
 import evolution.primitive.algebra.binding.parser.{BindingAlgebraGrammar, BindingAlgebraSyntax, Expressions}
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Matchers}
 
-class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with TestInterpreters {
+class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
   import ParserConfig.White._
   import fastparse.noApi._
 

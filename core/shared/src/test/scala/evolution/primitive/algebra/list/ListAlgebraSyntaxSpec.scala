@@ -2,7 +2,6 @@ package evolution.primitive.algebra.list
 
 import cats.{Defer, Id, MonoidK}
 import evolution.primitive.algebra.{Composed, TestInterpreters}
-import evolution.primitive.parser.CommonTestParsers
 import evolution.primitive.algebra.list.parser.{Expressions, ListAlgebraGrammar, ListAlgebraSyntax, Type}
 import evolution.primitive.algebra.parser._
 import fastparse.noApi
@@ -10,7 +9,7 @@ import fastparse.noApi._
 import org.scalatest.{FreeSpec, Inside, Matchers}
 import ParserConfig.White._
 
-class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside with TestInterpreters {
+class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: ListAlgebra[Constant, ListExpr, Binding] = ListAlgebraTestInterpreter
   import interpreter._, interpreter.{empty => nil}
 

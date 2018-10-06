@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
 import cats.Id
+import cats.kernel.Semigroup
 import evolution.algebra._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
@@ -12,8 +13,8 @@ import evolution.geometry.Point
 import evolution.primitive.algebra
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraSerializer, EvolutionAlgebraEvaluator}
-import evolution.primitive.algebra.parser.DrawingAlgebraParser
+import evolution.primitive.algebra.evolution.interpreter.{EvolutionAlgebraEvaluator, EvolutionAlgebraSerializer}
+import evolution.primitive.algebra.evolution.parser.EvolutionAlgebraGrammar
 import fastparse.noApi
 import japgolly.scalajs.react.vdom.html_<^._
 
@@ -32,8 +33,9 @@ object dsl extends DrawingDefinition[Point] {
           serialized => previousConfig =>
             new Config {
               override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
-                val algebraParser = new DrawingAlgebraParser[S, F, R](alg)
-                val parser: noApi.Parser[R[F[Point]]] = algebraParser.container.pointParserF
+                val grammar = EvolutionAlgebraGrammar.grammar[S, F, R](alg)
+                val parser: noApi.Parser[R[F[Point]]] =
+                  grammar.list.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
                 parser
                   .parse(serialized)
                   .fold((_, _, failure) => { println(failure); previousConfig.run(alg) }, (drawing, _) => drawing)
