@@ -54,5 +54,5 @@ class BindingAlgebraSyntax[R[_]](alg: BindingAlgebra[R, String])
     }
 
   override def fix[A](expr: ByVarParser[R, A => A]): ByVarParser[R, A] =
-    vars => function1("fix", expr("self" :: vars)).map(alg.fix)
+    vars => function1("fix", expr(vars)).map(alg.fix)
 }

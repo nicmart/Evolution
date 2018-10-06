@@ -91,6 +91,14 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
           mapCons[Double, Double](nil)(lambda("head", lambda("tail", nil)))
         parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
       }
+
+      "a constant evolution defined as a fixed point" in {
+        pending
+        val serializedExpression = "fix(lambda(s)($s))"
+        val expectedExpression: Binding[ListExpr[Double]] =
+          fix(lambda("s", var0[ListExpr[Double]]))
+        parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
+      }
     }
   }
 
