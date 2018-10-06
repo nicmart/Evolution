@@ -7,7 +7,7 @@ addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersi
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.6",
   version      := "0.1.0-SNAPSHOT",
   scalacOptions += "-Ypartial-unification",
   libraryDependencies ++= Seq(
