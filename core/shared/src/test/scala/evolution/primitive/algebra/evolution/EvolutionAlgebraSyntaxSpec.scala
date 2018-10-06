@@ -135,27 +135,6 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  lazy val syntax = new EvolutionAlgebraSyntax(EvolutionAlgebraTestInterpreter)
-  lazy val orMonoid: MonoidK[BindingParser] = new MonoidK[BindingParser] {
-    override def empty[A]: BindingParser[A] =
-      _ => Fail
-    override def combineK[A](x: BindingParser[A], y: BindingParser[A]): BindingParser[A] =
-      ctx => P(x(ctx) | y(ctx))
-  }
-  lazy val defer: Defer[BindingParser] = new Defer[BindingParser] {
-    override def defer[A](fa: => BindingParser[A]): BindingParser[A] =
-      ctx => P(fa(ctx))
-  }
-
-  def grammar(self: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser]) =
-    new EvolutionAlgebraGrammar[Constant, ListExpr, BindingParser, Parser[String]](
-      self,
-      syntax,
-      syntax.doubleConstant,
-      PrimitiveParsers.varName,
-      orMonoid
-    )
-
   def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser] =
-    grammar(new EvolutionAlgebraExpressions.Lazy[Constant, ListExpr, BindingParser](expressions, defer))
+    EvolutionAlgebraGrammar.grammar(EvolutionAlgebraTestInterpreter)
 }

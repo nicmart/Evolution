@@ -1,12 +1,17 @@
 package evolution.primitive.algebra.evolution.parser
+
 import cats.{Defer, MonoidK, Semigroup}
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ByVarParser, Composed, evolution}
+// TODO What the hell are these roots?
 import _root_.evolution.primitive.algebra.evolution.{EvolutionAlgebra, parser}
 import cats.instances.double._
 import _root_.evolution.primitive.algebra.binding.BindingAlgebra
 import _root_.evolution.primitive.algebra.constants.ConstantsAlgebra
 import _root_.evolution.primitive.algebra.list.ListAlgebra
+import _root_.evolution.primitive.algebra.parser.PrimitiveParsers
+import _root_.evolution.primitive.algebra.parser.ParserConfig.White._
+import fastparse.noApi.{Fail, P, Parser}
 
 trait EvolutionAlgebraExpressions[S[_], F[_], R[_]] {
   def list: ListAlgebraExpressions[S, F, R]
@@ -147,7 +152,6 @@ class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
   override val orMonoid: MonoidK[R]
 ) extends EvolutionAlgebraExpressions[S, F, R]
     with OrMonoid[R] {
-  import syntax.list._, syntax.bind._, syntax.constants._
 
   override def list: ListAlgebraExpressions[S, F, R] = new ListAlgebraExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
@@ -188,4 +192,40 @@ class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
 
   private lazy val internalBinding: BindingAlgebraExpressions[R] =
     new BindingAlgebraGrammar(self.binding, syntax.bind, variableSyntax, all, orMonoid)
+}
+
+object EvolutionAlgebraGrammar {
+  import EvolutionAlgebraExpressions.Lazy
+
+  def grammar[S[_], F[_], R[_]](
+    alg: EvolutionAlgebra[S, F, R, String]
+  ): EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]] = {
+    parserGrammarRec[S, F, R](alg, new Lazy[S, F, ByVarParser[R, ?]](grammar(alg), defer[R]))
+  }
+
+  private def parserGrammarRec[S[_], F[_], R[_]](
+    alg: EvolutionAlgebra[S, F, R, String],
+    self: EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]]
+  ): EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]] = {
+    val syntax = new EvolutionAlgebraSyntax[S, F, R](alg)
+    new EvolutionAlgebraGrammar[S, F, ByVarParser[R, ?], Parser[String]](
+      self,
+      syntax,
+      syntax.doubleConstant,
+      PrimitiveParsers.varName,
+      orMonoid[R]
+    )
+  }
+
+  private def orMonoid[R[_]]: MonoidK[ByVarParser[R, ?]] = new MonoidK[ByVarParser[R, ?]] {
+    override def empty[A]: ByVarParser[R, A] =
+      _ => Fail
+    override def combineK[A](x: ByVarParser[R, A], y: ByVarParser[R, A]): ByVarParser[R, A] =
+      ctx => P(x(ctx) | y(ctx))
+  }
+
+  private def defer[R[_]]: Defer[ByVarParser[R, ?]] = new Defer[ByVarParser[R, ?]] {
+    override def defer[A](fa: => ByVarParser[R, A]): ByVarParser[R, A] =
+      ctx => P(fa(ctx))
+  }
 }
