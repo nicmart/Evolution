@@ -8,45 +8,55 @@ import evolution.primitive.algebra.parser._
 import fastparse.noApi
 import fastparse.noApi._
 import org.scalatest.{FreeSpec, Inside, Matchers}
+import ParserConfig.White._
 
 class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParsers with Inside with TestInterpreters {
-  import ParserConfig.White._
+  val interpreter: ListAlgebra[Constant, ListExpr, Binding] = ListAlgebraTestInterpreter
+  import interpreter._, interpreter.{empty => nil}
+
   "A CoreDrawingAlgebraParser" - {
     "should parse" - {
       "an empty expression" in {
         val serializedExpression = "empty"
-        unsafeParseEvolution(serializedExpression, doubleType) shouldBe Empty[Double]()
+        unsafeParseEvolution(serializedExpression, doubleType) shouldBe nil[Double]
       }
 
       "a cons expression" in {
         val serializedExpression = "cons(1, empty)"
-        unsafeParseEvolution(serializedExpression, doubleType) shouldBe Cons(1.0, Empty[Double]())
+        unsafeParseEvolution(serializedExpression, doubleType) shouldBe cons(double(1), nil)
       }
 
       "a nested cons expression" in {
         val serializedExpression = "cons(1, cons(2, cons(3, empty)))"
         unsafeParseEvolution(serializedExpression, doubleType) shouldBe
-          Cons(1.0, Cons(2.0, Cons(3.0, Empty[Double]())))
+          cons(double(1), cons(double(2), cons(double(3), nil)))
       }
 
       "a mapEmpty expression" in {
         val serializedExpression = """mapEmpty(cons(1, empty),cons(2, empty))"""
         unsafeParseEvolution(serializedExpression, doubleType) shouldBe
-          MapEmpty(Cons(1.0, Empty[Double]()), Cons(2.0, Empty[Double]()))
+          mapEmpty(cons(double(1), nil))(cons(double(2), nil))
       }
 
       "a mapCons expression" in {
         val serializedExpression = """mapCons(cons(1, empty), cons("abc", empty))"""
-        val parsedExpression: MapCons[Double, String] =
-          unsafeParseEvolution(serializedExpression, stringType).asInstanceOf[MapCons[Double, String]]
-        unlift(parsedExpression.eva) shouldBe Cons(1.0, Empty[Double]())
-        unlift(parsedExpression.f)(1232132.0)(Empty[Double]()) shouldBe Cons[String]("abc", Empty[String]())
+        val expected = mapCons(cons(double(1), nil))(constantFunc(cons(string("abc"), nil)))
+        unsafeParseEvolution(serializedExpression, stringType) shouldBe expected
       }
     }
   }
 
   type TestExpressions = Expressions[Constant, ListExpr, Composed[Parser, Binding, ?]]
   type TestType[T] = Type[Constant, ListExpr, Composed[Parser, Binding, ?], T]
+
+  def double(d: Double): Binding[Constant[Double]] = Lift(Value[Double](d))
+  def string(s: String): Binding[Constant[String]] = Lift(Value[String](s))
+  def constantFunc[A, B](b: Binding[ListExpr[B]]): Binding[Constant[A] => ListExpr[A] => ListExpr[B]] =
+    Lift(ConstantMapConsFunc[A, B](b))
+
+  case class ConstantMapConsFunc[A, B](b: Binding[ListExpr[B]]) extends (Constant[A] => (ListExpr[A] => ListExpr[B])) {
+    def apply(x: Constant[A]): ListExpr[A] => ListExpr[B] = ???
+  }
 
   val doubleType: TestType[Double] =
     Type[Constant, ListExpr, Composed[Parser, Binding, ?], Double](doubleLiteral.map(d => Lift(Value(d))), Fail)
@@ -64,7 +74,7 @@ class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
       t1: TestType[T1],
       t2: TestType[T2]
     ): Parser[Binding[Constant[T1] => ListExpr[T1] => ListExpr[T2]]] =
-      self.evolution(t2).map(evolution => Lift(_ => _ => unlift(evolution)))
+      self.evolution(t2).map(constantFunc)
   }
 
   def expressions0(expressions: TestExpressions): TestExpressions =
@@ -97,6 +107,6 @@ class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with CommonTestParser
       List(expressions0, grammar)
     )
 
-  def unsafeParseEvolution[T](expression: String, t: TestType[T]): ListExpr[T] =
-    unlift(combinedExpressions.evolution(t).parse(expression).get.value)
+  def unsafeParseEvolution[T](expression: String, t: TestType[T]): Binding[ListExpr[T]] =
+    combinedExpressions.evolution(t).parse(expression).get.value
 }
