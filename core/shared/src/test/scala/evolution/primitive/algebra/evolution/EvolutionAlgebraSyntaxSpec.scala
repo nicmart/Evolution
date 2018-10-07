@@ -112,6 +112,15 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
           var0[ListExpr[Double]]
         parseEvolutionOfDoubles(serializedExpression, "s" :: Nil) shouldBe expectedExpression
       }
+
+      "an abnormous evolution" in {
+        pending
+        val serializedExpression =
+          "app(app(fix(lambda(self)(lambda(start)(lambda(evolution)(mapCons($evolution, lambda(h)(lambda(t)(cons($start, app(app($self, add($start, $h)), $t))))))))), point(1.0, 1.0)), fix(lambda(self)(cons(point(1.0, 1.0), $self)))"
+        val expectedExpression: Binding[ListExpr[Double]] =
+          var0[ListExpr[Double]]
+        parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression
+      }
     }
   }
 

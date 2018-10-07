@@ -48,7 +48,6 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    //config.run(new ToEvolution())(List.empty).evolution
     new Evolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] =
         config.run[Id, Evo, EvaluationResult](new EvolutionAlgebraEvaluator[Evo](alg)).get(List.empty)
@@ -58,8 +57,7 @@ object dsl extends DrawingDefinition[Point] {
     override def run[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String]): R[F[Point]] = {
       import alg.list._, alg.bind._
       import alg.constants._
-      //fix(lambda("self", cons(point(double(0), double(0)), var0[F[Point]])))
-      empty[Point]
+      fix(lambda("self", cons(point(double(0), double(0)), var0[F[Point]])))
     }
   }
 

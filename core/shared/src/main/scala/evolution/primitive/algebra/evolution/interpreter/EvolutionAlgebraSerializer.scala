@@ -8,6 +8,7 @@ import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.list.ListAlgebra
 import evolution.primitive.algebra.list.interpreter.ListAlgebraSerializer
 
+// TODO missing tests
 object EvolutionAlgebraSerializer extends EvolutionAlgebra[ConstString, ConstString, CtxString, String] {
   override val list: ListAlgebra[ConstString, ConstString, CtxString] = ListAlgebraSerializer
   override val constants: ConstantsAlgebra[RS] = ConstantsAlgebraSerializer
