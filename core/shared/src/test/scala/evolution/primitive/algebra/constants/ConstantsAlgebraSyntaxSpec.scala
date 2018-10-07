@@ -1,19 +1,17 @@
 package evolution.primitive.algebra.constants
 
 import cats.implicits._
-import cats.{Defer, MonoidK}
+import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.{Composed, TestInterpreters}
+import evolution.primitive.algebra.{ByVarParser, Composed, TestInterpreters}
 import evolution.primitive.algebra.constants.parser._
-import evolution.primitive.algebra.parser.ParserConfig.White._
-import fastparse.noApi.{Fail, P, Parser}
+import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.evolution.parser.{ConstantsAlgebraExpressions, EvolutionAlgebraGrammar}
 import org.scalatest.{FreeSpec, Matchers}
-import evolution.primitive.algebra.parser.PrimitiveParsers.doubleLiteral
 
 class ConstantsAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: ConstantsAlgebra[Composed[Binding, Constant, ?]] =
-    ConstantsAlgebraTestInterpreter
-  import interpreter._
+  val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  import interpreter.constants._
 
   "A ScalarAlgebraParser should parse" - {
     "double literals" in {
@@ -42,36 +40,15 @@ class ConstantsAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
     }
   }
 
-  type ConstantParser[T] = Parser[Binding[Constant[T]]]
-  type TestExpressions = Expressions[ConstantParser]
+  type BindingParser[T] = ByVarParser[Binding, T]
 
-  val doubleParser: Parser[Binding[Constant[Double]]] =
-    doubleLiteral.map { d =>
-      Lift(Value(d))
-    }
+  def expressions: ConstantsAlgebraExpressions[Constant, BindingParser] =
+    EvolutionAlgebraGrammar.grammar(interpreter).constants
 
-  // TODO move somewhere
-  lazy val parserMonoidK: MonoidK[ConstantParser] = new MonoidK[ConstantParser] {
-    override def empty[A]: ConstantParser[A] = Fail
-    override def combineK[A](x: ConstantParser[A], y: ConstantParser[A]): ConstantParser[A] = P(x | y)
+  private def unsafeParseDouble(serializedExpression: String): Binding[Constant[Double]] = {
+    expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
   }
-
-  lazy val deferParser: Defer[ConstantParser] = new Defer[ConstantParser] {
-    override def defer[A](fa: => ConstantParser[A]): ConstantParser[A] = P(fa)
-  }
-
-  val syntax: ConstantsAlgebraSyntax[Composed[Binding, Constant, ?]] =
-    new ConstantsAlgebraSyntax[Composed[Binding, Constant, ?]](interpreter)
-
-  def grammar(self: Expressions[ConstantParser]): Expressions[ConstantParser] =
-    new ConstantsAlgebraGrammar[ConstantParser](self, syntax, parserMonoidK)
-
-  def expressions: Expressions[ConstantParser] =
-    grammar(new LazyExpressions[ConstantParser](expressions, deferParser))
-
-  private def unsafeParseDouble(serializedExpression: String): Binding[Constant[Double]] =
-    expressions.get(doubleParser).parse(serializedExpression).get.value
 
   private def unsafeParsePoint(serializedExpression: String): Binding[Constant[Point]] =
-    expressions.get(syntax.anyPoint).parse(serializedExpression).get.value
+    expressions.constantOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
 }
