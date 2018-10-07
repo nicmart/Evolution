@@ -39,7 +39,7 @@ class EvolutionAlgebraEvaluatorSpec extends FreeSpec with Matchers {
     "should be able to express integrations" in {
       def integrate[S[_], F[_], R[_], T: Semigroup](alg: EvolutionAlgebra[S, F, R, String]): R[S[T] => F[T] => F[T]] = {
         import alg.list._, alg.bind._, alg.constants._
-        def varN[S](n: Int): R[S] = if (n <= 0) var0[S] else shift(varN(n - 1))
+        def varN[A](n: Int): R[A] = if (n <= 0) var0[A] else shift(varN(n - 1))
 
         fix[S[T] => F[T] => F[T]](
           lambda(
