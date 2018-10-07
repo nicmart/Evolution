@@ -93,40 +93,69 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
       }
 
       "a constant evolution defined as a fixed point" in {
-        pending
         val serializedExpression = "fix(lambda(s)($s))"
         val expectedExpression: Binding[ListExpr[Double]] =
           fix(lambda("s", var0[ListExpr[Double]]))
         parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
       }
+
+      "a lambda from an evolution to another" in {
+        val serializedExpression = "lambda(s)($s)"
+        val expectedExpression: Binding[ListExpr[Double] => ListExpr[Double]] =
+          lambda("s", var0[ListExpr[Double]])
+        parseLambdaOfEvolutions(serializedExpression) shouldBe expectedExpression
+      }
+
+      "an evolution expressed as a variable" in {
+        val serializedExpression = "$s"
+        val expectedExpression: Binding[ListExpr[Double]] =
+          var0[ListExpr[Double]]
+        parseEvolutionOfDoubles(serializedExpression, "s" :: Nil) shouldBe expectedExpression
+      }
     }
   }
 
-  def parseEvolutionOfDoubles(serializedExpression: String): Binding[ListExpr[Double]] =
-    expressions.list
-      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil)
+  def parseLambdaOfEvolutions(serializedExpression: String): Binding[ListExpr[Double] => ListExpr[Double]] =
+    expressions.binding
+      .function(
+        expressions.list.evolutionOf(expressions.constants.doubles),
+        expressions.list.evolutionOf(expressions.constants.doubles)
+      )(Nil)
       .parse(serializedExpression)
       .get
       .value
 
-  def parseEvolutionOfPoints(serializedExpression: String): Binding[ListExpr[Point]] =
+  def parseEvolutionOfDoubles(
+    serializedExpression: String,
+    currentVars: List[String] = Nil
+  ): Binding[ListExpr[Double]] =
     expressions.list
-      .evolutionOf(expressions.constants.points)(Semigroup[Point])(Nil)
+      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
       .parse(serializedExpression)
       .get
       .value
 
-  def parseConstantOfDoubles(serializedExpression: String): Binding[Constant[Double]] = {
+  def parseEvolutionOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[ListExpr[Point]] =
+    expressions.list
+      .evolutionOf(expressions.constants.points)(Semigroup[Point])(currentVars)
+      .parse(serializedExpression)
+      .get
+      .value
+
+  def parseConstantOfDoubles(
+    serializedExpression: String,
+    currentVars: List[String] = Nil
+  ): Binding[Constant[Double]] = {
     expressions.constants
-      .constantOf(expressions.constants.doubles)(Semigroup[Double])(Nil)
+      .constantOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
       .parse(serializedExpression)
       .get
       .value
   }
 
-  def parseConstantOfPoints(serializedExpression: String): Binding[Constant[Point]] =
+  def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Constant[Point]] =
     expressions.constants
-      .constantOf(expressions.constants.points)(Semigroup[Point])(Nil)
+      .constantOf(expressions.constants.points)(Semigroup[Point])(currentVars)
       .parse(serializedExpression)
       .get
       .value

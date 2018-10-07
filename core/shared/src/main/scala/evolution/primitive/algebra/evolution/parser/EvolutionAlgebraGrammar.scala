@@ -155,12 +155,13 @@ class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
 
   override def list: ListAlgebraExpressions[S, F, R] = new ListAlgebraExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
-      or(internalList.evolutionOf(constant), binding.valueOf(self.list.evolutionOf(constant)))
+      or(internalList.evolutionOf(constant), internalBinding.valueOf(self.list.evolutionOf(constant)))
   }
+
   override def constants: ConstantsAlgebraExpressions[S, R] =
     new ConstantsAlgebraExpressions[S, R] {
       override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
-        or(internalConstants.constantOf(constant), self.binding.valueOf(self.constants.constantOf(constant)))
+        or(internalConstants.constantOf(constant), internalBinding.valueOf(self.constants.constantOf(constant)))
       override def points: R[S[Point]] =
         internalConstants.points
       override def doubles: R[S[Double]] =
