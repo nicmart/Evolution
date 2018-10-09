@@ -11,6 +11,7 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
+import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.{Composed, ConstString, CtxString, Generator, defer, generator}
 import evolution.primitive.algebra.constants.ConstantsAlgebra
@@ -18,20 +19,23 @@ import evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
 
 class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit override val generatorDrivenConfig =
-    PropertyCheckConfig(maxDiscarded = 10000)
+    PropertyCheckConfig(maxDiscarded = 100000, minSuccessful = 1000)
 
   "An algebra generator" - {
     "should generate a lot of stuff" in {
-//      forAll(gen.list.evolutionOf[Double](gen.constants.doubles)) { evo =>
-//        println(evo(Nil))
-//      }
-
-      forAll(constantsGen.constantOf[Point](constantsGen.points)) { c =>
-        println(c(Nil))
-        1 shouldBe 1
+      forAll(doubleEvolutionGen) { evo =>
+        println(evo(Nil))
       }
+
+//      forAll(pointsGen) { c =>
+//        println(c(Nil))
+//        1 shouldBe 1
+//      }
     }
   }
+
+  lazy val pointsGen = constantsGen.constantOf[Point](constantsGen.points)(Semigroup[Point])(0)
+  lazy val doubleEvolutionGen = gen.list.evolutionOf[Double](gen.constants.doubles)(Semigroup[Double])(0)
 
   type S[T] = ConstString[T]
   type F[T] = ConstString[T]
@@ -57,7 +61,7 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
     new ConstantsAlgebraGrammar[S, Generator[R, ?]](
       self,
       constantsGenerator,
-      arbitrary[Double].map(d => alg.double(d)),
+      _ => arbitrary[Double].map(d => alg.double(d)),
       generator.genOrMonoidK
     )
   }
@@ -76,8 +80,8 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
     new EvolutionAlgebraGrammar[S, F, Generator[R, ?], Gen[String]](
       self,
       evolutionGenerator,
-      arbitrary[Double].map(alg.constants.double),
-      Gen.alphaLowerStr,
+      _ => arbitrary[Double].map(alg.constants.double),
+      Gen.alphaLowerStr.map(_.take(3)),
       generator.genOrMonoidK
     )
   }

@@ -8,17 +8,19 @@ import org.scalacheck.Gen
 class ConstantsAlgebraGenerator[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAlgebra[Generator[S, ?]] {
 
   override def double(d: Double): Generator[S, Double] =
-    Gen.const(alg.double(d))
+    _ => Gen.const(alg.double(d))
 
   override def point(genX: Generator[S, Double], genY: Generator[S, Double]): Generator[S, Point] =
-    for {
-      x <- genX
-      y <- genY
-    } yield alg.point(x, y)
+    n =>
+      for {
+        x <- genX(n)
+        y <- genY(n)
+      } yield alg.point(x, y)
 
   override def add[T: Semigroup](genA: Generator[S, T], genB: Generator[S, T]): Generator[S, T] =
-    for {
-      a <- genA
-      b <- genB
-    } yield alg.add(a, b)
+    n =>
+      for {
+        a <- genA(n)
+        b <- genB(n)
+      } yield alg.add(a, b)
 }
