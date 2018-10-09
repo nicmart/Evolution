@@ -3,7 +3,6 @@ package evolution.primitive.algebra.binding
 import cats.kernel.Semigroup
 import cats.{Defer, MonoidK}
 import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
-import evolution.primitive.algebra.binding.parser.{BindingAlgebraGrammar, BindingAlgebraSyntax, Expressions}
 import cats.implicits._
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions, EvolutionAlgebraGrammar}

@@ -3,7 +3,7 @@ import cats.Defer
 import org.scalacheck.Gen
 
 object defer {
-  def genDefer[R[_]]: Defer[Composed[Gen, R, ?]] = new Defer[Composed[Gen, R, ?]] {
-    override def defer[A](fa: => Gen[R[A]]): Gen[R[A]] = Gen.lzy(fa)
+  def genDefer[R[_]]: Defer[Generator[R, ?]] = new Defer[Generator[R, ?]] {
+    override def defer[A](fa: => Generator[R, A]): Generator[R, A] = Gen.lzy(fa)
   }
 }

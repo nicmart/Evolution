@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.evolution.parser
 import evolution.geometry.Point
-import evolution.primitive.algebra.ByVarParser
+import evolution.primitive.algebra.{ByVarParser, Composed}
 import evolution.primitive.algebra.binding.BindingAlgebra
 import evolution.primitive.algebra.binding.parser.BindingAlgebraSyntax
 import evolution.primitive.algebra.constants.parser.ConstantsAlgebraSyntax
@@ -13,7 +13,7 @@ import fastparse.noApi.Parser
 class EvolutionAlgebraSyntax[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String])
     extends EvolutionAlgebra[S, F, ByVarParser[R, ?], Parser[String]] {
 
-  private val constantsSyntax = new ConstantsAlgebraSyntax(alg.constants)
+  private val constantsSyntax = new ConstantsAlgebraSyntax[Composed[R, S, ?]](alg.constants)
   private val bindingSyntax = new BindingAlgebraSyntax(alg.bind)
 
   override val list: ListAlgebra[S, F, ByVarParser[R, ?]] =

@@ -1,22 +1,22 @@
 package evolution.primitive.algebra.constants.generator
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.Composed
+import evolution.primitive.algebra.{Composed, Generator}
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import org.scalacheck.Gen
 
-class ConstantsAlgebraGenerator[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAlgebra[Composed[Gen, S, ?]] {
+class ConstantsAlgebraGenerator[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAlgebra[Generator[S, ?]] {
 
-  override def double(d: Double): Gen[S[Double]] =
+  override def double(d: Double): Generator[S, Double] =
     Gen.const(alg.double(d))
 
-  override def point(genX: Gen[S[Double]], genY: Gen[S[Double]]): Gen[S[Point]] =
+  override def point(genX: Generator[S, Double], genY: Generator[S, Double]): Generator[S, Point] =
     for {
       x <- genX
       y <- genY
     } yield alg.point(x, y)
 
-  override def add[T: Semigroup](genA: Gen[S[T]], genB: Gen[S[T]]): Gen[S[T]] =
+  override def add[T: Semigroup](genA: Generator[S, T], genB: Generator[S, T]): Generator[S, T] =
     for {
       a <- genA
       b <- genB
