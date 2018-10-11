@@ -118,6 +118,7 @@ class BindingAlgebraGrammar[R[_], VarName](
     with OrMonoid[R] {
   import syntax._
 
+  // TODO allLet and allApp break Generators
   override def valueOf[T](t: R[T]): R[T] =
     or(var0, shift(self.valueOf(t)), fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
 

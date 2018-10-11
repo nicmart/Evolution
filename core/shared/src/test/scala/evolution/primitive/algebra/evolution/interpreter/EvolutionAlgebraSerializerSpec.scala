@@ -21,15 +21,15 @@ import evolution.primitive.algebra.{Composed, ConstString, CtxString, GenRepr}
 
 class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit override val generatorDrivenConfig =
-    PropertyCheckConfig(maxDiscarded = 1000, minSuccessful = 100, maxSize = 1)
+    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 0)
 
   "An algebra generator" - {
     "should generate a lot of stuff" in {
       // This goes in SO
-      doubleEvolutionGen.sample.get(Nil) shouldBe 1
-//      forAll(doubleEvolutionGen) { evo =>
-//        println(evo(Nil))
-//      }
+//      doubleEvolutionGen.sample.get(Nil) shouldBe 1
+      forAll(doubleEvolutionGen) { evo =>
+        println(evo(Nil))
+      }
 
 //      forAll(pointsGen) { c =>
 //        println(c(Nil))
@@ -85,7 +85,7 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
       self,
       evolutionGenerator,
       _ => Generator.Unknown(arbitrary[Double].map(alg.constants.double)),
-      Generator.Unknown(Gen.alphaLowerStr.map(_.take(3))),
+      Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString)),
       genOrMonoidK[R]
     )
   }
