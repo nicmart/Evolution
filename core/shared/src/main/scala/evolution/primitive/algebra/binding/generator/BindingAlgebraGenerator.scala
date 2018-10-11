@@ -20,22 +20,22 @@ class BindingAlgebraGenerator[R[_], VarName](alg: BindingAlgebra[R, VarName])
     n =>
       for {
         name <- genName
-        value <- genValue(n)
-        expr <- genExpr(n + 1)
+        value <- genValue(n).resize(_ / 2)
+        expr <- genExpr(n + 1).resize(_ / 2)
       } yield alg.let(name, value)(expr)
 
   override def lambda[A, B](genName: Generator[VarName], genExpr: GenRepr[R, B]): GenRepr[R, A => B] =
     n =>
       for {
         name <- genName
-        expr <- genExpr(n + 1)
+        expr <- genExpr(n + 1).resize(_ / 2)
       } yield alg.lambda(name, expr)
 
   override def app[A, B](genF: GenRepr[R, A => B], genA: GenRepr[R, A]): GenRepr[R, B] =
     n =>
       for {
-        f <- genF(n)
-        a <- genA(n)
+        f <- genF(n).resize(_ / 2)
+        a <- genA(n).resize(_ / 2)
       } yield alg.app(f, a)
 
   override def fix[A](genExpr: GenRepr[R, A => A]): GenRepr[R, A] =
