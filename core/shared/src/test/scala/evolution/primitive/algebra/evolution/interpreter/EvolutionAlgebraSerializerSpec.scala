@@ -54,9 +54,7 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
     def genInt: Gen[Int] = Gen.sized(Gen.const)
 
     def gen: Gen[List[Int]] =
-      Gen.sized(
-        s => Gen.frequency(1 -> genEmpty, s - 1 -> Gen.sized(s2 => Gen.resize(s2 - 1, genCons(genInt, Gen.lzy(gen)))))
-      )
+      Gen.sized(s => Gen.frequency(1 -> genEmpty, s - 1 -> Gen.resize(s - 1, genCons(genInt, Gen.lzy(gen)))))
   }
 
   lazy val pointsGen = constantsGen.constantOf[Point](constantsGen.points)(Semigroup[Point])(0).underlying
