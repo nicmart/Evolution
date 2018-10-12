@@ -21,21 +21,42 @@ import evolution.primitive.algebra.{Composed, ConstString, CtxString, GenRepr}
 
 class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit override val generatorDrivenConfig =
-    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 0)
+    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 100)
 
   "An algebra generator" - {
     "should generate a lot of stuff" in {
-      // This goes in SO
-//      doubleEvolutionGen.sample.get(Nil) shouldBe 1
-      forAll(doubleEvolutionGen) { evo =>
-        println(evo(Nil))
+
+      forAll(POF.gen) { list =>
+        println(list)
       }
+
+      // This goes in SO
+      //doubleEvolutionGen.sample.get(Nil) shouldBe 1
+//      forAll(doubleEvolutionGen) { evo =>
+//        println(evo(Nil))
+//      }
 
 //      forAll(pointsGen) { c =>
 //        println(c(Nil))
 //        1 shouldBe 1
 //      }
     }
+  }
+
+  object POF {
+    def genEmpty: Gen[List[Int]] = Gen.const(Nil)
+    def genCons(genHead: Gen[Int], genTail: Gen[List[Int]]): Gen[List[Int]] =
+      for {
+        head <- genHead
+        tail <- genTail
+      } yield head :: tail
+
+    def genInt: Gen[Int] = Gen.sized(Gen.const)
+
+    def gen: Gen[List[Int]] =
+      Gen.sized(
+        s => Gen.frequency(1 -> genEmpty, s - 1 -> Gen.sized(s2 => Gen.resize(s2 - 1, genCons(genInt, Gen.lzy(gen)))))
+      )
   }
 
   lazy val pointsGen = constantsGen.constantOf[Point](constantsGen.points)(Semigroup[Point])(0).underlying

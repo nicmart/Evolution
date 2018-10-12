@@ -16,7 +16,7 @@ trait GeneratorInstances {
   }
 
   val deferGenerator: Defer[Generator] = new Defer[Generator] {
-    override def defer[A](fa: => Generator[A]): Generator[A] = Generator.Unknown(Gen.lzy(fa.underlying))
+    override def defer[A](fa: => Generator[A]): Generator[A] = Generator.Unknown(Gen.delay(fa.underlying))
   }
 }
 

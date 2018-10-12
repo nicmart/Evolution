@@ -28,7 +28,11 @@ object Generator {
   sealed abstract case class Or[T](generators: List[Generator[T]]) extends Generator[T] {
     override def underlying: Gen[T] =
       if (generators.isEmpty) Gen.fail
-      else Gen.choose(0, generators.size - 1).flatMap(i => generators(i).underlying)
+      else
+        Gen.choose(0, generators.size - 1).flatMap(i => generators(i).underlying).map { t =>
+          println(s"Or generator of size ${generators.size} generated value $t")
+          t
+        }
     override def flatMap[T2](f: T => Generator[T2]): Generator[T2] = Or(generators.map(_.flatMap(f)))
     override def resize(newSize: Int => Int): Generator[T] = Or(generators.map(_.resize(newSize)))
   }
