@@ -51,6 +51,11 @@ trait PrimitiveParsers {
     P(operator ~ parser)
   def infix[A, B](operator: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
     P(parser1 ~ operator ~ parser2)
+  def infixFlatMap[A, B](parser1: Parser[A], operator: String, parser2: A => Parser[B]): Parser[B] =
+    parser1.flatMap { a =>
+      P(whitespaceWrap(operator) ~ parser2(a))
+    }
+
   def whitespaceWrap[T](p: Parser[T]): Parser[T] =
     P(ParserConfig.whitespaces ~ p ~ ParserConfig.whitespaces)
 }

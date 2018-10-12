@@ -18,7 +18,7 @@ object BindingAlgebraSerializer extends BindingAlgebra[CtxString, String] {
     ctx => s"fix(${expr(ctx)})"
 
   override def lambda[A, B](name: String, expr: CtxString[B]): CtxString[B] =
-    ctx => s"lambda($name)(${expr(s"$$$name" :: ctx)})"
+    ctx => s"$name -> ${expr(s"$$$name" :: ctx)}"
 
   override def app[A, B](f: CtxString[A], b: CtxString[B]): CtxString[A] =
     ctx => s"app(${f(ctx)}, ${b(ctx)})"

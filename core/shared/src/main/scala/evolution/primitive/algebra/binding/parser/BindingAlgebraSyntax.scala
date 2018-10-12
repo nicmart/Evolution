@@ -2,7 +2,13 @@ package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.ByVarParser
 import evolution.primitive.algebra.binding.BindingAlgebra
-import evolution.primitive.algebra.parser.PrimitiveParsers.{function1, function2, functionFlatMap, varUsage}
+import evolution.primitive.algebra.parser.PrimitiveParsers.{
+  function1,
+  function2,
+  functionFlatMap,
+  varUsage,
+  infixFlatMap
+}
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi._
@@ -39,8 +45,9 @@ class BindingAlgebraSyntax[R[_]](alg: BindingAlgebra[R, String])
 
   override def lambda[A, B](variableName: Parser[String], expr: ByVarParser[R, B]): ByVarParser[R, A => B] =
     vars =>
-      functionFlatMap[String, R[A => B]](
-        function1("lambda", variableName),
+      infixFlatMap[String, R[A => B]](
+        variableName,
+        "->",
         parsedVariableName =>
           expr(parsedVariableName :: vars).map { parsedExpression =>
             alg.lambda(parsedVariableName, parsedExpression)

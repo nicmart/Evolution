@@ -126,13 +126,13 @@ class BindingAlgebraGrammar[R[_], VarName](
     or(lambda(variableSyntax, t2), valueOf(self.function(t1, t2)))
 
   private def letExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
-    let(variableSyntax, self.valueOf(t1))(t2)
+    let(variableSyntax, self.valueOf(t1))(self.valueOf(t2))
 
   private def allLetExpressions[T](t: R[T]): R[T] =
     or(all.map(s => letExpression(s, t)): _*)
 
   private def appExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
-    app(self.function(t1, t2), t1)
+    app(self.function(t1, t2), self.valueOf(t1))
 
   private def allAppExpressions[T](t: R[T]): R[T] =
     or(all.map(s => appExpression(self.valueOf(s), t)): _*)

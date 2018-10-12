@@ -39,7 +39,7 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitivePars
       }
 
       "inside a lambda" in {
-        val serializedExpression = "app(lambda(x)(let(y, 1.0)($x)), 1.0)"
+        val serializedExpression = "app(x -> let(y, 1.0)($x), 1.0)"
         val expected: Binding[Constant[Double]] = app(lambda("x", let("y", double(1.0))(shift(var0))), double(1.0))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
@@ -47,33 +47,33 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitivePars
 
     "lambda expressions that are" - {
       "constant" in {
-        val serializedExpression = "lambda(x)(1.0)"
+        val serializedExpression = "x -> 1.0"
         val expected = lambda("x", double(1.0))
         unsafeParseLambda(serializedExpression) shouldBe expected
       }
 
       "identity" in {
-        val serializedExpression = "lambda(x)($x)"
+        val serializedExpression = "x -> $x"
         val expected = lambda("x", var0)
         unsafeParseLambda(serializedExpression) shouldBe expected
       }
 
       "nested" in {
-        val serializedExpression = "lambda(x)(lambda(y)($x))"
+        val serializedExpression = "x -> y -> $x"
         val expected: Binding[Constant[Double] => Constant[Double] => Constant[Double]] =
           lambda("x", lambda("y", shift(var0)))
         unsafeParseHOLambda(serializedExpression) shouldBe expected
       }
 
       "applications of HO lambdas" in {
-        val serializedExpression = "app(lambda(x)(lambda(y)($x)), 1.0)"
+        val serializedExpression = "app(x -> y -> $x, 1.0)"
         val expected: Binding[Constant[Double] => Constant[Double]] =
           app(lambda("x", lambda("y", shift(var0[Constant[Double]]))), double(1.0))
         unsafeParseLambda(serializedExpression) shouldBe expected
       }
 
       "inside let expressions" in {
-        val serializedExpression = "let(x, 1.0)(lambda(y)($x))"
+        val serializedExpression = "let(x, 1.0)(y -> $x)"
         val expected: Binding[Double => Double] = let("x", double(1.0))(lambda("y", shift(var0)))
         unsafeParseLambda(serializedExpression) shouldBe expected
       }
@@ -81,20 +81,20 @@ class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitivePars
 
     "fix expressions that are" - {
       "constant" in {
-        val serializedExpression = "fix(lambda(x)(1.0))"
+        val serializedExpression = "fix(x -> 1.0)"
         val expected: Binding[Constant[Double]] = fix(lambda("x", double(1.0)))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       "identities" in {
-        val serializedExpression = "fix(lambda(x)($x))"
+        val serializedExpression = "fix(x -> $x)"
         val expected: Binding[Constant[Double]] = fix(lambda("x", var0))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       // We need to make this work
       "fixed points of HOF" in {
-        val serializedExpression = "fix(lambda(f)($f))"
+        val serializedExpression = "fix(f -> $f)"
         val expected: Binding[Constant[Double] => Constant[Double]] =
           fix(lambda[Constant[Double] => Constant[Double], Constant[Double] => Constant[Double]]("f", var0))
         unsafeParseDouble(serializedExpression) shouldBe expected
