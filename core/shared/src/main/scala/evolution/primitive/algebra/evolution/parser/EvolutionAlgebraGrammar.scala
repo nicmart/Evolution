@@ -141,7 +141,10 @@ class BindingAlgebraGrammar[R[_], VarName](
 trait OrMonoid[R[_]] {
   def orMonoid: MonoidK[R]
   // TODO Changed to foldRight to improve generators performance.
-  protected def or[T](expressions: R[T]*): R[T] =
+  def or[T](expressions: R[T]*): R[T] =
+    orSeq(expressions)
+
+  protected def orSeq[T](expressions: Seq[R[T]]): R[T] =
     expressions.foldRight(orMonoid.empty[T])(orMonoid.combineK[T])
 }
 

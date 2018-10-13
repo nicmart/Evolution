@@ -14,14 +14,14 @@ class ConstantsAlgebraGenerator[S[_]](alg: ConstantsAlgebra[S]) extends Constant
   override def point(genX: GenRepr[S, Double], genY: GenRepr[S, Double]): GenRepr[S, Point] =
     n =>
       for {
-        x <- genX(n).resize(_ / 2)
-        y <- genY(n).resize(_ / 2)
+        x <- genX(n)
+        y <- genY(n)
       } yield alg.point(x, y)
 
   override def add[T: Semigroup](genA: GenRepr[S, T], genB: GenRepr[S, T]): GenRepr[S, T] =
     n =>
       for {
-        a <- genA(n).resize(_ / 2)
-        b <- genB(n).resize(_ / 2)
+        a <- genA(n)
+        b <- genB(n)
       } yield alg.add(a, b)
 }
