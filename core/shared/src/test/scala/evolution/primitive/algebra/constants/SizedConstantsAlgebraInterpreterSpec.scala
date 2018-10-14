@@ -3,11 +3,7 @@ import evolution.generator.Generator
 import evolution.generator.instances.GeneratorInstances
 import evolution.primitive.algebra.{CtxString, GenRepr, Sized, TestInterpreters}
 import evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
-import evolution.primitive.algebra.constants.interpreter.{
-  ConstantsAlgebraSerializer,
-  EmptyK,
-  SizedConstantsAlgebraInterpreter
-}
+import evolution.primitive.algebra.constants.interpreter.{ConstantsAlgebraSerializer, SizedConstantsAlgebraInterpreter}
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup

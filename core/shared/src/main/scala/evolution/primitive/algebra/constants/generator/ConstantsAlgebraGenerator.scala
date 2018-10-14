@@ -6,6 +6,9 @@ import evolution.primitive.algebra.{Composed, GenRepr}
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import org.scalacheck.Gen
 
+// TODO this can be a an applicative lifted algebra, because
+// there are no ad-hoc operations using the input of the function (unlike binding algebra,
+// for which the representation GenRepr was choosen
 class ConstantsAlgebraGenerator[S[_]](alg: ConstantsAlgebra[S]) extends ConstantsAlgebra[GenRepr[S, ?]] {
 
   override def double(d: Double): GenRepr[S, Double] =

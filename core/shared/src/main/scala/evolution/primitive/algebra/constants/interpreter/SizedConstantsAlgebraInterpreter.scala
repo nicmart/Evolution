@@ -11,7 +11,7 @@ class SizedConstantsAlgebraInterpreter[S[_]](alg: ConstantsAlgebra[S], val orMon
     with OrMonoid[S] {
 
   override def double(d: Double): Sized[S, Double] =
-    size => if (size == 1) alg.double(d) else orMonoid.empty
+    size => if (size == 0) alg.double(d) else orMonoid.empty
 
   override def point(x: Sized[S, Double], y: Sized[S, Double]): Sized[S, Point] =
     size => withSize(size - 1, x, y, alg.point)
@@ -20,14 +20,14 @@ class SizedConstantsAlgebraInterpreter[S[_]](alg: ConstantsAlgebra[S], val orMon
     size => withSize(size - 1, a, b, alg.add[T])
 
   // TODO avoid creation of impossible sizes
-  private def withSize[T1, T2](n: Int, a: Sized[S, T1], b: Sized[S, T1], f: (S[T1], S[T1]) => S[T2]): S[T2] =
-    orSeq(for {
-      i <- (1 until n).toList
+  // This makes the underlying Gen create a lot of failures
+  private def withSize[T1, T2](n: Int, a: Sized[S, T1], b: Sized[S, T1], f: (S[T1], S[T1]) => S[T2]): S[T2] = {
+    val list = for {
+      i <- (0 to n).toList
       sa = a(i)
       sb = b(n - i)
-    } yield f(sa, sb))
-}
+    } yield f(sa, sb)
 
-trait EmptyK[F[_]] {
-  def isEmpty[T](t: F[T]): Boolean
+    orSeq(list)
+  }
 }
