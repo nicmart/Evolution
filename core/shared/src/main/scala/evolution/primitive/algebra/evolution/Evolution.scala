@@ -5,7 +5,6 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 
 trait Evolution[S[_], F[_], R[_], VarName] {
-  final type RS[T] = R[S[T]]
   val list: Chain[S, F, R]
   val constants: Constants[Composed[R, S, ?]]
   val bind: Binding[R, VarName]

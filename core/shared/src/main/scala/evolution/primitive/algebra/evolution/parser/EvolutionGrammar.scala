@@ -207,7 +207,7 @@ object EvolutionGrammar {
     alg: Evolution[S, F, R, String],
     self: EvolutionExpressions[S, F, ByVarParser[R, ?]]
   ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
-    val syntax = new EvolutionAlgebraSyntax[S, F, R](alg)
+    val syntax = new EvolutionSyntax[S, F, R](alg)
     new EvolutionGrammar[S, F, ByVarParser[R, ?], Parser[String]](
       self,
       syntax,

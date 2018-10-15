@@ -10,7 +10,7 @@ import evolution.primitive.algebra.chain.{ContextualChain, Chain}
 import evolution.primitive.algebra.chain.parser.ChainSyntax
 import fastparse.noApi.Parser
 
-class EvolutionAlgebraSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
+class EvolutionSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
     extends Evolution[S, F, ByVarParser[R, ?], Parser[String]] {
 
   private val constantsSyntax = new ConstantsSyntax[Composed[R, S, ?]](alg.constants)

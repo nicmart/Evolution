@@ -3,9 +3,8 @@ import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.constants.Constants
-import evolution.primitive.algebra.evolution.interpreter.EvolutionSerializer.RS
 
-object ConstantsSerializer extends Constants[RS] {
+object ConstantsSerializer extends Constants[CtxString] {
   override def double(d: Double): CtxString[Double] = _ => d.toString
   override def point(x: CtxString[Double], y: CtxString[Double]): CtxString[Point] =
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
