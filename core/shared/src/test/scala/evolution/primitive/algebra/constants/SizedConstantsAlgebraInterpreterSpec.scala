@@ -1,14 +1,17 @@
 package evolution.primitive.algebra.constants
 import evolution.generator.Generator
 import evolution.generator.instances.GeneratorInstances
-import evolution.primitive.algebra.{CtxString, GenRepr, Sized, TestInterpreters}
-import evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
-import evolution.primitive.algebra.constants.interpreter.{ConstantsAlgebraSerializer, SizedConstantsAlgebraInterpreter}
+import evolution.primitive.algebra._
+import _root_.evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
+import _root_.evolution.primitive.algebra.constants.interpreter.{
+  ConstantsAlgebraSerializer,
+  SizeConstantsAlgebraEvaluator,
+  SizedConstantsAlgebraInterpreter
+}
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup
 import org.scalacheck.Gen
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
 class SizedConstantsAlgebraInterpreterSpec
@@ -19,12 +22,12 @@ class SizedConstantsAlgebraInterpreterSpec
     with GeneratorDrivenPropertyChecks {
 
   implicit override val generatorDrivenConfig =
-    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 50)
+    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 200)
 
   "A Sized Constants Interpreter" - {
     "should generate expression of the given size" in {
-      forAll(genWithSize) { serialized =>
-        println(serialized)
+      forAll(sizes) { size =>
+        size.actual shouldBe size.expected
       }
     }
   }
@@ -32,32 +35,34 @@ class SizedConstantsAlgebraInterpreterSpec
   val serializer: ConstantsAlgebraSerializer.type =
     ConstantsAlgebraSerializer
 
-  val generator: ConstantsAlgebra[GenRepr[CtxString, ?]] =
-    new ConstantsAlgebraGenerator[CtxString](serializer)
+  val sizeEvaluator: SizeConstantsAlgebraEvaluator.type =
+    SizeConstantsAlgebraEvaluator
 
-  val sizedGenerator: ConstantsAlgebra[Sized[GenRepr[CtxString, ?], ?]] =
-    new SizedConstantsAlgebraInterpreter[GenRepr[CtxString, ?]](generator, genOrMonoidK[CtxString])
+  val generator: ConstantsAlgebra[GenRepr[Const[?, Int], ?]] =
+    new ConstantsAlgebraGenerator[Const[?, Int]](sizeEvaluator)
 
-  val doubleGenerator: Generator[CtxString[Double]] =
-    Generator.Unknown(Gen.sized(s => Gen.const(_ => s.toString)))
+  val sizedGenerator: ConstantsAlgebra[Sized[GenRepr[Const[?, Int], ?], ?]] =
+    new SizedConstantsAlgebraInterpreter[GenRepr[Const[?, Int], ?]](generator, genOrMonoidK[Const[?, Int]])
 
-  def defer[T](t: => Sized[GenRepr[CtxString, ?], T]): Sized[GenRepr[CtxString, ?], T] =
-    size => deferGenRepr[CtxString].defer(t(size))
+  val doubleGenerator: Generator[Int] =
+    Generator.Unknown(Gen.const(0))
 
-  def doubles: Sized[GenRepr[CtxString, ?], Double] =
+  def defer[T](t: => Sized[GenRepr[Const[?, Int], ?], T]): Sized[GenRepr[Const[?, Int], ?], T] =
+    size => deferGenRepr[Const[?, Int]].defer(t(size))
+
+  def doubles: Sized[GenRepr[Const[?, Int], ?], Double] =
     size =>
       vars =>
         Generator.Or(
           List(
-            if (size <= 1) doubleGenerator else Generator.Fail(),
+            if (size <= 0) doubleGenerator else Generator.Fail(),
             sizedGenerator.add[Double](defer(doubles), defer(doubles))(Semigroup[Double])(size)(vars)
           )
     )
 
-  def gen: Gen[String] =
+  def sizes: Gen[Size] =
     Gen
-      .sized(size => doubles(size)(0).underlying)
-      .map(ctxString => ctxString(Nil))
+      .sized(size => doubles(size)(0).underlying.map(actualSize => Size(size, actualSize)))
 
-  def genWithSize: Gen[String] = Gen.sized(s => gen.map(out => s"size: $s => $out"))
+  case class Size(expected: Int, actual: Int)
 }
