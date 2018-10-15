@@ -6,7 +6,7 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
-import evolution.algebra.{Evolution, FullAlgebra}
+import evolution.algebra.{LegacyEvolution, FullAlgebra}
 import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
@@ -36,7 +36,7 @@ object drops extends DrawingDefinition[Point] {
       numberOfDrops = 80
     )
 
-  private class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+  private class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
       import config._
       import alg._
@@ -46,10 +46,9 @@ object drops extends DrawingDefinition[Point] {
         if (p < randomForceProbability) ring(randomForceStrength).head else pure(Point.zero)
       }
 
-      def accelerationEvolution: Evo[AccelerationLaw[Point]] = randomForces map { randomAcc =>
-        (position, velocity) =>
-          if ((randomAcc + velocity + acc).norm() < threshold) -velocity
-          else randomAcc + acc - velocity * friction
+      def accelerationEvolution: Evo[AccelerationLaw[Point]] = randomForces map { randomAcc => (position, velocity) =>
+        if ((randomAcc + velocity + acc).norm() < threshold) -velocity
+        else randomAcc + acc - velocity * friction
       }
 
       def pointEvo(from: Point): Evo[Point] = {
@@ -57,16 +56,16 @@ object drops extends DrawingDefinition[Point] {
       }
 
       sequenceParallel(
-        Queue.apply(Point.sequence(
-          numberOfDrops,
-          Point(context.right, context.top),
-          Point(context.left, context.top)
-        ).map(pointEvo): _*)
+        Queue.apply(
+          Point
+            .sequence(numberOfDrops, Point(context.right, context.top), Point(context.left, context.top))
+            .map(pointEvo): _*
+        )
       )
     }
   }
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   override val configComponent: ConfigComponent[Config] = ConfigComponent[Config]

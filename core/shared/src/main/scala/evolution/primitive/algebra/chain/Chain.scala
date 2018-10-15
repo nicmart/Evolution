@@ -8,6 +8,7 @@ trait Chain[S[_], F[_], R[_]] {
   def mapCons[A, B](eva: R[F[A]])(f: R[S[A] => F[A] => F[B]]): R[F[B]]
 }
 
+// TODO applicative on Reader[Ctx, ?]?
 class ContextualChain[S[_], F[_], R[_], Ctx](alg: Chain[S, F, R]) extends Chain[S, F, λ[α => Ctx => R[α]]] {
   override def empty[A]: Ctx => R[F[A]] = _ => alg.empty
   override def cons[A](head: Ctx => R[S[A]], tail: Ctx => R[F[A]]): Ctx => R[F[A]] =

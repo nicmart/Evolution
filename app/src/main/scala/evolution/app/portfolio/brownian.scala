@@ -13,16 +13,13 @@ import io.circe.generic.auto._
 
 object brownian extends DrawingDefinition[Point] {
   val name = "brownian"
-  case class Config(
-    radius: Double,
-    order: Int
-  )
+  case class Config(radius: Double, order: Int)
 
   override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    new Evolution[Point] {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
         val order = if (config.order > 0) config.order else 0

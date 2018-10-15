@@ -6,7 +6,7 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 import evolution.algebra.MotionEvolutionAlgebra.{AccelerationLaw, PhaseSpace, Position, Velocity}
 import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
@@ -25,16 +25,9 @@ object nBodies extends DrawingDefinition[Point] {
     speed2: Double
   )
 
-  def initialConfig = Config(
-    gravityConstant = 0.01,
-    distance = 200,
-    speed1 = 0,
-    mass1 = 10000,
-    speed2 = 0.5,
-    mass2 = 1
-  )
+  def initialConfig = Config(gravityConstant = 0.01, distance = 200, speed1 = 0, mass1 = 10000, speed2 = 0.5, mass2 = 1)
 
-  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+  class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       type FieldGen = PhaseSpace[Point] => AccelerationLaw[Point]
@@ -81,14 +74,15 @@ object nBodies extends DrawingDefinition[Point] {
         ((Point(-distance / 2, 0), Point(0, speed1)), mass1),
         ((Point(distance / 2, 0), Point(0, speed2)), mass2)
       )
-      val fieldGens: IndexedSeq[FieldGen] = IndexedSeq(fieldGen(gravityConstant, mass1), fieldGen(gravityConstant, mass2))
+      val fieldGens: IndexedSeq[FieldGen] =
+        IndexedSeq(fieldGen(gravityConstant, mass1), fieldGen(gravityConstant, mass2))
       val evo: Evo[IndexedSeq[(Position[Point], Velocity[Point])]] = solve2Multi(start, fieldGens)
 
       evo.map(_.toList).flattenList.positional
     }
   }
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   val configComponent: ConfigComponent[Config] =
@@ -99,9 +93,10 @@ object nBodies extends DrawingDefinition[Point] {
 
   private def fieldGen(gravityConstant: Double, mass: Double)(phase: PhaseSpace[Point]): AccelerationLaw[Point] = {
     val (pos1, vel1) = phase
-    (pos2, vel2) => {
-      val r12 = pos2 - pos1
-      -r12 * gravityConstant * mass / Math.pow(r12.norm(), 3)
-    }
+    (pos2, vel2) =>
+      {
+        val r12 = pos2 - pos1
+        -r12 * gravityConstant * mass / Math.pow(r12.norm(), 3)
+      }
   }
 }

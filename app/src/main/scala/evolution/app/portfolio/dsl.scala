@@ -47,8 +47,8 @@ object dsl extends DrawingDefinition[Point] {
     }
   }
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    new Evolution[Point] {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] =
         config.run[Id, Evo, EvaluationResult](new EvolutionAlgebraEvaluator[Evo](alg)).get(List.empty)
     }

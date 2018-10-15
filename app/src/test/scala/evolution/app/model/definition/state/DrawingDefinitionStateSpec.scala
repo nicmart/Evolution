@@ -1,20 +1,18 @@
 package evolution.app.model.definition.state
 
 import evolution.algebra
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.geometry.Point
 import org.scalatest._
 
-class DrawingDefinitionStateSpec
-  extends WordSpec
-    with Matchers {
+class DrawingDefinitionStateSpec extends WordSpec with Matchers {
 
-    "this is a test" in {
-      1 shouldBe 1
-    }
+  "this is a test" in {
+    1 shouldBe 1
+  }
 
   "a definition should be serializable" should {
     import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._

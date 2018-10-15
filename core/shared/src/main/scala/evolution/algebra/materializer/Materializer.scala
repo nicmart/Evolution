@@ -1,7 +1,7 @@
 package evolution.algebra.materializer
 
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 
 trait Materializer[S] {
-  def materialize[A](seed: S, evo: Evolution[A]): Stream[A]
+  def materialize[A](seed: S, evo: LegacyEvolution[A]): Stream[A]
 }

@@ -14,15 +14,13 @@ import io.circe.generic.auto._
 object line extends DrawingDefinition[Point] {
   val name = "line"
 
-  case class Config(
-    speed: Double
-  )
+  case class Config(speed: Double)
 
   override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    new Evolution[Point] {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
         solveIndependentStatic(Point.zero)(Point(config.speed, 0)).positional

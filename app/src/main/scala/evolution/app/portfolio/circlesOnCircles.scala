@@ -7,7 +7,7 @@ import evolution.algebra
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
@@ -40,24 +40,24 @@ object circlesOnCircles extends DrawingDefinition[Point] {
   override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+  class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     import config._
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       translate(
-          uniformRadial(Point(0, bigRadius), bigRadialSpeed),
+        uniformRadial(Point(0, bigRadius), bigRadialSpeed),
+        translate(
+          uniformRadial(Point(0, mediumRadius), mediumRadialSpeed),
           translate(
-            uniformRadial(Point(0, mediumRadius), mediumRadialSpeed),
-            translate(
-              uniformRadial(Point(0, smallRadius), smallRadialSpeed),
-              uniformRadial(Point(0, lastRadius), lastRadialSpeed)
-            )
+            uniformRadial(Point(0, smallRadius), smallRadialSpeed),
+            uniformRadial(Point(0, lastRadius), lastRadialSpeed)
           )
         )
+      )
     }
   }
 
-  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   override def configCodec: JsonCodec[Config] =

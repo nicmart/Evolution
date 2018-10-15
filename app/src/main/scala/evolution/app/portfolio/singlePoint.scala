@@ -5,7 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
@@ -17,14 +17,14 @@ object singlePoint extends DrawingDefinition[Point] {
   type Config = Unit
   def initialConfig: Unit = ()
 
-  class ThisEvolution(config: Unit, context: DrawingContext) extends Evolution[Point] {
+  class ThisEvolution(config: Unit, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       constant(Point.zero)
     }
   }
 
-  def evolution(config: Unit, context: DrawingContext): Evolution[Point] =
+  def evolution(config: Unit, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   val configComponent: ConfigComponent[Unit] = ConfigComponent[Unit]

@@ -7,7 +7,7 @@ import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
 import evolution.algebra.syntax.all._
-import evolution.algebra.{Evolution, FullAlgebra}
+import evolution.algebra.{LegacyEvolution, FullAlgebra}
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 
@@ -24,16 +24,12 @@ object oscillator extends DrawingDefinition[Point] {
     randomNoiseStrength: Double
   )
 
-  def initialConfig = Config(
-    springConstant = 0.00001,
-    friction = 0.0001,
-    randomNoiseProbability = .001,
-    randomNoiseStrength = .1
-  )
+  def initialConfig =
+    Config(springConstant = 0.00001, friction = 0.0001, randomNoiseProbability = .001, randomNoiseStrength = .1)
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
     import config._
-    new Evolution[Point] {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
 
@@ -47,9 +43,9 @@ object oscillator extends DrawingDefinition[Point] {
             else Point.zero
           }
         val accelerationEvo2 =
-          accelerationEvo.zipWith[Point, AccelerationLaw[Point]](random) {
-            (eq: AccelerationLaw[Point], noise: Point) => {
-              (x: Point, v: Point) => {
+          accelerationEvo.zipWith[Point, AccelerationLaw[Point]](random) { (eq: AccelerationLaw[Point], noise: Point) =>
+            { (x: Point, v: Point) =>
+              {
                 val acc = eq(x, v)
                 acc + noise
               }

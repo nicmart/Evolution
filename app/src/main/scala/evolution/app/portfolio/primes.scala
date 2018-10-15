@@ -7,7 +7,7 @@ import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
 import evolution.algebra
-import evolution.algebra.Evolution
+import evolution.algebra.LegacyEvolution
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
@@ -15,20 +15,12 @@ import io.circe.generic.auto._
 object primes extends DrawingDefinition[Point] {
   val name = "primes"
 
-  case class Config(
-    p: Int,
-    q: Int,
-    size: Int
-  )
+  case class Config(p: Int, q: Int, size: Int)
 
   override def initialConfig =
-    Config(
-      p = 7,
-      q = 101,
-      size = 500
-    )
+    Config(p = 7, q = 101, size = 500)
 
-  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+  class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       def gcd(a: Int, b: Int): Int = {
@@ -47,7 +39,7 @@ object primes extends DrawingDefinition[Point] {
     }
   }
 
-  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   override val configComponent: ConfigComponent[Config] =

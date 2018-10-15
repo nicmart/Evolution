@@ -7,7 +7,7 @@ import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.syntax.all._
-import evolution.algebra.{Evolution, FullAlgebra}
+import evolution.algebra.{LegacyEvolution, FullAlgebra}
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
@@ -25,16 +25,9 @@ object dynamicRotation extends DrawingDefinition[Point] {
   )
 
   override def initialConfig =
-    Config(
-      normSpeed = 15,
-      angularSpeed = 0.1,
-      omega = 0.01,
-      amplitude = 20,
-      omega2 = 0.1,
-      amplitude2 = 10
-    )
+    Config(normSpeed = 15, angularSpeed = 0.1, omega = 0.01, amplitude = 20, omega2 = 0.1, amplitude2 = 10)
 
-  class ThisEvolution(config: Config, context: DrawingContext) extends Evolution[Point] {
+  class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       import config._
@@ -51,18 +44,11 @@ object dynamicRotation extends DrawingDefinition[Point] {
         Point.polar(normSpeed * t, t)
       })
 
-      drawOnEvolution(
-        toPhaseSpace(drawOnEvolution(
-          spiral,
-          vibration(omega, amplitude)
-        )
-        ),
-        vibration(omega2, amplitude2)
-      )
+      drawOnEvolution(toPhaseSpace(drawOnEvolution(spiral, vibration(omega, amplitude))), vibration(omega2, amplitude2))
     }
   }
 
-  override def evolution(config: Config, context: DrawingContext): Evolution[Point] =
+  override def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] =
     new ThisEvolution(config, context)
 
   override val configComponent: ConfigComponent[Config] =

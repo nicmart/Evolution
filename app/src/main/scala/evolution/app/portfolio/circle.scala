@@ -15,17 +15,13 @@ import cats.instances.double._
 object circle extends DrawingDefinition[Point] {
   val name = "circle"
 
-  case class Config(
-    radius: Double,
-    omega: Double,
-    phase: Double
-  )
+  case class Config(radius: Double, omega: Double, phase: Double)
 
   override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    new Evolution[Point] {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._
         polar(constant(config.radius), progression(config.omega, config.phase))

@@ -1,9 +1,9 @@
 package evolution.algebra.materializer
 
-import evolution.algebra.{Evolution, FullAlgebra}
+import evolution.algebra.{LegacyEvolution, FullAlgebra}
 
-trait InterpreterMaterializer[S, Repr[+_]] extends Materializer[S] {
-  override def materialize[A](seed: S, evo: Evolution[A]): Stream[A] =
+trait InterpreterMaterializer[S, Repr[+ _]] extends Materializer[S] {
+  override def materialize[A](seed: S, evo: LegacyEvolution[A]): Stream[A] =
     toStream(seed, evo.run(interpreter))
 
   protected def interpreter: FullAlgebra[Repr]

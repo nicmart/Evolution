@@ -15,18 +15,13 @@ import cats.instances.double._
 object lissajous extends DrawingDefinition[Point] {
   val name = "lissajous"
 
-  case class Config(
-    a: Double,
-    b: Double,
-    delta: Double,
-    speed: Double
-  )
+  case class Config(a: Double, b: Double, delta: Double, speed: Double)
 
   override val configComponent: ConfigComponent[Config] =
     ConfigComponent[Config]
 
-  def evolution(config: Config, context: DrawingContext): Evolution[Point] = {
-    new Evolution[Point] {
+  def evolution(config: Config, context: DrawingContext): LegacyEvolution[Point] = {
+    new LegacyEvolution[Point] {
       override def run[Evo[+ _]](implicit alg: FullAlgebra[Evo]): Evo[Point] = {
         import alg._, config._
 
@@ -35,22 +30,14 @@ object lissajous extends DrawingDefinition[Point] {
         val size = Math.min(context.canvasSize.height, context.canvasSize.width) * 0.4
 
         progression(speed, 0).map { t =>
-          Point(
-            Math.sin(a * t + radiants),
-            Math.sin(b * t)
-          ) * size
+          Point(Math.sin(a * t + radiants), Math.sin(b * t)) * size
         }
       }
     }
   }
 
   val initialConfig =
-    Config(
-      a = 5,
-      b = 4,
-      delta = 90,
-      speed = .01
-    )
+    Config(a = 5, b = 4, delta = 90, speed = .01)
 
   override def configCodec: JsonCodec[Config] =
     JsonCodec[Config]
