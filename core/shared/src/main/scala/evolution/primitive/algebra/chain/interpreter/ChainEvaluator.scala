@@ -1,10 +1,10 @@
-package evolution.primitive.algebra.list.interpreter
+package evolution.primitive.algebra.chain.interpreter
 import cats.Id
 import evolution.algebra.EvolutionCoreAlgebra
 import evolution.primitive.algebra.binding.interpreter.{EvaluationResult, Value}
-import evolution.primitive.algebra.list.ListAlgebra
+import evolution.primitive.algebra.chain.Chain
 
-class ListAlgebraEvaluator[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends ListAlgebra[Id, F, EvaluationResult] {
+class ChainEvaluator[F[+ _]](evolutionAlg: EvolutionCoreAlgebra[F]) extends Chain[Id, F, EvaluationResult] {
   override def empty[A]: EvaluationResult[F[A]] =
     Value(_ => evolutionAlg.empty)
   override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[F[A]]): EvaluationResult[F[A]] =

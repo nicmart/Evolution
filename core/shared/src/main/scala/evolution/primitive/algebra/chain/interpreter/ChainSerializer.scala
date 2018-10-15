@@ -1,8 +1,8 @@
-package evolution.primitive.algebra.list.interpreter
+package evolution.primitive.algebra.chain.interpreter
 import evolution.primitive.algebra.{ConstString, CtxString}
-import evolution.primitive.algebra.list.ListAlgebra
+import evolution.primitive.algebra.chain.Chain
 
-object ListAlgebraSerializer extends ListAlgebra[ConstString, ConstString, CtxString] {
+object ChainSerializer extends Chain[ConstString, ConstString, CtxString] {
   override def empty[A]: CtxString[A] =
     _ => "empty"
   override def cons[A](head: CtxString[A], tail: CtxString[A]): CtxString[A] =

@@ -1,10 +1,10 @@
-package evolution.primitive.algebra.list.generator
+package evolution.primitive.algebra.chain.generator
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, GenRepr}
-import evolution.primitive.algebra.list.ListAlgebra
+import evolution.primitive.algebra.chain.Chain
 import org.scalacheck.Gen
 
-class ListAlgebraGenerator[S[_], F[_], R[_]](alg: ListAlgebra[S, F, R]) extends ListAlgebra[S, F, GenRepr[R, ?]] {
+class ChainGenerator[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, GenRepr[R, ?]] {
 
   override def empty[A]: GenRepr[R, F[A]] =
     _ => Generator.pure[R[F[A]]](alg.empty)

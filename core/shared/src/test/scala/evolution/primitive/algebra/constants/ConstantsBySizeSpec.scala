@@ -2,11 +2,11 @@ package evolution.primitive.algebra.constants
 import evolution.generator.Generator
 import evolution.generator.instances.GeneratorInstances
 import evolution.primitive.algebra._
-import _root_.evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
+import _root_.evolution.primitive.algebra.constants.generator.ConstantsGenerator
 import _root_.evolution.primitive.algebra.constants.interpreter.{
-  ConstantsAlgebraSerializer,
-  SizeConstantsAlgebraEvaluator,
-  SizedConstantsAlgebraInterpreter
+  ConstantsSerializer,
+  ConstantsSizeEvaluator,
+  ConstantsBySize
 }
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
@@ -14,7 +14,7 @@ import cats.kernel.Semigroup
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class SizedConstantsAlgebraInterpreterSpec
+class ConstantsBySizeSpec
     extends FreeSpec
     with Matchers
     with TestInterpreters
@@ -32,17 +32,17 @@ class SizedConstantsAlgebraInterpreterSpec
     }
   }
 
-  val serializer: ConstantsAlgebraSerializer.type =
-    ConstantsAlgebraSerializer
+  val serializer: ConstantsSerializer.type =
+    ConstantsSerializer
 
-  val sizeEvaluator: SizeConstantsAlgebraEvaluator.type =
-    SizeConstantsAlgebraEvaluator
+  val sizeEvaluator: ConstantsSizeEvaluator.type =
+    ConstantsSizeEvaluator
 
-  val generator: ConstantsAlgebra[GenRepr[Const[?, Int], ?]] =
-    new ConstantsAlgebraGenerator[Const[?, Int]](sizeEvaluator)
+  val generator: Constants[GenRepr[Const[?, Int], ?]] =
+    new ConstantsGenerator[Const[?, Int]](sizeEvaluator)
 
-  val sizedGenerator: ConstantsAlgebra[Sized[GenRepr[Const[?, Int], ?], ?]] =
-    new SizedConstantsAlgebraInterpreter[GenRepr[Const[?, Int], ?]](generator, genOrMonoidK[Const[?, Int]])
+  val sizedGenerator: Constants[Sized[GenRepr[Const[?, Int], ?], ?]] =
+    new ConstantsBySize[GenRepr[Const[?, Int], ?]](generator, genOrMonoidK[Const[?, Int]])
 
   val doubleGenerator: Generator[Int] =
     Generator.Unknown(Gen.const(0))

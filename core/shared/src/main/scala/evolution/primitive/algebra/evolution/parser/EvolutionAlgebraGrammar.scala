@@ -6,8 +6,8 @@ import evolution.primitive.algebra.{ByVarParser, Composed}
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import cats.instances.double._
 import evolution.primitive.algebra.binding.Binding
-import evolution.primitive.algebra.constants.ConstantsAlgebra
-import evolution.primitive.algebra.list.{ContextualListAlgebra, ListAlgebra}
+import evolution.primitive.algebra.constants.Constants
+import evolution.primitive.algebra.chain.{ContextualChain, Chain}
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi.{Fail, P, Parser}
@@ -44,7 +44,7 @@ object ListAlgebraExpressions {
 
 class ListAlgebraEvolutionGrammar[S[_], F[_], R[_]](
   self: EvolutionAlgebraExpressions[S, F, R],
-  syntax: ListAlgebra[S, F, R],
+  syntax: Chain[S, F, R],
   override val orMonoid: MonoidK[R],
 ) extends ListAlgebraExpressions[S, F, R]
     with OrMonoid[R] {
@@ -81,7 +81,7 @@ object ConstantsAlgebraExpressions {
 
 class ConstantsAlgebraGrammar[S[_], R[_]](
   self: ConstantsAlgebraExpressions[S, R],
-  syntax: ConstantsAlgebra[Composed[R, S, ?]],
+  syntax: Constants[Composed[R, S, ?]],
   doubleLiteral: R[S[Double]],
   override val orMonoid: MonoidK[R]
 ) extends ConstantsAlgebraExpressions[S, R]

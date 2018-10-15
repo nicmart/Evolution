@@ -3,7 +3,7 @@ package evolution.primitive.algebra
 import _root_.evolution.geometry.Point
 import binding.{Binding => BindingAlg}
 import evolution._
-import list._
+import chain._
 import constants._
 import cats.kernel.Semigroup
 
@@ -49,14 +49,14 @@ trait TestInterpreters {
     override def fix[A](expr: Binding[A => A]): Binding[A] = Fix(expr)
   }
 
-  object ConstantsAlgebraTestInterpreter extends ConstantsAlgebra[Composed[Binding, Constant, ?]] {
+  object ConstantsTestInterpreter extends Constants[Composed[Binding, Constant, ?]] {
     override def double(d: Double): Binding[Constant[Double]] = d
     override def point(x: Binding[Constant[Double]], y: Binding[Constant[Double]]): Binding[Constant[Point]] =
       PointConstant(x, y)
     override def add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]): Binding[Constant[T]] = Add(a, b)
   }
 
-  object ListAlgebraTestInterpreter extends ListAlgebra[Constant, ListExpr, Binding] {
+  object ChainTestInterpreter extends Chain[Constant, ListExpr, Binding] {
     override def empty[A]: Binding[ListExpr[A]] = Empty[A]()
     override def cons[A](head: Binding[Constant[A]], tail: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       Cons(head, tail)
@@ -69,8 +69,8 @@ trait TestInterpreters {
   }
 
   object EvolutionAlgebraTestInterpreter extends EvolutionAlgebra[Constant, ListExpr, Binding, String] {
-    override val list: ListAlgebra[Constant, ListExpr, Binding] = ListAlgebraTestInterpreter
-    override val constants: ConstantsAlgebra[Composed[Binding, Constant, ?]] = ConstantsAlgebraTestInterpreter
+    override val list: Chain[Constant, ListExpr, Binding] = ChainTestInterpreter
+    override val constants: Constants[Composed[Binding, Constant, ?]] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String] = BindingTestInterpreter
   }
 }

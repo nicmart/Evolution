@@ -1,12 +1,12 @@
-package evolution.primitive.algebra.list.parser
-import evolution.primitive.algebra.list.ListAlgebra
+package evolution.primitive.algebra.chain.parser
+import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.parser.PrimitiveParsers.function2
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 import evolution.primitive.algebra.parser.PrimitiveParsers._
 import fastparse.noApi.{P, Parser}
 
-class ListAlgebraSyntax[S[_], F[_], R[_]](alg: ListAlgebra[S, F, R]) extends ListAlgebra[S, F, λ[α => Parser[R[α]]]] {
+class ChainSyntax[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, λ[α => Parser[R[α]]]] {
 
   override def empty[A]: Parser[R[F[A]]] =
     P("empty").map(_ => alg.empty)

@@ -13,8 +13,8 @@ import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import _root_.evolution.primitive.algebra.constants.ConstantsAlgebra
-import _root_.evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
+import _root_.evolution.primitive.algebra.constants.Constants
+import _root_.evolution.primitive.algebra.constants.generator.ConstantsGenerator
 import _root_.evolution.generator.instances.GeneratorInstances._
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, ConstString, CtxString, GenRepr}
@@ -68,19 +68,17 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
   lazy val gen: EvolutionAlgebraExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
   lazy val constantsGen: ConstantsAlgebraExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
-  def constantGrammar[S[_], R[_]](
-    alg: ConstantsAlgebra[Composed[R, S, ?]]
-  ): ConstantsAlgebraExpressions[S, GenRepr[R, ?]] =
+  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?]]): ConstantsAlgebraExpressions[S, GenRepr[R, ?]] =
     constantGrammarRec[S, R](
       alg,
       new parser.ConstantsAlgebraExpressions.Lazy[S, GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
     )
 
   private def constantGrammarRec[S[_], R[_]](
-    alg: ConstantsAlgebra[Composed[R, S, ?]],
+    alg: Constants[Composed[R, S, ?]],
     self: ConstantsAlgebraExpressions[S, GenRepr[R, ?]]
   ): ConstantsAlgebraExpressions[S, GenRepr[R, ?]] = {
-    val constantsGenerator = new ConstantsAlgebraGenerator[Composed[R, S, ?]](alg)
+    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
     new ConstantsAlgebraGrammar[S, GenRepr[R, ?]](
       self,
       constantsGenerator,

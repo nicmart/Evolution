@@ -1,4 +1,4 @@
-package evolution.primitive.algebra.list
+package evolution.primitive.algebra.chain
 
 import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
 import evolution.primitive.algebra.parser._
@@ -8,7 +8,7 @@ import cats.kernel.Semigroup
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions, EvolutionAlgebraGrammar}
 
-class ListAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
+class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 

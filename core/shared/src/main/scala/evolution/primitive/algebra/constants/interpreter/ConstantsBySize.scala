@@ -3,11 +3,11 @@ import cats.MonoidK
 import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.Sized
-import evolution.primitive.algebra.constants.ConstantsAlgebra
+import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.parser.OrMonoid
 
-class SizedConstantsAlgebraInterpreter[S[_]](alg: ConstantsAlgebra[S], val orMonoid: MonoidK[S])
-    extends ConstantsAlgebra[Sized[S, ?]]
+class ConstantsBySize[S[_]](alg: Constants[S], val orMonoid: MonoidK[S])
+    extends Constants[Sized[S, ?]]
     with OrMonoid[S] {
 
   override def double(d: Double): Sized[S, Double] =
