@@ -1,8 +1,8 @@
 package evolution.primitive.algebra.evolution.interpreter
 
-import evolution.primitive.algebra.evolution.{EvolutionAlgebra, parser}
-import evolution.primitive.algebra.evolution.generator.EvolutionAlgebraGenerator
-import evolution.primitive.algebra.evolution.parser.EvolutionAlgebraExpressions.Lazy
+import evolution.primitive.algebra.evolution.{Evolution, parser}
+import evolution.primitive.algebra.evolution.generator.EvolutionGenerator
+import evolution.primitive.algebra.evolution.parser.EvolutionExpressions.Lazy
 import evolution.primitive.algebra.evolution.parser._
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi.Parser
@@ -19,7 +19,7 @@ import _root_.evolution.generator.instances.GeneratorInstances._
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, ConstString, CtxString, GenRepr}
 
-class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
+class LegacyEvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit override val generatorDrivenConfig =
     PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 100)
 
@@ -64,22 +64,22 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
   type F[T] = ConstString[T]
   type R[T] = CtxString[T]
 
-  lazy val interpreter: EvolutionAlgebra[S, F, R, String] = EvolutionAlgebraSerializer
-  lazy val gen: EvolutionAlgebraExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
-  lazy val constantsGen: ConstantsAlgebraExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
+  lazy val interpreter: Evolution[S, F, R, String] = EvolutionSerializer
+  lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
+  lazy val constantsGen: ConstantsExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
-  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?]]): ConstantsAlgebraExpressions[S, GenRepr[R, ?]] =
+  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?]]): ConstantsExpressions[S, GenRepr[R, ?]] =
     constantGrammarRec[S, R](
       alg,
-      new parser.ConstantsAlgebraExpressions.Lazy[S, GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
+      new parser.ConstantsExpressions.Lazy[S, GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
     )
 
   private def constantGrammarRec[S[_], R[_]](
     alg: Constants[Composed[R, S, ?]],
-    self: ConstantsAlgebraExpressions[S, GenRepr[R, ?]]
-  ): ConstantsAlgebraExpressions[S, GenRepr[R, ?]] = {
+    self: ConstantsExpressions[S, GenRepr[R, ?]]
+  ): ConstantsExpressions[S, GenRepr[R, ?]] = {
     val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
-    new ConstantsAlgebraGrammar[S, GenRepr[R, ?]](
+    new ConstantsGrammar[S, GenRepr[R, ?]](
       self,
       constantsGenerator,
       _ => Generator.Unknown(arbitrary[Double].map(d => alg.double(d))),
@@ -87,18 +87,16 @@ class EvolutionAlgebraSerializerSpec extends FreeSpec with Matchers with Generat
     )
   }
 
-  def grammar[S[_], F[_], R[_]](
-    alg: EvolutionAlgebra[S, F, R, String]
-  ): EvolutionAlgebraExpressions[S, F, GenRepr[R, ?]] = {
+  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, GenRepr[R, ?]](grammar(alg), deferGenRepr[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: EvolutionAlgebra[S, F, R, String],
-    self: EvolutionAlgebraExpressions[S, F, GenRepr[R, ?]]
-  ): EvolutionAlgebraExpressions[S, F, GenRepr[R, ?]] = {
-    val evolutionGenerator = new EvolutionAlgebraGenerator[S, F, R, String](alg)
-    new EvolutionAlgebraGrammar[S, F, GenRepr[R, ?], Generator[String]](
+    alg: Evolution[S, F, R, String],
+    self: EvolutionExpressions[S, F, GenRepr[R, ?]]
+  ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
+    val evolutionGenerator = new EvolutionGenerator[S, F, R, String](alg)
+    new EvolutionGrammar[S, F, GenRepr[R, ?], Generator[String]](
       self,
       evolutionGenerator,
       _ => Generator.Unknown(arbitrary[Double].map(alg.constants.double)),

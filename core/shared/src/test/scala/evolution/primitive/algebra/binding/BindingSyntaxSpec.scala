@@ -4,8 +4,8 @@ import cats.kernel.Semigroup
 import cats.{Defer, MonoidK}
 import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
 import cats.implicits._
-import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions, EvolutionAlgebraGrammar}
+import evolution.primitive.algebra.evolution.Evolution
+import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -13,7 +13,7 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
   import ParserConfig.White._
   import fastparse.noApi._
 
-  val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._
 
   "A Binding Algebra Parser should parse" - {
@@ -104,8 +104,8 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser] =
-    EvolutionAlgebraGrammar.grammar(EvolutionAlgebraTestInterpreter)
+  def expressions: EvolutionExpressions[Constant, ListExpr, BindingParser] =
+    EvolutionGrammar.grammar(EvolutionAlgebraTestInterpreter)
 
   private def unsafeParseDouble(expression: String): Binding[Constant[Double]] =
     expressions.binding.valueOf(expressions.constants.doubles)(Nil).parse(expression).get.value

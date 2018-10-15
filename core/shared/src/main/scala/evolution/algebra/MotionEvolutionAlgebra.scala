@@ -5,40 +5,30 @@ import cats.syntax.group._
 import evolution.algebra.syntax.all._
 import evolution.geometry.Point
 
-trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
+trait MotionEvolutionAlgebra[Evo[+ _]] extends LegacyEvolutionAlgebra[Evo] {
   import MotionEvolutionAlgebra._
-  private implicit lazy val E: EvolutionAlgebra[Evo] = this
+  private implicit lazy val E: LegacyEvolutionAlgebra[Evo] = this
 
   type PositionEvolution[A] = Evo[PositionLaw[A]]
   type VelocityEvolution[A] = Evo[VelocityLaw[A]]
   type AccelerationEvolution[A] = Evo[AccelerationLaw[A]]
   type SimpleAccelerationEvolution[A] = Evo[SimpleAccelerationLaw[A]]
 
-  def solve0[A: Group](a0: Position[A])(
-    position: PositionEvolution[A]
-  ): Evo[PhaseSpace[A]] =
+  def solve0[A: Group](a0: Position[A])(position: PositionEvolution[A]): Evo[PhaseSpace[A]] =
     solve(a0)(positionToVelocityEvolution(position))
 
-  def solve0Static[A: Group](a0: Position[A])(
-    positionLaw: PositionLaw[A]
-  ): Evo[PhaseSpace[A]] =
+  def solve0Static[A: Group](a0: Position[A])(positionLaw: PositionLaw[A]): Evo[PhaseSpace[A]] =
     solve(a0)(positionToVelocityEvolution(staticPosition(positionLaw)))
 
-  def solve0IndependentStatic[A: Group](a0: Position[A])(
-    position: Position[A]
-  ): Evo[PhaseSpace[A]] = {
+  def solve0IndependentStatic[A: Group](a0: Position[A])(position: Position[A]): Evo[PhaseSpace[A]] = {
     solve[A](a0)(positionToVelocityEvolution(independentStaticPosition(position)))
   }
 
-  def solve0Independent[A: Group](a0: Position[A])(
-    position: Evo[Position[A]]
-  ): Evo[PhaseSpace[A]] = {
+  def solve0Independent[A: Group](a0: Position[A])(position: Evo[Position[A]]): Evo[PhaseSpace[A]] = {
     solve[A](a0)(positionToVelocityEvolution(independentPosition(position)))
   }
 
-  def solve[A: Semigroup](a0: Position[A])(
-    velocity: VelocityEvolution[A]
-  ): Evo[PhaseSpace[A]] = {
+  def solve[A: Semigroup](a0: Position[A])(velocity: VelocityEvolution[A]): Evo[PhaseSpace[A]] = {
     (velocity: Evo[VelocityLaw[A]]).mapCons { (vEq, evv2) =>
       val v1 = vEq(a0)
       val a1 = a0 |+| v1
@@ -46,20 +36,14 @@ trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     }
   }
 
-  def solveStatic[A: Semigroup](a0: Position[A])(
-    velocityLaw: VelocityLaw[A]
-  ): Evo[PhaseSpace[A]] =
+  def solveStatic[A: Semigroup](a0: Position[A])(velocityLaw: VelocityLaw[A]): Evo[PhaseSpace[A]] =
     solve(a0)(staticVelocity(velocityLaw))
 
-  def solveIndependentStatic[A: Semigroup](a0: Position[A])(
-    velocity: Velocity[A]
-  ): Evo[PhaseSpace[A]] = {
+  def solveIndependentStatic[A: Semigroup](a0: Position[A])(velocity: Velocity[A]): Evo[PhaseSpace[A]] = {
     solve[A](a0)(independentStaticVelocity(velocity))
   }
 
-  def solveIndependent[A: Semigroup](a0: Position[A])(
-    velocity: Evo[Velocity[A]]
-  ): Evo[PhaseSpace[A]] = {
+  def solveIndependent[A: Semigroup](a0: Position[A])(velocity: Evo[Velocity[A]]): Evo[PhaseSpace[A]] = {
     solve[A](a0)(independentVelocity(velocity))
   }
 
@@ -93,21 +77,18 @@ trait MotionEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   }
 
   // @TODO not the right place for this
-  def drawOnEvolution(
-    evphase: Evo[PhaseSpace[Point]],
-    ev: Evo[Point]
-  ): Evo[Point] = {
+  def drawOnEvolution(evphase: Evo[PhaseSpace[Point]], ev: Evo[Point]): Evo[Point] = {
     evphase.zipWith[Point, Point](ev) { (phase, point) =>
       val (position, velocity) = phase
       position + point.rotate(velocity.angle)
     }
   }
 
-  private def simpleToAcceleration[A](law: SimpleAccelerationLaw[A]): AccelerationLaw[A]
-  = (position, _) => law(position)
+  private def simpleToAcceleration[A](law: SimpleAccelerationLaw[A]): AccelerationLaw[A] =
+    (position, _) => law(position)
 
-  private def simpleToAccelerationEvolution[A](eq: SimpleAccelerationEvolution[A]): AccelerationEvolution[A]
-  = E.map(eq)(simpleToAcceleration(_))
+  private def simpleToAccelerationEvolution[A](eq: SimpleAccelerationEvolution[A]): AccelerationEvolution[A] =
+    E.map(eq)(simpleToAcceleration(_))
 
   private def positionToVelocityEvolution[A: Group](posEv: PositionEvolution[A]): VelocityEvolution[A] = {
     (posEv: Evo[PositionLaw[A]]).map(positionLaw => p => positionLaw(p) |-| p)

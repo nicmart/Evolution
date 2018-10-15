@@ -5,13 +5,13 @@ import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.binding.parser.BindingSyntax
 import evolution.primitive.algebra.constants.parser.ConstantsSyntax
 import evolution.primitive.algebra.constants.{Constants, ContextualConstants}
-import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.chain.{ContextualChain, Chain}
 import evolution.primitive.algebra.chain.parser.ChainSyntax
 import fastparse.noApi.Parser
 
-class EvolutionAlgebraSyntax[S[_], F[_], R[_]](alg: EvolutionAlgebra[S, F, R, String])
-    extends EvolutionAlgebra[S, F, ByVarParser[R, ?], Parser[String]] {
+class EvolutionAlgebraSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
+    extends Evolution[S, F, ByVarParser[R, ?], Parser[String]] {
 
   private val constantsSyntax = new ConstantsSyntax[Composed[R, S, ?]](alg.constants)
   private val bindingSyntax = new BindingSyntax(alg.bind)

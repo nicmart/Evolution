@@ -2,8 +2,8 @@ package evolution.algebra
 
 import evolution.algebra.syntax.all._
 
-trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
-  implicit private lazy val alg: EvolutionAlgebra[Evo] = this
+trait NumericEvolutionAlgebra[Evo[+ _]] extends LegacyEvolutionAlgebra[Evo] {
+  implicit private lazy val alg: LegacyEvolutionAlgebra[Evo] = this
 
   def int: Evo[Int]
 
@@ -29,8 +29,9 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     double.map(d => (to - from) * d + from)
 
   def doubleBetweenEvo(from: Evo[Double], to: Evo[Double]): Evo[Double] =
-    from.zip(to).zip(double).map { case ((fromDouble, toDouble), d) =>
-      (toDouble - fromDouble) * d + fromDouble
+    from.zip(to).zip(double).map {
+      case ((fromDouble, toDouble), d) =>
+        (toDouble - fromDouble) * d + fromDouble
     }
 
   def ball(radius: Double): Evo[Double] =
@@ -41,8 +42,9 @@ trait NumericEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
     ball(1.0)
       .zipWith(ball(1))((v1, v2) => (v1, v2, v1 * v1 + v2 * v2))
       .filter { case (_, _, s) => s > 0 && s < 1 }
-      .map { case (v1, _, s) =>
-        val multiplier = math.sqrt(-2 * math.log(s) / s)
-        v1 * multiplier
+      .map {
+        case (v1, _, s) =>
+          val multiplier = math.sqrt(-2 * math.log(s) / s)
+          v1 * multiplier
       }
 }

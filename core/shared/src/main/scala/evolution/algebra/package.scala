@@ -3,8 +3,8 @@ package evolution
 import evolution.algebra._
 
 package object algebra {
-  trait FullAlgebra[Evo[+_]]
-    extends EvolutionAlgebra[Evo]
+  trait FullAlgebra[Evo[+ _]]
+      extends LegacyEvolutionAlgebra[Evo]
       with NumericEvolutionAlgebra[Evo]
       with DistributionEvolutionAlgebra[Evo]
       with SemigroupEvolutionAlgebra[Evo]

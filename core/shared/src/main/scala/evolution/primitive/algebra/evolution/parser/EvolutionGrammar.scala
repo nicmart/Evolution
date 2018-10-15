@@ -3,7 +3,7 @@ package evolution.primitive.algebra.evolution.parser
 import cats.{Defer, MonoidK, Semigroup}
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ByVarParser, Composed}
-import evolution.primitive.algebra.evolution.EvolutionAlgebra
+import evolution.primitive.algebra.evolution.Evolution
 import cats.instances.double._
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.Constants
@@ -13,40 +13,39 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi.{Fail, P, Parser}
 import Instances._
 
-trait EvolutionAlgebraExpressions[S[_], F[_], R[_]] {
-  def list: ListAlgebraExpressions[S, F, R]
-  def constants: ConstantsAlgebraExpressions[S, R]
-  def binding: BindingAlgebraExpressions[R]
+trait EvolutionExpressions[S[_], F[_], R[_]] {
+  def list: ChainExpressions[S, F, R]
+  def constants: ConstantsExpressions[S, R]
+  def binding: BindingExpressions[R]
 }
 
-object EvolutionAlgebraExpressions {
-  class Lazy[S[_], F[_], R[_]](inner: => EvolutionAlgebraExpressions[S, F, R], defer: Defer[R])
-      extends EvolutionAlgebraExpressions[S, F, R] {
-    override def list: ListAlgebraExpressions[S, F, R] =
-      new ListAlgebraExpressions.Lazy(inner.list, defer)
-    override def constants: ConstantsAlgebraExpressions[S, R] =
-      new ConstantsAlgebraExpressions.Lazy(inner.constants, defer)
-    override def binding: BindingAlgebraExpressions[R] =
-      new BindingAlgebraExpressions.Lazy(inner.binding, defer)
+object EvolutionExpressions {
+  class Lazy[S[_], F[_], R[_]](inner: => EvolutionExpressions[S, F, R], defer: Defer[R])
+      extends EvolutionExpressions[S, F, R] {
+    override def list: ChainExpressions[S, F, R] =
+      new ChainExpressions.Lazy(inner.list, defer)
+    override def constants: ConstantsExpressions[S, R] =
+      new ConstantsExpressions.Lazy(inner.constants, defer)
+    override def binding: BindingExpressions[R] =
+      new BindingExpressions.Lazy(inner.binding, defer)
   }
 }
 
-trait ListAlgebraExpressions[S[_], F[_], R[_]] {
+trait ChainExpressions[S[_], F[_], R[_]] {
   def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]]
 }
 
-object ListAlgebraExpressions {
-  class Lazy[S[_], F[_], R[_]](inner: => ListAlgebraExpressions[S, F, R], defer: Defer[R])
-      extends ListAlgebraExpressions[S, F, R] {
+object ChainExpressions {
+  class Lazy[S[_], F[_], R[_]](inner: => ChainExpressions[S, F, R], defer: Defer[R]) extends ChainExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] = defer.defer(inner.evolutionOf(constant))
   }
 }
 
-class ListAlgebraEvolutionGrammar[S[_], F[_], R[_]](
-  self: EvolutionAlgebraExpressions[S, F, R],
+class ChainGrammar[S[_], F[_], R[_]](
+  self: EvolutionExpressions[S, F, R],
   syntax: Chain[S, F, R],
   override val orMonoid: MonoidK[R],
-) extends ListAlgebraExpressions[S, F, R]
+) extends ChainExpressions[S, F, R]
     with OrMonoid[R] {
   import syntax._
   override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
@@ -63,15 +62,14 @@ class ListAlgebraEvolutionGrammar[S[_], F[_], R[_]](
     )
 }
 
-trait ConstantsAlgebraExpressions[S[_], R[_]] {
+trait ConstantsExpressions[S[_], R[_]] {
   def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]]
   def points: R[S[Point]]
   def doubles: R[S[Double]]
 }
 
-object ConstantsAlgebraExpressions {
-  class Lazy[S[_], R[_]](inner: => ConstantsAlgebraExpressions[S, R], defer: Defer[R])
-      extends ConstantsAlgebraExpressions[S, R] {
+object ConstantsExpressions {
+  class Lazy[S[_], R[_]](inner: => ConstantsExpressions[S, R], defer: Defer[R]) extends ConstantsExpressions[S, R] {
     override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
       defer.defer(inner.constantOf(constant))
     override def points: R[S[Point]] = defer.defer(inner.points)
@@ -79,12 +77,12 @@ object ConstantsAlgebraExpressions {
   }
 }
 
-class ConstantsAlgebraGrammar[S[_], R[_]](
-  self: ConstantsAlgebraExpressions[S, R],
+class ConstantsGrammar[S[_], R[_]](
+  self: ConstantsExpressions[S, R],
   syntax: Constants[Composed[R, S, ?]],
   doubleLiteral: R[S[Double]],
   override val orMonoid: MonoidK[R]
-) extends ConstantsAlgebraExpressions[S, R]
+) extends ConstantsExpressions[S, R]
     with OrMonoid[R] {
   import syntax._
   override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
@@ -95,25 +93,25 @@ class ConstantsAlgebraGrammar[S[_], R[_]](
     doubleLiteral
 }
 
-trait BindingAlgebraExpressions[R[_]] {
+trait BindingExpressions[R[_]] {
   def valueOf[T](t: R[T]): R[T]
   def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2]
 }
 
-object BindingAlgebraExpressions {
-  class Lazy[R[_]](inner: => BindingAlgebraExpressions[R], defer: Defer[R]) extends BindingAlgebraExpressions[R] {
+object BindingExpressions {
+  class Lazy[R[_]](inner: => BindingExpressions[R], defer: Defer[R]) extends BindingExpressions[R] {
     override def valueOf[T](t: R[T]): R[T] = defer.defer(inner.valueOf(t))
     override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = defer.defer(inner.function(t1, t2))
   }
 }
 
-class BindingAlgebraGrammar[R[_], VarName](
-  self: BindingAlgebraExpressions[R],
+class BindingGrammar[R[_], VarName](
+  self: BindingExpressions[R],
   syntax: Binding[R, VarName],
   variableSyntax: VarName,
   all: List[R[_]],
   override val orMonoid: MonoidK[R]
-) extends BindingAlgebraExpressions[R]
+) extends BindingExpressions[R]
     with OrMonoid[R] {
   import syntax._
 
@@ -147,22 +145,22 @@ trait OrMonoid[R[_]] {
     expressions.foldRight(orMonoid.empty[T])(orMonoid.combineK[T])
 }
 
-class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
-  self: EvolutionAlgebraExpressions[S, F, R],
-  syntax: EvolutionAlgebra[S, F, R, VarName],
+class EvolutionGrammar[S[_], F[_], R[_], VarName](
+  self: EvolutionExpressions[S, F, R],
+  syntax: Evolution[S, F, R, VarName],
   doubleLiteral: R[S[Double]],
   variableSyntax: VarName,
   override val orMonoid: MonoidK[R]
-) extends EvolutionAlgebraExpressions[S, F, R]
+) extends EvolutionExpressions[S, F, R]
     with OrMonoid[R] {
 
-  override def list: ListAlgebraExpressions[S, F, R] = new ListAlgebraExpressions[S, F, R] {
+  override def list: ChainExpressions[S, F, R] = new ChainExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
       or(internalList.evolutionOf(constant), internalBinding.valueOf(self.list.evolutionOf(constant)))
   }
 
-  override def constants: ConstantsAlgebraExpressions[S, R] =
-    new ConstantsAlgebraExpressions[S, R] {
+  override def constants: ConstantsExpressions[S, R] =
+    new ConstantsExpressions[S, R] {
       override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
         or(internalConstants.constantOf(constant), internalBinding.valueOf(self.constants.constantOf(constant)))
       override def points: R[S[Point]] =
@@ -171,7 +169,7 @@ class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
         internalConstants.doubles
     }
 
-  override def binding: BindingAlgebraExpressions[R] = new BindingAlgebraExpressions[R] {
+  override def binding: BindingExpressions[R] = new BindingExpressions[R] {
     override def valueOf[T](t: R[T]): R[T] =
       or(t, internalBinding.valueOf(self.binding.valueOf(t)))
     override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
@@ -188,31 +186,29 @@ class EvolutionAlgebraGrammar[S[_], F[_], R[_], VarName](
     self.list.evolutionOf(points)
   )
 
-  private lazy val internalList: ListAlgebraExpressions[S, F, R] =
-    new ListAlgebraEvolutionGrammar(self, syntax.list, orMonoid)
+  private lazy val internalList: ChainExpressions[S, F, R] =
+    new ChainGrammar(self, syntax.list, orMonoid)
 
-  private lazy val internalConstants: ConstantsAlgebraExpressions[S, R] =
-    new ConstantsAlgebraGrammar[S, R](self.constants, syntax.constants, doubleLiteral, orMonoid)
+  private lazy val internalConstants: ConstantsExpressions[S, R] =
+    new ConstantsGrammar[S, R](self.constants, syntax.constants, doubleLiteral, orMonoid)
 
-  private lazy val internalBinding: BindingAlgebraExpressions[R] =
-    new BindingAlgebraGrammar(self.binding, syntax.bind, variableSyntax, all, orMonoid)
+  private lazy val internalBinding: BindingExpressions[R] =
+    new BindingGrammar(self.binding, syntax.bind, variableSyntax, all, orMonoid)
 }
 
-object EvolutionAlgebraGrammar {
-  import EvolutionAlgebraExpressions.Lazy, Instances._
+object EvolutionGrammar {
+  import EvolutionExpressions.Lazy, Instances._
 
-  def grammar[S[_], F[_], R[_]](
-    alg: EvolutionAlgebra[S, F, R, String]
-  ): EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]] = {
+  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, ByVarParser[R, ?]](grammar(alg), defer[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: EvolutionAlgebra[S, F, R, String],
-    self: EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]]
-  ): EvolutionAlgebraExpressions[S, F, ByVarParser[R, ?]] = {
+    alg: Evolution[S, F, R, String],
+    self: EvolutionExpressions[S, F, ByVarParser[R, ?]]
+  ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     val syntax = new EvolutionAlgebraSyntax[S, F, R](alg)
-    new EvolutionAlgebraGrammar[S, F, ByVarParser[R, ?], Parser[String]](
+    new EvolutionGrammar[S, F, ByVarParser[R, ?], Parser[String]](
       self,
       syntax,
       syntax.doubleConstant,

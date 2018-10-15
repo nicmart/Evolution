@@ -5,11 +5,11 @@ import evolution.primitive.algebra.parser._
 import cats.implicits._
 import org.scalatest.{FreeSpec, Inside, Matchers}
 import cats.kernel.Semigroup
-import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions, EvolutionAlgebraGrammar}
+import evolution.primitive.algebra.evolution.Evolution
+import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
 
 class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
-  val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 
   "A CoreDrawingAlgebraParser" - {
@@ -54,8 +54,8 @@ class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with 
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, ByVarParser[Binding, ?]] =
-    EvolutionAlgebraGrammar.grammar(interpreter)
+  def expressions: EvolutionExpressions[Constant, ListExpr, ByVarParser[Binding, ?]] =
+    EvolutionGrammar.grammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
     expressions.list.evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil).parse(expression).get.value

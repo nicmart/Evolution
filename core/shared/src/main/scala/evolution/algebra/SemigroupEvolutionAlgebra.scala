@@ -3,8 +3,8 @@ package evolution.algebra
 import cats.kernel.{Group, Monoid, Semigroup}
 import evolution.algebra.syntax.all._
 
-trait SemigroupEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
-  private implicit lazy val E: EvolutionAlgebra[Evo] = this
+trait SemigroupEvolutionAlgebra[Evo[+ _]] extends LegacyEvolutionAlgebra[Evo] {
+  private implicit lazy val E: LegacyEvolutionAlgebra[Evo] = this
 
   def differentiate[A: Group](f: Evo[A]): Evo[A] =
     f.slidingPair.map { case (a1, a2) => Group[A].remove(a1, a2) }

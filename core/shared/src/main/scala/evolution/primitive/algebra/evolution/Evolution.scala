@@ -4,7 +4,7 @@ import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 
-trait EvolutionAlgebra[S[_], F[_], R[_], VarName] {
+trait Evolution[S[_], F[_], R[_], VarName] {
   final type RS[T] = R[S[T]]
   val list: Chain[S, F, R]
   val constants: Constants[Composed[R, S, ?]]

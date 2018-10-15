@@ -3,20 +3,15 @@ package evolution.laws
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import evolution.algebra.EvolutionAlgebra
+import evolution.algebra.LegacyEvolutionAlgebra
 import Arbitrary.arbitrary
-
 
 import scala.util.Random
 
-trait LawsBaseSpec[Evo[+ _]]
-  extends WordSpec
-    with Matchers
-    with PropertyChecks
-    with EvolutionLaws[Evo] {
+trait LawsBaseSpec[Evo[+ _]] extends WordSpec with Matchers with PropertyChecks with EvolutionLaws[Evo] {
   val sampleSize = 1000
 
-  val E: EvolutionAlgebra[Evo]
+  val E: LegacyEvolutionAlgebra[Evo]
 
   import E._
 
@@ -92,19 +87,12 @@ trait LawsBaseSpec[Evo[+ _]]
     Gen.choose(0, Int.MaxValue)
 
   def intEvolutions: Gen[Evo[Int]] =
-    Gen.oneOf(Seq(
-      E.empty,
-      pure(99),
-      seq(List.fill(1000)(Random.nextInt()))
-    )
-    )
+    Gen.oneOf(Seq(E.empty, pure(99), seq(List.fill(1000)(Random.nextInt()))))
 
   def intMapConsFunctions: Gen[(Int, Evo[Int]) => Evo[Int]] = arbitrary[Int].flatMap { n =>
-    Gen.oneOf[(Int, Evo[Int]) => Evo[Int]](Seq[(Int, Evo[Int]) => Evo[Int]](
-      (m, tail) => pure(m * n),
-      (m, tail) => constant(n * m + 1),
-      (m, tail) => tail
-    ))
+    Gen.oneOf[(Int, Evo[Int]) => Evo[Int]](
+      Seq[(Int, Evo[Int]) => Evo[Int]]((m, tail) => pure(m * n), (m, tail) => constant(n * m + 1), (m, tail) => tail)
+    )
   }
 
   def checkStream[A](eq: IsEq[Stream[A]]): Unit = {

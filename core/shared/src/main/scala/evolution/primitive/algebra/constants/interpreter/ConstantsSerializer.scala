@@ -3,7 +3,7 @@ import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.constants.Constants
-import evolution.primitive.algebra.evolution.interpreter.EvolutionAlgebraSerializer.RS
+import evolution.primitive.algebra.evolution.interpreter.EvolutionSerializer.RS
 
 object ConstantsSerializer extends Constants[RS] {
   override def double(d: Double): CtxString[Double] = _ => d.toString

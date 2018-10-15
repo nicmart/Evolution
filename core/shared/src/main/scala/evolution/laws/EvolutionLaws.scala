@@ -1,10 +1,10 @@
 package evolution.laws
 
-import evolution.algebra.EvolutionAlgebra
+import evolution.algebra.LegacyEvolutionAlgebra
 import evolution.algebra.syntax.all._
 
 trait EvolutionLaws[Evo[+ _]] {
-  implicit val E: EvolutionAlgebra[Evo]
+  implicit val E: LegacyEvolutionAlgebra[Evo]
 
   import E._
 
@@ -21,7 +21,9 @@ trait EvolutionLaws[Evo[+ _]] {
     cons(a, ev).mapCons(f) <-> f(a, ev)
 
   def mapConsLaw2[A](ev: Evo[A]): IsEq[Evo[A]] =
-    ev.mapCons { (a, ev2) => pure(a) } <-> ev.head
+    ev.mapCons { (a, ev2) =>
+      pure(a)
+    } <-> ev.head
 
   def consLaw[A](ev: Evo[A], a: A): IsEq[Evo[A]] = {
     def rec: Evo[A] = cons(a, rec)
@@ -30,7 +32,9 @@ trait EvolutionLaws[Evo[+ _]] {
 
   def concatIsStackSafeLaw[A](a: A): IsEq[Evo[A]] = {
     var evo: Evo[A] = empty
-    (1 to 5000).foreach { _ => evo = concat(pure(a), empty)}
+    (1 to 5000).foreach { _ =>
+      evo = concat(pure(a), empty)
+    }
     evo <-> evo
   }
 

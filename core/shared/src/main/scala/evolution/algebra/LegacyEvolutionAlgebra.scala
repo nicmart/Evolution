@@ -2,14 +2,14 @@ package evolution.algebra
 
 import scala.collection.immutable.Queue
 
-trait EvolutionCoreAlgebra[Evo[+ _]] {
+trait LegacyEvolutionCoreAlgebra[Evo[+ _]] {
   val empty: Evo[Nothing]
   def cons[A](head: A, tail: => Evo[A]): Evo[A]
   def mapEmpty[A](eva: Evo[A])(eva2: => Evo[A]): Evo[A]
   def mapCons[A, B](eva: Evo[A])(f: (A, Evo[A]) => Evo[B]): Evo[B]
 }
 
-trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
+trait LegacyEvolutionAlgebra[Evo[+ _]] extends LegacyEvolutionCoreAlgebra[Evo] {
   def pure[A](a: A): Evo[A] =
     cons(a, empty)
 
@@ -17,9 +17,9 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     cons(a, constant(a))
 
   def concat[A](evo1: Evo[A], evo2: => Evo[A]): Evo[A] =
-    mapEmpty(
-      mapCons(evo1) { (a, evo12) => cons(a, concat(evo12, evo2)) }
-    )(evo2)
+    mapEmpty(mapCons(evo1) { (a, evo12) =>
+      cons(a, concat(evo12, evo2))
+    })(evo2)
 
   def seq[A](as: List[A]): Evo[A] =
     as match {
@@ -28,24 +28,40 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     }
 
   def flatMap[A, B](eva: Evo[A])(f: A => Evo[B]): Evo[B] =
-    mapCons(eva) { (a, eva2) => concat(f(a), flatMap(eva2)(f)) }
+    mapCons(eva) { (a, eva2) =>
+      concat(f(a), flatMap(eva2)(f))
+    }
 
   def head[A](eva: Evo[A]): Evo[A] =
-    mapCons(eva) { (a, eva2) => pure(a) }
+    mapCons(eva) { (a, eva2) =>
+      pure(a)
+    }
 
   def tail[A](eva: Evo[A]): Evo[A] =
-    mapCons(eva) { (a, eva2) => eva2 }
+    mapCons(eva) { (a, eva2) =>
+      eva2
+    }
 
   def take[A](evo: Evo[A], n: Int): Evo[A] = {
-    if (n <= 0) empty else mapCons(evo) { (a, eva2) => concat(pure(a), take(eva2, n - 1)) }
+    if (n <= 0) empty
+    else
+      mapCons(evo) { (a, eva2) =>
+        concat(pure(a), take(eva2, n - 1))
+      }
   }
 
   def drop[A](evo: Evo[A], n: Int): Evo[A] = {
-    if (n <= 0) evo else mapCons(evo) { (a, eva2) => drop(eva2, n - 1) }
+    if (n <= 0) evo
+    else
+      mapCons(evo) { (a, eva2) =>
+        drop(eva2, n - 1)
+      }
   }
 
   def scan[Z, A](evo: Evo[A])(z: Z)(f: (Z, A) => Z): Evo[Z] =
-    cons(z, mapCons(evo) { (a, evo2) => scan(evo2)(f(z, a))(f) })
+    cons(z, mapCons(evo) { (a, evo2) =>
+      scan(evo2)(f(z, a))(f)
+    })
 
   def map[A, B](eva: Evo[A])(f: A => B): Evo[B] =
     flatMap(eva)(f andThen pure)
@@ -63,10 +79,14 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     }
 
   def slowDown[A](eva: Evo[A], n: Int): Evo[A] =
-    flatMap(eva) { a => repeat(pure(a), n) }
+    flatMap(eva) { a =>
+      repeat(pure(a), n)
+    }
 
   def slowDownBy[A](eva: Evo[A], evn: Evo[Int]): Evo[A] =
-    flatten(zipWith(eva, evn) { (a, n) => seq(List.fill(n)(a)) })
+    flatten(zipWith(eva, evn) { (a, n) =>
+      seq(List.fill(n)(a))
+    })
 
   def zipWith[A, B, C](eva: Evo[A], evb: Evo[B])(f: (A, B) => C): Evo[C] = {
     mapCons(eva) { (a, eva2) =>
@@ -88,8 +108,8 @@ trait EvolutionAlgebra[Evo[+ _]] extends EvolutionCoreAlgebra[Evo] {
     flatMap(eva)(seq)
 
   def slidingPairs[A](eva: Evo[A]): Evo[(A, A)] = {
-    val listEvo = scan[List[A], A](eva)(List.empty) {
-      (as, a) => (a :: as).take(2)
+    val listEvo = scan[List[A], A](eva)(List.empty) { (as, a) =>
+      (a :: as).take(2)
     }
     flatMap(listEvo) {
       case List(a1, a2) => pure((a2, a1))

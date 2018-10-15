@@ -5,12 +5,12 @@ import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ByVarParser, Composed, TestInterpreters}
 import evolution.primitive.algebra.constants.parser._
-import evolution.primitive.algebra.evolution.EvolutionAlgebra
-import evolution.primitive.algebra.evolution.parser.{ConstantsAlgebraExpressions, EvolutionAlgebraGrammar}
+import evolution.primitive.algebra.evolution.Evolution
+import evolution.primitive.algebra.evolution.parser.{ConstantsExpressions, EvolutionGrammar}
 import org.scalatest.{FreeSpec, Matchers}
 
 class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
   import interpreter.constants._
 
   "A ScalarAlgebraParser should parse" - {
@@ -42,8 +42,8 @@ class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: ConstantsAlgebraExpressions[Constant, BindingParser] =
-    EvolutionAlgebraGrammar.grammar(interpreter).constants
+  def expressions: ConstantsExpressions[Constant, BindingParser] =
+    EvolutionGrammar.grammar(interpreter).constants
 
   private def unsafeParseDouble(serializedExpression: String): Binding[Constant[Double]] = {
     expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value

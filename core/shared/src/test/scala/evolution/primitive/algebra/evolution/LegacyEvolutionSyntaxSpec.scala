@@ -3,11 +3,11 @@ import cats.kernel.Semigroup
 import cats.implicits._
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
-import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions, EvolutionAlgebraGrammar}
+import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
 import org.scalatest.{FreeSpec, Matchers}
 
-class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: EvolutionAlgebra[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+class LegacyEvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
+  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 
   "An Evolution Grammar" - {
@@ -171,6 +171,6 @@ class EvolutionAlgebraSyntaxSpec extends FreeSpec with Matchers with TestInterpr
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: EvolutionAlgebraExpressions[Constant, ListExpr, BindingParser] =
-    EvolutionAlgebraGrammar.grammar(EvolutionAlgebraTestInterpreter)
+  def expressions: EvolutionExpressions[Constant, ListExpr, BindingParser] =
+    EvolutionGrammar.grammar(EvolutionAlgebraTestInterpreter)
 }

@@ -3,7 +3,7 @@ package evolution.algebra
 import evolution.algebra.syntax.all._
 import evolution.geometry.Point
 
-trait PointEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
+trait PointEvolutionAlgebra[Evo[+ _]] extends LegacyEvolutionAlgebra[Evo] {
   self: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =>
 
   implicit private lazy val alg: NumericEvolutionAlgebra[Evo] with MotionEvolutionAlgebra[Evo] =
@@ -37,10 +37,7 @@ trait PointEvolutionAlgebra[Evo[+ _]] extends EvolutionAlgebra[Evo] {
   }
 
   def ring(radius: Double): Evo[Point] =
-    polar(
-      constant(radius),
-      double.map(_ * 2 * Math.PI)
-    )
+    polar(constant(radius), double.map(_ * 2 * Math.PI))
 
   def rotate(ev: Evo[Point])(center: Point, angle: Double): Evo[Point] =
     ev.map(p => (p - center).rotate(angle) + center)
