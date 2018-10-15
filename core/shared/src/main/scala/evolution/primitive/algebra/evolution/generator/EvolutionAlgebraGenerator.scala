@@ -1,8 +1,8 @@
 package evolution.primitive.algebra.evolution.generator
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, GenRepr}
-import evolution.primitive.algebra.binding.BindingAlgebra
-import evolution.primitive.algebra.binding.generator.BindingAlgebraGenerator
+import evolution.primitive.algebra.binding.Binding
+import evolution.primitive.algebra.binding.generator.BindingGenerator
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.constants.generator.ConstantsAlgebraGenerator
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
@@ -19,6 +19,6 @@ class EvolutionAlgebraGenerator[S[_], F[_], R[_], VarName](alg: EvolutionAlgebra
   override val constants: ConstantsAlgebra[GenRepr[Composed[R, S, ?], ?]] =
     new ConstantsAlgebraGenerator[Composed[R, S, ?]](alg.constants)
 
-  override val bind: BindingAlgebra[GenRepr[R, ?], Generator[VarName]] =
-    new BindingAlgebraGenerator(alg.bind)
+  override val bind: Binding[GenRepr[R, ?], Generator[VarName]] =
+    new BindingGenerator(alg.bind)
 }

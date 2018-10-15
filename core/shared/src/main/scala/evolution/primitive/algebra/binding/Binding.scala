@@ -1,7 +1,7 @@
 package evolution.primitive.algebra.binding
 import cats.~>
 
-trait BindingAlgebra[R[_], VarName] {
+trait Binding[R[_], VarName] {
   def varName(name: String): VarName
   def var0[A]: R[A]
   def shift[A](expr: R[A]): R[A]
@@ -11,8 +11,8 @@ trait BindingAlgebra[R[_], VarName] {
   def fix[A](expr: R[A => A]): R[A]
 }
 
-class MappedBindingAlgebra[R1[_], R2[_], VarName](alg: BindingAlgebra[R1, VarName], to: R1 ~> R2, from: R2 ~> R1)
-    extends BindingAlgebra[R2, VarName] {
+class MappedBinding[R1[_], R2[_], VarName](alg: Binding[R1, VarName], to: R1 ~> R2, from: R2 ~> R1)
+    extends Binding[R2, VarName] {
   def varName(name: String): VarName =
     alg.varName(name)
   def var0[A]: R2[A] =

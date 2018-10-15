@@ -1,7 +1,7 @@
 package evolution.primitive.algebra
 
 import _root_.evolution.geometry.Point
-import binding._
+import binding.{Binding => BindingAlg}
 import evolution._
 import list._
 import constants._
@@ -39,7 +39,7 @@ trait TestInterpreters {
     case Lift(t) => t
   }
 
-  object BindingAlgebraTestInterpreter extends BindingAlgebra[Binding, String] {
+  object BindingTestInterpreter extends BindingAlg[Binding, String] {
     override def varName(name: String): String = name
     override def var0[A]: Binding[A] = Var0[A]()
     override def shift[A](expr: Binding[A]): Binding[A] = Shift(expr)
@@ -71,6 +71,6 @@ trait TestInterpreters {
   object EvolutionAlgebraTestInterpreter extends EvolutionAlgebra[Constant, ListExpr, Binding, String] {
     override val list: ListAlgebra[Constant, ListExpr, Binding] = ListAlgebraTestInterpreter
     override val constants: ConstantsAlgebra[Composed[Binding, Constant, ?]] = ConstantsAlgebraTestInterpreter
-    override val bind: BindingAlgebra[Binding, String] = BindingAlgebraTestInterpreter
+    override val bind: BindingAlg[Binding, String] = BindingTestInterpreter
   }
 }

@@ -9,7 +9,7 @@ import evolution.primitive.algebra.evolution.parser.{EvolutionAlgebraExpressions
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Matchers}
 
-class BindingAlgebraSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
+class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
   import ParserConfig.White._
   import fastparse.noApi._
 

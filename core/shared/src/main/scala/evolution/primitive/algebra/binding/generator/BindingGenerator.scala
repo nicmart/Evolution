@@ -1,12 +1,11 @@
 package evolution.primitive.algebra.binding.generator
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, GenRepr}
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 import org.scalacheck.Gen
 
 // TODO here only var0 differs from an Applicative-lifted Binding Algebra
-class BindingAlgebraGenerator[R[_], VarName](alg: BindingAlgebra[R, VarName])
-    extends BindingAlgebra[GenRepr[R, ?], Generator[VarName]] {
+class BindingGenerator[R[_], VarName](alg: Binding[R, VarName]) extends Binding[GenRepr[R, ?], Generator[VarName]] {
 
   override def varName(name: String): Generator[VarName] =
     Generator.pure(alg.varName(name))

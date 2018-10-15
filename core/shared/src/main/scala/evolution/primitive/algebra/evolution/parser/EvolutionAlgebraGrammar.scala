@@ -5,14 +5,13 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.{ByVarParser, Composed}
 import evolution.primitive.algebra.evolution.EvolutionAlgebra
 import cats.instances.double._
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.ConstantsAlgebra
 import evolution.primitive.algebra.list.{ContextualListAlgebra, ListAlgebra}
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi.{Fail, P, Parser}
 import Instances._
-import evolution.primitive.algebra.list.parser.ListAlgebraSyntax
 
 trait EvolutionAlgebraExpressions[S[_], F[_], R[_]] {
   def list: ListAlgebraExpressions[S, F, R]
@@ -110,7 +109,7 @@ object BindingAlgebraExpressions {
 
 class BindingAlgebraGrammar[R[_], VarName](
   self: BindingAlgebraExpressions[R],
-  syntax: BindingAlgebra[R, VarName],
+  syntax: Binding[R, VarName],
   variableSyntax: VarName,
   all: List[R[_]],
   override val orMonoid: MonoidK[R]

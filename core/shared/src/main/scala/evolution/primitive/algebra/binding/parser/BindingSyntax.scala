@@ -1,7 +1,7 @@
 package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.ByVarParser
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.parser.PrimitiveParsers.{
   function1,
   function2,
@@ -13,8 +13,7 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi._
 
-class BindingAlgebraSyntax[R[_]](alg: BindingAlgebra[R, String])
-    extends BindingAlgebra[ByVarParser[R, ?], Parser[String]] {
+class BindingSyntax[R[_]](alg: Binding[R, String]) extends Binding[ByVarParser[R, ?], Parser[String]] {
 
   val variableIdentifier: Parser[String] = PrimitiveParsers.varName
 

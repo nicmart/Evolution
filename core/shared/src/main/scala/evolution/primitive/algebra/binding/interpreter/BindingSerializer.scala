@@ -1,9 +1,9 @@
 package evolution.primitive.algebra.binding.interpreter
 import evolution.primitive.algebra.CtxString
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 
 // TODO missing test
-object BindingAlgebraSerializer extends BindingAlgebra[CtxString, String] {
+object BindingSerializer extends Binding[CtxString, String] {
   override def varName(name: String): String = name
   override def var0[A]: CtxString[A] = {
     case head :: tail => head

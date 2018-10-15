@@ -1,8 +1,8 @@
 package evolution.primitive.algebra.binding.interpreter
 import evolution.primitive.algebra.Ctx
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 
-object BindingAlgebraEvaluator extends BindingAlgebra[EvaluationResult, String] {
+object BindingEvaluator extends Binding[EvaluationResult, String] {
   override def varName(name: String): String = name
 
   override def var0[A]: EvaluationResult[A] = Value {

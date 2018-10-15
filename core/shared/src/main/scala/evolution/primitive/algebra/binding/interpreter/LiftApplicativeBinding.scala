@@ -2,10 +2,10 @@ package evolution.primitive.algebra.binding.interpreter
 import cats.Applicative
 import cats.syntax._
 import evolution.primitive.algebra.Composed
-import evolution.primitive.algebra.binding.BindingAlgebra
+import evolution.primitive.algebra.binding.Binding
 
-class LiftApplicativeBindingAlgebra[R[_], VarName, F[_]: Applicative](alg: BindingAlgebra[R, VarName])
-    extends BindingAlgebra[Composed[F, R, ?], F[VarName]] {
+class LiftApplicativeBinding[R[_], VarName, F[_]: Applicative](alg: Binding[R, VarName])
+    extends Binding[Composed[F, R, ?], F[VarName]] {
   override def varName(name: String): F[VarName] =
     Applicative[F].pure(alg.varName(name))
   override def var0[A]: Composed[F, R, A] =
