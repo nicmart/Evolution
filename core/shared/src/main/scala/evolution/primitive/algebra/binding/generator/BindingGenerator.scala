@@ -5,10 +5,10 @@ import evolution.primitive.algebra.binding.Binding
 import org.scalacheck.Gen
 
 // TODO here only var0 differs from an Applicative-lifted Binding Algebra
-class BindingGenerator[R[_], Var](alg: Binding[R, Var]) extends Binding[GenRepr[R, ?], Generator[Var]] {
+class BindingGenerator[R[_], Var](alg: Binding[R, Var, String]) extends Binding[GenRepr[R, ?], Generator[Var], Unit] {
 
-  override def varName(name: String): Generator[Var] =
-    Generator.pure(alg.varName(name))
+  override def varName(name: Unit): Generator[Var] =
+    Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString).map(alg.varName))
 
   override def var0[A]: GenRepr[R, A] =
     n => if (n > 0) Generator.Unknown(Gen.const(alg.var0)) else Generator.Fail()

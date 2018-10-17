@@ -22,7 +22,7 @@ object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
   trait Config {
-    def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): R[F[Point]]
+    def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]]
   }
 
   override val configComponent: ConfigComponent[Config] = {
@@ -32,7 +32,7 @@ object dsl extends DrawingDefinition[Point] {
         config2Snapshot.zoomState[String](config2 => config2.run(EvolutionSerializer)(Nil)) {
           serialized => previousConfig =>
             new Config {
-              override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): R[F[Point]] = {
+              override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
                 val grammar = EvolutionGrammar.grammar[S, F, R](alg)
                 val parser: noApi.Parser[R[F[Point]]] =
                   grammar.list.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
@@ -54,7 +54,7 @@ object dsl extends DrawingDefinition[Point] {
     }
   }
   val initialConfig: Config = new Config {
-    override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): R[F[Point]] = {
+    override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
       import alg.list._, alg.bind._
       import alg.constants._
       fix(lambda("self", cons(point(double(0), double(0)), var0[F[Point]])))

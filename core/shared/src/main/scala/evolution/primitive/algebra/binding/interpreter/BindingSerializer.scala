@@ -3,7 +3,7 @@ import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.binding.Binding
 
 // TODO missing test
-object BindingSerializer extends Binding[CtxString, String] {
+object BindingSerializer extends Binding[CtxString, String, String] {
   override def varName(name: String): String = name
   override def var0[A]: CtxString[A] = {
     case head :: tail => head

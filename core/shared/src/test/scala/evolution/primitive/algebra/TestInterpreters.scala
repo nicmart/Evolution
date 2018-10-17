@@ -39,7 +39,7 @@ trait TestInterpreters {
     case Lift(t) => t
   }
 
-  object BindingTestInterpreter extends BindingAlg[Binding, String] {
+  object BindingTestInterpreter extends BindingAlg[Binding, String, String] {
     override def varName(name: String): String = name
     override def var0[A]: Binding[A] = Var0[A]()
     override def shift[A](expr: Binding[A]): Binding[A] = Shift(expr)
@@ -68,9 +68,9 @@ trait TestInterpreters {
       MapCons(eva, f)
   }
 
-  object EvolutionAlgebraTestInterpreter extends Evolution[Constant, ListExpr, Binding, Double, String] {
+  object EvolutionAlgebraTestInterpreter extends Evolution[Constant, ListExpr, Binding, Double, String, String] {
     override val list: Chain[Constant, ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Composed[Binding, Constant, ?], Double] = ConstantsTestInterpreter
-    override val bind: BindingAlg[Binding, String] = BindingTestInterpreter
+    override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
   }
 }

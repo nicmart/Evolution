@@ -28,7 +28,7 @@ object DrawingJsonCodec extends JsonCodec[Config] {
         } else {
           println("Successful expression")
           Some(new Config {
-            override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): R[F[Point]] = {
+            override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
               val grammar = EvolutionGrammar.grammar(alg)
               val algebraParser = grammar.list.evolutionOf[Point](grammar.constants.points)
               val parser = algebraParser(Nil)

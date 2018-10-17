@@ -13,12 +13,10 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi._
 
-class BindingSyntax[R[_]](alg: Binding[R, String]) extends Binding[ByVarParser[R, ?], Parser[String]] {
+class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVarParser[R, ?], Parser[String], Unit] {
 
-  val variableIdentifier: Parser[String] = PrimitiveParsers.varName
-
-  override def varName(name: String): Parser[String] =
-    P(name).!
+  override def varName(name: Unit): Parser[String] =
+    PrimitiveParsers.varName
 
   override def var0[A]: ByVarParser[R, A] =
     vars =>

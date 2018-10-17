@@ -13,7 +13,7 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
   import ParserConfig.White._
   import fastparse.noApi._
 
-  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._
 
   "A Binding Algebra Parser should parse" - {

@@ -64,7 +64,7 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
   type F[T] = ConstString[T]
   type R[T] = CtxString[T]
 
-  lazy val interpreter: Evolution[S, F, R, Double, String] = EvolutionSerializer
+  lazy val interpreter: Evolution[S, F, R, Double, String, String] = EvolutionSerializer
   lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
   lazy val constantsGen: ConstantsExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
@@ -82,12 +82,14 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
     new ConstantsGrammar[S, GenRepr[R, ?]](self, constantsGenerator, genOrMonoidK[R])
   }
 
-  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String]): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
+  def grammar[S[_], F[_], R[_]](
+    alg: Evolution[S, F, R, Double, String, String]
+  ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, GenRepr[R, ?]](grammar(alg), deferGenRepr[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, Double, String],
+    alg: Evolution[S, F, R, Double, String, String],
     self: EvolutionExpressions[S, F, GenRepr[R, ?]]
   ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
     val evolutionGenerator = new EvolutionGenerator[S, F, R, String](alg)

@@ -2,7 +2,7 @@ package evolution.primitive.algebra.binding.interpreter
 import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
 
-object BindingEvaluator extends Binding[EvaluationResult, String] {
+object BindingEvaluator extends Binding[EvaluationResult, String, String] {
   override def varName(name: String): String = name
 
   override def var0[A]: EvaluationResult[A] = Value {

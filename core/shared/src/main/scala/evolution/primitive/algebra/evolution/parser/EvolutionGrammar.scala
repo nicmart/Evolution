@@ -104,10 +104,9 @@ object BindingExpressions {
   }
 }
 
-class BindingGrammar[R[_], Var](
+class BindingGrammar[R[_], Var, VarName](
   self: BindingExpressions[R],
-  syntax: Binding[R, Var],
-  variableSyntax: Var,
+  syntax: Binding[R, Var, Unit],
   all: List[R[_]],
   override val orMonoid: MonoidK[R]
 ) extends BindingExpressions[R]
@@ -132,6 +131,8 @@ class BindingGrammar[R[_], Var](
 
   private def allAppExpressions[T](t: R[T]): R[T] =
     or(all.map(s => appExpression(self.valueOf(s), t)): _*)
+
+  private val variableSyntax = syntax.varName(())
 }
 
 trait OrMonoid[R[_]] {
@@ -146,7 +147,7 @@ trait OrMonoid[R[_]] {
 
 class EvolutionGrammar[S[_], F[_], R[_], Var](
   self: EvolutionExpressions[S, F, R],
-  syntax: Evolution[S, F, R, Unit, Var],
+  syntax: Evolution[S, F, R, Unit, Var, Unit],
   variableSyntax: Var,
   override val orMonoid: MonoidK[R]
 ) extends EvolutionExpressions[S, F, R]
@@ -193,20 +194,20 @@ class EvolutionGrammar[S[_], F[_], R[_], Var](
     new ConstantsGrammar[S, R](self.constants, syntax.constants, orMonoid)
 
   private lazy val internalBinding: BindingExpressions[R] =
-    new BindingGrammar(self.binding, syntax.bind, variableSyntax, all, orMonoid)
+    new BindingGrammar(self.binding, syntax.bind, all, orMonoid)
 }
 
 object EvolutionGrammar {
   import EvolutionExpressions.Lazy, Instances._
 
   def grammar[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, Double, String]
+    alg: Evolution[S, F, R, Double, String, String]
   ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, ByVarParser[R, ?]](grammar(alg), defer[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, Double, String],
+    alg: Evolution[S, F, R, Double, String, String],
     self: EvolutionExpressions[S, F, ByVarParser[R, ?]]
   ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     val syntax = new EvolutionSyntax[S, F, R](alg)
