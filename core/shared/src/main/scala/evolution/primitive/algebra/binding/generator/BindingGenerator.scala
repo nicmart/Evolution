@@ -5,9 +5,9 @@ import evolution.primitive.algebra.binding.Binding
 import org.scalacheck.Gen
 
 // TODO here only var0 differs from an Applicative-lifted Binding Algebra
-class BindingGenerator[R[_], VarName](alg: Binding[R, VarName]) extends Binding[GenRepr[R, ?], Generator[VarName]] {
+class BindingGenerator[R[_], Var](alg: Binding[R, Var]) extends Binding[GenRepr[R, ?], Generator[Var]] {
 
-  override def varName(name: String): Generator[VarName] =
+  override def varName(name: String): Generator[Var] =
     Generator.pure(alg.varName(name))
 
   override def var0[A]: GenRepr[R, A] =
@@ -16,7 +16,7 @@ class BindingGenerator[R[_], VarName](alg: Binding[R, VarName]) extends Binding[
   override def shift[A](expr: GenRepr[R, A]): GenRepr[R, A] =
     n => expr(n - 1).map(alg.shift)
 
-  override def let[A, B](genName: Generator[VarName], genValue: GenRepr[R, A])(genExpr: GenRepr[R, B]): GenRepr[R, B] =
+  override def let[A, B](genName: Generator[Var], genValue: GenRepr[R, A])(genExpr: GenRepr[R, B]): GenRepr[R, B] =
     n =>
       for {
         name <- genName
@@ -24,7 +24,7 @@ class BindingGenerator[R[_], VarName](alg: Binding[R, VarName]) extends Binding[
         expr <- genExpr(n + 1)
       } yield alg.let(name, value)(expr)
 
-  override def lambda[A, B](genName: Generator[VarName], genExpr: GenRepr[R, B]): GenRepr[R, A => B] =
+  override def lambda[A, B](genName: Generator[Var], genExpr: GenRepr[R, B]): GenRepr[R, A => B] =
     n =>
       for {
         name <- genName

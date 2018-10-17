@@ -9,8 +9,8 @@ import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.generator.ChainGenerator
 
-class EvolutionGenerator[S[_], F[_], R[_], VarName](alg: Evolution[S, F, R, Double, VarName])
-    extends Evolution[S, F, GenRepr[R, ?], Unit, Generator[VarName]] {
+class EvolutionGenerator[S[_], F[_], R[_], Var](alg: Evolution[S, F, R, Double, Var])
+    extends Evolution[S, F, GenRepr[R, ?], Unit, Generator[Var]] {
 
   override val list: Chain[S, F, GenRepr[R, ?]] =
     new ChainGenerator(alg.list)
@@ -18,6 +18,6 @@ class EvolutionGenerator[S[_], F[_], R[_], VarName](alg: Evolution[S, F, R, Doub
   override val constants: Constants[GenRepr[Composed[R, S, ?], ?], Unit] =
     new ConstantsGenerator[Composed[R, S, ?]](alg.constants)
 
-  override val bind: Binding[GenRepr[R, ?], Generator[VarName]] =
+  override val bind: Binding[GenRepr[R, ?], Generator[Var]] =
     new BindingGenerator(alg.bind)
 }

@@ -104,10 +104,10 @@ object BindingExpressions {
   }
 }
 
-class BindingGrammar[R[_], VarName](
+class BindingGrammar[R[_], Var](
   self: BindingExpressions[R],
-  syntax: Binding[R, VarName],
-  variableSyntax: VarName,
+  syntax: Binding[R, Var],
+  variableSyntax: Var,
   all: List[R[_]],
   override val orMonoid: MonoidK[R]
 ) extends BindingExpressions[R]
@@ -144,10 +144,10 @@ trait OrMonoid[R[_]] {
     expressions.foldRight(orMonoid.empty[T])(orMonoid.combineK[T])
 }
 
-class EvolutionGrammar[S[_], F[_], R[_], VarName](
+class EvolutionGrammar[S[_], F[_], R[_], Var](
   self: EvolutionExpressions[S, F, R],
-  syntax: Evolution[S, F, R, Unit, VarName],
-  variableSyntax: VarName,
+  syntax: Evolution[S, F, R, Unit, Var],
+  variableSyntax: Var,
   override val orMonoid: MonoidK[R]
 ) extends EvolutionExpressions[S, F, R]
     with OrMonoid[R] {
