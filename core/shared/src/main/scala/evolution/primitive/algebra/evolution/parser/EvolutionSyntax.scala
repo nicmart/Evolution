@@ -20,7 +20,7 @@ class EvolutionSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
     new ContextualChain[S, F, λ[α => Parser[R[α]]], List[String]](new ChainSyntax(alg.list))
 
   override val constants: Constants[λ[α => ByVarParser[R, S[α]]], Double] =
-    new ContextualConstants[λ[α => Parser[R[S[α]]]], List[String]](constantsSyntax)
+    new ContextualConstants[λ[α => Parser[R[S[α]]]], Double, List[String]](constantsSyntax)
 
   override val bind: Binding[ByVarParser[R, ?], Parser[String]] =
     bindingSyntax

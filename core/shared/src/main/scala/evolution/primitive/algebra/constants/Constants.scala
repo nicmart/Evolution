@@ -18,8 +18,9 @@ class MappedConstants[S1[_], S2[_], D](alg: Constants[S1, D], to: S1 ~> S2, from
     to(alg.add(from(a), from(b)))
 }
 
-class ContextualConstants[S[_], Ctx](alg: Constants[S, Double]) extends Constants[λ[α => Ctx => S[α]], Double] {
-  override def double(d: Double): Ctx => S[Double] = _ => alg.double(d)
+// TODO Constants Applicative?
+class ContextualConstants[S[_], D, Ctx](alg: Constants[S, D]) extends Constants[λ[α => Ctx => S[α]], D] {
+  override def double(d: D): Ctx => S[Double] = _ => alg.double(d)
   override def point(x: Ctx => S[Double], y: Ctx => S[Double]): Ctx => S[Point] = ctx => alg.point(x(ctx), y(ctx))
   override def add[T: Semigroup](a: Ctx => S[T], b: Ctx => S[T]): Ctx => S[T] =
     ctx => alg.add(a(ctx), b(ctx))
