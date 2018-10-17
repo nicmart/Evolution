@@ -6,11 +6,11 @@ import evolution.primitive.algebra.Sized
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.parser.OrMonoid
 
-class ConstantsBySize[S[_]](alg: Constants[S, Double], val orMonoid: MonoidK[S])
-    extends Constants[Sized[S, ?], Double]
+class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
+    extends Constants[Sized[S, ?], D]
     with OrMonoid[S] {
 
-  override def double(d: Double): Sized[S, Double] =
+  override def double(d: D): Sized[S, Double] =
     size => if (size == 0) alg.double(d) else orMonoid.empty
 
   override def point(x: Sized[S, Double], y: Sized[S, Double]): Sized[S, Point] =
