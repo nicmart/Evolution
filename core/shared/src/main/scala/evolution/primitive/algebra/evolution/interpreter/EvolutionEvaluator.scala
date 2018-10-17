@@ -15,7 +15,7 @@ import evolution.primitive.algebra.chain.interpreter.ChainEvaluator
 
 // Generic TODO: Make sure we do as much as possible outside the closures
 class EvolutionEvaluator[F[+ _]](evolutionAlg: LegacyEvolutionCoreAlgebra[F])
-    extends Evolution[Id, F, EvaluationResult, String] {
+    extends Evolution[Id, F, EvaluationResult, Double, String] {
   override val list: Chain[Id, F, EvaluationResult] = new ChainEvaluator(evolutionAlg)
   override val constants: Constants[EvaluationResult, Double] = ConstantsEvaluator
   override val bind: Binding[EvaluationResult, String] = BindingEvaluator

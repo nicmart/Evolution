@@ -7,7 +7,7 @@ import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, Evolu
 import org.scalatest.{FreeSpec, Matchers}
 
 class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 
   "An Evolution Grammar" - {

@@ -68,7 +68,7 @@ trait TestInterpreters {
       MapCons(eva, f)
   }
 
-  object EvolutionAlgebraTestInterpreter extends Evolution[Constant, ListExpr, Binding, String] {
+  object EvolutionAlgebraTestInterpreter extends Evolution[Constant, ListExpr, Binding, Double, String] {
     override val list: Chain[Constant, ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Composed[Binding, Constant, ?], Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String] = BindingTestInterpreter

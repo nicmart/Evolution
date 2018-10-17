@@ -10,7 +10,7 @@ import evolution.primitive.algebra.evolution.parser.{ConstantsExpressions, Evolu
 import org.scalatest.{FreeSpec, Matchers}
 
 class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: Evolution[Constant, ListExpr, Binding, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String] = EvolutionAlgebraTestInterpreter
   import interpreter.constants._
 
   "A ScalarAlgebraParser should parse" - {

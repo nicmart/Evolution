@@ -10,8 +10,8 @@ import evolution.primitive.algebra.chain.{ContextualChain, Chain}
 import evolution.primitive.algebra.chain.parser.ChainSyntax
 import fastparse.noApi.Parser
 
-class EvolutionSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
-    extends Evolution[S, F, ByVarParser[R, ?], Parser[String]] {
+class EvolutionSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String])
+    extends Evolution[S, F, ByVarParser[R, ?], Unit, Parser[String]] {
 
   private val constantsSyntax = new ConstantsSyntax[Composed[R, S, ?]](alg.constants)
   private val bindingSyntax = new BindingSyntax(alg.bind)
@@ -19,12 +19,12 @@ class EvolutionSyntax[S[_], F[_], R[_]](alg: Evolution[S, F, R, String])
   override val list: Chain[S, F, ByVarParser[R, ?]] =
     new ContextualChain[S, F, λ[α => Parser[R[α]]], List[String]](new ChainSyntax(alg.list))
 
-  override val constants: Constants[λ[α => ByVarParser[R, S[α]]], Double] =
-    new ContextualConstants[λ[α => Parser[R[S[α]]]], Double, List[String]](constantsSyntax)
+  override val constants: Constants[λ[α => ByVarParser[R, S[α]]], Unit] =
+    new ContextualConstants[λ[α => Parser[R[S[α]]]], Unit, List[String]](constantsSyntax)
 
   override val bind: Binding[ByVarParser[R, ?], Parser[String]] =
     bindingSyntax
 
-  val doubleConstant: ByVarParser[R, S[Double]] = _ => constantsSyntax.anyDouble
+  val doubleConstant: ByVarParser[R, S[Double]] = _ => constantsSyntax.double(())
   val variable: Parser[String] = bindingSyntax.variableIdentifier
 }

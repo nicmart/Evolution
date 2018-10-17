@@ -5,14 +5,15 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.{Composed, GenRepr}
 import evolution.primitive.algebra.constants.Constants
 import org.scalacheck.Gen
+import org.scalacheck.Arbitrary.arbitrary
 
 // TODO this can be a an applicative lifted algebra, because
 // there are no ad-hoc operations using the input of the function (unlike binding algebra,
 // for which the representation GenRepr was choosen
-class ConstantsGenerator[S[_], D](alg: Constants[S, D]) extends Constants[GenRepr[S, ?], D] {
+class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Unit] {
 
-  override def double(d: D): GenRepr[S, Double] =
-    _ => Generator.pure(alg.double(d))
+  override def double(d: Unit): GenRepr[S, Double] =
+    _ => Generator.Unknown(arbitrary[Double].map(alg.double))
 
   override def point(genX: GenRepr[S, Double], genY: GenRepr[S, Double]): GenRepr[S, Point] =
     n =>

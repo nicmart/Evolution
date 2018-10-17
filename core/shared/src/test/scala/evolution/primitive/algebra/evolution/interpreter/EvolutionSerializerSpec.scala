@@ -64,7 +64,7 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
   type F[T] = ConstString[T]
   type R[T] = CtxString[T]
 
-  lazy val interpreter: Evolution[S, F, R, String] = EvolutionSerializer
+  lazy val interpreter: Evolution[S, F, R, Double, String] = EvolutionSerializer
   lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
   lazy val constantsGen: ConstantsExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
@@ -78,28 +78,22 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
     alg: Constants[Composed[R, S, ?], Double],
     self: ConstantsExpressions[S, GenRepr[R, ?]]
   ): ConstantsExpressions[S, GenRepr[R, ?]] = {
-    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?], Double](alg)
-    new ConstantsGrammar[S, GenRepr[R, ?]](
-      self,
-      constantsGenerator,
-      _ => Generator.Unknown(arbitrary[Double].map(d => alg.double(d))),
-      genOrMonoidK[R]
-    )
+    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
+    new ConstantsGrammar[S, GenRepr[R, ?]](self, constantsGenerator, genOrMonoidK[R])
   }
 
-  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
+  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String]): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, GenRepr[R, ?]](grammar(alg), deferGenRepr[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, String],
+    alg: Evolution[S, F, R, Double, String],
     self: EvolutionExpressions[S, F, GenRepr[R, ?]]
   ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
     val evolutionGenerator = new EvolutionGenerator[S, F, R, String](alg)
     new EvolutionGrammar[S, F, GenRepr[R, ?], Generator[String]](
       self,
       evolutionGenerator,
-      _ => Generator.Unknown(arbitrary[Double].map(alg.constants.double)),
       Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString)),
       genOrMonoidK[R]
     )

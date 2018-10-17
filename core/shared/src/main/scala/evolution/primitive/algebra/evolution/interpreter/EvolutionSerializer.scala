@@ -9,7 +9,7 @@ import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.ChainSerializer
 
 // TODO missing tests
-object EvolutionSerializer extends Evolution[ConstString, ConstString, CtxString, String] {
+object EvolutionSerializer extends Evolution[ConstString, ConstString, CtxString, Double, String] {
   override val list: Chain[ConstString, ConstString, CtxString] = ChainSerializer
   override val constants: Constants[CtxString, Double] = ConstantsSerializer
   override val bind: Binding[CtxString, String] = BindingSerializer

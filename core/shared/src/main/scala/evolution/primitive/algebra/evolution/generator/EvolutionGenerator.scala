@@ -9,14 +9,14 @@ import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.generator.ChainGenerator
 
-class EvolutionGenerator[S[_], F[_], R[_], VarName](alg: Evolution[S, F, R, VarName])
-    extends Evolution[S, F, GenRepr[R, ?], Generator[VarName]] {
+class EvolutionGenerator[S[_], F[_], R[_], VarName](alg: Evolution[S, F, R, Double, VarName])
+    extends Evolution[S, F, GenRepr[R, ?], Unit, Generator[VarName]] {
 
   override val list: Chain[S, F, GenRepr[R, ?]] =
     new ChainGenerator(alg.list)
 
-  override val constants: Constants[GenRepr[Composed[R, S, ?], ?], Double] =
-    new ConstantsGenerator[Composed[R, S, ?], Double](alg.constants)
+  override val constants: Constants[GenRepr[Composed[R, S, ?], ?], Unit] =
+    new ConstantsGenerator[Composed[R, S, ?]](alg.constants)
 
   override val bind: Binding[GenRepr[R, ?], Generator[VarName]] =
     new BindingGenerator(alg.bind)

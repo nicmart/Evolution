@@ -79,8 +79,7 @@ object ConstantsExpressions {
 
 class ConstantsGrammar[S[_], R[_]](
   self: ConstantsExpressions[S, R],
-  syntax: Constants[Composed[R, S, ?], Double],
-  doubleLiteral: R[S[Double]],
+  syntax: Constants[Composed[R, S, ?], Unit],
   override val orMonoid: MonoidK[R]
 ) extends ConstantsExpressions[S, R]
     with OrMonoid[R] {
@@ -90,7 +89,7 @@ class ConstantsGrammar[S[_], R[_]](
   override def points: R[S[Point]] =
     point(self.constantOf(doubles), self.constantOf(doubles))
   override def doubles: R[S[Double]] =
-    doubleLiteral
+    syntax.double(())
 }
 
 trait BindingExpressions[R[_]] {
@@ -147,12 +146,13 @@ trait OrMonoid[R[_]] {
 
 class EvolutionGrammar[S[_], F[_], R[_], VarName](
   self: EvolutionExpressions[S, F, R],
-  syntax: Evolution[S, F, R, VarName],
-  doubleLiteral: R[S[Double]],
+  syntax: Evolution[S, F, R, Unit, VarName],
   variableSyntax: VarName,
   override val orMonoid: MonoidK[R]
 ) extends EvolutionExpressions[S, F, R]
     with OrMonoid[R] {
+
+  private def doubleLiteral: Composed[R, S, Double] = syntax.constants.double(())
 
   override def list: ChainExpressions[S, F, R] = new ChainExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
@@ -190,7 +190,7 @@ class EvolutionGrammar[S[_], F[_], R[_], VarName](
     new ChainGrammar(self, syntax.list, orMonoid)
 
   private lazy val internalConstants: ConstantsExpressions[S, R] =
-    new ConstantsGrammar[S, R](self.constants, syntax.constants, doubleLiteral, orMonoid)
+    new ConstantsGrammar[S, R](self.constants, syntax.constants, orMonoid)
 
   private lazy val internalBinding: BindingExpressions[R] =
     new BindingGrammar(self.binding, syntax.bind, variableSyntax, all, orMonoid)
@@ -199,22 +199,18 @@ class EvolutionGrammar[S[_], F[_], R[_], VarName](
 object EvolutionGrammar {
   import EvolutionExpressions.Lazy, Instances._
 
-  def grammar[S[_], F[_], R[_]](alg: Evolution[S, F, R, String]): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
+  def grammar[S[_], F[_], R[_]](
+    alg: Evolution[S, F, R, Double, String]
+  ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     parserGrammarRec[S, F, R](alg, new Lazy[S, F, ByVarParser[R, ?]](grammar(alg), defer[R]))
   }
 
   private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, String],
+    alg: Evolution[S, F, R, Double, String],
     self: EvolutionExpressions[S, F, ByVarParser[R, ?]]
   ): EvolutionExpressions[S, F, ByVarParser[R, ?]] = {
     val syntax = new EvolutionSyntax[S, F, R](alg)
-    new EvolutionGrammar[S, F, ByVarParser[R, ?], Parser[String]](
-      self,
-      syntax,
-      syntax.doubleConstant,
-      PrimitiveParsers.varName,
-      orMonoid[R]
-    )
+    new EvolutionGrammar[S, F, ByVarParser[R, ?], Parser[String]](self, syntax, PrimitiveParsers.varName, orMonoid[R])
   }
 }
 
