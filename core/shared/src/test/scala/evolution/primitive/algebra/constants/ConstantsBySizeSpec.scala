@@ -35,8 +35,8 @@ class ConstantsBySizeSpec
   val serializer: ConstantsSerializer.type =
     ConstantsSerializer
 
-  val sizeEvaluator: ConstantsSizeEvaluator.type =
-    ConstantsSizeEvaluator
+  val sizeEvaluator: ConstantsSizeEvaluator[Double] =
+    new ConstantsSizeEvaluator[Double]
 
   val generator: Constants[GenRepr[Const[?, Int], ?], Double] =
     new ConstantsGenerator[Const[?, Int], Double](sizeEvaluator)
