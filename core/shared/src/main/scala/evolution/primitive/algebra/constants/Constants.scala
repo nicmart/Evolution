@@ -1,7 +1,9 @@
 package evolution.primitive.algebra.constants
 import cats.kernel.Semigroup
 import cats.~>
+import cats.instances.function._
 import evolution.geometry.Point
+import evolution.primitive.algebra.constants.interpreter.ConstantsApplicative
 
 trait Constants[S[_], D] {
   def double(d: D): S[Double]
@@ -18,10 +20,4 @@ class MappedConstants[S1[_], S2[_], D](alg: Constants[S1, D], to: S1 ~> S2, from
     to(alg.add(from(a), from(b)))
 }
 
-// TODO Constants Applicative?
-class ContextualConstants[S[_], D, Ctx](alg: Constants[S, D]) extends Constants[λ[α => Ctx => S[α]], D] {
-  override def double(d: D): Ctx => S[Double] = _ => alg.double(d)
-  override def point(x: Ctx => S[Double], y: Ctx => S[Double]): Ctx => S[Point] = ctx => alg.point(x(ctx), y(ctx))
-  override def add[T: Semigroup](a: Ctx => S[T], b: Ctx => S[T]): Ctx => S[T] =
-    ctx => alg.add(a(ctx), b(ctx))
-}
+class ContextualConstants[S[_], D, Ctx](alg: Constants[S, D]) extends ConstantsApplicative[S, D, Ctx => ?](alg)

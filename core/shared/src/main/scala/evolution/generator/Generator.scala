@@ -1,4 +1,5 @@
 package evolution.generator
+import cats.Monad
 import evolution.generator.Generator.Fail
 import org.scalacheck.Gen
 
@@ -50,5 +51,15 @@ object Generator {
           Nil
         case generator => List(generator)
       }) {}
+  }
+
+  implicit val monadInstance: Monad[Generator] = new Monad[Generator] {
+    override def pure[A](x: A): Generator[A] = Generator.pure(x)
+    override def flatMap[A, B](fa: Generator[A])(f: A => Generator[B]): Generator[B] = fa.flatMap(f)
+    // TODO Stack unsafe. See https://github.com/non/cats-check/blob/master/src/main/scala/catscheck/instances/gen.scala
+    override def tailRecM[A, B](a: A)(f: A => Generator[Either[A, B]]): Generator[B] = flatMap(f(a)) {
+      case Left(a2) => tailRecM(a2)(f)
+      case Right(b) => pure(b)
+    }
   }
 }

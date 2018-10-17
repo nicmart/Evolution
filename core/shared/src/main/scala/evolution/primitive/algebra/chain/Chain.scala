@@ -1,5 +1,7 @@
 package evolution.primitive.algebra.chain
 import cats.~>
+import cats.instances.function._
+import evolution.primitive.algebra.chain.interpreter.ChainApplicative
 
 trait Chain[S[_], F[_], R[_]] {
   def empty[A]: R[F[A]]
@@ -8,16 +10,7 @@ trait Chain[S[_], F[_], R[_]] {
   def mapCons[A, B](eva: R[F[A]])(f: R[S[A] => F[A] => F[B]]): R[F[B]]
 }
 
-// TODO applicative on Reader[Ctx, ?]?
-class ContextualChain[S[_], F[_], R[_], Ctx](alg: Chain[S, F, R]) extends Chain[S, F, λ[α => Ctx => R[α]]] {
-  override def empty[A]: Ctx => R[F[A]] = _ => alg.empty
-  override def cons[A](head: Ctx => R[S[A]], tail: Ctx => R[F[A]]): Ctx => R[F[A]] =
-    ctx => alg.cons(head(ctx), tail(ctx))
-  override def mapEmpty[A](eva: Ctx => R[F[A]])(eva2: Ctx => R[F[A]]): Ctx => R[F[A]] =
-    ctx => alg.mapEmpty(eva(ctx))(eva2(ctx))
-  override def mapCons[A, B](eva: Ctx => R[F[A]])(f: Ctx => R[S[A] => F[A] => F[B]]): Ctx => R[F[B]] =
-    ctx => alg.mapCons(eva(ctx))(f(ctx))
-}
+class ContextualChain[S[_], F[_], R[_], Ctx](alg: Chain[S, F, R]) extends ChainApplicative[S, F, R, Ctx => ?](alg)
 
 class MappedChain[S[_], F[_], R1[_], R2[_]](alg: Chain[S, F, R1], to: R1 ~> R2, from: R2 ~> R1)
     extends Chain[S, F, R2] {
