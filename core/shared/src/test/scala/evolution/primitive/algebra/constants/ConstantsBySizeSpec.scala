@@ -38,10 +38,10 @@ class ConstantsBySizeSpec
   val sizeEvaluator: ConstantsSizeEvaluator.type =
     ConstantsSizeEvaluator
 
-  val generator: Constants[GenRepr[Const[?, Int], ?]] =
+  val generator: Constants[GenRepr[Const[?, Int], ?], Double] =
     new ConstantsGenerator[Const[?, Int]](sizeEvaluator)
 
-  val sizedGenerator: Constants[Sized[GenRepr[Const[?, Int], ?], ?]] =
+  val sizedGenerator: Constants[Sized[GenRepr[Const[?, Int], ?], ?], Double] =
     new ConstantsBySize[GenRepr[Const[?, Int], ?]](generator, genOrMonoidK[Const[?, Int]])
 
   val doubleGenerator: Generator[Int] =

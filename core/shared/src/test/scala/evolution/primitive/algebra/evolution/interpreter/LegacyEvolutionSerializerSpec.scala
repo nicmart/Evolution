@@ -68,14 +68,14 @@ class LegacyEvolutionSerializerSpec extends FreeSpec with Matchers with Generato
   lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
   lazy val constantsGen: ConstantsExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
-  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?]]): ConstantsExpressions[S, GenRepr[R, ?]] =
+  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?], Double]): ConstantsExpressions[S, GenRepr[R, ?]] =
     constantGrammarRec[S, R](
       alg,
       new parser.ConstantsExpressions.Lazy[S, GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
     )
 
   private def constantGrammarRec[S[_], R[_]](
-    alg: Constants[Composed[R, S, ?]],
+    alg: Constants[Composed[R, S, ?], Double],
     self: ConstantsExpressions[S, GenRepr[R, ?]]
   ): ConstantsExpressions[S, GenRepr[R, ?]] = {
     val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)

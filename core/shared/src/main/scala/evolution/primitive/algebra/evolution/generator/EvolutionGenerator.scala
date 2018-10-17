@@ -15,7 +15,7 @@ class EvolutionGenerator[S[_], F[_], R[_], VarName](alg: Evolution[S, F, R, VarN
   override val list: Chain[S, F, GenRepr[R, ?]] =
     new ChainGenerator(alg.list)
 
-  override val constants: Constants[GenRepr[Composed[R, S, ?], ?]] =
+  override val constants: Constants[GenRepr[Composed[R, S, ?], ?], Double] =
     new ConstantsGenerator[Composed[R, S, ?]](alg.constants)
 
   override val bind: Binding[GenRepr[R, ?], Generator[VarName]] =

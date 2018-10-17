@@ -9,7 +9,7 @@ import evolution.primitive.algebra.parser.PrimitiveParsers.function2
 import ParserConfig.White._
 import fastparse.noApi._
 
-class ConstantsSyntax[S[_]](alg: Constants[S]) extends Constants[λ[α => Parser[S[α]]]] {
+class ConstantsSyntax[S[_]](alg: Constants[S, Double]) extends Constants[λ[α => Parser[S[α]]], Double] {
   override def double(d: Double): Parser[S[Double]] =
     P(d.toString).map(_ => alg.double(d))
   override def point(x: Parser[S[Double]], y: Parser[S[Double]]): Parser[S[Point]] =

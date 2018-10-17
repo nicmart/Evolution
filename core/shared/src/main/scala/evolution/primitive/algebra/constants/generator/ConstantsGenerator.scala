@@ -9,7 +9,7 @@ import org.scalacheck.Gen
 // TODO this can be a an applicative lifted algebra, because
 // there are no ad-hoc operations using the input of the function (unlike binding algebra,
 // for which the representation GenRepr was choosen
-class ConstantsGenerator[S[_]](alg: Constants[S]) extends Constants[GenRepr[S, ?]] {
+class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Double] {
 
   override def double(d: Double): GenRepr[S, Double] =
     _ => Generator.pure(alg.double(d))

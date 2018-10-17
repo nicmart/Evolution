@@ -6,6 +6,6 @@ import evolution.primitive.algebra.chain.Chain
 
 trait Evolution[S[_], F[_], R[_], VarName] {
   val list: Chain[S, F, R]
-  val constants: Constants[Composed[R, S, ?]]
+  val constants: Constants[Composed[R, S, ?], Double]
   val bind: Binding[R, VarName]
 }

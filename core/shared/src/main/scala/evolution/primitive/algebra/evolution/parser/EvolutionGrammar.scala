@@ -79,7 +79,7 @@ object ConstantsExpressions {
 
 class ConstantsGrammar[S[_], R[_]](
   self: ConstantsExpressions[S, R],
-  syntax: Constants[Composed[R, S, ?]],
+  syntax: Constants[Composed[R, S, ?], Double],
   doubleLiteral: R[S[Double]],
   override val orMonoid: MonoidK[R]
 ) extends ConstantsExpressions[S, R]
