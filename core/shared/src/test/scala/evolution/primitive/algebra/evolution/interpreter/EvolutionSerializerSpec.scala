@@ -19,7 +19,7 @@ import _root_.evolution.generator.instances.GeneratorInstances._
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, ConstString, CtxString, GenRepr}
 
-class LegacyEvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
+class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit override val generatorDrivenConfig =
     PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 100)
 
@@ -78,7 +78,7 @@ class LegacyEvolutionSerializerSpec extends FreeSpec with Matchers with Generato
     alg: Constants[Composed[R, S, ?], Double],
     self: ConstantsExpressions[S, GenRepr[R, ?]]
   ): ConstantsExpressions[S, GenRepr[R, ?]] = {
-    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
+    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?], Double](alg)
     new ConstantsGrammar[S, GenRepr[R, ?]](
       self,
       constantsGenerator,

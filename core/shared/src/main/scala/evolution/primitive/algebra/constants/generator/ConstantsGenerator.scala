@@ -9,9 +9,9 @@ import org.scalacheck.Gen
 // TODO this can be a an applicative lifted algebra, because
 // there are no ad-hoc operations using the input of the function (unlike binding algebra,
 // for which the representation GenRepr was choosen
-class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Double] {
+class ConstantsGenerator[S[_], D](alg: Constants[S, D]) extends Constants[GenRepr[S, ?], D] {
 
-  override def double(d: Double): GenRepr[S, Double] =
+  override def double(d: D): GenRepr[S, Double] =
     _ => Generator.pure(alg.double(d))
 
   override def point(genX: GenRepr[S, Double], genY: GenRepr[S, Double]): GenRepr[S, Point] =

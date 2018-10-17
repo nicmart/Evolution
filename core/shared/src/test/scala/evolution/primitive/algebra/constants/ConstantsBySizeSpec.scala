@@ -39,7 +39,7 @@ class ConstantsBySizeSpec
     ConstantsSizeEvaluator
 
   val generator: Constants[GenRepr[Const[?, Int], ?], Double] =
-    new ConstantsGenerator[Const[?, Int]](sizeEvaluator)
+    new ConstantsGenerator[Const[?, Int], Double](sizeEvaluator)
 
   val sizedGenerator: Constants[Sized[GenRepr[Const[?, Int], ?], ?], Double] =
     new ConstantsBySize[GenRepr[Const[?, Int], ?]](generator, genOrMonoidK[Const[?, Int]])
