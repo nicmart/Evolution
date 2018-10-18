@@ -2,20 +2,14 @@ package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.ByVarParser
 import evolution.primitive.algebra.binding.Binding
-import evolution.primitive.algebra.parser.PrimitiveParsers.{
-  function1,
-  function2,
-  functionFlatMap,
-  varUsage,
-  infixFlatMap
-}
+import evolution.primitive.algebra.parser.PrimitiveParsers.{function1, function2, function3Dep, varUsage, infixFlatMap}
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi._
 
 class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVarParser[R, ?], Parser[String], Unit] {
 
-  override def varName(name: Unit): Parser[String] =
+  override def v(name: Unit): Parser[String] =
     PrimitiveParsers.varName
 
   override def var0[A]: ByVarParser[R, A] =
@@ -29,16 +23,24 @@ class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVar
     case _ => Fail
   }
 
-  override def let[A, B](variableName: Parser[String], value: ByVarParser[R, A])(
+  override def let[A, B](
+    variableName: Parser[String],
+    value: ByVarParser[R, A],
     expr: ByVarParser[R, B]
   ): ByVarParser[R, B] =
     vars =>
-      functionFlatMap[(String, R[A]), R[B]](function2("let", variableName, value(vars)), {
+      function3Dep[String, R[A], R[B]]("let", variableName, _ => value(vars), {
         case (parsedVariableName, parsedValue) =>
-          expr(parsedVariableName :: vars).map { parsedExpression =>
-            alg.let(parsedVariableName, parsedValue)(parsedExpression)
-          }
-      })
+          expr(parsedVariableName :: vars)
+      }).map { case (parsedVar, ra, rb) => alg.let(parsedVar, ra, rb) }
+
+//    vars =>
+//      functionFlatMap[(String, R[A]), R[B]](function2("let", variableName, value(vars)), {
+//        case (parsedVariableName, parsedValue) =>
+//          expr(parsedVariableName :: vars).map { parsedExpression =>
+//            alg.let(parsedVariableName, parsedValue, parsedExpression)
+//          }
+//      })
 
   override def lambda[A, B](variableName: Parser[String], expr: ByVarParser[R, B]): ByVarParser[R, A => B] =
     vars =>

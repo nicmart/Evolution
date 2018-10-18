@@ -19,28 +19,28 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
   "A Binding Algebra Parser should parse" - {
     "let expressions that are " - {
       "simple" in {
-        val serializedExpression = "let(x, 10.0)($x)"
-        val expected: Binding[Constant[Double]] = let[Constant[Double], Constant[Double]]("x", 10.0)(var0)
+        val serializedExpression = "let(x, 10.0, $x)"
+        val expected: Binding[Constant[Double]] = let[Constant[Double], Constant[Double]]("x", 10.0, var0)
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       "nested" in {
-        val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, 2.0)($x))"
+        val serializedExpression = "let(x, let(y, 1.0, $y), let(z, 2.0, $x))"
         val expected: Binding[Constant[Double]] =
-          let("x", let("y", double(1.0))(var0))(let("z", double(2.0))(shift(var0)))
+          let("x", let("y", double(1.0), var0), let("z", double(2.0), shift(var0)))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       "multi-nested" in {
-        val serializedExpression = "let(x, let(y, 1.0)($y))(let(z, let(u, $x)($u))($x))"
+        val serializedExpression = "let(x, let(y, 1.0, $y), let(z, let(u, $x, $u), $x))"
         val expected: Binding[Constant[Double]] =
-          let("x", let("y", double(1.0))(var0))(let("z", let("u", var0)(var0))(shift(var0)))
+          let("x", let("y", double(1.0), var0), let("z", let("u", var0, var0), shift(var0)))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
 
       "inside a lambda" in {
-        val serializedExpression = "app(x -> let(y, 1.0)($x), 1.0)"
-        val expected: Binding[Constant[Double]] = app(lambda("x", let("y", double(1.0))(shift(var0))), double(1.0))
+        val serializedExpression = "app(x -> let(y, 1.0, $x), 1.0)"
+        val expected: Binding[Constant[Double]] = app(lambda("x", let("y", double(1.0), shift(var0))), double(1.0))
         unsafeParseDouble(serializedExpression) shouldBe expected
       }
     }
@@ -73,8 +73,8 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
       }
 
       "inside let expressions" in {
-        val serializedExpression = "let(x, 1.0)(y -> $x)"
-        val expected: Binding[Double => Double] = let("x", double(1.0))(lambda("y", shift(var0)))
+        val serializedExpression = "let(x, 1.0, y -> $x)"
+        val expected: Binding[Double => Double] = let("x", double(1.0), lambda("y", shift(var0)))
         unsafeParseLambda(serializedExpression) shouldBe expected
       }
     }

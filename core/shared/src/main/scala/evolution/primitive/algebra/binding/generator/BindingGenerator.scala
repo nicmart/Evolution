@@ -7,8 +7,8 @@ import org.scalacheck.Gen
 // TODO here only var0 differs from an Applicative-lifted Binding Algebra
 class BindingGenerator[R[_], Var](alg: Binding[R, Var, String]) extends Binding[GenRepr[R, ?], Generator[Var], Unit] {
 
-  override def varName(name: Unit): Generator[Var] =
-    Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString).map(alg.varName))
+  override def v(name: Unit): Generator[Var] =
+    Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString).map(alg.v))
 
   override def var0[A]: GenRepr[R, A] =
     n => if (n > 0) Generator.Unknown(Gen.const(alg.var0)) else Generator.Fail()
@@ -16,13 +16,13 @@ class BindingGenerator[R[_], Var](alg: Binding[R, Var, String]) extends Binding[
   override def shift[A](expr: GenRepr[R, A]): GenRepr[R, A] =
     n => expr(n - 1).map(alg.shift)
 
-  override def let[A, B](genName: Generator[Var], genValue: GenRepr[R, A])(genExpr: GenRepr[R, B]): GenRepr[R, B] =
+  override def let[A, B](genName: Generator[Var], genValue: GenRepr[R, A], genExpr: GenRepr[R, B]): GenRepr[R, B] =
     n =>
       for {
         name <- genName
         value <- genValue(n)
         expr <- genExpr(n + 1)
-      } yield alg.let(name, value)(expr)
+      } yield alg.let(name, value, expr)
 
   override def lambda[A, B](genName: Generator[Var], genExpr: GenRepr[R, B]): GenRepr[R, A => B] =
     n =>

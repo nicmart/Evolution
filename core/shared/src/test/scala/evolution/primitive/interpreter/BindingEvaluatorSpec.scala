@@ -36,7 +36,7 @@ class BindingEvaluatorSpec extends FreeSpec with Matchers {
 
   "a let expression" - {
     "evaluates to the substitution of the evaluations" in {
-      val expr = let[Int, Int]("x", value(1))(var0)
+      val expr = let[Int, Int]("x", value(1), var0)
       expr.get(Nil) shouldBe 1
     }
   }

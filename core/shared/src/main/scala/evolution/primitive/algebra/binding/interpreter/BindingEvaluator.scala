@@ -3,7 +3,7 @@ import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
 
 object BindingEvaluator extends Binding[EvaluationResult, String, String] {
-  override def varName(name: String): String = name
+  override def v(name: String): String = name
 
   override def var0[A]: EvaluationResult[A] = Value {
     case h :: tail => h().asInstanceOf[A]
@@ -13,7 +13,7 @@ object BindingEvaluator extends Binding[EvaluationResult, String, String] {
     val exprCtx = expr.get
     Value(ctx => exprCtx(ctx.tail))
   }
-  override def let[A, B](name: String, value: EvaluationResult[A])(expr: EvaluationResult[B]): EvaluationResult[B] =
+  override def let[A, B](name: String, value: EvaluationResult[A], expr: EvaluationResult[B]): EvaluationResult[B] =
     app(lambda(name, expr), value)
 
   override def fix[A](expr: EvaluationResult[A => A]): EvaluationResult[A] =

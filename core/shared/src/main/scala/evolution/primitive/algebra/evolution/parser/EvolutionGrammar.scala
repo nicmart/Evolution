@@ -121,7 +121,7 @@ class BindingGrammar[R[_], Var, VarName](
     or(lambda(variableSyntax, t2), valueOf(self.function(t1, t2)))
 
   private def letExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
-    let(variableSyntax, self.valueOf(t1))(self.valueOf(t2))
+    let(variableSyntax, self.valueOf(t1), self.valueOf(t2))
 
   private def allLetExpressions[T](t: R[T]): R[T] =
     or(all.map(s => letExpression(s, t)): _*)
@@ -132,7 +132,7 @@ class BindingGrammar[R[_], Var, VarName](
   private def allAppExpressions[T](t: R[T]): R[T] =
     or(all.map(s => appExpression(self.valueOf(s), t)): _*)
 
-  private val variableSyntax = syntax.varName(())
+  private val variableSyntax = syntax.v(())
 }
 
 trait OrMonoid[R[_]] {

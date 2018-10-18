@@ -42,21 +42,28 @@ trait PrimitiveParsers {
   ): Parser[(A, B, C)] =
     P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
-  /**
-    * A function with two parameters list, where the second one can depend on the first
-    */
-  def functionFlatMap[A, B](func: Parser[A], f: A => Parser[B]): Parser[B] =
-    func.flatMap(a => P("(" ~ f(a) ~ ")"))
+  def function3Dep[A, B, C](
+    funcName: String,
+    parser1: Parser[A],
+    parser2: A => Parser[B],
+    parser3: (A, B) => Parser[C]
+  ): Parser[(A, B, C)] =
+    for {
+      a <- WP(funcName ~ "(" ~ parser1 ~ ",")
+      b <- WP(parser2(a) ~ ",")
+      c <- WP(parser3(a, b) ~ ")")
+    } yield (a, b, c)
+
   def prefix[A](operator: String, parser: Parser[A]): Parser[A] =
     P(operator ~ parser)
   def infix[A, B](operator: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
     P(parser1 ~ operator ~ parser2)
   def infixFlatMap[A, B](parser1: Parser[A], operator: String, parser2: A => Parser[B]): Parser[B] =
     parser1.flatMap { a =>
-      P(whitespaceWrap(operator) ~ parser2(a))
+      P(WP(operator) ~ parser2(a))
     }
 
-  def whitespaceWrap[T](p: Parser[T]): Parser[T] =
+  def WP[T](p: => Parser[T]): Parser[T] =
     P(ParserConfig.whitespaces ~ p ~ ParserConfig.whitespaces)
 }
 

@@ -40,10 +40,10 @@ trait TestInterpreters {
   }
 
   object BindingTestInterpreter extends BindingAlg[Binding, String, String] {
-    override def varName(name: String): String = name
+    override def v(name: String): String = name
     override def var0[A]: Binding[A] = Var0[A]()
     override def shift[A](expr: Binding[A]): Binding[A] = Shift(expr)
-    override def let[A, B](name: String, value: Binding[A])(expr: Binding[B]): Binding[B] = Let(name, value, expr)
+    override def let[A, B](name: String, value: Binding[A], expr: Binding[B]): Binding[B] = Let(name, value, expr)
     override def lambda[A, B](name: String, expr: Binding[B]): Binding[A => B] = Lambda(name, expr)
     override def app[A, B](f: Binding[A => B], a: Binding[A]): Binding[B] = App(f, a)
     override def fix[A](expr: Binding[A => A]): Binding[A] = Fix(expr)
