@@ -30,17 +30,8 @@ class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVar
   ): ByVarParser[R, B] =
     vars =>
       function3Dep[String, R[A], R[B]]("let", variableName, _ => value(vars), {
-        case (parsedVariableName, parsedValue) =>
-          expr(parsedVariableName :: vars)
+        case (parsedVariableName, _) => expr(parsedVariableName :: vars)
       }).map { case (parsedVar, ra, rb) => alg.let(parsedVar, ra, rb) }
-
-//    vars =>
-//      functionFlatMap[(String, R[A]), R[B]](function2("let", variableName, value(vars)), {
-//        case (parsedVariableName, parsedValue) =>
-//          expr(parsedVariableName :: vars).map { parsedExpression =>
-//            alg.let(parsedVariableName, parsedValue, parsedExpression)
-//          }
-//      })
 
   override def lambda[A, B](variableName: Parser[String], expr: ByVarParser[R, B]): ByVarParser[R, A => B] =
     vars =>

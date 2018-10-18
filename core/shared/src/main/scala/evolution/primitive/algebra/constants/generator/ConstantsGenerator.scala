@@ -4,12 +4,9 @@ import evolution.generator.Generator
 import evolution.geometry.Point
 import evolution.primitive.algebra.{Composed, GenRepr}
 import evolution.primitive.algebra.constants.Constants
-import org.scalacheck.Gen
 import org.scalacheck.Arbitrary.arbitrary
 
-// TODO this can be a an applicative lifted algebra, because
-// there are no ad-hoc operations using the input of the function (unlike binding algebra,
-// for which the representation GenRepr was choosen
+// TODO this can be a an applicative lifted algebra, with an overriden double method
 class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Unit] {
 
   override def double(d: Unit): GenRepr[S, Double] =
