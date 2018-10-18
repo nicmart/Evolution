@@ -33,7 +33,7 @@ class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with 
       "a mapEmpty expression" in {
         val serializedExpression = """mapEmpty(cons(1, empty),cons(2, empty))"""
         unsafeParseEvolution(serializedExpression) shouldBe
-          mapEmpty(cons(double(1), nil))(cons(double(2), nil))
+          mapEmpty(cons(double(1), nil), cons(double(2), nil))
       }
 
       "a mapCons expression" in {

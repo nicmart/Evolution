@@ -14,9 +14,9 @@ class ChainSyntax[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, λ[
   override def cons[A](head: Parser[R[S[A]]], tail: Parser[R[F[A]]]): Parser[R[F[A]]] =
     function2("cons", head, tail).map[R[F[A]]] { case (h, t) => alg.cons(h, t) }
 
-  override def mapEmpty[A](eva: Parser[R[F[A]]])(eva2: Parser[R[F[A]]]): Parser[R[F[A]]] =
+  override def mapEmpty[A](eva: Parser[R[F[A]]], eva2: Parser[R[F[A]]]): Parser[R[F[A]]] =
     function2("mapEmpty", eva, eva2)
-      .map[R[F[A]]] { case (in, out) => alg.mapEmpty(in)(out) }
+      .map[R[F[A]]] { case (in, out) => alg.mapEmpty(in, out) }
 
   override def mapCons[A, B](eva: Parser[R[F[A]]])(f: Parser[R[S[A] => F[A] => F[B]]]): Parser[R[F[B]]] =
     function2("mapCons", eva, f)

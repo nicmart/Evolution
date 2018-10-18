@@ -9,7 +9,7 @@ class ChainEvaluator[F[+ _]](evolutionAlg: LegacyEvolutionCoreAlgebra[F]) extend
     Value(_ => evolutionAlg.empty)
   override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[F[A]]): EvaluationResult[F[A]] =
     Value(ctx => evolutionAlg.cons(head.get(ctx), tail.get(ctx)))
-  override def mapEmpty[A](eva: EvaluationResult[F[A]])(eva2: EvaluationResult[F[A]]): EvaluationResult[F[A]] =
+  override def mapEmpty[A](eva: EvaluationResult[F[A]], eva2: EvaluationResult[F[A]]): EvaluationResult[F[A]] =
     Value(ctx => evolutionAlg.mapEmpty(eva.get(ctx))(eva2.get(ctx)))
   override def mapCons[A, B](
     eva: EvaluationResult[F[A]]

@@ -16,12 +16,12 @@ class ChainGenerator[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, 
         tail <- resized(genTail(n))
       } yield alg.cons(head, tail)
 
-  override def mapEmpty[A](gen1: GenRepr[R, F[A]])(gen2: GenRepr[R, F[A]]): GenRepr[R, F[A]] =
+  override def mapEmpty[A](gen1: GenRepr[R, F[A]], gen2: GenRepr[R, F[A]]): GenRepr[R, F[A]] =
     n =>
       for {
         a1 <- resized(gen1(n))
         a2 <- resized(gen2(n))
-      } yield alg.mapEmpty(a1)(a2)
+      } yield alg.mapEmpty(a1, a2)
 
   override def mapCons[A, B](genA: GenRepr[R, F[A]])(genFunc: GenRepr[R, S[A] => F[A] => F[B]]): GenRepr[R, F[B]] =
     n =>

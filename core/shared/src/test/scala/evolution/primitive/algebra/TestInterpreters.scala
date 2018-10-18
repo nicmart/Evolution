@@ -60,7 +60,7 @@ trait TestInterpreters {
     override def empty[A]: Binding[ListExpr[A]] = Empty[A]()
     override def cons[A](head: Binding[Constant[A]], tail: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       Cons(head, tail)
-    override def mapEmpty[A](eva: Binding[ListExpr[A]])(eva2: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
+    override def mapEmpty[A](eva: Binding[ListExpr[A]], eva2: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       MapEmpty(eva, eva2)
     override def mapCons[A, B](
       eva: Binding[ListExpr[A]]

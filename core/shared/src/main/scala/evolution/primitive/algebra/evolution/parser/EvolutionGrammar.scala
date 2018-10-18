@@ -58,7 +58,7 @@ class ChainGrammar[S[_], F[_], R[_]](
           self.binding.function(self.list.evolutionOf(constant), self.list.evolutionOf(constant))
         )
       ),
-      mapEmpty(self.list.evolutionOf(constant))(self.list.evolutionOf(constant))
+      mapEmpty(self.list.evolutionOf(constant), self.list.evolutionOf(constant))
     )
 }
 
