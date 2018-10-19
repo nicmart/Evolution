@@ -21,9 +21,6 @@ class ConstantsBySizeSpec
     with GeneratorInstances
     with GeneratorDrivenPropertyChecks {
 
-  implicit override val generatorDrivenConfig =
-    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 100, maxSize = 200)
-
   "A Sized Constants Interpreter" - {
     "should generate expression of the given size" in {
       forAll(sizes) { size =>
@@ -31,9 +28,6 @@ class ConstantsBySizeSpec
       }
     }
   }
-
-  val serializer: ConstantsSerializer.type =
-    ConstantsSerializer
 
   val sizeEvaluator: ConstantsSizeEvaluator[Double] =
     new ConstantsSizeEvaluator[Double]
@@ -44,9 +38,6 @@ class ConstantsBySizeSpec
   val sizedGenerator: Constants[Sized[GenRepr[Const[?, Int], ?], ?], Unit] =
     new ConstantsBySize[GenRepr[Const[?, Int], ?], Unit](generator, genOrMonoidK[Const[?, Int]])
 
-  val doubleGenerator: Generator[Int] =
-    Generator.Unknown(Gen.const(0))
-
   def defer[T](t: => Sized[GenRepr[Const[?, Int], ?], T]): Sized[GenRepr[Const[?, Int], ?], T] =
     size => deferGenRepr[Const[?, Int]].defer(t(size))
 
@@ -55,7 +46,7 @@ class ConstantsBySizeSpec
       vars =>
         Generator.Or(
           List(
-            if (size <= 0) doubleGenerator else Generator.Fail(),
+            sizedGenerator.double(())(size)(vars),
             sizedGenerator.add[Double](defer(doubles), defer(doubles))(Semigroup[Double])(size)(vars)
           )
     )
