@@ -6,7 +6,7 @@ import evolution.primitive.algebra.{Composed, GenRepr}
 import evolution.primitive.algebra.constants.Constants
 import org.scalacheck.Arbitrary.arbitrary
 
-// TODO this can be a an applicative lifted algebra, with an overriden double method
+// TODO this can be a an applicative lifted algebra, with an overridden double method
 class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Unit] {
 
   override def double(d: Unit): GenRepr[S, Double] =

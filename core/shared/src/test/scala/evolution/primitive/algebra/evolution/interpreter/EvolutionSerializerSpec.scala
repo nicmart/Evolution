@@ -4,11 +4,8 @@ import evolution.primitive.algebra.evolution.{Evolution, parser}
 import evolution.primitive.algebra.evolution.generator.EvolutionGenerator
 import evolution.primitive.algebra.evolution.parser.EvolutionExpressions.Lazy
 import evolution.primitive.algebra.evolution.parser._
-import evolution.primitive.algebra.parser.PrimitiveParsers
-import fastparse.noApi.Parser
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup
