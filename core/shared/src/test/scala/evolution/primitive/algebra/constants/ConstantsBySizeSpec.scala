@@ -1,16 +1,13 @@
 package evolution.primitive.algebra.constants
 import evolution.generator.Generator
 import evolution.generator.instances.GeneratorInstances
-import evolution.primitive.algebra._
+import evolution.primitive.algebra.{Const, GenRepr, Sized, TestInterpreters}
 import _root_.evolution.primitive.algebra.constants.generator.ConstantsGenerator
-import _root_.evolution.primitive.algebra.constants.interpreter.{
-  ConstantsSerializer,
-  ConstantsSizeEvaluator,
-  ConstantsBySize
-}
+import _root_.evolution.primitive.algebra.constants.interpreter.{ConstantsBySize, ConstantsSizeEvaluator}
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup
+import evolution.primitive.algebra.evolution.parser.ConstantsGrammar
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
@@ -56,4 +53,8 @@ class ConstantsBySizeSpec
       .sized(size => doubles(size)(0).underlying.map(actualSize => Size(size, actualSize)))
 
   case class Size(expected: Int, actual: Int)
+
+  object WithGrammar {
+    //def grammar(self: ) = new ConstantsGrammar[]()
+  }
 }

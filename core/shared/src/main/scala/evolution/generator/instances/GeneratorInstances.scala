@@ -1,7 +1,7 @@
 package evolution.generator.instances
 import cats.{Defer, MonoidK}
 import evolution.generator.Generator
-import evolution.primitive.algebra.GenRepr
+import evolution.primitive.algebra.{Composed, GenRepr}
 import org.scalacheck.Gen
 
 trait GeneratorInstances {

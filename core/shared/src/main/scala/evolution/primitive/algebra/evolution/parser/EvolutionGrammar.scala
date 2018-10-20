@@ -15,19 +15,23 @@ import Instances._
 
 trait EvolutionExpressions[S[_], F[_], R[_]] {
   def list: ChainExpressions[S, F, R]
-  def constants: ConstantsExpressions[S, R]
+  def constants: ConstantsExpressions[Composed[R, S, ?]]
   def binding: BindingExpressions[R]
 }
 
 object EvolutionExpressions {
-  class Lazy[S[_], F[_], R[_]](inner: => EvolutionExpressions[S, F, R], defer: Defer[R])
+  class Lazy[S[_], F[_], R[_]](inner: => EvolutionExpressions[S, F, R], deferR: Defer[R])
       extends EvolutionExpressions[S, F, R] {
     override def list: ChainExpressions[S, F, R] =
-      new ChainExpressions.Lazy(inner.list, defer)
-    override def constants: ConstantsExpressions[S, R] =
-      new ConstantsExpressions.Lazy(inner.constants, defer)
+      new ChainExpressions.Lazy(inner.list, deferR)
+    override def constants: ConstantsExpressions[Composed[R, S, ?]] =
+      new ConstantsExpressions.Lazy[Composed[R, S, ?]](inner.constants, deferRS)
     override def binding: BindingExpressions[R] =
-      new BindingExpressions.Lazy(inner.binding, defer)
+      new BindingExpressions.Lazy(inner.binding, deferR)
+
+    private val deferRS: Defer[Composed[R, S, ?]] = new Defer[Composed[R, S, ?]] {
+      override def defer[A](fa: => R[S[A]]): R[S[A]] = deferR.defer(fa)
+    }
   }
 }
 
@@ -62,33 +66,33 @@ class ChainGrammar[S[_], F[_], R[_]](
     )
 }
 
-trait ConstantsExpressions[S[_], R[_]] {
-  def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]]
-  def points: R[S[Point]]
-  def doubles: R[S[Double]]
+trait ConstantsExpressions[S[_]] {
+  def constantOf[T: Semigroup](constant: S[T]): S[T]
+  def points: S[Point]
+  def doubles: S[Double]
 }
 
 object ConstantsExpressions {
-  class Lazy[S[_], R[_]](inner: => ConstantsExpressions[S, R], defer: Defer[R]) extends ConstantsExpressions[S, R] {
-    override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
+  class Lazy[S[_]](inner: => ConstantsExpressions[S], defer: Defer[S]) extends ConstantsExpressions[S] {
+    override def constantOf[T: Semigroup](constant: S[T]): S[T] =
       defer.defer(inner.constantOf(constant))
-    override def points: R[S[Point]] = defer.defer(inner.points)
-    override def doubles: R[S[Double]] = defer.defer(inner.doubles)
+    override def points: S[Point] = defer.defer(inner.points)
+    override def doubles: S[Double] = defer.defer(inner.doubles)
   }
 }
 
-class ConstantsGrammar[S[_], R[_]](
-  self: ConstantsExpressions[S, R],
-  syntax: Constants[Composed[R, S, ?], Unit],
-  override val orMonoid: MonoidK[R]
-) extends ConstantsExpressions[S, R]
-    with OrMonoid[R] {
+class ConstantsGrammar[S[_]](
+  self: ConstantsExpressions[S],
+  syntax: Constants[S, Unit],
+  override val orMonoid: MonoidK[S]
+) extends ConstantsExpressions[S]
+    with OrMonoid[S] {
   import syntax._
-  override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
+  override def constantOf[T: Semigroup](constant: S[T]): S[T] =
     or(constant, add(self.constantOf(constant), self.constantOf(constant)))
-  override def points: R[S[Point]] =
+  override def points: S[Point] =
     point(self.constantOf(doubles), self.constantOf(doubles))
-  override def doubles: R[S[Double]] =
+  override def doubles: S[Double] =
     syntax.double(())
 }
 
@@ -160,8 +164,8 @@ class EvolutionGrammar[S[_], F[_], R[_], Var](
       or(internalList.evolutionOf(constant), internalBinding.valueOf(self.list.evolutionOf(constant)))
   }
 
-  override def constants: ConstantsExpressions[S, R] =
-    new ConstantsExpressions[S, R] {
+  override def constants: ConstantsExpressions[Composed[R, S, ?]] =
+    new ConstantsExpressions[Composed[R, S, ?]] {
       override def constantOf[T: Semigroup](constant: R[S[T]]): R[S[T]] =
         or(internalConstants.constantOf(constant), internalBinding.valueOf(self.constants.constantOf(constant)))
       override def points: R[S[Point]] =
@@ -190,11 +194,16 @@ class EvolutionGrammar[S[_], F[_], R[_], Var](
   private lazy val internalList: ChainExpressions[S, F, R] =
     new ChainGrammar(self, syntax.list, orMonoid)
 
-  private lazy val internalConstants: ConstantsExpressions[S, R] =
-    new ConstantsGrammar[S, R](self.constants, syntax.constants, orMonoid)
+  private lazy val internalConstants: ConstantsExpressions[Composed[R, S, ?]] =
+    new ConstantsGrammar[Composed[R, S, ?]](self.constants, syntax.constants, orMonoidRS)
 
   private lazy val internalBinding: BindingExpressions[R] =
     new BindingGrammar(self.binding, syntax.bind, all, orMonoid)
+
+  private lazy val orMonoidRS = new MonoidK[Composed[R, S, ?]] {
+    override def empty[A]: R[S[A]] = orMonoid.empty[S[A]]
+    override def combineK[A](x: R[S[A]], y: R[S[A]]): R[S[A]] = orMonoid.combineK(x, y)
+  }
 }
 
 object EvolutionGrammar {

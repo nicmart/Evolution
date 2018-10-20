@@ -66,20 +66,25 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
 
   lazy val interpreter: Evolution[S, F, R, Double, String, String] = EvolutionSerializer
   lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
-  lazy val constantsGen: ConstantsExpressions[S, GenRepr[R, ?]] = constantGrammar(interpreter.constants)
+  lazy val constantsGen: ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] = constantGrammar(interpreter.constants)
 
-  def constantGrammar[S[_], R[_]](alg: Constants[Composed[R, S, ?], Double]): ConstantsExpressions[S, GenRepr[R, ?]] =
+  def constantGrammar[S[_], R[_]](
+    alg: Constants[Composed[R, S, ?], Double]
+  ): ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] =
     constantGrammarRec[S, R](
       alg,
-      new parser.ConstantsExpressions.Lazy[S, GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
+      new parser.ConstantsExpressions.Lazy[Composed[GenRepr[R, ?], S, ?]](
+        constantGrammar(alg),
+        deferGenRepr[Composed[R, S, ?]]
+      )
     )
 
   private def constantGrammarRec[S[_], R[_]](
     alg: Constants[Composed[R, S, ?], Double],
-    self: ConstantsExpressions[S, GenRepr[R, ?]]
-  ): ConstantsExpressions[S, GenRepr[R, ?]] = {
+    self: ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]]
+  ): ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] = {
     val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
-    new ConstantsGrammar[S, GenRepr[R, ?]](self, constantsGenerator, genOrMonoidK[R])
+    new ConstantsGrammar[Composed[GenRepr[R, ?], S, ?]](self, constantsGenerator, genOrMonoidK[Composed[R, S, ?]])
   }
 
   def grammar[S[_], F[_], R[_]](

@@ -42,7 +42,7 @@ class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: ConstantsExpressions[Constant, BindingParser] =
+  def expressions: ConstantsExpressions[Composed[BindingParser, Constant, ?]] =
     EvolutionGrammar.grammar(interpreter).constants
 
   private def unsafeParseDouble(serializedExpression: String): Binding[Constant[Double]] = {
