@@ -55,7 +55,7 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
   }
 
   lazy val pointsGen = constantsGen.constantOf[Point](constantsGen.points)(Semigroup[Point])(0).underlying
-  lazy val doubleEvolutionGen = gen.list.evolutionOf[Double](gen.constants.doubles)(Semigroup[Double])(0).underlying
+  lazy val doubleEvolutionGen = gen.chain.evolutionOf[Double](gen.constants.doubles)(Semigroup[Double])(0).underlying
 
   type S[T] = ConstString[T]
   type F[T] = ConstString[T]

@@ -14,7 +14,7 @@ import fastparse.noApi.{Fail, P, Parser}
 import Instances._
 
 trait EvolutionExpressions[S[_], F[_], R[_]] {
-  def list: ChainExpressions[S, F, R]
+  def chain: ChainExpressions[S, F, R]
   def constants: ConstantsExpressions[Composed[R, S, ?]]
   def binding: BindingExpressions[R]
 }
@@ -22,8 +22,8 @@ trait EvolutionExpressions[S[_], F[_], R[_]] {
 object EvolutionExpressions {
   class Lazy[S[_], F[_], R[_]](inner: => EvolutionExpressions[S, F, R], deferR: Defer[R])
       extends EvolutionExpressions[S, F, R] {
-    override def list: ChainExpressions[S, F, R] =
-      new ChainExpressions.Lazy(inner.list, deferR)
+    override def chain: ChainExpressions[S, F, R] =
+      new ChainExpressions.Lazy(inner.chain, deferR)
     override def constants: ConstantsExpressions[Composed[R, S, ?]] =
       new ConstantsExpressions.Lazy[Composed[R, S, ?]](inner.constants, deferRS)
     override def binding: BindingExpressions[R] =
@@ -55,14 +55,14 @@ class ChainGrammar[S[_], F[_], R[_]](
   override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
     or(
       empty,
-      cons(self.constants.constantOf(constant), self.list.evolutionOf(constant)),
-      mapCons(self.list.evolutionOf(constant))(
+      cons(self.constants.constantOf(constant), self.chain.evolutionOf(constant)),
+      mapCons(self.chain.evolutionOf(constant))(
         self.binding.function(
           self.constants.constantOf(constant),
-          self.binding.function(self.list.evolutionOf(constant), self.list.evolutionOf(constant))
+          self.binding.function(self.chain.evolutionOf(constant), self.chain.evolutionOf(constant))
         )
       ),
-      mapEmpty(self.list.evolutionOf(constant), self.list.evolutionOf(constant))
+      mapEmpty(self.chain.evolutionOf(constant), self.chain.evolutionOf(constant))
     )
 }
 
@@ -159,9 +159,9 @@ class EvolutionGrammar[S[_], F[_], R[_], Var](
 
   private def doubleLiteral: Composed[R, S, Double] = syntax.constants.double(())
 
-  override def list: ChainExpressions[S, F, R] = new ChainExpressions[S, F, R] {
+  override def chain: ChainExpressions[S, F, R] = new ChainExpressions[S, F, R] {
     override def evolutionOf[T: Semigroup](constant: R[S[T]]): R[F[T]] =
-      or(internalList.evolutionOf(constant), internalBinding.valueOf(self.list.evolutionOf(constant)))
+      or(internalList.evolutionOf(constant), internalBinding.valueOf(self.chain.evolutionOf(constant)))
   }
 
   override def constants: ConstantsExpressions[Composed[R, S, ?]] =
@@ -187,8 +187,8 @@ class EvolutionGrammar[S[_], F[_], R[_], Var](
   private lazy val all: List[R[_]] = List[R[_]](
     self.constants.constantOf(doubles),
     self.constants.constantOf(points),
-    self.list.evolutionOf(doubles),
-    self.list.evolutionOf(points)
+    self.chain.evolutionOf(doubles),
+    self.chain.evolutionOf(points)
   )
 
   private lazy val internalList: ChainExpressions[S, F, R] =

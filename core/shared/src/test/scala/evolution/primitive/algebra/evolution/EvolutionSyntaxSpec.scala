@@ -127,8 +127,8 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
   def parseLambdaOfEvolutions(serializedExpression: String): Binding[ListExpr[Double] => ListExpr[Double]] =
     expressions.binding
       .function(
-        expressions.list.evolutionOf(expressions.constants.doubles),
-        expressions.list.evolutionOf(expressions.constants.doubles)
+        expressions.chain.evolutionOf(expressions.constants.doubles),
+        expressions.chain.evolutionOf(expressions.constants.doubles)
       )(Nil)
       .parse(serializedExpression)
       .get
@@ -138,14 +138,14 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
     serializedExpression: String,
     currentVars: List[String] = Nil
   ): Binding[ListExpr[Double]] =
-    expressions.list
+    expressions.chain
       .evolutionOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
       .parse(serializedExpression)
       .get
       .value
 
   def parseEvolutionOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[ListExpr[Point]] =
-    expressions.list
+    expressions.chain
       .evolutionOf(expressions.constants.points)(Semigroup[Point])(currentVars)
       .parse(serializedExpression)
       .get

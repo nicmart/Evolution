@@ -27,5 +27,4 @@ class ChainBySizeSpec
 
   val sizedGenerator: Chain[S, F, Sized[GenRepr[R, ?], ?]] =
     new ChainBySize[S, F, GenRepr[R, ?]](generator, genOrMonoidK[R])
-
 }

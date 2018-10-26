@@ -58,5 +58,5 @@ class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with 
     EvolutionGrammar.grammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
-    expressions.list.evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil).parse(expression).get.value
+    expressions.chain.evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil).parse(expression).get.value
 }

@@ -35,7 +35,7 @@ object dsl extends DrawingDefinition[Point] {
               override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
                 val grammar = EvolutionGrammar.grammar[S, F, R](alg)
                 val parser: noApi.Parser[R[F[Point]]] =
-                  grammar.list.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
+                  grammar.chain.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
                 parser
                   .parse(serialized)
                   .fold((_, _, failure) => { println(failure); previousConfig.run(alg) }, (drawing, _) => drawing)
