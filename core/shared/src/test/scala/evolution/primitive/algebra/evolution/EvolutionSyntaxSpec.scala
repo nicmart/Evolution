@@ -113,10 +113,11 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
         parseEvolutionOfDoubles(serializedExpression, "s" :: Nil) shouldBe expectedExpression
       }
 
+      // TODO write a valid expectation
       "an abnormous evolution" in {
         pending
         val serializedExpression =
-          "app(app(fix(lambda(self)(lambda(start)(lambda(evolution)(mapCons($evolution, lambda(h)(lambda(t)(cons($start, app(app($self, add($start, $h)), $t))))))))), point(1.0, 1.0)), fix(lambda(self)(cons(point(1.0, 1.0), $self)))"
+          "app(app(fix(self->start->evolution->mapCons($evolution,h->t->cons($start,app(app($self,add($start,$h)),$t)))),point(1.0,1.0)),fix(self->cons(point(1.0,1.0),$self)))"
         val expectedExpression: Binding[ListExpr[Double]] =
           var0[ListExpr[Double]]
         parseEvolutionOfPoints(serializedExpression) shouldBe expectedExpression

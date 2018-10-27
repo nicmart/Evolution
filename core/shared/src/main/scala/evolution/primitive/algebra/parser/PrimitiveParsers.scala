@@ -30,7 +30,7 @@ trait PrimitiveParsers {
   def varUsage(varName: String): Parser[String] = P("$" ~ varName.!)
 
   def function1[A](funcName: String, parser: Parser[A]): Parser[A] =
-    P(funcName ~/ "(" ~ parser ~ ")")
+    P(funcName ~ "(" ~ parser ~ ")")
   // TODO Remove the CUT to allow overloading. Find a solution to the problem
   def function2[A, B](funcName: String, parser1: Parser[A], parser2: Parser[B]): Parser[(A, B)] =
     P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ ")")
@@ -40,7 +40,7 @@ trait PrimitiveParsers {
     parser2: Parser[B],
     parser3: Parser[C]
   ): Parser[(A, B, C)] =
-    P(funcName ~ "(" ~/ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
+    P(funcName ~ "(" ~ parser1 ~ "," ~ parser2 ~ "," ~ parser3 ~ ")")
 
   def function3Dep[A, B, C](
     funcName: String,

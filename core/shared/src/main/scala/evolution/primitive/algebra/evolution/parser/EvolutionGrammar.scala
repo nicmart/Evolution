@@ -119,22 +119,22 @@ class BindingGrammar[R[_], Var, VarName](
 
   // TODO allLet and allApp break Generators
   override def valueOf[T](t: R[T]): R[T] =
-    or(var0, shift(self.valueOf(t)), fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
+    or(var0, shift(self.valueOf(t)), fix(self.function(t, t)), allLetExpressions(self.valueOf(t)), allAppExpressions(t))
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(lambda(variableSyntax, t2), valueOf(self.function(t1, t2)))
 
   private def letExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
-    let(variableSyntax, self.valueOf(t1), self.valueOf(t2))
+    let(variableSyntax, t1, t2)
 
   private def allLetExpressions[T](t: R[T]): R[T] =
     or(all.map(s => letExpression(s, t)): _*)
 
   private def appExpression[T1, T2](t1: R[T1], t2: R[T2]): R[T2] =
-    app(self.function(t1, t2), self.valueOf(t1))
+    app(self.function(t1, t2), t1)
 
   private def allAppExpressions[T](t: R[T]): R[T] =
-    or(all.map(s => appExpression(self.valueOf(s), t)): _*)
+    or(all.map(s => appExpression(s, t)): _*)
 
   private val variableSyntax = syntax.v(())
 }
