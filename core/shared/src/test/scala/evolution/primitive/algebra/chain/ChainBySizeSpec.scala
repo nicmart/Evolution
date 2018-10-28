@@ -2,7 +2,7 @@ package evolution.primitive.algebra.chain
 
 import evolution.generator.instances.GeneratorInstances
 import _root_.evolution.primitive.algebra.chain.generator.ChainGenerator
-import _root_.evolution.primitive.algebra.chain.interpreter.{ChainBySize, ChainSerializer}
+import _root_.evolution.primitive.algebra.chain.interpreter.{ChainBySize, ChainSerializer, ChainSizeEvaluator}
 import _root_.evolution.primitive.algebra.evolution.parser._
 import cats.{Defer, MonoidK, Semigroup}
 import cats.implicits._
@@ -19,28 +19,49 @@ class ChainBySizeSpec
     with TestInterpreters
     with GeneratorInstances
     with GeneratorDrivenPropertyChecks {
-  //val sizeEvaluator = ChainSizeEvaluator
 
   implicit override val generatorDrivenConfig =
     PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 50, maxSize = 10)
 
   "A Sized Chain Interpreter" - {
     "should generate double expressions of the given size" in {
-      forAll(genChainOfDoubles) { chain =>
-        println(s"size ${chain.size}: ${chain.t}")
+      forAll(genChainOfDoubles) { actualSizeWithExpectedSize =>
+        actualSizeWithExpectedSize.size shouldBe actualSizeWithExpectedSize.value
       }
     }
   }
 
-  type S[T] = ConstString[T]
-  type F[T] = ConstString[T]
-  type R[T] = CtxString[T]
+  object TestWithSerialization {
+    type S[T] = ConstString[T]
+    type F[T] = ConstString[T]
+    type R[T] = CtxString[T]
+    val serializer: Chain[S, F, R] = ChainSerializer
+    val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
+      numOfVars => if (size == 0) Generator.pure(vars => "d") else Generator.Fail()
+    val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>
+      numOfVars => if (size == 0) Generator.pure(vars => "p(x,y)") else Generator.Fail()
+  }
 
-  type GenOfSize[T] = GenRepr[Const[?, Int], T]
-  type GenOfSizeBySize[T] = Sized[GenOfSize, T]
+  object TestWithSizeEvaluation {
+    type S[T] = ConstString[T]
+    type F[T] = ConstString[T]
+    type R[T] = Int
+    val interpreter: Chain[S, F, R] = new ChainSizeEvaluator[S, F]
+    val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
+      numOfVars => if (size == 0) Generator.pure(0) else Generator.Fail()
+    val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>
+      numOfVars => if (size == 0) Generator.pure(0) else Generator.Fail()
 
-  val serializer: Chain[ConstString, ConstString, CtxString] = ChainSerializer
-  val generator: Chain[S, F, GenRepr[R, ?]] = new ChainGenerator(serializer)
+    def sizedFunction[T1, T2](
+      t1: Sized[GenRepr[R, ?], T1],
+      t2: Sized[GenRepr[R, ?], T2]
+    ): Sized[GenRepr[R, ?], T1 => T2] =
+      size => numOfVars => Generator.pure(size)
+  }
+
+  import TestWithSizeEvaluation._
+
+  val generator: Chain[S, F, GenRepr[R, ?]] = new ChainGenerator(interpreter)
 
   val sizedGenerator: Chain[S, F, Sized[GenRepr[R, ?], ?]] =
     new ChainBySize[S, F, GenRepr[R, ?]](generator, genOrMonoidK[R])
@@ -54,19 +75,8 @@ class ChainBySizeSpec
 
   val deferGenOfSizeBySize: Defer[Sized[GenRepr[R, ?], ?]] = new Defer[Sized[GenRepr[R, ?], ?]] {
     override def defer[A](fa: => Sized[GenRepr[R, ?], A]): Sized[GenRepr[R, ?], A] =
-      size => deferGenRepr.defer(fa(size))
+      size => deferGenRepr[R].defer(fa(size))
   }
-
-  val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
-    numOfVars => if (size == 0) Generator.pure(vars => "d") else Generator.Fail()
-  val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>
-    numOfVars => if (size == 0) Generator.pure(vars => "p(x,y)") else Generator.Fail()
-
-  def sizedFunction[T1, T2](
-    t1: Sized[GenRepr[R, ?], T1],
-    t2: Sized[GenRepr[R, ?], T2]
-  ): Sized[GenRepr[R, ?], T1 => T2] =
-    size => numOfVars => Generator.pure(vars => s"x -> f($size)")
 
   def expressions(
     chainExprs: ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]]
@@ -100,7 +110,7 @@ class ChainBySizeSpec
 
   val sizedChainOfDoubles: Sized[GenRepr[R, ?], F[Double]] = grammar.evolutionOf[Double](sizedDoubles)
 
-  val genChainOfDoubles = Gen.sized(s => sizedChainOfDoubles(s)(0).underlying.map(_(Nil)).map(ValueWithSize(s, _)))
+  val genChainOfDoubles = Gen.sized(s => sizedChainOfDoubles(s)(0).underlying.map(ValueWithSize(s, _)))
 
-  case class ValueWithSize[T](size: Int, t: T)
+  case class ValueWithSize[T](size: Int, value: T)
 }

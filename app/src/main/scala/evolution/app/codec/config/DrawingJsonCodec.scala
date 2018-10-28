@@ -32,7 +32,11 @@ object DrawingJsonCodec extends JsonCodec[Config] {
               val grammar = EvolutionGrammar.grammar(alg)
               val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
               val parser = algebraParser(Nil)
-              parser.parse(serialized).get.value
+              println("Parse inside config")
+
+              val r = parser.parse(serialized).get.value
+              println(s"This was parsed: $r")
+              r
             }
           })
         }
