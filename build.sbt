@@ -1,8 +1,7 @@
 import WebKeys._
+import sbt.Keys.resolvers
 
-autoCompilerPlugins := true
-resolvers += Resolver.sonatypeRepo("releases")
-addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
+
 
 
 lazy val commonSettings = List(
@@ -10,9 +9,9 @@ lazy val commonSettings = List(
   scalaVersion := "2.12.6",
   version      := "0.1.0-SNAPSHOT",
   scalacOptions += "-Ypartial-unification",
-  libraryDependencies ++= Seq(
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8" cross CrossVersion.binary)
-  )
+  autoCompilerPlugins := true,
+  resolvers += Resolver.sonatypeRepo("releases"),
+  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
 )
 
 lazy val core = crossProject.
@@ -26,8 +25,7 @@ lazy val core = crossProject.
             "org.typelevel" %%% "cats-core" % "1.3.1",
             "com.chuusai" %%% "shapeless" % "2.3.3",
             "org.scalacheck" %%% "scalacheck" % "1.13.4",
-            "com.lihaoyi" %%% "fastparse" % "1.0.0",
-            compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8" cross CrossVersion.binary)
+            "com.lihaoyi" %%% "fastparse" % "1.0.0"
         )
     ).
     jvmSettings(
