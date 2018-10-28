@@ -1,7 +1,6 @@
 import WebKeys._
 import sbt.Keys.resolvers
-
-
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 
 lazy val commonSettings = List(
@@ -14,9 +13,8 @@ lazy val commonSettings = List(
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
 )
 
-lazy val core = crossProject.
+lazy val core = crossProject(JSPlatform, JVMPlatform).
     crossType(CrossType.Full).
-    //in(file("core")).
     settings(
         name := "core",
         inThisBuild(commonSettings),
