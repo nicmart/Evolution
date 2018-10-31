@@ -3,18 +3,20 @@ package evolution.app.codec.config
 import evolution.app.codec.JsonCodec
 import evolution.app.portfolio.dsl.Config
 import evolution.geometry.Point
+import evolution.primitive.algebra.ConstString
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.EvolutionSerializer
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import io.circe.Json
 
 object DrawingJsonCodec extends JsonCodec[Config] {
+  val serializer = new EvolutionSerializer[ConstString, ConstString]
   override def encode(t: Config): Json =
-    Json.fromString(t.run(EvolutionSerializer)(Nil))
+    Json.fromString(t.run(serializer)(Nil))
   // TODO this is rubbish
   // TODO this is awful
   override def decode(r: Json): Option[Config] = {
-    val grammar = EvolutionGrammar.grammar(EvolutionSerializer)
+    val grammar = EvolutionGrammar.grammar(serializer)
     val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
     val stringParser = algebraParser(Nil)
     for {

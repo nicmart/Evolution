@@ -5,7 +5,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.12.6",
+  scalaVersion := "2.12.6", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
   version      := "0.1.0-SNAPSHOT",
   scalacOptions += "-Ypartial-unification",
   autoCompilerPlugins := true,

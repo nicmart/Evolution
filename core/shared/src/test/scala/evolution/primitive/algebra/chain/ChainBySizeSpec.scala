@@ -35,7 +35,7 @@ class ChainBySizeSpec
     type S[T] = ConstString[T]
     type F[T] = ConstString[T]
     type R[T] = CtxString[T]
-    val serializer: Chain[S, F, R] = ChainSerializer
+    val serializer: Chain[S, F, R] = new ChainSerializer
     val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
       numOfVars => if (size == 0) Generator.pure(vars => "d") else Generator.Fail()
     val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>

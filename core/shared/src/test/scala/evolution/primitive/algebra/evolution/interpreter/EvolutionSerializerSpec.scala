@@ -61,7 +61,7 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
   type F[T] = ConstString[T]
   type R[T] = CtxString[T]
 
-  lazy val interpreter: Evolution[S, F, R, Double, String, String] = EvolutionSerializer
+  lazy val interpreter: Evolution[S, F, R, Double, String, String] = new EvolutionSerializer
   lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
   lazy val constantsGen: ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] = constantGrammar(interpreter.constants)
 

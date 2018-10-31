@@ -9,3 +9,9 @@ trait Evolution[S[_], F[_], R[_], D, Var, VarName] {
   val constants: Constants[Composed[R, S, ?], D]
   val bind: Binding[R, Var, VarName]
 }
+
+object Evolution {
+  trait Expr[S[_], F[_], T] {
+    def run[R[_]](alg: Evolution[S, F, R, Double, String, String]): R[T]
+  }
+}

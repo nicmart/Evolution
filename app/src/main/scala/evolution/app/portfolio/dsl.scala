@@ -11,6 +11,7 @@ import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
 import evolution.primitive.algebra
+import evolution.primitive.algebra.{Const, ConstString, CtxString}
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionSerializer}
@@ -20,6 +21,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
+  private val serializer = new EvolutionSerializer[ConstString, ConstString]
 
   trait Config {
     def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]]
@@ -29,21 +31,21 @@ object dsl extends DrawingDefinition[Point] {
     // TODO improve this rubbish
     instance[Config]("drawing config") { (config2Snapshot, children) =>
       val stringSnapshot =
-        config2Snapshot.zoomState[String](config2 => config2.run(EvolutionSerializer)(Nil)) {
-          serialized => previousConfig =>
-            new Config {
-              override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
-                val grammar = EvolutionGrammar.grammar[S, F, R](alg)
-                val parser: noApi.Parser[R[F[Point]]] =
-                  grammar.chain.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
-                parser
-                  .parse(serialized)
-                  .fold((_, _, failure) => { println(failure); previousConfig.run(alg) }, (drawing, _) => drawing)
-              }
+        config2Snapshot.zoomState[String](config2 => config2.run(serializer)(Nil)) { serialized => previousConfig =>
+          new Config {
+            override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
+              val grammar = EvolutionGrammar.grammar[S, F, R](alg)
+              val parser: noApi.Parser[R[F[Point]]] =
+                grammar.chain.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
+              println("Parsing inside configComponent")
+              parser
+                .parse(serialized)
+                .fold((_, _, failure) => { println(failure); previousConfig.run(alg) }, (drawing, _) => drawing)
             }
+          }
         }
       val component: ConfigComponent[String] = instances.textConfig
-      component(stringSnapshot)()
+      component.apply(stringSnapshot)()
     }
   }
 
