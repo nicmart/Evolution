@@ -1,50 +1,45 @@
 package evolution.app.portfolio
 
 import cats.Id
-import cats.kernel.Semigroup
-import evolution.algebra._
+import evolution.algebra.representation.RNGRepr
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
+import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
-import evolution.primitive.algebra
-import evolution.primitive.algebra.{Const, ConstString, CtxString}
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionSerializer}
+import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionExpr, EvolutionSerializer}
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import evolution.random.RNG
-import fastparse.noApi
 import japgolly.scalajs.react.vdom.html_<^._
 
 object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
-  private val serializer = new EvolutionSerializer[ConstString, ConstString]
 
-  trait Config {
-    def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]]
-  }
+  type Expr[T] = Evolution.Expr[Id, RNGRepr, RNGRepr[Point]]
+
+  private val serializer = new EvolutionSerializer[Id, RNGRepr]
+  private val evolutionExpr = new EvolutionExpr[Id, RNGRepr]
+  private val grammar = EvolutionGrammar.grammar(evolutionExpr)
+  private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
+  private val stringParser = algebraParser(Nil)
+
+  case class Config(expr: Expr[Point])
 
   override val configComponent: ConfigComponent[Config] = {
-    // TODO improve this rubbish
     instance[Config]("drawing config") { (config2Snapshot, children) =>
       val stringSnapshot =
-        config2Snapshot.zoomState[String](config2 => config2.run(serializer)(Nil)) { serialized => previousConfig =>
-          new Config {
-            override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
-              val grammar = EvolutionGrammar.grammar[S, F, R](alg)
-              val parser: noApi.Parser[R[F[Point]]] =
-                grammar.chain.evolutionOf(grammar.constants.points)(Semigroup[Point])(Nil)
-              println("Parsing inside configComponent")
-              parser
+        config2Snapshot.zoomState[String](config2 => config2.expr.run(serializer)(Nil)) {
+          serialized => previousConfig =>
+            {
+              println("parsing inside configComponent")
+              stringParser
                 .parse(serialized)
-                .fold((_, _, failure) => { println(failure); previousConfig.run(alg) }, (drawing, _) => drawing)
+                .fold((_, _, failure) => { println(failure); previousConfig }, (drawing, _) => Config(drawing))
             }
-          }
         }
       val component: ConfigComponent[String] = instances.textConfig
       component.apply(stringSnapshot)()
@@ -52,15 +47,14 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   override def stream(ctx: DrawingContext, state: DrawingState[Config]): Stream[Point] =
-    state.config.run(EvolutionEvaluator).get(Nil).unfold(RNG(state.seed))
+    state.config.expr.run(EvolutionEvaluator).get(Nil).unfold(RNG(state.seed))
 
-  val initialConfig: Config = new Config {
-    override def run[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
-      import alg.list._, alg.bind._
-      import alg.constants._
-      fix(lambda("self", cons(point(double(0), double(0)), var0[F[Point]])))
+  val initialConfig: Config = Config(new Expr[Point] {
+    override def run[R[_]](alg: Evolution[Id, RNGRepr, R, Double, String, String]): R[RNGRepr[Point]] = {
+      import alg.list._, alg.bind._, alg.constants._
+      fix(lambda("self", cons(point(double(0), double(0)), var0[RNGRepr[Point]])))
     }
-  }
+  })
 
   override def configCodec: JsonCodec[Config] =
     DrawingJsonCodec

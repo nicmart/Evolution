@@ -10,7 +10,7 @@ import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionSerializer}
 
-class LegacyEvolutionEvaluatorSpec extends FreeSpec with Matchers {
+class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
       def drawing[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Double]] = {
