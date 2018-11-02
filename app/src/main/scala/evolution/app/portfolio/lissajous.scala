@@ -5,14 +5,14 @@ import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.geometry.Point
 import io.circe.generic.auto._
 import cats.instances.double._
 
-object lissajous extends DrawingDefinition[Point] {
+object lissajous extends LegacyDrawingDefinition[Point] {
   val name = "lissajous"
 
   case class Config(a: Double, b: Double, delta: Double, speed: Double)

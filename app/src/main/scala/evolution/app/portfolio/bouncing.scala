@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.instances._
 import cats.implicits._
 import evolution.app.react.component.config.ConfigComponent
@@ -15,7 +15,7 @@ import evolution.app.portfolio.brownian.Config
 import evolution.geometry.Point
 import io.circe.generic.auto._
 
-object bouncing extends DrawingDefinition[Point] {
+object bouncing extends LegacyDrawingDefinition[Point] {
   override val name = "bouncing"
   case class Config(groundLevel: Int, gravity: Double, elasticity: Double, friction: Double, horizontalSpeed: Double)
 

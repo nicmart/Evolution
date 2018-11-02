@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra
 import evolution.geometry.Point
@@ -12,7 +12,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
 
-object circlesOnCircles extends DrawingDefinition[Point] {
+object circlesOnCircles extends LegacyDrawingDefinition[Point] {
   val name = "circles on circles"
 
   case class Config(

@@ -6,7 +6,7 @@ import evolution.algebra._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ConfigComponent, instances}
 import evolution.geometry.Point
@@ -19,7 +19,7 @@ import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import fastparse.noApi
 import japgolly.scalajs.react.vdom.html_<^._
 
-object dsl extends DrawingDefinition[Point] {
+object dsl extends LegacyDrawingDefinition[Point] {
   val name = "drawing dsl"
   private val serializer = new EvolutionSerializer[ConstString, ConstString]
 

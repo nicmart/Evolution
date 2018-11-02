@@ -1,7 +1,7 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.config.instances._
 import evolution.algebra._
@@ -11,7 +11,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 import io.circe.generic.auto._
 
-object brownian extends DrawingDefinition[Point] {
+object brownian extends LegacyDrawingDefinition[Point] {
   val name = "brownian"
   case class Config(radius: Double, order: Int)
 

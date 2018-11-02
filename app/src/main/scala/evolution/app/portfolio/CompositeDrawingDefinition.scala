@@ -4,7 +4,7 @@ import evolution.algebra
 import evolution.algebra.LegacyEvolution
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition}
+import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.{CompositeConfigComponent, ConfigComponent}
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
@@ -13,7 +13,8 @@ import evolution.app.data.PointedSeq
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 
-class CompositeDrawingDefinition(drawings: => PointedSeq[DrawingDefinition[Point]]) extends DrawingDefinition[Point] {
+class CompositeDrawingDefinition(drawings: => PointedSeq[LegacyDrawingDefinition[Point]])
+    extends LegacyDrawingDefinition[Point] {
 
   val name = "combined drawings"
 
@@ -31,8 +32,18 @@ class CompositeDrawingDefinition(drawings: => PointedSeq[DrawingDefinition[Point
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {
       import alg._
       drawOnEvolution(
-        toPhaseSpace(config.drawing1.definition.evolution(config.drawing1.config, context).run),
-        config.drawing2.definition.evolution(config.drawing2.config, context).run
+        toPhaseSpace(
+          config.drawing1.definition
+          // Dirty hack, the problem here is that CompositeDefinitionConfig is used both in DrawingListDefinition,
+          // where we deal with DefinitionLists, and in here, where we deal with LegacyDefinitions.
+            .asInstanceOf[LegacyDrawingDefinition.Aux[Point, config.drawing1.InnerConfig]]
+            .evolution(config.drawing1.config, context)
+            .run
+        ),
+        config.drawing2.definition
+          .asInstanceOf[LegacyDrawingDefinition.Aux[Point, config.drawing2.InnerConfig]]
+          .evolution(config.drawing2.config, context)
+          .run
       )
     }
   }

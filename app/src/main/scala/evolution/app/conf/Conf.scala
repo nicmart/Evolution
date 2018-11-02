@@ -1,6 +1,6 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.portfolio._
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import evolution.algebra.materializer.{Materializer, RNGMaterializer}
@@ -26,7 +26,7 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawings: List[DrawingDefinition[Point]] =
+  lazy val drawings: List[LegacyDrawingDefinition[Point]] =
     List(
       line,
       circle,
@@ -45,12 +45,11 @@ object Conf {
       bouncing,
       lissajous,
       oscillator,
-      dsl,
       new CompositeDrawingDefinition(PointedSeq(drawings, brownian))
     )
 
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(drawings, brownian)
+    PointedSeq(dsl :: drawings, brownian)
 
   lazy val drawingDefinition: DrawingDefinition[Point] =
     new DrawingListDefinition(innerDrawingList)
@@ -95,7 +94,7 @@ object Conf {
   lazy val drawingConfComponent = drawingDefinition.configComponent
 
   lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Stream[Point] =
-    (context, state) => materializer.materialize(state.seed, drawingDefinition.evolution(state.config, context))
+    drawingDefinition.stream
 
   lazy val rendererStateToPointDrawer: (state.RendererState, DrawingContext) => PointDrawer =
     RendererStateToPointDrawer.apply

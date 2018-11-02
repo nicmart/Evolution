@@ -1,20 +1,20 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.algebra.syntax.all._
 import evolution.app.react.component.config.instances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
-import evolution.algebra.{LegacyEvolution, FullAlgebra}
+import evolution.algebra.{FullAlgebra, LegacyEvolution}
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
 
 import scala.collection.immutable.Queue
 import io.circe.generic.auto._
 
-object dynamics extends DrawingDefinition[Point] {
+object dynamics extends LegacyDrawingDefinition[Point] {
   val name = "dynamics"
 
   case class Config(acceleration: Double, friction: Double, numberOfPoints: Int)
