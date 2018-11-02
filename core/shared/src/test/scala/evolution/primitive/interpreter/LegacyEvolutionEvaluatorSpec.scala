@@ -4,7 +4,9 @@ import evolution.random.RNG
 import org.scalatest.{FreeSpec, Matchers}
 import cats.instances.double._
 import cats.kernel.Semigroup
+import evolution.algebra.representation.RNGRepr
 import evolution.geometry.Point
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionSerializer}
 
@@ -15,7 +17,7 @@ class LegacyEvolutionEvaluatorSpec extends FreeSpec with Matchers {
         import alg.list._, alg.bind._, alg.constants._
         fix(lambda("x", cons(double(1), var0[F[Double]])))
       }
-      val stream = drawing(interpreter).get(Nil)
+      val stream = materialize(drawing(interpreter))
       stream.take(10).toList shouldBe List.fill(10)(1.0)
     }
 
@@ -32,7 +34,7 @@ class LegacyEvolutionEvaluatorSpec extends FreeSpec with Matchers {
           double(0)
         )
       }
-      val stream = drawing(interpreter).get(Nil)
+      val stream = materialize(drawing(interpreter))
       stream.take(10).toList shouldBe List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     }
 
@@ -83,17 +85,13 @@ class LegacyEvolutionEvaluatorSpec extends FreeSpec with Matchers {
         app(app(integrate[S, F, R, Double](alg), double(100)), constant(alg))
       }
 
-      def drawing2[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
-        import alg.list._, alg.bind._, alg.constants._
-        app(app(integrate[S, F, R, Point](alg), point(double(1), double(1))), constant2(alg))
-      }
-
-      //println(drawing2(EvolutionAlgebraSerializer)(Nil))
-
-      val stream = drawing(interpreter).get(Nil)
+      val stream = materialize(drawing(interpreter))
       stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)
     }
 
-    lazy val interpreter = new EvolutionEvaluator[Stream](new StreamInterpreter)
+    def materialize[T](evaluationResult: EvaluationResult[RNGRepr[T]]): Stream[T] =
+      evaluationResult.get(Nil).unfold(RNG(0L))
+
+    lazy val interpreter = EvolutionEvaluator
   }
 }

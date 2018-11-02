@@ -1,7 +1,8 @@
 package evolution.primitive.algebra.constants.interpreter
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.binding.interpreter.{EvaluationResult, Value}
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult._
 import evolution.primitive.algebra.constants.Constants
 import cats.syntax.semigroup._
 
