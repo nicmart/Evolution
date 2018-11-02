@@ -13,17 +13,19 @@ import evolution.app.data.PointedSeq
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 
-class CompositeDrawingDefinition(drawings: PointedSeq[DrawingDefinition[Point]]) extends DrawingDefinition[Point] {
+class CompositeDrawingDefinition(drawings: => PointedSeq[DrawingDefinition[Point]]) extends DrawingDefinition[Point] {
 
   val name = "combined drawings"
 
   case class Config(drawing1: CompositeDefinitionConfig[Point], drawing2: CompositeDefinitionConfig[Point])
 
-  override def initialConfig =
+  override def initialConfig = {
+    val initialSelected = drawings.selected
     Config(
-      CompositeDefinitionConfig(drawings.selected.initialConfig, drawings.selected),
-      CompositeDefinitionConfig(drawings.selected.initialConfig, drawings.selected)
+      CompositeDefinitionConfig[Point, initialSelected.Config](initialSelected.initialConfig, initialSelected),
+      CompositeDefinitionConfig[Point, initialSelected.Config](initialSelected.initialConfig, initialSelected)
     )
+  }
 
   class ThisEvolution(config: Config, context: DrawingContext) extends LegacyEvolution[Point] {
     override def run[Evo[+ _]](implicit alg: algebra.FullAlgebra[Evo]): Evo[Point] = {

@@ -26,8 +26,9 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawings: Stream[DrawingDefinition[Point]] =
-    line #:: Stream(
+  lazy val drawings: List[DrawingDefinition[Point]] =
+    List(
+      line,
       circle,
       segments,
       brownian,
@@ -49,10 +50,7 @@ object Conf {
     )
 
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(
-      drawings,
-      brownian
-    )
+    PointedSeq(drawings, brownian)
 
   lazy val drawingDefinition: DrawingDefinition[Point] =
     new DrawingListDefinition(innerDrawingList)
@@ -76,29 +74,18 @@ object Conf {
 
   lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage[DrawingConfig], String] =
     pageDrawingCodec >>
-    pageStateCodec >>
-    JsonStringCodec >>
-    StringByteCodec >>
-    Base64Codec
+      pageStateCodec >>
+      JsonStringCodec >>
+      StringByteCodec >>
+      Base64Codec
 
   lazy val urlDelimiter = "#"
 
   lazy val initialPage: MyPages[DrawingConfig] =
     LoadDrawingPage(
       PageState(
-        DrawingState(
-          Random.nextLong(),
-          drawingDefinition.initialConfig
-        ),
-        RendererState(
-          1000,
-          1,
-          TrailSettings(
-            false,
-            0.12
-          ),
-          TorusCanvas
-        )
+        DrawingState(Random.nextLong(), drawingDefinition.initialConfig),
+        RendererState(1000, 1, TrailSettings(false, 0.12), TorusCanvas)
       )
     )
 
@@ -123,21 +110,10 @@ object Conf {
     Page.component[DrawingConfig](drawingConfComponent, canvasComponent)
 
   lazy val appComponent: App.ReactComponent[DrawingConfig] =
-    App.component[DrawingConfig](
-      points,
-      canvasInitializer,
-      initialRateCounter,
-      pageComponent
-    )
-
+    App.component[DrawingConfig](points, canvasInitializer, initialRateCounter, pageComponent)
 
   lazy val routingConfig: Routing[DrawingConfig] =
-    new Routing(
-      urlDelimiter,
-      appComponent,
-      initialPage,
-      loadDrawingPageStringCodec
-    )
+    new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageStringCodec)
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)
