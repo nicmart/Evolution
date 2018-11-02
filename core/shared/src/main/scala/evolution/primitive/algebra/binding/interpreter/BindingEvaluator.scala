@@ -1,4 +1,5 @@
 package evolution.primitive.algebra.binding.interpreter
+import cats.Applicative
 import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
 
@@ -39,5 +40,14 @@ object BindingEvaluator extends Binding[EvaluationResult, String, String] {
 sealed trait EvaluationResult[T] {
   def get: Ctx[T]
 }
+
+object EvaluationResult {
+  implicit val applicative: Applicative[EvaluationResult] = new Applicative[EvaluationResult] {
+    override def pure[A](x: A): EvaluationResult[A] = Value(_ => x)
+    override def ap[A, B](ff: EvaluationResult[A => B])(fa: EvaluationResult[A]): EvaluationResult[B] =
+      BindingEvaluator.app(ff, fa)
+  }
+}
+
 case class Lambda[A, B](term: EvaluationResult[B], get: Ctx[A => B]) extends EvaluationResult[A => B]
 case class Value[A](get: Ctx[A]) extends EvaluationResult[A]
