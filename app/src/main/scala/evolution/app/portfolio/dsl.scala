@@ -19,10 +19,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
-  type Expr[T] = Evolution.Expr[Id, RNGRepr, RNGRepr[Point]]
+  type Expr[T] = Evolution.Expr[RNGRepr, RNGRepr[Point]]
 
-  private val serializer = new EvolutionSerializer[Id, RNGRepr]
-  private val evolutionExpr = new EvolutionExpr[Id, RNGRepr]
+  private val serializer = new EvolutionSerializer[RNGRepr]
+  private val evolutionExpr = new EvolutionExpr[RNGRepr]
   private val grammar = EvolutionGrammar.grammar(evolutionExpr)
   private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
   private val stringParser = algebraParser(Nil)
@@ -50,7 +50,7 @@ object dsl extends DrawingDefinition[Point] {
     state.config.expr.run(EvolutionEvaluator).get(Nil).unfold(RNG(state.seed))
 
   val initialConfig: Config = Config(new Expr[Point] {
-    override def run[R[_]](alg: Evolution[Id, RNGRepr, R, Double, String, String]): R[RNGRepr[Point]] = {
+    override def run[R[_]](alg: Evolution[RNGRepr, R, Double, String, String]): R[RNGRepr[Point]] = {
       import alg.list._, alg.bind._, alg.constants._
       fix(lambda("self", cons(point(double(0), double(0)), var0[RNGRepr[Point]])))
     }

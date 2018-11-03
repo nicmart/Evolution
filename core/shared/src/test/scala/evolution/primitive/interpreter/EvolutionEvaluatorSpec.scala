@@ -13,7 +13,7 @@ import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, Ev
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
-      def drawing[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
         import alg.list._, alg.bind._, alg.constants._
         fix(lambda("x", cons(double(1), var0[F[Double]])))
       }
@@ -22,14 +22,11 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should create an evolution of the sequence of integers" in {
-      def drawing[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
         import alg.list._, alg.bind._, alg.constants._
-        app[S[Double], F[Double]](
+        app[Double, F[Double]](
           fix(
-            lambda(
-              "f",
-              lambda("s", cons(var0, app(shift(var0[S[Double] => F[Double]]), add(var0[S[Double]], double(1)))))
-            )
+            lambda("f", lambda("s", cons(var0, app(shift(var0[Double => F[Double]]), add(var0[Double], double(1))))))
           ),
           double(0)
         )
@@ -39,13 +36,11 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able to express integrations" in {
-      def integrate[S[_], F[_], R[_], T: Semigroup](
-        alg: Evolution[S, F, R, Double, String, String]
-      ): R[S[T] => F[T] => F[T]] = {
+      def integrate[F[_], R[_], T: Semigroup](alg: Evolution[F, R, Double, String, String]): R[T => F[T] => F[T]] = {
         import alg.list._, alg.bind._, alg.constants._
         def varN[A](n: Int): R[A] = if (n <= 0) var0[A] else shift(varN(n - 1))
 
-        fix[S[T] => F[T] => F[T]](
+        fix[T => F[T] => F[T]](
           lambda(
             "self",
             lambda(
@@ -57,10 +52,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
                     "h",
                     lambda(
                       "t",
-                      cons(
-                        varN[S[T]](3),
-                        app(app(varN[S[T] => F[T] => F[T]](4), add(varN[S[T]](3), varN[S[T]](1))), var0[F[T]])
-                      )
+                      cons(varN[T](3), app(app(varN[T => F[T] => F[T]](4), add(varN[T](3), varN[T](1))), var0[F[T]]))
                     )
                   )
                 )
@@ -70,19 +62,19 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         )
       }
 
-      def constant[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Double]] = {
+      def constant[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
         import alg.list._, alg.bind._, alg.constants._
         fix[F[Double]](lambda("self", cons(double(1), var0[F[Double]])))
       }
 
-      def constant2[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Point]] = {
+      def constant2[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] = {
         import alg.list._, alg.bind._, alg.constants._
         fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
       }
 
-      def drawing[S[_], F[_], R[_]](alg: Evolution[S, F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
         import alg.list._, alg.bind._, alg.constants._
-        app(app(integrate[S, F, R, Double](alg), double(100)), constant(alg))
+        app(app(integrate[F, R, Double](alg), double(100)), constant(alg))
       }
 
       val stream = materialize(drawing(interpreter))

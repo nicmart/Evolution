@@ -57,45 +57,37 @@ class EvolutionSerializerSpec extends FreeSpec with Matchers with GeneratorDrive
   lazy val pointsGen = constantsGen.constantOf[Point](constantsGen.points)(Semigroup[Point])(0).underlying
   lazy val doubleEvolutionGen = gen.chain.evolutionOf[Double](gen.constants.doubles)(Semigroup[Double])(0).underlying
 
-  type S[T] = ConstString[T]
   type F[T] = ConstString[T]
   type R[T] = CtxString[T]
 
-  lazy val interpreter: Evolution[S, F, R, Double, String, String] = new EvolutionSerializer
-  lazy val gen: EvolutionExpressions[S, F, GenRepr[R, ?]] = grammar(interpreter)
-  lazy val constantsGen: ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] = constantGrammar(interpreter.constants)
+  lazy val interpreter: Evolution[F, R, Double, String, String] = new EvolutionSerializer
+  lazy val gen: EvolutionExpressions[F, GenRepr[R, ?]] = grammar(interpreter)
+  lazy val constantsGen: ConstantsExpressions[GenRepr[R, ?]] = constantGrammar(interpreter.constants)
 
-  def constantGrammar[S[_], R[_]](
-    alg: Constants[Composed[R, S, ?], Double]
-  ): ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] =
-    constantGrammarRec[S, R](
+  def constantGrammar[R[_]](alg: Constants[R, Double]): ConstantsExpressions[GenRepr[R, ?]] =
+    constantGrammarRec[R](
       alg,
-      new parser.ConstantsExpressions.Lazy[Composed[GenRepr[R, ?], S, ?]](
-        constantGrammar(alg),
-        deferGenRepr[Composed[R, S, ?]]
-      )
+      new parser.ConstantsExpressions.Lazy[GenRepr[R, ?]](constantGrammar(alg), deferGenRepr[R])
     )
 
-  private def constantGrammarRec[S[_], R[_]](
-    alg: Constants[Composed[R, S, ?], Double],
-    self: ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]]
-  ): ConstantsExpressions[Composed[GenRepr[R, ?], S, ?]] = {
-    val constantsGenerator = new ConstantsGenerator[Composed[R, S, ?]](alg)
-    new ConstantsGrammar[Composed[GenRepr[R, ?], S, ?]](self, constantsGenerator, genOrMonoidK[Composed[R, S, ?]])
+  private def constantGrammarRec[R[_]](
+    alg: Constants[R, Double],
+    self: ConstantsExpressions[GenRepr[R, ?]]
+  ): ConstantsExpressions[GenRepr[R, ?]] = {
+    val constantsGenerator = new ConstantsGenerator[R](alg)
+    new ConstantsGrammar[GenRepr[R, ?]](self, constantsGenerator, genOrMonoidK[R])
   }
 
-  def grammar[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, Double, String, String]
-  ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
-    parserGrammarRec[S, F, R](alg, new Lazy[S, F, GenRepr[R, ?]](grammar(alg), deferGenRepr[R]))
+  def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, GenRepr[R, ?]] = {
+    parserGrammarRec[F, R](alg, new Lazy[F, GenRepr[R, ?]](grammar(alg), deferGenRepr[R]))
   }
 
-  private def parserGrammarRec[S[_], F[_], R[_]](
-    alg: Evolution[S, F, R, Double, String, String],
-    self: EvolutionExpressions[S, F, GenRepr[R, ?]]
-  ): EvolutionExpressions[S, F, GenRepr[R, ?]] = {
-    val evolutionGenerator = new EvolutionGenerator[S, F, R, String](alg)
-    new EvolutionGrammar[S, F, GenRepr[R, ?], Generator[String]](
+  private def parserGrammarRec[F[_], R[_]](
+    alg: Evolution[F, R, Double, String, String],
+    self: EvolutionExpressions[F, GenRepr[R, ?]]
+  ): EvolutionExpressions[F, GenRepr[R, ?]] = {
+    val evolutionGenerator = new EvolutionGenerator[F, R, String](alg)
+    new EvolutionGrammar[F, GenRepr[R, ?], Generator[String]](
       self,
       evolutionGenerator,
       Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString)),

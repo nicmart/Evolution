@@ -4,12 +4,12 @@ import evolution.primitive.algebra.{Composed, GenRepr}
 import evolution.primitive.algebra.chain.Chain
 import org.scalacheck.Gen
 
-class ChainGenerator[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, GenRepr[R, ?]] {
+class ChainGenerator[F[_], R[_]](alg: Chain[F, R]) extends Chain[F, GenRepr[R, ?]] {
 
   override def empty[A]: GenRepr[R, F[A]] =
     _ => Generator.pure[R[F[A]]](alg.empty)
 
-  override def cons[A](genHead: GenRepr[R, S[A]], genTail: GenRepr[R, F[A]]): GenRepr[R, F[A]] =
+  override def cons[A](genHead: GenRepr[R, A], genTail: GenRepr[R, F[A]]): GenRepr[R, F[A]] =
     n =>
       for {
         head <- resized(genHead(n))
@@ -23,7 +23,7 @@ class ChainGenerator[S[_], F[_], R[_]](alg: Chain[S, F, R]) extends Chain[S, F, 
         a2 <- resized(gen2(n))
       } yield alg.mapEmpty(a1, a2)
 
-  override def mapCons[A, B](genA: GenRepr[R, F[A]])(genFunc: GenRepr[R, S[A] => F[A] => F[B]]): GenRepr[R, F[B]] =
+  override def mapCons[A, B](genA: GenRepr[R, F[A]])(genFunc: GenRepr[R, A => F[A] => F[B]]): GenRepr[R, F[B]] =
     n =>
       for {
         a <- resized(genA(n))

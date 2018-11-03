@@ -7,7 +7,7 @@ import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, Evolu
 import org.scalatest.{FreeSpec, Matchers}
 
 class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 
   "An Evolution Grammar" - {
@@ -152,10 +152,7 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
       .get
       .value
 
-  def parseConstantOfDoubles(
-    serializedExpression: String,
-    currentVars: List[String] = Nil
-  ): Binding[Constant[Double]] = {
+  def parseConstantOfDoubles(serializedExpression: String, currentVars: List[String] = Nil): Binding[Double] = {
     expressions.constants
       .constantOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
       .parse(serializedExpression)
@@ -163,7 +160,7 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
       .value
   }
 
-  def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Constant[Point]] =
+  def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Point] =
     expressions.constants
       .constantOf(expressions.constants.points)(Semigroup[Point])(currentVars)
       .parse(serializedExpression)
@@ -172,6 +169,6 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: EvolutionExpressions[Constant, ListExpr, BindingParser] =
+  def expressions: EvolutionExpressions[ListExpr, BindingParser] =
     EvolutionGrammar.grammar(EvolutionAlgebraTestInterpreter)
 }

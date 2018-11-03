@@ -32,24 +32,22 @@ class ChainBySizeSpec
   }
 
   object TestWithSerialization {
-    type S[T] = ConstString[T]
     type F[T] = ConstString[T]
     type R[T] = CtxString[T]
-    val serializer: Chain[S, F, R] = new ChainSerializer
-    val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
+    val serializer: Chain[F, R] = new ChainSerializer
+    val sizedDoubles: Sized[GenRepr[R, ?], Double] = size =>
       numOfVars => if (size == 0) Generator.pure(vars => "d") else Generator.Fail()
-    val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>
+    val sizedPoints: Sized[GenRepr[R, ?], Point] = size =>
       numOfVars => if (size == 0) Generator.pure(vars => "p(x,y)") else Generator.Fail()
   }
 
   object TestWithSizeEvaluation {
-    type S[T] = ConstString[T]
     type F[T] = ConstString[T]
     type R[T] = Int
-    val interpreter: Chain[S, F, R] = new ChainSizeEvaluator[S, F]
-    val sizedDoubles: Sized[GenRepr[R, ?], S[Double]] = size =>
+    val interpreter: Chain[F, R] = new ChainSizeEvaluator[F]
+    val sizedDoubles: Sized[GenRepr[R, ?], Double] = size =>
       numOfVars => if (size == 0) Generator.pure(0) else Generator.Fail()
-    val sizedPoints: Sized[GenRepr[R, ?], S[Point]] = size =>
+    val sizedPoints: Sized[GenRepr[R, ?], Point] = size =>
       numOfVars => if (size == 0) Generator.pure(0) else Generator.Fail()
 
     def sizedFunction[T1, T2](
@@ -61,10 +59,10 @@ class ChainBySizeSpec
 
   import TestWithSizeEvaluation._
 
-  val generator: Chain[S, F, GenRepr[R, ?]] = new ChainGenerator(interpreter)
+  val generator: Chain[F, GenRepr[R, ?]] = new ChainGenerator(interpreter)
 
-  val sizedGenerator: Chain[S, F, Sized[GenRepr[R, ?], ?]] =
-    new ChainBySize[S, F, GenRepr[R, ?]](generator, genOrMonoidK[R])
+  val sizedGenerator: Chain[F, Sized[GenRepr[R, ?], ?]] =
+    new ChainBySize[F, GenRepr[R, ?]](generator, genOrMonoidK[R])
 
   val orMonoidGenOfSizeBySize: MonoidK[Sized[GenRepr[R, ?], ?]] = new MonoidK[Sized[GenRepr[R, ?], ?]] {
     override def empty[A]: Sized[GenRepr[R, ?], A] =
@@ -79,16 +77,14 @@ class ChainBySizeSpec
   }
 
   def expressions(
-    chainExprs: ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]]
-  ): EvolutionExpressions[S, F, Sized[GenRepr[R, ?], ?]] = new EvolutionExpressions[S, F, Sized[GenRepr[R, ?], ?]] {
-    override def chain: ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]] = chainExprs
-    override def constants: ConstantsExpressions[Composed[Sized[GenRepr[R, ?], ?], S, ?]] =
-      new ConstantsExpressions[Composed[Sized[GenRepr[R, ?], ?], S, ?]] {
-        override def constantOf[T: Semigroup](
-          constant: Composed[Sized[GenRepr[R, ?], ?], S, T]
-        ): Composed[Sized[GenRepr[R, ?], ?], S, T] = constant
-        override def points: Sized[GenRepr[R, ?], S[Point]] = sizedDoubles
-        override def doubles: Sized[GenRepr[R, ?], S[Double]] = sizedPoints
+    chainExprs: ChainExpressions[F, Sized[GenRepr[R, ?], ?]]
+  ): EvolutionExpressions[F, Sized[GenRepr[R, ?], ?]] = new EvolutionExpressions[F, Sized[GenRepr[R, ?], ?]] {
+    override def chain: ChainExpressions[F, Sized[GenRepr[R, ?], ?]] = chainExprs
+    override def constants: ConstantsExpressions[Sized[GenRepr[R, ?], ?]] =
+      new ConstantsExpressions[Sized[GenRepr[R, ?], ?]] {
+        override def constantOf[T: Semigroup](constant: Sized[GenRepr[R, ?], T]): Sized[GenRepr[R, ?], T] = constant
+        override def points: Sized[GenRepr[R, ?], Point] = sizedDoubles
+        override def doubles: Sized[GenRepr[R, ?], Double] = sizedPoints
       }
     override def binding: BindingExpressions[Sized[GenRepr[R, ?], ?]] =
       new BindingExpressions[Sized[GenRepr[R, ?], ?]] {
@@ -100,13 +96,11 @@ class ChainBySizeSpec
       }
   }
 
-  def grammarRec(
-    self: ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]]
-  ): ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]] =
-    new ChainGrammar[S, F, Sized[GenRepr[R, ?], ?]](expressions(self), sizedGenerator, orMonoidGenOfSizeBySize)
+  def grammarRec(self: ChainExpressions[F, Sized[GenRepr[R, ?], ?]]): ChainExpressions[F, Sized[GenRepr[R, ?], ?]] =
+    new ChainGrammar[F, Sized[GenRepr[R, ?], ?]](expressions(self), sizedGenerator, orMonoidGenOfSizeBySize)
 
-  val grammar: ChainExpressions[S, F, Sized[GenRepr[R, ?], ?]] =
-    grammarRec(new ChainExpressions.Lazy[S, F, Sized[GenRepr[R, ?], ?]](grammar, deferGenOfSizeBySize))
+  val grammar: ChainExpressions[F, Sized[GenRepr[R, ?], ?]] =
+    grammarRec(new ChainExpressions.Lazy[F, Sized[GenRepr[R, ?], ?]](grammar, deferGenOfSizeBySize))
 
   val sizedChainOfDoubles: Sized[GenRepr[R, ?], F[Double]] = grammar.evolutionOf[Double](sizedDoubles)
 

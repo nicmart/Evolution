@@ -10,7 +10,7 @@ import evolution.primitive.algebra.evolution.parser.{ConstantsExpressions, Evolu
 import org.scalatest.{FreeSpec, Matchers}
 
 class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.constants._
 
   "A ScalarAlgebraParser should parse" - {
@@ -42,13 +42,13 @@ class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: ConstantsExpressions[Composed[BindingParser, Constant, ?]] =
+  def expressions: ConstantsExpressions[BindingParser] =
     EvolutionGrammar.grammar(interpreter).constants
 
-  private def unsafeParseDouble(serializedExpression: String): Binding[Constant[Double]] = {
+  private def unsafeParseDouble(serializedExpression: String): Binding[Double] = {
     expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
   }
 
-  private def unsafeParsePoint(serializedExpression: String): Binding[Constant[Point]] =
+  private def unsafeParsePoint(serializedExpression: String): Binding[Point] =
     expressions.constantOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
 }

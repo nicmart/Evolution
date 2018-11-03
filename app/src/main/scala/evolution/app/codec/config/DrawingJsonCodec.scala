@@ -11,8 +11,8 @@ import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, Evolu
 import io.circe.Json
 
 object DrawingJsonCodec extends JsonCodec[Config] {
-  private val serializer = new EvolutionSerializer[Id, RNGRepr]
-  private val evolutionExpr = new EvolutionExpr[Id, RNGRepr]
+  private val serializer = new EvolutionSerializer[RNGRepr]
+  private val evolutionExpr = new EvolutionExpr[RNGRepr]
   private val grammar = EvolutionGrammar.grammar(evolutionExpr)
   private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
   private val stringParser = algebraParser(Nil)
@@ -26,6 +26,6 @@ object DrawingJsonCodec extends JsonCodec[Config] {
       _ = println("Parsing inside Json Codec")
       expr <- stringParser
         .parse(serialized)
-        .fold[Option[Evolution.Expr[Id, RNGRepr, RNGRepr[Point]]]]((_, _, _) => None, (expr, _) => Some(expr))
+        .fold[Option[Evolution.Expr[RNGRepr, RNGRepr[Point]]]]((_, _, _) => None, (expr, _) => Some(expr))
     } yield Config(expr)
 }

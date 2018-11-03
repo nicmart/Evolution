@@ -18,23 +18,18 @@ trait TestInterpreters {
   case class App[A, B](f: Binding[A => B], a: Binding[A]) extends Binding[B]
   case class Fix[A](expr: Binding[A => A]) extends Binding[A]
 
-  sealed trait Constant[A]
-  case class Value[T](value: T) extends Constant[T]
-  case class PointConstant(x: Binding[Constant[Double]], y: Binding[Constant[Double]]) extends Constant[Point]
-  case class Add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]) extends Constant[T]
+  case class Value[T](value: T) extends Binding[T]
+  case class PointConstant(x: Binding[Double], y: Binding[Double]) extends Binding[Point]
+  case class Add[T: Semigroup](a: Binding[T], b: Binding[T]) extends Binding[T]
 
   sealed trait ListExpr[A]
   case class Empty[A]() extends ListExpr[A]
-  case class Cons[A](head: Binding[Constant[A]], tail: Binding[ListExpr[A]]) extends ListExpr[A]
+  case class Cons[A](head: Binding[A], tail: Binding[ListExpr[A]]) extends ListExpr[A]
   case class MapEmpty[A](eva: Binding[ListExpr[A]], eva2: Binding[ListExpr[A]]) extends ListExpr[A]
-  case class MapCons[A, B](eva: Binding[ListExpr[A]], f: Binding[Constant[A] => ListExpr[A] => ListExpr[B]])
-      extends ListExpr[B]
+  case class MapCons[A, B](eva: Binding[ListExpr[A]], f: Binding[A => ListExpr[A] => ListExpr[B]]) extends ListExpr[B]
 
-  implicit def liftToConstant[T](t: T): Constant[T] = Value(t)
   implicit def liftToBinding[T](t: T): Binding[T] = Lift(t)
   implicit def liftListExprToBinding[T](t: ListExpr[T]): Binding[ListExpr[T]] = Lift(t)
-  implicit def liftConstantToBinding[T](t: Constant[T]): Binding[Constant[T]] = Lift(t)
-  implicit def liftToBindingConstant[T](t: T): Binding[Constant[T]] = Lift(Value(t))
   def unlift[T](binding: Binding[T]): T = binding match {
     case Lift(t) => t
   }
@@ -49,28 +44,28 @@ trait TestInterpreters {
     override def fix[A](expr: Binding[A => A]): Binding[A] = Fix(expr)
   }
 
-  object ConstantsTestInterpreter extends Constants[Composed[Binding, Constant, ?], Double] {
-    override def double(d: Double): Binding[Constant[Double]] = d
-    override def point(x: Binding[Constant[Double]], y: Binding[Constant[Double]]): Binding[Constant[Point]] =
+  object ConstantsTestInterpreter extends Constants[Binding, Double] {
+    override def double(d: Double): Binding[Double] = d
+    override def point(x: Binding[Double], y: Binding[Double]): Binding[Point] =
       PointConstant(x, y)
-    override def add[T: Semigroup](a: Binding[Constant[T]], b: Binding[Constant[T]]): Binding[Constant[T]] = Add(a, b)
+    override def add[T: Semigroup](a: Binding[T], b: Binding[T]): Binding[T] = Add(a, b)
   }
 
-  object ChainTestInterpreter extends Chain[Constant, ListExpr, Binding] {
+  object ChainTestInterpreter extends Chain[ListExpr, Binding] {
     override def empty[A]: Binding[ListExpr[A]] = Empty[A]()
-    override def cons[A](head: Binding[Constant[A]], tail: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
+    override def cons[A](head: Binding[A], tail: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       Cons(head, tail)
     override def mapEmpty[A](eva: Binding[ListExpr[A]], eva2: Binding[ListExpr[A]]): Binding[ListExpr[A]] =
       MapEmpty(eva, eva2)
     override def mapCons[A, B](
       eva: Binding[ListExpr[A]]
-    )(f: Binding[Constant[A] => ListExpr[A] => ListExpr[B]]): Binding[ListExpr[B]] =
+    )(f: Binding[A => ListExpr[A] => ListExpr[B]]): Binding[ListExpr[B]] =
       MapCons(eva, f)
   }
 
-  object EvolutionAlgebraTestInterpreter extends Evolution[Constant, ListExpr, Binding, Double, String, String] {
-    override val list: Chain[Constant, ListExpr, Binding] = ChainTestInterpreter
-    override val constants: Constants[Composed[Binding, Constant, ?], Double] = ConstantsTestInterpreter
+  object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {
+    override val list: Chain[ListExpr, Binding] = ChainTestInterpreter
+    override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
   }
 }

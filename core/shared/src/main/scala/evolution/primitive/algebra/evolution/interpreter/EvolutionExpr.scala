@@ -9,8 +9,8 @@ import evolution.primitive.algebra.constants.interpreter.ConstantsExpr
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
 
-class EvolutionExpr[S[_], F[_]] extends Evolution[S, F, Expr[S, F, ?], Double, String, String] {
-  override val list: Chain[S, F, Expr[S, F, ?]] = new ChainExpr[S, F]
-  override val constants: Constants[Composed[Expr[S, F, ?], S, ?], Double] = new ConstantsExpr[S, F]
-  override val bind: Binding[Expr[S, F, ?], String, String] = new BindingExpr[S, F]
+class EvolutionExpr[F[_]] extends Evolution[F, Expr[F, ?], Double, String, String] {
+  override val list: Chain[F, Expr[F, ?]] = new ChainExpr[F]
+  override val constants: Constants[Expr[F, ?], Double] = new ConstantsExpr[F]
+  override val bind: Binding[Expr[F, ?], String, String] = new BindingExpr[F]
 }

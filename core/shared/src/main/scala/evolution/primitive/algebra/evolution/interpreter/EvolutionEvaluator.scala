@@ -13,8 +13,8 @@ import evolution.primitive.algebra.constants.interpreter.ConstantsEvaluator
 import evolution.primitive.algebra.evolution.Evolution
 
 // Generic TODO: Make sure we do as much as possible outside the closures
-object EvolutionEvaluator extends Evolution[Id, RNGRepr, EvaluationResult, Double, String, String] {
-  override val list: Chain[Id, RNGRepr, EvaluationResult] = ChainEvaluator
+object EvolutionEvaluator extends Evolution[RNGRepr, EvaluationResult, Double, String, String] {
+  override val list: Chain[RNGRepr, EvaluationResult] = ChainEvaluator
   override val constants: Constants[EvaluationResult, Double] = ConstantsEvaluator
   override val bind: Binding[EvaluationResult, String, String] = BindingEvaluator
 }

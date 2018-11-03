@@ -2,7 +2,7 @@ package evolution.primitive.algebra.chain.interpreter
 import evolution.primitive.algebra.{ConstString, CtxString}
 import evolution.primitive.algebra.chain.Chain
 
-class ChainSerializer[S[_], F[_]] extends Chain[S, F, CtxString] {
+class ChainSerializer[F[_]] extends Chain[F, CtxString] {
   override def empty[A]: CtxString[A] =
     _ => "empty"
   override def cons[A](head: CtxString[A], tail: CtxString[A]): CtxString[A] =

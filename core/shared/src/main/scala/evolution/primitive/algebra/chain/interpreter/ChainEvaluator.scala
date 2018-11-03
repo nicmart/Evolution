@@ -6,7 +6,7 @@ import evolution.primitive.algebra.binding.interpreter.EvaluationResult.Value
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.Wip.ChainEvaluatorId
 
-object ChainEvaluator extends Chain[Id, RNGRepr, EvaluationResult] {
+object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
 
   override def empty[A]: EvaluationResult[RNGRepr[A]] = Value { ctx =>
     RNGRepr { rng =>
@@ -50,12 +50,12 @@ object ChainEvaluator extends Chain[Id, RNGRepr, EvaluationResult] {
 // TODO change name to Evaluator
 // TODO EvaluationResult applicative instance makes the implementation stackoverflow
 sealed abstract class ChainEvaluatorApplicative
-    extends ChainApplicative[Id, RNGRepr, Id, EvaluationResult](new ChainEvaluatorId)
+    extends ChainApplicative[RNGRepr, Id, EvaluationResult](new ChainEvaluatorId)
 
 object Wip {
-  def apply(): Chain[Id, RNGRepr, EvaluationResult] = new ChainEvaluatorApplicative {}
+  def apply(): Chain[RNGRepr, EvaluationResult] = new ChainEvaluatorApplicative {}
 
-  private[chain] class ChainEvaluatorId extends Chain[Id, RNGRepr, Id] {
+  private[chain] class ChainEvaluatorId extends Chain[RNGRepr, Id] {
 
     override def empty[A]: RNGRepr[A] = RNGRepr { rng =>
       (rng, None)

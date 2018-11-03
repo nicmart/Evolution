@@ -9,7 +9,7 @@ import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
 
 class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
-  val interpreter: Evolution[Constant, ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
 
   "A CoreDrawingAlgebraParser" - {
@@ -45,16 +45,16 @@ class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with 
     }
   }
 
-  def constantFunc[A, B](b: Binding[ListExpr[B]]): Binding[Constant[A] => ListExpr[A] => ListExpr[B]] =
+  def constantFunc[A, B](b: Binding[ListExpr[B]]): Binding[A => ListExpr[A] => ListExpr[B]] =
     Lift(ConstantMapConsFunc[A, B](b))
 
-  case class ConstantMapConsFunc[A, B](b: Binding[ListExpr[B]]) extends (Constant[A] => (ListExpr[A] => ListExpr[B])) {
-    def apply(x: Constant[A]): ListExpr[A] => ListExpr[B] = ???
+  case class ConstantMapConsFunc[A, B](b: Binding[ListExpr[B]]) extends (A => (ListExpr[A] => ListExpr[B])) {
+    def apply(x: A): ListExpr[A] => ListExpr[B] = ???
   }
 
   type BindingParser[T] = ByVarParser[Binding, T]
 
-  def expressions: EvolutionExpressions[Constant, ListExpr, ByVarParser[Binding, ?]] =
+  def expressions: EvolutionExpressions[ListExpr, ByVarParser[Binding, ?]] =
     EvolutionGrammar.grammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
