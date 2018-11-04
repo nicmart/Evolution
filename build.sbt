@@ -8,6 +8,7 @@ lazy val commonSettings = List(
   scalaVersion := "2.12.6", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
   version      := "0.1.0-SNAPSHOT",
   scalacOptions += "-Ypartial-unification",
+  Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
