@@ -2,16 +2,15 @@ package evolution.primitive.algebra.evolution.parser
 
 import cats.{Defer, MonoidK, Semigroup}
 import evolution.geometry.Point
-import evolution.primitive.algebra.{ByVarParser, Composed}
 import evolution.primitive.algebra.evolution.Evolution
 import cats.instances.double._
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.Constants
-import evolution.primitive.algebra.chain.{ContextualChain, Chain}
+import evolution.primitive.algebra.chain.Chain
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi.{Fail, P, Parser}
-import Instances._
 
 trait EvolutionExpressions[F[_], R[_]] {
   def chain: ChainExpressions[F, R]
@@ -201,31 +200,22 @@ class EvolutionGrammar[F[_], R[_], Var](
 }
 
 object EvolutionGrammar {
-  import EvolutionExpressions.Lazy, Instances._
+  import EvolutionExpressions.Lazy
 
-  def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, ByVarParser[R, ?]] = {
-    parserGrammarRec[F, R](alg, new Lazy[F, ByVarParser[R, ?]](grammar(alg), defer[R]))
+  def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
+    parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](grammar(alg), Defer[ByVarParserK[R, ?]]))
   }
 
   private def parserGrammarRec[F[_], R[_]](
     alg: Evolution[F, R, Double, String, String],
-    self: EvolutionExpressions[F, ByVarParser[R, ?]]
-  ): EvolutionExpressions[F, ByVarParser[R, ?]] = {
+    self: EvolutionExpressions[F, ByVarParserK[R, ?]]
+  ): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
     val syntax = new EvolutionSyntax[F, R](alg)
-    new EvolutionGrammar[F, ByVarParser[R, ?], Parser[String]](self, syntax, PrimitiveParsers.varName, orMonoid[R])
-  }
-}
-
-object Instances {
-  def orMonoid[R[_]]: MonoidK[ByVarParser[R, ?]] = new MonoidK[ByVarParser[R, ?]] {
-    override def empty[A]: ByVarParser[R, A] =
-      _ => Fail
-    override def combineK[A](x: ByVarParser[R, A], y: ByVarParser[R, A]): ByVarParser[R, A] =
-      ctx => P(x(ctx) | y(ctx))
-  }
-
-  def defer[R[_]]: Defer[ByVarParser[R, ?]] = new Defer[ByVarParser[R, ?]] {
-    override def defer[A](fa: => ByVarParser[R, A]): ByVarParser[R, A] =
-      ctx => P(fa(ctx))
+    new EvolutionGrammar[F, ByVarParserK[R, ?], Parser[String]](
+      self,
+      syntax,
+      PrimitiveParsers.varName,
+      MonoidK[ByVarParserK[R, ?]]
+    )
   }
 }

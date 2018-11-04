@@ -25,7 +25,7 @@ object dsl extends DrawingDefinition[Point] {
   private val evolutionExpr = new EvolutionExpr[RNGRepr]
   private val grammar = EvolutionGrammar.grammar(evolutionExpr)
   private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
-  private val stringParser = algebraParser(Nil)
+  private val stringParser = algebraParser.parser(Nil)
 
   case class Config(expr: Expr[Point])
 

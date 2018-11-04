@@ -19,5 +19,3 @@ class MappedConstants[S1[_], S2[_], D](alg: Constants[S1, D], to: S1 ~> S2, from
   def add[T: Semigroup](a: S2[T], b: S2[T]): S2[T] =
     to(alg.add(from(a), from(b)))
 }
-
-class ContextualConstants[S[_], D, Ctx](alg: Constants[S, D]) extends ConstantsApplicative[S, D, Ctx => ?](alg)
