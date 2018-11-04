@@ -3,10 +3,12 @@ package evolution.primitive.algebra.constants
 import cats.implicits._
 import cats.kernel.Semigroup
 import evolution.geometry.Point
-import evolution.primitive.algebra.{ByVarParser, Composed, TestInterpreters}
+import evolution.primitive.algebra.{Composed, TestInterpreters}
 import evolution.primitive.algebra.constants.parser._
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.parser.{ConstantsExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.parser.ByVarParser
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import org.scalatest.{FreeSpec, Matchers}
 
 class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
@@ -40,15 +42,15 @@ class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
     }
   }
 
-  type BindingParser[T] = ByVarParser[Binding, T]
+  type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: ConstantsExpressions[BindingParser] =
     EvolutionGrammar.grammar(interpreter).constants
 
   private def unsafeParseDouble(serializedExpression: String): Binding[Double] = {
-    expressions.constantOf(expressions.doubles)(Semigroup[Double])(Nil).parse(serializedExpression).get.value
+    expressions.constantOf(expressions.doubles)(Semigroup[Double]).parser(Nil).parse(serializedExpression).get.value
   }
 
   private def unsafeParsePoint(serializedExpression: String): Binding[Point] =
-    expressions.constantOf(expressions.points)(Semigroup[Point])(Nil).parse(serializedExpression).get.value
+    expressions.constantOf(expressions.points)(Semigroup[Point]).parser(Nil).parse(serializedExpression).get.value
 }

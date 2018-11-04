@@ -1,12 +1,13 @@
 package evolution.primitive.algebra.chain
 
-import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
+import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.parser._
 import cats.implicits._
 import org.scalatest.{FreeSpec, Inside, Matchers}
 import cats.kernel.Semigroup
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 
 class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
@@ -52,11 +53,16 @@ class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with 
     def apply(x: A): ListExpr[A] => ListExpr[B] = ???
   }
 
-  type BindingParser[T] = ByVarParser[Binding, T]
+  type BindingParser[T] = ByVarParserK[Binding, T]
 
-  def expressions: EvolutionExpressions[ListExpr, ByVarParser[Binding, ?]] =
+  def expressions: EvolutionExpressions[ListExpr, ByVarParserK[Binding, ?]] =
     EvolutionGrammar.grammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
-    expressions.chain.evolutionOf(expressions.constants.doubles)(Semigroup[Double])(Nil).parse(expression).get.value
+    expressions.chain
+      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])
+      .parser(Nil)
+      .parse(expression)
+      .get
+      .value
 }

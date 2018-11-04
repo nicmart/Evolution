@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.parser
 import cats.Id
-import evolution.primitive.algebra.parser.ByVarParser.Raw
+import evolution.primitive.algebra.parser.ByVarParser.{Prefixed, Raw}
 import fastparse.noApi.{P, Parser}
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._

@@ -2,10 +2,11 @@ package evolution.primitive.algebra.binding
 
 import cats.kernel.Semigroup
 import cats.{Defer, MonoidK}
-import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
+import evolution.primitive.algebra.TestInterpreters
 import cats.implicits._
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -102,20 +103,21 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
     }
   }
 
-  type BindingParser[T] = ByVarParser[Binding, T]
+  type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: EvolutionExpressions[ListExpr, BindingParser] =
     EvolutionGrammar.grammar(EvolutionAlgebraTestInterpreter)
 
   private def unsafeParseDouble(expression: String): Binding[Double] =
-    expressions.binding.valueOf(expressions.constants.doubles)(Nil).parse(expression).get.value
+    expressions.binding.valueOf(expressions.constants.doubles).parser(Nil).parse(expression).get.value
 
   private def unsafeParseLambda(expression: String): Binding[Double => Double] =
     expressions.binding
       .function(
         expressions.binding.valueOf(expressions.constants.doubles),
         expressions.binding.valueOf(expressions.constants.doubles)
-      )(Nil)
+      )
+      .parser(Nil)
       .parse(expression)
       .get
       .value
@@ -129,7 +131,8 @@ class BindingSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers wit
             expressions.binding.valueOf(expressions.constants.doubles),
             expressions.binding.valueOf(expressions.constants.doubles)
           )
-      )(Nil)
+      )
+      .parser(Nil)
       .parse(expression)
       .get
       .value

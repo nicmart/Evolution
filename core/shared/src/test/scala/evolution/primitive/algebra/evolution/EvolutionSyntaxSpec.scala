@@ -2,8 +2,9 @@ package evolution.primitive.algebra.evolution
 import cats.kernel.Semigroup
 import cats.implicits._
 import evolution.geometry.Point
-import evolution.primitive.algebra.{ByVarParser, TestInterpreters}
+import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import org.scalatest.{FreeSpec, Matchers}
 
 class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
@@ -131,7 +132,8 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
       .function(
         expressions.chain.evolutionOf(expressions.constants.doubles),
         expressions.chain.evolutionOf(expressions.constants.doubles)
-      )(Nil)
+      )
+      .parser(Nil)
       .parse(serializedExpression)
       .get
       .value
@@ -141,21 +143,24 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
     currentVars: List[String] = Nil
   ): Binding[ListExpr[Double]] =
     expressions.chain
-      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
+      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])
+      .parser(currentVars)
       .parse(serializedExpression)
       .get
       .value
 
   def parseEvolutionOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[ListExpr[Point]] =
     expressions.chain
-      .evolutionOf(expressions.constants.points)(Semigroup[Point])(currentVars)
+      .evolutionOf(expressions.constants.points)(Semigroup[Point])
+      .parser(currentVars)
       .parse(serializedExpression)
       .get
       .value
 
   def parseConstantOfDoubles(serializedExpression: String, currentVars: List[String] = Nil): Binding[Double] = {
     expressions.constants
-      .constantOf(expressions.constants.doubles)(Semigroup[Double])(currentVars)
+      .constantOf(expressions.constants.doubles)(Semigroup[Double])
+      .parser(currentVars)
       .parse(serializedExpression)
       .get
       .value
@@ -163,12 +168,13 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
 
   def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Point] =
     expressions.constants
-      .constantOf(expressions.constants.points)(Semigroup[Point])(currentVars)
+      .constantOf(expressions.constants.points)(Semigroup[Point])
+      .parser(currentVars)
       .parse(serializedExpression)
       .get
       .value
 
-  type BindingParser[T] = ByVarParser[Binding, T]
+  type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: EvolutionExpressions[ListExpr, BindingParser] =
     EvolutionGrammar.grammar(EvolutionAlgebraTestInterpreter)
