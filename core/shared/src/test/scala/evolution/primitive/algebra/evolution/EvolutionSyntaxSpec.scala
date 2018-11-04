@@ -117,7 +117,7 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
       // TODO write a valid expectation
       // TODO This takes 18 seconds!!!!!!!!!!!!!!!!!
       "an abnormous evolution" in {
-        //pending
+        pending
         val serializedExpression =
           "app(app(fix(self->start->evolution->mapCons($evolution,h->t->cons($start,app(app($self,add($start,$h)),$t)))),point(1.0,1.0)),fix(self->cons(point(1.0,1.0),$self)))"
         val expectedExpression: Binding[ListExpr[Double]] =

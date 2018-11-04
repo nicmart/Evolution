@@ -29,13 +29,17 @@ object ByVarParser {
     override def parser(vars: List[String]): noApi.Parser[T] = f(vars)
     override def map[B](g: T => B): ByVarParser[B] = Raw(vars => f(vars).map(g))
     override def withVar(varname: String): ByVarParser[T] = Raw(vars => f(varname :: vars))
-
   }
 
-  case class Prefixed[T](prefix: String, next: ByVarParser[T]) extends ByVarParser[T] {
-    override def parser(vars: List[String]): noApi.Parser[T] = prefix ~/ next.parser(vars)
+  sealed abstract case class Prefixed[T](prefix: String, next: ByVarParser[T]) extends ByVarParser[T] {
+    override def parser(vars: List[String]): noApi.Parser[T] = P(prefix ~ next.parser(vars))
     override def map[B](f: T => B): ByVarParser[B] = Prefixed(prefix, next.map(f))
     override def withVar(varname: String): ByVarParser[T] = Prefixed(prefix, next.withVar(varname))
+  }
+
+  object Prefixed {
+    def apply[T](prefix: String, next: ByVarParser[T]): ByVarParser[T] =
+      if (prefix.nonEmpty) Prefixed(prefix, next) else next
   }
 
   sealed abstract case class Or[T](parsers: List[ByVarParser[T]]) extends ByVarParser[T] {
@@ -47,7 +51,7 @@ object ByVarParser {
 
   object Or {
     def apply[T](parsers: List[ByVarParser[T]]): ByVarParser[T] =
-      if (parsers.nonEmpty) new Or(flatten(parsers)) {} else Fail()
+      if (parsers.nonEmpty) new Or(groupByPrefix(flatten(parsers))) {} else Fail()
 
     def flatten[T](parsers: List[ByVarParser[T]]): List[ByVarParser[T]] =
       parsers.flatMap {
@@ -57,14 +61,15 @@ object ByVarParser {
       }
 
     def groupByPrefix[T](parsers: List[ByVarParser[T]]): List[ByVarParser[T]] = {
-      val sortedMap: Map[String, ByVarParser[T]] = SortedMap.empty[String, ByVarParser[T]]
+      val sortedMap: Map[String, List[ByVarParser[T]]] = SortedMap.empty
       parsers
         .foldLeft(sortedMap) { (map, parser) =>
+          println("here")
           val (prefix, suffixParser) = split(parser)
-          val current = sortedMap.getOrElse(prefix, Fail())
-          sortedMap.updated(prefix, Prefixed(prefix, Or(List(current, suffixParser))))
+          val current = sortedMap.getOrElse(prefix, Nil)
+          sortedMap.updated(prefix, current :+ suffixParser)
         }
-        .values
+        .map { case (prefix, ps) => Prefixed(prefix, new Or(ps) {}) }
         .toList
     }
 

@@ -14,6 +14,7 @@ object ByVarParsers {
     Raw { vars =>
       P(funcName ~ "(" ~ parser.parser(vars) ~ ")")
     }
+  //Prefixed(funcName, Raw(vars => P("(" ~ parser.parser(vars) ~ ")")))
 
   def function2[A, B](funcName: String, parser1: ByVarParser[A], parser2: ByVarParser[B]): ByVarParser[(A, B)] =
     Raw { vars =>
