@@ -38,6 +38,7 @@ object ByVarParser {
   }
 
   sealed abstract case class Prefixed[T](prefix: String, next: ByVarParser[T]) extends ByVarParser[T] {
+    // TODO still we can't add a cut after the prefix
     override def parser(vars: List[String]): Parser[T] = P(prefix ~ next.parser(vars))
     override def map[B](f: T => B): ByVarParser[B] = Prefixed(prefix, next.map(f))
     override def withVar(varname: String): ByVarParser[T] = Prefixed(prefix, next.withVar(varname))
