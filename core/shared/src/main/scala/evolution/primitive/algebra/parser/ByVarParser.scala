@@ -20,30 +20,40 @@ object ByVarParser {
   type ByVarParserK[R[_], T] = ByVarParser[R[T]]
 
   case class Fail[T]() extends ByVarParser[T] {
-    override def parser(vars: List[String]): noApi.Parser[T] = noApi.Fail
+    override def parser(vars: List[String]): Parser[T] = noApi.Fail
     override def map[B](f: T => B): ByVarParser[B] = Fail()
     override def withVar(varname: String): ByVarParser[T] = Fail()
   }
 
+  case class Pure[T](t: T) extends ByVarParser[T] {
+    override def parser(vars: List[String]): Parser[T] = noApi.PassWith(t)
+    override def map[B](f: T => B): ByVarParser[B] = Pure(f(t))
+    override def withVar(varname: String): ByVarParser[T] = this
+  }
+
   case class Raw[T](f: List[String] => Parser[T]) extends ByVarParser[T] {
-    override def parser(vars: List[String]): noApi.Parser[T] = f(vars)
+    override def parser(vars: List[String]): Parser[T] = f(vars)
     override def map[B](g: T => B): ByVarParser[B] = Raw(vars => f(vars).map(g))
     override def withVar(varname: String): ByVarParser[T] = Raw(vars => f(varname :: vars))
   }
 
   sealed abstract case class Prefixed[T](prefix: String, next: ByVarParser[T]) extends ByVarParser[T] {
-    override def parser(vars: List[String]): noApi.Parser[T] = P(prefix ~ next.parser(vars))
+    override def parser(vars: List[String]): Parser[T] = P(prefix ~ next.parser(vars))
     override def map[B](f: T => B): ByVarParser[B] = Prefixed(prefix, next.map(f))
     override def withVar(varname: String): ByVarParser[T] = Prefixed(prefix, next.withVar(varname))
   }
 
   object Prefixed {
     def apply[T](prefix: String, next: ByVarParser[T]): ByVarParser[T] =
-      if (prefix.nonEmpty) Prefixed(prefix, next) else next
+      (prefix, next) match {
+        case ("", _) => next
+        case (_, Fail()) => Fail()
+        case _ => new Prefixed(prefix, next) {}
+      }
   }
 
   sealed abstract case class Or[T](parsers: List[ByVarParser[T]]) extends ByVarParser[T] {
-    override def parser(vars: List[String]): noApi.Parser[T] =
+    override def parser(vars: List[String]): Parser[T] =
       Either(Either.flatten(parsers.map(_.parser(vars)).toVector): _*)
     override def map[B](f: T => B): ByVarParser[B] = Or(parsers.map(_.map(f)))
     override def withVar(varname: String): ByVarParser[T] = Or(parsers.map(_.withVar(varname)))
@@ -51,25 +61,31 @@ object ByVarParser {
 
   object Or {
     def apply[T](parsers: List[ByVarParser[T]]): ByVarParser[T] =
-      if (parsers.nonEmpty) new Or(groupByPrefix(flatten(parsers))) {} else Fail()
+      orOfFlatten(flattenChildren(groupByPrefix(flattenChildren(parsers))))
 
-    def flatten[T](parsers: List[ByVarParser[T]]): List[ByVarParser[T]] =
+    private def orOfFlatten[T](parsers: List[ByVarParser[T]]): ByVarParser[T] = parsers match {
+      case Nil => Fail()
+      case head :: Nil => head
+      case _ => new Or(parsers) {}
+    }
+
+    private def flattenChildren[T](parsers: List[ByVarParser[T]]): List[ByVarParser[T]] = {
       parsers.flatMap {
-        case Or(innerParsers) => flatten(innerParsers)
+        case Or(innerParsers) => innerParsers
         case Fail() => Nil
         case parser => List(parser)
       }
+    }
 
     def groupByPrefix[T](parsers: List[ByVarParser[T]]): List[ByVarParser[T]] = {
       val sortedMap: Map[String, List[ByVarParser[T]]] = SortedMap.empty
       parsers
         .foldLeft(sortedMap) { (map, parser) =>
-          println("here")
           val (prefix, suffixParser) = split(parser)
-          val current = sortedMap.getOrElse(prefix, Nil)
-          sortedMap.updated(prefix, current :+ suffixParser)
+          val current = map.getOrElse(prefix, Nil)
+          map.updated(prefix, current :+ suffixParser)
         }
-        .map { case (prefix, ps) => Prefixed(prefix, new Or(ps) {}) }
+        .map { case (prefix, ps) => Prefixed(prefix, orOfFlatten(ps)) }
         .toList
     }
 
