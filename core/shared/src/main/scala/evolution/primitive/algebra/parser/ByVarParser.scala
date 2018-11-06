@@ -86,7 +86,7 @@ object ByVarParser {
           val current = map.getOrElse(prefix, Nil)
           map.updated(prefix, current :+ suffixParser)
         }
-        .map { case (prefix, ps) => Prefixed(prefix, orOfFlatten(ps)) }
+        .map { case (prefix, ps) => Prefixed(prefix, orOfFlatten(flattenChildren(ps))) }
         .toList
     }
 

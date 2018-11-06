@@ -9,8 +9,7 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser.PrimitiveParsers
-import evolution.primitive.algebra.parser.ParserConfig.White._
-import fastparse.noApi.{Fail, P, Parser}
+import fastparse.noApi.Parser
 
 trait EvolutionExpressions[F[_], R[_]] {
   def chain: ChainExpressions[F, R]
@@ -23,13 +22,9 @@ object EvolutionExpressions {
     override def chain: ChainExpressions[F, R] =
       new ChainExpressions.Lazy(inner.chain, deferR)
     override def constants: ConstantsExpressions[R] =
-      new ConstantsExpressions.Lazy[R](inner.constants, deferRS)
+      new ConstantsExpressions.Lazy(inner.constants, deferR)
     override def binding: BindingExpressions[R] =
       new BindingExpressions.Lazy(inner.binding, deferR)
-
-    private val deferRS: Defer[R] = new Defer[R] {
-      override def defer[A](fa: => R[A]): R[A] = deferR.defer(fa)
-    }
   }
 }
 
@@ -158,8 +153,10 @@ class EvolutionGrammar[F[_], R[_], Var](
   private def doubleLiteral: R[Double] = syntax.constants.double(())
 
   override def chain: ChainExpressions[F, R] = new ChainExpressions[F, R] {
-    override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] =
-      or(internalList.evolutionOf(constant), internalBinding.valueOf(self.chain.evolutionOf(constant)))
+    override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] = {
+      println("Executing")
+      or(internalChain.evolutionOf(constant), internalBinding.valueOf(self.chain.evolutionOf(constant)))
+    }
   }
 
   override def constants: ConstantsExpressions[R] =
@@ -189,7 +186,7 @@ class EvolutionGrammar[F[_], R[_], Var](
     self.chain.evolutionOf(points)
   )
 
-  private lazy val internalList: ChainExpressions[F, R] =
+  private lazy val internalChain: ChainExpressions[F, R] =
     new ChainGrammar(self, syntax.list, orMonoid)
 
   private lazy val internalConstants: ConstantsExpressions[R] =
