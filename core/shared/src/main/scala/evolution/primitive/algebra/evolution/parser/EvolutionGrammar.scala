@@ -19,22 +19,24 @@ trait EvolutionExpressions[F[_], R[_]] {
 }
 
 object EvolutionExpressions {
-  class Lazy[F[_], R[_]](inner: => EvolutionExpressions[F, R], deferR: Defer[R]) extends EvolutionExpressions[F, R] {
-    override def chain: ChainExpressions[F, R] =
+  class Lazy[F[_], R[_]](_inner: => EvolutionExpressions[F, R], deferR: Defer[R]) extends EvolutionExpressions[F, R] {
+    lazy val inner = _inner
+    override val chain: ChainExpressions[F, R] =
       new ChainExpressions.Lazy(inner.chain, deferR)
-    override def constants: ConstantsExpressions[R] =
+    override val constants: ConstantsExpressions[R] =
       new ConstantsExpressions.Lazy(inner.constants, deferR)
-    override def binding: BindingExpressions[R] =
+    override val binding: BindingExpressions[R] =
       new BindingExpressions.Lazy(inner.binding, deferR)
   }
 
-  class Debug[F[_], R[_]](inner: EvolutionExpressions[F, R]) extends EvolutionExpressions[F, R] {
+  class Debug[F[_], R[_]](_inner: EvolutionExpressions[F, R]) extends EvolutionExpressions[F, R] {
+    lazy val inner = _inner
     override def chain: ChainExpressions[F, R] =
-      debug("EvolutionExpressions::chain")(new parser.ChainExpressions.Debug(inner.chain))
+      debug(s"${inner.getClass}::chain")(new parser.ChainExpressions.Debug(inner.chain))
     override def constants: ConstantsExpressions[R] =
-      debug("EvolutionExpressions::constants")(new parser.ConstantsExpressions.Debug(inner.constants))
+      debug(s"${inner.getClass}::constants")(new parser.ConstantsExpressions.Debug(inner.constants))
     override def binding: BindingExpressions[R] =
-      debug("EvolutionExpressions::binding")(new parser.BindingExpressions.Debug(inner.binding))
+      debug(s"${inner.getClass}::binding")(new parser.BindingExpressions.Debug(inner.binding))
   }
 }
 
@@ -43,13 +45,14 @@ trait ChainExpressions[F[_], R[_]] {
 }
 
 object ChainExpressions {
-  class Lazy[F[_], R[_]](inner: => ChainExpressions[F, R], defer: Defer[R]) extends ChainExpressions[F, R] {
+  class Lazy[F[_], R[_]](_inner: => ChainExpressions[F, R], defer: Defer[R]) extends ChainExpressions[F, R] {
+    lazy val inner = _inner
     override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] = defer.defer(inner.evolutionOf(constant))
   }
 
   class Debug[F[_], R[_]](inner: ChainExpressions[F, R]) extends ChainExpressions[F, R] {
     override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] =
-      debug("ChainExpressions:evolutionOf")(inner.evolutionOf(constant))
+      debug(s"${inner.getClass}::evolutionOf")(inner.evolutionOf(constant))
   }
 }
 
@@ -81,7 +84,8 @@ trait ConstantsExpressions[R[_]] {
 }
 
 object ConstantsExpressions {
-  class Lazy[R[_]](inner: => ConstantsExpressions[R], defer: Defer[R]) extends ConstantsExpressions[R] {
+  class Lazy[R[_]](_inner: => ConstantsExpressions[R], defer: Defer[R]) extends ConstantsExpressions[R] {
+    lazy val inner = _inner
     override def constantOf[T: Semigroup](constant: R[T]): R[T] =
       defer.defer(inner.constantOf(constant))
     override def points: R[Point] = defer.defer(inner.points)
@@ -90,11 +94,11 @@ object ConstantsExpressions {
 
   class Debug[R[_]](inner: ConstantsExpressions[R]) extends ConstantsExpressions[R] {
     override def constantOf[T: Semigroup](constant: R[T]): R[T] =
-      debug("ConstantsExpressions::constantOf")(inner.constantOf(constant))
+      debug(s"${inner.getClass}::constantOf")(inner.constantOf(constant))
     override def points: R[Point] =
-      debug("ConstantsExpressions::points")(inner.points)
+      debug(s"${inner.getClass}::points")(inner.points)
     override def doubles: R[Double] =
-      debug("ConstantsExpressions::doubles")(inner.doubles)
+      debug(s"${inner.getClass}::doubles")(inner.doubles)
   }
 }
 
@@ -125,9 +129,10 @@ object BindingExpressions {
   }
 
   class Debug[R[_]](inner: BindingExpressions[R]) extends BindingExpressions[R] {
-    override def valueOf[T](t: R[T]): R[T] = debug("BindingExpressions::valueOf")(inner.valueOf(t))
+    override def valueOf[T](t: R[T]): R[T] =
+      debug(s"${inner.getClass}::valueOf")(inner.valueOf(t))
     override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
-      debug("BindingExpressions::valueOf")(inner.function(t1, t2))
+      debug(s"${inner.getClass}::valueOf")(inner.function(t1, t2))
   }
 }
 
@@ -230,9 +235,10 @@ object EvolutionGrammar {
   import EvolutionExpressions.Lazy
 
   def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
-    new EvolutionExpressions.Debug[F, ByVarParserK[R, ?]](
-      parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](grammar(alg), Defer[ByVarParserK[R, ?]]))
-    )
+    var self: EvolutionExpressions[F, ByVarParserK[R, ?]] = null
+    val expressions = parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](self, Defer[ByVarParserK[R, ?]]))
+    self = expressions
+    new EvolutionExpressions.Debug[F, ByVarParserK[R, ?]](expressions)
   }
 
   private def parserGrammarRec[F[_], R[_]](
@@ -250,10 +256,12 @@ object EvolutionGrammar {
 }
 
 object Debug {
+  var count = 0
   def debug[T](message: String)(t: => T): T = {
-    println(s"START: $message")
+    count += 1
+    println(s"$count) START: $message")
     val t2 = t
-    println(s"END: $message")
+    println(s"$count) END: $message")
     t2
   }
 }

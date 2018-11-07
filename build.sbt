@@ -27,8 +27,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).
             "com.lihaoyi" %%% "fastparse" % "1.0.0"
         )
     ).
-    jvmConfigure(
-      _ dependsOn core
+  jsSettings(
     ).
     jsSettings(
     )
