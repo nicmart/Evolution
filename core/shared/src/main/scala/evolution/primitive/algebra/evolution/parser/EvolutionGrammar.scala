@@ -2,11 +2,12 @@ package evolution.primitive.algebra.evolution.parser
 
 import cats.{Defer, MonoidK, Semigroup}
 import evolution.geometry.Point
-import evolution.primitive.algebra.evolution.Evolution
+import evolution.primitive.algebra.evolution.{Evolution, parser}
 import cats.instances.double._
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
+import evolution.primitive.algebra.evolution.parser.Debug.debug
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser.PrimitiveParsers
 import fastparse.noApi.Parser
@@ -26,6 +27,15 @@ object EvolutionExpressions {
     override def binding: BindingExpressions[R] =
       new BindingExpressions.Lazy(inner.binding, deferR)
   }
+
+  class Debug[F[_], R[_]](inner: EvolutionExpressions[F, R]) extends EvolutionExpressions[F, R] {
+    override def chain: ChainExpressions[F, R] =
+      debug("EvolutionExpressions::chain")(new parser.ChainExpressions.Debug(inner.chain))
+    override def constants: ConstantsExpressions[R] =
+      debug("EvolutionExpressions::constants")(new parser.ConstantsExpressions.Debug(inner.constants))
+    override def binding: BindingExpressions[R] =
+      debug("EvolutionExpressions::binding")(new parser.BindingExpressions.Debug(inner.binding))
+  }
 }
 
 trait ChainExpressions[F[_], R[_]] {
@@ -35,6 +45,11 @@ trait ChainExpressions[F[_], R[_]] {
 object ChainExpressions {
   class Lazy[F[_], R[_]](inner: => ChainExpressions[F, R], defer: Defer[R]) extends ChainExpressions[F, R] {
     override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] = defer.defer(inner.evolutionOf(constant))
+  }
+
+  class Debug[F[_], R[_]](inner: ChainExpressions[F, R]) extends ChainExpressions[F, R] {
+    override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] =
+      debug("ChainExpressions:evolutionOf")(inner.evolutionOf(constant))
   }
 }
 
@@ -72,6 +87,15 @@ object ConstantsExpressions {
     override def points: R[Point] = defer.defer(inner.points)
     override def doubles: R[Double] = defer.defer(inner.doubles)
   }
+
+  class Debug[R[_]](inner: ConstantsExpressions[R]) extends ConstantsExpressions[R] {
+    override def constantOf[T: Semigroup](constant: R[T]): R[T] =
+      debug("ConstantsExpressions::constantOf")(inner.constantOf(constant))
+    override def points: R[Point] =
+      debug("ConstantsExpressions::points")(inner.points)
+    override def doubles: R[Double] =
+      debug("ConstantsExpressions::doubles")(inner.doubles)
+  }
 }
 
 class ConstantsGrammar[R[_]](
@@ -98,6 +122,12 @@ object BindingExpressions {
   class Lazy[R[_]](inner: => BindingExpressions[R], defer: Defer[R]) extends BindingExpressions[R] {
     override def valueOf[T](t: R[T]): R[T] = defer.defer(inner.valueOf(t))
     override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = defer.defer(inner.function(t1, t2))
+  }
+
+  class Debug[R[_]](inner: BindingExpressions[R]) extends BindingExpressions[R] {
+    override def valueOf[T](t: R[T]): R[T] = debug("BindingExpressions::valueOf")(inner.valueOf(t))
+    override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
+      debug("BindingExpressions::valueOf")(inner.function(t1, t2))
   }
 }
 
@@ -200,7 +230,9 @@ object EvolutionGrammar {
   import EvolutionExpressions.Lazy
 
   def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
-    parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](grammar(alg), Defer[ByVarParserK[R, ?]]))
+    new EvolutionExpressions.Debug[F, ByVarParserK[R, ?]](
+      parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](grammar(alg), Defer[ByVarParserK[R, ?]]))
+    )
   }
 
   private def parserGrammarRec[F[_], R[_]](
@@ -214,5 +246,14 @@ object EvolutionGrammar {
       PrimitiveParsers.varName,
       MonoidK[ByVarParserK[R, ?]]
     )
+  }
+}
+
+object Debug {
+  def debug[T](message: String)(t: => T): T = {
+    println(s"START: $message")
+    val t2 = t
+    println(s"END: $message")
+    t2
   }
 }
