@@ -147,7 +147,17 @@ class BindingGrammar[R[_], Var, VarName](
 
   // TODO allLet and allApp break Generators
   override def valueOf[T](t: R[T]): R[T] =
-    or(var0, shift(self.valueOf(t)), fix(self.function(t, t)), allLetExpressions(self.valueOf(t)), allAppExpressions(t))
+    or(
+      var0,
+      shift(var0),
+      shift(shift(var0)),
+      shift(shift(shift(var0))),
+      shift(shift(shift(shift(var0)))),
+      shift(shift(shift(shift(shift(var0))))),
+      fix(self.function(t, t)),
+      allLetExpressions(self.valueOf(t)),
+      allAppExpressions(t)
+    )
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(lambda(variableSyntax, t2), valueOf(self.function(t1, t2)))
@@ -235,12 +245,10 @@ object EvolutionGrammar {
   import EvolutionExpressions.Lazy
 
   def grammar[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
-    var self: EvolutionExpressions[F, ByVarParserK[R, ?]] = null
-    val expressions = parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](self, Defer[ByVarParserK[R, ?]]))
-    self = expressions
+    lazy val expressions: EvolutionExpressions[F, ByVarParserK[R, ?]] =
+      parserGrammarRec[F, R](alg, new Lazy[F, ByVarParserK[R, ?]](expressions, Defer[ByVarParserK[R, ?]]))
     new EvolutionExpressions.Debug[F, ByVarParserK[R, ?]](expressions)
   }
-
   private def parserGrammarRec[F[_], R[_]](
     alg: Evolution[F, R, Double, String, String],
     self: EvolutionExpressions[F, ByVarParserK[R, ?]]
