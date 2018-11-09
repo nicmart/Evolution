@@ -1,7 +1,7 @@
 package evolution.primitive.algebra.parser
 
 import cats.{Applicative, Defer, MonoidK}
-import evolution.primitive.algebra.parser.ByVarParser.{Pure, Raw}
+import evolution.primitive.algebra.parser.ByVarParser.{Or, Prefixed, Pure, Raw}
 import fastparse.noApi
 import fastparse.noApi.Parser
 import fastparse.parsers.Combinators.{Either, Logged}
@@ -14,9 +14,25 @@ sealed trait ByVarParser[T] {
   // TODO do not expose parser
   def parser(vars: List[String]): Parser[T]
   def flatMap[B](f: T => ByVarParser[B]): ByVarParser[B]
-  def withVar(varname: String): ByVarParser[T]
   def logged(msg: String): ByVarParser[T]
+
   def map[B](f: T => B): ByVarParser[B] = flatMap(f andThen Pure.apply)
+
+  def pushVar(varname: String): ByVarParser[T] = this match {
+    case ByVarParser.Fail() => this
+    case Pure(t) => this
+    case Raw(f) => Raw(vars => f(varname :: vars))
+    case Prefixed(prefix, next) => Prefixed(prefix, next.pushVar(varname))
+    case Or(children) => Or(children.map(_.pushVar(varname)))
+  }
+
+  def popVar: ByVarParser[T] = this match {
+    case ByVarParser.Fail() => this
+    case Pure(t) => this
+    case Raw(f) => Raw(vars => f(vars.drop(1)))
+    case Prefixed(prefix, next) => Prefixed(prefix, next.popVar)
+    case Or(children) => Or(children.map(_.popVar))
+  }
 }
 
 object ByVarParser {
@@ -25,14 +41,12 @@ object ByVarParser {
   case class Fail[T]() extends ByVarParser[T] {
     override def parser(vars: List[String]): Parser[T] = noApi.Fail
     override def flatMap[B](f: T => ByVarParser[B]): ByVarParser[B] = Fail()
-    override def withVar(varname: String): ByVarParser[T] = Fail()
     override def logged(msg: String): ByVarParser[T] = Fail()
   }
 
   case class Pure[T](t: T) extends ByVarParser[T] {
     override def parser(vars: List[String]): Parser[T] = noApi.PassWith(t)
     override def flatMap[B](f: T => ByVarParser[B]): ByVarParser[B] = f(t)
-    override def withVar(varname: String): ByVarParser[T] = this
     override def logged(msg: String): ByVarParser[T] = this
   }
 
@@ -40,16 +54,14 @@ object ByVarParser {
     override def parser(vars: List[String]): Parser[T] = f(vars)
     override def flatMap[B](g: T => ByVarParser[B]): ByVarParser[B] =
       Raw(vars => f(vars).flatMap(t => g(t).parser(vars)))
-    override def withVar(varname: String): ByVarParser[T] = Raw(vars => f(varname :: vars))
     override def logged(msg: String): Raw[T] = Raw(vars => debugParser(s"Raw: $msg ($vars)", parser(vars)))
   }
 
   sealed abstract case class Prefixed[T](prefix: String, next: ByVarParser[T]) extends ByVarParser[T] {
     // TODO still we can't add a cut after the prefix
     override def parser(vars: List[String]): Parser[T] =
-      P(debugParser(s"$prefix ($vars)", prefix) ~/ debugParser(s"Suffix of $prefix ($vars)", next.parser(vars)))
+      P(debugParser(s"$prefix ($vars)", prefix) ~ debugParser(s"Suffix of $prefix ($vars)", next.parser(vars)))
     override def flatMap[B](f: T => ByVarParser[B]): ByVarParser[B] = Prefixed(prefix, next.flatMap(f))
-    override def withVar(varname: String): ByVarParser[T] = Prefixed(prefix, next.withVar(varname))
     override def logged(msg: String): ByVarParser[T] = this
   }
 
@@ -69,7 +81,6 @@ object ByVarParser {
     override def parser(vars: List[String]): Parser[T] =
       debugParser(s"OR ($vars)", Either(Either.flatten(parsers.map(_.parser(vars)).toVector): _*))
     override def flatMap[B](f: T => ByVarParser[B]): ByVarParser[B] = Or(parsers.map(_.flatMap(f)))
-    override def withVar(varname: String): ByVarParser[T] = Or(parsers.map(_.withVar(varname)))
     override def logged(msg: String): ByVarParser[T] = this
   }
 
