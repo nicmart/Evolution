@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.binding.parser
 
-import evolution.primitive.algebra.binding.Binding
+import evolution.primitive.algebra.binding.{Binding, BindingSyntax}
 import evolution.primitive.algebra.parser.ByVarParser.{ByVarParserK, Raw}
 import evolution.primitive.algebra.parser.ByVarParsers.{function1, function2, function3Dep, infixFlatMap}
 import evolution.primitive.algebra.parser.PrimitiveParsers.varUsage
@@ -8,18 +8,14 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.{ByVarParser, ByVarParsers, PrimitiveParsers}
 import fastparse.noApi._
 
-class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVarParserK[R, ?], Parser[String], Unit] {
+class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
+    extends BindingSyntax[ByVarParserK[R, ?], Parser[String], Unit] {
 
   override def v(name: Unit): Parser[String] =
     PrimitiveParsers.varName
 
-  def anyVar[T]: ByVarParser[R[T]] = ByVarParser.Vars.flatMap(anyVarParser)
-
-  private def anyVarParser[T](vars: List[String]): ByVarParser[R[T]] =
-    vars match {
-      case _ :: tail => ByVarParser.Or(List(var0, shift(anyVarParser(tail))))
-      case Nil => ByVarParser.Fail()
-    }
+  override def allVars[T]: ByVarParser[R[T]] =
+    ByVarParser.Vars.flatMap(anyVarParser)
 
   override def var0[A]: ByVarParser[R[A]] =
     Raw { vars =>
@@ -65,4 +61,10 @@ class BindingSyntax[R[_]](alg: Binding[R, String, String]) extends Binding[ByVar
 
   override def fix[A](expr: ByVarParserK[R, A => A]): ByVarParser[R[A]] =
     function1("fix", expr).map(alg.fix).logged("fix expr")
+
+  private def anyVarParser[T](vars: List[String]): ByVarParser[R[T]] =
+    vars match {
+      case _ :: tail => ByVarParser.Or(List(var0, shift(anyVarParser(tail))))
+      case Nil => ByVarParser.Fail()
+    }
 }

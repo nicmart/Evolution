@@ -14,7 +14,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
       def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         fix(lambda("x", cons(double(1), var0[F[Double]])))
       }
       val stream = materialize(drawing(interpreter))
@@ -23,7 +23,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
 
     "should create an evolution of the sequence of integers" in {
       def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         app[Double, F[Double]](
           fix(
             lambda("f", lambda("s", cons(var0, app(shift(var0[Double => F[Double]]), add(var0[Double], double(1))))))
@@ -37,7 +37,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
 
     "should be able to express integrations" in {
       def integrate[F[_], R[_], T: Semigroup](alg: Evolution[F, R, Double, String, String]): R[T => F[T] => F[T]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         def varN[A](n: Int): R[A] = if (n <= 0) var0[A] else shift(varN(n - 1))
 
         fix[T => F[T] => F[T]](
@@ -63,17 +63,17 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
       }
 
       def constant[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         fix[F[Double]](lambda("self", cons(double(1), var0[F[Double]])))
       }
 
       def constant2[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
       }
 
       def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
-        import alg.list._, alg.bind._, alg.constants._
+        import alg.chain._, alg.bind._, alg.constants._
         app(app(integrate[F, R, Double](alg), double(100)), constant(alg))
       }
 

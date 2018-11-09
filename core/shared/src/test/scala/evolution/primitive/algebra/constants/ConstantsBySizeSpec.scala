@@ -8,7 +8,7 @@ import cats.{Defer, MonoidK}
 import org.scalatest.{FreeSpec, Matchers}
 import cats.implicits._
 import cats.kernel.Semigroup
-import evolution.primitive.algebra.constants.parser.ConstantsSyntax
+import evolution.primitive.algebra.constants.parser.ConstantsParserSyntax
 import evolution.primitive.algebra.evolution.parser.{ConstantsExpressions, ConstantsGrammar}
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks

@@ -51,7 +51,7 @@ object dsl extends DrawingDefinition[Point] {
 
   val initialConfig: Config = Config(new Expr[Point] {
     override def run[R[_]](alg: Evolution[RNGRepr, R, Double, String, String]): R[RNGRepr[Point]] = {
-      import alg.list._, alg.bind._, alg.constants._
+      import alg.chain._, alg.bind._, alg.constants._
       fix(lambda("self", cons(point(double(0), double(0)), var0[RNGRepr[Point]])))
     }
   })

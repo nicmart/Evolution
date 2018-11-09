@@ -9,9 +9,9 @@ import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 
-class ChainSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
+class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._, interpreter.constants._, interpreter.list._, interpreter.list.{empty => nil}
+  import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{empty => nil}
 
   "A CoreDrawingAlgebraParser" - {
     "should parse" - {

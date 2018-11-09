@@ -2,9 +2,9 @@ package evolution.primitive.algebra.evolution.parser
 
 import cats.{Defer, MonoidK, Semigroup}
 import evolution.geometry.Point
-import evolution.primitive.algebra.evolution.{Evolution, parser}
+import evolution.primitive.algebra.evolution.{Evolution, EvolutionSyntax, parser}
 import cats.instances.double._
-import evolution.primitive.algebra.binding.Binding
+import evolution.primitive.algebra.binding.{Binding, BindingSyntax}
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.evolution.parser.Debug.debug
@@ -138,7 +138,7 @@ object BindingExpressions {
 
 class BindingGrammar[R[_], Var, VarName](
   self: BindingExpressions[R],
-  syntax: Binding[R, Var, Unit],
+  syntax: BindingSyntax[R, Var, Unit],
   all: List[R[_]],
   override val orMonoid: MonoidK[R]
 ) extends BindingExpressions[R]
@@ -147,17 +147,7 @@ class BindingGrammar[R[_], Var, VarName](
 
   // TODO allLet and allApp break Generators
   override def valueOf[T](t: R[T]): R[T] =
-    or(
-      var0,
-      shift(var0),
-      shift(shift(var0)),
-      shift(shift(shift(var0))),
-      shift(shift(shift(shift(var0)))),
-      shift(shift(shift(shift(shift(var0))))),
-      fix(self.function(t, t)),
-      allLetExpressions(self.valueOf(t)),
-      allAppExpressions(t)
-    )
+    or(allVars, fix(self.function(t, t)), allLetExpressions(self.valueOf(t)), allAppExpressions(t))
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(lambda(variableSyntax, t2), valueOf(self.function(t1, t2)))
@@ -189,7 +179,7 @@ trait OrMonoid[R[_]] {
 
 class EvolutionGrammar[F[_], R[_], Var](
   self: EvolutionExpressions[F, R],
-  syntax: Evolution[F, R, Unit, Var, Unit],
+  syntax: EvolutionSyntax[F, R, Var],
   variableSyntax: Var,
   override val orMonoid: MonoidK[R]
 ) extends EvolutionExpressions[F, R]
@@ -232,7 +222,7 @@ class EvolutionGrammar[F[_], R[_], Var](
   )
 
   private lazy val internalChain: ChainExpressions[F, R] =
-    new ChainGrammar(self, syntax.list, orMonoid)
+    new ChainGrammar(self, syntax.chain, orMonoid)
 
   private lazy val internalConstants: ConstantsExpressions[R] =
     new ConstantsGrammar[R](self.constants, syntax.constants, orMonoid)
@@ -253,7 +243,7 @@ object EvolutionGrammar {
     alg: Evolution[F, R, Double, String, String],
     self: EvolutionExpressions[F, ByVarParserK[R, ?]]
   ): EvolutionExpressions[F, ByVarParserK[R, ?]] = {
-    val syntax = new EvolutionSyntax[F, R](alg)
+    val syntax = new EvolutionParserSyntax[F, R](alg)
     new EvolutionGrammar[F, ByVarParserK[R, ?], Parser[String]](
       self,
       syntax,

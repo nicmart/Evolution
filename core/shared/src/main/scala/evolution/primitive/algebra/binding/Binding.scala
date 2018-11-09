@@ -11,6 +11,10 @@ trait Binding[R[_], Var, VarName] {
   def fix[A](expr: R[A => A]): R[A]
 }
 
+trait BindingSyntax[R[_], Var, VarName] extends Binding[R, Var, VarName] {
+  def allVars[T]: R[T]
+}
+
 class MappedBinding[R1[_], R2[_], Var, VarName](alg: Binding[R1, Var, VarName], to: R1 ~> R2, from: R2 ~> R1)
     extends Binding[R2, Var, VarName] {
   def v(name: VarName): Var =

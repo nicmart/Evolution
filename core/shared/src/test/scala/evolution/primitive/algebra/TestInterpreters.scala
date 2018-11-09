@@ -64,7 +64,7 @@ trait TestInterpreters {
   }
 
   object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {
-    override val list: Chain[ListExpr, Binding] = ChainTestInterpreter
+    override val chain: Chain[ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
   }

@@ -10,7 +10,7 @@ import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
 
 class EvolutionExpr[F[_]] extends Evolution[F, Expr[F, ?], Double, String, String] {
-  override val list: Chain[F, Expr[F, ?]] = new ChainExpr[F]
+  override val chain: Chain[F, Expr[F, ?]] = new ChainExpr[F]
   override val constants: Constants[Expr[F, ?], Double] = new ConstantsExpr[F]
   override val bind: Binding[Expr[F, ?], String, String] = new BindingExpr[F]
 }

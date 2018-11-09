@@ -11,7 +11,7 @@ import evolution.primitive.algebra.parser.ByVarParser
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import org.scalatest.{FreeSpec, Matchers}
 
-class ConstantsSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
+class ConstantsParserSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.constants._
 

@@ -7,7 +7,7 @@ import evolution.primitive.algebra.parser.{ByVarParser, ByVarParsers, ParserConf
 import evolution.primitive.algebra.parser.ByVarParsers.function2
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 
-class ConstantsSyntax[S[_]](alg: Constants[S, Double]) extends Constants[ByVarParserK[S, ?], Unit] {
+class ConstantsParserSyntax[S[_]](alg: Constants[S, Double]) extends Constants[ByVarParserK[S, ?], Unit] {
   override def double(d: Unit): ByVarParser[S[Double]] =
     ByVarParsers.doubleLiteral.map(alg.double)
   override def point(x: ByVarParser[S[Double]], y: ByVarParser[S[Double]]): ByVarParser[S[Point]] =

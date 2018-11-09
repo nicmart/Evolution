@@ -7,7 +7,7 @@ import fastparse.noApi._
 import evolution.primitive.algebra.parser.ByVarParsers._
 import fastparse.noApi.{P, Parser}
 
-class ChainSyntax[F[_], R[_]](alg: Chain[F, R]) extends Chain[F, ByVarParserK[R, ?]] {
+class ChainParserSyntax[F[_], R[_]](alg: Chain[F, R]) extends Chain[F, ByVarParserK[R, ?]] {
 
   override def empty[A]: ByVarParser[R[F[A]]] =
     Raw { _ =>

@@ -1,11 +1,12 @@
 package evolution.primitive.algebra.binding.generator
 import evolution.generator.Generator
 import evolution.primitive.algebra.{Composed, GenRepr}
-import evolution.primitive.algebra.binding.Binding
+import evolution.primitive.algebra.binding.{Binding, BindingSyntax}
 import org.scalacheck.Gen
 
 // TODO here only var0 differs from an Applicative-lifted Binding Algebra
-class BindingGenerator[R[_], Var](alg: Binding[R, Var, String]) extends Binding[GenRepr[R, ?], Generator[Var], Unit] {
+class BindingGenerator[R[_], Var](alg: Binding[R, Var, String])
+    extends BindingSyntax[GenRepr[R, ?], Generator[Var], Unit] {
 
   override def v(name: Unit): Generator[Var] =
     Generator.Unknown(Gen.nonEmptyListOf(Gen.alphaLowerChar).map(_.mkString).map(alg.v))
@@ -15,6 +16,11 @@ class BindingGenerator[R[_], Var](alg: Binding[R, Var, String]) extends Binding[
 
   override def shift[A](expr: GenRepr[R, A]): GenRepr[R, A] =
     n => expr(n - 1).map(alg.shift)
+
+  override def allVars[T]: GenRepr[R, T] = {
+    case n if n <= 0 => Generator.Fail()
+    case n => Generator.Or(List(var0[T](1), allVars[T](n - 1).map(alg.shift)))
+  }
 
   override def let[A, B](genName: Generator[Var], genValue: GenRepr[R, A], genExpr: GenRepr[R, B]): GenRepr[R, B] =
     n =>
