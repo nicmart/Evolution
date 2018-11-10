@@ -10,9 +10,7 @@ import fastparse.noApi.{P, Parser}
 class ChainParserSyntax[F[_], R[_]](alg: Chain[F, R]) extends Chain[F, ByVarParserK[R, ?]] {
 
   override def empty[A]: ByVarParser[R[F[A]]] =
-    Raw { _ =>
-      P("empty").map(_ => alg.empty)
-    }
+    Raw(_ => P("empty").map(_ => alg.empty), "empty")
 
   override def cons[A](head: ByVarParser[R[A]], tail: ByVarParser[R[F[A]]]): ByVarParser[R[F[A]]] =
     function2("cons", head, tail).map[R[F[A]]] { case (h, t) => alg.cons(h, t) }

@@ -7,6 +7,7 @@ import evolution.primitive.algebra.parser.PrimitiveParsers.varUsage
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.{ByVarParser, PrimitiveParsers}
 import fastparse.noApi._
+import fastparse.parsers.Combinators.Logged
 
 class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
     extends BindingSyntax[ByVarParserK[R, ?], Parser[String], Unit] {
@@ -18,11 +19,13 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
     ByVarParser.Vars.flatMap(anyVarParser)
 
   override def var0[A]: ByVarParser[R[A]] =
-    Raw { vars =>
-      vars.headOption.fold[Parser[R[A]]](Fail) { currentVar =>
-        varUsage(currentVar).map(_ => alg.var0)
-      }
-    }.logged("var0")
+    Raw(
+      vars =>
+        vars.headOption.fold[Parser[R[A]]](Fail) { currentVar =>
+          varUsage(currentVar).map(_ => alg.var0)
+      },
+      "var0"
+    ).logged("var0")
 
   override def shift[A](expr: ByVarParser[R[A]]): ByVarParser[R[A]] =
     expr.popVar.map(alg.shift).logged("shift")
@@ -32,13 +35,13 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
     value: ByVarParser[R[A]],
     expr: ByVarParserK[R, B]
   ): ByVarParserK[R, B] =
-    function3Dep[String, R[A], R[B]]("let", Raw(_ => variableName).logged("let var"), _ => value, {
+    function3Dep[String, R[A], R[B]]("let", Raw(_ => variableName, "let var"), _ => value, {
       case (parsedVariableName, _) => expr.pushVar(parsedVariableName)
     }).map { case (parsedVar, ra, rb) => alg.let(parsedVar, ra, rb) }.logged("let expression")
 
   override def lambda[A, B](variableName: Parser[String], expr: ByVarParserK[R, B]): ByVarParserK[R, A => B] =
     infixFlatMap[String, R[A => B]](
-      Raw(_ => variableName).logged("lambda var"),
+      Raw(_ => Logged(variableName, s"VariableUsage $variableName", println), "lambda var").logged("lambda var"),
       "->",
       parsedVariableName =>
         expr

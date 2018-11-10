@@ -7,7 +7,7 @@ import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, Evolu
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import org.scalatest.{FreeSpec, Matchers}
 
-class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
+class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{empty => nil}
 
@@ -114,9 +114,28 @@ class EvolutionSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
         parseEvolutionOfDoubles(serializedExpression, "s" :: Nil) shouldBe expectedExpression
       }
 
+      /***
+        * The cut makes the parse fail for this reasons:
+        * 1. The expressions to be parsed is known to be a Point
+        * 2. "app" is parsed and then any lambda that returns a Point is accepted
+        * 3. There are 4 available lambdas, expressed in an OR that contains Raws
+        * 4. Inside the first Raw for the lambda say Double -> Point there is another OR, with
+        *    a fix inside that parses successfully with a CUT
+        * 5. "app(fix(f->$f)" is parsed, and then the parser fails because it does not find a double
+        * 6. The parser does not try the other lambdas because of the CUT.
+        * 7. The parsing fails
+        * */
+      "an ambiguous evolution" in {
+        val serializedExpression = "app(fix(f->$f),point(0,0))"
+        val expectedExpression: Binding[Point] =
+          app[Point, Point](fix(lambda("f", var0)), point(double(0), double(0)))
+        parseConstantOfPoints(serializedExpression) shouldBe expectedExpression
+      }
+
       // TODO write a valid expectation
       // TODO This takes 18 seconds!!!!!!!!!!!!!!!!!
       "an abnormous evolution" in {
+        pending
         val serializedExpression =
           "app(app(fix(self->start->evolution->mapCons($evolution,h->t->cons($start,app(app($self,add($start,$h)),$t)))),point(1.0,1.0)),fix(self->cons(point(1.0,1.0),$self)))"
         val expectedExpression: Binding[ListExpr[Double]] =
