@@ -1,14 +1,14 @@
 package evolution.primitive.interpreter
 import evolution.algebra.interpreter.StreamInterpreter
 import evolution.random.RNG
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 import cats.instances.double._
 import cats.kernel.Semigroup
 import evolution.algebra.representation.RNGRepr
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionSerializer}
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionEvaluator, EvolutionSerializer }
 
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
@@ -62,9 +62,9 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         )
       }
 
-      def constant[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+      def constant[F[_], R[_], T](alg: Evolution[F, R, Double, String, String], c: R[T]): R[F[T]] = {
         import alg.chain._, alg.bind._, alg.constants._
-        fix[F[Double]](lambda("self", cons(double(1), var0[F[Double]])))
+        fix[F[T]](lambda("self", cons(c, var0[F[T]])))
       }
 
       def constant2[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] = {
@@ -72,13 +72,21 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
       }
 
-      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_], T: Semigroup](
+        alg: Evolution[F, R, Double, String, String],
+        s0: R[T],
+        v0: R[T]): R[F[T]] = {
         import alg.chain._, alg.bind._, alg.constants._
-        app(app(integrate[F, R, Double](alg), double(100)), constant(alg))
+        app(app(integrate[F, R, T](alg), s0), constant(alg, v0))
       }
 
-      val stream = materialize(drawing(interpreter))
+      import interpreter.constants._
+
+      val stream = materialize(drawing(interpreter, double(100), double(1)))
       stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)
+
+      val pointStream = materialize(drawing(interpreter, point(double(0), double(0)), point(double(1), double(1))))
+      pointStream.take(3).toList shouldBe List(Point(0, 0), Point(1, 1), Point(2, 2))
     }
 
     def materialize[T](evaluationResult: EvaluationResult[RNGRepr[T]]): Stream[T] =

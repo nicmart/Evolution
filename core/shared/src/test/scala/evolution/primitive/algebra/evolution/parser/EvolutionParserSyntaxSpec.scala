@@ -1,15 +1,18 @@
-package evolution.primitive.algebra.evolution
-import cats.kernel.Semigroup
+package evolution.primitive.algebra.evolution.parser
+
 import cats.implicits._
+import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.TestInterpreters
-import evolution.primitive.algebra.evolution.parser.{ EvolutionExpressions, EvolutionGrammar }
+import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{ empty => nil }
+  import interpreter.bind._
+  import interpreter.chain.{ empty => nil, _ }
+  import interpreter.constants._
 
   "An Evolution Grammar" - {
     "should parse constants" - {

@@ -214,10 +214,10 @@ class EvolutionGrammar[F[_], R[_], Var](
   private lazy val points = internalConstants.points
 
   private lazy val all: List[R[_]] = List[R[_]](
+    self.chain.evolutionOf(points),
     self.constants.constantOf(doubles),
     self.constants.constantOf(points),
-    self.chain.evolutionOf(doubles),
-    self.chain.evolutionOf(points)
+    self.chain.evolutionOf(doubles)
   )
 
   private lazy val internalChain: ChainExpressions[F, R] =
