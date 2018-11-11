@@ -1,7 +1,7 @@
 package evolution.primitive.algebra.evolution.interpreter
 import evolution.geometry.Point
-import evolution.primitive.algebra.evolution.interpreter.Types.{ F, TypeInfo }
 import org.scalatest.{ FreeSpec, Matchers }
+import evolution.primitive.algebra.evolution.interpreter.Types._
 
 class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
   val interpreter = new EvolutionTypedSerializer
@@ -9,23 +9,28 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
 
   "EvolutionTypedSerializer" - {
     "should serialize with type information" - {
-      "an empty evolution of doubles" in {
-        emptyEvolution(evolutionOfDoubles) shouldBe "empty:F[Double]"
+      "evolutions" - {
+        "an empty evolution of doubles" in {
+          emptyEvolution.infer(evolutionOfDoubles).toString shouldBe "empty: F[Double]"
+        }
+
+        "an empty evolution of points" in {
+          emptyEvolution.infer(evolutionOfPoints).toString shouldBe "empty: F[Point]"
+        }
       }
 
-      "an empty evolution of points" in {
-        emptyEvolution(evolutionOfPoints) shouldBe "empty:F[Point]"
-      }
+      "constants" - {
+        "an app that returns a double" in {
+          val expr = app[Point, Double](lambda("p", double(2)), point(double(0), double(0)))
+          val expected =
+            "app((p: Point -> 2.0: Double): Point -> Double, point(0.0: Double, 0.0: Double): Point): Double"
+          expr.infer(doubleConstant).toString shouldBe expected
+        }
 
-      "an app that returns a double" in {
-        val expr = app[Point, Double](lambda("p", double(2)), point(double(0), double(0)))
-        expr(doubleConstant) shouldBe "app(p:Point->2:Double):Double"
+        "a point" in {
+          point(double(0), double(1)).infer(pointConstant).toString shouldBe "point(0.0: Double, 1.0: Double): Point"
+        }
       }
     }
   }
-
-  lazy val evolutionOfDoubles: TypeInfo[F[Double]] = TypeInfo("F[Double]")
-  lazy val evolutionOfPoints: TypeInfo[F[Double]] = TypeInfo("F[Point]")
-  lazy val doubleConstant: TypeInfo[Double] = TypeInfo("Double")
-  lazy val pointConstant: TypeInfo[Double] = TypeInfo("Point")
 }
