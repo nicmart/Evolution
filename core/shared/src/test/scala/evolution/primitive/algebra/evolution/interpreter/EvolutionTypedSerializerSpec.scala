@@ -5,17 +5,25 @@ import evolution.primitive.algebra.evolution.interpreter.Types._
 
 class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
   val interpreter = new EvolutionTypedSerializer
-  import interpreter.bind._, interpreter.chain.{ empty => emptyEvolution }, interpreter._, interpreter.constants._
+  import interpreter.bind._, interpreter.chain.{ empty => emptyEvolution }, interpreter.chain._, interpreter.constants._
 
   "EvolutionTypedSerializer" - {
     "should serialize with type information" - {
       "evolutions" - {
-        "an empty evolution of doubles" in {
-          emptyEvolution.infer(evolutionOfDoubles).toString shouldBe "empty: F[Double]"
+        "of doubles" - {
+          "empty" in {
+            emptyEvolution.infer(evolutionOfDoubles).toString shouldBe "empty: F[Double]"
+          }
+
+          "cons" in {
+            cons(double(1), emptyEvolution).infer(evolutionOfDoubles) shouldBe ""
+          }
         }
 
-        "an empty evolution of points" in {
-          emptyEvolution.infer(evolutionOfPoints).toString shouldBe "empty: F[Point]"
+        "of points" - {
+          "empty" in {
+            emptyEvolution.infer(evolutionOfPoints).toString shouldBe "empty: F[Point]"
+          }
         }
       }
 
