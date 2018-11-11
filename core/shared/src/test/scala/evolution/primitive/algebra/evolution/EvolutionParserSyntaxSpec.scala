@@ -3,13 +3,13 @@ import cats.kernel.Semigroup
 import cats.implicits._
 import evolution.geometry.Point
 import evolution.primitive.algebra.TestInterpreters
-import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.evolution.parser.{ EvolutionExpressions, EvolutionGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{empty => nil}
+  import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{ empty => nil }
 
   "An Evolution Grammar" - {
     "should parse constants" - {
@@ -115,16 +115,16 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
       }
 
       /***
-        * The cut makes the parse fail for this reasons:
-        * 1. The expressions to be parsed is known to be a Point
-        * 2. "app" is parsed and then any lambda that returns a Point is accepted
-        * 3. There are 4 available lambdas, expressed in an OR that contains Raws
-        * 4. Inside the first Raw for the lambda say Double -> Point there is another OR, with
-        *    a fix inside that parses successfully with a CUT
-        * 5. "app(fix(f->$f)" is parsed, and then the parser fails because it does not find a double
-        * 6. The parser does not try the other lambdas because of the CUT.
-        * 7. The parsing fails
-        * */
+       * The cut makes the parse fail for this reasons:
+       * 1. The expressions to be parsed is known to be a Point
+       * 2. "app" is parsed and then any lambda that returns a Point is accepted (allApp in BindingSyntax)
+       * 3. There are 4 available lambdas, expressed in an OR that contains Raws
+       * 4. Inside the first Raw for the lambda say Double -> Point there is another OR, with
+       *    a fix inside that parses successfully with a CUT
+       * 5. "app(fix(f->$f)" is parsed, and then the parser fails because it does not find a double
+       * 6. The parser does not try the other lambdas because of the CUT.
+       * 7. The parsing fails
+       * */
       "an ambiguous evolution" in {
         val serializedExpression = "app(fix(f->$f),point(0,0))"
         val expectedExpression: Binding[Point] =
@@ -178,7 +178,7 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   def parseConstantOfDoubles(serializedExpression: String, currentVars: List[String] = Nil): Binding[Double] = {
     expressions.constants
       .constantOf(expressions.constants.doubles)(Semigroup[Double])
-      .parser(currentVars)
+      .loggingParser(currentVars)
       .parse(serializedExpression)
       .get
       .value
@@ -187,7 +187,7 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Point] =
     expressions.constants
       .constantOf(expressions.constants.points)(Semigroup[Point])
-      .parser(currentVars)
+      .loggingParser(currentVars)
       .parse(serializedExpression)
       .get
       .value

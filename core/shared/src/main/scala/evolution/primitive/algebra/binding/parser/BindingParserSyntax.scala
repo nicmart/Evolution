@@ -1,11 +1,11 @@
 package evolution.primitive.algebra.binding.parser
 
-import evolution.primitive.algebra.binding.{Binding, BindingSyntax}
-import evolution.primitive.algebra.parser.ByVarParser.{ByVarParserK, Raw}
-import evolution.primitive.algebra.parser.ByVarParsers.{function1, function2, function3Dep, infixFlatMap}
+import evolution.primitive.algebra.binding.{ Binding, BindingSyntax }
+import evolution.primitive.algebra.parser.ByVarParser.{ ByVarParserK, Raw }
+import evolution.primitive.algebra.parser.ByVarParsers.{ function1, function2, function3Dep, infixFlatMap }
 import evolution.primitive.algebra.parser.PrimitiveParsers.varUsage
 import evolution.primitive.algebra.parser.ParserConfig.White._
-import evolution.primitive.algebra.parser.{ByVarParser, PrimitiveParsers}
+import evolution.primitive.algebra.parser.{ ByVarParser, PrimitiveParsers }
 import fastparse.noApi._
 import fastparse.parsers.Combinators.Logged
 
@@ -25,10 +25,10 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
           varUsage(currentVar).map(_ => alg.var0)
       },
       "var0"
-    ).logged("var0")
+    )
 
   override def shift[A](expr: ByVarParser[R[A]]): ByVarParser[R[A]] =
-    expr.popVar.map(alg.shift).logged("shift")
+    expr.popVar.map(alg.shift)
 
   override def let[A, B](
     variableName: Parser[String],
@@ -37,34 +37,29 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
   ): ByVarParserK[R, B] =
     function3Dep[String, R[A], R[B]]("let", Raw(_ => variableName, "let var"), _ => value, {
       case (parsedVariableName, _) => expr.pushVar(parsedVariableName)
-    }).map { case (parsedVar, ra, rb) => alg.let(parsedVar, ra, rb) }.logged("let expression")
+    }).map { case (parsedVar, ra, rb) => alg.let(parsedVar, ra, rb) }
 
   override def lambda[A, B](variableName: Parser[String], expr: ByVarParserK[R, B]): ByVarParserK[R, A => B] =
     infixFlatMap[String, R[A => B]](
-      Raw(_ => Logged(variableName, s"VariableUsage $variableName", println), "lambda var").logged("lambda var"),
+      Raw(_ => variableName, s"VariableUsage: $variableName"),
       "->",
       parsedVariableName =>
-        expr
-          .pushVar(parsedVariableName)
-          .map { parsedExpression =>
-            alg.lambda[A, B](parsedVariableName, parsedExpression)
-          }
-          .logged("lambda body")
+        expr.pushVar(parsedVariableName).map { parsedExpression =>
+          alg.lambda[A, B](parsedVariableName, parsedExpression)
+      }
     )
 
   override def app[A, B](f: ByVarParserK[R, A => B], a: ByVarParser[R[A]]): ByVarParserK[R, B] =
-    function2("app", f, a)
-      .map {
-        case (parsedFunction, parsedArgument) => alg.app(parsedFunction, parsedArgument)
-      }
-      .logged("app expr")
+    function2("app", f, a).map {
+      case (parsedFunction, parsedArgument) => alg.app(parsedFunction, parsedArgument)
+    }
 
   override def fix[A](expr: ByVarParserK[R, A => A]): ByVarParser[R[A]] =
-    function1("fix", expr).map(alg.fix).logged("fix expr")
+    function1("fix", expr).map(alg.fix)
 
   private def anyVarParser[T](vars: List[String]): ByVarParser[R[T]] =
     vars match {
       case _ :: tail => ByVarParser.Or(List(var0, shift(anyVarParser(tail))))
-      case Nil => ByVarParser.Fail()
+      case Nil       => ByVarParser.Fail()
     }
 }

@@ -1,10 +1,10 @@
 package evolution.primitive.algebra.evolution.parser
 
-import cats.{Defer, MonoidK, Semigroup}
+import cats.{ Defer, MonoidK, Semigroup }
 import evolution.geometry.Point
-import evolution.primitive.algebra.evolution.{Evolution, EvolutionSyntax, parser}
+import evolution.primitive.algebra.evolution.{ Evolution, EvolutionSyntax, parser }
 import cats.instances.double._
-import evolution.primitive.algebra.binding.{Binding, BindingSyntax}
+import evolution.primitive.algebra.binding.{ Binding, BindingSyntax }
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.evolution.parser.Debug.debug
@@ -189,7 +189,6 @@ class EvolutionGrammar[F[_], R[_], Var](
 
   override def chain: ChainExpressions[F, R] = new ChainExpressions[F, R] {
     override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] = {
-      println("Executing")
       or(internalChain.evolutionOf(constant), internalBinding.valueOf(self.chain.evolutionOf(constant)))
     }
   }
