@@ -16,13 +16,23 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
           }
 
           "cons" in {
-            cons(double(1), emptyEvolution).infer(evolutionOfDoubles) shouldBe ""
+            cons(double(1), emptyEvolution)
+              .infer(evolutionOfDoubles)
+              .toString shouldBe "cons(1.0: Double, empty: F[Double]): F[Double]"
           }
+
+          "mapEmpty" in {}
         }
 
         "of points" - {
           "empty" in {
             emptyEvolution.infer(evolutionOfPoints).toString shouldBe "empty: F[Point]"
+          }
+
+          "cons" in {
+            cons(point(double(1), double(0)), emptyEvolution)
+              .infer(evolutionOfPoints)
+              .toString shouldBe "cons(point(1.0: Double, 0.0: Double): Point, empty: F[Point]): F[Point]"
           }
         }
       }

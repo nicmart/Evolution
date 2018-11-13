@@ -10,8 +10,13 @@ import evolution.primitive.algebra.evolution.Evolution
 class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
   override val chain: Chain[F, R] = new Chain[F, R] {
     override def empty[A]: R[F[A]] = R(requiredType => AnnotatedValue(requiredType, "empty"))
-    override def cons[A](head: R[A], tail: R[F[A]]): R[F[A]] = ???
-    //R(requiredType => AnnotatedValue(requiredType, s"cons(${head(re)})"))
+    override def cons[A](head: R[A], tail: R[F[A]]): R[F[A]] =
+      R { requiredType =>
+        AnnotatedValue(
+          requiredType,
+          s"cons(${head.infer(requiredType.asHigherKindedType.inner)}, ${tail.infer(requiredType)})"
+        )
+      }
     override def mapEmpty[A](eva: R[F[A]], eva2: R[F[A]]): R[F[A]] = ???
     override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] = ???
   }
@@ -32,7 +37,7 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
 
     override def lambda[A, B](variable: String, expr: R[B]): R[A => B] =
       R(requiredType => {
-        val functionTypeInfo = requiredType.asFunction[A, B]
+        val functionTypeInfo = requiredType.asFunction
         AnnotatedValue(functionTypeInfo, s"$variable: ${functionTypeInfo.from} -> ${expr.infer(functionTypeInfo.to)}")
       })
 
@@ -46,66 +51,72 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
 }
 
 object Types {
-  sealed trait TypeInfo[T] {
+  sealed trait TypeInfo {
     def info: String
     override def toString: String = info
 
-    def unify(other: TypeInfo[T]): TypeInfo[T] = (this, other) match {
+    def unify(other: TypeInfo): TypeInfo = (this, other) match {
       case (Unknown(_), _) => other
       case (_, Unknown(_)) => this
-//      case (FunctionTypeInfo(from1, to1), FunctionTypeInfo(from2, to2)) =>
-//        FunctionTypeInfo(from1.unify(from2), to1.unify(to2))
-//      case (HigherKindedTypeInfo(label1, t1), HigherKindedTypeInfo(label2, t2)) if label1 == label2 =>
-//        HigherKindedTypeInfo(label1, t1.unify(t2))
+      case (FunctionTypeInfo(from1, to1), FunctionTypeInfo(from2, to2)) =>
+        FunctionTypeInfo(from1.unify(from2), to1.unify(to2))
+      case (HigherKindedTypeInfo(label1, t1), HigherKindedTypeInfo(label2, t2)) if label1 == label2 =>
+        HigherKindedTypeInfo(label1, t1.unify(t2))
       case (type1, type2) if type1 == type2 => this
       case _                                => Error(this, other)
     }
 
-    def unify(annotatedValue: AnnotatedValue[T]): TypeInfo[T] =
+    def unify(annotatedValue: AnnotatedValue): TypeInfo =
       unify(annotatedValue.typeInfo)
 
-    def asFunction[A, B](implicit ev: T =:= (A => B)): FunctionTypeInfo[A, B] =
-      this.asInstanceOf[FunctionTypeInfo[A, B]]
+    def asFunction: FunctionTypeInfo =
+      this.asInstanceOf[FunctionTypeInfo]
 
-    def asHigherKindedType[A, G[_]](implicit ev: T =:= (G[A])): HigherKindedTypeInfo[A, G] =
-      this.asInstanceOf[HigherKindedTypeInfo[A, G]]
+    def asHigherKindedType: HigherKindedTypeInfo =
+      this.asInstanceOf[HigherKindedTypeInfo]
   }
 
-  case class Unknown[T](override final val info: String = "unknown") extends TypeInfo[T]
-  case class Error[T](a: TypeInfo[T], b: TypeInfo[T]) extends TypeInfo[T] {
+  case class Unknown(override final val info: String = "unknown") extends TypeInfo
+  case class Error(a: TypeInfo, b: TypeInfo) extends TypeInfo {
     override def info: String = s"error($a and $b are incompatible)"
   }
-  case class SimpleTypeInfo[T](override val info: String) extends TypeInfo[T]
-  case class FunctionTypeInfo[A, B](from: TypeInfo[A], to: TypeInfo[B]) extends TypeInfo[A => B] {
+  case class SimpleTypeInfo(override val info: String) extends TypeInfo
+  case class FunctionTypeInfo(from: TypeInfo, to: TypeInfo) extends TypeInfo {
     override def info: String = s"$from -> $to"
   }
-  case class HigherKindedTypeInfo[A, G[_]](label: String, inner: TypeInfo[A]) extends TypeInfo[G[A]] {
+  case class HigherKindedTypeInfo(label: String, inner: TypeInfo) extends TypeInfo {
     override def info: String = s"$label[$inner]"
   }
 
-  case class AnnotatedValue[T](typeInfo: TypeInfo[T], value: String) {
+  case class AnnotatedValue(typeInfo: TypeInfo, value: String) {
     override def toString = s"$value: $typeInfo"
     def wrapped = s"($value): $typeInfo"
+    def unify(otherType: TypeInfo): AnnotatedValue =
+      copy(typeInfo = typeInfo.unify(otherType))
   }
 
   case class F[T]()
 
   sealed trait R[T] {
-    def infer(requiredType: TypeInfo[T]): AnnotatedValue[T]
+    def infer(requiredType: TypeInfo): AnnotatedValue
+    def unify(typeInfo: TypeInfo): R[T] =
+      R { requiredType =>
+        infer(requiredType).unify(typeInfo)
+      }
   }
 
   object R {
-    def apply[T](f: TypeInfo[T] => AnnotatedValue[T]): R[T] = new R[T] {
-      override def infer(requiredType: TypeInfo[T]): AnnotatedValue[T] = f(requiredType)
+    def apply[T](f: TypeInfo => AnnotatedValue): R[T] = new R[T] {
+      override def infer(requiredType: TypeInfo): AnnotatedValue = f(requiredType)
     }
 
-    def known[T](annotatedValue: AnnotatedValue[T]): R[T] = R { requiredType =>
-      annotatedValue.copy(typeInfo = requiredType.unify(annotatedValue.typeInfo))
+    def known[T](annotatedValue: AnnotatedValue): R[T] = R { requiredType =>
+      annotatedValue.unify(requiredType)
     }
   }
 
-  lazy val doubleConstant: TypeInfo[Double] = SimpleTypeInfo("Double")
-  lazy val evolutionOfDoubles: TypeInfo[F[Double]] = HigherKindedTypeInfo("F", doubleConstant)
-  lazy val pointConstant: TypeInfo[Point] = SimpleTypeInfo("Point")
-  lazy val evolutionOfPoints: TypeInfo[F[Point]] = Types.HigherKindedTypeInfo("F", pointConstant)
+  lazy val doubleConstant: TypeInfo = SimpleTypeInfo("Double")
+  lazy val evolutionOfDoubles: TypeInfo = HigherKindedTypeInfo("F", doubleConstant)
+  lazy val pointConstant: TypeInfo = SimpleTypeInfo("Point")
+  lazy val evolutionOfPoints: TypeInfo = Types.HigherKindedTypeInfo("F", pointConstant)
 }
