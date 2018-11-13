@@ -10,6 +10,7 @@ import evolution.primitive.algebra.evolution.Evolution
 class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
   override val chain: Chain[F, R] = new Chain[F, R] {
     override def empty[A]: R[F[A]] = R(requiredType => AnnotatedValue(requiredType, "empty"))
+
     override def cons[A](head: R[A], tail: R[F[A]]): R[F[A]] =
       R { requiredType =>
         AnnotatedValue(
@@ -17,7 +18,14 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
           s"cons(${head.infer(requiredType.asHigherKindedType.inner)}, ${tail.infer(requiredType)})"
         )
       }
-    override def mapEmpty[A](eva: R[F[A]], eva2: R[F[A]]): R[F[A]] = ???
+
+    override def mapEmpty[A](eva: R[F[A]], eva2: R[F[A]]): R[F[A]] = R { requiredType =>
+      AnnotatedValue(
+        requiredType.unify(eva.infer(requiredType)).unify(eva2.infer(requiredType)),
+        s"mapEmpty(${eva.infer(requiredType)}, ${eva2.infer(requiredType)})"
+      )
+    }
+
     override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] = ???
   }
 

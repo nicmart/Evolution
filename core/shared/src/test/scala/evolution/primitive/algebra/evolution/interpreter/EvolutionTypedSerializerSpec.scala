@@ -21,7 +21,11 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
               .toString shouldBe "cons(1.0: Double, empty: F[Double]): F[Double]"
           }
 
-          "mapEmpty" in {}
+          "mapEmpty" in {
+            val actual = mapEmpty[Double](emptyEvolution, emptyEvolution).infer(evolutionOfDoubles)
+            val expected = "mapEmpty(empty: F[Double], empty: F[Double]): F[Double]"
+            actual.toString shouldBe expected
+          }
         }
 
         "of points" - {
