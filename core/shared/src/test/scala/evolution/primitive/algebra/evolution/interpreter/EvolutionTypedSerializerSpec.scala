@@ -26,6 +26,18 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
             val expected = "mapEmpty(empty: F[Double], empty: F[Double]): F[Double]"
             actual.toString shouldBe expected
           }
+
+          "mapCons" in {
+            val actual =
+              mapCons[Double, Double](emptyEvolution)(
+                lambda[Double, F[Double] => F[Double]](
+                  "head",
+                  lambda[F[Double], F[Double]]("tail", emptyEvolution[Double]))
+              ).infer(evolutionOfDoubles)
+            val expected =
+              "mapCons(empty: F[Double], head -> tail -> empty: Double -> F[Double] -> F[Double]): F[Double]"
+            actual.toString shouldBe expected
+          }
         }
 
         "of points" - {
@@ -38,6 +50,12 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
               .infer(evolutionOfPoints)
               .toString shouldBe "cons(point(1.0: Double, 0.0: Double): Point, empty: F[Point]): F[Point]"
           }
+
+          "mapEmpty" in {
+            val actual = mapEmpty[Point](emptyEvolution, emptyEvolution).infer(evolutionOfPoints)
+            val expected = "mapEmpty(empty: F[Point], empty: F[Point]): F[Point]"
+            actual.toString shouldBe expected
+          }
         }
       }
 
@@ -45,7 +63,7 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
         "an app that returns a double" in {
           val expr = app[Point, Double](lambda("p", double(2)), point(double(0), double(0)))
           val expected =
-            "app((p: Point -> 2.0: Double): Point -> Double, point(0.0: Double, 0.0: Double): Point): Double"
+            "app(p -> 2.0: Point -> Double, point(0.0: Double, 0.0: Double): Point): Double"
           expr.infer(doubleConstant).toString shouldBe expected
         }
 

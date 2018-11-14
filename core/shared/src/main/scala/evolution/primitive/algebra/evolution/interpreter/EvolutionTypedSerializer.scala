@@ -26,7 +26,22 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       )
     }
 
-    override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] = ???
+    override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] =
+      R { requiredType =>
+        val evaType = requiredType.asHigherKindedType.copy(inner = Unknown())
+        val fRequiredType =
+          FunctionTypeInfo(
+            eva.infer(evaType).typeInfo.asHigherKindedType.inner,
+            FunctionTypeInfo(
+              eva.infer(evaType).typeInfo,
+              requiredType
+            )
+          )
+        AnnotatedValue(
+          requiredType,
+          s"mapCons(${eva.infer(evaType)}, ${f.infer(fRequiredType)})"
+        )
+      }
   }
 
   override val constants: Constants[R, Double] = new Constants[R, Double] {
@@ -46,12 +61,13 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
     override def lambda[A, B](variable: String, expr: R[B]): R[A => B] =
       R(requiredType => {
         val functionTypeInfo = requiredType.asFunction
-        AnnotatedValue(functionTypeInfo, s"$variable: ${functionTypeInfo.from} -> ${expr.infer(functionTypeInfo.to)}")
+        val inferredType = functionTypeInfo.copy(to = expr.infer(functionTypeInfo.to).typeInfo)
+        AnnotatedValue(inferredType, s"$variable -> ${expr.infer(functionTypeInfo.to).value}")
       })
 
     override def app[A, B](f: R[A => B], a: R[A]): R[B] = R(bType => {
       val fType = FunctionTypeInfo(a.infer(Unknown()).typeInfo, bType)
-      AnnotatedValue(bType, s"app(${f.infer(fType).wrapped}, ${a.infer(Unknown())})")
+      AnnotatedValue(bType, s"app(${f.infer(fType)}, ${a.infer(Unknown())})")
     })
 
     override def fix[A](expr: R[A => A]): R[A] = ???
