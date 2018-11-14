@@ -67,6 +67,14 @@ class EvolutionTypedSerializerSpec extends FreeSpec with Matchers {
           expr.infer(doubleConstant).toString shouldBe expected
         }
 
+        // TODO this is the culprit
+        "an app that returns a double taking an empty evolution as input" in {
+          val expr = app[F[Double], Double](lambda("p", double(0)), emptyEvolution[Double])
+          val expected =
+            "app(p -> 0.0: F[Double] -> Double, 0.0: Double): Double"
+          expr.infer(doubleConstant).toString shouldBe expected
+        }
+
         "a point" in {
           point(double(0), double(1)).infer(pointConstant).toString shouldBe "point(0.0: Double, 1.0: Double): Point"
         }
