@@ -49,14 +49,24 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       R.known(AnnotatedValue(doubleConstant, d.toString))
     override def point(x: R[Double], y: R[Double]): R[Point] =
       R.known(AnnotatedValue(pointConstant, s"point(${x.infer(doubleConstant)}, ${y.infer(doubleConstant)})"))
-    override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = ???
+    override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = R { requiredType =>
+      val annotatedA @ AnnotatedValue(aType, aValue) = a.infer(requiredType)
+      val annotatedB @ AnnotatedValue(bType, bValue) = b.infer(requiredType)
+      val unifiedType = requiredType.unify(aType).unify(bType)
+      AnnotatedValue(unifiedType, s"add($annotatedA, $annotatedB)")
+    }
   }
 
   override val bind: Binding[R, String, String] = new Binding[R, String, String] {
-    override def v(name: String): String = ???
-    override def var0[A]: R[A] = ???
-    override def shift[A](expr: R[A]): R[A] = ???
-    override def let[A, B](variable: String, value: R[A], expr: R[B]): R[B] = ???
+    override def v(name: String): String = name
+    override def var0[A]: R[A] = R.unknown("var0")
+    override def shift[A](expr: R[A]): R[A] = expr.mapValue(value => value.copy(value = s"shift($value)"))
+    override def let[A, B](variable: String, value: R[A], expr: R[B]): R[B] = R { requiredBType =>
+      val annotatedA @ AnnotatedValue(aType, aValue) = value.infer(Unknown())
+      val annotatedB @ AnnotatedValue(bType, bValue) = expr.infer(requiredBType)
+      val unifiedBType = bType.unify(requiredBType)
+      AnnotatedValue(unifiedBType, s"let($variable, $annotatedA, $annotatedB)")
+    }
 
     override def lambda[A, B](variable: String, expr: R[B]): R[A => B] =
       R(requiredType => {
@@ -70,7 +80,11 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       AnnotatedValue(bType, s"app(${f.infer(fType)}, ${a.infer(Unknown())})")
     })
 
-    override def fix[A](expr: R[A => A]): R[A] = ???
+    override def fix[A](expr: R[A => A]): R[A] = R { requiredAType =>
+      val expectedFuncType = FunctionTypeInfo(requiredAType, requiredAType)
+      val annotatedFunc @ AnnotatedValue(FunctionTypeInfo(from, to), exprValue) = expr.infer(expectedFuncType)
+      AnnotatedValue(requiredAType, s"fix($annotatedFunc)")
+    }
   }
 }
 
@@ -127,6 +141,9 @@ object Types {
       R { requiredType =>
         infer(requiredType).unify(typeInfo)
       }
+    def mapValue(f: AnnotatedValue => AnnotatedValue): R[T] = R { t =>
+      f(infer(t))
+    }
   }
 
   object R {
@@ -136,6 +153,10 @@ object Types {
 
     def known[T](annotatedValue: AnnotatedValue): R[T] = R { requiredType =>
       annotatedValue.unify(requiredType)
+    }
+
+    def unknown[T](value: String): R[T] = R { requiredType =>
+      AnnotatedValue(requiredType, value)
     }
   }
 
