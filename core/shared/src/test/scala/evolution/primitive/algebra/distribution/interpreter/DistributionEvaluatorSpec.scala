@@ -1,10 +1,10 @@
-package evolution.primitive.algebra.distribution
+package evolution.primitive.algebra.distribution.interpreter
 
 import cats.implicits._
 import evolution.algebra.representation.RNGRepr
 import evolution.generator.instances.GeneratorInstances
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
-import evolution.primitive.algebra.distribution.interpreter.DistributionEvaluator
+import evolution.primitive.algebra.distribution.Distribution
 import evolution.random.RNG
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Inspectors, Matchers }
