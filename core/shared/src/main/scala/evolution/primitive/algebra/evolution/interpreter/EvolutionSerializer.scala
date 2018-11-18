@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.evolution.interpreter
-import evolution.primitive.algebra.{ConstString, CtxString}
+import evolution.primitive.algebra.{ ConstString, CtxString }
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.binding.interpreter.BindingSerializer
 import evolution.primitive.algebra.constants.Constants
@@ -7,10 +7,12 @@ import evolution.primitive.algebra.constants.interpreter.ConstantsSerializer
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.ChainSerializer
+import evolution.primitive.algebra.distribution.Distribution
 
 // TODO missing tests
 class EvolutionSerializer[F[_]] extends Evolution[F, CtxString, Double, String, String] {
   override val chain: Chain[F, CtxString] = new ChainSerializer
   override val constants: Constants[CtxString, Double] = ConstantsSerializer
   override val bind: Binding[CtxString, String, String] = BindingSerializer
+  override val distribution: Distribution[F, CtxString] = ???
 }

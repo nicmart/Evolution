@@ -5,6 +5,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.constants.Constants
+import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 
 class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
@@ -86,6 +87,8 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       AnnotatedValue(requiredAType, s"fix($annotatedFunc)")
     }
   }
+
+  override val distribution: Distribution[F, R] = ???
 }
 
 object Types {

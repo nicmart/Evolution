@@ -1,7 +1,8 @@
 package evolution.primitive.algebra
 
+import distribution._
 import _root_.evolution.geometry.Point
-import binding.{Binding => BindingAlg}
+import binding.{ Binding => BindingAlg }
 import evolution._
 import chain._
 import constants._
@@ -67,5 +68,6 @@ trait TestInterpreters {
     override val chain: Chain[ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
+    override val distribution: Distribution[ListExpr, Binding] = ???
   }
 }

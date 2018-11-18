@@ -1,7 +1,7 @@
-package evolution.primitive.interpreter
+package evolution.primitive.algebra.binding.interpreter
+
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult.Value
-import evolution.primitive.algebra.binding.interpreter.{BindingEvaluator, EvaluationResult}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingEvaluatorSpec extends FreeSpec with Matchers {
   val evaluator = BindingEvaluator
