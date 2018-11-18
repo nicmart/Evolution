@@ -88,7 +88,14 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
     }
   }
 
-  override val distribution: Distribution[F, R] = ???
+  override val distribution: Distribution[F, R] = new Distribution[F, R] {
+    override def uniform(from: R[Double], to: R[Double]): R[F[Double]] = R { required =>
+      val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
+      val annotatedFrom @ AnnotatedValue(fromType, fromValue) = from.infer(inner)
+      val annotatedTo @ AnnotatedValue(toType, toValue) = to.infer(inner)
+      AnnotatedValue(required, s"uniform($annotatedFrom, $annotatedTo)")
+    }
+  }
 }
 
 object Types {

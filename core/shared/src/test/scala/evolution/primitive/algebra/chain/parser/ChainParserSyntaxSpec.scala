@@ -1,17 +1,18 @@
-package evolution.primitive.algebra.chain
+package evolution.primitive.algebra.chain.parser
 
-import evolution.primitive.algebra.TestInterpreters
-import evolution.primitive.algebra.parser._
 import cats.implicits._
-import org.scalatest.{FreeSpec, Inside, Matchers}
 import cats.kernel.Semigroup
+import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.evolution.parser.{ EvolutionExpressions, EvolutionGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
+import evolution.primitive.algebra.parser._
+import org.scalatest.{ FreeSpec, Inside, Matchers }
 
 class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._, interpreter.constants._, interpreter.chain._, interpreter.chain.{empty => nil}
+  import interpreter.chain.{ empty => nil, _ }
+  import interpreter.constants._
 
   "A CoreDrawingAlgebraParser" - {
     "should parse" - {

@@ -1,21 +1,17 @@
-package evolution.primitive.algebra.binding
+package evolution.primitive.algebra.binding.parser
 
-import cats.kernel.Semigroup
-import cats.{Defer, MonoidK}
 import evolution.primitive.algebra.TestInterpreters
-import cats.implicits._
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{EvolutionExpressions, EvolutionGrammar}
+import evolution.primitive.algebra.evolution.parser.{ EvolutionExpressions, EvolutionGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
-  import ParserConfig.White._
-  import fastparse.noApi._
 
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._, interpreter.constants._
+  import interpreter.bind._
+  import interpreter.constants._
 
   "A Binding Algebra Parser should parse" - {
     "let expressions that are " - {
@@ -126,11 +122,10 @@ class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParse
     expressions.binding
       .function(
         expressions.binding.valueOf(expressions.constants.doubles),
-        expressions.binding
-          .function(
-            expressions.binding.valueOf(expressions.constants.doubles),
-            expressions.binding.valueOf(expressions.constants.doubles)
-          )
+        expressions.binding.function(
+          expressions.binding.valueOf(expressions.constants.doubles),
+          expressions.binding.valueOf(expressions.constants.doubles)
+        )
       )
       .parser(Nil)
       .parse(expression)
