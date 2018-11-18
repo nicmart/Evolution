@@ -185,11 +185,18 @@ class EvolutionGrammar[F[_], R[_], Var](
 ) extends EvolutionExpressions[F, R]
     with OrMonoid[R] {
 
+  private val distribution = syntax.distribution
+
   private def doubleLiteral: R[Double] = syntax.constants.double(())
 
   override def chain: ChainExpressions[F, R] = new ChainExpressions[F, R] {
     override def evolutionOf[T: Semigroup](constant: R[T]): R[F[T]] = {
-      or(internalChain.evolutionOf(constant), internalBinding.valueOf(self.chain.evolutionOf(constant)))
+      or(
+        internalChain.evolutionOf(constant),
+        internalBinding.valueOf(self.chain.evolutionOf(constant)),
+        // This is only of type Double
+        //distribution.uniform(self.constants.constantOf(constant), self.constants.constantOf(constant))
+      )
     }
   }
 

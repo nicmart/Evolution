@@ -7,6 +7,7 @@ import evolution.primitive.algebra.evolution.{ Evolution, EvolutionSyntax }
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.parser.ChainParserSyntax
 import evolution.primitive.algebra.distribution.Distribution
+import evolution.primitive.algebra.distribution.parser.DistributionParserSyntax
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import fastparse.noApi.Parser
 
@@ -22,5 +23,6 @@ class EvolutionParserSyntax[F[_], R[_]](alg: Evolution[F, R, Double, String, Str
   override val bind: BindingSyntax[ByVarParserK[R, ?], Parser[String], Unit] =
     new BindingParserSyntax(alg.bind)
 
-  override val distribution: Distribution[F, ByVarParserK[R, ?]] = ???
+  override val distribution: Distribution[F, ByVarParserK[R, ?]] =
+    new DistributionParserSyntax(alg.distribution)
 }
