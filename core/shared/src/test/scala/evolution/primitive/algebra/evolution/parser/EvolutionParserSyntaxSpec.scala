@@ -137,7 +137,6 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
       }
 
       // TODO write a valid expectation
-      // TODO This takes 18 seconds!!!!!!!!!!!!!!!!!
       "an abnormous evolution" in {
         pending
         val serializedExpression =
@@ -150,8 +149,8 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   }
 
   def parseLambdaOfEvolutions(serializedExpression: String): Binding[ListExpr[Double] => ListExpr[Double]] =
-    expressions2
-      .function(expressions2.evolutionOfDoubles, expressions2.evolutionOfDoubles)
+    expressions
+      .function(expressions.evolutionOfDoubles, expressions.evolutionOfDoubles)
       .parser(Nil)
       .parse(serializedExpression)
       .get
@@ -161,20 +160,20 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
     serializedExpression: String,
     currentVars: List[String] = Nil
   ): Binding[ListExpr[Double]] =
-    expressions2.evolutionOfDoubles.parser(currentVars).parse(serializedExpression).get.value
+    expressions.evolutionOfDoubles.parser(currentVars).parse(serializedExpression).get.value
 
   def parseEvolutionOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[ListExpr[Point]] =
-    expressions2.evolutionOfPoints.parser(currentVars).parse(serializedExpression).get.value
+    expressions.evolutionOfPoints.parser(currentVars).parse(serializedExpression).get.value
 
   def parseConstantOfDoubles(serializedExpression: String, currentVars: List[String] = Nil): Binding[Double] = {
-    expressions2.doubleConstant.loggingParser(currentVars).parse(serializedExpression).get.value
+    expressions.doubleConstant.loggingParser(currentVars).parse(serializedExpression).get.value
   }
 
   def parseConstantOfPoints(serializedExpression: String, currentVars: List[String] = Nil): Binding[Point] =
-    expressions2.pointConstant.loggingParser(currentVars).parse(serializedExpression).get.value
+    expressions.pointConstant.loggingParser(currentVars).parse(serializedExpression).get.value
 
   type BindingParser[T] = ByVarParserK[Binding, T]
 
-  val expressions2: Expressions[ListExpr, BindingParser, Parser[String]] =
+  val expressions: Expressions[ListExpr, BindingParser, Parser[String]] =
     GlobalGrammar.grammar(EvolutionAlgebraTestInterpreter)
 }
