@@ -64,10 +64,15 @@ trait TestInterpreters {
       MapCons(eva, f)
   }
 
+  object DistributionTestInterpreter extends Distribution[ListExpr, Binding] {
+    override def uniform(from: Binding[Double], to: Binding[Double]): Binding[ListExpr[Double]] =
+      ???
+  }
+
   object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {
     override val chain: Chain[ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
-    override val distribution: Distribution[ListExpr, Binding] = ???
+    override val distribution: Distribution[ListExpr, Binding] = DistributionTestInterpreter
   }
 }
