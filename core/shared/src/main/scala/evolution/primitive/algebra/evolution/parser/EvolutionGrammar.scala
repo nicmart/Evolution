@@ -65,7 +65,8 @@ class GlobalGrammar[F[_], R[_], Var](
       chain.empty,
       chain.cons(t, ft),
       chain.mapCons(ft)(function(t, function(ft, ft))),
-      chain.mapEmpty(ft, ft)
+      chain.mapEmpty(ft, ft),
+      genericBinding(ft)
     )
 
   private def genericBinding[T](t: R[T]): R[T] =
@@ -80,6 +81,15 @@ class GlobalGrammar[F[_], R[_], Var](
       bind.app(self.function(self.pointConstant, t), self.pointConstant))
 
   private val variables = bind.v(())
+}
+
+object GlobalGrammar {
+  def grammar[F[_], R[_]](
+    alg: Evolution[F, R, Double, String, String]): Expressions[F, ByVarParserK[R, ?], Parser[String]] =
+    new GlobalGrammar[F, ByVarParserK[R, ?], Parser[String]](
+      new EvolutionParserSyntax[F, R](alg),
+      MonoidK[ByVarParserK[R, ?]],
+      Defer[ByVarParserK[R, ?]])
 }
 
 trait EvolutionExpressions[F[_], R[_]] {
