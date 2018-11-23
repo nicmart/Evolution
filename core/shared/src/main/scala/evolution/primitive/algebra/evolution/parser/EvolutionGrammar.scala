@@ -27,7 +27,7 @@ object Expressions {
   }
 }
 
-class GlobalGrammar[F[_], R[_], Var](
+class EvolutionGrammar[F[_], R[_], Var](
   syntax: EvolutionSyntax[F, R, Var],
   override val orMonoid: MonoidK[R],
   defer: Defer[R])
@@ -78,10 +78,10 @@ class GlobalGrammar[F[_], R[_], Var](
   private val variables = bind.v(())
 }
 
-object GlobalGrammar {
+object EvolutionGrammar {
   def parserGrammar[F[_], R[_]](
     alg: Evolution[F, R, Double, String, String]): Expressions[F, ByVarParserK[R, ?], Parser[String]] =
-    new GlobalGrammar[F, ByVarParserK[R, ?], Parser[String]](
+    new EvolutionGrammar[F, ByVarParserK[R, ?], Parser[String]](
       new EvolutionParserSyntax[F, R](alg),
       MonoidK[ByVarParserK[R, ?]],
       Defer[ByVarParserK[R, ?]])

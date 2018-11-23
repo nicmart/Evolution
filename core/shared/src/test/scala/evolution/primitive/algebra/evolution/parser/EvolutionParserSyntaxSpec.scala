@@ -175,5 +175,5 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   type BindingParser[T] = ByVarParserK[Binding, T]
 
   val expressions: Expressions[ListExpr, BindingParser, Parser[String]] =
-    GlobalGrammar.parserGrammar(EvolutionAlgebraTestInterpreter)
+    EvolutionGrammar.parserGrammar(EvolutionAlgebraTestInterpreter)
 }

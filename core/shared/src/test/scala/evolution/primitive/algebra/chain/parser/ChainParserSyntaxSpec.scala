@@ -3,7 +3,7 @@ package evolution.primitive.algebra.chain.parser
 import cats.implicits._
 import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{ Expressions, GlobalGrammar }
+import evolution.primitive.algebra.evolution.parser.{ Expressions, EvolutionGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
 import org.scalatest.{ FreeSpec, Inside, Matchers }
@@ -57,7 +57,7 @@ class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers
   type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], Parser[String]] =
-    GlobalGrammar.parserGrammar(interpreter)
+    EvolutionGrammar.parserGrammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
     expressions.evolutionOfDoubles.parser(Nil).parse(expression).get.value

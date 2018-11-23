@@ -5,7 +5,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.{ Composed, TestInterpreters }
 import evolution.primitive.algebra.constants.parser._
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{ Expressions, GlobalGrammar }
+import evolution.primitive.algebra.evolution.parser.{ Expressions, EvolutionGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import fastparse.noApi
 import org.scalatest.{ FreeSpec, Matchers }
@@ -44,7 +44,7 @@ class ConstantsParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], noApi.Parser[String]] =
-    GlobalGrammar.parserGrammar(interpreter)
+    EvolutionGrammar.parserGrammar(interpreter)
 
   private def unsafeParseDouble(serializedExpression: String): Binding[Double] = {
     expressions.doubleConstant.parser(Nil).parse(serializedExpression).get.value
