@@ -6,15 +6,15 @@ import evolution.app.codec.JsonCodec
 import evolution.app.portfolio.dsl.Config
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionExpr, EvolutionSerializer}
-import evolution.primitive.algebra.evolution.parser.{EvolutionGrammar}
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionExpr, EvolutionSerializer }
+import evolution.primitive.algebra.evolution.parser.{ EvolutionGrammar }
 import io.circe.Json
 
 object DrawingJsonCodec extends JsonCodec[Config] {
   private val serializer = new EvolutionSerializer[RNGRepr]
   private val evolutionExpr = new EvolutionExpr[RNGRepr]
-  private val grammar = EvolutionGrammar.grammar(evolutionExpr)
-  private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
+  private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
+  private val algebraParser = grammar.evolutionOfPoints
   private val stringParser = algebraParser.parser(Nil)
 
   override def encode(t: Config): Json =

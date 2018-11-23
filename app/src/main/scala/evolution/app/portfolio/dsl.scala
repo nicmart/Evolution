@@ -8,10 +8,10 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.ConfigComponent.instance
-import evolution.app.react.component.config.{ConfigComponent, instances}
+import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{EvolutionEvaluator, EvolutionExpr, EvolutionSerializer}
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionEvaluator, EvolutionExpr, EvolutionSerializer }
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import evolution.random.RNG
 import japgolly.scalajs.react.vdom.html_<^._
@@ -23,8 +23,8 @@ object dsl extends DrawingDefinition[Point] {
 
   private val serializer = new EvolutionSerializer[RNGRepr]
   private val evolutionExpr = new EvolutionExpr[RNGRepr]
-  private val grammar = EvolutionGrammar.grammar(evolutionExpr)
-  private val algebraParser = grammar.chain.evolutionOf[Point](grammar.constants.points)
+  private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
+  private val algebraParser = grammar.evolutionOfPoints
   private val stringParser = algebraParser.parser(Nil)
 
   case class Config(expr: Expr[Point])

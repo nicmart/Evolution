@@ -136,6 +136,11 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
         parseConstantOfPoints(serializedExpression) shouldBe expectedExpression
       }
 
+      // TODO let's change the interpreter to the typed serialiser before implementing this
+      "a uniform distribution of doubles" in {
+        pending
+      }
+
       // TODO write a valid expectation
       "an abnormous evolution" in {
         pending

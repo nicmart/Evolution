@@ -41,13 +41,22 @@ class EvolutionGrammar[F[_], R[_], Var](
     or(constants.double(), genericConstant(self.doubleConstant))
 
   override def pointConstant: R[Point] =
-    or(constants.point(doubleConstant, doubleConstant), genericConstant(self.pointConstant))
+    or(
+      constants.point(doubleConstant, doubleConstant),
+      genericConstant(self.pointConstant)
+    )
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
-    or(bind.lambda(variables, t2), genericBinding(self.function(t1, t2)))
+    or(
+      bind.lambda(variables, t2),
+      genericBinding(self.function(t1, t2))
+    )
 
   override def evolutionOfDoubles: R[F[Double]] =
-    or(genericEvolution(doubleConstant, self.evolutionOfDoubles))
+    or(
+      distribution.uniform(doubleConstant, doubleConstant),
+      genericEvolution(doubleConstant, self.evolutionOfDoubles)
+    )
 
   override def evolutionOfPoints: R[F[Point]] =
     or(genericEvolution(pointConstant, self.evolutionOfPoints))
