@@ -4,10 +4,16 @@ import cats.implicits._
 import cats.kernel.Semigroup
 import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{ EvolutionExpressions, EvolutionGrammar }
+import evolution.primitive.algebra.evolution.parser.{
+  EvolutionExpressions,
+  EvolutionGrammar,
+  Expressions,
+  GlobalGrammar
+}
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
 import org.scalatest.{ FreeSpec, Inside, Matchers }
+import fastparse.noApi.Parser
 
 class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
   val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
@@ -56,14 +62,9 @@ class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers
 
   type BindingParser[T] = ByVarParserK[Binding, T]
 
-  def expressions: EvolutionExpressions[ListExpr, ByVarParserK[Binding, ?]] =
-    EvolutionGrammar.grammar(interpreter)
+  def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], Parser[String]] =
+    GlobalGrammar.grammar(interpreter)
 
   def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
-    expressions.chain
-      .evolutionOf(expressions.constants.doubles)(Semigroup[Double])
-      .parser(Nil)
-      .parse(expression)
-      .get
-      .value
+    expressions.evolutionOfDoubles.parser(Nil).parse(expression).get.value
 }
