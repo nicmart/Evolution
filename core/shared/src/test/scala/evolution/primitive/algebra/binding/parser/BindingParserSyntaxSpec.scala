@@ -2,12 +2,7 @@ package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{
-  EvolutionExpressions,
-  EvolutionGrammar,
-  Expressions,
-  GlobalGrammar
-}
+import evolution.primitive.algebra.evolution.parser.{ Expressions, GlobalGrammar }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
 import fastparse.noApi
@@ -108,7 +103,7 @@ class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParse
   type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], noApi.Parser[String]] =
-    GlobalGrammar.grammar(EvolutionAlgebraTestInterpreter)
+    GlobalGrammar.parserGrammar(EvolutionAlgebraTestInterpreter)
 
   private def unsafeParseDouble(expression: String): Binding[Double] =
     expressions.doubleConstant.parser(Nil).parse(expression).get.value

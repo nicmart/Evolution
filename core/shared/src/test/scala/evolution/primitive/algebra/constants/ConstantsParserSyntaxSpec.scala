@@ -44,7 +44,7 @@ class ConstantsParserSyntaxSpec extends FreeSpec with Matchers with TestInterpre
   type BindingParser[T] = ByVarParserK[Binding, T]
 
   def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], noApi.Parser[String]] =
-    GlobalGrammar.grammar(interpreter)
+    GlobalGrammar.parserGrammar(interpreter)
 
   private def unsafeParseDouble(serializedExpression: String): Binding[Double] = {
     expressions.doubleConstant.parser(Nil).parse(serializedExpression).get.value
