@@ -1,8 +1,7 @@
 package evolution.primitive.algebra.distribution.parser
 
-import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.distribution.Distribution
-import evolution.primitive.algebra.parser.ByVarParser.{ ByVarParserK, Raw }
+import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 import evolution.primitive.algebra.parser.ByVarParsers._

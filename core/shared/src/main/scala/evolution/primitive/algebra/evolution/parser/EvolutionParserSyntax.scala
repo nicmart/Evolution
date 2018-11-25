@@ -6,6 +6,8 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.{ Evolution, EvolutionSyntax }
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.parser.ChainParserSyntax
+import evolution.primitive.algebra.derived.Derived
+import evolution.primitive.algebra.derived.parser.DerivedParserSyntax
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.distribution.parser.DistributionParserSyntax
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
@@ -25,4 +27,7 @@ class EvolutionParserSyntax[F[_], R[_]](alg: Evolution[F, R, Double, String, Str
 
   override val distribution: Distribution[F, ByVarParserK[R, ?]] =
     new DistributionParserSyntax(alg.distribution)
+
+  override val derived: Derived[F, ByVarParserK[R, ?]] =
+    new DerivedParserSyntax(alg.derived)
 }

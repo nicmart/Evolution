@@ -59,7 +59,10 @@ class EvolutionGrammar[F[_], R[_], Var](
     )
 
   override def evolutionOfPoints: R[F[Point]] =
-    or(genericEvolution(pointConstant, self.evolutionOfPoints))
+    or(
+      derived.cartesian(self.evolutionOfDoubles, self.evolutionOfDoubles),
+      genericEvolution(pointConstant, self.evolutionOfPoints)
+    )
 
   private def genericConstant[T: Semigroup](t: R[T]): R[T] =
     or(constants.add(t, t), genericBinding(t))
@@ -70,6 +73,7 @@ class EvolutionGrammar[F[_], R[_], Var](
       chain.cons(t, ft),
       chain.mapCons(ft)(function(t, function(ft, ft))),
       chain.mapEmpty(ft, ft),
+      derived.constant(t),
       genericBinding(ft)
     )
 

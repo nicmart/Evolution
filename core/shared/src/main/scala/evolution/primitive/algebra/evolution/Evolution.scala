@@ -19,6 +19,7 @@ trait EvolutionSyntax[F[_], R[_], Var] {
   val constants: Constants[R, Unit]
   val bind: BindingSyntax[R, Var, Unit]
   val distribution: Distribution[F, R]
+  val derived: Derived[F, R]
 }
 
 object Evolution {
