@@ -11,4 +11,5 @@ class ConstantsSizeEvaluator[D] extends Constants[Const[?, Int], D] {
   override def add[T: VectorSpace](a: Int, b: Int): Int = 1 + a + b
   override def sin(d: Int): Int = 1 + d
   override def cos(d: Int): Int = 1 + d
+  override def multiply[T: VectorSpace](k: Int, t: Int): Int = 1 + k + t
 }

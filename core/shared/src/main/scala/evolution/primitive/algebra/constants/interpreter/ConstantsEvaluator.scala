@@ -18,4 +18,6 @@ object ConstantsEvaluator extends Constants[EvaluationResult, Double] {
     Value(ctx => Math.sin(d.get(ctx)))
   override def cos(d: EvaluationResult[Double]): EvaluationResult[Double] =
     Value(ctx => Math.cos(d.get(ctx)))
+  override def multiply[T: VectorSpace](k: EvaluationResult[Double], t: EvaluationResult[T]): EvaluationResult[T] =
+    Value(ctx => VectorSpace[T].mult(k.get(ctx), t.get(ctx)))
 }

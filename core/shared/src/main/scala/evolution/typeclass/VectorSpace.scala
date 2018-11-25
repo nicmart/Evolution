@@ -5,6 +5,7 @@ import cats.instances.double._
 trait VectorSpace[T] {
   def monoid: Monoid[T]
   def mult(k: Double, t: T): T
+  def add(t1: T, t2: T): T = monoid.combine(t1, t2)
 }
 
 object VectorSpace {

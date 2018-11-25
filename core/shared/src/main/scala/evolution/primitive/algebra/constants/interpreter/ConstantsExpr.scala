@@ -36,4 +36,9 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?], Double] {
       override def run[R[_]](alg: Evolution[F, R, Double, String, String]): R[Double] =
         alg.constants.cos(d.run(alg))
     }
+  override def multiply[T: VectorSpace](k: Expr[F, Double], t: Expr[F, T]): Expr[F, T] =
+    new Expr[F, T] {
+      override def run[R[_]](alg: Evolution[F, R, Double, String, String]): R[T] =
+        alg.constants.multiply(k.run(alg), t.run(alg))
+    }
 }

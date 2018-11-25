@@ -38,4 +38,11 @@ class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenR
       for {
         d <- gen(n)
       } yield alg.cos(d)
+
+  override def multiply[T: VectorSpace](genK: GenRepr[S, Double], genT: GenRepr[S, T]): GenRepr[S, T] =
+    n =>
+      for {
+        k <- genK(n)
+        t <- genT(n)
+      } yield alg.multiply(k, t)
 }

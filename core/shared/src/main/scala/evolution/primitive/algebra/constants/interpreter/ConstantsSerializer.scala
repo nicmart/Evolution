@@ -16,4 +16,6 @@ object ConstantsSerializer extends Constants[CtxString, Double] {
     ctx => s"sin(${d(ctx)})"
   override def cos(d: CtxString[Double]): CtxString[Double] =
     ctx => s"cos(${d(ctx)})"
+  override def multiply[T: VectorSpace](k: CtxString[Double], t: CtxString[T]): CtxString[T] =
+    ctx => s"multiply(${k(ctx)}, ${t(ctx)})"
 }

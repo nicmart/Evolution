@@ -14,6 +14,8 @@ class ConstantsApplicative[R1[_], D, R2[_]: Applicative](alg: Constants[R1, D])
     Applicative[R2].map2(x, y)(alg.point)
   override def add[T: VectorSpace](a: R2[R1[T]], b: R2[R1[T]]): R2[R1[T]] =
     Applicative[R2].map2(a, b)(alg.add[T])
+  override def multiply[T: VectorSpace](k: Composed[R2, R1, Double], t: Composed[R2, R1, T]): Composed[R2, R1, T] =
+    Applicative[R2].map2(k, t)(alg.multiply[T])
   override def sin(d: R2[R1[Double]]): R2[R1[Double]] =
     Applicative[R2].map(d)(alg.sin)
   override def cos(d: R2[R1[Double]]): R2[R1[Double]] =

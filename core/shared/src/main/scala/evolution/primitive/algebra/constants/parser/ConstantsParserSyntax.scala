@@ -19,4 +19,8 @@ class ConstantsParserSyntax[S[_]](alg: Constants[S, Double]) extends Constants[B
     function1("sin", d).map(alg.sin)
   override def cos(d: ByVarParserK[S, Double]): ByVarParserK[S, Double] =
     function1("cos", d).map(alg.cos)
+  override def multiply[T: VectorSpace](
+    kParser: ByVarParserK[S, Double],
+    tParser: ByVarParserK[S, T]): ByVarParserK[S, T] =
+    function2("multiply", kParser, tParser).map { case (k, t) => alg.multiply(k, t) }
 }

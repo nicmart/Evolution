@@ -26,9 +26,12 @@ class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
   override def cos(d: Sized[S, Double]): Sized[S, Double] =
     size => alg.cos(d(size - 1))
 
+  override def multiply[T: VectorSpace](k: Sized[S, Double], t: Sized[S, T]): Sized[S, T] =
+    size => withSize(size - 1, k, t, alg.multiply[T])
+
 // TODO avoid creation of impossible sizes
   // This makes the underlying Gen create a lot of failures
-  private def withSize[T1, T2](n: Int, a: Sized[S, T1], b: Sized[S, T1], f: (S[T1], S[T1]) => S[T2]): S[T2] = {
+  private def withSize[T1, T2, T3](n: Int, a: Sized[S, T1], b: Sized[S, T2], f: (S[T1], S[T2]) => S[T3]): S[T3] = {
     val list = for {
       i <- (0 to n).toList
       sa = a(i)

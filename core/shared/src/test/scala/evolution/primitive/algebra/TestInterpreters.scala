@@ -54,6 +54,7 @@ trait TestInterpreters {
     override def add[T: VectorSpace](a: Binding[T], b: Binding[T]): Binding[T] = Add(a, b)
     override def sin(d: Binding[Double]): Binding[Double] = ???
     override def cos(d: Binding[Double]): Binding[Double] = ???
+    override def multiply[T: VectorSpace](k: Binding[Double], t: Binding[T]): Binding[T] = ???
   }
 
   object ChainTestInterpreter extends Chain[ListExpr, Binding] {

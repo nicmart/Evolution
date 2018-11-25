@@ -10,6 +10,7 @@ trait Constants[R[_], D] {
   def double(d: D): R[Double]
   def point(x: R[Double], y: R[Double]): R[Point]
   def add[T: VectorSpace](a: R[T], b: R[T]): R[T]
+  def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T]
   def sin(d: R[Double]): R[Double]
   def cos(d: R[Double]): R[Double]
 }
@@ -25,4 +26,6 @@ class MappedConstants[R1[_], R2[_], D](alg: Constants[R1, D], to: R1 ~> R2, from
     to(alg.sin(from(d)))
   override def cos(d: R2[Double]): R2[Double] =
     to(alg.cos(from(d)))
+  override def multiply[T: VectorSpace](k: R2[Double], t: R2[T]): R2[T] =
+    to(alg.multiply(from(k), from(t)))
 }

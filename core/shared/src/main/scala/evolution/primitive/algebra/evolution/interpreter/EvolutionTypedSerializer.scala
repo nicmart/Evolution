@@ -67,6 +67,11 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       val annotatedD = d.infer(requiredType)
       AnnotatedValue(requiredType, s"sin($annotatedD)")
     }
+    override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = R { requiredType =>
+      val annotatedK = k.infer(doubleConstant)
+      val annotatedT = t.infer(requiredType)
+      AnnotatedValue(requiredType, s"multiply($annotatedK, $annotatedT)")
+    }
   }
 
   override val bind: Binding[R, String, String] = new Binding[R, String, String] {
