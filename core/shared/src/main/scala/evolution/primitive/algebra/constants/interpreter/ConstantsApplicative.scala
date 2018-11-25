@@ -6,9 +6,8 @@ import evolution.primitive.algebra.Composed
 import evolution.primitive.algebra.constants.Constants
 import evolution.typeclass.VectorSpace
 
-class ConstantsApplicative[R1[_], D, R2[_]: Applicative](alg: Constants[R1, D])
-    extends Constants[Composed[R2, R1, ?], D] {
-  override def double(d: D): R2[R1[Double]] =
+class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extends Constants[Composed[R2, R1, ?]] {
+  override def double(d: Double): R2[R1[Double]] =
     Applicative[R2].pure(alg.double(d))
   override def point(x: R2[R1[Double]], y: R2[R1[Double]]): R2[R1[Point]] =
     Applicative[R2].map2(x, y)(alg.point)

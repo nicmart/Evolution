@@ -14,9 +14,9 @@ import evolution.primitive.algebra.distribution.interpreter.DistributionEvaluato
 import evolution.primitive.algebra.evolution.Evolution
 
 // Generic TODO: Make sure we do as much as possible outside the closures
-object EvolutionEvaluator extends Evolution[RNGRepr, EvaluationResult, Double, String, String] {
+object EvolutionEvaluator extends Evolution[RNGRepr, EvaluationResult, String, String] {
   override val chain: Chain[RNGRepr, EvaluationResult] = ChainEvaluator
-  override val constants: Constants[EvaluationResult, Double] = ConstantsEvaluator
+  override val constants: Constants[EvaluationResult] = ConstantsEvaluator
   override val bind: Binding[EvaluationResult, String, String] = BindingEvaluator
   override val distribution: Distribution[RNGRepr, EvaluationResult] = DistributionEvaluator
   override val derived: Derived[RNGRepr, EvaluationResult] = new DefaultDerived(this)

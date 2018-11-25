@@ -47,7 +47,7 @@ trait TestInterpreters {
     override def fix[A](expr: Binding[A => A]): Binding[A] = Fix(expr)
   }
 
-  object ConstantsTestInterpreter extends Constants[Binding, Double] {
+  object ConstantsTestInterpreter extends Constants[Binding] {
     override def double(d: Double): Binding[Double] = d
     override def point(x: Binding[Double], y: Binding[Double]): Binding[Point] =
       PointConstant(x, y)
@@ -81,9 +81,9 @@ trait TestInterpreters {
       ???
   }
 
-  object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {
+  object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, String, String] {
     override val chain: Chain[ListExpr, Binding] = ChainTestInterpreter
-    override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
+    override val constants: Constants[Binding] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
     override val distribution: Distribution[ListExpr, Binding] = DistributionTestInterpreter
     override val derived: Derived[ListExpr, Binding] = DerivedTestInterpreter

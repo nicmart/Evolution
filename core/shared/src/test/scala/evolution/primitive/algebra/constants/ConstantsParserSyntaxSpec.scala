@@ -11,7 +11,7 @@ import fastparse.noApi
 import org.scalatest.{ FreeSpec, Matchers }
 
 class ConstantsParserSyntaxSpec extends FreeSpec with Matchers with TestInterpreters {
-  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.constants._
 
   "A ScalarAlgebraParser should parse" - {

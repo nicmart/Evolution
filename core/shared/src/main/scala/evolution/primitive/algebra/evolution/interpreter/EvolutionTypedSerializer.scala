@@ -10,7 +10,7 @@ import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
 
-class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
+class EvolutionTypedSerializer extends Evolution[F, R, String, String] {
   override val chain: Chain[F, R] = new Chain[F, R] {
     override def empty[A]: R[F[A]] = R(requiredType => AnnotatedValue(requiredType, "empty"))
 
@@ -47,7 +47,7 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       }
   }
 
-  override val constants: Constants[R, Double] = new Constants[R, Double] {
+  override val constants: Constants[R] = new Constants[R] {
     override def double(d: Double): R[Double] =
       R.known(AnnotatedValue(doubleConstant, d.toString))
     override def point(x: R[Double], y: R[Double]): R[Point] =

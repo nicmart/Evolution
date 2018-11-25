@@ -13,9 +13,9 @@ import evolution.primitive.algebra.distribution.interpreter.DistributionExpr
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
 
-class EvolutionExpr[F[_]] extends Evolution[F, Expr[F, ?], Double, String, String] {
+class EvolutionExpr[F[_]] extends Evolution[F, Expr[F, ?], String, String] {
   override val chain: Chain[F, Expr[F, ?]] = new ChainExpr[F]
-  override val constants: Constants[Expr[F, ?], Double] = new ConstantsExpr[F]
+  override val constants: Constants[Expr[F, ?]] = new ConstantsExpr[F]
   override val bind: Binding[Expr[F, ?], String, String] = new BindingExpr[F]
   override val distribution: Distribution[F, Expr[F, ?]] = new DistributionExpr[F]
   override val derived: Derived[F, Expr[F, ?]] = new DerivedExpr[F]

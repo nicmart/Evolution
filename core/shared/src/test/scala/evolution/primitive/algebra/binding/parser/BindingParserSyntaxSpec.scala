@@ -10,7 +10,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
 
-  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.bind._
   import interpreter.constants._
 

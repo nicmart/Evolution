@@ -7,7 +7,7 @@ import evolution.primitive.algebra.constants.Constants
 import cats.syntax.semigroup._
 import evolution.typeclass.VectorSpace
 
-object ConstantsEvaluator extends Constants[EvaluationResult, Double] {
+object ConstantsEvaluator extends Constants[EvaluationResult] {
   override def double(d: Double): EvaluationResult[Double] =
     Value(_ => d)
   override def point(x: EvaluationResult[Double], y: EvaluationResult[Double]): EvaluationResult[Point] =

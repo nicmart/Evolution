@@ -13,9 +13,9 @@ import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.distribution.interpreter.DistributionSerializer
 
 // TODO missing tests
-class EvolutionSerializer[F[_]] extends Evolution[F, CtxString, Double, String, String] {
+class EvolutionSerializer[F[_]] extends Evolution[F, CtxString, String, String] {
   override val chain: Chain[F, CtxString] = new ChainSerializer
-  override val constants: Constants[CtxString, Double] = ConstantsSerializer
+  override val constants: Constants[CtxString] = ConstantsSerializer
   override val bind: Binding[CtxString, String, String] = BindingSerializer
   override val distribution: Distribution[F, CtxString] = new DistributionSerializer
   override val derived: Derived[F, CtxString] = new DerivedSerializer[F]

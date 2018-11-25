@@ -39,7 +39,7 @@ class EvolutionGrammar[F[_], R[_], Var](
 
   override def doubleConstant: R[Double] =
     or(
-      constants.double(),
+      constants.allDoubles,
       constants.sin(self.doubleConstant),
       constants.cos(self.doubleConstant),
       genericConstant(self.doubleConstant))
@@ -98,7 +98,7 @@ class EvolutionGrammar[F[_], R[_], Var](
 
 object EvolutionGrammar {
   def parserGrammar[F[_], R[_]](
-    alg: Evolution[F, R, Double, String, String]): Expressions[F, ByVarParserK[R, ?], Parser[String]] =
+    alg: Evolution[F, R, String, String]): Expressions[F, ByVarParserK[R, ?], Parser[String]] =
     new EvolutionGrammar[F, ByVarParserK[R, ?], Parser[String]](
       new EvolutionParserSyntax[F, R](alg),
       MonoidK[ByVarParserK[R, ?]],

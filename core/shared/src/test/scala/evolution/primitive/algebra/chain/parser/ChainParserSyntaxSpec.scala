@@ -10,7 +10,7 @@ import org.scalatest.{ FreeSpec, Inside, Matchers }
 import fastparse.noApi.Parser
 
 class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
-  val interpreter: Evolution[ListExpr, Binding, Double, String, String] = EvolutionAlgebraTestInterpreter
+  val interpreter: Evolution[ListExpr, Binding, String, String] = EvolutionAlgebraTestInterpreter
   import interpreter.chain.{ empty => nil, _ }
   import interpreter.constants._
 

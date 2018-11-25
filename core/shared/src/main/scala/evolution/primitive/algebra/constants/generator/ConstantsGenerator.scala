@@ -3,15 +3,18 @@ import cats.kernel.Semigroup
 import evolution.generator.Generator
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ Composed, GenRepr }
-import evolution.primitive.algebra.constants.Constants
+import evolution.primitive.algebra.constants.{ Constants, ConstantsSyntax }
 import evolution.typeclass.VectorSpace
 import org.scalacheck.Arbitrary.arbitrary
 
 // TODO this can be a an applicative lifted algebra, with an overridden double method
-class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenRepr[S, ?], Unit] {
+class ConstantsGenerator[S[_]](alg: Constants[S]) extends ConstantsSyntax[GenRepr[S, ?]] {
 
-  override def double(d: Unit): GenRepr[S, Double] =
+  override def allDoubles: GenRepr[S, Double] =
     _ => Generator.Unknown(arbitrary[Double].map(alg.double))
+
+  override def double(d: Double): GenRepr[S, Double] =
+    _ => Generator.pure(alg.double(d))
 
   override def point(genX: GenRepr[S, Double], genY: GenRepr[S, Double]): GenRepr[S, Point] =
     n =>

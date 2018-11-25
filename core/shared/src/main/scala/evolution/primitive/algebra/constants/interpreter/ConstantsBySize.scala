@@ -3,15 +3,18 @@ import cats.MonoidK
 import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.Sized
-import evolution.primitive.algebra.constants.Constants
+import evolution.primitive.algebra.constants.{ Constants, ConstantsSyntax }
 import evolution.primitive.algebra.evolution.parser.OrMonoid
 import evolution.typeclass.VectorSpace
 
-class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
-    extends Constants[Sized[S, ?], D]
+class ConstantsBySize[S[_], D](alg: ConstantsSyntax[S], val orMonoid: MonoidK[S])
+    extends ConstantsSyntax[Sized[S, ?]]
     with OrMonoid[S] {
 
-  override def double(d: D): Sized[S, Double] =
+  override def allDoubles: Sized[S, Double] =
+    size => if (size == 0) alg.allDoubles else orMonoid.empty
+
+  override def double(d: Double): Sized[S, Double] =
     size => if (size == 0) alg.double(d) else orMonoid.empty
 
   override def point(x: Sized[S, Double], y: Sized[S, Double]): Sized[S, Point] =

@@ -13,7 +13,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -24,7 +24,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should create an evolution of the sequence of integers" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -40,7 +40,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able to express integrations" in {
-      def integrate[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, Double, String, String]): R[T => F[T] => F[T]] = {
+      def integrate[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, String, String]): R[T => F[T] => F[T]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -68,23 +68,20 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         )
       }
 
-      def constant[F[_], R[_], T](alg: Evolution[F, R, Double, String, String], c: R[T]): R[F[T]] = {
+      def constant[F[_], R[_], T](alg: Evolution[F, R, String, String], c: R[T]): R[F[T]] = {
         import alg.bind._
         import alg.chain._
         fix[F[T]](lambda("self", cons(c, var0[F[T]])))
       }
 
-      def constant2[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] = {
+      def constant2[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Point]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
         fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
       }
 
-      def drawing[F[_], R[_], T: VectorSpace](
-        alg: Evolution[F, R, Double, String, String],
-        s0: R[T],
-        v0: R[T]): R[F[T]] = {
+      def drawing[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, String, String], s0: R[T], v0: R[T]): R[F[T]] = {
         import alg.bind._
         app(app(integrate[F, R, T](alg), s0), constant(alg, v0))
       }
@@ -99,7 +96,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be to define constants" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
         import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
         constant(double(1))
       }
@@ -108,7 +105,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able combine two evolutions of doubles into one evolution of points" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Point]] = {
         import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
         cartesian(constant(double(1)), constant(double(2)))
       }
