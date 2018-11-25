@@ -1,5 +1,4 @@
 package evolution.primitive.algebra.distribution.interpreter
-import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr

@@ -8,6 +8,7 @@ import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.ChainEvaluator
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.constants.interpreter.ConstantsEvaluator
+import evolution.primitive.algebra.derived.{ DefaultDerived, Derived }
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.distribution.interpreter.DistributionEvaluator
 import evolution.primitive.algebra.evolution.Evolution
@@ -18,4 +19,5 @@ object EvolutionEvaluator extends Evolution[RNGRepr, EvaluationResult, Double, S
   override val constants: Constants[EvaluationResult, Double] = ConstantsEvaluator
   override val bind: Binding[EvaluationResult, String, String] = BindingEvaluator
   override val distribution: Distribution[RNGRepr, EvaluationResult] = DistributionEvaluator
+  override val derived: Derived[RNGRepr, EvaluationResult] = new DefaultDerived(this)
 }

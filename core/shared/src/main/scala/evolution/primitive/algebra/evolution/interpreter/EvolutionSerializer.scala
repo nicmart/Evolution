@@ -7,6 +7,8 @@ import evolution.primitive.algebra.constants.interpreter.ConstantsSerializer
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.ChainSerializer
+import evolution.primitive.algebra.derived.Derived
+import evolution.primitive.algebra.derived.interpreter.DerivedSerializer
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.distribution.interpreter.DistributionSerializer
 
@@ -16,4 +18,5 @@ class EvolutionSerializer[F[_]] extends Evolution[F, CtxString, Double, String, 
   override val constants: Constants[CtxString, Double] = ConstantsSerializer
   override val bind: Binding[CtxString, String, String] = BindingSerializer
   override val distribution: Distribution[F, CtxString] = new DistributionSerializer
+  override val derived: Derived[F, CtxString] = new DerivedSerializer[F]
 }

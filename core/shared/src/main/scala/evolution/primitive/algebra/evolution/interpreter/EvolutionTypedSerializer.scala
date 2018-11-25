@@ -5,6 +5,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.constants.Constants
+import evolution.primitive.algebra.derived.Derived
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 
@@ -94,6 +95,14 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       val annotatedFrom @ AnnotatedValue(fromType, fromValue) = from.infer(inner)
       val annotatedTo @ AnnotatedValue(toType, toValue) = to.infer(inner)
       AnnotatedValue(required, s"uniform($annotatedFrom, $annotatedTo)")
+    }
+  }
+
+  override val derived: Derived[F, R] = new Derived[F, R] {
+    override def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] = R { required =>
+      val annotatedX = x.infer(evolutionOfDoubles)
+      val annotatedY = y.infer(evolutionOfDoubles)
+      AnnotatedValue(required.unify(evolutionOfPoints), s"uniform($annotatedX, $annotatedY)")
     }
   }
 }

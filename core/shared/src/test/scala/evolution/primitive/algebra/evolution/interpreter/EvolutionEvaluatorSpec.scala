@@ -97,6 +97,19 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
       pointStream.take(3).toList shouldBe List(Point(0, 0), Point(1, 1), Point(2, 2))
     }
 
+    "should be able to zipWith" in {
+      def drawing[F[_], R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Double]] = {
+        ???
+//        import alg.bind._, alg.chain._, alg.bind._
+//        app[Double, F[Double]](
+//          fix(
+//            lambda("f", lambda("s", cons(var0, app(shift(var0[Double => F[Double]]), add(var0[Double], double(1))))))
+//          ),
+//          double(0)
+//        )
+      }
+    }
+
     def materialize[T](evaluationResult: EvaluationResult[RNGRepr[T]]): Stream[T] =
       evaluationResult.get(Nil).unfold(RNG(0L))
 

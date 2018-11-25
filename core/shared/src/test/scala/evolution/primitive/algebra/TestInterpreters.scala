@@ -3,6 +3,7 @@ package evolution.primitive.algebra
 import distribution._
 import _root_.evolution.geometry.Point
 import binding.{ Binding => BindingAlg }
+import derived._
 import evolution._
 import chain._
 import constants._
@@ -69,10 +70,15 @@ trait TestInterpreters {
       ???
   }
 
+  object DerivedTestInterpreter extends Derived[ListExpr, Binding] {
+    override def cartesian(x: Binding[ListExpr[Double]], y: Binding[ListExpr[Double]]): Binding[ListExpr[Point]] = ???
+  }
+
   object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {
     override val chain: Chain[ListExpr, Binding] = ChainTestInterpreter
     override val constants: Constants[Binding, Double] = ConstantsTestInterpreter
     override val bind: BindingAlg[Binding, String, String] = BindingTestInterpreter
     override val distribution: Distribution[ListExpr, Binding] = DistributionTestInterpreter
+    override val derived: Derived[ListExpr, Binding] = DerivedTestInterpreter
   }
 }
