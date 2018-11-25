@@ -104,6 +104,11 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       val annotatedY = y.infer(evolutionOfDoubles)
       AnnotatedValue(required.unify(evolutionOfPoints), s"uniform($annotatedX, $annotatedY)")
     }
+    override def constant[A](a: R[A]): R[F[A]] = R { required =>
+      val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
+      val annotatedA @ AnnotatedValue(aType, aValue) = a.infer(inner)
+      AnnotatedValue(required, s"constant($annotatedA)")
+    }
   }
 }
 
