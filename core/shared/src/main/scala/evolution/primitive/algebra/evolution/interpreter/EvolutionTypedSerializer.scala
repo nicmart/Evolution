@@ -57,6 +57,15 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       val unifiedType = requiredType.unify(aType).unify(bType)
       AnnotatedValue(unifiedType, s"add($annotatedA, $annotatedB)")
     }
+    override def sin(d: R[Double]): R[Double] = R { requiredType =>
+      val annotatedD = d.infer(requiredType)
+      AnnotatedValue(requiredType, s"sin($annotatedD)")
+    }
+
+    override def cos(d: R[Double]): R[Double] = R { requiredType =>
+      val annotatedD = d.infer(requiredType)
+      AnnotatedValue(requiredType, s"sin($annotatedD)")
+    }
   }
 
   override val bind: Binding[R, String, String] = new Binding[R, String, String] {

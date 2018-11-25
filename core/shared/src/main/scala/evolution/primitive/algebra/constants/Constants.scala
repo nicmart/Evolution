@@ -5,17 +5,23 @@ import cats.instances.function._
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.interpreter.ConstantsApplicative
 
-trait Constants[S[_], D] {
-  def double(d: D): S[Double]
-  def point(x: S[Double], y: S[Double]): S[Point]
-  def add[T: Semigroup](a: S[T], b: S[T]): S[T]
+trait Constants[R[_], D] {
+  def double(d: D): R[Double]
+  def point(x: R[Double], y: R[Double]): R[Point]
+  def add[T: Semigroup](a: R[T], b: R[T]): R[T]
+  def sin(d: R[Double]): R[Double]
+  def cos(d: R[Double]): R[Double]
 }
 
-class MappedConstants[S1[_], S2[_], D](alg: Constants[S1, D], to: S1 ~> S2, from: S2 ~> S1) extends Constants[S2, D] {
-  def double(d: D): S2[Double] =
+class MappedConstants[R1[_], R2[_], D](alg: Constants[R1, D], to: R1 ~> R2, from: R2 ~> R1) extends Constants[R2, D] {
+  def double(d: D): R2[Double] =
     to(alg.double(d))
-  def point(x: S2[Double], y: S2[Double]): S2[Point] =
+  def point(x: R2[Double], y: R2[Double]): R2[Point] =
     to(alg.point(from(x), from(y)))
-  def add[T: Semigroup](a: S2[T], b: S2[T]): S2[T] =
+  def add[T: Semigroup](a: R2[T], b: R2[T]): R2[T] =
     to(alg.add(from(a), from(b)))
+  override def sin(d: R2[Double]): R2[Double] =
+    to(alg.sin(from(d)))
+  override def cos(d: R2[Double]): R2[Double] =
+    to(alg.cos(from(d)))
 }

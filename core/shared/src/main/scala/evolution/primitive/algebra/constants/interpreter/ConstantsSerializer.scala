@@ -5,8 +5,14 @@ import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.constants.Constants
 
 object ConstantsSerializer extends Constants[CtxString, Double] {
-  override def double(d: Double): CtxString[Double] = _ => d.toString
+  override def double(d: Double): CtxString[Double] =
+    _ => d.toString
   override def point(x: CtxString[Double], y: CtxString[Double]): CtxString[Point] =
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
-  override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] = ctx => s"add(${a(ctx)}, ${b(ctx)})"
+  override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] =
+    ctx => s"add(${a(ctx)}, ${b(ctx)})"
+  override def sin(d: CtxString[Double]): CtxString[Double] =
+    ctx => s"sin(${d(ctx)})"
+  override def cos(d: CtxString[Double]): CtxString[Double] =
+    ctx => s"cos(${d(ctx)})"
 }

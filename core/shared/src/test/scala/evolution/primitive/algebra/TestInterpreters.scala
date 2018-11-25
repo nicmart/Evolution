@@ -51,6 +51,8 @@ trait TestInterpreters {
     override def point(x: Binding[Double], y: Binding[Double]): Binding[Point] =
       PointConstant(x, y)
     override def add[T: Semigroup](a: Binding[T], b: Binding[T]): Binding[T] = Add(a, b)
+    override def sin(d: Binding[Double]): Binding[Double] = ???
+    override def cos(d: Binding[Double]): Binding[Double] = ???
   }
 
   object ChainTestInterpreter extends Chain[ListExpr, Binding] {

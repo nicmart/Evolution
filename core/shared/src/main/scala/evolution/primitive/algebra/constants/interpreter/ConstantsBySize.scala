@@ -19,7 +19,13 @@ class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
   override def add[T: Semigroup](a: Sized[S, T], b: Sized[S, T]): Sized[S, T] =
     size => withSize(size - 1, a, b, alg.add[T])
 
-  // TODO avoid creation of impossible sizes
+  override def sin(d: Sized[S, Double]): Sized[S, Double] =
+    size => alg.sin(d(size - 1))
+
+  override def cos(d: Sized[S, Double]): Sized[S, Double] =
+    size => alg.cos(d(size - 1))
+
+// TODO avoid creation of impossible sizes
   // This makes the underlying Gen create a lot of failures
   private def withSize[T1, T2](n: Int, a: Sized[S, T1], b: Sized[S, T1], f: (S[T1], S[T1]) => S[T2]): S[T2] = {
     val list = for {

@@ -2,7 +2,7 @@ package evolution.primitive.algebra.constants.generator
 import cats.kernel.Semigroup
 import evolution.generator.Generator
 import evolution.geometry.Point
-import evolution.primitive.algebra.{Composed, GenRepr}
+import evolution.primitive.algebra.{ Composed, GenRepr }
 import evolution.primitive.algebra.constants.Constants
 import org.scalacheck.Arbitrary.arbitrary
 
@@ -25,4 +25,16 @@ class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenR
         a <- genA(n)
         b <- genB(n)
       } yield alg.add(a, b)
+
+  override def sin(gen: GenRepr[S, Double]): GenRepr[S, Double] =
+    n =>
+      for {
+        d <- gen(n)
+      } yield alg.sin(d)
+
+  override def cos(gen: GenRepr[S, Double]): GenRepr[S, Double] =
+    n =>
+      for {
+        d <- gen(n)
+      } yield alg.cos(d)
 }

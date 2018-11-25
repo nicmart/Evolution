@@ -4,6 +4,7 @@ import evolution.primitive.algebra.evolution.Evolution
 
 trait Derived[F[_], R[_]] {
   def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]]
+  //def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
 }
 
@@ -12,6 +13,12 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, Double, String, String]) e
 
   override def constant[A](a: R[A]): R[F[A]] =
     fix[F[A]](lambda("self", cons(a, varN("self", 0))))
+
+  override def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
+    app2(zipWith(lambda2[Double, Double, Point]("fx", "fy", point(varN("fx", 1), varN("fy", 0)))), x, y)
+
+//  override def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]] =
+//    zipWith(lambda2[Double, Double, Point]("radius", "angle", ))
 
   def flatMap[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
     ???
@@ -51,7 +58,4 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, Double, String, String]) e
 
   def appZipWith[A, B, C](fa: R[F[A]], fb: R[F[B]], f: R[A => B => C]): R[F[C]] =
     app2(zipWith(lambda2[A, B, C]("fa", "fb", app2(f, varN("fx", 1), varN("fy", 2)))), fa, fb)
-
-  override def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
-    app2(zipWith(lambda2[Double, Double, Point]("fx", "fy", point(varN("fx", 1), varN("fy", 0)))), x, y)
 }
