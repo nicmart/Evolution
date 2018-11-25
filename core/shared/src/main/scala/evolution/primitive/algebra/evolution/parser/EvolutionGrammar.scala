@@ -38,7 +38,11 @@ class EvolutionGrammar[F[_], R[_], Var](
   private val self: Expressions[F, R, Var] = new evolution.parser.Expressions.Lazy(this, defer)
 
   override def doubleConstant: R[Double] =
-    or(constants.double(), genericConstant(self.doubleConstant))
+    or(
+      constants.double(),
+      constants.sin(self.doubleConstant),
+      constants.cos(self.doubleConstant),
+      genericConstant(self.doubleConstant))
 
   override def pointConstant: R[Point] =
     or(
@@ -61,11 +65,12 @@ class EvolutionGrammar[F[_], R[_], Var](
   override def evolutionOfPoints: R[F[Point]] =
     or(
       derived.cartesian(self.evolutionOfDoubles, self.evolutionOfDoubles),
+      derived.polar(self.evolutionOfDoubles, self.evolutionOfDoubles),
       genericEvolution(pointConstant, self.evolutionOfPoints)
     )
 
   private def genericConstant[T: VectorSpace](t: R[T]): R[T] =
-    or(constants.add(t, t), genericBinding(t))
+    or(constants.add(t, t), constants.multiply(self.doubleConstant, t), genericBinding(t))
 
   private def genericEvolution[T](t: R[T], ft: R[F[T]]): R[F[T]] =
     or(

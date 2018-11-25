@@ -124,6 +124,11 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       val annotatedA @ AnnotatedValue(aType, aValue) = a.infer(inner)
       AnnotatedValue(required, s"constant($annotatedA)")
     }
+    override def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]] = R { required =>
+      val annotatedRadius = radius.infer(evolutionOfDoubles)
+      val annotatedAngle = angle.infer(evolutionOfDoubles)
+      AnnotatedValue(required.unify(evolutionOfPoints), s"polar($annotatedRadius, $annotatedAngle)")
+    }
   }
 }
 

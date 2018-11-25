@@ -17,4 +17,9 @@ class DerivedExpr[F[_]] extends Derived[F, Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R, Double, String, String]): R[F[A]] =
         alg.derived.constant(a.run(alg))
     }
+  override def polar(radius: Expr[F, F[Double]], angle: Expr[F, F[Double]]): Expr[F, F[Point]] =
+    new Expr[F, F[Point]] {
+      override def run[R[_]](alg: Evolution[F, R, Double, String, String]): R[F[Point]] =
+        alg.derived.polar(radius.run(alg), angle.run(alg))
+    }
 }

@@ -77,6 +77,8 @@ trait TestInterpreters {
   object DerivedTestInterpreter extends Derived[ListExpr, Binding] {
     override def cartesian(x: Binding[ListExpr[Double]], y: Binding[ListExpr[Double]]): Binding[ListExpr[Point]] = ???
     override def constant[A](a: Binding[A]): Binding[ListExpr[A]] = ???
+    override def polar(radius: Binding[ListExpr[Double]], angle: Binding[ListExpr[Double]]): Binding[ListExpr[Point]] =
+      ???
   }
 
   object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, Double, String, String] {

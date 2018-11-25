@@ -15,4 +15,9 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
 
   override def constant[A](parserA: ByVarParserK[R, A]): ByVarParserK[R, F[A]] =
     function1("constant", parserA).map(a => alg.constant(a))
+
+  override def polar(
+    radiusParser: ByVarParserK[R, F[Double]],
+    angleParser: ByVarParserK[R, F[Double]]): ByVarParserK[R, F[Point]] =
+    function2("polar", radiusParser, angleParser).map { case (radius, angle) => alg.polar(radius, angle) }
 }
