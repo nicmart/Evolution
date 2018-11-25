@@ -2,6 +2,7 @@ package evolution.primitive.algebra
 
 import distribution._
 import _root_.evolution.geometry.Point
+import _root_.evolution.typeclass.VectorSpace
 import binding.{ Binding => BindingAlg }
 import derived._
 import evolution._
@@ -22,7 +23,7 @@ trait TestInterpreters {
 
   case class Value[T](value: T) extends Binding[T]
   case class PointConstant(x: Binding[Double], y: Binding[Double]) extends Binding[Point]
-  case class Add[T: Semigroup](a: Binding[T], b: Binding[T]) extends Binding[T]
+  case class Add[T: VectorSpace](a: Binding[T], b: Binding[T]) extends Binding[T]
 
   sealed trait ListExpr[A]
   case class Empty[A]() extends ListExpr[A]
@@ -50,7 +51,7 @@ trait TestInterpreters {
     override def double(d: Double): Binding[Double] = d
     override def point(x: Binding[Double], y: Binding[Double]): Binding[Point] =
       PointConstant(x, y)
-    override def add[T: Semigroup](a: Binding[T], b: Binding[T]): Binding[T] = Add(a, b)
+    override def add[T: VectorSpace](a: Binding[T], b: Binding[T]): Binding[T] = Add(a, b)
     override def sin(d: Binding[Double]): Binding[Double] = ???
     override def cos(d: Binding[Double]): Binding[Double] = ???
   }

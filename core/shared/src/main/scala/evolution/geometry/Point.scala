@@ -1,6 +1,7 @@
 package evolution.geometry
 
-import cats.kernel.Group
+import cats.kernel.{ Group, Monoid }
+import evolution.typeclass.VectorSpace
 
 final case class Point(x: Double, y: Double) {
   def +(other: Point) = Point(x + other.x, y + other.y)
@@ -18,9 +19,9 @@ final case class Point(x: Double, y: Double) {
   def norm(): Double = Math.sqrt(x * x + y * y)
   def distance(other: Point): Double = (this - other).norm()
   def angle: Double = (x, y) match {
-    case (0, _) => 0
+    case (0, _)     => 0
     case _ if x > 0 => Math.atan(y / x)
-    case _ => Math.atan(y / x) + Math.PI
+    case _          => Math.atan(y / x) + Math.PI
   }
   def versor(): Option[Point] = {
     val normValue = norm()
@@ -62,5 +63,10 @@ object Point {
     override def empty: Point = zero
     override def combine(x: Point, y: Point): Point = x + y
     override def inverse(point: Point): Point = -point
+  }
+
+  implicit val pointVectorSpace: VectorSpace[Point] = new VectorSpace[Point] {
+    override def monoid: Monoid[Point] = pointGroup
+    override def mult(k: Double, t: Point): Point = t * k
   }
 }

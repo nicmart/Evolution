@@ -4,6 +4,7 @@ import evolution.generator.Generator
 import evolution.geometry.Point
 import evolution.primitive.algebra.{ Composed, GenRepr }
 import evolution.primitive.algebra.constants.Constants
+import evolution.typeclass.VectorSpace
 import org.scalacheck.Arbitrary.arbitrary
 
 // TODO this can be a an applicative lifted algebra, with an overridden double method
@@ -19,7 +20,7 @@ class ConstantsGenerator[S[_]](alg: Constants[S, Double]) extends Constants[GenR
         y <- genY(n)
       } yield alg.point(x, y)
 
-  override def add[T: Semigroup](genA: GenRepr[S, T], genB: GenRepr[S, T]): GenRepr[S, T] =
+  override def add[T: VectorSpace](genA: GenRepr[S, T], genB: GenRepr[S, T]): GenRepr[S, T] =
     n =>
       for {
         a <- genA(n)

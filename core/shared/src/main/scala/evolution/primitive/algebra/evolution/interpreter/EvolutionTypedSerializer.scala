@@ -8,6 +8,7 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.derived.Derived
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
+import evolution.typeclass.VectorSpace
 
 class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
   override val chain: Chain[F, R] = new Chain[F, R] {
@@ -51,7 +52,7 @@ class EvolutionTypedSerializer extends Evolution[F, R, Double, String, String] {
       R.known(AnnotatedValue(doubleConstant, d.toString))
     override def point(x: R[Double], y: R[Double]): R[Point] =
       R.known(AnnotatedValue(pointConstant, s"point(${x.infer(doubleConstant)}, ${y.infer(doubleConstant)})"))
-    override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = R { requiredType =>
+    override def add[T: VectorSpace](a: R[T], b: R[T]): R[T] = R { requiredType =>
       val annotatedA @ AnnotatedValue(aType, aValue) = a.infer(requiredType)
       val annotatedB @ AnnotatedValue(bType, bValue) = b.infer(requiredType)
       val unifiedType = requiredType.unify(aType).unify(bType)

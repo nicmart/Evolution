@@ -4,6 +4,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
+import evolution.typeclass.VectorSpace
 
 class ConstantsExpr[F[_]] extends Constants[Expr[F, ?], Double] {
 
@@ -19,7 +20,7 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?], Double] {
         alg.constants.point(x.run(alg), y.run(alg))
     }
 
-  override def add[T: Semigroup](a: Expr[F, T], b: Expr[F, T]): Expr[F, T] =
+  override def add[T: VectorSpace](a: Expr[F, T], b: Expr[F, T]): Expr[F, T] =
     new Expr[F, T] {
       override def run[R[_]](alg: Evolution[F, R, Double, String, String]): R[T] =
         alg.constants.add(a.run(alg), b.run(alg))

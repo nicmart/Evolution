@@ -5,6 +5,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.Sized
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.parser.OrMonoid
+import evolution.typeclass.VectorSpace
 
 class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
     extends Constants[Sized[S, ?], D]
@@ -16,7 +17,7 @@ class ConstantsBySize[S[_], D](alg: Constants[S, D], val orMonoid: MonoidK[S])
   override def point(x: Sized[S, Double], y: Sized[S, Double]): Sized[S, Point] =
     size => withSize(size - 1, x, y, alg.point)
 
-  override def add[T: Semigroup](a: Sized[S, T], b: Sized[S, T]): Sized[S, T] =
+  override def add[T: VectorSpace](a: Sized[S, T], b: Sized[S, T]): Sized[S, T] =
     size => withSize(size - 1, a, b, alg.add[T])
 
   override def sin(d: Sized[S, Double]): Sized[S, Double] =

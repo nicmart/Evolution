@@ -7,6 +7,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.random.RNG
+import evolution.typeclass.VectorSpace
 import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
@@ -39,7 +40,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able to express integrations" in {
-      def integrate[F[_], R[_], T: Semigroup](alg: Evolution[F, R, Double, String, String]): R[T => F[T] => F[T]] = {
+      def integrate[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, Double, String, String]): R[T => F[T] => F[T]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -80,7 +81,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
       }
 
-      def drawing[F[_], R[_], T: Semigroup](
+      def drawing[F[_], R[_], T: VectorSpace](
         alg: Evolution[F, R, Double, String, String],
         s0: R[T],
         v0: R[T]): R[F[T]] = {

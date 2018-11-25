@@ -3,7 +3,7 @@ package evolution.primitive.algebra.evolution.parser
 import cats.{ Defer, MonoidK, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.{ Evolution, EvolutionSyntax, parser }
-import cats.instances.double._
+import evolution.typeclass.VectorSpace
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.evolution
 import fastparse.noApi.Parser
@@ -64,7 +64,7 @@ class EvolutionGrammar[F[_], R[_], Var](
       genericEvolution(pointConstant, self.evolutionOfPoints)
     )
 
-  private def genericConstant[T: Semigroup](t: R[T]): R[T] =
+  private def genericConstant[T: VectorSpace](t: R[T]): R[T] =
     or(constants.add(t, t), genericBinding(t))
 
   private def genericEvolution[T](t: R[T], ft: R[F[T]]): R[F[T]] =
