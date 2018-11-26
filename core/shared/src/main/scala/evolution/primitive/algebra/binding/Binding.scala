@@ -2,6 +2,7 @@ package evolution.primitive.algebra.binding
 import cats.~>
 
 trait Binding[R[_], Var, VarName] {
+  //todo remove it and use syntax
   def v(name: VarName): Var
   def var0[A]: R[A]
   def shift[A](expr: R[A]): R[A]
