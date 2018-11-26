@@ -2,44 +2,44 @@ package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{ Expressions, EvolutionGrammar }
+import evolution.primitive.algebra.evolution.interpreter.Types.{ FunctionTypeInfo, doubleConstant }
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionTypedSerializer, Types }
+import evolution.primitive.algebra.evolution.parser.{ EvolutionGrammar, Expressions }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser._
 import fastparse.noApi
 import org.scalatest.{ FreeSpec, Matchers }
 
-class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with TestInterpreters {
+class BindingParserSyntaxSpec extends FreeSpec with Matchers {
 
-  val interpreter: Evolution[ListExpr, Binding, String, String] = EvolutionAlgebraTestInterpreter
-  import interpreter.bind._
-  import interpreter.constants._
+  val interpreter = new EvolutionTypedSerializer
+  import interpreter.bind._, interpreter.constants._
 
   "A Binding Algebra Parser should parse" - {
     "let expressions that are " - {
       "simple" in {
         val serializedExpression = "let(x, 10.0, $x)"
-        val expected: Binding[Double] = let[Double, Double]("x", 10.0, var0)
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        val expected = let[Double, Double]("x", double(10.0), var0[Double])
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
 
       "nested" in {
         val serializedExpression = "let(x, let(y, 1.0, $y), let(z, 2.0, $x))"
-        val expected: Binding[Double] =
+        val expected =
           let("x", let("y", double(1.0), var0), let("z", double(2.0), shift(var0)))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
 
       "multi-nested" in {
         val serializedExpression = "let(x, let(y, 1.0, $y), let(z, let(u, $x, $u), $x))"
-        val expected: Binding[Double] =
-          let("x", let("y", double(1.0), var0), let("z", let("u", var0, var0), shift(var0)))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        val expected = let("x", let("y", double(1.0), var0), let("z", let("u", var0, var0), shift(var0)))
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
 
       "inside a lambda" in {
         val serializedExpression = "app(x -> let(y, 1.0, $x), 1.0)"
-        val expected: Binding[Double] = app(lambda("x", let("y", double(1.0), shift(var0))), double(1.0))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        val expected = app(lambda("x", let("y", double(1.0), shift(var0))), double(1.0))
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
     }
 
@@ -47,71 +47,79 @@ class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParse
       "constant" in {
         val serializedExpression = "x -> 1.0"
         val expected = lambda("x", double(1.0))
-        unsafeParseLambda(serializedExpression) shouldBe expected
+        unsafeParseLambda(serializedExpression) shouldBe expected.infer(lambdaType).toString
       }
 
       "identity" in {
         val serializedExpression = "x -> $x"
         val expected = lambda("x", var0)
-        unsafeParseLambda(serializedExpression) shouldBe expected
+        unsafeParseLambda(serializedExpression) shouldBe expected.infer(lambdaType).toString
       }
 
       "nested" in {
         val serializedExpression = "x -> y -> $x"
-        val expected: Binding[Double => Double => Double] =
+        val expected =
           lambda("x", lambda("y", shift(var0)))
-        unsafeParseHOLambda(serializedExpression) shouldBe expected
+        unsafeParseHOLambda(serializedExpression) shouldBe expected.infer(lambdaHOType).toString
       }
 
       "applications of HO lambdas" in {
         val serializedExpression = "app(x -> y -> $x, 1.0)"
-        val expected: Binding[Double => Double] =
-          app(lambda("x", lambda("y", shift(var0[Double]))), double(1.0))
-        unsafeParseLambda(serializedExpression) shouldBe expected
+        val expected =
+          app(lambda[Double, Double => Double]("x", lambda[Double, Double]("y", shift(var0[Double]))), double(1.0))
+        unsafeParseLambda(serializedExpression) shouldBe expected.infer(lambdaType).toString
       }
 
       "inside let expressions" in {
         val serializedExpression = "let(x, 1.0, y -> $x)"
-        val expected: Binding[Double => Double] = let("x", double(1.0), lambda("y", shift(var0)))
-        unsafeParseLambda(serializedExpression) shouldBe expected
+        val expected = let("x", double(1.0), lambda("y", shift(var0)))
+        unsafeParseLambda(serializedExpression) shouldBe expected.infer(lambdaType).toString
       }
     }
 
     "fix expressions that are" - {
       "constant" in {
         val serializedExpression = "fix(x -> 1.0)"
-        val expected: Binding[Double] = fix(lambda("x", double(1.0)))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        val expected = fix[Double](lambda("x", double(1.0)))
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
 
       "identities" in {
         val serializedExpression = "fix(x -> $x)"
-        val expected: Binding[Double] = fix(lambda("x", var0))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        val expected = fix(lambda("x", var0))
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
 
       // We need to make this work
       "fixed points of HOF" in {
         val serializedExpression = "fix(f -> $f)"
-        val expected: Binding[Double => Double] =
+        val expected =
           fix(lambda[Double => Double, Double => Double]("f", var0))
-        unsafeParseDouble(serializedExpression) shouldBe expected
+        unsafeParseDouble(serializedExpression) shouldBe expected.infer(doubleConstant).toString
       }
     }
   }
 
-  type BindingParser[T] = ByVarParserK[Binding, T]
+  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?], noApi.Parser[String]] =
+    EvolutionGrammar.parserGrammar(new EvolutionTypedSerializer)
 
-  def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], noApi.Parser[String]] =
-    EvolutionGrammar.parserGrammar(EvolutionAlgebraTestInterpreter)
+  private def unsafeParseDouble(expression: String): String =
+    expressions.doubleConstant.parser(Nil).parse(expression).get.value.infer(doubleConstant).toString
 
-  private def unsafeParseDouble(expression: String): Binding[Double] =
-    expressions.doubleConstant.parser(Nil).parse(expression).get.value
+  lazy val lambdaType = FunctionTypeInfo(doubleConstant, doubleConstant)
+  lazy val lambdaHOType = FunctionTypeInfo(doubleConstant, lambdaType)
 
-  private def unsafeParseLambda(expression: String): Binding[Double => Double] =
-    expressions.function(expressions.doubleConstant, expressions.doubleConstant).parser(Nil).parse(expression).get.value
+  private def unsafeParseLambda(expression: String): String =
+    expressions
+      .function(expressions.doubleConstant, expressions.doubleConstant)
+      .parser(Nil)
+      .parse(expression)
+      .get
+      .value
+      .infer(lambdaType)
+      .toString
 
-  private def unsafeParseHOLambda(expression: String): Binding[Double => Double => Double] =
+  private def unsafeParseHOLambda(expression: String): String =
     expressions
       .function(
         expressions.doubleConstant,
@@ -124,4 +132,6 @@ class BindingParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParse
       .parse(expression)
       .get
       .value
+      .infer(lambdaHOType)
+      .toString
 }
