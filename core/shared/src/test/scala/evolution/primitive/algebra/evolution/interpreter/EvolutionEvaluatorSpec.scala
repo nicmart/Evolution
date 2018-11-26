@@ -40,50 +40,9 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able to express integrations" in {
-      def integrate[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, String, String]): R[T => F[T] => F[T]] = {
-        import alg.bind._
-        import alg.chain._
-        import alg.constants._
-        def varN[A](n: Int): R[A] = if (n <= 0) var0[A] else shift(varN(n - 1))
-
-        fix[T => F[T] => F[T]](
-          lambda(
-            "self",
-            lambda(
-              "start",
-              lambda(
-                "evolution",
-                mapCons(var0[F[T]])(
-                  lambda(
-                    "h",
-                    lambda(
-                      "t",
-                      cons(varN[T](3), app(app(varN[T => F[T] => F[T]](4), add(varN[T](3), varN[T](1))), var0[F[T]]))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      }
-
-      def constant[F[_], R[_], T](alg: Evolution[F, R, String, String], c: R[T]): R[F[T]] = {
-        import alg.bind._
-        import alg.chain._
-        fix[F[T]](lambda("self", cons(c, var0[F[T]])))
-      }
-
-      def constant2[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Point]] = {
-        import alg.bind._
-        import alg.chain._
-        import alg.constants._
-        fix[F[Point]](lambda("self", cons(point(double(1), double(1)), var0[F[Point]])))
-      }
-
       def drawing[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, String, String], s0: R[T], v0: R[T]): R[F[T]] = {
-        import alg.bind._
-        app(app(integrate[F, R, T](alg), s0), constant(alg, v0))
+        import alg.bind._, alg.derived._
+        integrate(s0, constant(v0))
       }
 
       import interpreter.constants._

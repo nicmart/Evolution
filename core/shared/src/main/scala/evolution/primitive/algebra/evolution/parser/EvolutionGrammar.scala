@@ -72,14 +72,15 @@ class EvolutionGrammar[F[_], R[_], Var](
   private def genericConstant[T: VectorSpace](t: R[T]): R[T] =
     or(constants.add(t, t), constants.multiply(self.doubleConstant, t), genericBinding(t))
 
-  private def genericEvolution[T](t: R[T], ft: R[F[T]]): R[F[T]] =
+  private def genericEvolution[T: VectorSpace](t: R[T], ft: R[F[T]]): R[F[T]] =
     or(
       chain.empty,
       chain.cons(t, ft),
       chain.mapCons(ft)(function(t, function(ft, ft))),
       chain.mapEmpty(ft, ft),
       derived.constant(t),
-      genericBinding(ft)
+      derived.integrate(t, ft),
+      genericBinding(ft),
     )
 
   private def genericBinding[T](t: R[T]): R[T] =

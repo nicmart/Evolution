@@ -129,6 +129,13 @@ class EvolutionTypedSerializer extends Evolution[F, R, String, String] {
       val annotatedAngle = angle.infer(evolutionOfDoubles)
       AnnotatedValue(required.unify(evolutionOfPoints), s"polar($annotatedRadius, $annotatedAngle)")
     }
+
+    override def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] = R { required =>
+      val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
+      val annotatedStart = start.infer(inner)
+      val annotatedSpeed = speed.infer(required)
+      AnnotatedValue(required, s"integrate($annotatedStart, $annotatedSpeed)")
+    }
   }
 }
 

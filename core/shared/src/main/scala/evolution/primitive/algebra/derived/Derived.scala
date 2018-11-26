@@ -1,11 +1,13 @@
 package evolution.primitive.algebra.derived
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
+import evolution.typeclass.VectorSpace
 
 trait Derived[F[_], R[_]] {
   def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]]
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
+  def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
 }
 
 class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, String, String]) extends Derived[F, R] {
@@ -27,21 +29,49 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, String, String]) extends D
       radius,
       angle)
 
+  override def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] =
+    app2(integrateLambda[A], start, speed)
+
+  private def integrateLambda[T: VectorSpace]: R[T => F[T] => F[T]] =
+    fix[T => F[T] => F[T]](
+      lambda(
+        "self",
+        lambda2[T, F[T], F[T]](
+          "start",
+          "speed",
+          mapCons(varN[F[T]]("speed", 0))(
+            lambda2[T, F[T], F[T]](
+              "speedHead",
+              "speedTail",
+              cons(
+                varN("start", 3),
+                app2[T, F[T], F[T]](
+                  varN("self", 4),
+                  add(varN[T]("start", 3), varN[T]("speedHead", 1)),
+                  varN[F[T]]("speedTail", 0)))
+            )
+          )
+        )
+      ))
+
   def flatMap[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
     ???
 
-  def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
+  private def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
     ???
 
-  def lambda2[A, B, C](var1: String, var2: String, expr: R[C]): R[A => B => C] =
+  private def lambda2[A, B, C](var1: String, var2: String, expr: R[C]): R[A => B => C] =
     lambda[A, B => C](var1, lambda[B, C](var2, expr))
 
-  def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
+  private def lambda3[A, B, C, D](var1: String, var2: String, var3: String, expr: R[D]): R[A => B => C => D] =
+    lambda[A, B => C => D](var1, lambda2[B, C, D](var2, var3, expr))
+
+  private def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
     app(app(f, a), b)
 
-  def varN[A](name: String, n: Int): R[A] = if (n <= 0) var0 else shift(varN(name, n - 1))
+  private def varN[A](name: String, n: Int): R[A] = if (n <= 0) var0 else shift(varN(name, n - 1))
 
-  def zipWith[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
+  private def zipWith[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
     fix[F[A] => F[B] => F[C]](
       lambda[F[A] => F[B] => F[C], F[A] => F[B] => F[C]](
         "self",
@@ -62,7 +92,4 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, String, String]) extends D
         )
       )
     )
-
-  def appZipWith[A, B, C](fa: R[F[A]], fb: R[F[B]], f: R[A => B => C]): R[F[C]] =
-    app2(zipWith(lambda2[A, B, C]("fa", "fb", app2(f, varN("fx", 1), varN("fy", 2)))), fa, fb)
 }

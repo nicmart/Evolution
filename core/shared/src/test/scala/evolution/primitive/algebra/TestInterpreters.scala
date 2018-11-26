@@ -79,6 +79,7 @@ trait TestInterpreters {
     override def constant[A](a: Binding[A]): Binding[ListExpr[A]] = ???
     override def polar(radius: Binding[ListExpr[Double]], angle: Binding[ListExpr[Double]]): Binding[ListExpr[Point]] =
       ???
+    override def integrate[A: VectorSpace](start: Binding[A], speed: Binding[ListExpr[A]]): Binding[ListExpr[A]] = ???
   }
 
   object EvolutionAlgebraTestInterpreter extends Evolution[ListExpr, Binding, String, String] {

@@ -5,6 +5,7 @@ import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 import evolution.primitive.algebra.parser.ByVarParsers._
+import evolution.typeclass.VectorSpace
 import fastparse.noApi.{ P, Parser }
 
 class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByVarParserK[R, ?]] {
@@ -20,4 +21,9 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     radiusParser: ByVarParserK[R, F[Double]],
     angleParser: ByVarParserK[R, F[Double]]): ByVarParserK[R, F[Point]] =
     function2("polar", radiusParser, angleParser).map { case (radius, angle) => alg.polar(radius, angle) }
+
+  override def integrate[A: VectorSpace](
+    startParser: ByVarParserK[R, A],
+    speedParser: ByVarParserK[R, F[A]]): ByVarParserK[R, F[A]] =
+    function2("integrate", startParser, speedParser).map { case (start, speed) => alg.integrate(start, speed) }
 }
