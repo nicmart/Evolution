@@ -1,16 +1,15 @@
 package evolution.primitive.algebra.chain.parser
 
-import cats.implicits._
-import evolution.primitive.algebra.TestInterpreters
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.parser.{ Expressions, EvolutionGrammar }
+import evolution.primitive.algebra.evolution.interpreter.Types.{ F, R }
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionTypedSerializer, Types }
+import evolution.primitive.algebra.evolution.parser.{ EvolutionGrammar, Expressions }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
-import evolution.primitive.algebra.parser._
+import fastparse.noApi
 import org.scalatest.{ FreeSpec, Inside, Matchers }
-import fastparse.noApi.Parser
 
-class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers with Inside with TestInterpreters {
-  val interpreter: Evolution[ListExpr, Binding, String, String] = EvolutionAlgebraTestInterpreter
+class ChainParserSyntaxSpec extends FreeSpec with Matchers with Inside {
+  val interpreter: Evolution[F, R, String, String] = new EvolutionTypedSerializer
   import interpreter.chain.{ empty => nil, _ }
   import interpreter.constants._
 
@@ -18,47 +17,33 @@ class ChainParserSyntaxSpec extends FreeSpec with Matchers with PrimitiveParsers
     "should parse" - {
       "an empty expression" in {
         val serializedExpression = "empty"
-        unsafeParseEvolution(serializedExpression) shouldBe nil[Double]
+        unsafeParseEvolution(serializedExpression) shouldBe nil[Double].infer(Types.evolutionOfDoubles).toString
       }
 
       "a cons expression" in {
         val serializedExpression = "cons(1, empty)"
-        unsafeParseEvolution(serializedExpression) shouldBe cons(double(1), nil)
+        unsafeParseEvolution(serializedExpression) shouldBe cons[Double](double(1), nil)
+          .infer(Types.evolutionOfDoubles)
+          .toString
       }
 
       "a nested cons expression" in {
         val serializedExpression = "cons(1, cons(2, cons(3, empty)))"
         unsafeParseEvolution(serializedExpression) shouldBe
-          cons(double(1), cons(double(2), cons(double(3), nil)))
+          cons(double(1), cons(double(2), cons(double(3), nil))).infer(Types.evolutionOfDoubles).toString
       }
 
       "a mapEmpty expression" in {
         val serializedExpression = """mapEmpty(cons(1, empty),cons(2, empty))"""
         unsafeParseEvolution(serializedExpression) shouldBe
-          mapEmpty(cons(double(1), nil), cons(double(2), nil))
-      }
-
-      "a mapCons expression" in {
-        pending
-        val serializedExpression = """mapCons(cons(1, empty), cons(1, empty))"""
-        val expected = mapCons(cons(double(1), nil))(constantFunc(cons(double(1), nil)))
-        unsafeParseEvolution(serializedExpression) shouldBe expected
+          mapEmpty(cons(double(1), nil), cons(double(2), nil)).infer(Types.evolutionOfDoubles).toString
       }
     }
   }
 
-  def constantFunc[A, B](b: Binding[ListExpr[B]]): Binding[A => ListExpr[A] => ListExpr[B]] =
-    Lift(ConstantMapConsFunc[A, B](b))
-
-  case class ConstantMapConsFunc[A, B](b: Binding[ListExpr[B]]) extends (A => (ListExpr[A] => ListExpr[B])) {
-    def apply(x: A): ListExpr[A] => ListExpr[B] = ???
-  }
-
-  type BindingParser[T] = ByVarParserK[Binding, T]
-
-  def expressions: Expressions[ListExpr, ByVarParserK[Binding, ?], Parser[String]] =
+  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?], noApi.Parser[String]] =
     EvolutionGrammar.parserGrammar(interpreter)
 
-  def unsafeParseEvolution[T](expression: String): Binding[ListExpr[Double]] =
-    expressions.evolutionOfDoubles.parser(Nil).parse(expression).get.value
+  def unsafeParseEvolution(expression: String): String =
+    expressions.evolutionOfDoubles.parser(Nil).parse(expression).get.value.infer(Types.evolutionOfDoubles).toString
 }
