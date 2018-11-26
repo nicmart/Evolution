@@ -10,6 +10,7 @@ import chain._
 import constants._
 import cats.kernel.Semigroup
 
+@deprecated("Use TypedSerializer")
 trait TestInterpreters {
 
   sealed trait Binding[A]
