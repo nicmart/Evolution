@@ -6,7 +6,7 @@ import evolution.primitive.algebra.evolution.Evolution.Expr
 class DistributionExpr[F[_]] extends Distribution[F, Expr[F, ?]] {
   override def uniform(from: Expr[F, Double], to: Expr[F, Double]): Expr[F, F[Double]] =
     new Expr[F, F[Double]] {
-      override def run[R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] =
+      override def run[R[_]](alg: Evolution[F, R]): R[F[Double]] =
         alg.distribution.uniform(from.run(alg), to.run(alg))
     }
 }

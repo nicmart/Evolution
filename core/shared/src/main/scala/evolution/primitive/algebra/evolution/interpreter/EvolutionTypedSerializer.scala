@@ -10,7 +10,7 @@ import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
 
-class EvolutionTypedSerializer extends Evolution[F, R, String, String] {
+class EvolutionTypedSerializer extends Evolution[F, R] {
   override val chain: Chain[F, R] = new Chain[F, R] {
     override def empty[A]: R[F[A]] = R(requiredType => AnnotatedValue(requiredType, "empty"))
 
@@ -74,8 +74,7 @@ class EvolutionTypedSerializer extends Evolution[F, R, String, String] {
     }
   }
 
-  override val bind: Binding[R, String, String] = new Binding[R, String, String] {
-    override def v(name: String): String = name
+  override val bind: Binding[R, String] = new Binding[R, String] {
     override def var0[A]: R[A] = R.unknown("var0")
     override def shift[A](expr: R[A]): R[A] = expr.mapValue(value => value.copy(value = s"shift($value)"))
     override def let[A, B](variable: String, value: R[A], expr: R[B]): R[B] = R { requiredBType =>

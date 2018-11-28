@@ -2,10 +2,9 @@ package evolution.primitive.algebra.binding.interpreter
 import cats.Applicative
 import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult.{Lambda, Value}
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult.{ Lambda, Value }
 
-object BindingEvaluator extends Binding[EvaluationResult, String, String] {
-  override def v(name: String): String = name
+object BindingEvaluator extends Binding[EvaluationResult, String] {
 
   override def var0[A]: EvaluationResult[A] = Value {
     case h :: tail => h().asInstanceOf[A]
@@ -21,7 +20,7 @@ object BindingEvaluator extends Binding[EvaluationResult, String, String] {
   override def fix[A](expr: EvaluationResult[A => A]): EvaluationResult[A] =
     expr match {
       case Lambda(term, _) => Value(fixTerm(term.get))
-      case _ => app(expr, fix(expr))
+      case _               => app(expr, fix(expr))
     }
 
   override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] = {

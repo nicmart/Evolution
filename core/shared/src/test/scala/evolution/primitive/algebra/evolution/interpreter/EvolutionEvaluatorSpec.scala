@@ -13,7 +13,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -24,7 +24,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should create an evolution of the sequence of integers" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
         import alg.bind._
         import alg.chain._
         import alg.constants._
@@ -40,7 +40,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able to express integrations" in {
-      def drawing[F[_], R[_], T: VectorSpace](alg: Evolution[F, R, String, String], s0: R[T], v0: R[T]): R[F[T]] = {
+      def drawing[F[_], R[_], T: VectorSpace](alg: Evolution[F, R], s0: R[T], v0: R[T]): R[F[T]] = {
         import alg.bind._, alg.derived._
         integrate(s0, constant(v0))
       }
@@ -55,7 +55,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be to define constants" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Double]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
         import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
         constant(double(1))
       }
@@ -64,7 +64,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be able combine two evolutions of doubles into one evolution of points" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R, String, String]): R[F[Point]] = {
+      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Point]] = {
         import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
         cartesian(constant(double(1)), constant(double(2)))
       }

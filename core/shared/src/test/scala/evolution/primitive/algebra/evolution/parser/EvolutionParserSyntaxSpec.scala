@@ -205,6 +205,6 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers {
       .infer(pointConstant)
       .toString
 
-  val expressions: Expressions[F, ByVarParserK[R, ?], noApi.Parser[String]] =
+  val expressions: Expressions[F, ByVarParserK[R, ?]] =
     EvolutionGrammar.parserGrammar(interpreter)
 }

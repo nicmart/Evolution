@@ -8,7 +8,7 @@ import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.evolution
 import fastparse.noApi.Parser
 
-trait Expressions[F[_], R[_], Var] {
+trait Expressions[F[_], R[_]] {
   def doubleConstant: R[Double]
   def pointConstant: R[Point]
   def evolutionOfDoubles: R[F[Double]]
@@ -17,8 +17,8 @@ trait Expressions[F[_], R[_], Var] {
 }
 
 object Expressions {
-  class Lazy[F[_], R[_], Var](_inner: => Expressions[F, R, Var], defer: Defer[R]) extends Expressions[F, R, Var] {
-    private val inner: Expressions[F, R, Var] = _inner
+  class Lazy[F[_], R[_], Var](_inner: => Expressions[F, R], defer: Defer[R]) extends Expressions[F, R] {
+    private val inner: Expressions[F, R] = _inner
     def doubleConstant: R[Double] = defer.defer(inner.doubleConstant)
     def pointConstant: R[Point] = defer.defer(inner.pointConstant)
     def evolutionOfDoubles: R[F[Double]] = defer.defer(inner.evolutionOfDoubles)
@@ -27,15 +27,12 @@ object Expressions {
   }
 }
 
-class EvolutionGrammar[F[_], R[_], Var](
-  syntax: EvolutionSyntax[F, R, Var],
-  override val orMonoid: MonoidK[R],
-  defer: Defer[R])
-    extends Expressions[F, R, Var]
+class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val orMonoid: MonoidK[R], defer: Defer[R])
+    extends Expressions[F, R]
     with OrMonoid[R] {
   import syntax._
 
-  private val self: Expressions[F, R, Var] = new evolution.parser.Expressions.Lazy(this, defer)
+  private val self: Expressions[F, R] = new evolution.parser.Expressions.Lazy(this, defer)
 
   override def doubleConstant: R[Double] =
     or(
@@ -52,7 +49,7 @@ class EvolutionGrammar[F[_], R[_], Var](
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(
-      bind.lambda(variables, t2),
+      bind.lambda(bind.allVars, t2),
       genericBinding(self.function(t1, t2))
     )
 
@@ -84,23 +81,20 @@ class EvolutionGrammar[F[_], R[_], Var](
     )
 
   private def genericBinding[T](t: R[T]): R[T] =
-    or(bind.allVars, bind.fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
+    or(bind.allVarsExpressions, bind.fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
 
   private def allLetExpressions[T](t: R[T]): R[T] =
-    or(bind.let(variables, self.doubleConstant, t), bind.let(variables, self.pointConstant, t))
+    or(bind.let(bind.allVars, self.doubleConstant, t), bind.let(bind.allVars, self.pointConstant, t))
 
   private def allAppExpressions[T](t: R[T]): R[T] =
     or(
       bind.app(self.function(self.doubleConstant, t), self.doubleConstant),
       bind.app(self.function(self.pointConstant, t), self.pointConstant))
-
-  private val variables = bind.v(())
 }
 
 object EvolutionGrammar {
-  def parserGrammar[F[_], R[_]](
-    alg: Evolution[F, R, String, String]): Expressions[F, ByVarParserK[R, ?], Parser[String]] =
-    new EvolutionGrammar[F, ByVarParserK[R, ?], Parser[String]](
+  def parserGrammar[F[_], R[_]](alg: Evolution[F, R]): Expressions[F, ByVarParserK[R, ?]] =
+    new EvolutionGrammar[F, ByVarParserK[R, ?]](
       new EvolutionParserSyntax[F, R](alg),
       MonoidK[ByVarParserK[R, ?]],
       Defer[ByVarParserK[R, ?]])

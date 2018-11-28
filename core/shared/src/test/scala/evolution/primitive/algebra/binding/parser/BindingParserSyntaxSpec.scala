@@ -98,7 +98,7 @@ class BindingParserSyntaxSpec extends FreeSpec with Matchers {
     }
   }
 
-  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?], noApi.Parser[String]] =
+  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?]] =
     EvolutionGrammar.parserGrammar(new EvolutionTypedSerializer)
 
   private def unsafeParseDouble(expression: String): String =

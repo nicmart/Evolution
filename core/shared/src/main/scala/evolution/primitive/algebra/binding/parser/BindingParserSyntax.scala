@@ -1,21 +1,20 @@
 package evolution.primitive.algebra.binding.parser
 
 import evolution.primitive.algebra.binding.{ Binding, BindingSyntax }
+import evolution.primitive.algebra.parser.{ ByVarParser, PrimitiveParsers }
 import evolution.primitive.algebra.parser.ByVarParser.{ ByVarParserK, Raw }
 import evolution.primitive.algebra.parser.ByVarParsers.{ function1, function2, function3Dep, infixFlatMap }
-import evolution.primitive.algebra.parser.PrimitiveParsers.varUsage
 import evolution.primitive.algebra.parser.ParserConfig.White._
-import evolution.primitive.algebra.parser.{ ByVarParser, PrimitiveParsers }
+import evolution.primitive.algebra.parser.PrimitiveParsers.varUsage
+import fastparse.noApi
 import fastparse.noApi._
-import fastparse.parsers.Combinators.Logged
 
-class BindingParserSyntax[R[_]](alg: Binding[R, String, String])
-    extends BindingSyntax[ByVarParserK[R, ?], Parser[String], Unit] {
+class BindingParserSyntax[R[_]](alg: Binding[R, String]) extends BindingSyntax[ByVarParserK[R, ?], Parser[String]] {
 
-  override def v(name: Unit): Parser[String] =
+  override def allVars: noApi.Parser[String] =
     PrimitiveParsers.varName
 
-  override def allVars[T]: ByVarParser[R[T]] =
+  override def allVarsExpressions[T]: ByVarParser[R[T]] =
     ByVarParser.Vars.flatMap(anyVarParser)
 
   override def var0[A]: ByVarParser[R[A]] =

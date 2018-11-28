@@ -9,7 +9,7 @@ import fastparse.noApi
 import org.scalatest.{ FreeSpec, Inside, Matchers }
 
 class ChainParserSyntaxSpec extends FreeSpec with Matchers with Inside {
-  val interpreter: Evolution[F, R, String, String] = new EvolutionTypedSerializer
+  val interpreter: Evolution[F, R] = new EvolutionTypedSerializer
   import interpreter.chain.{ empty => nil, _ }
   import interpreter.constants._
 
@@ -41,7 +41,7 @@ class ChainParserSyntaxSpec extends FreeSpec with Matchers with Inside {
     }
   }
 
-  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?], noApi.Parser[String]] =
+  def expressions: Expressions[Types.F, ByVarParserK[Types.R, ?]] =
     EvolutionGrammar.parserGrammar(interpreter)
 
   def unsafeParseEvolution(expression: String): String =

@@ -4,10 +4,8 @@ import cats.syntax._
 import evolution.primitive.algebra.Composed
 import evolution.primitive.algebra.binding.Binding
 
-class BindingApplicative[R[_], Var, VarName, F[_]: Applicative](alg: Binding[R, Var, VarName])
-    extends Binding[Composed[F, R, ?], F[Var], VarName] {
-  override def v(name: VarName): F[Var] =
-    Applicative[F].pure(alg.v(name))
+class BindingApplicative[R[_], Var, F[_]: Applicative](alg: Binding[R, Var])
+    extends Binding[Composed[F, R, ?], F[Var]] {
   override def var0[A]: Composed[F, R, A] =
     Applicative[F].pure(alg.var0)
   override def shift[A](expr: Composed[F, R, A]): Composed[F, R, A] =

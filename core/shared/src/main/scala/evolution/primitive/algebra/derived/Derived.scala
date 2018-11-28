@@ -10,7 +10,7 @@ trait Derived[F[_], R[_]] {
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
 }
 
-class DefaultDerived[F[_], R[_]](alg: Evolution[F, R, String, String]) extends Derived[F, R] {
+class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   import alg.bind._, alg.chain._, alg.constants._, alg.distribution._
 
   override def constant[A](a: R[A]): R[F[A]] =
