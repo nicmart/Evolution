@@ -1,18 +1,12 @@
 package evolution.primitive.algebra.parser
-import evolution.generator.instances.GeneratorInstances
-import evolution.primitive.algebra.parser.ByVarParser.{Or, Prefixed, Pure}
+import evolution.primitive.algebra.parser.ByVarParser.{ Or, Prefixed, Pure }
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{FreeSpec, Inside, Matchers}
+import org.scalatest.{ FreeSpec, Inside, Matchers }
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 
-class ByVarParserSpec
-    extends FreeSpec
-    with Matchers
-    with Inside
-    with GeneratorInstances
-    with GeneratorDrivenPropertyChecks {
+class ByVarParserSpec extends FreeSpec with Matchers with Inside with GeneratorDrivenPropertyChecks {
 
 //  implicit override val generatorDrivenConfig =
 //    PropertyCheckConfig(maxDiscarded = 100, minSuccessful = 50, maxSize = 2)
@@ -49,7 +43,7 @@ class ByVarParserSpec
 
   private def isOr[T](parser: ByVarParser[T]): Boolean = parser match {
     case Or(_) => true
-    case _ => false
+    case _     => false
   }
 
   private def genParsersWithLeaves: Gen[ParserWithLeaves] =

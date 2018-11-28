@@ -2,7 +2,6 @@ package evolution.primitive.algebra.distribution.interpreter
 
 import cats.implicits._
 import evolution.algebra.representation.RNGRepr
-import evolution.generator.instances.GeneratorInstances
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.random.RNG
@@ -11,12 +10,7 @@ import org.scalatest.{ FreeSpec, Inspectors, Matchers }
 
 import scala.util.Random
 
-class DistributionEvaluatorSpec
-    extends FreeSpec
-    with Matchers
-    with Inspectors
-    with GeneratorInstances
-    with GeneratorDrivenPropertyChecks {
+class DistributionEvaluatorSpec extends FreeSpec with Matchers with Inspectors with GeneratorDrivenPropertyChecks {
 
   lazy val interpreter: Distribution[RNGRepr, EvaluationResult] =
     DistributionEvaluator

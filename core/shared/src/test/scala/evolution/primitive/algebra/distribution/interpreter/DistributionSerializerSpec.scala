@@ -1,15 +1,9 @@
 package evolution.primitive.algebra.distribution.interpreter
 import cats.Id
-import evolution.generator.instances.GeneratorInstances
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Inspectors, Matchers }
 
-class DistributionSerializerSpec
-    extends FreeSpec
-    with Matchers
-    with Inspectors
-    with GeneratorInstances
-    with GeneratorDrivenPropertyChecks {
+class DistributionSerializerSpec extends FreeSpec with Matchers with Inspectors with GeneratorDrivenPropertyChecks {
 
   val interpreter = new DistributionSerializer[Id]
   import interpreter._

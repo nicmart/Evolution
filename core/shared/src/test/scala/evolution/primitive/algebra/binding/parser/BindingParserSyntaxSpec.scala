@@ -1,7 +1,5 @@
 package evolution.primitive.algebra.binding.parser
 
-import evolution.primitive.algebra.TestInterpreters
-import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.Types.{ FunctionTypeInfo, doubleConstant }
 import evolution.primitive.algebra.evolution.interpreter.{ EvolutionTypedSerializer, Types }
 import evolution.primitive.algebra.evolution.parser.{ EvolutionGrammar, Expressions }
