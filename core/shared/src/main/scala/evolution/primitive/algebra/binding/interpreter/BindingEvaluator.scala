@@ -1,6 +1,5 @@
 package evolution.primitive.algebra.binding.interpreter
 import cats.Applicative
-import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult._
 
@@ -16,42 +15,47 @@ object BindingEvaluator extends Binding[EvaluationResult, String] {
 
   override def fix[A](expr: EvaluationResult[A => A]): EvaluationResult[A] =
     expr match {
-      case Lambda(term, _) => Value(fixTerm(term.get))
-      case _               => app(expr, fix(expr))
+      case Lambda(term) => Value(fixTerm(term.get))
+      case _            => app(expr, fix(expr))
     }
 
-  override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] = {
-    val ctxExpr = expr.get
-    Lambda(expr, ctx => debug("evaluating lambda", a => ctxExpr((() => a) :: ctx)))
-  }
+  override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] =
+    Lambda(expr)
 
-  override def app[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]): EvaluationResult[B] = {
-    val (fCtx, aCtx) = (f.get, a.get)
-    Value(ctx => debug("evaluating app", fCtx(ctx)(aCtx(ctx))))
-  }
+  override def app[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]): EvaluationResult[B] =
+    Value(ctx => debug("evaluating app", f.get(ctx)(a.get(ctx))))
 
-  private def fixTerm[A](expr: Ctx[A]): Ctx[A] =
+  private def fixTerm[A](expr: Ctx => A): Ctx => A =
     ctx => {
-      lazy val a: A = expr((() => a) :: ctx)
+      lazy val a: A = expr(push(() => a, ctx))
       debug("evaluating fix", a)
     }
 }
 
 sealed trait EvaluationResult[T] {
-  def get: Ctx[T]
+  @inline def get(ctx: Ctx): T
 }
 
 object EvaluationResult {
+  type Ctx = List[() => Any]
+  def push[T](elem: () => T, ctx: Ctx): Ctx = elem :: ctx
+  def pushStrict[T](elem: T, ctx: Ctx): Ctx = (() => elem) :: ctx
 
-  case class Lambda[A, B](term: EvaluationResult[B], get: Ctx[A => B]) extends EvaluationResult[A => B] {
-    println("Creating Lambda")
+  case class Constant[A](a: A) extends EvaluationResult[A] {
+    override def get(ctx: Ctx): A = a
   }
-  case class Value[A](get: Ctx[A]) extends EvaluationResult[A] {
+
+  case class Lambda[A, B](term: EvaluationResult[B]) extends EvaluationResult[A => B] {
+    println("Creating Lambda")
+    @inline override def get(ctx: Ctx): A => B = debug("evaluating lambda", a => term.get(pushStrict(a, ctx)))
+  }
+  case class Value[A](getA: Ctx => A) extends EvaluationResult[A] {
     println("Creating Value")
+    @inline override def get(ctx: Ctx): A = getA(ctx)
   }
 
   case class Var[A](n: Int) extends EvaluationResult[A] {
-    override def get: Ctx[A] = ctx => debug(s"evaluating var($n)", ctx(n)().asInstanceOf[A])
+    @inline override def get(ctx: Ctx): A = debug(s"evaluating var($n)", ctx(n)().asInstanceOf[A])
   }
 
   implicit val applicative: Applicative[EvaluationResult] = new Applicative[EvaluationResult] {
@@ -61,7 +65,7 @@ object EvaluationResult {
   }
 
   def debug[T](string: String, t: T): T = {
-    println(string)
+    //println(string)
     t
   }
 }

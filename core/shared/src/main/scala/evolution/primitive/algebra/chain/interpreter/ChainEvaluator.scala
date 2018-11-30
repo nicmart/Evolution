@@ -2,7 +2,7 @@ package evolution.primitive.algebra.chain.interpreter
 import cats.Id
 import evolution.algebra.representation.RNGRepr
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult.Value
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult.{ Constant, Value }
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.chain.interpreter.Wip.ChainEvaluatorId
 
@@ -10,7 +10,7 @@ import scala.util.Random
 
 object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
 
-  override def empty[A]: EvaluationResult[RNGRepr[A]] = Value { ctx =>
+  override def empty[A]: EvaluationResult[RNGRepr[A]] = Constant {
     val id = Random.nextInt()
     debug(s"$id) evaluating empty")
     RNGRepr { rng =>
@@ -61,7 +61,7 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
   }
 
   def debug(message: String): Unit = {
-    println(message)
+    //println(message)
   }
 }
 
