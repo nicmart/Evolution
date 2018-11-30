@@ -12,9 +12,9 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
 
   override def empty[A]: EvaluationResult[RNGRepr[A]] = Value { ctx =>
     val id = Random.nextInt()
-    println(s"$id) evaluating empty")
+    debug(s"$id) evaluating empty")
     RNGRepr { rng =>
-      println(s"$id) running empty")
+      debug(s"$id) running empty")
       (rng, None)
     }
   }
@@ -22,9 +22,9 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
   override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[RNGRepr[A]]): EvaluationResult[RNGRepr[A]] =
     Value { ctx =>
       val id = Random.nextInt()
-      println(s"$id) evaluating cons")
+      debug(s"$id) evaluating cons")
       RNGRepr { rng =>
-        println(s"$id) running cons")
+        debug(s"$id) running cons")
         (rng, Some((head.get(ctx), tail.get(ctx))))
       }
     }
@@ -34,10 +34,10 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
     eva2: EvaluationResult[RNGRepr[A]]
   ): EvaluationResult[RNGRepr[A]] = Value { ctx =>
     val id = Random.nextInt()
-    println(s"$id) evaluating mapEmpty")
+    debug(s"$id) evaluating mapEmpty")
     RNGRepr[A] { rng =>
       val (rng2, next) = eva.get(ctx).run(rng)
-      println(s"$id) running mapEmpty")
+      debug(s"$id) running mapEmpty")
       next match {
         case None => eva2.get(ctx).run(rng2)
         case _    => (rng2, next)
@@ -49,15 +49,19 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
     eva: EvaluationResult[RNGRepr[A]]
   )(f: EvaluationResult[A => RNGRepr[A] => RNGRepr[B]]): EvaluationResult[RNGRepr[B]] = Value { ctx =>
     val id = Random.nextInt()
-    println(s"$id) evaluating mapCons")
+    debug(s"$id) evaluating mapCons")
     RNGRepr[B] { rng =>
-      println(s"$id) running mapCons")
+      debug(s"$id) running mapCons")
       val (rng2, next) = eva.get(ctx).run(rng)
       next match {
         case None            => (rng2, None)
         case Some((a, eva2)) => f.get(ctx)(a)(eva2).run(rng2)
       }
     }
+  }
+
+  def debug(message: String): Unit = {
+    println(message)
   }
 }
 

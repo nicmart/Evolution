@@ -2,16 +2,14 @@ package evolution.primitive.algebra.binding.interpreter
 import cats.Applicative
 import evolution.primitive.algebra.Ctx
 import evolution.primitive.algebra.binding.Binding
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult.{ Lambda, Value }
+import evolution.primitive.algebra.binding.interpreter.EvaluationResult._
 
 object BindingEvaluator extends Binding[EvaluationResult, String] {
-  override def var0[A]: EvaluationResult[A] = Value {
-    case h :: tail => debug("evaluating var0", h().asInstanceOf[A])
-  }
+  override def var0[A]: EvaluationResult[A] = Var(0)
 
-  override def shift[A](expr: EvaluationResult[A]): EvaluationResult[A] = {
-    val exprCtx = expr.get
-    Value(ctx => debug("evaluating shift", exprCtx(ctx.tail)))
+  override def shift[A](expr: EvaluationResult[A]): EvaluationResult[A] = expr match {
+    case Var(n) => Var(n + 1)
+    case _      => Value(ctx => debug("evaluating shift", expr.get(ctx.tail)))
   }
   override def let[A, B](name: String, value: EvaluationResult[A], expr: EvaluationResult[B]): EvaluationResult[B] =
     debug("evaluating let", app(lambda(name, expr), value))
@@ -37,11 +35,6 @@ object BindingEvaluator extends Binding[EvaluationResult, String] {
       lazy val a: A = expr((() => a) :: ctx)
       debug("evaluating fix", a)
     }
-
-  private def debug[T](string: String, t: T): T = {
-    println(string)
-    t
-  }
 }
 
 sealed trait EvaluationResult[T] {
@@ -57,9 +50,18 @@ object EvaluationResult {
     println("Creating Value")
   }
 
+  case class Var[A](n: Int) extends EvaluationResult[A] {
+    override def get: Ctx[A] = ctx => debug(s"evaluating var($n)", ctx(n)().asInstanceOf[A])
+  }
+
   implicit val applicative: Applicative[EvaluationResult] = new Applicative[EvaluationResult] {
     override def pure[A](x: A): EvaluationResult[A] = Value(_ => x)
     override def ap[A, B](ff: EvaluationResult[A => B])(fa: EvaluationResult[A]): EvaluationResult[B] =
       BindingEvaluator.app(ff, fa)
+  }
+
+  def debug[T](string: String, t: T): T = {
+    println(string)
+    t
   }
 }
