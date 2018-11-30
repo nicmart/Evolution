@@ -47,11 +47,16 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
 
       import interpreter.constants._
 
-      val stream = materialize(drawing(interpreter, double(100), double(1)))
-      stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)
+      val stream = materialize(drawing(interpreter, double(100), double(1))).map(elem => {
+        println("computing elem"); elem
+      })
+      stream.take(3).toList shouldBe List(100, 101, 102)
 
-      val pointStream = materialize(drawing(interpreter, point(double(0), double(0)), point(double(1), double(1))))
-      pointStream.take(3).toList shouldBe List(Point(0, 0), Point(1, 1), Point(2, 2))
+//      val stream = materialize(drawing(interpreter, double(100), double(1)))
+//      stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)
+//
+//      val pointStream = materialize(drawing(interpreter, point(double(0), double(0)), point(double(1), double(1))))
+//      pointStream.take(3).toList shouldBe List(Point(0, 0), Point(1, 1), Point(2, 2))
     }
 
     "should be to define constants" in {
