@@ -45,12 +45,27 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         integrate(s0, constant(v0))
       }
 
+      def brownian[F[_], R[_], T: VectorSpace](alg: Evolution[F, R]): R[F[Point]] = {
+        import alg.bind._, alg.derived._, alg.distribution._, alg.constants._
+        //integrate(s0, constant(v0))
+        integrate[Point](
+          point(double(0), double(0)),
+          cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1))))
+      }
+
       import interpreter.constants._
 
-      val stream = materialize(drawing(interpreter, double(100), double(1))).map(elem => {
+//      val stream = materialize(drawing(interpreter, double(100), double(1))).map(elem => {
+//        println("computing elem"); elem
+//      })
+
+      println("materializing brownian stream")
+      val brownianStream = materialize(brownian(interpreter)).map(elem => {
         println("computing elem"); elem
       })
-      stream.take(3).toList shouldBe List(100, 101, 102)
+
+      //stream.take(3).toList shouldBe List(100, 101, 102)
+      brownianStream.take(1).toList shouldBe List(100, 101, 102)
 
 //      val stream = materialize(drawing(interpreter, double(100), double(1)))
 //      stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)

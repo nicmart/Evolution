@@ -20,14 +20,17 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
   }
 
   override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[RNGRepr[A]]): EvaluationResult[RNGRepr[A]] =
-    Value { ctx =>
-      val id = Random.nextInt()
-      debug(s"$id) evaluating cons")
-      RNGRepr { rng =>
-        debug(s"$id) running cons")
-        (rng, Some((head.get(ctx), tail.get(ctx))))
-      }
-    }
+    Value(
+      ctx => {
+        val id = Random.nextInt()
+        debug(s"$id) evaluating cons")
+        RNGRepr { rng =>
+          debug(s"$id) running cons")
+          (rng, Some((head.get(ctx), tail.get(ctx))))
+        }
+      },
+      s"cons($head, $tail)"
+    )
 
   override def mapEmpty[A](
     eva: EvaluationResult[RNGRepr[A]],
@@ -47,21 +50,24 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
 
   override def mapCons[A, B](
     eva: EvaluationResult[RNGRepr[A]]
-  )(f: EvaluationResult[A => RNGRepr[A] => RNGRepr[B]]): EvaluationResult[RNGRepr[B]] = Value { ctx =>
-    val id = Random.nextInt()
-    debug(s"$id) evaluating mapCons")
-    RNGRepr[B] { rng =>
-      debug(s"$id) running mapCons")
-      val (rng2, next) = eva.get(ctx).run(rng)
-      next match {
-        case None            => (rng2, None)
-        case Some((a, eva2)) => f.get(ctx)(a)(eva2).run(rng2)
+  )(f: EvaluationResult[A => RNGRepr[A] => RNGRepr[B]]): EvaluationResult[RNGRepr[B]] = Value(
+    ctx => {
+      val id = Random.nextInt()
+      debug(s"$id) evaluating mapCons")
+      RNGRepr[B] { rng =>
+        debug(s"$id) running mapCons")
+        val (rng2, next) = eva.get(ctx).run(rng)
+        next match {
+          case None            => (rng2, None)
+          case Some((a, eva2)) => f.get(ctx)(a)(eva2).run(rng2)
+        }
       }
-    }
-  }
+    },
+    s"mapCons($eva)($f)"
+  )
 
   def debug(message: String): Unit = {
-    //println(message)
+    println(message)
   }
 }
 
