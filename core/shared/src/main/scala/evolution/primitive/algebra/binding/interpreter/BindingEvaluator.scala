@@ -4,6 +4,8 @@ import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.binding.interpreter.BindingEvaluator.{ app, fix }
 import evolution.primitive.algebra.binding.interpreter.EvaluationResult._
 
+import scala.util.Random
+
 object BindingEvaluator extends Binding[EvaluationResult, String] {
   override def var0[A]: EvaluationResult[A] = Var(0)
 
@@ -18,15 +20,21 @@ object BindingEvaluator extends Binding[EvaluationResult, String] {
     Fix(expr)
 
   override def lambda[A, B](name: String, expr: EvaluationResult[B]): EvaluationResult[A => B] =
-    Lambda(name, expr)
+    Lam(name, expr)
 
   override def app[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]): EvaluationResult[B] =
-    App(f, a)
+    f match {
+      case lambda @ Lam(_, _)                    => AppOfLambda(lambda, a)
+      case AppOfLambda(Lam(_, Lam(_, inner)), b) => App2OfLambda[A, Any, B](inner, b, a)
+      case _                                     => App(f, a)
+    }
 }
 
 sealed trait EvaluationResult[T] {
-  @inline def get(ctx: Ctx): T = debug(s"Evaluating $this", evaluate(ctx))
-  protected def evaluate(ctx: Ctx): T
+  @inline def get(ctx: Ctx): T =
+    //debug(s"Evaluating $this", evaluate(ctx))
+    evaluate(ctx)
+  @inline protected def evaluate(ctx: Ctx): T
 }
 
 object EvaluationResult {
@@ -42,10 +50,20 @@ object EvaluationResult {
     override def evaluate(ctx: Ctx): B = f.get(ctx)(a.get(ctx))
   }
 
+  case class AppOfLambda[A, B](f: Lam[A, B], a: EvaluationResult[A]) extends EvaluationResult[B] {
+    private val expr = f.term
+    override protected def evaluate(ctx: Ctx): B = expr.get(pushStrict(a.get(ctx), ctx))
+  }
+
+  case class App2OfLambda[A, B, C](inner: EvaluationResult[C], b: EvaluationResult[B], a: EvaluationResult[A])
+      extends EvaluationResult[C] {
+    override protected def evaluate(ctx: Ctx): C = inner.get(pushStrict(b.get(ctx), pushStrict(a.get(ctx), ctx)))
+  }
+
   case class Fix[A](expr: EvaluationResult[A => A]) extends EvaluationResult[A] {
     override def evaluate(ctx: Ctx): A = expr match {
-      case Lambda(_, term) => fixTerm(term.get)(ctx)
-      case _               => app(expr, fix(expr)).get(ctx)
+      case Lam(_, term) => fixTerm(term.get)(ctx)
+      case _            => app(expr, fix(expr)).get(ctx)
     }
 
     private def fixTerm(expr: Ctx => A): Ctx => A =
@@ -55,7 +73,7 @@ object EvaluationResult {
       }
   }
 
-  case class Lambda[A, B](varName: String, term: EvaluationResult[B]) extends EvaluationResult[A => B] {
+  case class Lam[A, B](varName: String, term: EvaluationResult[B]) extends EvaluationResult[A => B] {
     println("Creating Lambda")
     @inline override def evaluate(ctx: Ctx): A => B =
       a => term.get(pushStrict(a, ctx))
@@ -76,8 +94,11 @@ object EvaluationResult {
       BindingEvaluator.app(ff, fa)
   }
 
-  def debug[T](string: String, t: => T): T = {
-    println(string)
-    t
+  def debug[T](message: String, t: => T): T = {
+    val id = Random.nextInt().toHexString.take(6)
+    println(s"START ($id): $message")
+    val result = t
+    println(s"END   ($id): $message")
+    result
   }
 }
