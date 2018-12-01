@@ -32,8 +32,8 @@ object BindingEvaluator extends Binding[EvaluationResult, String] {
 
 sealed trait EvaluationResult[T] {
   @inline def get(ctx: Ctx): T =
-    //debug(s"Evaluating $this", evaluate(ctx))
-    evaluate(ctx)
+    debug(s"Evaluating $this", evaluate(ctx))
+  //evaluate(ctx)
   @inline protected def evaluate(ctx: Ctx): T
 }
 
