@@ -67,7 +67,7 @@ object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
   )
 
   def debug(message: String): Unit = {
-    println(message)
+    //println(message)
   }
 }
 

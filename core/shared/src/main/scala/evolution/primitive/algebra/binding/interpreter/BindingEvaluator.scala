@@ -42,8 +42,9 @@ object EvaluationResult {
   def push[T](elem: () => T, ctx: Ctx): Ctx = elem :: ctx
   def pushStrict[T](elem: T, ctx: Ctx): Ctx = (() => elem) :: ctx
 
-  case class Constant[A](a: A) extends EvaluationResult[A] {
+  case class Constant[A](a: A, label: String = "") extends EvaluationResult[A] {
     override def evaluate(ctx: Ctx): A = a
+    override def toString: String = if (label.nonEmpty) s"Constant($label)" else s"Constant($a)"
   }
 
   case class App[A, B](f: EvaluationResult[A => B], a: EvaluationResult[A]) extends EvaluationResult[B] {

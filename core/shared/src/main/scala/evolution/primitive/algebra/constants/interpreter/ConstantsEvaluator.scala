@@ -11,9 +11,9 @@ object ConstantsEvaluator extends Constants[EvaluationResult] {
   override def double(d: Double): EvaluationResult[Double] =
     Constant(d)
   override def point(x: EvaluationResult[Double], y: EvaluationResult[Double]): EvaluationResult[Point] =
-    Value(ctx => Point(x.get(ctx), y.get(ctx)))
+    Value(ctx => Point(x.get(ctx), y.get(ctx)), s"point($x, $y)")
   override def add[T: VectorSpace](a: EvaluationResult[T], b: EvaluationResult[T]): EvaluationResult[T] =
-    Value(ctx => VectorSpace[T].monoid.combine(a.get(ctx), b.get(ctx)))
+    Value(ctx => VectorSpace[T].monoid.combine(a.get(ctx), b.get(ctx)), s"add($a, $b)")
   override def sin(d: EvaluationResult[Double]): EvaluationResult[Double] =
     Value(ctx => Math.sin(d.get(ctx)))
   override def cos(d: EvaluationResult[Double]): EvaluationResult[Double] =
