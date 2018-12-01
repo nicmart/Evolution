@@ -10,8 +10,12 @@ import evolution.typeclass.VectorSpace
 object ConstantsEvaluator extends Constants[EvaluationResult] {
   override def double(d: Double): EvaluationResult[Double] =
     Constant(d)
-  override def point(x: EvaluationResult[Double], y: EvaluationResult[Double]): EvaluationResult[Point] =
-    Value(ctx => Point(x.get(ctx), y.get(ctx)), s"point($x, $y)")
+  override def point(evalX: EvaluationResult[Double], evalY: EvaluationResult[Double]): EvaluationResult[Point] =
+    (evalX, evalY) match {
+      case (Constant(x, _), Constant(y, _)) => Constant(Point(x, y), s"constant-point($evalX, $evalY)")
+      case _                                => Value(ctx => Point(evalX.get(ctx), evalY.get(ctx)), s"non-constant-point($evalX, $evalY)")
+    }
+
   override def add[T: VectorSpace](a: EvaluationResult[T], b: EvaluationResult[T]): EvaluationResult[T] =
     Value(ctx => VectorSpace[T].monoid.combine(a.get(ctx), b.get(ctx)), s"add($a, $b)")
   override def sin(d: EvaluationResult[Double]): EvaluationResult[Double] =
