@@ -1,100 +1,61 @@
 package evolution.primitive.algebra.chain.interpreter
-import cats.Id
 import evolution.algebra.representation.RNGRepr
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult._
+import evolution.data.Result
+import evolution.data.Result._
 import evolution.primitive.algebra.chain.Chain
-import evolution.primitive.algebra.chain.interpreter.Wip.ChainEvaluatorId
 
-import scala.util.Random
+// TODO through applicative?
+object ChainEvaluator extends Chain[RNGRepr, Result] {
 
-object ChainEvaluator extends Chain[RNGRepr, EvaluationResult] {
-
-  override def empty[A]: EvaluationResult[RNGRepr[A]] = Constant {
+  override def empty[A]: Result[RNGRepr[A]] = Constant {
     debug(s"evaluating empty", RNGRepr { rng =>
       debug("running empty", (rng, None))
     })
   }
 
-  override def cons[A](head: EvaluationResult[A], tail: EvaluationResult[RNGRepr[A]]): EvaluationResult[RNGRepr[A]] =
+  override def cons[A](evalHead: Result[A], evalTail: Result[RNGRepr[A]]): Result[RNGRepr[A]] =
     Value(
       ctx => {
-        debug("evaluating cons", RNGRepr { rng =>
-          debug("running cons", (rng, Some((head.get(ctx), tail.get(ctx)))))
-        })
+        val head = evalHead.evaluate(ctx)
+        val tail = evalTail.evaluate(ctx)
+        RNGRepr { rng =>
+          debug(s"running cons($evalHead, $evalTail)", (rng, Some((head, tail))))
+        }
       },
-      s"cons($head, $tail)"
+      s"cons($evalHead, $evalTail)"
     )
 
   override def mapEmpty[A](
-    eva: EvaluationResult[RNGRepr[A]],
-    eva2: EvaluationResult[RNGRepr[A]]
-  ): EvaluationResult[RNGRepr[A]] = Value { ctx =>
-    debug(
-      "evaluating mapEmpty",
+    eva: Result[RNGRepr[A]],
+    eva2: Result[RNGRepr[A]]
+  ): Result[RNGRepr[A]] = Value(
+    ctx =>
       RNGRepr[A] { rng =>
-        val (rng2, next) = eva.get(ctx).run(rng)
-        debug("running mapEmpty", next match {
-          case None => eva2.get(ctx).run(rng2)
+        val (rng2, next) = eva.evaluate(ctx).run(rng)
+        debug(s"running mapEmpty($eva, $eva2)", next match {
+          case None => eva2.evaluate(ctx).run(rng2)
           case _    => (rng2, next)
         })
-      }
-    )
-  }
+    },
+    s"mapEmpty($eva, $eva2)"
+  )
 
   override def mapCons[A, B](
-    eva: EvaluationResult[RNGRepr[A]]
-  )(f: EvaluationResult[A => RNGRepr[A] => RNGRepr[B]]): EvaluationResult[RNGRepr[B]] = Value(
+    evalFA: Result[RNGRepr[A]]
+  )(evalF: Result[A => RNGRepr[A] => RNGRepr[B]]): Result[RNGRepr[B]] = Value(
     ctx => {
-      debug(
-        "evaluating mapCons",
-        RNGRepr[B] { rng =>
-          debug("running mapCons", {
-            val (rng2, next) = eva.get(ctx).run(rng)
-            next match {
-              case None            => (rng2, None)
-              case Some((a, eva2)) => f.get(ctx)(a)(eva2).run(rng2)
-            }
-          })
-        }
-      )
+      val fa = evalFA.evaluate(ctx)
+      val f = evalF.evaluate(ctx)
+      RNGRepr[B] { rng =>
+        debug(s"running mapCons($evalFA, $evalF)", {
+          val (rng2, next) = fa.run(rng)
+          next match {
+            case None            => (rng2, None)
+            case Some((a, eva2)) => f(a)(eva2).run(rng2)
+          }
+        })
+      }
     },
-    s"mapCons($eva)($f)"
+    s"mapCons($evalFA)($evalF)"
   )
-}
-
-// TODO change name to Evaluator
-// TODO EvaluationResult applicative instance makes the implementation stackoverflow
-sealed abstract class ChainEvaluatorApplicative
-    extends ChainApplicative[RNGRepr, Id, EvaluationResult](new ChainEvaluatorId)
-
-object Wip {
-  def apply(): Chain[RNGRepr, EvaluationResult] = new ChainEvaluatorApplicative {}
-
-  private[chain] class ChainEvaluatorId extends Chain[RNGRepr, Id] {
-
-    override def empty[A]: RNGRepr[A] = RNGRepr { rng =>
-      (rng, None)
-    }
-
-    override def cons[A](head: A, tail: RNGRepr[A]): RNGRepr[A] = RNGRepr { rng =>
-      (rng, Some((head, tail)))
-    }
-
-    override def mapEmpty[A](eva: RNGRepr[A], eva2: RNGRepr[A]): RNGRepr[A] = RNGRepr[A] { rng =>
-      val (rng2, next) = eva.run(rng)
-      next match {
-        case None => eva2.run(rng2)
-        case _    => (rng2, next)
-      }
-    }
-
-    override def mapCons[A, B](eva: RNGRepr[A])(f: A => RNGRepr[A] => RNGRepr[B]): RNGRepr[B] = RNGRepr[B] { rng =>
-      val (rng2, next) = eva.run(rng)
-      next match {
-        case None            => (rng2, None)
-        case Some((a, eva2)) => f(a)(eva2).run(rng2)
-      }
-    }
-  }
 }

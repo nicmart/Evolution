@@ -4,8 +4,8 @@ import cats.instances.double._
 import cats.kernel.Semigroup
 import evolution.algebra.representation.RNGRepr
 import evolution.geometry.Point
-import evolution.primitive.algebra.binding.interpreter.EvaluationResult
 import evolution.primitive.algebra.evolution.Evolution
+import evolution.data.Result
 import evolution.random.RNG
 import evolution.typeclass.VectorSpace
 import org.scalatest.{ FreeSpec, Matchers }
@@ -51,6 +51,8 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         integrate[Point](
           point(double(0), double(0)),
           cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1))))
+
+        cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1)))
       }
 
       import interpreter.constants._
@@ -92,8 +94,8 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
       stream.take(2).toList shouldBe List(Point(1, 2), Point(1, 2))
     }
 
-    def materialize[T](evaluationResult: EvaluationResult[RNGRepr[T]]): Stream[T] =
-      evaluationResult.get(Nil).unfold(RNG(0L))
+    def materialize[T](evaluationResult: Result[RNGRepr[T]]): Stream[T] =
+      evaluationResult.evaluate.unfold(RNG(0L))
 
     lazy val interpreter = EvolutionEvaluator
   }
