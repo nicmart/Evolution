@@ -32,12 +32,12 @@ object Result {
 
   case class AppOfLambda[A, B](f: Lam[A, B], a: Result[A]) extends Result[B] {
     private val expr = f.term
-    override protected def eval(ctx: Ctx): B = expr.evaluate(pushStrict(a.evaluate(ctx), ctx))
+    override protected def eval(ctx: Ctx): B = expr.evaluate(ctx.pushStrict(a.evaluate(ctx)))
   }
 
   case class App2OfLambda[A, B, C](inner: Result[C], b: Result[B], a: Result[A]) extends Result[C] {
     override protected def eval(ctx: Ctx): C =
-      inner.evaluate(pushStrict(b.evaluate(ctx), pushStrict(a.evaluate(ctx), ctx)))
+      inner.evaluate(pushStrict(b.evaluate(ctx), ctx.pushStrict(a.evaluate(ctx))))
   }
 
   case class Fix[A](expr: Result[A => A]) extends Result[A] {
@@ -48,7 +48,7 @@ object Result {
 
     private def fixTerm(expr: Ctx => A): Ctx => A =
       ctx => {
-        lazy val a: A = expr(pushLazy(() => a, ctx))
+        lazy val a: A = expr(ctx.pushLazy(() => a))
         debug("evaluating fix\nevaluating lambda of fix", a)
       }
   }
@@ -56,7 +56,7 @@ object Result {
   case class Lam[A, B](varName: String, term: Result[B]) extends Result[A => B] {
     println("Creating Lambda")
     @inline override def eval(ctx: Ctx): A => B =
-      a => term.evaluate(pushStrict(a, ctx))
+      a => term.evaluate(ctx.pushStrict(a))
     override def toString: String = s"lambda($varName -> $term)"
   }
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Result[A] {
