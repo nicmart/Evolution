@@ -40,15 +40,14 @@ object Result {
 
   case class Fix[A](expr: Result[A => A]) extends Result[A] {
     override def eval(ctx: Ctx): A = expr match {
-      case Lam(_, term) => fixTerm(term.evaluateWith)(ctx)
-      case _            => app(expr, fix(expr)).evaluateWith(ctx)
+      case Lam(_, term) => fixLambda(term, ctx)
+      case _            => app(expr, fix(expr)).evaluateWith(ctx) // This should never happen
     }
 
-    private def fixTerm(expr: Ctx => A): Ctx => A =
-      ctx => {
-        lazy val a: A = expr(ctx.pushLazy(() => a))
-        debug("evaluating fix\nevaluating lambda of fix", a)
-      }
+    private def fixLambda(expressionOfLambda: Result[A], ctx: Ctx): A = {
+      lazy val a: A = expressionOfLambda.evaluateWith(ctx.pushLazy(() => a))
+      debug("evaluating fix\nevaluating lambda of fix", a)
+    }
   }
 
   case class Lam[A, B](varName: String, term: Result[B]) extends Result[A => B] {
