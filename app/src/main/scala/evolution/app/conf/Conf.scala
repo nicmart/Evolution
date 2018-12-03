@@ -1,21 +1,21 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
+import evolution.app.model.definition.{ DrawingDefinition, LegacyDrawingDefinition }
 import evolution.app.portfolio._
-import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
-import evolution.algebra.materializer.{Materializer, RNGMaterializer}
+import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
+import evolution.algebra.materializer.{ Materializer, RNGMaterializer }
 import evolution.algebra.interpreter.RNGInterpreter
 import evolution.app.codec._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state._
-import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState}
+import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState }
 import evolution.app.react.routing.Routing
 import cats.implicits._
 import evolution.app.canvas.drawer._
 import evolution.app.data.PointedSeq
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
-import evolution.app.react.component.{App, Canvas}
+import evolution.app.react.component.{ App, Canvas }
 import evolution.app.react.component.presentational.Page
 import evolution.geometry.Point
 import japgolly.scalajs.react.extra.router.Router
@@ -49,7 +49,7 @@ object Conf {
     )
 
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(dsl :: drawings, brownian)
+    PointedSeq(dsl :: rawBrownian :: drawings, brownian)
 
   lazy val drawingDefinition: DrawingDefinition[Point] =
     new DrawingListDefinition(innerDrawingList)
