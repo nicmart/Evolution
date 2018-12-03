@@ -69,7 +69,7 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   private def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
     app(app(f, a), b)
 
-  private def varN[A](name: String, n: Int): R[A] = if (n <= 0) var0 else shift(varN(name, n - 1))
+  private def varN[A](name: String, n: Int): R[A] = if (n <= 0) var0(name) else shift(varN(name, n - 1))
 
   private def zipWith[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
     fix[F[A] => F[B] => F[C]](

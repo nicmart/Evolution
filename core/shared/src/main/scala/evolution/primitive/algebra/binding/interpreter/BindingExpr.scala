@@ -5,10 +5,10 @@ import evolution.primitive.algebra.evolution.Evolution.Expr
 
 class BindingExpr[F[_]] extends Binding[Expr[F, ?], String] {
 
-  override def var0[A]: Expr[F, A] =
+  override def var0[A](name: String): Expr[F, A] =
     new Expr[F, A] {
       override def run[R[_]](alg: Evolution[F, R]): R[A] =
-        alg.bind.var0
+        alg.bind.var0(name)
     }
 
   override def shift[A](expr: Expr[F, A]): Expr[F, A] =

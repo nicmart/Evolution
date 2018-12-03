@@ -5,7 +5,7 @@ import evolution.data.EvaluationContextModule._
 import evolution.primitive.algebra.binding.Binding
 
 object BindingEvaluator extends Binding[Result, String] {
-  override def var0[A]: Result[A] = Var(0)
+  override def var0[A](name: String): Result[A] = Var(0)
 
   override def shift[A](expr: Result[A]): Result[A] = expr match {
     case Var(n) => Var(n + 1)

@@ -17,11 +17,11 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String]) extends BindingSyntax[B
   override def allVarsExpressions[T]: ByVarParser[R[T]] =
     ByVarParser.Vars.flatMap(anyVarParser)
 
-  override def var0[A]: ByVarParser[R[A]] =
+  override def var0[A](name: String): ByVarParser[R[A]] =
     Raw(
       vars =>
         vars.headOption.fold[Parser[R[A]]](Fail) { currentVar =>
-          varUsage(currentVar).map(_ => alg.var0)
+          varUsage(currentVar).map(_ => alg.var0(name))
       },
       "var0"
     )
@@ -58,7 +58,7 @@ class BindingParserSyntax[R[_]](alg: Binding[R, String]) extends BindingSyntax[B
 
   private def anyVarParser[T](vars: List[String]): ByVarParser[R[T]] =
     vars match {
-      case _ :: tail => ByVarParser.Or(List(var0, shift(anyVarParser(tail))))
+      case _ :: tail => ByVarParser.Or(List(var0(""), shift(anyVarParser(tail))))
       case Nil       => ByVarParser.Fail()
     }
 }

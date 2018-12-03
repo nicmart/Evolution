@@ -6,8 +6,8 @@ import evolution.primitive.algebra.binding.Binding
 
 class BindingApplicative[R[_], Var, F[_]: Applicative](alg: Binding[R, Var])
     extends Binding[Composed[F, R, ?], F[Var]] {
-  override def var0[A]: Composed[F, R, A] =
-    Applicative[F].pure(alg.var0)
+  override def var0[A](name: String): Composed[F, R, A] =
+    Applicative[F].pure(alg.var0(name))
   override def shift[A](expr: Composed[F, R, A]): Composed[F, R, A] =
     Applicative[F].map(expr)(alg.shift)
   override def let[A, B](name: F[Var], value: Composed[F, R, A], expr: Composed[F, R, B]): Composed[F, R, B] =

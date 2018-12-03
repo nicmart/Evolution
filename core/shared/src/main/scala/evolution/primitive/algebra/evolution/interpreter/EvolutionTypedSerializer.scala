@@ -75,7 +75,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {
-    override def var0[A]: R[A] = R.unknown("var0")
+    override def var0[A](name: String): R[A] = R.unknown("var0")
     override def shift[A](expr: R[A]): R[A] = expr.mapValue(value => value.copy(value = s"shift($value)"))
     override def let[A, B](variable: String, value: R[A], expr: R[B]): R[B] = R { requiredBType =>
       val annotatedA @ AnnotatedValue(aType, aValue) = value.infer(Unknown())

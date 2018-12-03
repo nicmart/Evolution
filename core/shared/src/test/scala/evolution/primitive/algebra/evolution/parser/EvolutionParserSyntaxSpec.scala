@@ -101,21 +101,21 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers {
       "a constant evolution defined as a fixed point" in {
         val serializedExpression = "fix(s -> $s)"
         val expectedExpression: String =
-          fix[F[Double]](lambda("s", var0[F[Double]])).infer(evolutionOfDoubles).toString
+          fix[F[Double]](lambda("s", var0[F[Double]]("s"))).infer(evolutionOfDoubles).toString
         parseEvolutionOfDoubles(serializedExpression) shouldBe expectedExpression
       }
 
       "a lambda from an evolution to another" in {
         val serializedExpression = "s -> $s"
         val expectedExpression: String =
-          lambda("s", var0[F[Double]]).infer(lambdaTypeInfo).toString
+          lambda("s", var0[F[Double]]("s")).infer(lambdaTypeInfo).toString
         parseLambdaOfEvolutions(serializedExpression) shouldBe expectedExpression
       }
 
       "an evolution expressed as a variable" in {
         val serializedExpression = "$s"
         val expectedExpression: String =
-          var0[F[Double]].infer(evolutionOfDoubles).toString
+          var0[F[Double]]("s").infer(evolutionOfDoubles).toString
         parseEvolutionOfDoubles(serializedExpression, "s" :: Nil) shouldBe expectedExpression
       }
 
@@ -133,7 +133,7 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers {
       "an ambiguous evolution" in {
         val serializedExpression = "app(fix(f->$f),point(0,0))"
         val expectedExpression: String =
-          app[Point, Point](fix(lambda("f", var0)), point(double(0), double(0))).infer(pointConstant).toString
+          app[Point, Point](fix(lambda("f", var0("f"))), point(double(0), double(0))).infer(pointConstant).toString
         parseConstantOfPoints(serializedExpression) shouldBe expectedExpression
       }
 

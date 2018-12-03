@@ -17,7 +17,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         import alg.bind._
         import alg.chain._
         import alg.constants._
-        fix(lambda("x", cons(double(1), var0[F[Double]])))
+        fix(lambda("x", cons(double(1), var0[F[Double]]("x"))))
       }
       val stream = materialize(drawing(interpreter))
       stream.take(10).toList shouldBe List.fill(10)(1.0)
@@ -30,7 +30,11 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
         import alg.constants._
         app[Double, F[Double]](
           fix(
-            lambda("f", lambda("s", cons(var0, app(shift(var0[Double => F[Double]]), add(var0[Double], double(1))))))
+            lambda(
+              "f",
+              lambda(
+                "s",
+                cons(var0("s"), app(shift(var0[Double => F[Double]]("f")), add(var0[Double]("s"), double(1))))))
           ),
           double(0)
         )
