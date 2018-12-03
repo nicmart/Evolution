@@ -12,14 +12,14 @@ class BindingEvaluatorSpec extends FreeSpec with Matchers {
   "a var0 expression" - {
     "evaluates to the first item in the stack" in {
       val expr = var0[Double]("x")
-      expr.evaluate(ctxOf(12)) shouldBe 12
+      expr.evaluateWith(ctxOf(12)) shouldBe 12
     }
   }
 
   "a shift expression" - {
     "evaluates to the second item in the stack" in {
       val expr = shift(var0[Double]("x"))
-      expr.evaluate(ctxOf(1, 2)) shouldBe 2
+      expr.evaluateWith(ctxOf(1, 2)) shouldBe 2
     }
   }
 
@@ -33,7 +33,7 @@ class BindingEvaluatorSpec extends FreeSpec with Matchers {
   "an app expression" - {
     "evaluates a lambda" in {
       val expr = app(lambda[Int, Int]("x", var0("x")), var0("y"))
-      expr.evaluate(ctxOf(1)) shouldBe 1
+      expr.evaluateWith(ctxOf(1)) shouldBe 1
     }
   }
 

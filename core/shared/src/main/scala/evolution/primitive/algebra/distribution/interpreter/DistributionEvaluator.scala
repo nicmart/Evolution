@@ -15,7 +15,9 @@ object DistributionEvaluator extends Distribution[RNGRepr, Result] {
     (fromEval, toEval) match {
       case (Constant(from, _), Constant(to, _)) => Constant(repr(from, to), s"constant-uniform($fromEval, $toEval)")
       case _ =>
-        Value(ctx => repr(fromEval.evaluate(ctx), toEval.evaluate(ctx)), s"non-constant-uniform($fromEval, $toEval)")
+        Value(
+          ctx => repr(fromEval.evaluateWith(ctx), toEval.evaluateWith(ctx)),
+          s"non-constant-uniform($fromEval, $toEval)")
     }
 
   private def repr(from: Double, to: Double): RNGRepr[Double] = {

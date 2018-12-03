@@ -9,7 +9,7 @@ object BindingEvaluator extends Binding[Result, String] {
 
   override def shift[A](expr: Result[A]): Result[A] = expr match {
     case Var(n, name) => Var(n + 1, name)
-    case _            => Value(ctx => expr.evaluate(ctx.pop))
+    case _            => Value(ctx => expr.evaluateWith(ctx.pop))
   }
   override def let[A, B](name: String, value: Result[A], expr: Result[B]): Result[B] =
     app(lambda(name, expr), value)

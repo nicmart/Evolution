@@ -8,10 +8,8 @@ import evolution.data.EvaluationContextModule._
 import scala.util.Random
 
 sealed trait Result[T] {
-  @inline def evaluate(ctx: Ctx): T =
-    Result.debug(s"Evaluating $this", eval(ctx))
-  //evaluate(ctx)
-  def evaluate: T = evaluate(emptyCtx)
+  @inline def evaluateWith(ctx: Ctx): T = Result.debug(s"Evaluating $this", eval(ctx))
+  @inline def evaluate: T = evaluateWith(emptyCtx)
   @inline protected def eval(ctx: Ctx): T
 }
 
@@ -27,23 +25,23 @@ object Result {
   }
 
   case class App[A, B](f: Result[A => B], a: Result[A]) extends Result[B] {
-    override def eval(ctx: Ctx): B = f.evaluate(ctx)(a.evaluate(ctx))
+    override def eval(ctx: Ctx): B = f.evaluateWith(ctx)(a.evaluateWith(ctx))
   }
 
   case class AppOfLambda[A, B](f: Lam[A, B], a: Result[A]) extends Result[B] {
     private val expr = f.term
-    override protected def eval(ctx: Ctx): B = expr.evaluate(ctx.pushStrict(a.evaluate(ctx)))
+    override protected def eval(ctx: Ctx): B = expr.evaluateWith(ctx.pushStrict(a.evaluateWith(ctx)))
   }
 
   case class App2OfLambda[A, B, C](inner: Result[C], b: Result[B], a: Result[A]) extends Result[C] {
     override protected def eval(ctx: Ctx): C =
-      inner.evaluate(pushStrict(b.evaluate(ctx), ctx.pushStrict(a.evaluate(ctx))))
+      inner.evaluateWith(ctx.pushStrict(a.evaluateWith(ctx)).pushStrict(b.evaluateWith(ctx)))
   }
 
   case class Fix[A](expr: Result[A => A]) extends Result[A] {
     override def eval(ctx: Ctx): A = expr match {
-      case Lam(_, term) => fixTerm(term.evaluate)(ctx)
-      case _            => app(expr, fix(expr)).evaluate(ctx)
+      case Lam(_, term) => fixTerm(term.evaluateWith)(ctx)
+      case _            => app(expr, fix(expr)).evaluateWith(ctx)
     }
 
     private def fixTerm(expr: Ctx => A): Ctx => A =
@@ -56,7 +54,7 @@ object Result {
   case class Lam[A, B](varName: String, term: Result[B]) extends Result[A => B] {
     println("Creating Lambda")
     @inline override def eval(ctx: Ctx): A => B =
-      a => term.evaluate(ctx.pushStrict(a))
+      a => term.evaluateWith(ctx.pushStrict(a))
     override def toString: String = s"lambda($varName -> $term)"
   }
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Result[A] {
@@ -80,7 +78,5 @@ object Result {
     level -= 1
     result
   }
-  @inline def xdebug[T](message: String, t: => T): T = {
-    t
-  }
+  @inline def xdebug[T](message: String, t: => T): T = t
 }

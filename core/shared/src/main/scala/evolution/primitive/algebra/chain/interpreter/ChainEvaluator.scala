@@ -16,8 +16,8 @@ object ChainEvaluator extends Chain[RNGRepr, Result] {
   override def cons[A](evalHead: Result[A], evalTail: Result[RNGRepr[A]]): Result[RNGRepr[A]] =
     Value(
       ctx => {
-        val head = evalHead.evaluate(ctx)
-        val tail = evalTail.evaluate(ctx)
+        val head = evalHead.evaluateWith(ctx)
+        val tail = evalTail.evaluateWith(ctx)
         RNGRepr { rng =>
           debug(s"running cons($evalHead, $evalTail)", (rng, Some((head, tail))))
         }
@@ -31,9 +31,9 @@ object ChainEvaluator extends Chain[RNGRepr, Result] {
   ): Result[RNGRepr[A]] = Value(
     ctx =>
       RNGRepr[A] { rng =>
-        val (rng2, next) = eva.evaluate(ctx).run(rng)
+        val (rng2, next) = eva.evaluateWith(ctx).run(rng)
         debug(s"running mapEmpty($eva, $eva2)", next match {
-          case None => eva2.evaluate(ctx).run(rng2)
+          case None => eva2.evaluateWith(ctx).run(rng2)
           case _    => (rng2, next)
         })
     },
@@ -44,8 +44,8 @@ object ChainEvaluator extends Chain[RNGRepr, Result] {
     evalFA: Result[RNGRepr[A]]
   )(evalF: Result[A => RNGRepr[A] => RNGRepr[B]]): Result[RNGRepr[B]] = Value(
     ctx => {
-      val fa = evalFA.evaluate(ctx)
-      val f = evalF.evaluate(ctx)
+      val fa = evalFA.evaluateWith(ctx)
+      val f = evalF.evaluateWith(ctx)
       RNGRepr[B] { rng =>
         debug(s"running mapCons($evalFA, $evalF)", {
           val (rng2, next) = fa.run(rng)
