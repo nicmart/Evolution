@@ -1,19 +1,19 @@
 package evolution.primitive.algebra.chain.interpreter
 import evolution.algebra.representation.RNGRepr
-import evolution.data.Result
-import evolution.data.Result._
+import evolution.data.Evaluation
+import evolution.data.Evaluation._
 import evolution.primitive.algebra.chain.Chain
 
 // TODO through applicative?
-object ChainEvaluator extends Chain[RNGRepr, Result] {
+object ChainEvaluator extends Chain[RNGRepr, Evaluation] {
 
-  override def empty[A]: Result[RNGRepr[A]] = Constant {
+  override def empty[A]: Evaluation[RNGRepr[A]] = Constant {
     debug(s"evaluating empty", RNGRepr { rng =>
       debug("running empty", (rng, None))
     })
   }
 
-  override def cons[A](evalHead: Result[A], evalTail: Result[RNGRepr[A]]): Result[RNGRepr[A]] =
+  override def cons[A](evalHead: Evaluation[A], evalTail: Evaluation[RNGRepr[A]]): Evaluation[RNGRepr[A]] =
     Value(
       ctx => {
         val head = evalHead.evaluateWith(ctx)
@@ -26,9 +26,9 @@ object ChainEvaluator extends Chain[RNGRepr, Result] {
     )
 
   override def mapEmpty[A](
-    eva: Result[RNGRepr[A]],
-    eva2: Result[RNGRepr[A]]
-  ): Result[RNGRepr[A]] = Value(
+    eva: Evaluation[RNGRepr[A]],
+    eva2: Evaluation[RNGRepr[A]]
+  ): Evaluation[RNGRepr[A]] = Value(
     ctx =>
       RNGRepr[A] { rng =>
         val (rng2, next) = eva.evaluateWith(ctx).run(rng)
@@ -41,8 +41,8 @@ object ChainEvaluator extends Chain[RNGRepr, Result] {
   )
 
   override def mapCons[A, B](
-    evalFA: Result[RNGRepr[A]]
-  )(evalF: Result[A => RNGRepr[A] => RNGRepr[B]]): Result[RNGRepr[B]] = Value(
+    evalFA: Evaluation[RNGRepr[A]]
+  )(evalF: Evaluation[A => RNGRepr[A] => RNGRepr[B]]): Evaluation[RNGRepr[B]] = Value(
     ctx => {
       val fa = evalFA.evaluateWith(ctx)
       val f = evalF.evaluateWith(ctx)

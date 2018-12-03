@@ -1,7 +1,7 @@
 package evolution.primitive.algebra.binding.interpreter
 
-import evolution.data.Result
-import evolution.data.Result._
+import evolution.data.Evaluation
+import evolution.data.Evaluation._
 import evolution.data.EvaluationContext._
 import org.scalatest.{ FreeSpec, Matchers }
 
@@ -44,5 +44,5 @@ class BindingEvaluatorSpec extends FreeSpec with Matchers {
     }
   }
 
-  def value[T](t: T): Result[T] = Value(_ => t)
+  def value[T](t: T): Evaluation[T] = Value(_ => t)
 }

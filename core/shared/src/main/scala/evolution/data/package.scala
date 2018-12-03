@@ -1,7 +1,7 @@
 package evolution
-import evolution.data.EvaluationResultModuleImpl
+import evolution.data.EvaluationContextModuleImpl
 
 package object data {
-  final val EvaluationContext: EvaluationContextModule = EvaluationResultModuleImpl
+  final val EvaluationContext: EvaluationContextModule = EvaluationContextDebugModuleImpl
   type Ctx = EvaluationContext.Ctx
 }
