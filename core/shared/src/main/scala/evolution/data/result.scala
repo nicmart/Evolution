@@ -21,6 +21,11 @@ object Result {
     override def toString: String = if (label.nonEmpty) s"Constant($label)" else s"Constant($a)"
   }
 
+  case class Var[A](n: Int, name: String) extends Result[A] {
+    @inline override def eval(ctx: Ctx): A = ctx.apply[A](n)
+    override def toString: String = s"$$$name"
+  }
+
   case class App[A, B](f: Result[A => B], a: Result[A]) extends Result[B] {
     override def eval(ctx: Ctx): B = f.evaluate(ctx)(a.evaluate(ctx))
   }
@@ -56,11 +61,6 @@ object Result {
   }
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Result[A] {
     @inline override def eval(ctx: Ctx): A = getA(ctx)
-  }
-
-  case class Var[A](n: Int) extends Result[A] {
-    @inline override def eval(ctx: Ctx): A = ctx.apply[A](n)
-    override def toString: String = s"Var($n)"
   }
 
   implicit val applicative: Applicative[Result] = new Applicative[Result] {
