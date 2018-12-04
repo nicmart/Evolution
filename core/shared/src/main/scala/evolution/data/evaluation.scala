@@ -40,14 +40,14 @@ object Evaluation {
 
   case class Fix[A](expr: Evaluation[A => A]) extends Evaluation[A] {
     override def eval(ctx: Ctx): A = expr match {
-      case Lam(_, term) => fixLambda(term, ctx)
-      case _            => app(expr, fix(expr)).evaluateWith(ctx) // This should never happen
+      case Lam(varName, term) => fixLambda(varName, term, ctx)
+      case _                  => app(expr, fix(expr)).evaluateWith(ctx) // This should never happen
     }
 
-    private def fixLambda(expressionOfLambda: Evaluation[A], ctx: Ctx): A = {
+    private def fixLambda(varName: String, expressionOfLambda: Evaluation[A], ctx: Ctx): A = {
       lazy val a: A =
-        expressionOfLambda.evaluateWith(ctx.pushLazy(() => a, s"Lambda(fix)($expressionOfLambda)"))
-      debug("evaluating fix\nevaluating lambda of fix", a)
+        expressionOfLambda.evaluateWith(ctx.pushLazy(() => a, s"$varName -> $expressionOfLambda"))
+      debug("evaluating lambda of fix", a)
     }
   }
 
@@ -55,7 +55,7 @@ object Evaluation {
     println("Creating Lambda")
     @inline override def eval(ctx: Ctx): A => B =
       a => term.evaluateWith(ctx.pushStrict(a, s"LambdaArg($a) of $term"))
-    override def toString: String = s"lambda($varName -> $term)"
+    override def toString: String = s"$varName -> $term"
   }
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Evaluation[A] {
     @inline override def eval(ctx: Ctx): A = getA(ctx)
@@ -72,9 +72,9 @@ object Evaluation {
     level += 1
     val indent = " " * (level * 4)
     val id = Random.nextInt().toHexString.take(3)
-    println(s"${indent}+ ($id): $message")
+    println(s"${indent}+++ ($id): $message")
     val result = t
-    println(s"${indent}- ($id): $message")
+    println(s"${indent}--- ($id): $message")
     level -= 1
     result
   }

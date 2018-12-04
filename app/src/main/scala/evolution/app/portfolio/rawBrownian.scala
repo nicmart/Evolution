@@ -15,14 +15,17 @@ object rawBrownian extends DrawingDefinition[Point] {
   override type Config = Unit
   override def initialConfig: Unit = ()
 
-  override def stream(ctx: DrawingContext, state: DrawingState[Unit]): Stream[Point] = {
-    streamFrom(Point.zero)
-  }
-
-  private def streamFrom(current: Point): Stream[Point] = {
-    val next = Point(current.x + Random.nextDouble() * 4 - 2, current.y + Random.nextDouble() * 4 - 2)
-    current #:: streamFrom(next)
-  }
+  // Mutable iterator for max performance
+  override def stream(ctx: DrawingContext, state: DrawingState[Unit]): Iterator[Point] =
+    new Iterator[Point] {
+      private var current = Point.zero
+      override def hasNext: Boolean = true
+      override def next(): Point = {
+        val result = current
+        current = Point(current.x + Random.nextDouble() * 4 - 2, current.y + Random.nextDouble() * 4 - 2)
+        result
+      }
+    }
 
   override def configComponent: ConfigComponent[Unit] =
     ConfigComponent[Unit]

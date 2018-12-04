@@ -93,7 +93,7 @@ object Conf {
 
   lazy val drawingConfComponent = drawingDefinition.configComponent
 
-  lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Stream[Point] =
+  lazy val points: (DrawingContext, DrawingState[DrawingConfig]) => Iterator[Point] =
     drawingDefinition.stream
 
   lazy val rendererStateToPointDrawer: (state.RendererState, DrawingContext) => PointDrawer =

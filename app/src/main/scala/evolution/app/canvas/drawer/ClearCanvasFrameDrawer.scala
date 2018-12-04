@@ -5,7 +5,6 @@ import evolution.geometry.Point
 import org.scalajs.dom
 import org.scalajs.dom.CanvasRenderingContext2D
 
-
 case class RGBAColor(red: Short, blue: Short, green: Short, opacity: Double) {
   def css: String = s"rgba($red, $blue, $green, $opacity)"
 }
@@ -16,9 +15,9 @@ final class ClearCanvasFrameDrawer(
   color: RGBAColor
 ) extends FrameDrawer {
 
-  @inline override def drawFrame(context: CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point] = {
+  @inline override def drawFrame(context: CanvasRenderingContext2D, points: Iterator[Point]): Iterator[Point] = {
     clearCanvas(context)
-    drawer.drawFrame(context, pointStream)
+    drawer.drawFrame(context, points)
   }
 
   @inline private def clearCanvas(context: dom.CanvasRenderingContext2D): Unit = {

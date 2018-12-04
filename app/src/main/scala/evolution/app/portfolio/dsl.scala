@@ -46,8 +46,8 @@ object dsl extends DrawingDefinition[Point] {
     }
   }
 
-  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Stream[Point] =
-    state.config.expr.run(EvolutionEvaluator).evaluate.unfold(RNG(state.seed))
+  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] =
+    state.config.expr.run(EvolutionEvaluator).evaluate.unfold(RNG(state.seed)).toIterator
 
   val initialConfig: Config = Config(new Expr[Point] {
     override def run[R[_]](alg: Evolution[RNGRepr, R]): R[RNGRepr[Point]] = {

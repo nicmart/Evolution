@@ -71,7 +71,7 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
       })
 
       //stream.take(3).toList shouldBe List(100, 101, 102)
-      brownianStream.take(3).toList shouldBe List(100, 101, 102)
+      brownianStream.take(2).toList shouldBe List(100, 101, 102)
 
 //      val stream = materialize(drawing(interpreter, double(100), double(1)))
 //      stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)

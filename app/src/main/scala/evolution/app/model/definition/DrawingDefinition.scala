@@ -6,7 +6,7 @@ import evolution.algebra.LegacyEvolution
 import evolution.algebra.interpreter.RNGInterpreter
 import evolution.algebra.materializer.RNGMaterializer
 import evolution.app.codec.JsonCodec
-import evolution.app.conf.Conf.{DrawingConfig, drawingDefinition, materializer}
+import evolution.app.conf.Conf.{ DrawingConfig, drawingDefinition, materializer }
 import evolution.app.model.state.DrawingState
 import evolution.geometry.Point
 
@@ -14,7 +14,7 @@ trait DrawingDefinition[T] {
   type Config
   def name: String
   def initialConfig: Config
-  def stream(ctx: DrawingContext, state: DrawingState[Config]): Stream[T]
+  def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[T]
   def configComponent: ConfigComponent[Config]
   def configCodec: JsonCodec[Config]
 }
@@ -24,8 +24,8 @@ object DrawingDefinition {
 }
 
 trait LegacyDrawingDefinition[T] extends DrawingDefinition[T] {
-  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Stream[T] =
-    LegacyDrawingDefinition.materializer.materialize(state.seed, evolution(state.config, ctx))
+  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[T] =
+    LegacyDrawingDefinition.materializer.materialize(state.seed, evolution(state.config, ctx)).toIterator
   def evolution(config: Config, context: DrawingContext): LegacyEvolution[T]
 }
 

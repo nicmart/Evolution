@@ -2,13 +2,13 @@ package evolution.app.react.component.presentational
 
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.state.{DrawingState, RendererState}
+import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.ConfigComponent
-import evolution.app.react.component.control.{PlayToggle, RenderingSettings}
+import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
 import evolution.geometry.Point
-import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
-import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
+import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
+import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -24,7 +24,7 @@ object Page {
     running: StateSnapshot[Boolean],
     drawingContext: DrawingContext,
     rendererState: StateSnapshot[RendererState],
-    points: Stream[Point],
+    points: Iterator[Point],
     drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
     onRefresh: Callback,
@@ -42,12 +42,12 @@ object Page {
       val configState = props.drawingState.zoomState(_.config)(config => state => state.copy(config = config))
       <.div(
         Navbar.component(
-          <.div(^.className := "navbar-item is-hidden-touch",
+          <.div(
+            ^.className := "navbar-item is-hidden-touch",
             <.a(
               ^.href := "https://github.com/nicmart/Evolution",
               <.i(^.className := "fab fa-github fa-lg")
-            )
-          ),
+            )),
           <.div(
             ^.className := "navbar-item is-hidden-touch",
             <.div(
@@ -66,21 +66,21 @@ object Page {
             RenderingSettings.component(props.rendererState)
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
-          <.div(^.className := "navbar-item",
-            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")
-          )
+          <.div(
+            ^.className := "navbar-item",
+            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}"))
         ),
         <.div(
           ^.id := "page-content",
-          canvasComponent.withKey(props.canvasKey)(Canvas.Props(
-            props.drawingContext,
-            canvasInitializer,
-            props.rendererState.value,
-            props.points,
-            props.onFrameDraw,
-            props.running.value
-          )
-          ),
+          canvasComponent.withKey(props.canvasKey)(
+            Canvas.Props(
+              props.drawingContext,
+              canvasInitializer,
+              props.rendererState.value,
+              props.points,
+              props.onFrameDraw,
+              props.running.value
+            )),
           Sidebar.component(
             drawingConfig(configState)()
           )

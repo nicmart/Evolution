@@ -6,7 +6,7 @@ import org.scalajs.dom
 import org.scalajs.dom.raw.CanvasRenderingContext2D
 
 trait FrameDrawer {
-  def drawFrame(context: dom.CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point]
+  def drawFrame(context: dom.CanvasRenderingContext2D, pointStream: Iterator[Point]): Iterator[Point]
 }
 
 final case class BaseFrameDrawer(
@@ -17,7 +17,7 @@ final case class BaseFrameDrawer(
   private val offsetX = drawingContext.canvasSize.width / 2
   private val offsetY = drawingContext.canvasSize.height / 2
 
-  @inline def drawFrame(context: dom.CanvasRenderingContext2D, pointStream: Stream[Point]): Stream[Point] = {
+  @inline def drawFrame(context: dom.CanvasRenderingContext2D, pointStream: Iterator[Point]): Iterator[Point] = {
     var currentStream = pointStream
     (1 to iterations).foreach { _ =>
       currentStream = drawAndNext(currentStream, context)
@@ -25,9 +25,9 @@ final case class BaseFrameDrawer(
     currentStream
   }
 
-  @inline private def drawAndNext(points: Stream[Point], context: CanvasRenderingContext2D): Stream[Point] = {
-    drawPoint(points.head, context)
-    points.tail
+  @inline private def drawAndNext(points: Iterator[Point], context: CanvasRenderingContext2D): Iterator[Point] = {
+    drawPoint(points.next(), context)
+    points
   }
 
   @inline private def drawPoint(point: Point, context: CanvasRenderingContext2D): Unit = {

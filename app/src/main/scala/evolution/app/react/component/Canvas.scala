@@ -3,10 +3,10 @@ package evolution.app.react.component
 import evolution.app.canvas.drawer.FrameDrawer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
-import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
+import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
+import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
 import org.scalajs.dom
 import evolution.geometry.Point
 
@@ -18,18 +18,17 @@ object Canvas {
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
     rendererState: RendererState,
-    points: Stream[Point],
+    points: Iterator[Point],
     onFrameDidDraw: Callback,
     running: Boolean
   )
 
-  class Backend(
-    drawerFromState: (RendererState, DrawingContext) => FrameDrawer)(
+  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer)(
     bs: BackendScope[Props, Unit]
   ) {
     var running = false
     var stopPending = false
-    var points: Stream[Point] = Stream.empty
+    var points: Iterator[Point] = Iterator.empty
 
     def render(props: Props): VdomElement = {
       val size = props.context.canvasSize.point
@@ -43,9 +42,9 @@ object Canvas {
 
     def tick(props: Props, ctx: dom.CanvasRenderingContext2D, drawer: FrameDrawer): Unit = {
       if (runNext()) {
-          points = drawer.drawFrame(ctx, points)
-          props.onFrameDidDraw.runNow()
-          dom.window.requestAnimationFrame(_ => tick(props, ctx, drawer))
+        points = drawer.drawFrame(ctx, points)
+        props.onFrameDidDraw.runNow()
+        dom.window.requestAnimationFrame(_ => tick(props, ctx, drawer))
       } else {
         running = false
         stopPending = false
@@ -87,14 +86,16 @@ object Canvas {
   }
 
   def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
-    ScalaComponent.builder[Props]("Canvas")
+    ScalaComponent
+      .builder[Props]("Canvas")
       .backend[Backend](scope => new Backend(drawerFromState)(scope))
       .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
         s.backend.onMount(s.getDOMNode, s.props)
       }
-      .componentWillUnmount(s => Callback {
-        s.backend.scheduleStop()
+      .componentWillUnmount(s =>
+        Callback {
+          s.backend.scheduleStop()
       })
       .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode, s.nextProps))
       .build
