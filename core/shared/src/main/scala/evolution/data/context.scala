@@ -33,7 +33,7 @@ private[data] object EvaluationContextDebugModuleImpl extends EvaluationContextM
   override type Ctx = List[Result[_]]
   @inline override def emptyCtx: Ctx = Nil
   @inline override def pushLazy[T](elem: () => T, ctx: Ctx, debugMessage: String): Ctx =
-    Result(elem, debugMessage) :: ctx
+    Evaluation.debugLine(s"Pushed: $debugMessage", Result(elem, debugMessage) :: ctx)
   @inline override def pop(ctx: Ctx): Ctx = ctx.tail
   @inline override def get[T](ctx: Ctx, n: Int): T = {
     val result = ctx.apply(n)

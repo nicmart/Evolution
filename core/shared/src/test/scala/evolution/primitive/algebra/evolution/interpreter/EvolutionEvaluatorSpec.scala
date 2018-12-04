@@ -65,13 +65,20 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
 //        println("computing elem"); elem
 //      })
 
+      println("Desugared expression")
+      println(brownian(new DesugarEvolutionSerializer[RNGRepr])(VectorSpace[Double])(Nil))
+
       println("materializing brownian stream")
+      var evalCount = Evaluation.total
       val brownianStream = materialize(brownian(interpreter)).map(elem => {
-        println("computing elem"); elem
+        println("computing elem")
+        println(s"Total Evaluations: ${Evaluation.total - evalCount}")
+        evalCount = Evaluation.total
+        elem
       })
 
       //stream.take(3).toList shouldBe List(100, 101, 102)
-      brownianStream.take(2).toList shouldBe List(100, 101, 102)
+      brownianStream.take(4).toList shouldBe List(100, 101, 102)
 
 //      val stream = materialize(drawing(interpreter, double(100), double(1)))
 //      stream.take(10).toList shouldBe List(100, 101, 102, 103, 104, 105, 106, 107, 108, 109)

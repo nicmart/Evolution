@@ -28,6 +28,10 @@ object Evaluation {
     override def eval(ctx: Ctx): B = f.evaluateWith(ctx)(a.evaluateWith(ctx))
   }
 
+  case class App2[A, B, C](f: Evaluation[A => B => C], a: Evaluation[A], b: Evaluation[B]) extends Evaluation[C] {
+    override def eval(ctx: Ctx): C = f.evaluateWith(ctx)(a.evaluateWith(ctx))(b.evaluateWith(ctx))
+  }
+
   case class AppOfLambda[A, B](f: Lam[A, B], a: Evaluation[A]) extends Evaluation[B] {
     private val expr = f.term
     override protected def eval(ctx: Ctx): B = expr.evaluateWith(ctx.pushStrict(a.evaluateWith(ctx), a.toString))
@@ -46,17 +50,23 @@ object Evaluation {
 
     private def fixLambda(varName: String, expressionOfLambda: Evaluation[A], ctx: Ctx): A = {
       lazy val a: A =
-        expressionOfLambda.evaluateWith(ctx.pushLazy(() => a, s"$varName -> $expressionOfLambda"))
+        expressionOfLambda.evaluateWith(ctx.pushLazy(() => a, s"(r) $expressionOfLambda"))
       debug("evaluating lambda of fix", a)
     }
   }
 
   case class Lam[A, B](varName: String, term: Evaluation[B]) extends Evaluation[A => B] {
-    println("Creating Lambda")
     @inline override def eval(ctx: Ctx): A => B =
       a => term.evaluateWith(ctx.pushStrict(a, s"LambdaArg($a) of $term"))
     override def toString: String = s"$varName -> $term"
   }
+
+  case class Lam2[A, B, C](varA: String, varB: String, term: Evaluation[C]) extends Evaluation[A => B => C] {
+    override def eval(ctx: Ctx): A => B => C =
+      a =>
+        b => term.evaluateWith(ctx.pushStrict(a, s"LambdaArg1($a) of $term").pushStrict(b, s"LambdaArg2($b) of $term"))
+  }
+
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Evaluation[A] {
     @inline override def eval(ctx: Ctx): A = getA(ctx)
   }
@@ -68,7 +78,9 @@ object Evaluation {
   }
 
   var level = -1
+  var total = 0
   @inline def debug[T](message: String, t: => T): T = {
+    total += 1
     level += 1
     val indent = " " * (level * 4)
     val id = Random.nextInt().toHexString.take(3)
@@ -78,5 +90,12 @@ object Evaluation {
     level -= 1
     result
   }
+
+  @inline def debugLine[T](message: String, t: => T): T = {
+    val indent = " " * (level * 4)
+    println(s"${indent}$message")
+    t
+  }
+
   @inline def xdebug[T](message: String, t: => T): T = t
 }
