@@ -3,8 +3,6 @@ package evolution.app.conf
 import evolution.app.model.definition.{ DrawingDefinition, LegacyDrawingDefinition }
 import evolution.app.portfolio._
 import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
-import evolution.algebra.materializer.{ Materializer, RNGMaterializer }
-import evolution.algebra.interpreter.RNGInterpreter
 import evolution.app.codec._
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state._
@@ -55,9 +53,6 @@ object Conf {
     new DrawingListDefinition(innerDrawingList)
 
   type DrawingConfig = drawingDefinition.Config
-
-  lazy val materializer: Materializer[Long] =
-    RNGMaterializer(new RNGInterpreter)
 
   lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
     DrawingState.jsonCodec(drawingDefinition)

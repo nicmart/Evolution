@@ -4,11 +4,9 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.react.component.config.ConfigComponent
 import evolution.algebra.LegacyEvolution
 import evolution.algebra.interpreter.RNGInterpreter
-import evolution.algebra.materializer.RNGMaterializer
 import evolution.app.codec.JsonCodec
-import evolution.app.conf.Conf.{ DrawingConfig, drawingDefinition, materializer }
 import evolution.app.model.state.DrawingState
-import evolution.geometry.Point
+import evolution.random.RNG
 
 trait DrawingDefinition[T] {
   type Config
@@ -25,11 +23,11 @@ object DrawingDefinition {
 
 trait LegacyDrawingDefinition[T] extends DrawingDefinition[T] {
   override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[T] =
-    LegacyDrawingDefinition.materializer.materialize(state.seed, evolution(state.config, ctx)).toIterator
+    evolution(state.config, ctx).run(interpreter).iterator(RNG(state.seed))
   def evolution(config: Config, context: DrawingContext): LegacyEvolution[T]
+  private val interpreter = new RNGInterpreter
 }
 
 object LegacyDrawingDefinition {
   type Aux[T, C] = LegacyDrawingDefinition[T] { type Config = C }
-  val materializer = RNGMaterializer(new RNGInterpreter)
 }

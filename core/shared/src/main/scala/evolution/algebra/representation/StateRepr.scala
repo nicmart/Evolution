@@ -13,4 +13,22 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
       }
     }
   }
+
+  def iterator(rng1: S): Iterator[A] = new Iterator[A] {
+    val firstRun = run(rng1)
+    var currentState = firstRun._1
+    var maybeNext: Option[(A, Self)] = firstRun._2
+
+    override def hasNext: Boolean = maybeNext.isDefined
+
+    override def next(): A = {
+      maybeNext match {
+        case Some((a, self)) =>
+          val nextRun = self.run(currentState)
+          currentState = nextRun._1
+          maybeNext = nextRun._2
+          a
+      }
+    }
+  }
 }
