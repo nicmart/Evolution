@@ -16,7 +16,7 @@ object rawBrownian extends DrawingDefinition[Point] {
   override def initialConfig: Unit = ()
 
   // Mutable iterator for max performance
-  override def stream(ctx: DrawingContext, state: DrawingState[Unit], (Double, Double) => ): Iterator[Point] =
+  override def stream(ctx: DrawingContext, state: DrawingState[Unit]): Iterator[Point] =
     new Iterator[Point] {
       private var current = Point.zero
       override def hasNext: Boolean = true

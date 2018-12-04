@@ -8,6 +8,10 @@ import evolution.app.codec.JsonCodec
 import evolution.app.model.state.DrawingState
 import evolution.random.RNG
 
+trait Drawer[T] {
+  def drawPoint(x: Double, y: Double): T
+}
+
 trait DrawingDefinition[T] {
   type Config
   def name: String
