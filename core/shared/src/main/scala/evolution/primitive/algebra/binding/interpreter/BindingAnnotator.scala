@@ -2,7 +2,7 @@ package evolution.primitive.algebra.binding.interpreter
 import evolution.data.AnnotationModule._
 import evolution.primitive.algebra.binding.Binding
 
-object BindingEvaluator extends Binding[R, String] {
+object BindingAnnotator extends Binding[R, String] {
   override def var0[A](name: String): R[A] =
     Annotation(Set(0), builder.bind.var0(name))
 

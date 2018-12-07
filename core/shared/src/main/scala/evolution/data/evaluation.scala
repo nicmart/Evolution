@@ -1,13 +1,13 @@
 package evolution.data
 import cats.{ Applicative, Id }
 import evolution.algebra.representation.RNGRepr
-import evolution.primitive.algebra.binding.interpreter.BindingEvaluator
-import evolution.primitive.algebra.binding.interpreter.BindingEvaluator.{ app, fix }
+import evolution.primitive.algebra.binding.interpreter.BindingAnnotator
+import evolution.primitive.algebra.binding.interpreter.BindingAnnotator.{ app, fix }
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationContextModule._
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
-import evolution.primitive.algebra.evolution.interpreter.EvolutionEvaluator
+import evolution.primitive.algebra.evolution.interpreter.EvolutionAnnotator
 import evolution.random.RNG
 
 import scala.util.Random
@@ -30,7 +30,7 @@ private[data] object EvaluationModuleImpl extends EvaluationModule {
   override type R[T] = Evaluation[T]
   override type F[T] = RNGRepr[T]
   override def newSeed: Long = Random.nextLong()
-  override def interpreter: Evolution[F, R] = EvolutionEvaluator
+  override def interpreter: Evolution[F, R] = EvolutionAnnotator
   override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] = fa.evaluate.iterator(RNG(seed))
   override def materializeConstant[T](t: R[T]): T = t.evaluate
 }
@@ -102,7 +102,7 @@ object Evaluation {
   implicit val applicative: Applicative[Evaluation] = new Applicative[Evaluation] {
     override def pure[A](x: A): Evaluation[A] = Value(_ => x)
     override def ap[A, B](ff: Evaluation[A => B])(fa: Evaluation[A]): Evaluation[B] =
-      BindingEvaluator.app(ff, fa)
+      BindingAnnotator.app(ff, fa)
   }
 
   var level = -1

@@ -5,7 +5,7 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.typeclass.VectorSpace
 import evolution.data.AnnotationModule._
 
-object ConstantsEvaluator extends Constants[R] {
+object ConstantsAnnotator extends Constants[R] {
   override def double(d: Double): R[Double] =
     Annotation(Set.empty, builder.constants.double(d))
 

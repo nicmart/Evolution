@@ -108,6 +108,6 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     def materialize[T](evaluationResult: Evaluation[RNGRepr[T]]): Stream[T] =
       evaluationResult.evaluate.unfold(RNG(0L))
 
-    lazy val interpreter = EvolutionEvaluator
+    lazy val interpreter = EvolutionAnnotator
   }
 }

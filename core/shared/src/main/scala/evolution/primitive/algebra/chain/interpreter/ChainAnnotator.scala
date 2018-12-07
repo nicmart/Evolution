@@ -3,7 +3,7 @@ import evolution.data.AnnotationModule._
 import evolution.primitive.algebra.chain.Chain
 
 // TODO through applicative?
-object ChainEvaluator extends Chain[F, R] {
+object ChainAnnotator extends Chain[F, R] {
 
   override def empty[A]: R[F[A]] =
     Annotation(Set.empty, builder.chain.empty)

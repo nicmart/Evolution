@@ -6,7 +6,7 @@ import evolution.data.EvaluationContext._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingEvaluatorSpec extends FreeSpec with Matchers {
-  val evaluator = BindingEvaluator
+  val evaluator = BindingAnnotator
   import evaluator._
 
   "a var0 expression" - {
