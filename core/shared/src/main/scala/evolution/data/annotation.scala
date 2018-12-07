@@ -12,7 +12,7 @@ trait AnnotationModule {
   def interpreter: Evolution[F, R]
   def materialize[T](seed: Long, annotation: R[F[T]]): Iterator[T]
 
-  case class Annotation[T](vars: Set[Int], expr: Expr[F, T], tags: Set[T] = Set.empty) {
+  case class Annotation[T](vars: Set[Int], expr: Expr[F, T], tags: Set[T] = Set.empty[T]) {
     def unshiftedVars: Set[Int] = vars.filter(_ > 0).map(_ - 1)
     def shiftedVars: Set[Int] = vars.map(_ + 1)
   }

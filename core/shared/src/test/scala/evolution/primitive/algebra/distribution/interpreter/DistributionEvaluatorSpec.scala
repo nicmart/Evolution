@@ -14,7 +14,7 @@ import scala.util.Random
 class DistributionEvaluatorSpec extends FreeSpec with Matchers with Inspectors with GeneratorDrivenPropertyChecks {
 
   lazy val interpreter: Distribution[RNGRepr, Evaluation] =
-    DistributionAnnotator
+    DistributionEvaluator
   import interpreter._
 
   "A Distribution evaluator" - {
