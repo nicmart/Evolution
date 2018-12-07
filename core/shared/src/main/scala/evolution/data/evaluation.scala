@@ -18,21 +18,24 @@ trait EvaluationModule {
 
   // TODO it would be nice to make the seed abstract too
   def newSeed: Long
-  def interpreter: Evolution[F, R]
+  val interpreter: Evolution[F, R]
   def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T]
   def materializeConstant[T](t: R[T]): T
+  def materializeConstantWith[T](t: R[T], ctx: Ctx): T
 
   final def materializeExpr[T](seed: Long, expr: Expr[F, F[T]]): Iterator[T] =
     materialize(seed, expr.run[R](interpreter))
 }
 
 private[data] object EvaluationModuleImpl extends EvaluationModule {
-  override type R[T] = Evaluation[T]
-  override type F[T] = RNGRepr[T]
+  override type R[T] = AnnotationModule.R[T]
+  override type F[T] = AnnotationModule.F[T]
   override def newSeed: Long = Random.nextLong()
-  override def interpreter: Evolution[F, R] = EvolutionEvaluator
-  override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] = fa.evaluate.iterator(RNG(seed))
-  override def materializeConstant[T](t: R[T]): T = t.evaluate
+  override val interpreter: Evolution[F, R] = AnnotationModule.interpreter
+  override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] =
+    fa.expr.run(EvolutionEvaluator).evaluate.iterator(RNG(seed))
+  override def materializeConstant[T](t: R[T]): T = materializeConstantWith(t, emptyCtx)
+  override def materializeConstantWith[T](t: R[T], ctx: Ctx): T = t.expr.run(EvolutionEvaluator).evaluateWith(ctx)
 }
 
 sealed trait Evaluation[T] {

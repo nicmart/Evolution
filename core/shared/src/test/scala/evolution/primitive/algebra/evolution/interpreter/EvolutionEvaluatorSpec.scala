@@ -1,33 +1,23 @@
 package evolution.primitive.algebra.evolution.interpreter
 
 import cats.instances.double._
-import cats.kernel.Semigroup
-import evolution.algebra.representation.RNGRepr
 import evolution.geometry.Point
-import evolution.primitive.algebra.evolution.Evolution
 import evolution.data.Evaluation
-import evolution.random.RNG
-import evolution.typeclass.VectorSpace
+import evolution.data.EvaluationModule._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
+  import interpreter.chain._, interpreter.bind._, interpreter.derived._, interpreter.constants._,
+  interpreter.distribution._
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
-        import alg.bind._
-        import alg.chain._
-        import alg.constants._
-        fix(lambda("x", cons(double(1), var0[F[Double]]("x"))))
-      }
-      val stream = materialize(drawing(interpreter))
+      val expr: R[F[Double]] = fix(lambda("x", cons(double(1), var0[F[Double]]("x"))))
+      val stream = materialize(0, expr)
       stream.take(10).toList shouldBe List.fill(10)(1.0)
     }
 
     "should create an evolution of the sequence of integers" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
-        import alg.bind._
-        import alg.chain._
-        import alg.constants._
+      val expr: R[F[Double]] =
         app[Double, F[Double]](
           fix(
             lambda(
@@ -38,39 +28,21 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
           ),
           double(0)
         )
-      }
-      val stream = materialize(drawing(interpreter))
+
+      val stream = materialize(0, expr)
       stream.take(10).toList shouldBe List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     }
 
     "should be able to express integrations" in {
-      def drawing[F[_], R[_], T: VectorSpace](alg: Evolution[F, R], s0: R[T], v0: R[T]): R[F[T]] = {
-        import alg.bind._, alg.derived._
-        integrate(s0, constant(v0))
-      }
 
-      def brownian[F[_], R[_], T: VectorSpace](alg: Evolution[F, R]): R[F[Point]] = {
-        import alg.bind._, alg.derived._, alg.distribution._, alg.constants._
-        //integrate(s0, constant(v0))
-        integrate[Point](
-          point(double(0), double(0)),
-          cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1))))
-
-        cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1)))
-      }
-
-      import interpreter.constants._
-
-//      val stream = materialize(drawing(interpreter, double(100), double(1))).map(elem => {
-//        println("computing elem"); elem
-//      })
+      val expr: R[F[Point]] = cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1)))
 
       println("Desugared expression")
-      println(brownian(new DesugarEvolutionSerializer[RNGRepr])(VectorSpace[Double])(Nil))
+      //println(cartesian(new DesugarEvolutionSerializer[RNGRepr])(VectorSpace[Double])(Nil))
 
       println("materializing brownian stream")
       var evalCount = Evaluation.total
-      val brownianStream = materialize(brownian(interpreter)).map(elem => {
+      val brownianStream = materialize(0L, expr).map(elem => {
         println("computing elem")
         println(s"Total Evaluations: ${Evaluation.total - evalCount}")
         evalCount = Evaluation.total
@@ -88,26 +60,15 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
     }
 
     "should be to define constants" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Double]] = {
-        import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
-        constant(double(1))
-      }
-      val stream = materialize(drawing(interpreter))
+      val expr: R[F[Double]] = constant(double(1))
+      val stream = materialize(0, expr)
       stream.take(2).toList shouldBe List(1, 1)
     }
 
     "should be able combine two evolutions of doubles into one evolution of points" in {
-      def drawing[F[_], R[_]](alg: Evolution[F, R]): R[F[Point]] = {
-        import alg.bind._, alg.chain._, alg.bind._, alg.derived._, alg.constants._
-        cartesian(constant(double(1)), constant(double(2)))
-      }
-      val stream = materialize(drawing(interpreter))
+      val expr: R[F[Point]] = cartesian(constant(double(1)), constant(double(2)))
+      val stream = materialize(0, expr)
       stream.take(2).toList shouldBe List(Point(1, 2), Point(1, 2))
     }
-
-    def materialize[T](evaluationResult: Evaluation[RNGRepr[T]]): Stream[T] =
-      evaluationResult.evaluate.unfold(RNG(0L))
-
-    lazy val interpreter = EvolutionEvaluator
   }
 }

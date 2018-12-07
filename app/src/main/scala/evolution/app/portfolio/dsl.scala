@@ -10,12 +10,10 @@ import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
-import evolution.data.Evaluation
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{ EvolutionAnnotator, EvolutionExpr, EvolutionSerializer }
+import evolution.primitive.algebra.evolution.interpreter.{ EvolutionExpr, EvolutionSerializer }
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
-import evolution.random.RNG
 import japgolly.scalajs.react.vdom.html_<^._
 
 object dsl extends DrawingDefinition[Point] {
