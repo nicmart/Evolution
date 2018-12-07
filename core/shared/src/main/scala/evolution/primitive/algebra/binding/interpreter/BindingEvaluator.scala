@@ -1,33 +1,23 @@
 package evolution.primitive.algebra.binding.interpreter
-import evolution.data.Evaluation
-import evolution.data.Evaluation._
-import evolution.data.EvaluationContextModule._
+import evolution.data.AnnotationModule._
 import evolution.primitive.algebra.binding.Binding
 
-object BindingEvaluator extends Binding[Evaluation, String] {
-  override def var0[A](name: String): Evaluation[A] = Var(0, name)
+object BindingEvaluator extends Binding[R, String] {
+  override def var0[A](name: String): R[A] =
+    Annotation(Set(0), builder.bind.var0(name))
 
-  override def shift[A](expr: Evaluation[A]): Evaluation[A] = expr match {
-    case Var(n, name) => Var(n + 1, name)
-    case _            => Value(ctx => expr.evaluateWith(ctx.pop))
+  override def shift[A](expr: R[A]): R[A] = {
+    Annotation(expr.shiftedVars, builder.bind.shift(expr.expr))
   }
-  override def let[A, B](name: String, value: Evaluation[A], expr: Evaluation[B]): Evaluation[B] =
+  override def let[A, B](name: String, value: R[A], expr: R[B]): R[B] =
     app(lambda(name, expr), value)
 
-  override def fix[A](expr: Evaluation[A => A]): Evaluation[A] =
-    Fix(expr)
+  override def fix[A](expr: R[A => A]): R[A] =
+    Annotation(expr.vars, builder.bind.fix(expr.expr))
 
-  override def lambda[A, B](var1: String, expr: Evaluation[B]): Evaluation[A => B] =
-    expr match {
-      case Lam(var2, expr2) => Lam2(var1, var2, expr2)
-      case _                => Lam(var1, expr)
-    }
+  override def lambda[A, B](var1: String, expr: R[B]): R[A => B] =
+    Annotation(expr.unshiftedVars, builder.bind.lambda(var1, expr.expr))
 
-  override def app[A, B](f: Evaluation[A => B], a: Evaluation[A]): Evaluation[B] =
-    f match {
-      case lambda @ Lam(_, _)        => AppOfLambda(lambda, a)
-      case App(Lam2(_, _, inner), b) => App2OfLambda[A, Any, B](inner, b, a)
-      case App(inner, b)             => App2(inner, b, a)
-      case _                         => App(f, a)
-    }
+  override def app[A, B](f: R[A => B], a: R[A]): R[B] =
+    Annotation(f.vars ++ a.vars, builder.bind.app(f.expr, a.expr))
 }

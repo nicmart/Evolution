@@ -1,11 +1,39 @@
 package evolution.data
-import cats.Applicative
+import cats.{ Applicative, Id }
+import evolution.algebra.representation.RNGRepr
 import evolution.primitive.algebra.binding.interpreter.BindingEvaluator
 import evolution.primitive.algebra.binding.interpreter.BindingEvaluator.{ app, fix }
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationContextModule._
+import evolution.primitive.algebra.evolution.Evolution
+import evolution.primitive.algebra.evolution.Evolution.Expr
+import evolution.primitive.algebra.evolution.interpreter.EvolutionEvaluator
+import evolution.random.RNG
 
 import scala.util.Random
+
+trait EvaluationModule {
+  type R[T]
+  type F[T]
+
+  // TODO it would be nice to make the seed abstract too
+  def newSeed: Long
+  def interpreter: Evolution[F, R]
+  def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T]
+  def materializeConstant[T](t: R[T]): T
+
+  final def materializeExpr[T](seed: Long, expr: Expr[F, F[T]]): Iterator[T] =
+    materialize(seed, expr.run[R](interpreter))
+}
+
+private[data] object EvaluationModuleImpl extends EvaluationModule {
+  override type R[T] = Evaluation[T]
+  override type F[T] = RNGRepr[T]
+  override def newSeed: Long = Random.nextLong()
+  override def interpreter: Evolution[F, R] = EvolutionEvaluator
+  override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] = fa.evaluate.iterator(RNG(seed))
+  override def materializeConstant[T](t: R[T]): T = t.evaluate
+}
 
 sealed trait Evaluation[T] {
   @inline def evaluateWith(ctx: Ctx): T = Evaluation.debug(s"$this", eval(ctx))

@@ -7,6 +7,7 @@ import evolution.primitive.algebra.distribution.Distribution
 import evolution.random.RNG
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Inspectors, Matchers }
+import evolution.data.EvaluationModule._
 
 import scala.util.Random
 

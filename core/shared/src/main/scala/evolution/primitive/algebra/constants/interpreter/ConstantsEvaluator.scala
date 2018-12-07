@@ -1,27 +1,27 @@
 package evolution.primitive.algebra.constants.interpreter
 
 import evolution.geometry.Point
-import evolution.data.Evaluation
-import evolution.data.Evaluation._
 import evolution.primitive.algebra.constants.Constants
 import evolution.typeclass.VectorSpace
+import evolution.data.AnnotationModule._
 
-object ConstantsEvaluator extends Constants[Evaluation] {
-  override def double(d: Double): Evaluation[Double] =
-    Constant(d)
-  override def point(evalX: Evaluation[Double], evalY: Evaluation[Double]): Evaluation[Point] =
-    (evalX, evalY) match {
-      case (Constant(x, _), Constant(y, _)) => Constant(Point(x, y), s"constant-point($evalX, $evalY)")
-      case _ =>
-        Value(ctx => Point(evalX.evaluateWith(ctx), evalY.evaluateWith(ctx)), s"non-constant-point($evalX, $evalY)")
-    }
+object ConstantsEvaluator extends Constants[R] {
+  override def double(d: Double): R[Double] =
+    Annotation(Set.empty, builder.constants.double(d))
 
-  override def add[T: VectorSpace](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
-    Value(ctx => VectorSpace[T].monoid.combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
-  override def sin(d: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => Math.sin(d.evaluateWith(ctx)))
-  override def cos(d: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => Math.cos(d.evaluateWith(ctx)))
-  override def multiply[T: VectorSpace](k: Evaluation[Double], t: Evaluation[T]): Evaluation[T] =
-    Value(ctx => VectorSpace[T].mult(k.evaluateWith(ctx), t.evaluateWith(ctx)))
+  override def point(evalX: R[Double], evalY: R[Double]): R[Point] =
+    Annotation(evalX.vars ++ evalY.vars, builder.constants.point(evalX.expr, evalY.expr))
+
+  override def add[T: VectorSpace](a: R[T], b: R[T]): R[T] =
+    Annotation(a.vars ++ b.vars, builder.constants.add(a.expr, b.expr))
+
+  override def sin(d: R[Double]): R[Double] =
+    Annotation(d.vars, builder.constants.sin(d.expr))
+
+  override def cos(d: R[Double]): R[Double] =
+    Annotation(d.vars, builder.constants.cos(d.expr))
+
+  override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] =
+    Annotation(k.vars ++ t.vars, builder.constants.multiply(k.expr, t.expr))
+
 }
