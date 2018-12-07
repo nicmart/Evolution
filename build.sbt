@@ -5,7 +5,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.12.6", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
+  scalaVersion := "2.12.8", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
   version      := "0.1.0-SNAPSHOT",
   scalacOptions += "-Ypartial-unification",
   Test / testOptions ++= List(Tests.Argument(TestFrameworks.ScalaTest, "-oSD"), Tests.Argument(TestFrameworks.ScalaTest, "-W", "1", "1")),
