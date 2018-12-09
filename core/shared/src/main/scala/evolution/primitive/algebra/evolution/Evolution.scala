@@ -27,4 +27,12 @@ object Evolution {
   trait Expr[F[_], T] {
     def run[R[_]](alg: Evolution[F, R]): R[T]
   }
+
+  class Delegate[F[_], R[_]](evolution: Evolution[F, R]) extends Evolution[F, R] {
+    override val chain: Chain[F, R] = evolution.chain
+    override val constants: Constants[R] = evolution.constants
+    override val bind: Binding[R, String] = evolution.bind
+    override val distribution: Distribution[F, R] = evolution.distribution
+    override val derived: Derived[F, R] = evolution.derived
+  }
 }

@@ -28,12 +28,13 @@ trait EvaluationModule {
 }
 
 private[data] object EvaluationModuleImpl extends EvaluationModule {
-  override type R[T] = AnnotationModule.R[T]
-  override type F[T] = AnnotationModule.F[T]
+  override type R[T] = Annotation[T]
+  override type F[T] = RNGRepr[T]
   override def newSeed: Long = Random.nextLong()
-  override val interpreter: Evolution[F, R] = AnnotationModule.interpreter
+  override val interpreter: Evolution[F, R] = EvolutionAnnotator
+  private val evaluator: Evolution[F, Evaluation] = EvolutionEvaluator
   override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] =
-    fa.expr.run(EvolutionEvaluator).evaluate.iterator(RNG(seed))
+    fa.evaluate(evaluator, emptyCtx).iterator(RNG(seed))
   override def materializeConstant[T](t: R[T]): T = materializeConstantWith(t, emptyCtx)
   override def materializeConstantWith[T](t: R[T], ctx: Ctx): T = t.expr.run(EvolutionEvaluator).evaluateWith(ctx)
 }

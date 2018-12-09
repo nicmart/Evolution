@@ -10,6 +10,17 @@ trait Binding[R[_], Var] {
   def fix[A](expr: R[A => A]): R[A]
 }
 
+object Binding {
+  class Delegate[R[_], Var](binding: Binding[R, Var]) extends Binding[R, Var] {
+    override def var0[A](name: String): R[A] = binding.var0(name)
+    override def shift[A](expr: R[A]): R[A] = binding.shift(expr)
+    override def let[A, B](variable: Var, value: R[A], expr: R[B]): R[B] = binding.let(variable, value, expr)
+    override def lambda[A, B](variable: Var, expr: R[B]): R[A => B] = binding.lambda(variable, expr)
+    override def app[A, B](f: R[A => B], a: R[A]): R[B] = binding.app(f, a)
+    override def fix[A](expr: R[A => A]): R[A] = binding.fix(expr)
+  }
+}
+
 trait BindingSyntax[R[_], Var] extends Binding[R, Var] {
   def allVarsExpressions[T]: R[T]
   def allVars: Var
