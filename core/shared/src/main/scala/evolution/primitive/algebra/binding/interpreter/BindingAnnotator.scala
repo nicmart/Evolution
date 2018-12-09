@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.binding.interpreter
 import evolution.algebra.representation.RNGRepr
-import evolution.data.Annotation
+import evolution.data.{ Annotation, Tag }
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.evolution.interpreter.EvolutionExpr
 
@@ -19,8 +19,10 @@ object BindingAnnotator extends Binding[Annotation, String] {
   override def fix[A](expr: Annotation[A => A]): Annotation[A] =
     Annotation(expr.vars, builder.bind.fix(expr.expr))
 
-  override def lambda[A, B](var1: String, expr: Annotation[B]): Annotation[A => B] =
-    Annotation(expr.unshiftedVars, builder.bind.lambda(var1, expr.expr))
+  override def lambda[A, B](var1: String, expr: Annotation[B]): Annotation[A => B] = {
+    val tag = if (expr.minVar > 0) Tag.ConstantLambda[A, B](expr.expr) else Tag.Unknown[A => B]()
+    Annotation(expr.unshiftedVars, builder.bind.lambda(var1, expr.expr), tag)
+  }
 
   override def app[A, B](f: Annotation[A => B], a: Annotation[A]): Annotation[B] =
     Annotation(f.vars ++ a.vars, builder.bind.app(f.expr, a.expr))

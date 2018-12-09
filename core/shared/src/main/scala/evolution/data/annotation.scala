@@ -7,6 +7,8 @@ import evolution.primitive.algebra.evolution.interpreter.EvolutionUnshifter.unsh
 case class Annotation[T](vars: Set[Int], expr: Expr[RNGRepr, T], tag: Tag[T] = Tag.Unknown[T]()) {
   def unshiftedVars: Set[Int] = vars.filter(_ > 0).map(_ - 1)
   def shiftedVars: Set[Int] = vars.map(_ + 1)
+  def minVar: Int = vars.min
+  def maxVar: Int = vars.max
   def isClosed: Boolean = vars.isEmpty
   def isOpen: Boolean = !isClosed
   def evaluate(evaluator: Evolution[RNGRepr, Evaluation], ctx: Ctx): T = tag match {
