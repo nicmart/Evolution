@@ -26,4 +26,7 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     startParser: ByVarParserK[R, A],
     speedParser: ByVarParserK[R, F[A]]): ByVarParserK[R, F[A]] =
     function2("integrate", startParser, speedParser).map { case (start, speed) => alg.integrate(start, speed) }
+
+  override def map[A, B](faParser: ByVarParserK[R, F[A]], fParser: ByVarParserK[R, A => B]): ByVarParserK[R, F[B]] =
+    function2("map", faParser, fParser).map { case (fa, f) => alg.map(fa, f) }
 }

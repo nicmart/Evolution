@@ -33,6 +33,20 @@ class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
       stream.take(10).toList shouldBe List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     }
 
+    "should be able to map evolutions" in {
+      val expr: R[F[Double]] = map(uniform(double(0), double(1)), lambda[Double, Double]("x", double(0)))
+
+      var evalCount = Evaluation.total
+      val stream = materialize(0L, expr).map(elem => {
+        println("computing elem")
+        println(s"Total Evaluations: ${Evaluation.total - evalCount}")
+        evalCount = Evaluation.total
+        elem
+      })
+
+      stream.take(4).toList shouldBe List(100, 101, 102)
+    }
+
     "should be able to express integrations" in {
 
       val expr: R[F[Point]] = cartesian(uniform(double(-1), double(1)), uniform(double(-1), double(1)))

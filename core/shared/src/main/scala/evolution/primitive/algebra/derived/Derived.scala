@@ -8,6 +8,7 @@ trait Derived[F[_], R[_]] {
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
+  def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
 }
 
 class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
@@ -32,6 +33,26 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   override def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] =
     app2(integrateLambda[A], start, speed)
 
+  override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
+    app(mapLambda(f), fa)
+
+  private def mapLambda[A, B](f: R[A => B]): R[F[A] => F[B]] =
+    fix[F[A] => F[B]](
+      lambda(
+        "self",
+        lambda[F[A], F[B]](
+          "fa",
+          mapCons(varN[F[A]]("fa", 0))(
+            lambda2(
+              "head",
+              "tail",
+              cons(app(f, varN[A]("head", 1)), app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0)))
+            )
+          )
+        )
+      )
+    )
+
   private def integrateLambda[T: VectorSpace]: R[T => F[T] => F[T]] =
     fix[T => F[T] => F[T]](
       lambda(
@@ -55,9 +76,6 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
       ))
 
   def flatMap[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
-    ???
-
-  private def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
     ???
 
   private def lambda2[A, B, C](var1: String, var2: String, expr: R[C]): R[A => B => C] =

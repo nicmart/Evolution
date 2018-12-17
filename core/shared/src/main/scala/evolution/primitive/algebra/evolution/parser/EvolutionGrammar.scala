@@ -56,14 +56,14 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
   override def evolutionOfDoubles: R[F[Double]] =
     or(
       distribution.uniform(doubleConstant, doubleConstant),
-      genericEvolution(doubleConstant, self.evolutionOfDoubles)
+      genericEvolution(self.doubleConstant, self.evolutionOfDoubles)
     )
 
   override def evolutionOfPoints: R[F[Point]] =
     or(
       derived.cartesian(self.evolutionOfDoubles, self.evolutionOfDoubles),
       derived.polar(self.evolutionOfDoubles, self.evolutionOfDoubles),
-      genericEvolution(pointConstant, self.evolutionOfPoints)
+      genericEvolution(self.pointConstant, self.evolutionOfPoints)
     )
 
   private def genericConstant[T: VectorSpace](t: R[T]): R[T] =
@@ -77,19 +77,34 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       chain.mapEmpty(ft, ft),
       derived.constant(t),
       derived.integrate(t, ft),
-      genericBinding(ft),
+      allMappedEvolutions(t),
+      genericBinding(ft)
     )
 
   private def genericBinding[T](t: R[T]): R[T] =
     or(bind.allVarsExpressions, bind.fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
 
+  private def allMappedEvolutions[T](t: R[T]): R[F[T]] =
+    or(
+      derived.map(self.evolutionOfDoubles, function(self.doubleConstant, t)),
+      derived.map(self.evolutionOfPoints, function(self.pointConstant, t))
+    )
+
   private def allLetExpressions[T](t: R[T]): R[T] =
-    or(bind.let(bind.allVars, self.doubleConstant, t), bind.let(bind.allVars, self.pointConstant, t))
+    or(
+      bind.let(bind.allVars, self.doubleConstant, t),
+      bind.let(bind.allVars, self.pointConstant, t),
+      bind.let(bind.allVars, self.evolutionOfDoubles, t),
+      bind.let(bind.allVars, self.evolutionOfPoints, t)
+    )
 
   private def allAppExpressions[T](t: R[T]): R[T] =
     or(
       bind.app(self.function(self.doubleConstant, t), self.doubleConstant),
-      bind.app(self.function(self.pointConstant, t), self.pointConstant))
+      bind.app(self.function(self.pointConstant, t), self.pointConstant),
+      bind.app(self.function(self.evolutionOfDoubles, t), self.evolutionOfDoubles),
+      bind.app(self.function(self.evolutionOfPoints, t), self.evolutionOfPoints)
+    )
 }
 
 object EvolutionGrammar {

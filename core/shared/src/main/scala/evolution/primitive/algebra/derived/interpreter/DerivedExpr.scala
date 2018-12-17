@@ -29,4 +29,10 @@ class DerivedExpr[F[_]] extends Derived[F, Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[A]] =
         alg.derived.integrate(start.run(alg), speed.run(alg))
     }
+
+  override def map[A, B](fa: Expr[F, F[A]], f: Expr[F, A => B]): Expr[F, F[B]] =
+    new Expr[F, F[B]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[B]] =
+        alg.derived.map(fa.run(alg), f.run(alg))
+    }
 }

@@ -1,16 +1,14 @@
 package evolution.data
 import evolution.algebra.representation.RNGRepr
-import evolution.data.Annotation.Info
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
-import evolution.primitive.algebra.evolution.interpreter.EvolutionExpr
 import evolution.primitive.algebra.evolution.interpreter.EvolutionUnshifter.unshiftExpr
 
 case class Annotation[T](vars: Set[Int], info: Annotation.Info[T]) {
   def unshiftedVars: Set[Int] = vars.filter(_ > 0).map(_ - 1)
   def shiftedVars: Set[Int] = vars.map(_ + 1)
-  def minVar: Int = vars.min
-  def maxVar: Int = vars.max
+  def minVar: Int = if (vars.isEmpty) Int.MaxValue else vars.min
+  def maxVar: Int = if (vars.isEmpty) Int.MinValue else vars.max
   def isClosed: Boolean = vars.isEmpty
   def isOpen: Boolean = !isClosed
   def evaluate(evaluator: Evolution[RNGRepr, Evaluation], ctx: Ctx): T = Annotation.evaluate(this, evaluator, ctx)
@@ -36,5 +34,6 @@ object Annotation {
       case Info.Unknown(expr)              => expr.run(evaluator).evaluateWith(ctx)
       case Info.ConstantLambda(term, expr) => expr.run(evaluator).evaluateWith(ctx)
       case Info.StatelessEvolution(expr)   => expr.run(evaluator).evaluateWith(ctx)
+      case Info.Fix(inner, expr)           => expr.run(evaluator).evaluateWith(ctx)
     }
 }

@@ -19,16 +19,18 @@ object BindingEvaluator extends Binding[Evaluation, String] {
     Fix(expr)
 
   override def lambda[A, B](var1: String, expr: Evaluation[B]): Evaluation[A => B] =
-    expr match {
-      case Lam(var2, expr2) => Lam2(var1, var2, expr2)
-      case _                => Lam(var1, expr)
-    }
+    Lam(var1, expr)
+//    expr match {
+//      case Lam(var2, expr2) => Lam2(var1, var2, expr2)
+//      case _                => Lam(var1, expr)
+//    }
 
   override def app[A, B](f: Evaluation[A => B], a: Evaluation[A]): Evaluation[B] =
-    f match {
-      case lambda @ Lam(_, _)        => AppOfLambda(lambda, a)
-      case App(Lam2(_, _, inner), b) => App2OfLambda[A, Any, B](inner, b, a)
-      case App(inner, b)             => App2(inner, b, a)
-      case _                         => App(f, a)
-    }
+    App(f, a)
+//    f match {
+//      case lambda @ Lam(_, _)        => AppOfLambda(lambda, a)
+//      case App(Lam2(_, _, inner), b) => App2OfLambda[A, Any, B](inner, b, a)
+//      case App(inner, b)             => App2(inner, b, a)
+//      case _                         => App(f, a)
+//    }
 }
