@@ -77,7 +77,9 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       chain.mapEmpty(ft, ft),
       derived.constant(t),
       derived.integrate(t, ft),
+      derived.concat(ft, ft),
       allMappedEvolutions(t),
+      allFlatMappedEvolutions(ft),
       genericBinding(ft)
     )
 
@@ -88,6 +90,12 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     or(
       derived.map(self.evolutionOfDoubles, function(self.doubleConstant, t)),
       derived.map(self.evolutionOfPoints, function(self.pointConstant, t))
+    )
+
+  private def allFlatMappedEvolutions[T](ft: R[F[T]]): R[F[T]] =
+    or(
+      derived.flatMap(self.evolutionOfDoubles, function(self.doubleConstant, ft)),
+      derived.flatMap(self.evolutionOfPoints, function(self.pointConstant, ft))
     )
 
   private def allLetExpressions[T](t: R[T]): R[T] =

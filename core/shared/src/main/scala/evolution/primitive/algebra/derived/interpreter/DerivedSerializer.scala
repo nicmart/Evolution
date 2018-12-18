@@ -19,4 +19,10 @@ class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
 
   override def map[A, B](fa: CtxString[F[A]], f: CtxString[A => B]): CtxString[F[B]] =
     ctx => s"map(${fa(ctx)}, ${f(ctx)})"
+
+  override def concat[A](fa1: CtxString[F[A]], fa2: CtxString[F[A]]): CtxString[F[A]] =
+    ctx => s"concat(${fa1(ctx)}, ${fa2(ctx)})"
+
+  override def flatMap[A, B](fa: CtxString[F[A]], f: CtxString[A => F[B]]): CtxString[F[B]] =
+    ctx => s"flatMap(${fa(ctx)}, ${f(ctx)})"
 }

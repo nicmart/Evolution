@@ -8,7 +8,9 @@ trait Derived[F[_], R[_]] {
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
+  def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]]
   def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
+  def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]]
 }
 
 class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
@@ -30,11 +32,17 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
       radius,
       angle)
 
+  override def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]] =
+    app2(concatLambda, fa1, fa2)
+
   override def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] =
     app2(integrateLambda[A], start, speed)
 
   override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
     app(mapLambda(f), fa)
+
+  override def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]] =
+    app(flatMapLambda(f), fa)
 
   private def mapLambda[A, B](f: R[A => B]): R[F[A] => F[B]] =
     fix[F[A] => F[B]](
@@ -48,6 +56,54 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
               "tail",
               cons(app(f, varN[A]("head", 1)), app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0)))
             )
+          )
+        )
+      )
+    )
+
+  private def flatMapLambda[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
+    fix[F[A] => F[B]](
+      lambda(
+        "self",
+        lambda(
+          "fa",
+          mapCons[A, B](varN[F[A]]("fa", 0))(
+            lambda2[A, F[A], F[B]](
+              "head",
+              "tail",
+              concat(
+                app(f, varN[A]("head", 1)),
+                app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0))
+              )
+            )
+          )
+        )
+      )
+    )
+
+  private def concatLambda[A]: R[F[A] => F[A] => F[A]] =
+    fix[F[A] => F[A] => F[A]](
+      lambda(
+        "self",
+        lambda2[F[A], F[A], F[A]](
+          "fa1",
+          "fa2",
+          mapEmpty[A](
+            mapCons(varN[F[A]]("fa1", 1))(
+              lambda2(
+                "head1",
+                "tail1",
+                cons(
+                  varN[A]("head1", 1),
+                  app2(
+                    varN[F[A] => F[A] => F[A]]("self", 4),
+                    varN[F[A]]("tail1", 0),
+                    varN[F[A]]("fa2", 2)
+                  )
+                )
+              )
+            ),
+            varN[F[A]]("fa2", 0)
           )
         )
       )

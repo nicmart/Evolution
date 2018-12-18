@@ -19,6 +19,18 @@ class DerivedExpr[F[_]] extends Derived[F, Expr[F, ?]] {
         alg.derived.constant(a.run(alg))
     }
 
+  override def concat[A](fa1: Expr[F, F[A]], fa2: Expr[F, F[A]]): Expr[F, F[A]] =
+    new Expr[F, F[A]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[A]] =
+        alg.derived.concat(fa1.run(alg), fa2.run(alg))
+    }
+
+  override def flatMap[A, B](fa: Expr[F, F[A]], f: Expr[F, A => F[B]]): Expr[F, F[B]] =
+    new Expr[F, F[B]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[B]] =
+        alg.derived.flatMap(fa.run(alg), f.run(alg))
+    }
+
   override def polar(radius: Expr[F, F[Double]], angle: Expr[F, F[Double]]): Expr[F, F[Point]] =
     new Expr[F, F[Point]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[Point]] =

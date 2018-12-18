@@ -138,8 +138,20 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
     override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] = R { required =>
       val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
       val annotatedFa = fa.infer(Unknown())
-      val annotatedF = f.infer(FunctionTypeInfo(annotatedFa.typeInfo, inner))
+      val HigherKindedTypeInfo(labelFa, aTypeInfo) = annotatedFa.typeInfo
+      val annotatedF = f.infer(FunctionTypeInfo(aTypeInfo, inner))
       AnnotatedValue(required, s"map($annotatedFa, $annotatedF)")
+    }
+
+    override def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]] = R { required =>
+      AnnotatedValue(required, s"concat(${fa1.infer(required)}, ${fa2.infer(required)})")
+    }
+
+    override def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]] = R { required =>
+      val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
+      val annotatedFa = fa.infer(Unknown())
+      val annotatedF = f.infer(FunctionTypeInfo(annotatedFa.typeInfo, expectedHKType))
+      AnnotatedValue(required, s"flatMap($annotatedFa, $annotatedF)")
     }
   }
 }

@@ -29,4 +29,12 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
 
   override def map[A, B](faParser: ByVarParserK[R, F[A]], fParser: ByVarParserK[R, A => B]): ByVarParserK[R, F[B]] =
     function2("map", faParser, fParser).map { case (fa, f) => alg.map(fa, f) }
+
+  override def concat[A](fa1Parser: ByVarParserK[R, F[A]], fa2Parser: ByVarParserK[R, F[A]]): ByVarParserK[R, F[A]] =
+    function2("concat", fa1Parser, fa2Parser).map { case (fa1, fa2) => alg.concat(fa1, fa2) }
+
+  override def flatMap[A, B](
+    faParser: ByVarParserK[R, F[A]],
+    fParser: ByVarParserK[R, A => F[B]]): ByVarParserK[R, F[B]] =
+    function2("flatMap", faParser, fParser).map { case (fa, f) => alg.flatMap(fa, f) }
 }
