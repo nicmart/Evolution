@@ -3,7 +3,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.constants.Constants
-import evolution.primitive.algebra.derived.Derived
+import evolution.primitive.algebra.derived.{ DefaultDerived, Derived }
 import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
@@ -21,13 +21,15 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   override def materialize[T](seed: Long, ft: R[F[T]]): Iterator[T] = ???
 
   sealed trait R[T]
-  final case class Evo[T](get: F[T]) extends R[F[T]]
+  final case class Evo[T](evo: F[T]) extends R[F[T]]
   final case class Dbl(d: Double) extends R[Double]
   final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
   final case class Add[T: VectorSpace](a: R[T], b: R[T]) extends R[T] {
+    val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
     def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
   }
   final case class Multiply[T: VectorSpace](k: R[Double], t: R[T]) extends R[T] {
+    val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
     def map2(fk: R[Double] => R[Double], ft: R[T] => R[T]): Multiply[T] = Multiply(fk(k), ft(t))
   }
   final case class Sin(d: R[Double]) extends R[Double]
@@ -44,6 +46,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   final case class Cons[A](head: R[A], tail: R[F[A]]) extends F[A]
   final case class MapEmpty[A](eva: R[F[A]], eva2: R[F[A]]) extends F[A]
   final case class MapCons[A, B](eva: R[F[A]], f: R[A => F[A] => F[B]]) extends F[B]
+  final case class Uniform(from: R[Double], to: R[Double]) extends F[Double]
 
   override def evolution: Evolution[F, R] = new Evolution[F, R] {
     override val chain: Chain[F, R] = new Chain[F, R] {
@@ -70,13 +73,15 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       override def app[A, B](f: R[A => B], a: R[A]): R[B] = App(f, a)
       override def fix[A](expr: R[A => A]): R[A] = Fix(expr)
     }
-    override val distribution: Distribution[F, R] = ???
-    override val derived: Derived[F, R] = ???
+    override val distribution: Distribution[F, R] = new Distribution[F, R] {
+      override def uniform(from: R[Double], to: R[Double]): R[F[Double]] = ???
+    }
+    override val derived: Derived[F, R] = new DefaultDerived[F, R](this)
   }
 
   private def usedVars[T](rt: R[T]): Set[Int] =
     rt match {
-      case Evo(get)            => usedVars(get)
+      case Evo(evo)            => usedVars(evo)
       case Dbl(d)              => Set.empty
       case Pnt(x, y)           => usedVars(x) ++ usedVars(y)
       case Add(a, b)           => usedVars(a) ++ usedVars(b)
@@ -121,7 +126,27 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       case Cons(head, tail)    => Cons(assign(head, variable, value), assign(tail, variable, value))
       case MapEmpty(eva, eva2) => MapEmpty(assign(eva, variable, value), assign(eva2, variable, value))
       case MapCons(eva, f)     => MapCons(assign(eva, variable, value), assign(f, variable, value))
+      case Uniform(from, to)   => Uniform(assign(from, variable, value), assign(to, variable, value))
     }
+
+  import EvaluationContextModule._, EvaluationContextModule._
+
+  private def eval[T](ctx: Ctx, rt: R[T]): T = rt match {
+    case Evo(evo)              => evo
+    case Dbl(d)                => d
+    case Pnt(x, y)             => Point(eval(ctx, x), eval(ctx, y))
+    case add @ Add(a, b)       => add.vectorSpace.add(eval(ctx, a), eval(ctx, b))
+    case mult @ Multiply(k, t) => mult.vectorSpace.mult(eval(ctx, k), eval(ctx, t))
+    case Sin(d)                => Math.sin(eval(ctx, d))
+    case Cos(d)                => Math.cos(eval(ctx, d))
+    case Var0(name)            => ctx(0)
+    case Shift(expr)           => eval(ctx.pop, expr)
+    case Let(_, value, expr)   => eval(ctx.pushStrict(eval(ctx, value), ""), expr)
+    case Lambda(_, expr)       => (a => eval(ctx.pushStrict(a, ""), expr))
+    case App(f, a)             => eval(ctx, f)(eval(ctx, a))
+    case Fix(Lambda(_, expr))  => eval(ctx.pushLazy(() => eval(ctx, expr), ""), expr)
+    case Fix(expr)             => ??? // This will diverge
+  }
 
   private def isConstantLambda[A, B](f: R[A => B]): Option[R[B]] =
     f match {
