@@ -1,4 +1,5 @@
 package evolution.data
+import evolution.data.MaterializationModuleImpl.E.{ Finite, Full }
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.chain.Chain
@@ -146,6 +147,53 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
     case App(f, a)             => eval(ctx, f)(eval(ctx, a))
     case Fix(Lambda(_, expr))  => eval(ctx.pushLazy(() => eval(ctx, expr), ""), expr)
     case Fix(expr)             => ??? // This will diverge
+  }
+
+  sealed trait E[T]
+  object E {
+    final case class Full[T](run: Long => (Long, Option[(T, E[T])])) extends E[T]
+    final case class Finite[T](ts: List[T]) extends E[T]
+  }
+
+  private def evalEvo[T](ctx: Ctx, rft: R[F[T]]): E[T] = eval(ctx, eval(ctx, rft))
+
+  private def eval[T](ctx: Ctx, ft: F[T]): E[T] = ft match {
+
+    case Empty() => E.Finite(Nil)
+
+    case Cons(head, tail) =>
+      evalEvo(ctx, tail) match {
+        case Finite(ts) => Finite(eval(ctx, head) :: ts)
+        case full @ Full(_) =>
+          Full { seed =>
+            (seed, Some((eval(ctx, head), full)))
+          }
+      }
+
+    case MapEmpty(eva, eva2) =>
+      evalEvo(ctx, eva) match {
+        case Finite(Nil) => evalEvo(ctx, eva2)
+        case Full(thisRun) =>
+          Full { seed =>
+            val (seed2, maybeNext) = thisRun(seed)
+            maybeNext match {
+              case None => run(seed2, evalEvo(ctx, eva2))
+              case next => (seed2, next)
+            }
+          }
+      }
+
+    case MapCons(eva, f)   => ???
+    case Uniform(from, to) => ???
+  }
+
+  private def run[T](seed: Long, evo: E[T]): (Long, Option[(T, E[T])]) = evo match {
+    case Full(doRun) => doRun(seed)
+    case Finite(ts) =>
+      ts match {
+        case head :: tail => (seed, Some((head, Finite(tail))))
+        case Nil          => (seed, None)
+      }
   }
 
   private def isConstantLambda[A, B](f: R[A => B]): Option[R[B]] =
