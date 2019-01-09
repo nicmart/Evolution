@@ -24,6 +24,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   sealed trait R[T]
   final case class Evo[T](evo: F[T]) extends R[F[T]]
   final case class Dbl(d: Double) extends R[Double]
+  final case class Integer(n: Int) extends R[Int]
   final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
   final case class Add[T: VectorSpace](a: R[T], b: R[T]) extends R[T] {
     val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
@@ -58,6 +59,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
     }
 
     override val constants: Constants[R] = new Constants[R] {
+      override def int(n: Int): R[Int] = Integer(n)
       override def double(d: Double): R[Double] = Dbl(d)
       override def point(x: R[Double], y: R[Double]): R[Point] = Pnt(x, y)
       override def add[T: VectorSpace](a: R[T], b: R[T]): R[T] = Add(a, b)

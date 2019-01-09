@@ -8,6 +8,12 @@ import evolution.typeclass.VectorSpace
 
 class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
 
+  override def int(n: Int): Expr[F, Int] =
+    new Expr[F, Int] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Int] =
+        alg.constants.int(n)
+    }
+
   override def double(d: Double): Expr[F, Double] =
     new Expr[F, Double] {
       override def run[R[_]](alg: Evolution[F, R]): R[Double] =

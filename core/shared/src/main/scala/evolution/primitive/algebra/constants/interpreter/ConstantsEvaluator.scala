@@ -7,6 +7,8 @@ import evolution.primitive.algebra.constants.Constants
 import evolution.typeclass.VectorSpace
 
 object ConstantsEvaluator extends Constants[Evaluation] {
+  override def int(n: Int): Evaluation[Int] =
+    Constant(n)
   override def double(d: Double): Evaluation[Double] =
     Constant(d)
   override def point(evalX: Evaluation[Double], evalY: Evaluation[Double]): Evaluation[Point] =

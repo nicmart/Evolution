@@ -10,10 +10,14 @@ import evolution.typeclass.VectorSpace
 import fastparse.noApi._
 
 class ConstantsParserSyntax[S[_]](alg: Constants[S]) extends ConstantsSyntax[ByVarParserK[S, ?]] {
+  override def allIntegers: ByVarParser[S[Int]] =
+    ByVarParsers.intLiteral.map(alg.int)
   override def allDoubles: ByVarParser[S[Double]] =
     ByVarParsers.doubleLiteral.map(alg.double)
   override def double(d: Double): ByVarParser[S[Double]] =
     ByVarParser.Raw(ctx => P(d.toString)).map(_ => alg.double(d))
+  override def int(n: Int): ByVarParserK[S, Int] =
+    ByVarParser.Raw(ctx => P(n.toString)).map(_ => alg.int(n))
   override def point(x: ByVarParser[S[Double]], y: ByVarParser[S[Double]]): ByVarParser[S[Point]] =
     function2("point", x, y).map { case (parsedX, parsedY) => alg.point(parsedX, parsedY) }
   override def add[T: VectorSpace](a: ByVarParser[S[T]], b: ByVarParser[S[T]]): ByVarParser[S[T]] =

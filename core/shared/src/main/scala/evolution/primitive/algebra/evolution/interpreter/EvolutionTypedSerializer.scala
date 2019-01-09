@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.evolution.interpreter
-import Types.{ HigherKindedTypeInfo, doubleConstant, _ }
+import Types.{ HigherKindedTypeInfo, doubleConstant, intConstant, _ }
 import cats.kernel.Semigroup
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
@@ -48,6 +48,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
   }
 
   override val constants: Constants[R] = new Constants[R] {
+    override def int(n: Int): R[Int] =
+      R.known(AnnotatedValue(intConstant, n.toString))
     override def double(d: Double): R[Double] =
       R.known(AnnotatedValue(doubleConstant, d.toString))
     override def point(x: R[Double], y: R[Double]): R[Point] =
@@ -229,6 +231,7 @@ object Types {
   }
 
   lazy val doubleConstant: TypeInfo = SimpleTypeInfo("Double")
+  lazy val intConstant: TypeInfo = SimpleTypeInfo("Int")
   lazy val evolutionOfDoubles: TypeInfo = HigherKindedTypeInfo("F", doubleConstant)
   lazy val pointConstant: TypeInfo = SimpleTypeInfo("Point")
   lazy val evolutionOfPoints: TypeInfo = Types.HigherKindedTypeInfo("F", pointConstant)

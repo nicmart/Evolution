@@ -11,6 +11,9 @@ import evolution.typeclass.VectorSpace
 object ConstantsAnnotator extends Constants[Annotation] {
   private val builder = new EvolutionExpr[RNGRepr]
 
+  override def int(n: Int): Annotation[Int] =
+    Annotation(Set.empty, Unknown(builder.constants.int(n)))
+
   override def double(d: Double): Annotation[Double] =
     Annotation(Set.empty, Unknown(builder.constants.double(d)))
 

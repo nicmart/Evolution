@@ -15,6 +15,9 @@ trait PrimitiveParsers {
   val doubleLiteral: Parser[Double] =
     P("-".? ~ (floatDigits | digit.rep(1))).!.map(_.toDouble)
 
+  val intLiteral: Parser[Int] =
+    P("-".? ~ digit.rep(1)).!.map(_.toInt)
+
   val varName: Parser[String] = {
     val letter = P(CharIn('a' to 'z') | CharIn('A' to 'Z') | CharIn('0' to '9'))
     P(letter.rep(1).!)

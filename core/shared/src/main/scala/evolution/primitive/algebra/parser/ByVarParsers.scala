@@ -8,6 +8,9 @@ import fastparse.parsers.Combinators.Logged
 
 object ByVarParsers {
 
+  val intLiteral: ByVarParser[Int] =
+    Raw(_ => PrimitiveParsers.intLiteral, "intLiteral")
+
   val doubleLiteral: ByVarParser[Double] =
     Raw(_ => PrimitiveParsers.doubleLiteral, "doubleLiteral")
 
