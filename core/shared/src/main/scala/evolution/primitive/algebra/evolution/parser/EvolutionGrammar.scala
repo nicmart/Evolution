@@ -11,6 +11,7 @@ import fastparse.noApi.Parser
 trait Expressions[F[_], R[_]] {
   def doubleConstant: R[Double]
   def pointConstant: R[Point]
+  def intConstant: R[Int]
   def evolutionOfDoubles: R[F[Double]]
   def evolutionOfPoints: R[F[Point]]
   def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2]
@@ -21,6 +22,7 @@ object Expressions {
     private val inner: Expressions[F, R] = _inner
     def doubleConstant: R[Double] = defer.defer(inner.doubleConstant)
     def pointConstant: R[Point] = defer.defer(inner.pointConstant)
+    def intConstant: R[Int] = defer.defer(inner.intConstant)
     def evolutionOfDoubles: R[F[Double]] = defer.defer(inner.evolutionOfDoubles)
     def evolutionOfPoints: R[F[Point]] = defer.defer(inner.evolutionOfPoints)
     def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = defer.defer(inner.function(t1, t2))
@@ -46,6 +48,9 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       constants.point(doubleConstant, doubleConstant),
       genericConstant(self.pointConstant)
     )
+
+  override def intConstant: R[Int] =
+    or(constants.allIntegers, genericConstant(self.intConstant))
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(
@@ -73,7 +78,7 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     or(
       chain.empty,
       chain.cons(t, ft),
-      chain.mapCons(ft)(function(t, function(ft, ft))),
+      allMapConsedEvolutions(ft),
       chain.mapEmpty(ft, ft),
       derived.constant(t),
       derived.integrate(t, ft),
@@ -85,6 +90,12 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
 
   private def genericBinding[T](t: R[T]): R[T] =
     or(bind.allVarsExpressions, bind.fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
+
+  private def allMapConsedEvolutions[T](ft: R[F[T]]): R[F[T]] =
+    or(
+      chain.mapCons(self.evolutionOfDoubles)(function(self.doubleConstant, function(self.evolutionOfDoubles, ft))),
+      chain.mapCons(self.evolutionOfPoints)(function(self.pointConstant, function(self.evolutionOfPoints, ft)))
+    )
 
   private def allMappedEvolutions[T](t: R[T]): R[F[T]] =
     or(
@@ -110,9 +121,12 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     or(
       bind.app(self.function(self.doubleConstant, t), self.doubleConstant),
       bind.app(self.function(self.pointConstant, t), self.pointConstant),
+      bind.app(self.function(self.intConstant, t), self.intConstant),
       bind.app(self.function(self.evolutionOfDoubles, t), self.evolutionOfDoubles),
       bind.app(self.function(self.evolutionOfPoints, t), self.evolutionOfPoints)
     )
+
+  private case class Def[T](constant: R[T], evolution: R[F[T]])
 }
 
 object EvolutionGrammar {

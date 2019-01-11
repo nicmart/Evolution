@@ -1,6 +1,7 @@
 package evolution.typeclass
 import cats.kernel.Monoid
 import cats.instances.double._
+import cats.instances.int._
 
 trait VectorSpace[T] {
   def monoid: Monoid[T]
@@ -14,5 +15,11 @@ object VectorSpace {
   implicit val doubleInstance: VectorSpace[Double] = new VectorSpace[Double] {
     override def monoid: Monoid[Double] = Monoid[Double]
     override def mult(k: Double, t: Double): Double = k * t
+  }
+
+  // This does not make any sense, Integers are not a VS over the reals
+  implicit val intInstance: VectorSpace[Int] = new VectorSpace[Int] {
+    override def monoid: Monoid[Int] = Monoid[Int]
+    override def mult(k: Double, t: Int): Int = (k * t).toInt
   }
 }
