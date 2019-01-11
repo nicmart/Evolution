@@ -67,7 +67,7 @@ object Point {
   }
 
   implicit val pointVectorSpace: VectorSpace[Point] = new VectorSpace[Point] {
-    override def monoid: Monoid[Point] = pointGroup
+    override def group: Group[Point] = pointGroup
     override def mult(k: Double, t: Point): Point = t * k
   }
 
