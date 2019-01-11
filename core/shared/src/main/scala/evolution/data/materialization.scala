@@ -40,6 +40,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   final case class Equals[T: Eq](a: R[T], b: R[T]) extends R[Boolean] {
     val eq: Eq[T] = implicitly[Eq[T]]
   }
+  final case class IfThen[T](condition: R[Boolean], a: R[T], b: R[T]) extends R[T]
 
   final case class Var0[A](name: String) extends R[A]
   final case class Shift[A](expr: R[A]) extends R[A]
@@ -72,6 +73,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       override def sin(d: R[Double]): R[Double] = Sin(d)
       override def cos(d: R[Double]): R[Double] = Cos(d)
       override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = Equals(a, b)
+      override def ifThen[T](condition: R[Boolean], a: R[T], b: R[T]): R[T] = IfThen(condition, a, b)
     }
 
     override val bind: Binding[R, String] = new Binding[R, String] {

@@ -75,6 +75,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       AnnotatedValue(requiredType, s"multiply($annotatedK, $annotatedT)")
     }
     override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = ???
+    override def ifThen[T](condition: R[Boolean], a: R[T], b: R[T]): R[T] = ???
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {

@@ -32,4 +32,9 @@ class ConstantsParserSyntax[S[_]](alg: Constants[S]) extends ConstantsSyntax[ByV
     function2("multiply", kParser, tParser).map { case (k, t) => alg.multiply(k, t) }
   override def eq[T: Eq](aParser: ByVarParserK[S, T], bParser: ByVarParserK[S, T]): ByVarParserK[S, Boolean] =
     function2("eq", aParser, bParser).map { case (a, b) => alg.eq(a, b) }
+  override def ifThen[T](
+    conditionParser: ByVarParserK[S, Boolean],
+    aParser: ByVarParserK[S, T],
+    bParser: ByVarParserK[S, T]): ByVarParserK[S, T] =
+    function3("if", conditionParser, aParser, bParser).map { case (condition, a, b) => alg.ifThen(condition, a, b) }
 }

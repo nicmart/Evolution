@@ -29,4 +29,6 @@ object ConstantsEvaluator extends Constants[Evaluation] {
     Value(ctx => VectorSpace[T].mult(k.evaluateWith(ctx), t.evaluateWith(ctx)))
   override def eq[T: Eq](a: Evaluation[T], b: Evaluation[T]): Evaluation[Boolean] =
     Value(ctx => Eq[T].eqv(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"eq($a, $b)")
+  override def ifThen[T](condition: Evaluation[Boolean], a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
+    Value(ctx => if (condition.evaluateWith(ctx)) a.evaluateWith(ctx) else b.evaluateWith(ctx))
 }

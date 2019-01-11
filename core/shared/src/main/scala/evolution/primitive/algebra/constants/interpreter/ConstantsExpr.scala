@@ -54,4 +54,10 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R]): R[Boolean] =
         alg.constants.eq(a.run(alg), b.run(alg))
     }
+
+  override def ifThen[T](condition: Expr[F, Boolean], a: Expr[F, T], b: Expr[F, T]): Expr[F, T] =
+    new Expr[F, T] {
+      override def run[R[_]](alg: Evolution[F, R]): R[T] =
+        alg.constants.ifThen(condition.run(alg), a.run(alg), b.run(alg))
+    }
 }

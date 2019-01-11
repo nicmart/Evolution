@@ -31,6 +31,19 @@ object ByVarParsers {
       )
     )
 
+  def function3[A, B, C](
+    funcName: String,
+    parser1: ByVarParser[A],
+    parser2: ByVarParser[B],
+    parser3: ByVarParser[C]): ByVarParser[(A, B, C)] =
+    Prefixed(
+      funcName,
+      Raw(
+        vars => P("(" ~ parser1.parser(vars) ~ "," ~ parser2.parser(vars) ~ "," ~ parser3.parser(vars) ~ ")"),
+        s"$funcName args($parser1, $parser2)"
+      )
+    )
+
   def function3Dep[A, B, C](
     funcName: String,
     parser1: ByVarParser[A],

@@ -35,4 +35,7 @@ object ConstantsAnnotator extends Constants[Annotation] {
 
   override def eq[T: Eq](a: Annotation[T], b: Annotation[T]): Annotation[Boolean] =
     Annotation(a.vars ++ b.vars, Unknown(builder.constants.eq(a.expr, b.expr)))
+
+  override def ifThen[T](condition: Annotation[Boolean], a: Annotation[T], b: Annotation[T]): Annotation[T] =
+    Annotation(condition.vars ++ a.vars ++ b.vars, Unknown(builder.constants.ifThen(condition.expr, a.expr, b.expr)))
 }

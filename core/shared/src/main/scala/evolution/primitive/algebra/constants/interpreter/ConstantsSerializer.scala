@@ -22,4 +22,6 @@ object ConstantsSerializer extends Constants[CtxString] {
     ctx => s"multiply(${k(ctx)}, ${t(ctx)})"
   override def eq[T: Eq](a: CtxString[T], b: CtxString[T]): CtxString[Boolean] =
     ctx => s"eq(${a(ctx)}, ${b(ctx)})"
+  override def ifThen[T](condition: CtxString[Boolean], a: CtxString[T], b: CtxString[T]): CtxString[T] =
+    ctx => s"if(${condition(ctx)}, ${a(ctx)}, ${b(ctx)})"
 }
