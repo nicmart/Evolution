@@ -1,6 +1,7 @@
 package evolution.primitive.algebra.evolution.parser
 
 import evolution.geometry.Point
+import evolution.typeclass.VectorSpace._
 import evolution.primitive.algebra.evolution.interpreter.Types._
 import evolution.primitive.algebra.evolution.interpreter.{ EvolutionTypedSerializer, Types }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK

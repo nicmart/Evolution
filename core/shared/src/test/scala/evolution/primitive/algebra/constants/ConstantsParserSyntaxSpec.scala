@@ -5,6 +5,7 @@ import evolution.primitive.algebra.evolution.interpreter.{ EvolutionTypedSeriali
 import evolution.primitive.algebra.evolution.parser.{ EvolutionGrammar, Expressions }
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import fastparse.noApi
+import evolution.typeclass.VectorSpace._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class ConstantsParserSyntaxSpec extends FreeSpec with Matchers {

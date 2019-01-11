@@ -2,6 +2,7 @@ package evolution.primitive.algebra.derived
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
+import evolution.typeclass.VectorSpace._
 
 trait Derived[F[_], R[_]] {
   def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]]

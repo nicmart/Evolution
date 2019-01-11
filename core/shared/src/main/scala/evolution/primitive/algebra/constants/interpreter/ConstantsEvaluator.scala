@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.constants.interpreter
 
-import cats.kernel.Eq
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.data.Evaluation
 import evolution.data.Evaluation._
@@ -19,8 +19,8 @@ object ConstantsEvaluator extends Constants[Evaluation] {
         Value(ctx => Point(evalX.evaluateWith(ctx), evalY.evaluateWith(ctx)), s"non-constant-point($evalX, $evalY)")
     }
 
-  override def add[T: VectorSpace](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
-    Value(ctx => VectorSpace[T].monoid.combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
+  override def add[T: Semigroup](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
+    Value(ctx => Semigroup[T].combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
   override def sin(d: Evaluation[Double]): Evaluation[Double] =
     Value(ctx => Math.sin(d.evaluateWith(ctx)))
   override def cos(d: Evaluation[Double]): Evaluation[Double] =

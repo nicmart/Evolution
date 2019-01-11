@@ -54,7 +54,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       R.known(AnnotatedValue(doubleConstant, d.toString))
     override def point(x: R[Double], y: R[Double]): R[Point] =
       R.known(AnnotatedValue(pointConstant, s"point(${x.infer(doubleConstant)}, ${y.infer(doubleConstant)})"))
-    override def add[T: VectorSpace](a: R[T], b: R[T]): R[T] = R { requiredType =>
+    override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = R { requiredType =>
       val annotatedA @ AnnotatedValue(aType, aValue) = a.infer(requiredType)
       val annotatedB @ AnnotatedValue(bType, bValue) = b.infer(requiredType)
       val unifiedType = requiredType.unify(aType).unify(bType)

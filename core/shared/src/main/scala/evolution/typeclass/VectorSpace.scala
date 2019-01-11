@@ -22,4 +22,6 @@ object VectorSpace {
     override def monoid: Monoid[Int] = Monoid[Int]
     override def mult(k: Double, t: Int): Int = (k * t).toInt
   }
+
+  implicit def monoidInstance[T](implicit vs: VectorSpace[T]): Monoid[T] = vs.monoid
 }

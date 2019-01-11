@@ -12,7 +12,7 @@ object ConstantsSerializer extends Constants[CtxString] {
     _ => d.toString
   override def point(x: CtxString[Double], y: CtxString[Double]): CtxString[Point] =
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
-  override def add[T: VectorSpace](a: CtxString[T], b: CtxString[T]): CtxString[T] =
+  override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] =
     ctx => s"add(${a(ctx)}, ${b(ctx)})"
   override def sin(d: CtxString[Double]): CtxString[Double] =
     ctx => s"sin(${d(ctx)})"

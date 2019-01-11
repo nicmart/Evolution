@@ -5,6 +5,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.{ Evolution, EvolutionSyntax, parser }
 import evolution.typeclass.VectorSpace
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
+import evolution.typeclass.VectorSpace._
 import evolution.primitive.algebra.evolution
 import fastparse.noApi.Parser
 import cats.instances.int._

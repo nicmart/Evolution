@@ -1,5 +1,5 @@
 package evolution.data
-import cats.kernel.Eq
+import cats.kernel.{ Eq, Semigroup }
 import evolution.data.MaterializationModuleImpl.E.{ Finite, Full }
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
@@ -27,8 +27,8 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   final case class Dbl(d: Double) extends R[Double]
   final case class Integer(n: Int) extends R[Int]
   final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
-  final case class Add[T: VectorSpace](a: R[T], b: R[T]) extends R[T] {
-    val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
+  final case class Add[T: Semigroup](a: R[T], b: R[T]) extends R[T] {
+    val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
     def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
   }
   final case class Multiply[T: VectorSpace](k: R[Double], t: R[T]) extends R[T] {
@@ -68,7 +68,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       override def int(n: Int): R[Int] = Integer(n)
       override def double(d: Double): R[Double] = Dbl(d)
       override def point(x: R[Double], y: R[Double]): R[Point] = Pnt(x, y)
-      override def add[T: VectorSpace](a: R[T], b: R[T]): R[T] = Add(a, b)
+      override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = Add(a, b)
       override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = Multiply(k, t)
       override def sin(d: R[Double]): R[Double] = Sin(d)
       override def cos(d: R[Double]): R[Double] = Cos(d)
@@ -146,7 +146,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
     case Evo(evo)              => evo
     case Dbl(d)                => d
     case Pnt(x, y)             => Point(eval(ctx, x), eval(ctx, y))
-    case add @ Add(a, b)       => add.vectorSpace.add(eval(ctx, a), eval(ctx, b))
+    case add @ Add(a, b)       => add.semigroup.combine(eval(ctx, a), eval(ctx, b))
     case mult @ Multiply(k, t) => mult.vectorSpace.mult(eval(ctx, k), eval(ctx, t))
     case Sin(d)                => Math.sin(eval(ctx, d))
     case Cos(d)                => Math.cos(eval(ctx, d))
