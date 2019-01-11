@@ -1,4 +1,5 @@
 package evolution.data
+import cats.Group
 import cats.kernel.{ Eq, Semigroup }
 import evolution.data.MaterializationModuleImpl.E.{ Finite, Full }
 import evolution.geometry.Point
@@ -30,6 +31,9 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   final case class Add[T: Semigroup](a: R[T], b: R[T]) extends R[T] {
     val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
     def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
+  }
+  final case class Inverse[T: Group](t: R[T]) extends R[T] {
+    val group: Group[T] = implicitly[Group[T]]
   }
   final case class Multiply[T: VectorSpace](k: R[Double], t: R[T]) extends R[T] {
     val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
@@ -69,6 +73,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       override def double(d: Double): R[Double] = Dbl(d)
       override def point(x: R[Double], y: R[Double]): R[Point] = Pnt(x, y)
       override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = Add(a, b)
+      override def inverse[T: Group](a: R[T]): R[T] = Inverse(a)
       override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = Multiply(k, t)
       override def sin(d: R[Double]): R[Double] = Sin(d)
       override def cos(d: R[Double]): R[Double] = Cos(d)

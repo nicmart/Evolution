@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.constants.interpreter
-import cats.Applicative
+import cats.{ Applicative, Group }
 import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.Composed
@@ -15,6 +15,8 @@ class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extend
     Applicative[R2].map2(x, y)(alg.point)
   override def add[T: Semigroup](a: R2[R1[T]], b: R2[R1[T]]): R2[R1[T]] =
     Applicative[R2].map2(a, b)(alg.add[T])
+  override def inverse[T: Group](a: Composed[R2, R1, T]): Composed[R2, R1, T] =
+    Applicative[R2].map(a)(alg.inverse[T])
   override def multiply[T: VectorSpace](k: Composed[R2, R1, Double], t: Composed[R2, R1, T]): Composed[R2, R1, T] =
     Applicative[R2].map2(k, t)(alg.multiply[T])
   override def sin(d: R2[R1[Double]]): R2[R1[Double]] =

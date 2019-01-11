@@ -1,4 +1,5 @@
 package evolution.primitive.algebra.constants.interpreter
+import cats.Group
 import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.CtxString
@@ -14,6 +15,8 @@ object ConstantsSerializer extends Constants[CtxString] {
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
   override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] =
     ctx => s"add(${a(ctx)}, ${b(ctx)})"
+  override def inverse[T: Group](a: CtxString[T]): CtxString[T] =
+    ctx => s"inverse(${a(ctx)})"
   override def sin(d: CtxString[Double]): CtxString[Double] =
     ctx => s"sin(${d(ctx)})"
   override def cos(d: CtxString[Double]): CtxString[Double] =

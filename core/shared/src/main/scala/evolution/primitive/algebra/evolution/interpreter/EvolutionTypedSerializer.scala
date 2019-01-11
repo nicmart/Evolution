@@ -1,5 +1,6 @@
 package evolution.primitive.algebra.evolution.interpreter
 import Types.{ HigherKindedTypeInfo, doubleConstant, intConstant, _ }
+import cats.Group
 import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
@@ -60,6 +61,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val unifiedType = requiredType.unify(aType).unify(bType)
       AnnotatedValue(unifiedType, s"add($annotatedA, $annotatedB)")
     }
+    override def inverse[T: Group](a: R[T]): R[T] = ???
     override def sin(d: R[Double]): R[Double] = R { requiredType =>
       val annotatedD = d.infer(requiredType)
       AnnotatedValue(requiredType, s"sin($annotatedD)")

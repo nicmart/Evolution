@@ -1,4 +1,5 @@
 package evolution.primitive.algebra.constants.interpreter
+import cats.Group
 import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.Constants
@@ -31,6 +32,13 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R]): R[T] =
         alg.constants.add(a.run(alg), b.run(alg))
     }
+
+  override def inverse[T: Group](a: Expr[F, T]): Expr[F, T] =
+    new Expr[F, T] {
+      override def run[R[_]](alg: Evolution[F, R]): R[T] =
+        alg.constants.inverse(a.run(alg))
+    }
+
   override def sin(d: Expr[F, Double]): Expr[F, Double] =
     new Expr[F, Double] {
       override def run[R[_]](alg: Evolution[F, R]): R[Double] =

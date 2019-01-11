@@ -1,5 +1,6 @@
 package evolution.primitive.algebra.constants.interpreter
 
+import cats.Group
 import cats.kernel.{ Eq, Semigroup }
 import evolution.algebra.representation.RNGRepr
 import evolution.data.Annotation
@@ -23,6 +24,9 @@ object ConstantsAnnotator extends Constants[Annotation] {
 
   override def add[T: Semigroup](a: Annotation[T], b: Annotation[T]): Annotation[T] =
     Annotation(a.vars ++ b.vars, Unknown(builder.constants.add(a.expr, b.expr)))
+
+  override def inverse[T: Group](a: Annotation[T]): Annotation[T] =
+    Annotation(a.vars, Unknown(builder.constants.inverse(a.expr)))
 
   override def sin(d: Annotation[Double]): Annotation[Double] =
     Annotation(d.vars, Unknown(builder.constants.sin(d.expr)))
