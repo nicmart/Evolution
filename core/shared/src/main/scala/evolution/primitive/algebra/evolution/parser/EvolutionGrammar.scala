@@ -85,7 +85,7 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     )
 
   private def genericVectorConstant[T: VectorSpace](t: R[T]): R[T] =
-    or(constants.add(t, t), constants.multiply(self.doubleConstant, t), genericExpr(t))
+    or(constants.add(t, t), constants.inverse(t), constants.multiply(self.doubleConstant, t), genericExpr(t))
 
   private def genericEvolution[T: VectorSpace](t: R[T], ft: R[F[T]]): R[F[T]] =
     or(
