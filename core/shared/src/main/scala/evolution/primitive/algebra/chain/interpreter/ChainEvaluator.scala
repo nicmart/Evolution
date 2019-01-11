@@ -18,8 +18,8 @@ object ChainEvaluator extends Chain[RNGRepr, Evaluation] {
     Value(
       ctx => {
         val head = evalHead.evaluateWith(ctx)
-        val tail = evalTail.evaluateWith(ctx)
         RNGRepr { rng =>
+          val tail = evalTail.evaluateWith(ctx)
           debug(s"running cons($evalHead, $evalTail)", (rng, Some((head, tail))))
         }
       },

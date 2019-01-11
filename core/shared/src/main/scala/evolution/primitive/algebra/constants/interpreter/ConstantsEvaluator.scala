@@ -1,5 +1,6 @@
 package evolution.primitive.algebra.constants.interpreter
 
+import cats.kernel.Eq
 import evolution.geometry.Point
 import evolution.data.Evaluation
 import evolution.data.Evaluation._
@@ -26,4 +27,6 @@ object ConstantsEvaluator extends Constants[Evaluation] {
     Value(ctx => Math.cos(d.evaluateWith(ctx)))
   override def multiply[T: VectorSpace](k: Evaluation[Double], t: Evaluation[T]): Evaluation[T] =
     Value(ctx => VectorSpace[T].mult(k.evaluateWith(ctx), t.evaluateWith(ctx)))
+  override def eq[T: Eq](a: Evaluation[T], b: Evaluation[T]): Evaluation[Boolean] =
+    Value(ctx => Eq[T].eqv(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"eq($a, $b)")
 }

@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.constants
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import cats.~>
 import cats.instances.function._
 import evolution.geometry.Point
@@ -13,6 +13,7 @@ trait Constants[R[_]] {
   def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T]
   def sin(d: R[Double]): R[Double]
   def cos(d: R[Double]): R[Double]
+  def eq[T: Eq](a: R[T], b: R[T]): R[Boolean]
 }
 
 trait ConstantsSyntax[R[_]] extends Constants[R] {
@@ -35,4 +36,6 @@ class MappedConstants[R1[_], R2[_]](alg: Constants[R1], to: R1 ~> R2, from: R2 ~
     to(alg.cos(from(d)))
   override def multiply[T: VectorSpace](k: R2[Double], t: R2[T]): R2[T] =
     to(alg.multiply(from(k), from(t)))
+  override def eq[T: Eq](a: R2[T], b: R2[T]): R2[Boolean] =
+    to(alg.eq(from(a), from(b)))
 }

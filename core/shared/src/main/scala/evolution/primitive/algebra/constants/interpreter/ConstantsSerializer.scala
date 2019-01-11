@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.constants.interpreter
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.constants.Constants
@@ -20,4 +20,6 @@ object ConstantsSerializer extends Constants[CtxString] {
     ctx => s"cos(${d(ctx)})"
   override def multiply[T: VectorSpace](k: CtxString[Double], t: CtxString[T]): CtxString[T] =
     ctx => s"multiply(${k(ctx)}, ${t(ctx)})"
+  override def eq[T: Eq](a: CtxString[T], b: CtxString[T]): CtxString[Boolean] =
+    ctx => s"eq(${a(ctx)}, ${b(ctx)})"
 }

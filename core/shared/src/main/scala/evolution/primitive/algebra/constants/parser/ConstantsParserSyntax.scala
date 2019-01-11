@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.constants.parser
 
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.{ Constants, ConstantsSyntax }
 import evolution.primitive.algebra.parser.{ ByVarParser, ByVarParsers, ParserConfig, PrimitiveParsers }
@@ -30,4 +30,6 @@ class ConstantsParserSyntax[S[_]](alg: Constants[S]) extends ConstantsSyntax[ByV
     kParser: ByVarParserK[S, Double],
     tParser: ByVarParserK[S, T]): ByVarParserK[S, T] =
     function2("multiply", kParser, tParser).map { case (k, t) => alg.multiply(k, t) }
+  override def eq[T: Eq](aParser: ByVarParserK[S, T], bParser: ByVarParserK[S, T]): ByVarParserK[S, Boolean] =
+    function2("eq", aParser, bParser).map { case (a, b) => alg.eq(a, b) }
 }

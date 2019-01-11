@@ -76,14 +76,11 @@ object Evaluation {
 
   case class Fix[A](expr: Evaluation[A => A]) extends Evaluation[A] {
     override def eval(ctx: Ctx): A = expr match {
-      case Lam(varName, term) => fixLambda(varName, term, ctx)
-      case _                  => app(expr, fix(expr)).evaluateWith(ctx) // This should never happen
-    }
-
-    private def fixLambda(varName: String, expressionOfLambda: Evaluation[A], ctx: Ctx): A = {
-      lazy val a: A =
-        expressionOfLambda.evaluateWith(ctx.pushLazy(() => a, s"(r) $expressionOfLambda"))
-      debug("evaluating lambda of fix", a)
+      case Lam(varName, term) => {
+        lazy val a: A = term.evaluateWith(ctx.pushLazy(() => a, s"(r) $term"))
+        debug("evaluating lambda of fix", a)
+      }
+      case _ => ??? //app(expr, fix(expr)).evaluateWith(ctx) // This should never happen
     }
   }
 
@@ -111,7 +108,7 @@ object Evaluation {
 
   var level = -1
   var total = 0
-  @inline def xdebug[T](message: => String, t: => T): T = {
+  @inline def debug[T](message: => String, t: => T): T = {
     total += 1
     level += 1
     val indent = " " * (level * 4)
@@ -129,5 +126,5 @@ object Evaluation {
     t
   }
 
-  @inline def debug[T](message: => String, t: => T): T = t
+  @inline def xdebug[T](message: => String, t: => T): T = t
 }

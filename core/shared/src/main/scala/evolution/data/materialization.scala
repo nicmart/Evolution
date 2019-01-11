@@ -1,4 +1,5 @@
 package evolution.data
+import cats.kernel.Eq
 import evolution.data.MaterializationModuleImpl.E.{ Finite, Full }
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
@@ -36,6 +37,10 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
   }
   final case class Sin(d: R[Double]) extends R[Double]
   final case class Cos(d: R[Double]) extends R[Double]
+  final case class Equals[T: Eq](a: R[T], b: R[T]) extends R[Boolean] {
+    val eq: Eq[T] = implicitly[Eq[T]]
+  }
+
   final case class Var0[A](name: String) extends R[A]
   final case class Shift[A](expr: R[A]) extends R[A]
   final case class Let[A, B](variable: String, value: R[A], expr: R[B]) extends R[B]
@@ -66,6 +71,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = Multiply(k, t)
       override def sin(d: R[Double]): R[Double] = Sin(d)
       override def cos(d: R[Double]): R[Double] = Cos(d)
+      override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = Equals(a, b)
     }
 
     override val bind: Binding[R, String] = new Binding[R, String] {

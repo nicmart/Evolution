@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.constants.interpreter
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.evolution.Evolution
@@ -42,9 +42,16 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R]): R[Double] =
         alg.constants.cos(d.run(alg))
     }
+
   override def multiply[T: VectorSpace](k: Expr[F, Double], t: Expr[F, T]): Expr[F, T] =
     new Expr[F, T] {
       override def run[R[_]](alg: Evolution[F, R]): R[T] =
         alg.constants.multiply(k.run(alg), t.run(alg))
+    }
+
+  override def eq[T: Eq](a: Expr[F, T], b: Expr[F, T]): Expr[F, Boolean] =
+    new Expr[F, Boolean] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Boolean] =
+        alg.constants.eq(a.run(alg), b.run(alg))
     }
 }

@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.evolution.interpreter
 import Types.{ HigherKindedTypeInfo, doubleConstant, intConstant, _ }
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.chain.Chain
@@ -74,6 +74,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val annotatedT = t.infer(requiredType)
       AnnotatedValue(requiredType, s"multiply($annotatedK, $annotatedT)")
     }
+    override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = ???
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {

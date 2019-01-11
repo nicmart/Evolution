@@ -1,6 +1,6 @@
 package evolution.primitive.algebra.constants.interpreter
 import cats.Applicative
-import cats.kernel.Semigroup
+import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.primitive.algebra.Composed
 import evolution.primitive.algebra.constants.Constants
@@ -21,4 +21,6 @@ class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extend
     Applicative[R2].map(d)(alg.sin)
   override def cos(d: R2[R1[Double]]): R2[R1[Double]] =
     Applicative[R2].map(d)(alg.cos)
+  override def eq[T: Eq](a: R2[R1[T]], b: R2[R1[T]]): R2[R1[Boolean]] =
+    Applicative[R2].map2(a, b)(alg.eq[T])
 }

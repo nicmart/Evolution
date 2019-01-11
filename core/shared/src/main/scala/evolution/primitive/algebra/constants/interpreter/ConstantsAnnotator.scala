@@ -1,5 +1,6 @@
 package evolution.primitive.algebra.constants.interpreter
 
+import cats.kernel.Eq
 import evolution.algebra.representation.RNGRepr
 import evolution.data.Annotation
 import evolution.data.Annotation.Info.Unknown
@@ -32,4 +33,6 @@ object ConstantsAnnotator extends Constants[Annotation] {
   override def multiply[T: VectorSpace](k: Annotation[Double], t: Annotation[T]): Annotation[T] =
     Annotation(k.vars ++ t.vars, Unknown(builder.constants.multiply(k.expr, t.expr)))
 
+  override def eq[T: Eq](a: Annotation[T], b: Annotation[T]): Annotation[Boolean] =
+    Annotation(a.vars ++ b.vars, Unknown(builder.constants.eq(a.expr, b.expr)))
 }
