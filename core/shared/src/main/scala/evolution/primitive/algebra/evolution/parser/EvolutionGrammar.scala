@@ -7,11 +7,14 @@ import evolution.typeclass.VectorSpace
 import evolution.primitive.algebra.parser.ByVarParser.ByVarParserK
 import evolution.primitive.algebra.evolution
 import fastparse.noApi.Parser
+import cats.instances.int._
+import cats.instances.double._
 
 trait Expressions[F[_], R[_]] {
   def doubleConstant: R[Double]
   def pointConstant: R[Point]
   def intConstant: R[Int]
+  def boolConstant: R[Boolean]
   def evolutionOfDoubles: R[F[Double]]
   def evolutionOfPoints: R[F[Point]]
   def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2]
@@ -23,6 +26,7 @@ object Expressions {
     def doubleConstant: R[Double] = defer.defer(inner.doubleConstant)
     def pointConstant: R[Point] = defer.defer(inner.pointConstant)
     def intConstant: R[Int] = defer.defer(inner.intConstant)
+    def boolConstant: R[Boolean] = defer.defer(inner.boolConstant)
     def evolutionOfDoubles: R[F[Double]] = defer.defer(inner.evolutionOfDoubles)
     def evolutionOfPoints: R[F[Point]] = defer.defer(inner.evolutionOfPoints)
     def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = defer.defer(inner.function(t1, t2))
@@ -51,6 +55,14 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
 
   override def intConstant: R[Int] =
     or(constants.allIntegers, genericConstant(self.intConstant))
+
+  override def boolConstant: R[Boolean] =
+    or(
+      constants.eq(self.intConstant, self.intConstant),
+      constants.eq(self.doubleConstant, self.doubleConstant),
+      constants.eq(self.pointConstant, self.pointConstant),
+      genericBinding(self.boolConstant)
+    )
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(

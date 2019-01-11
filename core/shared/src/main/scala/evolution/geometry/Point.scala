@@ -1,5 +1,6 @@
 package evolution.geometry
 
+import cats.Eq
 import cats.kernel.{ Group, Monoid }
 import evolution.typeclass.VectorSpace
 
@@ -69,4 +70,6 @@ object Point {
     override def monoid: Monoid[Point] = pointGroup
     override def mult(k: Double, t: Point): Point = t * k
   }
+
+  implicit val pointEq: Eq[Point] = Eq.instance((p1, p2) => p1 == p2)
 }
