@@ -25,4 +25,7 @@ class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
 
   override def flatMap[A, B](fa: CtxString[F[A]], f: CtxString[A => F[B]]): CtxString[F[B]] =
     ctx => s"flatMap(${fa(ctx)}, ${f(ctx)})"
+
+  override def take[T](n: CtxString[Int], ft: CtxString[F[T]]): CtxString[F[T]] =
+    ctx => s"take(${n(ctx)}, ${ft(ctx)})"
 }

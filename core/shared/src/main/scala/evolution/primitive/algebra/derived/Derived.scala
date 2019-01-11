@@ -3,6 +3,7 @@ import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
 import evolution.typeclass.VectorSpace._
+import cats.implicits._
 
 trait Derived[F[_], R[_]] {
   def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]]
@@ -12,6 +13,7 @@ trait Derived[F[_], R[_]] {
   def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]]
   def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
   def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]]
+  def take[T](n: R[Int], ft: R[F[T]]): R[F[T]]
 }
 
 class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
@@ -132,8 +134,41 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
         )
       ))
 
-  def flatMap[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
-    ???
+  override def take[T](n: R[Int], ft: R[F[T]]): R[F[T]] =
+    app2(takeLambda, n, ft)
+
+  private def takeLambda[T]: R[Int => F[T] => F[T]] =
+    fix[Int => F[T] => F[T]](
+      lambda(
+        "self",
+        lambda(
+          "n",
+          lambda(
+            "ft",
+            ifThen(
+              alg.constants.eq(int(0), varN[Int]("n", 1)),
+              empty[T],
+              mapCons(varN[F[T]]("ft", 0))(
+                lambda(
+                  "head",
+                  lambda(
+                    "tail",
+                    cons(
+                      varN[T]("head", 1),
+                      app2(
+                        varN[Int => F[T] => F[T]]("self", 4),
+                        add(varN[Int]("n", 3), inverse(int(1))),
+                        varN[F[T]]("ft", 0)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
 
   private def lambda2[A, B, C](var1: String, var2: String, expr: R[C]): R[A => B => C] =
     lambda[A, B => C](var1, lambda[B, C](var2, expr))

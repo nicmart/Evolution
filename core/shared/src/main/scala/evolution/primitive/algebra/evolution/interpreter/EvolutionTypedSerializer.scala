@@ -159,6 +159,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val annotatedF = f.infer(FunctionTypeInfo(annotatedFa.typeInfo, expectedHKType))
       AnnotatedValue(required, s"flatMap($annotatedFa, $annotatedF)")
     }
+
+    override def take[T](n: R[Int], ft: R[F[T]]): R[F[T]] = ???
   }
 }
 

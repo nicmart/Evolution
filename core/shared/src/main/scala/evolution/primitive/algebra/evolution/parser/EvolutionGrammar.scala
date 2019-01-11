@@ -104,6 +104,7 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       chain.mapEmpty(ft, ft),
       derived.constant(t),
       derived.concat(ft, ft),
+      derived.take(self.intConstant, ft),
       allMappedEvolutions(t),
       allFlatMappedEvolutions(ft),
       genericExpr(ft)

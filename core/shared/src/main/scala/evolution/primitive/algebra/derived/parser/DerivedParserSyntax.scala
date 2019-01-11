@@ -37,4 +37,7 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     faParser: ByVarParserK[R, F[A]],
     fParser: ByVarParserK[R, A => F[B]]): ByVarParserK[R, F[B]] =
     function2("flatMap", faParser, fParser).map { case (fa, f) => alg.flatMap(fa, f) }
+
+  override def take[T](nParser: ByVarParserK[R, Int], ftParser: ByVarParserK[R, F[T]]): ByVarParserK[R, F[T]] =
+    function2("take", nParser, ftParser).map { case (n, ft) => alg.take(n, ft) }
 }
