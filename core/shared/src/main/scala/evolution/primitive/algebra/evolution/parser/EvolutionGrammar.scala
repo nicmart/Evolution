@@ -45,29 +45,29 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       constants.allDoubles,
       constants.sin(self.doubleConstant),
       constants.cos(self.doubleConstant),
-      genericConstant(self.doubleConstant))
+      genericVectorConstant(self.doubleConstant))
 
   override def pointConstant: R[Point] =
     or(
       constants.point(doubleConstant, doubleConstant),
-      genericConstant(self.pointConstant)
+      genericVectorConstant(self.pointConstant)
     )
 
   override def intConstant: R[Int] =
-    or(constants.allIntegers, genericConstant(self.intConstant))
+    or(constants.allIntegers, genericVectorConstant(self.intConstant))
 
   override def boolConstant: R[Boolean] =
     or(
       constants.eq(self.intConstant, self.intConstant),
       constants.eq(self.doubleConstant, self.doubleConstant),
       constants.eq(self.pointConstant, self.pointConstant),
-      genericBinding(self.boolConstant)
+      genericExpr(self.boolConstant)
     )
 
   override def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] =
     or(
       bind.lambda(bind.allVars, t2),
-      genericBinding(self.function(t1, t2))
+      genericExpr(self.function(t1, t2))
     )
 
   override def evolutionOfDoubles: R[F[Double]] =
@@ -83,8 +83,8 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       genericEvolution(self.pointConstant, self.evolutionOfPoints)
     )
 
-  private def genericConstant[T: VectorSpace](t: R[T]): R[T] =
-    or(constants.add(t, t), constants.multiply(self.doubleConstant, t), genericBinding(t))
+  private def genericVectorConstant[T: VectorSpace](t: R[T]): R[T] =
+    or(constants.add(t, t), constants.multiply(self.doubleConstant, t), genericExpr(t))
 
   private def genericEvolution[T: VectorSpace](t: R[T], ft: R[F[T]]): R[F[T]] =
     or(
@@ -97,11 +97,16 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       derived.concat(ft, ft),
       allMappedEvolutions(t),
       allFlatMappedEvolutions(ft),
-      genericBinding(ft)
+      genericExpr(ft)
     )
 
-  private def genericBinding[T](t: R[T]): R[T] =
-    or(bind.allVarsExpressions, bind.fix(self.function(t, t)), allLetExpressions(t), allAppExpressions(t))
+  private def genericExpr[T](t: R[T]): R[T] =
+    or(
+      constants.ifThen(self.boolConstant, t, t),
+      bind.allVarsExpressions,
+      bind.fix(self.function(t, t)),
+      allLetExpressions(t),
+      allAppExpressions(t))
 
   private def allMapConsedEvolutions[T](ft: R[F[T]]): R[F[T]] =
     or(

@@ -108,7 +108,7 @@ object Evaluation {
 
   var level = -1
   var total = 0
-  @inline def debug[T](message: => String, t: => T): T = {
+  @inline def xdebug[T](message: => String, t: => T): T = {
     total += 1
     level += 1
     val indent = " " * (level * 4)
@@ -126,5 +126,5 @@ object Evaluation {
     t
   }
 
-  @inline def xdebug[T](message: => String, t: => T): T = t
+  @inline def debug[T](message: => String, t: => T): T = t
 }
