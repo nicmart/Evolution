@@ -20,6 +20,7 @@ trait Expressions[F[_], R[_]] {
   def evolutionOfDoubles: R[F[Double]]
   def evolutionOfPoints: R[F[Point]]
   def evolutionOfBools: R[F[Boolean]]
+  def evolutionOf[T](rt: R[T]): R[F[T]]
   def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2]
 }
 
@@ -34,6 +35,8 @@ object Expressions {
     def evolutionOfDoubles: R[F[Double]] = defer.defer(inner.evolutionOfDoubles)
     def evolutionOfPoints: R[F[Point]] = defer.defer(inner.evolutionOfPoints)
     def evolutionOfBools: R[F[Boolean]] = defer.defer(inner.evolutionOfBools)
+    def evolutionOf[T](rt: R[T]): R[F[T]] = defer.defer(inner.evolutionOf(rt))
+
     def function[T1, T2](t1: R[T1], t2: R[T2]): R[T1 => T2] = defer.defer(inner.function(t1, t2))
   }
 }
@@ -93,6 +96,9 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       genericEvolution(self.boolConstant, self.evolutionOfBools)
     )
 
+  override def evolutionOf[T](rt: R[T]): R[F[T]] =
+    genericEvolution(rt, self.evolutionOf(rt))
+
   private def genericVectorConstant[T: VectorSpace](t: R[T]): R[T] =
     or(constants.add(t, t), constants.inverse(t), constants.multiply(self.doubleConstant, t), genericExpr(t))
 
@@ -142,7 +148,10 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     or(
       derived.flatMap(self.evolutionOfDoubles, function(self.doubleConstant, ft)),
       derived.flatMap(self.evolutionOfPoints, function(self.pointConstant, ft)),
-      derived.flatMap(self.evolutionOfBools, function(self.boolConstant, ft))
+      derived.flatMap(self.evolutionOfBools, function(self.boolConstant, ft)),
+      derived.flatMap(self.evolutionOf(self.evolutionOfDoubles), function(self.evolutionOfDoubles, ft)),
+      derived.flatMap(self.evolutionOf(self.evolutionOfPoints), function(self.evolutionOfPoints, ft)),
+      derived.flatMap(self.evolutionOf(self.evolutionOfBools), function(self.evolutionOfBools, ft))
     )
 
   private def allLetExpressions[T](t: R[T]): R[T] =
