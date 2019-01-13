@@ -20,7 +20,7 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   import alg.bind._, alg.chain._, alg.constants._, alg.distribution._
 
   override def constant[A](a: R[A]): R[F[A]] =
-    fix[F[A]](lambda("self", cons(a, varN("self", 0))))
+    fix[F[A]](lambda("self", cons(shift(a), varN("self", 0))))
 
   override def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
     app2(zipWith(lambda2[Double, Double, Point]("fx", "fy", point(varN("fx", 1), varN("fy", 0)))), x, y)

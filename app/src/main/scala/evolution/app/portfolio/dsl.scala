@@ -12,7 +12,11 @@ import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.geometry.Point
 import evolution.primitive.algebra.evolution.Evolution
-import evolution.primitive.algebra.evolution.interpreter.{ EvolutionExpr, EvolutionSerializer }
+import evolution.primitive.algebra.evolution.interpreter.{
+  DesugarEvolutionSerializer,
+  EvolutionExpr,
+  EvolutionSerializer
+}
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import japgolly.scalajs.react.vdom.html_<^._
 
@@ -23,6 +27,7 @@ object dsl extends DrawingDefinition[Point] {
   type Expr[T] = Evolution.Expr[F, F[T]]
 
   private val serializer = new EvolutionSerializer[F]
+  private val desugaringSerializer = new DesugarEvolutionSerializer[F]
   private val evolutionExpr = new EvolutionExpr[F]
   private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
   private val algebraParser = grammar.evolutionOfPoints
@@ -39,7 +44,14 @@ object dsl extends DrawingDefinition[Point] {
               println("parsing inside configComponent")
               stringParser
                 .parse(serialized)
-                .fold((_, _, failure) => { println(failure); previousConfig }, (drawing, _) => Config(drawing))
+                .fold(
+                  (_, _, failure) => { println(failure); previousConfig },
+                  (drawing, _) => {
+                    println(s"Parsed expression: ${drawing.run(serializer)(Nil)}")
+                    println(s"Desugared expression: ${drawing.run(desugaringSerializer)(Nil)}")
+                    Config(drawing)
+                  }
+                )
             }
         }
       val component: ConfigComponent[String] = instances.textConfig
