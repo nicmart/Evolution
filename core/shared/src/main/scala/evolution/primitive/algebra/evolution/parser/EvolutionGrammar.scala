@@ -119,6 +119,7 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
   private def genericVectorEvolution[T: VectorSpace](t: R[T], ft: R[F[T]]): R[F[T]] =
     or(
       derived.integrate(t, ft),
+      derived.solve1(self.evolutionOf(function(t, t)), t),
       genericEvolution(t, ft)
     )
 

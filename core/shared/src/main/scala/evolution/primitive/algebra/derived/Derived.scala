@@ -10,8 +10,8 @@ trait Derived[F[_], R[_]] {
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
-  def solve1[X: VectorSpace](eq: R[F[X] => F[X]], x0: R[F[X]]): R[F[X]]
-  def solve2[X: VectorSpace](eq: R[F[X] => F[X] => F[X]], x0: R[F[X]], v0: R[F[X]]): R[F[X]] = ???
+  def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]]
+  def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]] = ???
   def concat[X](fa1: R[F[X]], fa2: R[F[X]]): R[F[X]]
   def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
   def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]]
@@ -42,6 +42,9 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
 
   override def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] =
     app2(integrateLambda[A], start, speed)
+
+  override def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]] =
+    app2(solve1Lambda[X], eq, x0)
 
   override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
     app(mapLambda(f), fa)
@@ -136,16 +139,26 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
         )
       ))
 
-  private def solve1Lambda[X: VectorSpace[X]]: R[(F[X] => F[X]) => F[X] => F[X]] =
-    fix[(F[X] => F[X]) => F[X] => F[X]](
+  private def solve1Lambda[X: VectorSpace]: R[F[X => X] => X => F[X]] =
+    fix[F[X => X] => X => F[X]](
       lambda(
         "self",
-        lambda2[F[X] => F[X], F[X], F[X]](
+        lambda2[F[X => X], X, F[X]](
           "v",
           "x0",
           cons(
             varN("x0", 0),
-            ???
+            mapCons(varN[F[X => X]]("v", 1))(
+              lambda2[X => X, F[X => X], F[X]](
+                "vHead",
+                "vTail",
+                app2[F[X => X], X, F[X]](
+                  varN("self", 4),
+                  varN("vTail", 0),
+                  add(varN("x0", 2), app[X, X](varN("vHead", 1), varN("x0", 2)))
+                )
+              )
+            )
           )
         )
       )

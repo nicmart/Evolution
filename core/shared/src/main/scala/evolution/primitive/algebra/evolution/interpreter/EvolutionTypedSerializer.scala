@@ -144,7 +144,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       AnnotatedValue(required, s"integrate($annotatedStart, $annotatedSpeed)")
     }
 
-    override def solve1[X: VectorSpace](eq: R[F[X] => F[X]], x0: R[F[X]]): R[F[X]] = ???
+    override def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]] = ???
+
     override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] = R { required =>
       val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
       val annotatedFa = fa.infer(Unknown())

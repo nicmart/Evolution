@@ -17,7 +17,7 @@ class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
   override def integrate[A: VectorSpace](start: CtxString[A], speed: CtxString[F[A]]): CtxString[F[A]] =
     ctx => s"integrate(${start(ctx)}, ${speed(ctx)})"
 
-  override def solve1[X: VectorSpace](eq: CtxString[F[X] => F[X]], x0: CtxString[F[X]]): CtxString[F[X]] =
+  override def solve1[X: VectorSpace](eq: CtxString[F[X => X]], x0: CtxString[X]): CtxString[F[X]] =
     ctx => s"solve1(${eq(ctx)}, ${x0(ctx)})"
 
   override def map[A, B](fa: CtxString[F[A]], f: CtxString[A => B]): CtxString[F[B]] =
