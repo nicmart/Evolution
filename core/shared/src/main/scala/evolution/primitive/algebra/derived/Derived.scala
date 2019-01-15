@@ -10,7 +10,9 @@ trait Derived[F[_], R[_]] {
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
-  def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]]
+  def solve1[X: VectorSpace](eq: R[F[X] => F[X]], x0: R[F[X]]): R[F[X]]
+  def solve2[X: VectorSpace](eq: R[F[X] => F[X] => F[X]], x0: R[F[X]], v0: R[F[X]]): R[F[X]] = ???
+  def concat[X](fa1: R[F[X]], fa2: R[F[X]]): R[F[X]]
   def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
   def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]]
   def take[T](n: R[Int], ft: R[F[T]]): R[F[T]]
@@ -133,6 +135,21 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
           )
         )
       ))
+
+  private def solve1Lambda[X: VectorSpace[X]]: R[(F[X] => F[X]) => F[X] => F[X]] =
+    fix[(F[X] => F[X]) => F[X] => F[X]](
+      lambda(
+        "self",
+        lambda2[F[X] => F[X], F[X], F[X]](
+          "v",
+          "x0",
+          cons(
+            varN("x0", 0),
+            ???
+          )
+        )
+      )
+    )
 
   override def take[T](n: R[Int], ft: R[F[T]]): R[F[T]] =
     app2(takeLambda, n, ft)

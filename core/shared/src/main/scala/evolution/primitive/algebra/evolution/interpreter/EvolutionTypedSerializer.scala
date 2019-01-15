@@ -61,7 +61,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val unifiedType = requiredType.unify(aType).unify(bType)
       AnnotatedValue(unifiedType, s"add($annotatedA, $annotatedB)")
     }
-    override def inverse[T: Group](a: R[T]): R[T] = ???
+
     override def sin(d: R[Double]): R[Double] = R { requiredType =>
       val annotatedD = d.infer(requiredType)
       AnnotatedValue(requiredType, s"sin($annotatedD)")
@@ -76,8 +76,10 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val annotatedT = t.infer(requiredType)
       AnnotatedValue(requiredType, s"multiply($annotatedK, $annotatedT)")
     }
+
     override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = ???
     override def ifThen[T](condition: R[Boolean], a: R[T], b: R[T]): R[T] = ???
+    override def inverse[T: Group](a: R[T]): R[T] = ???
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {
@@ -141,6 +143,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val annotatedSpeed = speed.infer(required)
       AnnotatedValue(required, s"integrate($annotatedStart, $annotatedSpeed)")
     }
+
+    override def solve1[X: VectorSpace](eq: R[F[X] => F[X]], x0: R[F[X]]): R[F[X]] = ???
     override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] = R { required =>
       val expectedHKType @ HigherKindedTypeInfo(label, inner) = required
       val annotatedFa = fa.infer(Unknown())

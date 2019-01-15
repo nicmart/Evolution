@@ -27,6 +27,11 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     speedParser: ByVarParserK[R, F[A]]): ByVarParserK[R, F[A]] =
     function2("integrate", startParser, speedParser).map { case (start, speed) => alg.integrate(start, speed) }
 
+  override def solve1[X: VectorSpace](
+    equationParser: ByVarParserK[R, F[X] => F[X]],
+    x0Parser: ByVarParserK[R, F[X]]): ByVarParserK[R, F[X]] =
+    function2("solve1", equationParser, x0Parser).map { case (equation, x0) => alg.solve1(equation, x0) }
+
   override def map[A, B](faParser: ByVarParserK[R, F[A]], fParser: ByVarParserK[R, A => B]): ByVarParserK[R, F[B]] =
     function2("map", faParser, fParser).map { case (fa, f) => alg.map(fa, f) }
 

@@ -42,6 +42,12 @@ class DerivedExpr[F[_]] extends Derived[F, Expr[F, ?]] {
         alg.derived.integrate(start.run(alg), speed.run(alg))
     }
 
+  override def solve1[X: VectorSpace](equation: Expr[F, F[X] => F[X]], x0: Expr[F, F[X]]): Expr[F, F[X]] =
+    new Expr[F, F[X]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[X]] =
+        alg.derived.solve1(equation.run(alg), x0.run(alg))
+    }
+
   override def map[A, B](fa: Expr[F, F[A]], f: Expr[F, A => B]): Expr[F, F[B]] =
     new Expr[F, F[B]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[B]] =
