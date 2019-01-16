@@ -61,8 +61,11 @@ object dsl extends DrawingDefinition[Point] {
     }
   }
 
-  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] =
+  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = {
+    println(s"Full expression: ${bindPredefinedVars(ctx, state.config.expr).run(serializer)(Nil)}")
+    println(s"Full desugared expression: ${bindPredefinedVars(ctx, state.config.expr).run(desugaringSerializer)(Nil)}")
     data.EvaluationModule.materializeExpr[Point](state.seed, bindPredefinedVars(ctx, state.config.expr))
+  }
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[Point]): Expr[Point] =
     new Expr[Point] {

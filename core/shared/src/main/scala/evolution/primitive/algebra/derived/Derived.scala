@@ -52,6 +52,7 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   override def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]] =
     app(flatMapLambda(f), fa)
 
+  // TODO f as parameter of lambda, so we can remove shiftN
   private def mapLambda[A, B](f: R[A => B]): R[F[A] => F[B]] =
     fix[F[A] => F[B]](
       lambda(
@@ -62,13 +63,14 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
             lambda2(
               "head",
               "tail",
-              cons(app(f, varN[A]("head", 1)), app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0)))
+              cons(app(shiftN(f, 4), varN[A]("head", 1)), app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0)))
             )
           )
         )
       )
     )
 
+  // TODO f as parameter of lambda, so we can remove shiftN
   private def flatMapLambda[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
     fix[F[A] => F[B]](
       lambda(
@@ -80,7 +82,7 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
               "head",
               "tail",
               concat(
-                app(f, varN[A]("head", 1)),
+                app(shiftN(f, 4), varN[A]("head", 1)),
                 app(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0))
               )
             )
@@ -209,7 +211,8 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
   private def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
     app(app(f, a), b)
 
-  private def varN[A](name: String, n: Int): R[A] = if (n <= 0) var0(name) else shift(varN(name, n - 1))
+  private def varN[A](name: String, n: Int): R[A] = shiftN(var0(name), n)
+  private def shiftN[A](expr: R[A], n: Int): R[A] = if (n <= 0) expr else shift(shiftN(expr, n - 1))
 
   private def zipWith[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
     fix[F[A] => F[B] => F[C]](
