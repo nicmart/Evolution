@@ -10,14 +10,15 @@ import io.circe.Json
 import evolution.data.EvaluationModule._
 
 object DrawingJsonCodec extends JsonCodec[Config] {
+  private val initialContext = List("left", "bottom", "right", "top")
   private val serializer = new EvolutionSerializer[F]
   private val evolutionExpr = new EvolutionExpr[F]
   private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
   private val algebraParser = grammar.evolutionOfPoints
-  private val stringParser = algebraParser.parser(Nil)
+  private val stringParser = algebraParser.parser(initialContext)
 
   override def encode(t: Config): Json =
-    Json.fromString(t.expr.run(serializer)(Nil))
+    Json.fromString(t.expr.run(serializer)(initialContext))
 
   override def decode(r: Json): Option[Config] =
     for {

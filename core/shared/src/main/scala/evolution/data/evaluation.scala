@@ -19,7 +19,8 @@ trait EvaluationModule {
   // TODO it would be nice to make the seed abstract too
   def newSeed: Long
   val interpreter: Evolution[F, R]
-  def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T]
+  final def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] = materializeWith(seed, fa, emptyCtx)
+  def materializeWith[T](seed: Long, fa: R[F[T]], ctx: Ctx): Iterator[T]
   def materializeConstant[T](t: R[T]): T
   def materializeConstantWith[T](t: R[T], ctx: Ctx): T
 
@@ -33,8 +34,8 @@ private[data] object EvaluationModuleImpl extends EvaluationModule {
   override def newSeed: Long = Random.nextLong()
   override val interpreter: Evolution[F, R] = EvolutionAnnotator
   private val evaluator: Evolution[F, Evaluation] = EvolutionEvaluator
-  override def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] =
-    fa.evaluate(evaluator, emptyCtx).iterator(RNG(seed))
+  override def materializeWith[T](seed: Long, fa: R[F[T]], ctx: Ctx): Iterator[T] =
+    fa.evaluate(evaluator, ctx).iterator(RNG(seed))
   override def materializeConstant[T](t: R[T]): T = materializeConstantWith(t, emptyCtx)
   override def materializeConstantWith[T](t: R[T], ctx: Ctx): T = t.expr.run(EvolutionEvaluator).evaluateWith(ctx)
 }
