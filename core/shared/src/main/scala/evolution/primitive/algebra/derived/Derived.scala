@@ -11,7 +11,7 @@ trait Derived[F[_], R[_]] {
   def constant[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
   def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]]
-  def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]] = ???
+  def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]]
   def concat[X](fa1: R[F[X]], fa2: R[F[X]]): R[F[X]]
   def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]]
   def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]]
@@ -45,6 +45,9 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
 
   override def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]] =
     app2(solve1Lambda[X], eq, x0)
+
+  override def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]] =
+    app3(solve2Lambda[X], eq, x0, v0)
 
   override def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
     app(mapLambda(f), fa)
@@ -166,6 +169,36 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
       )
     )
 
+  private def solve2Lambda[X: VectorSpace]: R[F[X => X => X] => X => X => F[X]] =
+    fix[F[X => X => X] => X => X => F[X]](
+      lambda(
+        "self",
+        lambda3[F[X => X => X], X, X, F[X]](
+          "a",
+          "x0",
+          "v0",
+          cons(
+            varN("x0", 1),
+            mapCons(varN[F[X => X => X]]("a", 2))(
+              lambda2[X => X => X, F[X => X => X], F[X]](
+                "aHead",
+                "aTail",
+                app3[F[X => X => X], X, X, F[X]](
+                  varN("self", 5),
+                  varN("aTail", 0),
+                  add(varN("x0", 3), varN("v0", 2)),
+                  add(
+                    varN("v0", 2),
+                    app2[X, X, X](varN("aHead", 1), varN("x0", 3), varN("v0", 2))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+
   override def take[T](n: R[Int], ft: R[F[T]]): R[F[T]] =
     app2(takeLambda, n, ft)
 
@@ -210,6 +243,9 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
 
   private def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
     app(app(f, a), b)
+
+  private def app3[A, B, C, D](f: R[A => B => C => D], a: R[A], b: R[B], c: R[C]): R[D] =
+    app(app(app(f, a), b), c)
 
   private def varN[A](name: String, n: Int): R[A] = shiftN(var0(name), n)
   private def shiftN[A](expr: R[A], n: Int): R[A] = if (n <= 0) expr else shift(shiftN(expr, n - 1))

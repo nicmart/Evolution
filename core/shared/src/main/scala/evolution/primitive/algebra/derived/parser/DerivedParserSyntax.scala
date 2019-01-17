@@ -32,6 +32,12 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     x0Parser: ByVarParserK[R, X]): ByVarParserK[R, F[X]] =
     function2("solve1", equationParser, x0Parser).map { case (equation, x0) => alg.solve1(equation, x0) }
 
+  override def solve2[X: VectorSpace](
+    eqParser: ByVarParserK[R, F[X => X => X]],
+    x0Parser: ByVarParserK[R, X],
+    v0Parser: ByVarParserK[R, X]): ByVarParserK[R, F[X]] =
+    function3("solve2", eqParser, x0Parser, v0Parser).map { case (eq, x0, v0) => alg.solve2(eq, x0, v0) }
+
   override def map[A, B](faParser: ByVarParserK[R, F[A]], fParser: ByVarParserK[R, A => B]): ByVarParserK[R, F[B]] =
     function2("map", faParser, fParser).map { case (fa, f) => alg.map(fa, f) }
 

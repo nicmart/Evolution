@@ -120,6 +120,7 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
     or(
       derived.integrate(t, ft),
       derived.solve1(self.evolutionOf(function(t, t)), t),
+      derived.solve2(self.evolutionOf(function(t, function(t, t))), t, t),
       genericEvolution(t, ft)
     )
 

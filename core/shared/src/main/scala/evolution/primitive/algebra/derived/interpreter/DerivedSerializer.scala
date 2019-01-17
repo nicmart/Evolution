@@ -20,6 +20,12 @@ class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
   override def solve1[X: VectorSpace](eq: CtxString[F[X => X]], x0: CtxString[X]): CtxString[F[X]] =
     ctx => s"solve1(${eq(ctx)}, ${x0(ctx)})"
 
+  override def solve2[X: VectorSpace](
+    eq: CtxString[F[X => X => X]],
+    x0: CtxString[X],
+    v0: CtxString[X]): CtxString[F[X]] =
+    ctx => s"solve2(${eq(ctx)}, ${x0(ctx)}, ${v0(ctx)})"
+
   override def map[A, B](fa: CtxString[F[A]], f: CtxString[A => B]): CtxString[F[B]] =
     ctx => s"map(${fa(ctx)}, ${f(ctx)})"
 
