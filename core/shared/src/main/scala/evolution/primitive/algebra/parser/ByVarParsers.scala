@@ -63,6 +63,12 @@ object ByVarParsers {
       )
     )
 
+  def infix[A, B](parser1: ByVarParser[A], operator: String, parser2: ByVarParser[B]): ByVarParser[(A, B)] =
+    Raw(
+      vars => P(parser1.parser(vars) ~ operator ~ parser2.parser(vars)),
+      s"infix: $parser1 $operator $parser2"
+    )
+
   def infixFlatMap[A, B](parser1: ByVarParser[A], operator: String, parser2: A => ByVarParser[B]): ByVarParser[B] =
     Raw(
       vars =>
