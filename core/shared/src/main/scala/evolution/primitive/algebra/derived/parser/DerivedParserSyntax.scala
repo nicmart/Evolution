@@ -15,6 +15,9 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
     function2("point", parserX, parserY).map { case (x, y) => alg.cartesian(x, y) }
 
   override def constant[A](parserA: ByVarParserK[R, A]): ByVarParserK[R, F[A]] =
+    function1("constant", parserA).map(a => alg.constant(a))
+
+  override def constantF[A](parserA: ByVarParserK[R, A]): ByVarParserK[R, F[A]] =
     parserA.map(a => alg.constant(a))
 
   override def polar(

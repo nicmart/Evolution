@@ -9,6 +9,7 @@ trait Derived[F[_], R[_]] {
   def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]]
   def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]]
   def constant[A](a: R[A]): R[F[A]]
+  def constantF[A](a: R[A]): R[F[A]]
   def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]]
   def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]]
   def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]]
@@ -23,6 +24,9 @@ class DefaultDerived[F[_], R[_]](alg: Evolution[F, R]) extends Derived[F, R] {
 
   override def constant[A](a: R[A]): R[F[A]] =
     fix[F[A]](lambda("self", cons(shift(a), varN("self", 0))))
+
+  override def constantF[A](a: R[A]): R[F[A]] =
+    constant(a)
 
   override def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
     app2(zipWith(lambda2[Double, Double, Point]("fx", "fy", point(varN("fx", 1), varN("fy", 0)))), x, y)

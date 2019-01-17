@@ -9,6 +9,9 @@ class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
 
   override def constant[A](a: CtxString[A]): CtxString[F[A]] =
+    ctx => s"constant(${a(ctx)})"
+
+  override def constantF[A](a: CtxString[A]): CtxString[F[A]] =
     ctx => s"${a(ctx)}"
 
   override def polar(radius: CtxString[F[Double]], angle: CtxString[F[Double]]): CtxString[F[Point]] =

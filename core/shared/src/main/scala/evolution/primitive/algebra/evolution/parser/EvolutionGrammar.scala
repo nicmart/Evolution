@@ -113,7 +113,8 @@ class EvolutionGrammar[F[_], R[_]](syntax: EvolutionSyntax[F, R], override val o
       derived.take(self.intConstant, ft),
       allMappedEvolutions(t),
       allFlatMappedEvolutions(ft),
-      genericExpr(ft)
+      genericExpr(ft),
+      derived.constantF(t),
     )
 
   private def genericVectorEvolution[T: VectorSpace](t: R[T], ft: R[F[T]]): R[F[T]] =

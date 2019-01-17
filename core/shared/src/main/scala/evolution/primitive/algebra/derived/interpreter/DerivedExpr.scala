@@ -19,6 +19,12 @@ class DerivedExpr[F[_]] extends Derived[F, Expr[F, ?]] {
         alg.derived.constant(a.run(alg))
     }
 
+  override def constantF[A](a: Expr[F, A]): Expr[F, F[A]] =
+    new Expr[F, F[A]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[A]] =
+        alg.derived.constantF(a.run(alg))
+    }
+
   override def concat[A](fa1: Expr[F, F[A]], fa2: Expr[F, F[A]]): Expr[F, F[A]] =
     new Expr[F, F[A]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[A]] =
