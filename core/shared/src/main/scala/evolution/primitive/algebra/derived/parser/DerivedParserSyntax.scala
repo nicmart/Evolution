@@ -12,7 +12,7 @@ class DerivedParserSyntax[F[_], R[_]](alg: Derived[F, R]) extends Derived[F, ByV
   override def cartesian(
     parserX: ByVarParserK[R, F[Double]],
     parserY: ByVarParserK[R, F[Double]]): ByVarParserK[R, F[Point]] =
-    function2("cartesian", parserX, parserY).map { case (x, y) => alg.cartesian(x, y) }
+    function2("point", parserX, parserY).map { case (x, y) => alg.cartesian(x, y) }
 
   override def constant[A](parserA: ByVarParserK[R, A]): ByVarParserK[R, F[A]] =
     parserA.map(a => alg.constant(a))

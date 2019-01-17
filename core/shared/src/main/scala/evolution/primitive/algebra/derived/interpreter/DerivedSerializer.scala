@@ -6,7 +6,7 @@ import evolution.typeclass.VectorSpace
 
 class DerivedSerializer[F[_]] extends Derived[F, CtxString] {
   override def cartesian(x: CtxString[F[Double]], y: CtxString[F[Double]]): CtxString[F[Point]] =
-    ctx => s"cartesian(${x(ctx)}, ${y(ctx)})"
+    ctx => s"point(${x(ctx)}, ${y(ctx)})"
 
   override def constant[A](a: CtxString[A]): CtxString[F[A]] =
     ctx => s"${a(ctx)}"
