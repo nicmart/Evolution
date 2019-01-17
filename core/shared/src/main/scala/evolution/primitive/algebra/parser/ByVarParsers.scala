@@ -63,6 +63,9 @@ object ByVarParsers {
       )
     )
 
+  def prefix[A](operator: String, parser: ByVarParser[A]): ByVarParser[A] =
+    Prefixed(operator, parser)
+
   def infix[A, B](parser1: ByVarParser[A], operator: String, parser2: ByVarParser[B]): ByVarParser[(A, B)] =
     Raw(
       vars => P(parser1.parser(vars) ~ operator ~ parser2.parser(vars)),

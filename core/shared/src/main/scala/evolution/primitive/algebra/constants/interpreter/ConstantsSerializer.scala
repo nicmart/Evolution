@@ -16,7 +16,7 @@ object ConstantsSerializer extends Constants[CtxString] {
   override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] =
     ctx => s"add(${a(ctx)}, ${b(ctx)})"
   override def inverse[T: Group](a: CtxString[T]): CtxString[T] =
-    ctx => s"inverse(${a(ctx)})"
+    ctx => s"-${a(ctx)}"
   override def sin(d: CtxString[Double]): CtxString[Double] =
     ctx => s"sin(${d(ctx)})"
   override def cos(d: CtxString[Double]): CtxString[Double] =

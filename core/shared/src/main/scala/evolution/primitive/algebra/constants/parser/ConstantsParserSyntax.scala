@@ -24,7 +24,7 @@ class ConstantsParserSyntax[S[_]](alg: Constants[S]) extends ConstantsSyntax[ByV
   override def add[T: Semigroup](a: ByVarParser[S[T]], b: ByVarParser[S[T]]): ByVarParser[S[T]] =
     function2("add", a, b).map { case (parsedA, parsedB) => alg.add(parsedA, parsedB) }
   override def inverse[T: Group](aParser: ByVarParser[S[T]]): ByVarParser[S[T]] =
-    function1("inverse", aParser).map(alg.inverse[T])
+    prefix("-", aParser).map(alg.inverse[T])
   override def sin(d: ByVarParserK[S, Double]): ByVarParserK[S, Double] =
     function1("sin", d).map(alg.sin)
   override def cos(d: ByVarParserK[S, Double]): ByVarParserK[S, Double] =
