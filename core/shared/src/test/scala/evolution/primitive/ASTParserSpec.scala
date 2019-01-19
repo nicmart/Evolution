@@ -66,6 +66,22 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
           unsafeParse(s"$identifier -> $expr") shouldBe Expr.Lambda(identifier, unsafeParse(expr))
         }
       }
+
+      "HO lambdas" in {
+        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
+          unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldBe Expr.Lambda(
+            identifier1,
+            Expr.Lambda(identifier2, unsafeParse(expr)))
+        }
+      }
+
+      "a -> b + c = a -> (b + c)" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe Expr.Lambda(
+            identifier1,
+            Expr.BinaryOp("+", unsafeParse(expr1), unsafeParse(expr2)))
+        }
+      }
     }
   }
 
