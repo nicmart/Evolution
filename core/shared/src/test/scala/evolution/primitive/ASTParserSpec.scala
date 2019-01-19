@@ -53,6 +53,16 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
         }
       }
 
+      "(a + b) * c" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"($a + $b) * $c") shouldBe Expr.BinaryOp(
+            "*",
+            Expr.BinaryOp("+", unsafeParse(a), unsafeParse(b)),
+            unsafeParse(c)
+          )
+        }
+      }
+
       "function calls" in {
         forAll(genIdentifier, genFunctionArgs) { (f, args) =>
           val expr = s"$f(${args.mkString(", ")})"
