@@ -10,13 +10,16 @@ object parser {
     expr ~ End
 
   lazy val expr: Parser[Expr] =
-    P(term)
+    P(infix(term, "+", expr) | term)
 
   lazy val term: Parser[Expr] =
     P(factor)
 
   lazy val factor: Parser[Expr] =
     P(("(" ~ expr ~ ")") | number | variable)
+
+  def infix(a: Parser[Expr], op: String, b: Parser[Expr]): Parser[Expr] =
+    P(a ~ op ~ b).map { case (x, y) => Expr.BinaryOp(op, x, y) }
 
   lazy val number: Parser[Expr.Number] =
     numbers.doubleLiteral.map(Expr.Number)
