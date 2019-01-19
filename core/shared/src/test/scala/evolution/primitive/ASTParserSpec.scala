@@ -2,15 +2,15 @@ package evolution.primitive
 import evolution.primitive.ast.Expr
 import org.scalacheck.{ Gen, Shrink }
 import org.scalatest.{ FreeSpec, Matchers }
-import parser.expr
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class ParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
-  implicit val disableShrink: Shrink[String] = Shrink(s => Stream.empty)
+class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
+  implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
+
   "The expression parser" - {
     "should parse doubles literals" in {
       forAll { d: Double =>
-        unsafeParse(d.toString) shouldBe Expr.Dbl(d)
+        unsafeParse(d.toString) shouldBe Expr.Number(d.toString)
       }
     }
 
@@ -26,5 +26,5 @@ class ParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChec
     tail <- Gen.alphaNumStr
   } yield head + tail
 
-  def unsafeParse(string: String): Expr = expr.parse(string).get.value
+  def unsafeParse(string: String): Expr = parser.parser.parse(string).get.value
 }

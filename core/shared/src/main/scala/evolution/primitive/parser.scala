@@ -1,29 +1,31 @@
 package evolution.primitive
-import fastparse.noApi.{ P, Parser }
-import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.ast.Expr
-import fastparse.{ all, core }
+import fastparse.all
+import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 
 object parser {
 
+  lazy val parser: Parser[Expr] =
+    expr ~ End
+
   lazy val expr: Parser[Expr] =
-    P(double | term) ~ End
+    P(term)
 
   lazy val term: Parser[Expr] =
     P(factor)
 
   lazy val factor: Parser[Expr] =
-    P(("(" ~ expr ~ ")") | double | variable)
+    P(("(" ~ expr ~ ")") | number | variable)
 
-  lazy val double: Parser[Expr.Dbl] =
-    numbers.doubleLiteral.map(Expr.Dbl)
+  lazy val number: Parser[Expr.Number] =
+    numbers.doubleLiteral.map(Expr.Number)
 
   lazy val variable: Parser[Expr.Var] =
     P("$" ~~ (alpha ~~ alphaNum.repX(1).?).!).map(Expr.Var)
 
-  lazy val alpha: Parser[Unit] = CharIn('a' to 'z') | CharIn('A' to 'Z')
-  lazy val alphaNum: Parser[Unit] = CharIn('0' to '9') | alpha
+  lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
+  lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
   object numbers {
 
@@ -33,8 +35,11 @@ object parser {
     lazy val floatDigits: Parser[Unit] =
       P(digit.rep ~~ "." ~~ digit.repX(1))
 
-    lazy val doubleLiteral: Parser[Double] =
-      P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!.map(_.toDouble)
+    lazy val intLiteral: Parser[Int] =
+      digit.!.map(_.toInt)
+
+    lazy val doubleLiteral: Parser[String] =
+      P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!
 
     lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
   }
