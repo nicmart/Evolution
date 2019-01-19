@@ -7,23 +7,26 @@ import fastparse.noApi._
 object parser {
 
   lazy val parser: Parser[Expr] =
-    expr ~ End
+    expr0 ~ End
 
-  lazy val expr: Parser[Expr] =
-    P(infix(term, ops2, expr) | term)
+  lazy val expr0: Parser[Expr] =
+    P(lambda | expr1)
 
-  lazy val term: Parser[Expr] =
-    P(infix(factor, ops1, term) | factor)
+  lazy val expr1: Parser[Expr] =
+    P(infix(expr2, ops0, expr1) | expr2)
 
-  lazy val factor: Parser[Expr] =
-    P(("(" ~ expr ~ ")") | number | variable | funcCall)
+  lazy val expr2: Parser[Expr] =
+    P(infix(expr3, ops1, expr2) | expr3)
+
+  lazy val expr3: Parser[Expr] =
+    P(("(" ~ expr0 ~ ")") | number | variable | funcCall)
 
   def infix(a: Parser[Expr], op: Parser[String], b: Parser[Expr]): Parser[Expr] =
     P(a ~ op ~ b).map { case (a, op, b) => Expr.BinaryOp(op, a, b) }
 
   // Operators in order of precedence
+  lazy val ops0: Parser[String] = P("+").!
   lazy val ops1: Parser[String] = P("*").!
-  lazy val ops2: Parser[String] = P("+").!
 
   lazy val number: Parser[Expr.Number] =
     numbers.doubleLiteral.map(Expr.Number)
@@ -32,10 +35,13 @@ object parser {
     P("$" ~~ identifier).map(Expr.Var)
 
   lazy val funcCall: Parser[Expr] =
-    P(identifier ~ "(" ~ args ~ ")").map { case (funcName, args) => Expr.FuncCall(funcName, args) }
+    P(identifier ~ "(" ~ args ~ ")").map(Expr.FuncCall.tupled)
+
+  lazy val lambda: Parser[Expr] =
+    P(identifier ~ "->" ~ expr0).map(Expr.Lambda.tupled)
 
   lazy val args: Parser[List[Expr]] =
-    P(expr ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+    P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
   lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
   lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
