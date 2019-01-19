@@ -92,6 +92,22 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
             Expr.BinaryOp("+", unsafeParse(expr1), unsafeParse(expr2)))
         }
       }
+
+      "Parse a complex expression: a -> b -> ($c + 2) * f($d, g(-1))" in {
+        val parsed = unsafeParse("a -> b -> ($c + 2) * f($d, g(-1))")
+        val expected =
+          Expr.Lambda(
+            "a",
+            Expr.Lambda(
+              "b",
+              Expr.BinaryOp(
+                "*",
+                Expr.BinaryOp("+", Expr.Var("c"), Expr.Number("2")),
+                Expr.FuncCall("f", List(Expr.Var("d"), Expr.FuncCall("g", List(Expr.Number("-1"))))))
+            )
+          )
+        parsed shouldBe expected
+      }
     }
   }
 
