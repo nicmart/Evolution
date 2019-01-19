@@ -17,7 +17,7 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
       }
 
       "variables" in {
-        forAll(genVarName) { varName =>
+        forAll(genIdentifier) { varName =>
           unsafeParse(s"$$$varName") shouldBe Expr.Var(varName)
         }
       }
@@ -52,15 +52,24 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
           )
         }
       }
+
+      "function calls" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (f, a, b) =>
+          unsafeParse(s"$f($a, $b)") shouldBe Expr.FuncCall(
+            f,
+            List(unsafeParse(a), unsafeParse(b))
+          )
+        }
+      }
     }
   }
 
   def genLeafExpr: Gen[String] =
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
 
-  def genVarUsage: Gen[String] = genVarName.map(v => s"$$$v")
+  def genVarUsage: Gen[String] = genIdentifier.map(v => s"$$$v")
 
-  def genVarName: Gen[String] = for {
+  def genIdentifier: Gen[String] = for {
     head <- Gen.alphaChar
     tail <- Gen.alphaNumStr
   } yield head + tail

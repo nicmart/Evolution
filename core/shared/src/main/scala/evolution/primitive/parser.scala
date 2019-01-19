@@ -16,7 +16,7 @@ object parser {
     P(infix(factor, ops1, term) | factor)
 
   lazy val factor: Parser[Expr] =
-    P(("(" ~ expr ~ ")") | number | variable)
+    P(("(" ~ expr ~ ")") | number | variable | funcCall)
 
   def infix(a: Parser[Expr], op: Parser[String], b: Parser[Expr]): Parser[Expr] =
     P(a ~ op ~ b).map { case (a, op, b) => Expr.BinaryOp(op, a, b) }
@@ -29,8 +29,15 @@ object parser {
     numbers.doubleLiteral.map(Expr.Number)
 
   lazy val variable: Parser[Expr.Var] =
-    P("$" ~~ (alpha ~~ alphaNum.repX(1).?).!).map(Expr.Var)
+    P("$" ~~ identifier).map(Expr.Var)
 
+  lazy val funcCall: Parser[Expr] =
+    P(identifier ~ "(" ~ args ~ ")").map { case (funcName, args) => Expr.FuncCall(funcName, args) }
+
+  lazy val args: Parser[List[Expr]] =
+    P(expr ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+
+  lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
   lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
