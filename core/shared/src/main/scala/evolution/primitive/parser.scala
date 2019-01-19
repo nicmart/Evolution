@@ -13,7 +13,7 @@ object parser {
     P(infix(term, "+", expr) | term)
 
   lazy val term: Parser[Expr] =
-    P(factor)
+    P(infix(factor, "*", expr) | factor)
 
   lazy val factor: Parser[Expr] =
     P(("(" ~ expr ~ ")") | number | variable)

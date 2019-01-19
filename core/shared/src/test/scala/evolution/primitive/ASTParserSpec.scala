@@ -27,6 +27,12 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
           unsafeParse(s"$a + $b") shouldBe Expr.BinaryOp("+", unsafeParse(a), unsafeParse(b))
         }
       }
+
+      "multiplications" in {
+        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+          unsafeParse(s"$a * $b") shouldBe Expr.BinaryOp("*", unsafeParse(a), unsafeParse(b))
+        }
+      }
     }
   }
 
