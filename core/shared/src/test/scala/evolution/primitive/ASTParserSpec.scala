@@ -54,15 +54,20 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
       }
 
       "function calls" in {
-        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (f, a, b) =>
-          unsafeParse(s"$f($a, $b)") shouldBe Expr.FuncCall(
-            f,
-            List(unsafeParse(a), unsafeParse(b))
-          )
+        forAll(genIdentifier, genFunctionArgs) { (f, args) =>
+          val expr = s"$f(${args.mkString(", ")})"
+          val expected = Expr.FuncCall(f, args.map(unsafeParse))
+          unsafeParse(expr) shouldBe expected
         }
       }
     }
   }
+
+  def genFunctionArgs: Gen[List[String]] =
+    for {
+      n <- Gen.choose(1, 6)
+      args <- Gen.listOfN(n, genLeafExpr)
+    } yield args
 
   def genLeafExpr: Gen[String] =
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
