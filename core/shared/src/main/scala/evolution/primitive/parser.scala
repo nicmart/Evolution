@@ -14,10 +14,16 @@ object parser {
     P(factor)
 
   lazy val factor: Parser[Expr] =
-    P(double | ("(" ~ expr ~ ")"))
+    P(("(" ~ expr ~ ")") | double | variable)
 
   lazy val double: Parser[Expr.Dbl] =
     numbers.doubleLiteral.map(Expr.Dbl)
+
+  lazy val variable: Parser[Expr.Var] =
+    P("$" ~~ (alpha ~~ alphaNum.repX(1).?).!).map(Expr.Var)
+
+  lazy val alpha: Parser[Unit] = CharIn('a' to 'z') | CharIn('A' to 'Z')
+  lazy val alphaNum: Parser[Unit] = CharIn('0' to '9') | alpha
 
   object numbers {
 
@@ -25,11 +31,11 @@ object parser {
       P(CharIn('0' to '9'))
 
     lazy val floatDigits: Parser[Unit] =
-      P(digit.rep ~ "." ~ digit.rep(1))
+      P(digit.rep ~~ "." ~~ digit.repX(1))
 
     lazy val doubleLiteral: Parser[Double] =
-      P("-".? ~ (floatDigits | digit.rep(1)) ~ exp.?).!.map(_.toDouble)
+      P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!.map(_.toDouble)
 
-    lazy val exp: Parser[Unit] = P(CharIn("Ee") ~ CharIn("+\\-").? ~ digit.rep(1))
+    lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
   }
 }
