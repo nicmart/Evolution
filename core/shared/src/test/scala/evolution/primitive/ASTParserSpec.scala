@@ -33,6 +33,25 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
           unsafeParse(s"$a * $b") shouldBe Expr.BinaryOp("*", unsafeParse(a), unsafeParse(b))
         }
       }
+
+      "a * b + c = (a * b) + c" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a * $b + $c") shouldBe Expr.BinaryOp(
+            "+",
+            Expr.BinaryOp("*", unsafeParse(a), unsafeParse(b)),
+            unsafeParse(c))
+        }
+      }
+
+      "a + b * c = a + (b * c)" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a + $b * $c") shouldBe Expr.BinaryOp(
+            "+",
+            unsafeParse(a),
+            Expr.BinaryOp("*", unsafeParse(b), unsafeParse(c))
+          )
+        }
+      }
     }
   }
 
