@@ -29,16 +29,16 @@ class Parsers[F[_]](val ast: Ast[F]) {
   lazy val ops1: Parser[String] = P("*").!
 
   lazy val number: Parser[Expr.Number] =
-    numbers.doubleLiteral.map(Expr.Number)
+    numbers.doubleLiteral.map(Expr.Number(_))
 
   lazy val variable: Parser[Expr.Var] =
-    P("$" ~~ identifier).map(Expr.Var)
+    P("$" ~~ identifier).map(Expr.Var(_))
 
   lazy val funcCall: Parser[Expr] =
-    P(identifier ~ "(" ~ args ~ ")").map(Expr.FuncCall.tupled)
+    P(identifier ~ "(" ~ args ~ ")").map { case (identifier, args) => Expr.FuncCall(identifier, args) }
 
   lazy val lambda: Parser[Expr] =
-    P(identifier ~ "->" ~ expr0).map(Expr.Lambda.tupled)
+    P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(identifier, body) }
 
   lazy val args: Parser[List[Expr]] =
     P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }

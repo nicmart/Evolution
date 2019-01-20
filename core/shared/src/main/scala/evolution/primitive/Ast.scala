@@ -2,13 +2,16 @@ package evolution.primitive
 import evolution.geometry
 
 class Ast[F[_]] {
-  sealed trait Expr
+  sealed trait Expr {
+    def tpe: TypeAnnotation
+  }
+
   object Expr {
-    final case class Var(name: String) extends Expr
-    final case class FuncCall(funcName: String, args: List[Expr]) extends Expr
-    final case class BinaryOp(op: String, a: Expr, b: Expr) extends Expr
-    final case class Lambda(varName: String, expr: Expr) extends Expr
-    final case class Number(n: String) extends Expr
+    final case class Var(name: String, tpe: TypeAnnotation = Unknown) extends Expr
+    final case class FuncCall(funcName: String, args: List[Expr], tpe: TypeAnnotation = Unknown) extends Expr
+    final case class BinaryOp(op: String, a: Expr, b: Expr, tpe: TypeAnnotation = Unknown) extends Expr
+    final case class Lambda(varName: String, expr: Expr, tpe: TypeAnnotation = Unknown) extends Expr
+    final case class Number(n: String, tpe: TypeAnnotation = Unknown) extends Expr
   }
 
   sealed trait Type { type Out }
