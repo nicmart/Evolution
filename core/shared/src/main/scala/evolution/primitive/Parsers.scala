@@ -1,10 +1,10 @@
 package evolution.primitive
-import evolution.primitive.ast.Expr
 import fastparse.all
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import fastparse.noApi._
 
-object parser {
+class Parsers[F[_]](val ast: Ast[F]) {
+  import ast._
 
   lazy val parser: Parser[Expr] =
     expr0 ~ End

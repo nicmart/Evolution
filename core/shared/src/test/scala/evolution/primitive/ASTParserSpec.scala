@@ -1,5 +1,5 @@
 package evolution.primitive
-import evolution.primitive.ast.Expr
+import cats.Id
 import org.scalacheck.{ Gen, Shrink }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.{ FreeSpec, Matchers }
@@ -7,6 +7,8 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
 class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
+  val parser = new Parsers[Id](new Ast[Id])
+  import parser.ast._
 
   "The expression parser" - {
     "should parse" - {
