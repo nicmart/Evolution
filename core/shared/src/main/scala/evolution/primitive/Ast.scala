@@ -17,6 +17,7 @@ class Ast[F[_]] {
     final case class Var(name: String, tpe: TypeAnnotation = Unknown) extends Expr
     final case class FuncCall(funcName: String, args: List[Expr], tpe: TypeAnnotation = Unknown) extends Expr
     final case class BinaryOp(op: String, a: Expr, b: Expr, tpe: TypeAnnotation = Unknown) extends Expr
+    // TODO var should be an expr probably
     final case class Lambda(varName: String, expr: Expr, tpe: TypeAnnotation = Unknown) extends Expr
     final case class Number(n: String, tpe: TypeAnnotation = Unknown) extends Expr
   }
