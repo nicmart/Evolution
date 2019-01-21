@@ -5,6 +5,15 @@ import scala.util.Try
 
 class Typer[F[_]](val ast: Ast[F]) {
   import ast._
+  def assignVars(ctx: Context, expr: Expr): (Context, Expr) =
+    expr match {
+      case Expr.Var(name, tpe)                => ???
+      case Expr.FuncCall(funcName, args, tpe) => ???
+      case Expr.BinaryOp(op, a, b, tpe)       => ???
+      case Expr.Lambda(varName, expr, tpe)    => ???
+      case Expr.Number(n, tpe)                => ???
+    }
+
   def check(ctx: Context, expected: Type, expr: Expr): Either[String, Expr] =
     (expr, expected) match {
       case (Expr.Var(name, tpe), _) =>

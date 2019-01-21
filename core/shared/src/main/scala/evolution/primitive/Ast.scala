@@ -4,6 +4,13 @@ import evolution.geometry
 class Ast[F[_]] {
   sealed trait Expr {
     def tpe: TypeAnnotation
+    def withType(tpe: Type): Expr = this match {
+      case Expr.Var(name, _)                => Expr.Var(name, Typed(tpe))
+      case Expr.FuncCall(funcName, args, _) => Expr.FuncCall(funcName, args, Typed(tpe))
+      case Expr.BinaryOp(op, a, b, _)       => Expr.BinaryOp(op, a, b, Typed(tpe))
+      case Expr.Lambda(varName, expr, _)    => Expr.Lambda(varName, expr, Typed(tpe))
+      case Expr.Number(n, _)                => Expr.Number(n, Typed(tpe))
+    }
   }
 
   object Expr {
@@ -34,6 +41,7 @@ class Ast[F[_]] {
     def get(name: String): Option[Type] = bindings.get(name)
     def put(name: String, tpe: Type): Context = new Context(bindings.updated(name, tpe))
     def nextVar: String = "X" + bindings.size
+    def nextTypeVar: Type = Type.Var(nextVar)
   }
 
   object Context {
