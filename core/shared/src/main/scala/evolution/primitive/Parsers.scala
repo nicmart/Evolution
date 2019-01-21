@@ -38,7 +38,7 @@ class Parsers[F[_]](val ast: Ast[F]) {
     P(identifier ~ "(" ~ args ~ ")").map { case (identifier, args) => Expr.FuncCall(identifier, args) }
 
   lazy val lambda: Parser[Expr] =
-    P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(identifier, body) }
+    P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
 
   lazy val args: Parser[List[Expr]] =
     P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }

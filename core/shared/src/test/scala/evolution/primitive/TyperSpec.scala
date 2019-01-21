@@ -26,6 +26,8 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
           annotated shouldBe numberExpr.copy(tpe = Typed(Type.Integer))
         }
       }
+
+      "variables" - {}
     }
 
     "should fail to type" - {

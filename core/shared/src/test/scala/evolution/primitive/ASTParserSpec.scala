@@ -75,22 +75,22 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
 
       "lambdas" in {
         forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
-          unsafeParse(s"$identifier -> $expr") shouldBe Expr.Lambda(identifier, unsafeParse(expr))
+          unsafeParse(s"$identifier -> $expr") shouldBe Expr.Lambda(Expr.Var(identifier), unsafeParse(expr))
         }
       }
 
       "HO lambdas" in {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
           unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldBe Expr.Lambda(
-            identifier1,
-            Expr.Lambda(identifier2, unsafeParse(expr)))
+            Expr.Var(identifier1),
+            Expr.Lambda(Expr.Var(identifier2), unsafeParse(expr)))
         }
       }
 
       "a -> b + c = a -> (b + c)" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe Expr.Lambda(
-            identifier1,
+            Expr.Var(identifier1),
             Expr.BinaryOp("+", unsafeParse(expr1), unsafeParse(expr2)))
         }
       }
@@ -99,9 +99,9 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
         val parsed = unsafeParse("a -> b -> ($c + 2) * f($d, g(-1))")
         val expected =
           Expr.Lambda(
-            "a",
+            Expr.Var("a"),
             Expr.Lambda(
-              "b",
+              Expr.Var("b"),
               Expr.BinaryOp(
                 "*",
                 Expr.BinaryOp("+", Expr.Var("c"), Expr.Number("2")),
