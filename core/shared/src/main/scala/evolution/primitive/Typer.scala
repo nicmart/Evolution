@@ -35,8 +35,9 @@ class Typer[F[_]](val ast: Ast[F]) {
         vars2.withNext(next => Expr.BinaryOp(op, typedA, typedB, Typed(next)))
 
       case Expr.Lambda(varName, lambdaBody, _) =>
-        val (vars1, typedBody) = assignVarsRec(vars, lambdaBody)
-        vars1.withNext(next => Expr.Lambda(varName, lambdaBody, Typed(next)))
+        val (vars1, typedVar) = assignVarsRec(vars, varName)
+        val (vars2, typedBody) = assignVarsRec(vars1, lambdaBody)
+        vars2.withNext(next => Expr.Lambda(varName.copy(tpe = typedVar.tpe), typedBody, Typed(next)))
     }
 
   private class TypeVars(total: Int) {

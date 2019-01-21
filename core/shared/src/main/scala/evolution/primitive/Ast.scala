@@ -33,7 +33,12 @@ class Ast[F[_]] {
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
   }
 
-  sealed trait TypeAnnotation
+  sealed trait TypeAnnotation {
+    def mapType(f: Type => Type): TypeAnnotation = this match {
+      case Unknown    => Unknown
+      case Typed(tpe) => Typed(f(tpe))
+    }
+  }
   final case object Unknown extends TypeAnnotation
   final case class Typed(tpe: Type) extends TypeAnnotation
 
