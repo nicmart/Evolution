@@ -17,7 +17,7 @@ class Typer[F[_]](val ast: Ast[F]) {
     case Expr.FuncCall(funcName, args, tpe) => Nil
     case Expr.BinaryOp(op, a, b, tpe)       => Nil
     case Expr.Lambda(varName, expr, tpe)    => Nil
-    case Expr.Number(n, tpe)                => Nil
+    case Expr.Number(n, tpe)                => List(Constraint(tpe, Type.Dbl))
   }
 
   case class Constraint(a: Type, b: Type)

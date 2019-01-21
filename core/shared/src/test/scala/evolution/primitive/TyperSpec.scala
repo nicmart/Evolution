@@ -7,14 +7,14 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
 class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
   val typer = new Typer[Id](new Ast[Id])
+  import typer._
   import typer.ast._
 
   "The typer" - {
     "should find constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
-          val numberWithVars = typer.assignVars(numberExpr)
-          typer.findConstraints(numberWithVars) shouldBe Nil
+          typer.findConstraints(numberExpr.withType(Type.Var("X"))) shouldBe List(Constraint(Type.Var("X"), Type.Dbl))
         }
       }
 
