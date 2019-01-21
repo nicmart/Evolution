@@ -15,13 +15,13 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "numbers" in {
         forAll(genNumber) { numberExpr =>
           // Numbers literals are overloaded, we defer a decision on this
-          typer.findConstraints(numberExpr.withType(Type.Var("X"))) shouldBe Nil
+          typer.findConstraints(numberExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
         }
       }
 
       "vars" in {
         forAll(genVar) { varExpr =>
-          typer.findConstraints(varExpr.withType(Type.Var("X"))) shouldBe Nil
+          typer.findConstraints(varExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
         }
       }
 
@@ -29,10 +29,7 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
         "point" in {
           forAll(genNumber, genNumber) { (x, y) =>
             val p = Expr.FuncCall("point", List(x, y), Type.Var("X"))
-            typer.findConstraints(p) shouldBe List(
-              Constraint(p.tpe, Type.Point),
-              Constraint(x.tpe, Type.Dbl),
-              Constraint(y.tpe, Type.Dbl))
+            typer.findConstraints(p) shouldBe Constraints(p.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
           }
         }
       }

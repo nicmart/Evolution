@@ -12,18 +12,30 @@ class Typer[F[_]](val ast: Ast[F]) {
   def assignVars(expr: Expr): Expr =
     assignVarsRec(TypeVars.empty, expr)._2
 
-  def findConstraints(expr: Expr): List[Constraint] = (expr match {
-    case Expr.Var(_, _) => Nil
+  def findConstraints(expr: Expr): Constraints = (expr match {
+    case Expr.Var(_, _) => Constraints.empty
     case Expr.FuncCall(funcName, args, tpe) =>
       (funcName, args) match {
         case ("point", x :: y :: Nil) =>
-          List(Constraint(tpe, Type.Point), Constraint(x.tpe, Type.Dbl), Constraint(y.tpe, Type.Dbl))
+          Constraints(tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
       }
-    case Expr.Lambda(varName, expr, tpe) => Nil
-    case Expr.Number(n, tpe)             => Nil
-  }) ++ expr.children.flatMap(findConstraints)
+    case Expr.Lambda(varName, expr, tpe) => Constraints.empty
+    case Expr.Number(n, tpe)             => Constraints.empty
+  }).merge(expr.children.map(findConstraints))
 
   case class Constraint(a: Type, b: Type)
+  case class Constraints(constraints: List[Constraint]) {
+    def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
+    def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
+      constraints.merge(current)
+    }
+  }
+  object Constraints {
+    val empty: Constraints = Constraints(Nil)
+    def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
+      case (a, b) => Constraint(a, b)
+    })
+  }
 
   private def assignVarsRec(vars: TypeVars, expr: Expr): (TypeVars, Expr) =
     expr match {
