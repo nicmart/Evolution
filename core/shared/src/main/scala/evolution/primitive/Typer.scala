@@ -12,13 +12,21 @@ class Typer[F[_]](val ast: Ast[F]) {
   def assignVars(expr: Expr): Expr =
     assignVarsRec(TypeVars.empty, expr)._2
 
-  def findConstraints(expr: Expr): List[Constraint] = expr match {
-    case Expr.Var(name, tpe)                => Nil
-    case Expr.FuncCall(funcName, args, tpe) => Nil
-    case Expr.BinaryOp(op, a, b, tpe)       => Nil
-    case Expr.Lambda(varName, expr, tpe)    => Nil
-    case Expr.Number(n, tpe)                => List(Constraint(tpe, Type.Dbl))
-  }
+  def findConstraints(expr: Expr): List[Constraint] = (expr match {
+    case Expr.Var(_, _) => Nil
+    case Expr.FuncCall(funcName, args, tpe) =>
+      (funcName, args) match {
+        case ("point", x :: y :: Nil) =>
+          List(Constraint(tpe, Type.Point), Constraint(x.tpe, Type.Dbl), Constraint(y.tpe, Type.Dbl))
+      }
+    case Expr.BinaryOp(op, a, b, tpe) =>
+      op match {
+        case "+" => ???
+        case "*" => ???
+      }
+    case Expr.Lambda(varName, expr, tpe) => Nil
+    case Expr.Number(n, tpe)             => List(Constraint(tpe, Type.Dbl))
+  }) ++ expr.children.flatMap(findConstraints)
 
   case class Constraint(a: Type, b: Type)
 

@@ -11,10 +11,16 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
   import typer.ast._
 
   "The typer" - {
-    "should find constraints for" - {
+    "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
           typer.findConstraints(numberExpr.withType(Type.Var("X"))) shouldBe List(Constraint(Type.Var("X"), Type.Dbl))
+        }
+      }
+
+      "vars" in {
+        forAll(genVar) { varExpr =>
+          typer.findConstraints(varExpr.withType(Type.Var("X"))) shouldBe Nil
         }
       }
 
@@ -33,4 +39,5 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
   def genNumber: Gen[Expr.Number] = arbitrary[Double].map(d => Expr.Number(d.toString))
   def genIntNumber: Gen[Expr.Number] = arbitrary[Int].map(d => Expr.Number(d.toString))
   def genNotIntNumber: Gen[Expr.Number] = arbitrary[Int].map(d => Expr.Number((0.1 + d).toString))
+  def genVar: Gen[Expr.Var] = Gen.alphaChar.map(char => Expr.Var(char.toString.toUpperCase))
 }
