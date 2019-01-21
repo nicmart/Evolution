@@ -22,7 +22,7 @@ class Parsers[F[_]](val ast: Ast[F]) {
     P(("(" ~ expr0 ~ ")") | number | variable | funcCall)
 
   def infix(a: Parser[Expr], op: Parser[String], b: Parser[Expr]): Parser[Expr] =
-    P(a ~ op ~ b).map { case (a, op, b) => Expr.BinaryOp(op, a, b) }
+    P(a ~ op ~ b).map { case (a, op, b) => Expr.FuncCall(op, List(a, b)) }
 
   // Operators in order of precedence
   lazy val ops0: Parser[String] = P("+").!

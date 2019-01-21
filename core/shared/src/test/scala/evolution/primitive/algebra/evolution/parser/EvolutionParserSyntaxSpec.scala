@@ -100,6 +100,7 @@ class EvolutionParserSyntaxSpec extends FreeSpec with Matchers {
       }
 
       "a constant evolution defined as a fixed point" in {
+        pending
         val serializedExpression = "fix(s -> $s)"
         val expectedExpression: String =
           fix[F[Double]](lambda("s", var0[F[Double]]("s"))).infer(evolutionOfDoubles).toString

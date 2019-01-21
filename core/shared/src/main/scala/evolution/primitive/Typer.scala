@@ -19,13 +19,8 @@ class Typer[F[_]](val ast: Ast[F]) {
         case ("point", x :: y :: Nil) =>
           List(Constraint(tpe, Type.Point), Constraint(x.tpe, Type.Dbl), Constraint(y.tpe, Type.Dbl))
       }
-    case Expr.BinaryOp(op, a, b, tpe) =>
-      op match {
-        case "+" => ???
-        case "*" => ???
-      }
     case Expr.Lambda(varName, expr, tpe) => Nil
-    case Expr.Number(n, tpe)             => List(Constraint(tpe, Type.Dbl))
+    case Expr.Number(n, tpe)             => Nil
   }) ++ expr.children.flatMap(findConstraints)
 
   case class Constraint(a: Type, b: Type)
@@ -47,11 +42,6 @@ class Typer[F[_]](val ast: Ast[F]) {
           }
         typeVarsWithArgsVars.withNext(next => Expr.FuncCall(funcName, transformedArgs.reverse, next))
 
-      case Expr.BinaryOp(op, a, b, _) =>
-        val (vars1, typedA) = assignVarsRec(vars, a)
-        val (vars2, typedB) = assignVarsRec(vars1, b)
-        vars2.withNext(next => Expr.BinaryOp(op, typedA, typedB, next))
-
       case Expr.Lambda(varName, lambdaBody, _) =>
         val (vars1, typedVar) = assignVarsRec(vars, varName)
         val (vars2, typedBody) = assignVarsRec(vars1, lambdaBody)
@@ -66,23 +56,6 @@ class Typer[F[_]](val ast: Ast[F]) {
   private object TypeVars {
     val empty = new TypeVars(0)
   }
-
-  def check(ctx: Context, expected: Type, expr: Expr): Either[String, Expr] =
-    (expr, expected) match {
-      case (Expr.Var(name, tpe), _) =>
-        Left("")
-      case (Expr.FuncCall(funcName, args, tpe), _) =>
-        Left("")
-      case (Expr.BinaryOp(op, a, b, tpe), _) =>
-        Left("")
-      case (Expr.Lambda(varName, body, tpe), _) =>
-        Left("")
-
-      case (Expr.Number(n, tpe), Type.Dbl) =>
-        parseDouble(n).map(_ => Expr.Number(n, Type.Dbl))
-      case (Expr.Number(n, tpe), Type.Integer) =>
-        parseInt(n).map(_ => Expr.Number(n, Type.Integer))
-    }
 
   private def parseInt(n: String): Either[String, Int] =
     Try(n.toInt).toEither.left.map(_ => "")

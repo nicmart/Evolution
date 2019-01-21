@@ -26,41 +26,38 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
 
       "additions" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a + $b") shouldBe Expr.BinaryOp("+", unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a + $b") shouldBe Expr.FuncCall("+", List(unsafeParse(a), unsafeParse(b)))
         }
       }
 
       "multiplications" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a * $b") shouldBe Expr.BinaryOp("*", unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a * $b") shouldBe Expr.FuncCall("*", List(unsafeParse(a), unsafeParse(b)))
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a * $b + $c") shouldBe Expr.BinaryOp(
+          unsafeParse(s"$a * $b + $c") shouldBe Expr.FuncCall(
             "+",
-            Expr.BinaryOp("*", unsafeParse(a), unsafeParse(b)),
-            unsafeParse(c))
+            List(Expr.FuncCall("*", List(unsafeParse(a), unsafeParse(b))), unsafeParse(c)))
         }
       }
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a + $b * $c") shouldBe Expr.BinaryOp(
+          unsafeParse(s"$a + $b * $c") shouldBe Expr.FuncCall(
             "+",
-            unsafeParse(a),
-            Expr.BinaryOp("*", unsafeParse(b), unsafeParse(c))
+            List(unsafeParse(a), Expr.FuncCall("*", List(unsafeParse(b), unsafeParse(c))))
           )
         }
       }
 
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"($a + $b) * $c") shouldBe Expr.BinaryOp(
+          unsafeParse(s"($a + $b) * $c") shouldBe Expr.FuncCall(
             "*",
-            Expr.BinaryOp("+", unsafeParse(a), unsafeParse(b)),
-            unsafeParse(c)
+            List(Expr.FuncCall("+", List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
           )
         }
       }
@@ -91,7 +88,7 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe Expr.Lambda(
             Expr.Var(identifier1),
-            Expr.BinaryOp("+", unsafeParse(expr1), unsafeParse(expr2)))
+            Expr.FuncCall("+", List(unsafeParse(expr1), unsafeParse(expr2))))
         }
       }
 
@@ -102,10 +99,11 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
             Expr.Var("a"),
             Expr.Lambda(
               Expr.Var("b"),
-              Expr.BinaryOp(
+              Expr.FuncCall(
                 "*",
-                Expr.BinaryOp("+", Expr.Var("c"), Expr.Number("2")),
-                Expr.FuncCall("f", List(Expr.Var("d"), Expr.FuncCall("g", List(Expr.Number("-1"))))))
+                List(
+                  Expr.FuncCall("+", List(Expr.Var("c"), Expr.Number("2"))),
+                  Expr.FuncCall("f", List(Expr.Var("d"), Expr.FuncCall("g", List(Expr.Number("-1")))))))
             )
           )
         parsed shouldBe expected
