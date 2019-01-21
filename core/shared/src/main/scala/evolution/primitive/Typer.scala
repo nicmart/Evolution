@@ -12,12 +12,22 @@ class Typer[F[_]](val ast: Ast[F]) {
   def assignVars(expr: Expr): Expr =
     assignVarsRec(TypeVars.empty, expr)._2
 
+  def findConstraints(expr: Expr): List[Constraint] = expr match {
+    case Expr.Var(name, tpe)                => Nil
+    case Expr.FuncCall(funcName, args, tpe) => Nil
+    case Expr.BinaryOp(op, a, b, tpe)       => Nil
+    case Expr.Lambda(varName, expr, tpe)    => Nil
+    case Expr.Number(n, tpe)                => Nil
+  }
+
+  case class Constraint(a: Type, b: Type)
+
   private def assignVarsRec(vars: TypeVars, expr: Expr): (TypeVars, Expr) =
     expr match {
       case Expr.Var(name, _) =>
         vars.withNext(expr.withType)
 
-      case Expr.Number(n, tpe) =>
+      case Expr.Number(n, _) =>
         vars.withNext(expr.withType)
 
       case Expr.FuncCall(funcName, funcArgs, _) =>
@@ -27,17 +37,17 @@ class Typer[F[_]](val ast: Ast[F]) {
               val (nextTypeVars, typedArg) = assignVarsRec(typeVarsSoFar, arg)
               (nextTypeVars, typedArg :: typedArgsSoFar)
           }
-        typeVarsWithArgsVars.withNext(next => Expr.FuncCall(funcName, transformedArgs.reverse, Typed(next)))
+        typeVarsWithArgsVars.withNext(next => Expr.FuncCall(funcName, transformedArgs.reverse, next))
 
       case Expr.BinaryOp(op, a, b, _) =>
         val (vars1, typedA) = assignVarsRec(vars, a)
         val (vars2, typedB) = assignVarsRec(vars1, b)
-        vars2.withNext(next => Expr.BinaryOp(op, typedA, typedB, Typed(next)))
+        vars2.withNext(next => Expr.BinaryOp(op, typedA, typedB, next))
 
       case Expr.Lambda(varName, lambdaBody, _) =>
         val (vars1, typedVar) = assignVarsRec(vars, varName)
         val (vars2, typedBody) = assignVarsRec(vars1, lambdaBody)
-        vars2.withNext(next => Expr.Lambda(varName.copy(tpe = typedVar.tpe), typedBody, Typed(next)))
+        vars2.withNext(next => Expr.Lambda(varName.copy(tpe = typedVar.tpe), typedBody, next))
     }
 
   private class TypeVars(total: Int) {
@@ -61,9 +71,9 @@ class Typer[F[_]](val ast: Ast[F]) {
         Left("")
 
       case (Expr.Number(n, tpe), Type.Dbl) =>
-        parseDouble(n).map(_ => Expr.Number(n, Typed(Type.Dbl)))
+        parseDouble(n).map(_ => Expr.Number(n, Type.Dbl))
       case (Expr.Number(n, tpe), Type.Integer) =>
-        parseInt(n).map(_ => Expr.Number(n, Typed(Type.Integer)))
+        parseInt(n).map(_ => Expr.Number(n, Type.Integer))
     }
 
   private def parseInt(n: String): Either[String, Int] =

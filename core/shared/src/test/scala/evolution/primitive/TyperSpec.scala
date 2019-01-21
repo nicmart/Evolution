@@ -10,34 +10,23 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
   import typer.ast._
 
   "The typer" - {
-    "should successfully type" - {
-      "all numbers as doubles" in {
+    "should find constraints for" - {
+      "numbers" in {
         forAll(genNumber) { numberExpr =>
-          val ctx = Context.empty
-          val annotated = typer.check(Context.empty, Type.Dbl, numberExpr).right.get
-          annotated shouldBe numberExpr.copy(tpe = Typed(Type.Dbl))
+          val numberWithVars = typer.assignVars(numberExpr)
+          typer.findConstraints(numberWithVars) shouldBe Nil
         }
       }
 
-      "integers as int" in {
+      "integers" in {
         forAll(genIntNumber) { numberExpr =>
           val ctx = Context.empty
           val annotated = typer.check(Context.empty, Type.Integer, numberExpr).right.get
-          annotated shouldBe numberExpr.copy(tpe = Typed(Type.Integer))
+          annotated shouldBe numberExpr.withType(Type.Integer)
         }
       }
 
       "variables" - {}
-    }
-
-    "should fail to type" - {
-      "doubles as integers" in {
-        forAll(genNotIntNumber) { numberExpr =>
-          val ctx = Context.empty
-          val annotated = typer.check(Context.empty, Type.Integer, numberExpr)
-          annotated.isLeft shouldBe true
-        }
-      }
     }
   }
 
