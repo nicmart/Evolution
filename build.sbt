@@ -24,7 +24,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).
             "org.typelevel" %%% "cats-core" % "1.3.1",
             "com.chuusai" %%% "shapeless" % "2.3.3",
             "org.scalacheck" %%% "scalacheck" % "1.13.4",
-            "com.lihaoyi" %%% "fastparse" % "1.0.0"
+            "com.lihaoyi" %%% "fastparse" % "1.0.0",
+            "com.beachape" %%% "enumeratum" % "1.5.13"
         )
     ).
   jsSettings(

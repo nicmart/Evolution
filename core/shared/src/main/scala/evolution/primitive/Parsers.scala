@@ -21,12 +21,12 @@ class Parsers[F[_]](val ast: Ast[F]) {
   lazy val expr3: Parser[Expr] =
     P(("(" ~ expr0 ~ ")") | number | variable | funcCall)
 
-  def infix(a: Parser[Expr], op: Parser[String], b: Parser[Expr]): Parser[Expr] =
+  def infix(a: Parser[Expr], op: Parser[PredefinedFunction], b: Parser[Expr]): Parser[Expr] =
     P(a ~ op ~ b).map { case (a, op, b) => Expr.FuncCall(op, List(a, b)) }
 
   // Operators in order of precedence
-  lazy val ops0: Parser[String] = P("+").!
-  lazy val ops1: Parser[String] = P("*").!
+  lazy val ops0: Parser[PredefinedFunction] = P("+").map(_ => PredefinedFunction.Add)
+  lazy val ops1: Parser[PredefinedFunction] = P("*").map(_ => PredefinedFunction.Multiply)
 
   lazy val number: Parser[Expr.Number] =
     numbers.doubleLiteral.map(Expr.Number(_))
@@ -35,7 +35,7 @@ class Parsers[F[_]](val ast: Ast[F]) {
     P("$" ~~ identifier).map(Expr.Var(_))
 
   lazy val funcCall: Parser[Expr] =
-    P(identifier ~ "(" ~ args ~ ")").map { case (identifier, args) => Expr.FuncCall(identifier, args) }
+    P(functionName ~ "(" ~ args ~ ")").map { case (func, args) => Expr.FuncCall(func, args) }
 
   lazy val lambda: Parser[Expr] =
     P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
@@ -44,6 +44,7 @@ class Parsers[F[_]](val ast: Ast[F]) {
     P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
   lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
+  lazy val functionName: Parser[PredefinedFunction] = identifier.map(PredefinedFunction.withNameInsensitive)
   lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 

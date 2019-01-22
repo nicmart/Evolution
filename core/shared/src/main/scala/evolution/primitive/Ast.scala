@@ -1,5 +1,8 @@
 package evolution.primitive
+import enumeratum.{ Enum, EnumEntry }
 import evolution.geometry
+
+import scala.collection.immutable
 
 class Ast[F[_]] {
   sealed trait Expr {
@@ -23,15 +26,17 @@ class Ast[F[_]] {
 
   object Expr {
     final case class Var(name: String, tpe: Type = Type.Var("")) extends Expr
-    final case class FuncCall(funcName: String, args: List[Expr], tpe: Type = Type.Var("")) extends Expr
+    final case class FuncCall(funcId: PredefinedFunction, args: List[Expr], tpe: Type = Type.Var("")) extends Expr
     // TODO should this be just a func call?
     final case class Lambda(varName: Expr.Var, expr: Expr, tpe: Type = Type.Var("")) extends Expr
     final case class Number(n: String, tpe: Type = Type.Var("")) extends Expr
   }
 
-  abstract sealed class PredefinedFunction(val arity: Int)
+  abstract sealed class PredefinedFunction(val arity: Int) extends EnumEntry
 
-  object PredefinedFunction {
+  object PredefinedFunction extends Enum[PredefinedFunction] {
+    val values: immutable.IndexedSeq[PredefinedFunction] = findValues
+
     // Constants
     case object Point extends PredefinedFunction(2)
     case object Add extends PredefinedFunction(2)
@@ -44,6 +49,7 @@ class Ast[F[_]] {
 
     // Bindings
     case object Fix extends PredefinedFunction(1)
+    case object App extends PredefinedFunction(2)
     //case object Let extends PredefinedFunction(1)
 
     // Chain

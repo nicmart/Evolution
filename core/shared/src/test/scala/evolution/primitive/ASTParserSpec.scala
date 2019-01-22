@@ -9,6 +9,7 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   val parser = new Parsers[Id](new Ast[Id])
   import parser.ast._
+  import PredefinedFunction._
 
   "The expression parser" - {
     "should parse" - {
@@ -26,29 +27,29 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
 
       "additions" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a + $b") shouldBe Expr.FuncCall("+", List(unsafeParse(a), unsafeParse(b)))
+          unsafeParse(s"$a + $b") shouldBe Expr.FuncCall(Add, List(unsafeParse(a), unsafeParse(b)))
         }
       }
 
       "multiplications" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a * $b") shouldBe Expr.FuncCall("*", List(unsafeParse(a), unsafeParse(b)))
+          unsafeParse(s"$a * $b") shouldBe Expr.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b)))
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe Expr.FuncCall(
-            "+",
-            List(Expr.FuncCall("*", List(unsafeParse(a), unsafeParse(b))), unsafeParse(c)))
+            Add,
+            List(Expr.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c)))
         }
       }
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a + $b * $c") shouldBe Expr.FuncCall(
-            "+",
-            List(unsafeParse(a), Expr.FuncCall("*", List(unsafeParse(b), unsafeParse(c))))
+            Add,
+            List(unsafeParse(a), Expr.FuncCall(Multiply, List(unsafeParse(b), unsafeParse(c))))
           )
         }
       }
@@ -56,15 +57,15 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"($a + $b) * $c") shouldBe Expr.FuncCall(
-            "*",
-            List(Expr.FuncCall("+", List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+            Multiply,
+            List(Expr.FuncCall(Add, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
           )
         }
       }
 
       "function calls" in {
-        forAll(genIdentifier, genFunctionArgs) { (f, args) =>
-          val expr = s"$f(${args.mkString(", ")})"
+        forAll(genPredefinedFunc, genFunctionArgs) { (f, args) =>
+          val expr = s"${f.entryName}(${args.mkString(", ")})"
           val expected = Expr.FuncCall(f, args.map(unsafeParse))
           unsafeParse(expr) shouldBe expected
         }
@@ -88,22 +89,23 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe Expr.Lambda(
             Expr.Var(identifier1),
-            Expr.FuncCall("+", List(unsafeParse(expr1), unsafeParse(expr2))))
+            Expr.FuncCall(Add, List(unsafeParse(expr1), unsafeParse(expr2))))
         }
       }
 
-      "Parse a complex expression: a -> b -> ($c + 2) * f($d, g(-1))" in {
-        val parsed = unsafeParse("a -> b -> ($c + 2) * f($d, g(-1))")
+      "Parse a complex expression: a -> b -> ($c + 2) * app($d, inverse(-1))" in {
+        val parsed = unsafeParse("a -> b -> ($c + 2) * app($d, inverse(-1))")
         val expected =
           Expr.Lambda(
             Expr.Var("a"),
             Expr.Lambda(
               Expr.Var("b"),
               Expr.FuncCall(
-                "*",
+                Multiply,
                 List(
-                  Expr.FuncCall("+", List(Expr.Var("c"), Expr.Number("2"))),
-                  Expr.FuncCall("f", List(Expr.Var("d"), Expr.FuncCall("g", List(Expr.Number("-1")))))))
+                  Expr.FuncCall(Add, List(Expr.Var("c"), Expr.Number("2"))),
+                  Expr.FuncCall(App, List(Expr.Var("d"), Expr.FuncCall(Inverse, List(Expr.Number("-1"))))))
+              )
             )
           )
         parsed shouldBe expected
@@ -126,6 +128,9 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
     head <- Gen.alphaChar
     tail <- Gen.alphaNumStr
   } yield head + tail
+
+  def genPredefinedFunc: Gen[PredefinedFunction] =
+    Gen.oneOf(PredefinedFunction.values)
 
   def unsafeParse(string: String): Expr = parser.parser.parse(string).get.value
 }

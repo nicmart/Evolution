@@ -4,7 +4,7 @@ import scala.util.Try
 
 class Typer[F[_]](val ast: Ast[F]) {
   import ast._
-  import Expr._
+  import Expr._, PredefinedFunction._
 
   /**
    * Traverse the AST and assign type variables to each expression.
@@ -17,9 +17,9 @@ class Typer[F[_]](val ast: Ast[F]) {
     case Var(_, _) => Constraints.empty
     case FuncCall(funcName, args, tpe) =>
       (funcName, args) match {
-        case ("point", x :: y :: Nil) =>
+        case (Point, x :: y :: Nil) =>
           Constraints(tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
-        case ("app", f :: x :: Nil) =>
+        case (App, f :: x :: Nil) =>
           Constraints(f.tpe -> Type.Arrow(x.tpe, tpe))
       }
     case Lambda(variable, lambdaExpr, tpe) =>

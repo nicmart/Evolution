@@ -28,7 +28,7 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "pre-defined functions" - {
         "point" in {
           forAll(genNumber, genNumber) { (x, y) =>
-            val p = Expr.FuncCall("point", List(x, y), Type.Var("X"))
+            val p = Expr.FuncCall(PredefinedFunction.Point, List(x, y), Type.Var("X"))
             typer.findConstraints(p) shouldBe Constraints(p.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
           }
         }
@@ -37,7 +37,8 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "complex expressions" - {
         pending
         "x -> point($x, $x)" in {
-          val lambda = Expr.Lambda(Expr.Var("x"), Expr.FuncCall("point", List(Expr.Var("x"), Expr.Var("x"))))
+          val lambda =
+            Expr.Lambda(Expr.Var("x"), Expr.FuncCall(PredefinedFunction.Point, List(Expr.Var("x"), Expr.Var("x"))))
           val typed = typer.assignVars(lambda)
           typer.findConstraints(typed) shouldBe Constraints.empty
         }
