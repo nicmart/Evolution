@@ -33,6 +33,15 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
           }
         }
       }
+
+      "complex expressions" - {
+        pending
+        "x -> point($x, $x)" in {
+          val lambda = Expr.Lambda(Expr.Var("x"), Expr.FuncCall("point", List(Expr.Var("x"), Expr.Var("x"))))
+          val typed = typer.assignVars(lambda)
+          typer.findConstraints(typed) shouldBe Constraints.empty
+        }
+      }
     }
   }
 

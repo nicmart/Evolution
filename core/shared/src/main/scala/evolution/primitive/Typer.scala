@@ -4,42 +4,56 @@ import scala.util.Try
 
 class Typer[F[_]](val ast: Ast[F]) {
   import ast._
+  import Expr._
 
   /**
-   * Travers the AST and assign type variables to each expression.
+   * Traverse the AST and assign type variables to each expression.
    * No constraint is added at this stage
    */
   def assignVars(expr: Expr): Expr =
     assignVarsRec(TypeVars.empty, expr)._2
 
   def findConstraints(expr: Expr): Constraints = (expr match {
-    case Expr.Var(_, _) => Constraints.empty
-    case Expr.FuncCall(funcName, args, tpe) =>
+    case Var(_, _) => Constraints.empty
+    case FuncCall(funcName, args, tpe) =>
       (funcName, args) match {
         case ("point", x :: y :: Nil) =>
           Constraints(tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
+        case ("app", f :: x :: Nil) =>
+          Constraints(f.tpe -> Type.Arrow(x.tpe, tpe))
       }
-    case Expr.Lambda(varName, expr, tpe) => Constraints.empty
-    case Expr.Number(n, tpe)             => Constraints.empty
+    case Lambda(variable, lambdaExpr, tpe) =>
+      val arrowConstraint = Constraints(tpe -> Type.Arrow(variable.tpe, lambdaExpr.tpe))
+      val variableConstraints = Constraints(varUsagesIn(variable.name, lambdaExpr).map(u => u.tpe -> variable.tpe): _*)
+      arrowConstraint.merge(variableConstraints)
+    case Number(n, tpe) => Constraints.empty
+    case _              => ???
   }).merge(expr.children.map(findConstraints))
 
   def varUsagesIn(varName: String, expr: Expr): List[Expr] =
     expr match {
-      case Expr.Var(name, _) if name == varName                                       => List(expr)
-      case Expr.Var(_, _)                                                             => Nil
-      case Expr.FuncCall(funcName, args, _)                                           => args.flatMap(varUsagesIn(varName, _))
-      case Expr.Lambda(Expr.Var(lambdaVar, _), lambdaExpr, _) if lambdaVar == varName => Nil // Shadowing
-      case Expr.Lambda(lambdaVar, lambdaExpr, _)                                      => varUsagesIn(varName, lambdaExpr)
-      case Expr.Number(n, _)                                                          => Nil
+      case Var(name, _) if name == varName                                  => List(expr)
+      case Var(_, _)                                                        => Nil
+      case FuncCall(funcName, args, _)                                      => args.flatMap(varUsagesIn(varName, _))
+      case Lambda(Var(lambdaVar, _), lambdaExpr, _) if lambdaVar == varName => Nil // Shadowing
+      case Lambda(_, lambdaExpr, _)                                         => varUsagesIn(varName, lambdaExpr)
+      case Number(n, _)                                                     => Nil
     }
 
-  case class Constraint(a: Type, b: Type)
+  case class Constraint(a: Type, b: Type) {
+    def reverse: Constraint = Constraint(b, a)
+    def isEquivalentTo(other: Constraint): Boolean = this == other || this == other.reverse
+  }
+
   case class Constraints(constraints: List[Constraint]) {
     def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
     def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
       constraints.merge(current)
     }
+    def isEquivalentTo(other: Constraints): Boolean = ???
+    override def toString: String = constraints.map(c => s"${c.a} = ${c.b}").mkString("\n")
   }
+
   object Constraints {
     val empty: Constraints = Constraints(Nil)
     def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
@@ -49,25 +63,25 @@ class Typer[F[_]](val ast: Ast[F]) {
 
   private def assignVarsRec(vars: TypeVars, expr: Expr): (TypeVars, Expr) =
     expr match {
-      case Expr.Var(name, _) =>
+      case Var(name, _) =>
         vars.withNext(expr.withType)
 
-      case Expr.Number(n, _) =>
+      case Number(n, _) =>
         vars.withNext(expr.withType)
 
-      case Expr.FuncCall(funcName, funcArgs, _) =>
+      case FuncCall(funcName, funcArgs, _) =>
         val (typeVarsWithArgsVars, transformedArgs) =
           funcArgs.foldLeft[(TypeVars, List[Expr])]((vars, Nil)) {
             case ((typeVarsSoFar, typedArgsSoFar), arg) =>
               val (nextTypeVars, typedArg) = assignVarsRec(typeVarsSoFar, arg)
               (nextTypeVars, typedArg :: typedArgsSoFar)
           }
-        typeVarsWithArgsVars.withNext(next => Expr.FuncCall(funcName, transformedArgs.reverse, next))
+        typeVarsWithArgsVars.withNext(next => FuncCall(funcName, transformedArgs.reverse, next))
 
-      case Expr.Lambda(varName, lambdaBody, _) =>
+      case Lambda(varName, lambdaBody, _) =>
         val (vars1, typedVar) = assignVarsRec(vars, varName)
         val (vars2, typedBody) = assignVarsRec(vars1, lambdaBody)
-        vars2.withNext(next => Expr.Lambda(varName.copy(tpe = typedVar.tpe), typedBody, next))
+        vars2.withNext(next => Lambda(varName.copy(tpe = typedVar.tpe), typedBody, next))
     }
 
   private class TypeVars(total: Int) {
