@@ -23,6 +23,16 @@ class Typer[F[_]](val ast: Ast[F]) {
     case Expr.Number(n, tpe)             => Constraints.empty
   }).merge(expr.children.map(findConstraints))
 
+  def varUsagesIn(varName: String, expr: Expr): List[Expr] =
+    expr match {
+      case Expr.Var(name, _) if name == varName                                       => List(expr)
+      case Expr.Var(_, _)                                                             => Nil
+      case Expr.FuncCall(funcName, args, _)                                           => args.flatMap(varUsagesIn(varName, _))
+      case Expr.Lambda(Expr.Var(lambdaVar, _), lambdaExpr, _) if lambdaVar == varName => Nil // Shadowing
+      case Expr.Lambda(lambdaVar, lambdaExpr, _)                                      => varUsagesIn(varName, lambdaExpr)
+      case Expr.Number(n, _)                                                          => Nil
+    }
+
   case class Constraint(a: Type, b: Type)
   case class Constraints(constraints: List[Constraint]) {
     def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
