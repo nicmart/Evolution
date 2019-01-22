@@ -29,6 +29,45 @@ class Ast[F[_]] {
     final case class Number(n: String, tpe: Type = Type.Var("")) extends Expr
   }
 
+  abstract sealed class PredefinedFunction(val arity: Int)
+
+  object PredefinedFunction {
+    // Constants
+    case object Point extends PredefinedFunction(2)
+    case object Add extends PredefinedFunction(2)
+    case object Inverse extends PredefinedFunction(1)
+    case object Multiply extends PredefinedFunction(2)
+    case object Sin extends PredefinedFunction(1)
+    case object Cos extends PredefinedFunction(1)
+    case object Eq extends PredefinedFunction(2)
+    case object IfThen extends PredefinedFunction(3)
+
+    // Bindings
+    case object Fix extends PredefinedFunction(1)
+    //case object Let extends PredefinedFunction(1)
+
+    // Chain
+    case object Empty extends PredefinedFunction(0)
+    case object Cons extends PredefinedFunction(2)
+    case object MapEmpty extends PredefinedFunction(2)
+    case object MapCons extends PredefinedFunction(2)
+
+    // Derived
+    case object Cartesian extends PredefinedFunction(2)
+    case object Polar extends PredefinedFunction(2)
+    case object Constant extends PredefinedFunction(1)
+    case object Integrate extends PredefinedFunction(2)
+    case object Solve1 extends PredefinedFunction(2)
+    case object Solve2 extends PredefinedFunction(2)
+    case object Concat extends PredefinedFunction(2)
+    case object Map extends PredefinedFunction(2)
+    case object FlatMap extends PredefinedFunction(2)
+    case object Take extends PredefinedFunction(2)
+
+    // Distribution
+    case object Uniform extends PredefinedFunction(2)
+  }
+
   sealed trait Type {
     type Out
     def children: List[Type] = this match {
