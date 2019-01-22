@@ -45,7 +45,7 @@ class Ast[F[_]] {
     case object Sin extends PredefinedFunction(1)
     case object Cos extends PredefinedFunction(1)
     case object Eq extends PredefinedFunction(2)
-    case object IfThen extends PredefinedFunction(3)
+    case object If extends PredefinedFunction(3)
 
     // Bindings
     case object Fix extends PredefinedFunction(1)
