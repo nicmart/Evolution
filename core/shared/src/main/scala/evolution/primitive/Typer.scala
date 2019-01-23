@@ -71,19 +71,19 @@ class Typer[F[_]](val ast: Ast[F]) {
       case (App, f :: x :: Nil) =>
         (typeVars, Constraints(f.tpe -> Type.Arrow(x.tpe, func.tpe)))
       case (Empty, Nil) =>
-        (typeVars, Constraints(func.tpe -> Type.Evo(Type.Var("Not used"))))
+        typeVars.withNext(v => Constraints(func.tpe -> Type.Evo(v)))
       case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
         (typeVars, Constraints(func.tpe -> y.tpe, y.tpe -> Type.Evo(x.tpe), func.tpe -> Type.Evo(x.tpe)))
       case (MapEmpty, x :: y :: Nil) =>
         (typeVars, Constraints(func.tpe -> x.tpe, func.tpe -> y.tpe, x.tpe -> y.tpe))
-      case (MapCons, x :: f :: Nil) => // TODO we need to generate new type vars...
-        (
-          typeVars,
+      case (MapCons, x :: f :: Nil) =>
+        typeVars.withNext2 { (a, b) =>
           Constraints(
-            x.tpe -> Type.Evo(Type.Var("X")),
-            func.tpe -> Type.Evo(Type.Var("Y")),
-            f.tpe -> Type.Arrow(Type.Var("X"), Type.Arrow(Type.Evo(Type.Var("X")), Type.Evo(Type.Var("Y"))))
-          ))
+            x.tpe -> Type.Evo(a),
+            func.tpe -> Type.Evo(b),
+            f.tpe -> Type.Arrow(a, Type.Arrow(Type.Evo(a), Type.Evo(b)))
+          )
+        }
 
       case (Cartesian, x :: y :: Nil) =>
         (
@@ -107,37 +107,37 @@ class Typer[F[_]](val ast: Ast[F]) {
             func.tpe -> Type.Evo(x.tpe),
             x.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))))
       case (Concat, x :: y :: Nil) => // TODO gen new vars
-        (
-          typeVars,
+        typeVars.withNext { a =>
           Constraints(
-            x.tpe -> Type.Evo(Type.Var("X")),
-            y.tpe -> Type.Evo(Type.Var("X")),
-            func.tpe -> Type.Evo(Type.Var("X")),
-          ))
-      case (Map, x :: f :: Nil) => // TODO we need to generate new type vars
-        (
-          typeVars,
+            x.tpe -> Type.Evo(a),
+            y.tpe -> Type.Evo(a),
+            func.tpe -> Type.Evo(a),
+          )
+        }
+      case (Map, x :: f :: Nil) =>
+        typeVars.withNext2 { (a, b) =>
           Constraints(
-            x.tpe -> Type.Evo(Type.Var("X")),
-            func.tpe -> Type.Evo(Type.Var("Y")),
-            f.tpe -> Type.Arrow(Type.Var("X"), Type.Var("Y"))
-          ))
-      case (FlatMap, x :: f :: Nil) => // TODO we need to generate new type vars
-        (
-          typeVars,
+            x.tpe -> Type.Evo(a),
+            func.tpe -> Type.Evo(b),
+            f.tpe -> Type.Arrow(a, b)
+          )
+        }
+      case (FlatMap, x :: f :: Nil) =>
+        typeVars.withNext2 { (a, b) =>
           Constraints(
-            x.tpe -> Type.Evo(Type.Var("X")),
-            func.tpe -> Type.Evo(Type.Var("Y")),
-            f.tpe -> Type.Arrow(Type.Var("X"), Type.Evo(Type.Var("Y")))
-          ))
-      case (Take, n :: e :: Nil) => // TODO we need to generate new type vars
-        (
-          typeVars,
+            x.tpe -> Type.Evo(a),
+            func.tpe -> Type.Evo(b),
+            f.tpe -> Type.Arrow(a, Type.Evo(b))
+          )
+        }
+      case (Take, n :: e :: Nil) =>
+        typeVars.withNext { a =>
           Constraints(
             n.tpe -> Type.Integer,
-            e.tpe -> Type.Evo(Type.Var("X")),
-            func.tpe -> Type.Evo(Type.Var("X")),
-          ))
+            e.tpe -> Type.Evo(a),
+            func.tpe -> Type.Evo(a),
+          )
+        }
 
       case (Uniform, from :: to :: Nil) =>
         (typeVars, Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl))

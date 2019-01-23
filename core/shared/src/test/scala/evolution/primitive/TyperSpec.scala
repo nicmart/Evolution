@@ -38,7 +38,15 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       }
 
       "complex expressions" - {
-        pending
+        //pending
+        "mapCons" in {
+          val expr = Expr.FuncCall(
+            PredefinedFunction.MapCons,
+            List(Expr.Var("fa"), Expr.Lambda(Expr.Var("head"), Expr.Lambda(Expr.Var("tail"), Expr.Var("tail")))))
+          println(expr)
+          println(typer.assignVarsAndFindConstraints(expr))
+        }
+
         "x -> point($x, $x)" in {
           val lambda =
             Expr.Lambda(Expr.Var("x"), Expr.FuncCall(PredefinedFunction.Point, List(Expr.Var("x"), Expr.Var("x"))))
