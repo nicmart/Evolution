@@ -15,13 +15,13 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "numbers" in {
         forAll(genNumber) { numberExpr =>
           // Numbers literals are overloaded, we defer a decision on this
-          typer.findConstraints(numberExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
+          typer.assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
         }
       }
 
       "vars" in {
         forAll(genVar) { varExpr =>
-          typer.findConstraints(varExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
+          typer.assignVarsAndFindConstraints(varExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
         }
       }
 
@@ -29,7 +29,10 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
         "point" in {
           forAll(genNumber, genNumber) { (x, y) =>
             val p = Expr.FuncCall(PredefinedFunction.Point, List(x, y), Type.Var("X"))
-            typer.findConstraints(p) shouldBe Constraints(p.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl)
+            typer.findConstraints(TypeVars.empty, p)._2 shouldBe Constraints(
+              p.tpe -> Type.Point,
+              x.tpe -> Type.Dbl,
+              y.tpe -> Type.Dbl)
           }
         }
       }
@@ -39,8 +42,8 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
         "x -> point($x, $x)" in {
           val lambda =
             Expr.Lambda(Expr.Var("x"), Expr.FuncCall(PredefinedFunction.Point, List(Expr.Var("x"), Expr.Var("x"))))
-          val typed = typer.assignVars(lambda)
-          typer.findConstraints(typed) shouldBe Constraints.empty
+          val (vars1, typed) = typer.assignVars(TypeVars.empty, lambda)
+          typer.findConstraints(vars1, typed)._2 shouldBe Constraints.empty
         }
       }
     }
