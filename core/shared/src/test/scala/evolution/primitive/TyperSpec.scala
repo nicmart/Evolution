@@ -43,8 +43,11 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
           val expr = Expr.FuncCall(
             PredefinedFunction.MapCons,
             List(Expr.Var("fa"), Expr.Lambda(Expr.Var("head"), Expr.Lambda(Expr.Var("tail"), Expr.Var("tail")))))
-          println(expr)
-          println(typer.assignVarsAndFindConstraints(expr))
+
+          val (vars1, withVars) = assignVars(TypeVars.empty, expr)
+          val (vars2, constraints) = findConstraints(vars1, withVars)
+          println(withVars)
+          println(constraints)
         }
 
         "x -> point($x, $x)" in {

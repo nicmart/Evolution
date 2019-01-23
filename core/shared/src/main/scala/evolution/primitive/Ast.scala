@@ -83,7 +83,10 @@ class Ast[F[_]] {
     }
   }
   object Type {
-    final case class Var(name: String) extends Type { type Out = Nothing }
+    final case class Var(name: String) extends Type {
+      type Out = Nothing
+      override def toString: String = name
+    }
     final case object Integer extends Type { type Out = Int }
     final case object Dbl extends Type { type Out = Double }
     final case object Point extends Type { type Out = geometry.Point }

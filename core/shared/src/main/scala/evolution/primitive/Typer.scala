@@ -21,7 +21,7 @@ class Typer[F[_]](val ast: Ast[F]) {
       case FuncCall(funcName, funcArgs, _) =>
         val (typeVarsWithArgsVars, transformedArgs) =
           vars.traverse(funcArgs)(assignVars)
-        typeVarsWithArgsVars.withNext(next => FuncCall(funcName, transformedArgs.reverse, next))
+        typeVarsWithArgsVars.withNext(next => FuncCall(funcName, transformedArgs, next))
 
       case Lambda(varName, lambdaBody, _) =>
         val (vars1, typedVar) = assignVars(vars, varName)
