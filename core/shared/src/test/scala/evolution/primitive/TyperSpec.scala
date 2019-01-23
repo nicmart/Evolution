@@ -9,19 +9,20 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
   val typer = new Typer[Id](new Ast[Id])
   import typer._
   import typer.ast._
+  import typer.ast.Expr._
 
   "The typer" - {
     "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
           // Numbers literals are overloaded, we defer a decision on this
-          typer.assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
+          typer.assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X")))._2 shouldBe Constraints.empty
         }
       }
 
       "vars" in {
         forAll(genVar) { varExpr =>
-          typer.assignVarsAndFindConstraints(varExpr.withType(Type.Var("X"))) shouldBe Constraints.empty
+          typer.assignVarsAndFindConstraints(varExpr.withType(Type.Var("X")))._2 shouldBe Constraints.empty
         }
       }
 
@@ -38,7 +39,7 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       }
 
       "complex expressions" - {
-        //pending
+        pending
         "mapCons" in {
           val expr = Expr.FuncCall(
             PredefinedFunction.MapCons,
@@ -57,6 +58,47 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
           typer.findConstraints(vars1, typed)._2 shouldBe Constraints.empty
         }
       }
+    }
+
+    "should unify" - {
+      "point expressions" in {
+        val untyped = Expr.FuncCall(PredefinedFunction.Point, Expr.Var("a") :: Expr.Var("b") :: Nil)
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped)
+        val substitution = unify(constraints).right.get
+        substitution.substitute(expr).tpe shouldBe Type.Point
+      }
+
+      "app(x -> $x, 2)" in {
+        val identity = Expr.Lambda(Expr.Var("x"), Expr.Var("x"))
+        val untyped = Expr.FuncCall(PredefinedFunction.App, List(identity, Expr.Number("2", Type.Dbl)))
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped)
+        println(constraints)
+        val substitution = unify(constraints).right.get
+        println(substitution)
+        println(expr)
+        println(substitution.substitute(expr))
+        substitution.substitute(expr).tpe shouldBe Type.Dbl
+      }
+
+      "mapCons(empty, head -> tail -> cons(1, tail))" in {
+        val untyped = FuncCall(
+          PredefinedFunction.MapCons,
+          List(
+            FuncCall(PredefinedFunction.Empty, Nil),
+            Lambda(
+              Var("head"),
+              Lambda(
+                Var("tail"),
+                FuncCall(PredefinedFunction.Cons, List(Number("1", Type.Dbl), Var("tail")))
+              )
+            )
+          )
+        )
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped)
+        val substitution = unify(constraints).right.get
+        substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Dbl)
+      }
+
     }
   }
 

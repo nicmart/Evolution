@@ -12,6 +12,8 @@ class Typer[F[_]](val ast: Ast[F]) {
    */
   def assignVars(vars: TypeVars, expr: Expr): (TypeVars, Expr) =
     expr match {
+      case _ if expr.tpe != Type.Var("") =>
+        (vars, expr)
       case Var(name, _) =>
         vars.withNext(expr.withType)
 
@@ -45,8 +47,32 @@ class Typer[F[_]](val ast: Ast[F]) {
     (vars2, constraints1.merge(constraints2))
   }
 
-  def assignVarsAndFindConstraints(expr: Expr): Constraints =
-    (findConstraints _).tupled(assignVars(TypeVars.empty, expr))._2
+  def assignVarsAndFindConstraints(expr: Expr): (Expr, Constraints) = {
+    val (vars, exprWithVars) = assignVars(TypeVars.empty, expr)
+    (exprWithVars, findConstraints(vars, exprWithVars)._2)
+  }
+
+  def unify(constraints: Constraints): Either[String, Substitution] =
+    constraints.constraints match {
+      case Nil => Right(Substitution.Empty)
+      case head :: tail =>
+        head match {
+          case Constraint(a, b) if a == b => unify(Constraints(tail))
+          case Constraint(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
+            val substituteVar = Substitution.Simple(x, t)
+            val constraints2 = substituteVar.substitute(Constraints(tail))
+            unify(constraints2).map(subst => Substitution.Composite(substituteVar, subst))
+          case Constraint(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
+            val substituteVar = Substitution.Simple(x, t)
+            val constraints2 = substituteVar.substitute(Constraints(tail))
+            unify(constraints2).map(subst => Substitution.Composite(substituteVar, subst))
+          case Constraint(Type.Evo(a), Type.Evo(b)) =>
+            unify(Constraints(a -> b).merge(Constraints(tail)))
+          case Constraint(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
+            unify(Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
+          case _ => Left(s"$head constraint can't be unified")
+        }
+    }
 
   private def findConstraintsOfPredefinedFunctionCall(typeVars: TypeVars, func: FuncCall): (TypeVars, Constraints) =
     (func.funcId, func.args) match {
@@ -73,7 +99,7 @@ class Typer[F[_]](val ast: Ast[F]) {
       case (Empty, Nil) =>
         typeVars.withNext(v => Constraints(func.tpe -> Type.Evo(v)))
       case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
-        (typeVars, Constraints(func.tpe -> y.tpe, y.tpe -> Type.Evo(x.tpe), func.tpe -> Type.Evo(x.tpe)))
+        (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe), func.tpe -> Type.Evo(x.tpe)))
       case (MapEmpty, x :: y :: Nil) =>
         (typeVars, Constraints(func.tpe -> x.tpe, func.tpe -> y.tpe, x.tpe -> y.tpe))
       case (MapCons, x :: f :: Nil) =>
@@ -145,12 +171,20 @@ class Typer[F[_]](val ast: Ast[F]) {
 
   def varUsagesIn(varName: String, expr: Expr): List[Expr] =
     expr match {
-      case Var(name, _) if name == varName                                  => List(expr)
-      case Var(_, _)                                                        => Nil
-      case FuncCall(funcName, args, _)                                      => args.flatMap(varUsagesIn(varName, _))
-      case Lambda(Var(lambdaVar, _), lambdaExpr, _) if lambdaVar == varName => Nil // Shadowing
-      case Lambda(_, lambdaExpr, _)                                         => varUsagesIn(varName, lambdaExpr)
-      case Number(n, _)                                                     => Nil
+      case Var(name, _) if name == varName                         => List(expr)
+      case Var(_, _)                                               => Nil
+      case FuncCall(funcName, args, _)                             => args.flatMap(varUsagesIn(varName, _))
+      case Lambda(Var(lambdaVar, _), _, _) if lambdaVar == varName => Nil // Shadowing
+      case Lambda(_, lambdaExpr, _)                                => varUsagesIn(varName, lambdaExpr)
+      case Number(n, _)                                            => Nil
+    }
+
+  def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =
+    tpe match {
+      case Type.Var(name) if name == varName => List(tpe)
+      case Type.Evo(inner)                   => typeVarUsagesIn(varName, inner)
+      case Type.Arrow(from, to)              => typeVarUsagesIn(varName, from) ++ typeVarUsagesIn(varName, to)
+      case _                                 => Nil
     }
 
   case class Constraint(a: Type, b: Type) {
@@ -183,6 +217,20 @@ class Typer[F[_]](val ast: Ast[F]) {
     final def substitute(c: Constraints): Constraints =
       Constraints(c.constraints.map(substitute))
 
+    final def substitute(expr: Expr): Expr =
+      expr match {
+        case variable @ Expr.Var(name, tpe)   => substitute(variable)
+        case Expr.FuncCall(funcId, args, tpe) => Expr.FuncCall(funcId, args.map(substitute), substitute(tpe))
+        case Expr.Lambda(varName, lambdaExpr, tpe) =>
+          Expr.Lambda(substitute(varName), substitute(lambdaExpr), substitute(tpe))
+        case Expr.Number(n, tpe) => Expr.Number(n, substitute(tpe))
+      }
+
+    final def substitute(expr: Expr.Var): Expr.Var =
+      expr match {
+        case Expr.Var(name, tpe) => Expr.Var(name, substitute(tpe))
+      }
+
     final def andThen(other: Substitution): Substitution =
       Substitution.Composite(this, other)
   }
@@ -203,6 +251,10 @@ class Typer[F[_]](val ast: Ast[F]) {
 
     final case class Composite(a: Substitution, b: Substitution) extends Substitution {
       override def substitute(t: Type): Type = b.substitute(a.substitute(t))
+    }
+
+    final case object Empty extends Substitution {
+      override def substitute(t: Type): Type = t
     }
   }
 
