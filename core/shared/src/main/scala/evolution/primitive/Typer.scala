@@ -19,13 +19,8 @@ class Typer[F[_]](val ast: Ast[F]) {
         vars.withNext(expr.withType)
 
       case FuncCall(funcName, funcArgs, _) =>
-        // TODO use traverse?
         val (typeVarsWithArgsVars, transformedArgs) =
-          funcArgs.foldLeft[(TypeVars, List[Expr])]((vars, Nil)) {
-            case ((typeVarsSoFar, typedArgsSoFar), arg) =>
-              val (nextTypeVars, typedArg) = assignVars(typeVarsSoFar, arg)
-              (nextTypeVars, typedArg :: typedArgsSoFar)
-          }
+          vars.traverse(funcArgs)(assignVars)
         typeVarsWithArgsVars.withNext(next => FuncCall(funcName, transformedArgs.reverse, next))
 
       case Lambda(varName, lambdaBody, _) =>
