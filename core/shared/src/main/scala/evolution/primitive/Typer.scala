@@ -174,6 +174,38 @@ class Typer[F[_]](val ast: Ast[F]) {
     })
   }
 
+  sealed trait Substitution {
+    def substitute(t: Type): Type
+
+    final def substitute(c: Constraint): Constraint =
+      Constraint(substitute(c.a), substitute(c.b))
+
+    final def substitute(c: Constraints): Constraints =
+      Constraints(c.constraints.map(substitute))
+
+    final def andThen(other: Substitution): Substitution =
+      Substitution.Composite(this, other)
+  }
+
+  object Substitution {
+    final case class Simple(variable: String, withType: Type) extends Substitution {
+      override def substitute(t: Type): Type = t match {
+        case Type.Var(name) if name == variable => withType
+        case Type.Evo(inner)                    => Type.Evo(substitute(inner))
+        case Type.Arrow(from, to)               => Type.Arrow(substitute(from), substitute(to))
+        case Type.Var(name)                     => t
+        case Type.Integer                       => t
+        case Type.Dbl                           => t
+        case Type.Point                         => t
+        case Type.Bool                          => t
+      }
+    }
+
+    final case class Composite(a: Substitution, b: Substitution) extends Substitution {
+      override def substitute(t: Type): Type = b.substitute(a.substitute(t))
+    }
+  }
+
   class TypeVars(total: Int) {
     def withNext[T](f: Type.Var => T): (TypeVars, T) =
       (new TypeVars(total + 1), f(Type.Var(s"T$total")))
