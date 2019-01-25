@@ -1,17 +1,8 @@
 package evolution.primitive
 import cats.Id
-import org.scalacheck.{ Gen, Shrink }
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalatest.{ FreeSpec, Matchers }
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalacheck.Shrink
 
-class ASTParserSpec
-    extends FreeSpec
-    with Matchers
-    with GeneratorDrivenPropertyChecks
-    with ParsersModule[Id]
-    with ASTArbitraries[Id]
-    with WithAst[Id] {
+class ASTParserSpec extends CompilerSpecModule[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   import ast._
   import PredefinedFunction._

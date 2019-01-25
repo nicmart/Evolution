@@ -1,18 +1,7 @@
 package evolution.primitive
-import cats.Id
-import org.scalacheck.Gen
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalatest.{ FreeSpec, Matchers }
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import evolution.data.initial
 
-class TyperSpec
-    extends FreeSpec
-    with Matchers
-    with GeneratorDrivenPropertyChecks
-    with TyperModule[Id]
-    with ParsersModule[Id]
-    with ASTArbitraries[Id]
-    with WithAst[Id] {
+class TyperSpec extends CompilerSpecModule[initial.F] {
   import Typer._, ast._, Expr._
   val typer = Typer
 
@@ -107,20 +96,4 @@ class TyperSpec
 
     }
   }
-
-  def genNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Double].map(d => Expr.Number(d.toString)))
-  def genIntNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Int].map(d => Expr.Number(d.toString)))
-  def genNotIntNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Int].map(d => Expr.Number((0.1 + d).toString)))
-
-  def withRandomTypeVar(gen: Gen[Expr]): Gen[Expr] =
-    for {
-      expr <- gen
-      typeChar <- Gen.alphaChar
-    } yield expr.withType(Type.Var(typeChar.toString.toUpperCase))
-
-  def genVar: Gen[Expr.Var] =
-    for {
-      char <- Gen.alphaChar
-      typeChar <- Gen.alphaChar
-    } yield Expr.Var(char.toString, Type.Var(typeChar.toString.toUpperCase))
 }
