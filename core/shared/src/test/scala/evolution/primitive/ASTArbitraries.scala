@@ -29,6 +29,12 @@ trait ASTArbitraries[F[_]] { self: WithAst[F] =>
   def genNotIntNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Int].map(d => Expr.Number((0.1 + d).toString)))
 
   def genTypedNumber: Gen[Expr.Number] = arbitrary[Double].map(d => Expr.Number(d.toString, Type.Dbl))
+  def genTypedVar: Gen[Expr.Var] = for {
+    id <- genIdentifier
+    tpe <- genType
+  } yield Expr.Var(id, tpe)
+
+  def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
 
   def withRandomTypeVar(gen: Gen[Expr]): Gen[Expr] =
     for {

@@ -1,10 +1,12 @@
 package evolution.primitive
 import enumeratum.{ Enum, EnumEntry }
 import evolution.geometry
+import evolution.primitive.algebra.evolution.Evolution
 
 import scala.collection.immutable
 
 class Ast[F[_]] {
+
   sealed trait Expr {
     val tpe: Type
     final type Out = tpe.Out

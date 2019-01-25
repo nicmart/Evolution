@@ -12,9 +12,13 @@ class CompilerSpec extends CompilerSpecModule[initial.F] {
       "number literals" in forAll(genTypedNumber) { n =>
         unsafeCompile(n) shouldBe initial.Dbl(n.n.toDouble)
       }
+
+      "variable usages" in forAll(genTypedVar) { v =>
+        unsafeCompile(v) shouldBe initial.Var0[v.Out](v.name)
+      }
     }
   }
 
-  private def unsafeCompile(expr: Expr): initial.R[_] =
+  private def unsafeCompile(expr: Expr): initial.R[expr.Out] =
     Compiler.compile[initial.R](expr, alg).right.get
 }
