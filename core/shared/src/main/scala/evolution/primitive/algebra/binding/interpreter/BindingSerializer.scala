@@ -3,7 +3,7 @@ import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.binding.Binding
 
 // TODO missing test
-object BindingSerializer extends Binding[CtxString, String] {
+trait BindingSerializer extends Binding[CtxString, String] {
   override def var0[A](name: String): CtxString[A] = {
     case head :: tail => s"$$$head"
   }
@@ -22,3 +22,5 @@ object BindingSerializer extends Binding[CtxString, String] {
   override def app[A, B](f: CtxString[A], b: CtxString[B]): CtxString[A] =
     ctx => s"app(${f(ctx)}, ${b(ctx)})"
 }
+
+object BindingSerializer extends BindingSerializer

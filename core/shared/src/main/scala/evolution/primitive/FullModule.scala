@@ -6,7 +6,9 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
   def parse[R[_]](
     serialisedExpr: String,
     expectedType: Type,
-    alg: Evolution[F, R]): Either[String, R[expectedType.Out]] = {
+    alg: Evolution[F, R],
+    ctx: VarContext
+  ): Either[String, R[expectedType.Out]] = {
 
     val parsed: Either[String, Expr] =
       Parsers.parser.parse(serialisedExpr).fold((_, _, f) => Left(f.toString), (expr, _) => Right(expr))
@@ -17,7 +19,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
       constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe))
       unification <- Typer.unify(constraintsWithExpectedType)
       typedExpr = unification.substitute(exprWithTypeVars)
-      result <- Compiler.compile[R](typedExpr, alg)
+      result <- Compiler.compile[R](typedExpr, alg, ctx)
     } yield result.asInstanceOf[R[expectedType.Out]]
   }
 }

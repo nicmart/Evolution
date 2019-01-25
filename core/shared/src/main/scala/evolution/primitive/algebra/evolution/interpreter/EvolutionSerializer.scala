@@ -24,3 +24,12 @@ class EvolutionSerializer[F[_]] extends Evolution[F, CtxString] {
 class DesugarEvolutionSerializer[F[_]] extends EvolutionSerializer[F] {
   override val derived: Derived[F, CtxString] = new DefaultDerived[F, CtxString](new EvolutionSerializer[F])
 }
+
+class DeBrujinEvolutionSerializer[F[_]] extends EvolutionSerializer[F] {
+  override val bind: Binding[CtxString, String] = new BindingSerializer {
+    override def var0[A](name: String): CtxString[A] =
+      ctx => "var(0)"
+    override def shift[A](expr: CtxString[A]): CtxString[A] =
+      ctx => s"shift(${expr(ctx)})"
+  }
+}

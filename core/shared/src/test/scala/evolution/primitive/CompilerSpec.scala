@@ -17,6 +17,12 @@ class CompilerSpec extends CompilerSpecModule[initial.F] {
         unsafeCompile(v) shouldBe initial.Var0[v.Out](v.name)
       }
 
+      "variable usages in non-empty contexts" in forAll(genTypedVar) { v =>
+        whenever(v.name != "x") {
+          unsafeCompile(v, VarContext.empty.push(v.name).push("x")) shouldBe initial.Shift(initial.Var0[v.Out](v.name))
+        }
+      }
+
       "let bindings" in forAll(genTypedVar, genTypedNumber, genTypedNumber) { (variable, n1, n2) =>
         val variable1 = Expr.Var(variable.name, n1.tpe)
         unsafeCompile(Expr.Let(variable1, n1, n2)) shouldBe initial.Let(
@@ -28,9 +34,10 @@ class CompilerSpec extends CompilerSpecModule[initial.F] {
       "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>
         unsafeCompile(Lambda(variable, n)) shouldBe initial.Lambda(variable.name, unsafeCompile(n))
       }
+
     }
   }
 
-  private def unsafeCompile(expr: Expr): initial.R[expr.Out] =
-    Compiler.compile[initial.R](expr, alg).right.get
+  private def unsafeCompile(expr: Expr, ctx: VarContext = VarContext.empty): initial.R[expr.Out] =
+    Compiler.compile[initial.R](expr, alg, ctx).right.get
 }

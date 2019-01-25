@@ -8,6 +8,9 @@ trait Binding[R[_], Var] {
   def lambda[A, B](variable: Var, expr: R[B]): R[A => B]
   def app[A, B](f: R[A => B], a: R[A]): R[B]
   def fix[A](expr: R[A => A]): R[A]
+
+  final def varN[A](name: String, n: Int): R[A] =
+    if (n <= 0) var0(name) else shift(varN[A](name, n - 1))
 }
 
 object Binding {

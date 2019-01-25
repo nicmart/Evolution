@@ -128,6 +128,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           (
             typeVars,
             Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
+        case (Polar, x :: y :: Nil) =>
+          (
+            typeVars,
+            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
         case (Constant, x :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe)))
         case (Integrate, x :: y :: Nil) =>

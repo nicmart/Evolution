@@ -15,6 +15,7 @@ import evolution.geometry.Point
 import evolution.primitive.FullModule
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{
+  DeBrujinEvolutionSerializer,
   DesugarEvolutionSerializer,
   EvolutionExpr,
   EvolutionSerializer
@@ -28,29 +29,33 @@ object dsl extends DrawingDefinition[Point] {
 
   type Expr[T] = Evolution.Expr[F, F[T]]
 
-  private val initialContext = List("left", "bottom", "right", "top")
+  private val module = new FullModule[F]
+  private val predefinedVars = List("left", "bottom", "right", "top")
+  private val initialVarContext = new module.VarContext(predefinedVars)
   private val serializer = new EvolutionSerializer[F]
   private val desugaringSerializer = new DesugarEvolutionSerializer[F]
+  private val deBrujinSerializer = new DeBrujinEvolutionSerializer[F]
   private val evolutionExpr = new EvolutionExpr[F]
   private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
   private val algebraParser = grammar.evolutionOfPoints
-  private val stringParser = algebraParser.parser(initialContext)
+  private val stringParser = algebraParser.parser(predefinedVars)
 
-  val module = new FullModule[F]
   import module.ast.Type
+
   case class Config(expr: Expr[Point])
 
   override val configComponent: ConfigComponent[Config] = {
     instance[Config]("drawing config") { (config2Snapshot, children) =>
       val stringSnapshot =
-        config2Snapshot.zoomState[String](config2 => config2.expr.run(serializer)(initialContext)) {
+        config2Snapshot.zoomState[String](config2 => config2.expr.run(serializer)(predefinedVars)) {
           serialized => previousConfig =>
             {
               println("parsing inside configComponent")
-              module.parse(serialized, Type.Evo(Type.Point), evolutionExpr) match {
+              module.parse(serialized, Type.Evo(Type.Point), evolutionExpr, initialVarContext) match {
                 case Right(expr) =>
-                  println(s"Parsed expression: ${expr.run(serializer)(initialContext)}")
-                  println(s"Desugared expression: ${expr.run(desugaringSerializer)(initialContext)}")
+                  println(s"Parsed expression: ${expr.run(serializer)(predefinedVars)}")
+                  println(s"Parsed expression with De Brujn indexes:\n${expr.run(deBrujinSerializer)(predefinedVars)}")
+                  println(s"Desugared expression: ${expr.run(desugaringSerializer)(predefinedVars)}")
                   Config(expr.asInstanceOf[Expr[Point]])
                 case Left(error) =>
                   println(error)
