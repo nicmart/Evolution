@@ -28,6 +28,7 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
           currentState = nextRun._1
           maybeNext = nextRun._2
           a
+        case None => throw new NoSuchElementException
       }
     }
   }

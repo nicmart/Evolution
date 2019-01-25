@@ -19,7 +19,7 @@ class Parsers[F[_]](val ast: Ast[F]) {
     P(infix(expr3, ops1, expr2) | expr3)
 
   lazy val expr3: Parser[Expr] =
-    P(("(" ~ expr0 ~ ")") | number | variable | funcCall)
+    P(("(" ~ expr0 ~ ")") | number | variable | let | funcCall)
 
   def infix(a: Parser[Expr], op: Parser[PredefinedFunction], b: Parser[Expr]): Parser[Expr] =
     P(a ~ op ~ b).map { case (a, op, b) => Expr.FuncCall(op, List(a, b)) }
@@ -39,6 +39,11 @@ class Parsers[F[_]](val ast: Ast[F]) {
 
   lazy val lambda: Parser[Expr] =
     P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
+
+  lazy val let: Parser[Expr] = P("let(" ~ identifier ~ "," ~ expr0 ~ "," ~ expr0 ~ ")").map {
+    case (id, value, in) =>
+      Expr.Let(Expr.Var(id), value, in)
+  }
 
   lazy val args: Parser[List[Expr]] =
     P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }

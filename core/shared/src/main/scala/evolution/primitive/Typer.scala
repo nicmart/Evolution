@@ -29,6 +29,12 @@ class Typer[F[_]](val ast: Ast[F]) {
         val (vars1, typedVar) = assignVars(vars, varName)
         val (vars2, typedBody) = assignVars(vars1, lambdaBody)
         vars2.withNext(next => Lambda(varName.copy(tpe = typedVar.tpe), typedBody, next))
+
+      case Let(varName, value, in, _) =>
+        val (vars1, typedVar) = assignVars(vars, varName)
+        val (vars2, typedValue) = assignVars(vars1, value)
+        val (vars3, typedIn) = assignVars(vars2, in)
+        vars3.withNext(next => Let(varName.copy(tpe = typedVar.tpe), typedValue, typedIn, next))
     }
 
   def findConstraints(typeVars: TypeVars, expr: Expr): (TypeVars, Constraints) = {
@@ -40,6 +46,11 @@ class Typer[F[_]](val ast: Ast[F]) {
         val variableConstraints =
           Constraints(varUsagesIn(variable.name, lambdaExpr).map(u => u.tpe -> variable.tpe): _*)
         (typeVars, arrowConstraint.merge(variableConstraints))
+      case Let(variable, value, in, tpe) =>
+        (
+          typeVars,
+          Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
+            .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe)))
       case Number(n, tpe) => (typeVars, Constraints.empty)
       case _              => ???
     }
@@ -115,10 +126,6 @@ class Typer[F[_]](val ast: Ast[F]) {
         (
           typeVars,
           Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
-      case (Point, x :: y :: Nil) =>
-        (
-          typeVars,
-          Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
       case (Constant, x :: Nil) =>
         (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe)))
       case (Integrate, x :: y :: Nil) =>
@@ -176,6 +183,8 @@ class Typer[F[_]](val ast: Ast[F]) {
       case FuncCall(funcName, args, _)                             => args.flatMap(varUsagesIn(varName, _))
       case Lambda(Var(lambdaVar, _), _, _) if lambdaVar == varName => Nil // Shadowing
       case Lambda(_, lambdaExpr, _)                                => varUsagesIn(varName, lambdaExpr)
+      case Let(Var(letVar, _), value, in, _) if letVar == varName  => varUsagesIn(varName, value) // Shadowing
+      case Let(Var(_, _), value, in, _)                            => varUsagesIn(varName, value) ++ varUsagesIn(varName, in)
       case Number(n, _)                                            => Nil
     }
 

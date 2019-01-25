@@ -13,6 +13,7 @@ class Ast[F[_]] {
       case Expr.Var(name, _)                => Expr.Var(name, tpe)
       case Expr.FuncCall(funcName, args, _) => Expr.FuncCall(funcName, args, tpe)
       case Expr.Lambda(varName, expr, _)    => Expr.Lambda(varName, expr, tpe)
+      case Expr.Let(varName, expr, in, _)   => Expr.Let(varName, expr, in, tpe)
       case Expr.Number(n, _)                => Expr.Number(n, tpe)
     }
 
@@ -20,6 +21,7 @@ class Ast[F[_]] {
       case Expr.Var(name, tpe)                => Nil
       case Expr.FuncCall(funcName, args, tpe) => args
       case Expr.Lambda(varName, expr, tpe)    => List(varName, expr)
+      case Expr.Let(varName, expr, in, tpe)   => List(varName, expr, in)
       case Expr.Number(n, tpe)                => Nil
     }
   }
@@ -27,8 +29,8 @@ class Ast[F[_]] {
   object Expr {
     final case class Var(name: String, tpe: Type = Type.Var("")) extends Expr
     final case class FuncCall(funcId: PredefinedFunction, args: List[Expr], tpe: Type = Type.Var("")) extends Expr
-    // TODO should this be just a func call?
     final case class Lambda(varName: Expr.Var, expr: Expr, tpe: Type = Type.Var("")) extends Expr
+    final case class Let(varName: Expr.Var, expr: Expr, in: Expr, tpe: Type = Type.Var("")) extends Expr
     final case class Number(n: String, tpe: Type = Type.Var("")) extends Expr
   }
 

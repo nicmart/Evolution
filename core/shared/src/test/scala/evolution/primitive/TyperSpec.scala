@@ -39,6 +39,7 @@ class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       }
 
       "complex expressions" - {
+        // TODO
         pending
         "mapCons" in {
           val expr = Expr.FuncCall(

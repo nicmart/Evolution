@@ -10,6 +10,7 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
   val parser = new Parsers[Id](new Ast[Id])
   import parser.ast._
   import PredefinedFunction._
+  import Expr._
 
   "The expression parser" - {
     "should parse" - {
@@ -82,6 +83,12 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
           unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldBe Expr.Lambda(
             Expr.Var(identifier1),
             Expr.Lambda(Expr.Var(identifier2), unsafeParse(expr)))
+        }
+      }
+
+      "Let bindings" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
+          unsafeParse(s"let($id, $value, $in)") shouldBe Let(Var(id), unsafeParse(value), unsafeParse(in))
         }
       }
 
