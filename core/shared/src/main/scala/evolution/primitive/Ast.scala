@@ -1,7 +1,12 @@
 package evolution.primitive
+import cats.{ Eq, Group }
+import cats.kernel.Semigroup
 import enumeratum.{ Enum, EnumEntry }
 import evolution.geometry
 import evolution.primitive.algebra.evolution.Evolution
+import cats.implicits._
+import evolution.geometry.Point
+import evolution.typeclass.VectorSpace
 
 import scala.collection.immutable
 
@@ -86,6 +91,7 @@ class Ast[F[_]] {
       case _                    => Nil
     }
   }
+
   object Type {
     final case class Var(name: String) extends Type {
       type Out = Nothing
@@ -97,6 +103,38 @@ class Ast[F[_]] {
     final case object Bool extends Type { type Out = Boolean }
     final case class Evo(inner: Type) extends Type { type Out = F[inner.type] }
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
+
+    def group(t: Type): Either[String, Group[t.Out]] = {
+      t match {
+        case Type.Integer => Right(Group[Int])
+        case Type.Dbl     => Right(Group[Double])
+        case Type.Point   => Right(Group[Point])
+        case _            => Left(s"Unable to find a group for type $t")
+      }
+    }.asInstanceOf[Either[String, Group[t.Out]]]
+
+    def vectorSpace(t: Type): Either[String, VectorSpace[t.Out]] = {
+      t match {
+        case Type.Integer => Right(VectorSpace[Int])
+        case Type.Dbl     => Right(VectorSpace[Double])
+        case Type.Point   => Right(VectorSpace[Point])
+        case _            => Left(s"Unable to find a vector space for type $t")
+      }
+    }.asInstanceOf[Either[String, VectorSpace[t.Out]]]
+
+    def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
+      t match {
+        case Type.Integer => Right(Eq[Int])
+        case Type.Dbl     => Right(Eq[Double])
+        case Type.Point   => Right(Eq[Point])
+        case _            => Left(s"Unable to find a vector space for type $t")
+      }
+    }.asInstanceOf[Either[String, Eq[t.Out]]]
+
+    def unwrapF(t: Type): Either[String, Type] = t match {
+      case Type.Evo(inner) => Right(inner)
+      case _               => Left(s"Type $t is not an Evolution type")
+    }
   }
 
   final class Context(bindings: Map[String, Type]) {
