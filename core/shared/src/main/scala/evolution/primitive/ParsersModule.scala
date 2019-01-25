@@ -36,7 +36,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P("$" ~~ identifier).map(Expr.Var(_))
 
     lazy val funcCall: Parser[Expr] =
-      func0Call | P(functionName ~ "(" ~ args ~ ")").map { case (func, args) => Expr.FuncCall(func, args) }
+      func0Call | P(functionName ~/ "(" ~ args ~ ")").map { case (func, args) => Expr.FuncCall(func, args) }
 
     // Functions with 0 arity
     lazy val func0Call: Parser[Expr] =
@@ -48,7 +48,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val lambda: Parser[Expr] =
       P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
 
-    lazy val let: Parser[Expr] = P("let(" ~ identifier ~ "," ~ expr0 ~ "," ~ expr0 ~ ")").map {
+    lazy val let: Parser[Expr] = P("let(" ~/ identifier ~ "," ~ expr0 ~ "," ~ expr0 ~ ")").map {
       case (id, value, in) =>
         Expr.Let(Expr.Var(id), value, in)
     }
@@ -57,7 +57,10 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P(expr0 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
-    lazy val functionName: Parser[PredefinedFunction] = identifier.map(PredefinedFunction.withNameInsensitive)
+    //lazy val functionName: Parser[PredefinedFunction] = identifier.map(PredefinedFunction.withNameInsensitive).log()
+    lazy val functionName: Parser[PredefinedFunction] = identifier
+      .filter(id => PredefinedFunction.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
+      .map(PredefinedFunction.withNameInsensitive)
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
