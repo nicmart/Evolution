@@ -6,8 +6,8 @@ import scala.collection.immutable
 
 class Ast[F[_]] {
   sealed trait Expr {
-
-    def tpe: Type
+    val tpe: Type
+    final type Out = tpe.Out
 
     def withType(tpe: Type): Expr = this match {
       case Expr.Var(name, _)                => Expr.Var(name, tpe)
@@ -18,11 +18,11 @@ class Ast[F[_]] {
     }
 
     def children: List[Expr] = this match {
-      case Expr.Var(name, tpe)                => Nil
-      case Expr.FuncCall(funcName, args, tpe) => args
-      case Expr.Lambda(varName, expr, tpe)    => List(varName, expr)
-      case Expr.Let(varName, expr, in, tpe)   => List(varName, expr, in)
-      case Expr.Number(n, tpe)                => Nil
+      case Expr.Var(name, _)                => Nil
+      case Expr.FuncCall(funcName, args, _) => args
+      case Expr.Lambda(varName, expr, _)    => List(varName, expr)
+      case Expr.Let(varName, expr, in, _)   => List(varName, expr, in)
+      case Expr.Number(n, _)                => Nil
     }
   }
 
@@ -108,4 +108,8 @@ class Ast[F[_]] {
   object Context {
     val empty: Context = new Context(Map.empty)
   }
+}
+
+trait WithAst[F[_]] {
+  val ast: Ast[F] = new Ast
 }

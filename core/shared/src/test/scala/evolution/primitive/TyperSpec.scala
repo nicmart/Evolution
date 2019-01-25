@@ -5,11 +5,16 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.{ FreeSpec, Matchers }
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class TyperSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
-  val typer = new Typer[Id](new Ast[Id])
-  import typer._
-  import typer.ast._
-  import typer.ast.Expr._
+class TyperSpec
+    extends FreeSpec
+    with Matchers
+    with GeneratorDrivenPropertyChecks
+    with TyperModule[Id]
+    with ParsersModule[Id]
+    with ASTArbitraries[Id]
+    with WithAst[Id] {
+  import Typer._, ast._, Expr._
+  val typer = Typer
 
   "The typer" - {
     "should generate constraints for" - {

@@ -5,10 +5,15 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.{ FreeSpec, Matchers }
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
+class ASTParserSpec
+    extends FreeSpec
+    with Matchers
+    with GeneratorDrivenPropertyChecks
+    with ParsersModule[Id]
+    with ASTArbitraries[Id]
+    with WithAst[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
-  val parser = new Parsers[Id](new Ast[Id])
-  import parser.ast._
+  import ast._
   import PredefinedFunction._
   import Expr._
 
@@ -120,24 +125,5 @@ class ASTParserSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyC
     }
   }
 
-  def genFunctionArgs: Gen[List[String]] =
-    for {
-      n <- Gen.choose(1, 6)
-      args <- Gen.listOfN(n, genLeafExpr)
-    } yield args
-
-  def genLeafExpr: Gen[String] =
-    Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
-
-  def genVarUsage: Gen[String] = genIdentifier.map(v => s"$$$v")
-
-  def genIdentifier: Gen[String] = for {
-    head <- Gen.alphaChar
-    tail <- Gen.alphaNumStr
-  } yield head + tail
-
-  def genPredefinedFunc: Gen[PredefinedFunction] =
-    Gen.oneOf(PredefinedFunction.values)
-
-  def unsafeParse(string: String): Expr = parser.parser.parse(string).get.value
+  def unsafeParse(string: String): Expr = Parsers.parser.parse(string).get.value
 }
