@@ -92,11 +92,11 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         case (Point, x :: y :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
         case (Add, x :: y :: Nil) =>
-          (typeVars, Constraints(x.tpe -> y.tpe))
+          (typeVars, Constraints(x.tpe -> y.tpe, func.tpe -> x.tpe))
         case (Inverse, x :: Nil) =>
-          (typeVars, Constraints.empty)
+          (typeVars, Constraints(x.tpe -> func.tpe))
         case (Multiply, x :: y :: Nil) =>
-          (typeVars, Constraints(x.tpe -> y.tpe))
+          (typeVars, Constraints(x.tpe -> Type.Dbl, y.tpe -> func.tpe))
         case (Cos, x :: Nil) =>
           (typeVars, Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl))
         case (Sin, x :: Nil) =>

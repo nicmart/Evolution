@@ -8,6 +8,8 @@ import evolution.primitive.algebra.evolution.interpreter.{ EvolutionExpr, Evolut
 import evolution.primitive.algebra.evolution.parser.EvolutionGrammar
 import io.circe.Json
 import evolution.data.EvaluationModule._
+import evolution.primitive.FullModule
+import evolution.primitive.algebra.evolution.Evolution.Expr
 
 object DrawingJsonCodec extends JsonCodec[Config] {
   private val initialContext = List("left", "bottom", "right", "top")
@@ -16,6 +18,8 @@ object DrawingJsonCodec extends JsonCodec[Config] {
   private val grammar = EvolutionGrammar.parserGrammar(evolutionExpr)
   private val algebraParser = grammar.evolutionOfPoints
   private val stringParser = algebraParser.parser(initialContext)
+  val module = new FullModule[F]
+  import module.ast.Type
 
   override def encode(t: Config): Json =
     Json.fromString(t.expr.run(serializer)(initialContext))
@@ -23,9 +27,9 @@ object DrawingJsonCodec extends JsonCodec[Config] {
   override def decode(r: Json): Option[Config] =
     for {
       serialized <- r.asString
-      _ = println("Parsing inside Json Codec")
-      expr <- stringParser
-        .parse(serialized)
-        .fold[Option[Evolution.Expr[F, F[Point]]]]((_, _, _) => None, (expr, _) => Some(expr))
-    } yield Config(expr)
+      _ = println(s"Parsing inside Json Codec: $serialized")
+      parsed = module.parse(serialized, Type.Evo(Type.Point), evolutionExpr)
+      _ = parsed.left.map(println)
+      expr <- parsed.toOption
+    } yield Config(expr.asInstanceOf[Expr[F, F[Point]]])
 }

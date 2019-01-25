@@ -23,8 +23,10 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             } yield alg.bind.let(varName.name, compiledValue, compiledIn)
           case Expr.Number(n, Type.Dbl) =>
             Right(alg.constants.double(n.toDouble))
+          case Expr.Number(n, Type.Integer) =>
+            Right(alg.constants.double(n.toInt))
           case _ =>
-            Left("Invalid type")
+            Left(s"Invalid type for expression $expr")
         }
       }.asInstanceOf[Either[String, R[expr.Out]]]
 
@@ -69,7 +71,7 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
               alg.bind.app(compiledF.asInstanceOf[R[x.Out => func.Out]], compiledX.asInstanceOf[R[x.Out]])
             }
           case (Empty, Nil) =>
-            alg.chain.empty
+            Right(alg.chain.empty)
           case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
             (compile(x), compile(y)).mapN { (compiledX, compiledY) =>
               alg.chain.cons[x.Out](compiledX.asInstanceOf[R[x.Out]], compiledY.asInstanceOf[R[F[x.Out]]])

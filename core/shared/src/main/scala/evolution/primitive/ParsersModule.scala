@@ -17,7 +17,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P(infix(expr2, ops0, expr1) | expr2)
 
     lazy val expr2: Parser[Expr] =
-      P(infix(expr3, ops1, expr2) | expr3)
+      P(unaryPrefixOp | infix(expr3, ops1, expr2) | expr3)
 
     lazy val expr3: Parser[Expr] =
       P(("(" ~ expr0 ~ ")") | number | variable | let | funcCall)
@@ -36,7 +36,14 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P("$" ~~ identifier).map(Expr.Var(_))
 
     lazy val funcCall: Parser[Expr] =
-      P(functionName ~ "(" ~ args ~ ")").map { case (func, args) => Expr.FuncCall(func, args) }
+      func0Call | P(functionName ~ "(" ~ args ~ ")").map { case (func, args) => Expr.FuncCall(func, args) }
+
+    // Functions with 0 arity
+    lazy val func0Call: Parser[Expr] =
+      P("empty").map(_ => Expr.FuncCall(PredefinedFunction.Empty, Nil))
+
+    lazy val unaryPrefixOp: Parser[Expr] =
+      P("-" ~ expr3).map(e => Expr.FuncCall(PredefinedFunction.Inverse, List(e)))
 
     lazy val lambda: Parser[Expr] =
       P(identifier ~ "->" ~ expr0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
@@ -47,7 +54,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     }
 
     lazy val args: Parser[List[Expr]] =
-      P(expr1 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+      P(expr0 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
     lazy val functionName: Parser[PredefinedFunction] = identifier.map(PredefinedFunction.withNameInsensitive)

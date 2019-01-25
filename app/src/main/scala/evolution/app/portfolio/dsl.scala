@@ -12,6 +12,7 @@ import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.data.EvaluationModule
 import evolution.geometry.Point
+import evolution.primitive.FullModule
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{
   DesugarEvolutionSerializer,
@@ -35,6 +36,8 @@ object dsl extends DrawingDefinition[Point] {
   private val algebraParser = grammar.evolutionOfPoints
   private val stringParser = algebraParser.parser(initialContext)
 
+  val module = new FullModule[F]
+  import module.ast.Type
   case class Config(expr: Expr[Point])
 
   override val configComponent: ConfigComponent[Config] = {
@@ -44,16 +47,15 @@ object dsl extends DrawingDefinition[Point] {
           serialized => previousConfig =>
             {
               println("parsing inside configComponent")
-              stringParser
-                .parse(serialized)
-                .fold(
-                  (_, _, failure) => { println(failure); previousConfig },
-                  (drawing, _) => {
-                    println(s"Parsed expression: ${drawing.run(serializer)(initialContext)}")
-                    println(s"Desugared expression: ${drawing.run(desugaringSerializer)(initialContext)}")
-                    Config(drawing)
-                  }
-                )
+              module.parse(serialized, Type.Evo(Type.Point), evolutionExpr) match {
+                case Right(expr) =>
+                  println(s"Parsed expression: ${expr.run(serializer)(initialContext)}")
+                  println(s"Desugared expression: ${expr.run(desugaringSerializer)(initialContext)}")
+                  Config(expr.asInstanceOf[Expr[Point]])
+                case Left(error) =>
+                  println(error)
+                  previousConfig
+              }
             }
         }
       val component: ConfigComponent[String] = instances.textConfig
@@ -89,6 +91,7 @@ object dsl extends DrawingDefinition[Point] {
     override def run[R[_]](alg: Evolution[F, R]): R[F[Point]] = {
       import alg.chain._, alg.bind._, alg.constants._, alg.derived._, alg.distribution._
       integrate(point(double(0), double(0)), cartesian(uniform(double(-2), double(2)), uniform(double(-2), double(2))))
+      empty
     }
   })
 
