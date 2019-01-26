@@ -238,6 +238,8 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           case Expr.FuncCall(funcId, args, tpe) => Expr.FuncCall(funcId, args.map(substitute), substitute(tpe))
           case Expr.Lambda(varName, lambdaExpr, tpe) =>
             Expr.Lambda(substitute(varName), substitute(lambdaExpr), substitute(tpe))
+          case Expr.Let(varName, body, in, tpe) =>
+            Expr.Let(substitute(varName), substitute(body), substitute(in), substitute(tpe))
           case Expr.Number(n, tpe) => Expr.Number(n, substitute(tpe))
         }
 
