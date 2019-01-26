@@ -136,15 +136,15 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe)))
         case (Integrate, x :: y :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe))) // Here I omitted the redundant condition)
-        case (Solve1, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Evo(y.tpe), x.tpe -> Type.Evo(Type.Arrow(x.tpe, x.tpe))))
-        case (Solve2, x :: y :: z :: Nil) =>
+        case (Solve1, eq :: x :: Nil) =>
+          (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), eq.tpe -> Type.Evo(Type.Arrow(x.tpe, x.tpe))))
+        case (Solve2, eq :: x :: y :: Nil) =>
           (
             typeVars,
             Constraints(
-              y.tpe -> x.tpe,
               func.tpe -> Type.Evo(x.tpe),
-              x.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))))
+              x.tpe -> y.tpe,
+              eq.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))))
         case (Concat, x :: y :: Nil) => // TODO gen new vars
           typeVars.withNext { a =>
             Constraints(
