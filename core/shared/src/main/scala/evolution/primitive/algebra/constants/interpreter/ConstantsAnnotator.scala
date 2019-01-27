@@ -22,6 +22,12 @@ object ConstantsAnnotator extends Constants[Annotation] {
   override def point(evalX: Annotation[Double], evalY: Annotation[Double]): Annotation[Point] =
     Annotation(evalX.vars ++ evalY.vars, Unknown(builder.constants.point(evalX.expr, evalY.expr)))
 
+  override def x(evalPoint: Annotation[Point]): Annotation[Double] =
+    Annotation(evalPoint.vars, Unknown(builder.constants.x(evalPoint.expr)))
+
+  override def y(evalPoint: Annotation[Point]): Annotation[Double] =
+    Annotation(evalPoint.vars, Unknown(builder.constants.y(evalPoint.expr)))
+
   override def add[T: Semigroup](a: Annotation[T], b: Annotation[T]): Annotation[T] =
     Annotation(a.vars ++ b.vars, Unknown(builder.constants.add(a.expr, b.expr)))
 

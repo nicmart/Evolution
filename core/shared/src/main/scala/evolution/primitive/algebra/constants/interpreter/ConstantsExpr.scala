@@ -27,6 +27,18 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
         alg.constants.point(x.run(alg), y.run(alg))
     }
 
+  override def x(point: Expr[F, Point]): Expr[F, Double] =
+    new Expr[F, Double] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Double] =
+        alg.constants.x(point.run(alg))
+    }
+
+  override def y(point: Expr[F, Point]): Expr[F, Double] =
+    new Expr[F, Double] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Double] =
+        alg.constants.y(point.run(alg))
+    }
+
   override def add[T: Semigroup](a: Expr[F, T], b: Expr[F, T]): Expr[F, T] =
     new Expr[F, T] {
       override def run[R[_]](alg: Evolution[F, R]): R[T] =

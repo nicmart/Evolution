@@ -13,6 +13,10 @@ class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extend
     Applicative[R2].pure(alg.double(d))
   override def point(x: R2[R1[Double]], y: R2[R1[Double]]): R2[R1[Point]] =
     Applicative[R2].map2(x, y)(alg.point)
+  override def x(point: R2[R1[Point]]): R2[R1[Double]] =
+    Applicative[R2].map(point)(alg.x)
+  override def y(point: R2[R1[Point]]): R2[R1[Double]] =
+    Applicative[R2].map(point)(alg.y)
   override def add[T: Semigroup](a: R2[R1[T]], b: R2[R1[T]]): R2[R1[T]] =
     Applicative[R2].map2(a, b)(alg.add[T])
   override def inverse[T: Group](a: Composed[R2, R1, T]): Composed[R2, R1, T] =
@@ -28,6 +32,7 @@ class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extend
   override def ifThen[T](
     condition: Composed[R2, R1, Boolean],
     a: Composed[R2, R1, T],
-    b: Composed[R2, R1, T]): Composed[R2, R1, T] =
+    b: Composed[R2, R1, T]
+  ): Composed[R2, R1, T] =
     Applicative[R2].map3(condition, a, b)(alg.ifThen[T])
 }

@@ -19,7 +19,10 @@ object ConstantsEvaluator extends Constants[Evaluation] {
       case _ =>
         Value(ctx => Point(evalX.evaluateWith(ctx), evalY.evaluateWith(ctx)), s"non-constant-point($evalX, $evalY)")
     }
-
+  override def x(evalPoint: Evaluation[Point]): Evaluation[Double] =
+    Value(ctx => evalPoint.evaluateWith(ctx).x)
+  override def y(evalPoint: Evaluation[Point]): Evaluation[Double] =
+    Value(ctx => evalPoint.evaluateWith(ctx).y)
   override def add[T: Semigroup](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
     Value(ctx => Semigroup[T].combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
   override def inverse[T: Group](a: Evaluation[T]): Evaluation[T] =

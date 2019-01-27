@@ -80,6 +80,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
     override def eq[T: Eq](a: R[T], b: R[T]): R[Boolean] = ???
     override def ifThen[T](condition: R[Boolean], a: R[T], b: R[T]): R[T] = ???
     override def inverse[T: Group](a: R[T]): R[T] = ???
+    override def x(point: R[Point]): R[Double] = ???
+    override def y(point: R[Point]): R[Double] = ???
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {

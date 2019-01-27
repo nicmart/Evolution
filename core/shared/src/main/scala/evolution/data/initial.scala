@@ -16,6 +16,8 @@ object initial {
   final case class Dbl(d: Double) extends R[Double]
   final case class Integer(n: Int) extends R[Int]
   final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
+  final case class X(p: R[Point]) extends R[Double]
+  final case class Y(p: R[Point]) extends R[Double]
   final case class Add[T: Semigroup](a: R[T], b: R[T]) extends R[T] {
     val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
     def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
@@ -60,6 +62,8 @@ object initial {
       override def int(n: Int): R[Int] = Integer(n)
       override def double(d: Double): R[Double] = Dbl(d)
       override def point(x: R[Double], y: R[Double]): R[Point] = Pnt(x, y)
+      override def x(point: R[Point]): R[Double] = X(point)
+      override def y(point: R[Point]): R[Double] = Y(point)
       override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = Add(a, b)
       override def inverse[T: Group](a: R[T]): R[T] = Inverse(a)
       override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = Multiply(k, t)
