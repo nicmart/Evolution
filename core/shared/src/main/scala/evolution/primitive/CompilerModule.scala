@@ -35,82 +35,78 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
         (func.funcId, func.args) match {
           case (Point, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
-              alg.constants.point(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])
+              alg.constants.point(compiledX.asInstanceOf, compiledY.asInstanceOf)
             }
           case (Add, x :: y :: Nil) =>
             (Type.group(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (sg, compiledX, compiledY) =>
-              alg.constants.add(compiledX.asInstanceOf[R[func.Out]], compiledY.asInstanceOf[R[func.Out]])(sg)
+              alg.constants.add(compiledX.asInstanceOf, compiledY.asInstanceOf)(sg)
             }
           case (Inverse, x :: Nil) =>
             (Type.group(func.tpe), compile(x, ctx)).mapN { (g, compiledX) =>
-              alg.constants.inverse(compiledX.asInstanceOf[R[func.Out]])(g)
+              alg.constants.inverse(compiledX.asInstanceOf)(g)
             }
           case (Multiply, x :: y :: Nil) =>
             (Type.vectorSpace(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (vs, compiledX, compiledY) =>
-              alg.constants.multiply(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[func.Out]])(vs)
+              alg.constants.multiply(compiledX.asInstanceOf, compiledY.asInstanceOf)(vs)
             }
           case (Cos, x :: Nil) =>
-            compile(x, ctx).map(compiledX => alg.constants.cos(compiledX.asInstanceOf[R[Double]]))
+            compile(x, ctx).map(compiledX => alg.constants.cos(compiledX.asInstanceOf))
           case (Sin, x :: Nil) =>
-            compile(x, ctx).map(compiledX => alg.constants.sin(compiledX.asInstanceOf[R[Double]]))
+            compile(x, ctx).map(compiledX => alg.constants.sin(compiledX.asInstanceOf))
           case (Eq, x :: y :: Nil) =>
             for {
               compiledX <- compile(x, ctx)
               compiledY <- compile(y, ctx)
               eqTypeClass <- Type.eqTypeClass(x.tpe)
-            } yield alg.constants.eq[x.Out](compiledX, compiledY.asInstanceOf[R[x.Out]])(eqTypeClass)
+            } yield alg.constants.eq[x.Out](compiledX, compiledY.asInstanceOf)(eqTypeClass)
           case (If, x :: y :: z :: Nil) =>
             (compile(x, ctx), compile(y, ctx), compile(z, ctx)).mapN { (compiledX, compiledY, compiledZ) =>
-              alg.constants.ifThen(compiledX.asInstanceOf[R[Boolean]], compiledY, compiledZ.asInstanceOf[R[y.Out]])
+              alg.constants.ifThen(compiledX.asInstanceOf, compiledY, compiledZ.asInstanceOf)
             }
           case (Fix, f :: Nil) =>
             compile(f, ctx).map { compiledF =>
-              alg.bind.fix(compiledF.asInstanceOf[R[func.Out => func.Out]])
+              alg.bind.fix(compiledF.asInstanceOf)
             }
           case (App, f :: x :: Nil) =>
             (compile(f, ctx), compile(x, ctx)).mapN { (compiledF, compiledX) =>
-              alg.bind.app(compiledF.asInstanceOf[R[x.Out => func.Out]], compiledX.asInstanceOf[R[x.Out]])
+              alg.bind.app(compiledF.asInstanceOf, compiledX.asInstanceOf)
             }
           case (Empty, Nil) =>
             Right(alg.chain.empty)
           case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
-              alg.chain.cons[x.Out](compiledX.asInstanceOf[R[x.Out]], compiledY.asInstanceOf[R[F[x.Out]]])
+              alg.chain.cons(compiledX.asInstanceOf, compiledY.asInstanceOf)
             }
           case (MapEmpty, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
-              alg.chain
-                .mapEmpty[func.Out](compiledX.asInstanceOf[R[F[func.Out]]], compiledY.asInstanceOf[R[F[func.Out]]])
+              alg.chain.mapEmpty(compiledX.asInstanceOf, compiledY.asInstanceOf)
             }
           case (MapCons, x :: f :: Nil) =>
             (compile(x, ctx), compile(f, ctx)).mapN { (compiledX, compiledF) =>
-              alg.chain.mapCons[x.Out, func.Out](compiledX.asInstanceOf[R[F[x.Out]]])(
-                compiledF.asInstanceOf[R[x.Out => F[x.Out] => F[func.Out]]])
+              alg.chain.mapCons(compiledX.asInstanceOf)(compiledF.asInstanceOf)
             }
           case (Cartesian, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
-              alg.derived.cartesian(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
+              alg.derived.cartesian(compiledX.asInstanceOf, compiledY.asInstanceOf)
             }
           case (Polar, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
-              alg.derived.polar(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
+              alg.derived.polar(compiledX.asInstanceOf, compiledY.asInstanceOf)
             }
           case (Constant, x :: Nil) =>
-            compile(x, ctx).map(compiledX => alg.derived.constant(compiledX.asInstanceOf[R[func.Out]]))
+            compile(x, ctx).map(compiledX => alg.derived.constant(compiledX.asInstanceOf))
           case (Integrate, x :: y :: Nil) =>
             for {
               compiledX <- compile(x, ctx)
               compiledY <- compile(y, ctx)
               vs <- Type.vectorSpace(x.tpe)
-            } yield alg.derived.integrate[x.Out](compiledX, compiledY.asInstanceOf[R[F[x.Out]]])(vs)
+            } yield alg.derived.integrate(compiledX, compiledY.asInstanceOf)(vs)
           case (Solve1, x :: y :: Nil) =>
             for {
               compiledX <- compile(x, ctx)
               compiledY <- compile(y, ctx)
               vs <- Type.vectorSpace(y.tpe)
-            } yield
-              alg.derived
-                .solve1[y.Out](compiledX.asInstanceOf[R[F[y.Out => y.Out]]], compiledY.asInstanceOf[R[y.Out]])(vs)
+            } yield alg.derived.solve1(compiledX.asInstanceOf, compiledY.asInstanceOf)(vs)
           case (Solve2, x :: y :: z :: Nil) =>
             for {
               compiledX <- compile(x, ctx)
@@ -118,37 +114,40 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
               compiledZ <- compile(z, ctx)
               vs <- Type.vectorSpace(y.tpe)
             } yield
-              alg.derived.solve2[y.Out](
-                compiledX.asInstanceOf[R[F[y.Out => y.Out => y.Out]]],
-                compiledY.asInstanceOf[R[y.Out]],
-                compiledY.asInstanceOf[R[y.Out]])(vs)
+              alg.derived.solve2(
+                compiledX.asInstanceOf,
+                compiledY.asInstanceOf,
+                compiledY.asInstanceOf
+              )(vs)
           case (Concat, x :: y :: Nil) => // TODO gen new vars
             (Type.unwrapF(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (innerType, compiledX, compiledY) =>
-              alg.derived.concat[innerType.Out](
-                compiledX.asInstanceOf[R[F[innerType.Out]]],
-                compiledY.asInstanceOf[R[F[innerType.Out]]])
+              alg.derived.concat(
+                compiledX.asInstanceOf,
+                compiledY.asInstanceOf
+              )
             }
           case (Map, x :: f :: Nil) =>
             (compile(x, ctx), compile(f, ctx)).mapN { (compiledX, compiledF) =>
-              alg.derived
-                .map[x.Out, func.Out](compiledX.asInstanceOf[R[F[x.Out]]], compiledF.asInstanceOf[R[x.Out => func.Out]])
+              alg.derived.map(compiledX.asInstanceOf, compiledF.asInstanceOf)
             }
           case (FlatMap, x :: f :: Nil) =>
             (Type.unwrapF(func.tpe), compile(x, ctx), compile(f, ctx)).mapN { (innerType, compiledX, compiledF) =>
-              alg.derived.flatMap[x.Out, innerType.Out](
-                compiledX.asInstanceOf[R[F[x.Out]]],
-                compiledF.asInstanceOf[R[x.Out => F[innerType.Out]]])
+              alg.derived.flatMap(
+                compiledX.asInstanceOf,
+                compiledF.asInstanceOf
+              )
             }
           case (Take, n :: e :: Nil) =>
             (Type.unwrapF(func.tpe), compile(n, ctx), compile(e, ctx)).mapN { (innerType, compiledN, compiledF) =>
-              alg.derived.take(compiledN.asInstanceOf[R[Int]], compiledF.asInstanceOf[R[F[innerType.Out]]])
+              alg.derived.take(compiledN.asInstanceOf, compiledF.asInstanceOf)
             }
           case (Uniform, from :: to :: Nil) =>
             (compile(from, ctx), compile(to, ctx)).mapN { (compiledFrom, compiledTo) =>
-              alg.distribution.uniform(compiledFrom.asInstanceOf[R[Double]], compiledTo.asInstanceOf[R[Double]])
+              alg.distribution.uniform(compiledFrom.asInstanceOf, compiledTo.asInstanceOf)
             }
+          case _ => Left(s"Invalid type for expression $func")
         }
-      }.asInstanceOf[Either[String, R[func.Out]]]
+      }.asInstanceOf
 
       compile(expr, ctx)
     }
