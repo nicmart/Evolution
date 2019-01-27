@@ -21,6 +21,11 @@ trait ASTArbitraries[F[_]] { self: WithAst[F] =>
     tail <- Gen.alphaNumStr
   } yield head + tail
 
+  def genLambda: Gen[String] = for {
+    id <- genIdentifier
+    body <- genLeafExpr
+  } yield s"$id -> $body"
+
   def genPredefinedFunc: Gen[PredefinedFunction] =
     Gen.oneOf(PredefinedFunction.values)
 

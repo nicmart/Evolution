@@ -19,12 +19,18 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       }
 
     lazy val precedence2: Parser[Expr] =
-      P(factor ~ ("*" ~/ factor).rep).map {
+      P(appOrFactor ~ ("*" ~/ appOrFactor).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList, PredefinedFunction.Multiply)
       }
 
     lazy val factor: Parser[Expr] =
       P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | funcCall)
+
+    lazy val appOrFactor: Parser[Expr] =
+      P(factor ~ ("(" ~/ args ~ ")").?).map {
+        case (f, None)       => f
+        case (f, Some(args)) => evalApp(f, args)
+      }
 
     lazy val number: Parser[Expr.Number] =
       numbers.doubleLiteral.map(Expr.Number(_))
@@ -64,6 +70,12 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     def evalAssocBinaryOp(head: Expr, tail: List[Expr], op: PredefinedFunction): Expr =
       (head :: tail).reduceRight[Expr] { (e, m) =>
         Expr.FuncCall(op, List(e, m))
+      }
+
+    def evalApp(f: Expr, args: List[Expr]): Expr =
+      args match {
+        case Nil                => f
+        case argHead :: argTail => evalApp(Expr.FuncCall(PredefinedFunction.App, List(f, argHead)), argTail)
       }
 
     object numbers {

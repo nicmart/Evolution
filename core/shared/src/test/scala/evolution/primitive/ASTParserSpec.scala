@@ -38,7 +38,8 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe Expr.FuncCall(
             Add,
-            List(Expr.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c)))
+            List(Expr.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+          )
         }
       }
 
@@ -78,7 +79,8 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
           unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldBe Expr.Lambda(
             Expr.Var(identifier1),
-            Expr.Lambda(Expr.Var(identifier2), unsafeParse(expr)))
+            Expr.Lambda(Expr.Var(identifier2), unsafeParse(expr))
+          )
         }
       }
 
@@ -92,7 +94,8 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe Expr.Lambda(
             Expr.Var(identifier1),
-            Expr.FuncCall(Add, List(unsafeParse(expr1), unsafeParse(expr2))))
+            Expr.FuncCall(Add, List(unsafeParse(expr1), unsafeParse(expr2)))
+          )
         }
       }
 
@@ -107,11 +110,39 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
                 Multiply,
                 List(
                   Expr.FuncCall(Add, List(Expr.Var("c"), Expr.Number("2"))),
-                  Expr.FuncCall(App, List(Expr.Var("d"), Expr.FuncCall(Inverse, List(Expr.Number("-1"))))))
+                  Expr.FuncCall(App, List(Expr.Var("d"), Expr.FuncCall(Inverse, List(Expr.Number("-1")))))
+                )
               )
             )
           )
         parsed shouldBe expected
+      }
+
+      "parse applications of vars" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$$$identifier1($expr1, $expr2)") shouldBe Expr.FuncCall(
+            App,
+            List(
+              Expr.FuncCall(
+                App,
+                List(Expr.Var(identifier1), unsafeParse(expr1))
+              ),
+              unsafeParse(expr2)
+            )
+          )
+        }
+      }
+
+      "parse applications of lambdas" in {
+        forAll(genLambda, genLeafExpr) { (lambda, expr) =>
+          unsafeParse(s"($lambda)($expr)") shouldBe Expr.FuncCall(
+            App,
+            List(
+              unsafeParse(lambda),
+              unsafeParse(expr)
+            )
+          )
+        }
       }
     }
   }
