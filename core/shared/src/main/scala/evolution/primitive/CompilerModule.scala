@@ -1,4 +1,5 @@
 package evolution.primitive
+import evolution.geometry
 import evolution.primitive.algebra.evolution.Evolution
 import cats.implicits._
 
@@ -36,6 +37,14 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
           case (Point, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
               alg.constants.point(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])
+            }
+          case (X, p :: Nil) =>
+            compile(p, ctx).map { compiledP =>
+              alg.constants.x(compiledP.asInstanceOf[R[geometry.Point]])
+            }
+          case (Y, p :: Nil) =>
+            compile(p, ctx).map { compiledP =>
+              alg.constants.y(compiledP.asInstanceOf[R[geometry.Point]])
             }
           case (Add, x :: y :: Nil) =>
             (Type.group(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (sg, compiledX, compiledY) =>
@@ -85,7 +94,8 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
           case (MapCons, x :: f :: Nil) =>
             (compile(x, ctx), compile(f, ctx)).mapN { (compiledX, compiledF) =>
               alg.chain.mapCons[x.Out, func.Out](compiledX.asInstanceOf[R[F[x.Out]]])(
-                compiledF.asInstanceOf[R[x.Out => F[x.Out] => F[func.Out]]])
+                compiledF.asInstanceOf[R[x.Out => F[x.Out] => F[func.Out]]]
+              )
             }
           case (Cartesian, x :: y :: Nil) =>
             (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
@@ -121,12 +131,14 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
               alg.derived.solve2[y.Out](
                 compiledX.asInstanceOf[R[F[y.Out => y.Out => y.Out]]],
                 compiledY.asInstanceOf[R[y.Out]],
-                compiledY.asInstanceOf[R[y.Out]])(vs)
+                compiledY.asInstanceOf[R[y.Out]]
+              )(vs)
           case (Concat, x :: y :: Nil) => // TODO gen new vars
             (Type.unwrapF(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (innerType, compiledX, compiledY) =>
               alg.derived.concat[innerType.Out](
                 compiledX.asInstanceOf[R[F[innerType.Out]]],
-                compiledY.asInstanceOf[R[F[innerType.Out]]])
+                compiledY.asInstanceOf[R[F[innerType.Out]]]
+              )
             }
           case (Map, x :: f :: Nil) =>
             (compile(x, ctx), compile(f, ctx)).mapN { (compiledX, compiledF) =>
@@ -137,7 +149,8 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             (Type.unwrapF(func.tpe), compile(x, ctx), compile(f, ctx)).mapN { (innerType, compiledX, compiledF) =>
               alg.derived.flatMap[x.Out, innerType.Out](
                 compiledX.asInstanceOf[R[F[x.Out]]],
-                compiledF.asInstanceOf[R[x.Out => F[innerType.Out]]])
+                compiledF.asInstanceOf[R[x.Out => F[innerType.Out]]]
+              )
             }
           case (Take, n :: e :: Nil) =>
             (Type.unwrapF(func.tpe), compile(n, ctx), compile(e, ctx)).mapN { (innerType, compiledN, compiledF) =>

@@ -52,7 +52,8 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           (
             typeVars,
             Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
-              .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe)))
+              .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe))
+          )
         case Number(n, tpe) => (typeVars, Constraints.empty)
         case _              => ???
       }
@@ -91,6 +92,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       (func.funcId, func.args) match {
         case (Point, x :: y :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
+        case (X, p :: Nil) =>
+          (typeVars, Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point))
+        case (Y, p :: Nil) =>
+          (typeVars, Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point))
         case (Add, x :: y :: Nil) =>
           (typeVars, Constraints(x.tpe -> y.tpe, func.tpe -> x.tpe))
         case (Inverse, x :: Nil) =>
@@ -127,11 +132,13 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         case (Cartesian, x :: y :: Nil) =>
           (
             typeVars,
-            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
+            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
+          )
         case (Polar, x :: y :: Nil) =>
           (
             typeVars,
-            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl)))
+            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
+          )
         case (Constant, x :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe)))
         case (Integrate, x :: y :: Nil) =>
@@ -144,13 +151,15 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             Constraints(
               func.tpe -> Type.Evo(x.tpe),
               x.tpe -> y.tpe,
-              eq.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))))
+              eq.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))
+            )
+          )
         case (Concat, x :: y :: Nil) => // TODO gen new vars
           typeVars.withNext { a =>
             Constraints(
               x.tpe -> Type.Evo(a),
               y.tpe -> Type.Evo(a),
-              func.tpe -> Type.Evo(a),
+              func.tpe -> Type.Evo(a)
             )
           }
         case (Map, x :: f :: Nil) =>
@@ -174,7 +183,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             Constraints(
               n.tpe -> Type.Integer,
               e.tpe -> Type.Evo(a),
-              func.tpe -> Type.Evo(a),
+              func.tpe -> Type.Evo(a)
             )
           }
 
