@@ -24,11 +24,6 @@ object Binding {
   }
 }
 
-trait BindingSyntax[R[_], Var] extends Binding[R, Var] {
-  def allVarsExpressions[T]: R[T]
-  def allVars: Var
-}
-
 class MappedBinding[R1[_], R2[_], Var](alg: Binding[R1, Var], to: R1 ~> R2, from: R2 ~> R1) extends Binding[R2, Var] {
   override def var0[A](name: String): R2[A] =
     to(alg.var0(name))

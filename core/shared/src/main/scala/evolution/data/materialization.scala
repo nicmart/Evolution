@@ -45,6 +45,7 @@ private[data] object MaterializationModuleImpl extends MaterializationModule {
       case Lambda(_, expr)     => usedVars(expr).map(_ - 1).filter(_ >= 0)
       case App(f, a)           => usedVars(f) ++ usedVars(a)
       case Fix(expr)           => usedVars(expr).map(_ - 1).filter(_ >= 0)
+      case Equals(a, b) => usedVars(a) ++ usedVars(b)
     }
 
   private def usedVars[T](evo: F[T]): Set[Int] = evo match {

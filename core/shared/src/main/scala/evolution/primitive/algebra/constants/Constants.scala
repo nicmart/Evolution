@@ -18,11 +18,6 @@ trait Constants[R[_]] {
   def ifThen[T](condition: R[Boolean], a: R[T], b: R[T]): R[T]
 }
 
-trait ConstantsSyntax[R[_]] extends Constants[R] {
-  def allDoubles: R[Double]
-  def allIntegers: R[Int]
-}
-
 class MappedConstants[R1[_], R2[_]](alg: Constants[R1], to: R1 ~> R2, from: R2 ~> R1) extends Constants[R2] {
   override def int(n: Int): R2[Int] =
     to(alg.int(n))

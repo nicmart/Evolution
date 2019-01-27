@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.chain.interpreter
-import evolution.primitive.algebra.{ConstString, CtxString}
+import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.chain.Chain
 
 class ChainSerializer[F[_]] extends Chain[F, CtxString] {
