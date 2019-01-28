@@ -50,6 +50,14 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             (Type.group(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (sg, compiledX, compiledY) =>
               alg.constants.add(compiledX.asInstanceOf[R[func.Out]], compiledY.asInstanceOf[R[func.Out]])(sg)
             }
+          case (Div, x :: y :: Nil) =>
+            (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
+              alg.constants.div(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])
+            }
+          case (Exp, x :: y :: Nil) =>
+            (compile(x, ctx), compile(y, ctx)).mapN { (compiledX, compiledY) =>
+              alg.constants.exp(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])
+            }
           case (Inverse, x :: Nil) =>
             (Type.group(func.tpe), compile(x, ctx)).mapN { (g, compiledX) =>
               alg.constants.inverse(compiledX.asInstanceOf[R[func.Out]])(g)
