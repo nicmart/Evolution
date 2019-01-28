@@ -45,6 +45,18 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
         alg.constants.add(a.run(alg), b.run(alg))
     }
 
+  override def div(a: Expr[F, Double], b: Expr[F, Double]): Expr[F, Double] =
+    new Expr[F, Double] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Double] =
+        alg.constants.div(a.run(alg), b.run(alg))
+    }
+
+  override def exp(a: Expr[F, Double], b: Expr[F, Double]): Expr[F, Double] =
+    new Expr[F, Double] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Double] =
+        alg.constants.exp(a.run(alg), b.run(alg))
+    }
+
   override def inverse[T: Group](a: Expr[F, T]): Expr[F, T] =
     new Expr[F, T] {
       override def run[R[_]](alg: Evolution[F, R]): R[T] =

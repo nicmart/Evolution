@@ -82,6 +82,8 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
     override def inverse[T: Group](a: R[T]): R[T] = ???
     override def x(point: R[Point]): R[Double] = ???
     override def y(point: R[Point]): R[Double] = ???
+    override def div(a: R[Double], b: R[Double]): R[Double] = ???
+    override def exp(a: R[Double], b: R[Double]): R[Double] = ???
   }
 
   override val bind: Binding[R, String] = new Binding[R, String] {

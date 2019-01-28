@@ -31,6 +31,12 @@ object ConstantsAnnotator extends Constants[Annotation] {
   override def add[T: Semigroup](a: Annotation[T], b: Annotation[T]): Annotation[T] =
     Annotation(a.vars ++ b.vars, Unknown(builder.constants.add(a.expr, b.expr)))
 
+  override def div(a: Annotation[Double], b: Annotation[Double]): Annotation[Double] =
+    Annotation(a.vars ++ b.vars, Unknown(builder.constants.div(a.expr, b.expr)))
+
+  override def exp(a: Annotation[Double], b: Annotation[Double]): Annotation[Double] =
+    Annotation(a.vars ++ b.vars, Unknown(builder.constants.exp(a.expr, b.expr)))
+
   override def inverse[T: Group](a: Annotation[T]): Annotation[T] =
     Annotation(a.vars, Unknown(builder.constants.inverse(a.expr)))
 

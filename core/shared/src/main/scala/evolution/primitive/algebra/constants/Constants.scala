@@ -12,6 +12,8 @@ trait Constants[R[_]] {
   def x(point: R[Point]): R[Double]
   def y(point: R[Point]): R[Double]
   def add[T: Semigroup](a: R[T], b: R[T]): R[T]
+  def div(a: R[Double], b: R[Double]): R[Double]
+  def exp(a: R[Double], b: R[Double]): R[Double]
   def inverse[T: Group](a: R[T]): R[T]
   def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T]
   def sin(d: R[Double]): R[Double]

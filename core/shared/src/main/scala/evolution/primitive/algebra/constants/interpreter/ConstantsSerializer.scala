@@ -19,6 +19,10 @@ object ConstantsSerializer extends Constants[CtxString] {
     ctx => s"x(${point(ctx)})"
   override def add[T: Semigroup](a: CtxString[T], b: CtxString[T]): CtxString[T] =
     ctx => s"${a(ctx)} + ${b(ctx)}"
+  override def div(a: CtxString[Double], b: CtxString[Double]): CtxString[Double] =
+    ctx => s"${a(ctx)} / ${b(ctx)}}"
+  override def exp(a: CtxString[Double], b: CtxString[Double]): CtxString[Double] =
+    ctx => s"${a(ctx)}^${b(ctx)}}"
   override def inverse[T: Group](a: CtxString[T]): CtxString[T] =
     ctx => s"-${a(ctx)}"
   override def sin(d: CtxString[Double]): CtxString[Double] =

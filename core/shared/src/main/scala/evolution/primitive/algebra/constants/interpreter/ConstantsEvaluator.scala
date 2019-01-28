@@ -25,6 +25,10 @@ object ConstantsEvaluator extends Constants[Evaluation] {
     Value(ctx => evalPoint.evaluateWith(ctx).y)
   override def add[T: Semigroup](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
     Value(ctx => Semigroup[T].combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
+  override def div(a: Evaluation[Double], b: Evaluation[Double]): Evaluation[Double] =
+    Value(ctx => a.evaluateWith(ctx) / b.evaluateWith(ctx), s"div($a, $b)")
+  override def exp(a: Evaluation[Double], b: Evaluation[Double]): Evaluation[Double] =
+    Value(ctx => Math.pow(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"exp($a, $b)")
   override def inverse[T: Group](a: Evaluation[T]): Evaluation[T] =
     Value(ctx => Group[T].inverse(a.evaluateWith(ctx)), s"inverse($a)")
   override def sin(d: Evaluation[Double]): Evaluation[Double] =

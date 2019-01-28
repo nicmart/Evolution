@@ -19,6 +19,10 @@ class ConstantsApplicative[R1[_], R2[_]: Applicative](alg: Constants[R1]) extend
     Applicative[R2].map(point)(alg.y)
   override def add[T: Semigroup](a: R2[R1[T]], b: R2[R1[T]]): R2[R1[T]] =
     Applicative[R2].map2(a, b)(alg.add[T])
+  override def div(a: R2[R1[Double]], b: R2[R1[Double]]): R2[R1[Double]] =
+    Applicative[R2].map2(a, b)(alg.div)
+  override def exp(a: R2[R1[Double]], b: R2[R1[Double]]): R2[R1[Double]] =
+    Applicative[R2].map2(a, b)(alg.div)
   override def inverse[T: Group](a: Composed[R2, R1, T]): Composed[R2, R1, T] =
     Applicative[R2].map(a)(alg.inverse[T])
   override def multiply[T: VectorSpace](k: Composed[R2, R1, Double], t: Composed[R2, R1, T]): Composed[R2, R1, T] =

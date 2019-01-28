@@ -22,6 +22,8 @@ object initial {
     val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
     def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
   }
+  final case class Div(a: R[Double], b: R[Double]) extends R[Double]
+  final case class Exp(a: R[Double], b: R[Double]) extends R[Double]
   final case class Inverse[T: Group](t: R[T]) extends R[T] {
     val group: Group[T] = implicitly[Group[T]]
   }
@@ -65,6 +67,8 @@ object initial {
       override def x(point: R[Point]): R[Double] = X(point)
       override def y(point: R[Point]): R[Double] = Y(point)
       override def add[T: Semigroup](a: R[T], b: R[T]): R[T] = Add(a, b)
+      override def div(a: R[Double], b: R[Double]): R[Double] = Div(a, b)
+      override def exp(a: R[Double], b: R[Double]): R[Double] = Exp(a, b)
       override def inverse[T: Group](a: R[T]): R[T] = Inverse(a)
       override def multiply[T: VectorSpace](k: R[Double], t: R[T]): R[T] = Multiply(k, t)
       override def sin(d: R[Double]): R[Double] = Sin(d)
