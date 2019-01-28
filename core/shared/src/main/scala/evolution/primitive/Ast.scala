@@ -51,6 +51,8 @@ class Ast[F[_]] {
     case object X extends PredefinedFunction(1)
     case object Y extends PredefinedFunction(1)
     case object Add extends PredefinedFunction(2)
+    case object Div extends PredefinedFunction(2)
+    case object Exp extends PredefinedFunction(2)
     case object Inverse extends PredefinedFunction(1)
     case object Multiply extends PredefinedFunction(2)
     case object Sin extends PredefinedFunction(1)

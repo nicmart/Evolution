@@ -13,14 +13,28 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val precedence0: Parser[Expr] =
       P(lambda | precedence1)
 
+    lazy val precedence1Ops: Parser[PredefinedFunction] =
+      P("+").map(_ => PredefinedFunction.Add)
+
     lazy val precedence1: Parser[Expr] =
-      P(precedence2 ~ ("+" ~/ precedence2).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList, PredefinedFunction.Add)
+      P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
+        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
+    lazy val precedence2Ops: Parser[PredefinedFunction] =
+      P("*").map(_ => PredefinedFunction.Multiply) | P("/").map(_ => PredefinedFunction.Div)
+
     lazy val precedence2: Parser[Expr] =
-      P(appOrFactor ~ ("*" ~/ appOrFactor).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList, PredefinedFunction.Multiply)
+      P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
+        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+      }
+
+    lazy val precedence3Ops: Parser[PredefinedFunction] =
+      P("^").map(_ => PredefinedFunction.Exp)
+
+    lazy val precedence3: Parser[Expr] =
+      P(appOrFactor ~ (precedence3Ops ~/ appOrFactor).rep).map {
+        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
     lazy val factor: Parser[Expr] =
@@ -67,9 +81,10 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-    def evalAssocBinaryOp(head: Expr, tail: List[Expr], op: PredefinedFunction): Expr =
-      (head :: tail).reduceRight[Expr] { (e, m) =>
-        Expr.FuncCall(op, List(e, m))
+    def evalAssocBinaryOp(head: Expr, tail: List[(PredefinedFunction, Expr)]): Expr =
+      tail match {
+        case Nil                        => head
+        case (op, tailHead) :: tailTail => Expr.FuncCall(op, List(head, evalAssocBinaryOp(tailHead, tailTail)))
       }
 
     def evalApp(f: Expr, args: List[Expr]): Expr =

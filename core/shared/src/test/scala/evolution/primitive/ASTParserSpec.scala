@@ -144,6 +144,62 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
           )
         }
       }
+
+      "parse exponentials" - {
+        "2^3" in {
+          unsafeParse("2^3") shouldBe Expr.FuncCall(Exp, List(Expr.Number("2"), Expr.Number("3")))
+        }
+
+        "2^3 + 1" in {
+          unsafeParse("2^3 + 1") shouldBe Expr.FuncCall(
+            Add,
+            List(Expr.FuncCall(Exp, List(Expr.Number("2"), Expr.Number("3"))), Expr.Number("1"))
+          )
+        }
+
+        "2^3 * 2" in {
+          unsafeParse("2^3 * 2") shouldBe Expr.FuncCall(
+            Multiply,
+            List(Expr.FuncCall(Exp, List(Expr.Number("2"), Expr.Number("3"))), Expr.Number("2"))
+          )
+        }
+
+        "2 * 2^3" in {
+          unsafeParse("2 * 2^3") shouldBe Expr.FuncCall(
+            Multiply,
+            List(Expr.Number("2"), Expr.FuncCall(Exp, List(Expr.Number("2"), Expr.Number("3"))))
+          )
+        }
+      }
+
+      "parse divisions" - {
+        "a / b + c = (a / b) + c" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"$a / $b + $c") shouldBe Expr.FuncCall(
+              Add,
+              List(Expr.FuncCall(Div, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+            )
+          }
+        }
+
+        "a + b / c = a + (b / c)" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"$a + $b / $c") shouldBe Expr.FuncCall(
+              Add,
+              List(unsafeParse(a), Expr.FuncCall(Div, List(unsafeParse(b), unsafeParse(c))))
+            )
+          }
+        }
+
+        "(a + b) / c" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"($a + $b) / $c") shouldBe Expr.FuncCall(
+              Div,
+              List(Expr.FuncCall(Add, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+            )
+          }
+        }
+      }
     }
   }
 
