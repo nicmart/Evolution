@@ -11,5 +11,13 @@ object DistributionAnnotator extends Distribution[RNGRepr, Annotation] {
   override def uniform(fromEval: Annotation[Double], toEval: Annotation[Double]): Annotation[RNGRepr[Double]] =
     Annotation(
       fromEval.vars ++ toEval.vars,
-      StatelessEvolution(builder.distribution.uniform(fromEval.expr, toEval.expr)))
+      StatelessEvolution(builder.distribution.uniform(fromEval.expr, toEval.expr))
+    )
+  override def uniformChoice[T](tsEval: List[Annotation[T]]): Annotation[RNGRepr[T]] =
+    Annotation(
+      tsEval.foldLeft(Set.empty[Int]) { (vars, annotation) =>
+        vars ++ annotation.vars
+      },
+      StatelessEvolution(builder.distribution.uniformChoice(tsEval.map(_.expr)))
+    )
 }

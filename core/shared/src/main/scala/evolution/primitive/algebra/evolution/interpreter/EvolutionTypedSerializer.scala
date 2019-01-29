@@ -122,6 +122,7 @@ class EvolutionTypedSerializer extends Evolution[F, R] {
       val annotatedTo @ AnnotatedValue(toType, toValue) = to.infer(inner)
       AnnotatedValue(required, s"uniform($annotatedFrom, $annotatedTo)")
     }
+    override def uniformChoice[T](ts: List[R[T]]): R[F[T]] = ???
   }
 
   override val derived: Derived[F, R] = new Derived[F, R] {
