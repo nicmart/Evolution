@@ -41,50 +41,51 @@ class Ast[F[_]] {
     final case class Number(n: String, tpe: Type = Type.Var("")) extends Expr
   }
 
-  abstract sealed class PredefinedFunction(val arity: Int) extends EnumEntry
+  abstract sealed class PredefinedFunction extends EnumEntry
 
   object PredefinedFunction extends Enum[PredefinedFunction] {
     val values: immutable.IndexedSeq[PredefinedFunction] = findValues
 
     // Constants
-    case object Point extends PredefinedFunction(2)
-    case object X extends PredefinedFunction(1)
-    case object Y extends PredefinedFunction(1)
-    case object Add extends PredefinedFunction(2)
-    case object Div extends PredefinedFunction(2)
-    case object Exp extends PredefinedFunction(2)
-    case object Inverse extends PredefinedFunction(1)
-    case object Multiply extends PredefinedFunction(2)
-    case object Sin extends PredefinedFunction(1)
-    case object Cos extends PredefinedFunction(1)
-    case object Eq extends PredefinedFunction(2)
-    case object If extends PredefinedFunction(3)
+    case object Point extends PredefinedFunction
+    case object X extends PredefinedFunction
+    case object Y extends PredefinedFunction
+    case object Add extends PredefinedFunction
+    case object Div extends PredefinedFunction
+    case object Exp extends PredefinedFunction
+    case object Inverse extends PredefinedFunction
+    case object Multiply extends PredefinedFunction
+    case object Sin extends PredefinedFunction
+    case object Cos extends PredefinedFunction
+    case object Eq extends PredefinedFunction
+    case object If extends PredefinedFunction
 
     // Bindings
-    case object Fix extends PredefinedFunction(1)
-    case object App extends PredefinedFunction(2)
-    //case object Let extends PredefinedFunction(1)
+    case object Fix extends PredefinedFunction
+    case object App extends PredefinedFunction
+    //case object Let extends PredefinedFunction
 
     // Chain
-    case object Empty extends PredefinedFunction(0)
-    case object Cons extends PredefinedFunction(2)
-    case object MapEmpty extends PredefinedFunction(2)
-    case object MapCons extends PredefinedFunction(2)
+    case object Empty extends PredefinedFunction
+    case object Cons extends PredefinedFunction
+    case object MapEmpty extends PredefinedFunction
+    case object MapCons extends PredefinedFunction
 
     // Derived
-    case object Cartesian extends PredefinedFunction(2)
-    case object Polar extends PredefinedFunction(2)
-    case object Constant extends PredefinedFunction(1)
-    case object Integrate extends PredefinedFunction(2)
-    case object Solve1 extends PredefinedFunction(2)
-    case object Solve2 extends PredefinedFunction(2)
-    case object Concat extends PredefinedFunction(2)
-    case object Map extends PredefinedFunction(2)
-    case object FlatMap extends PredefinedFunction(2)
-    case object Take extends PredefinedFunction(2)
+    case object Cartesian extends PredefinedFunction
+    case object Polar extends PredefinedFunction
+    case object Constant extends PredefinedFunction
+    case object Integrate extends PredefinedFunction
+    case object Solve1 extends PredefinedFunction
+    case object Solve2 extends PredefinedFunction
+    case object Concat extends PredefinedFunction
+    case object Map extends PredefinedFunction
+    case object FlatMap extends PredefinedFunction
+    case object Take extends PredefinedFunction
 
     // Distribution
-    case object Uniform extends PredefinedFunction(2)
+    case object Uniform extends PredefinedFunction
+    case object UniformChoice extends PredefinedFunction
   }
 
   sealed trait Type {

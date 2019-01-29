@@ -168,6 +168,10 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             (compile(from, ctx), compile(to, ctx)).mapN { (compiledFrom, compiledTo) =>
               alg.distribution.uniform(compiledFrom.asInstanceOf[R[Double]], compiledTo.asInstanceOf[R[Double]])
             }
+          case (UniformChoice, choices) =>
+            choices.traverse(choice => compile(choice, ctx)).map { compiledChoices =>
+              alg.distribution.uniformChoice(compiledChoices.asInstanceOf[List[R[func.Out]]])
+            }
           case _ => Left(s"Invalid type for expression $func")
         }
       }.asInstanceOf[Either[String, R[func.Out]]]

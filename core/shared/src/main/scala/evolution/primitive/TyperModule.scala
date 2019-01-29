@@ -193,6 +193,9 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
         case (Uniform, from :: to :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl))
+
+        case (UniformChoice, vars) =>
+          (typeVars, Constraints(vars.map(v => func.tpe -> Type.Evo(v.tpe)): _*))
       }
 
     def varUsagesIn(varName: String, expr: Expr): List[Expr] =
