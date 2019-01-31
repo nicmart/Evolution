@@ -28,7 +28,8 @@ class CompilerSpec extends CompilerSpecModule[initial.F] {
         unsafeCompile(Expr.Let(variable1, n1, n2)) shouldBe initial.Let(
           variable1.name,
           unsafeCompile(n1),
-          unsafeCompile(n2))
+          unsafeCompile(n2)
+        )
       }
 
       "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>

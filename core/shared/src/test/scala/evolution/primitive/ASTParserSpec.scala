@@ -28,6 +28,30 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         }
       }
 
+      "bindings" - {
+        "a = 2 in $a" in {
+          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
+            unsafeParse(s"$id =$expr in $$$id") shouldBe Let(Var(id), unsafeParse(expr), Var(id))
+          }
+        }
+
+        "a = b in\\n 1 + 2" in {
+          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
+            unsafeParse(s"$id = $expr in 1 + 2") shouldBe Let(
+              Var(id),
+              unsafeParse(expr),
+              FuncCall(Add, List(Number("1"), Number("2"))))
+          }
+        }
+
+        "a = aval in b = bval in body" in {
+          forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
+            unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldBe
+              Let(Var(a), unsafeParse(aVal), Let(Var(b), unsafeParse(bVal), unsafeParse(body)))
+          }
+        }
+      }
+
       "multiplications" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
           unsafeParse(s"$a * $b") shouldBe Expr.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b)))

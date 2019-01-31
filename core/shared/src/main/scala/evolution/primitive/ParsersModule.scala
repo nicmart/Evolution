@@ -1,6 +1,7 @@
 package evolution.primitive
 import fastparse.all
 import evolution.primitive.algebra.parser.ParserConfig.White._
+import evolution.primitive.algebra.parser.ParserConfig.whitespaces
 import fastparse.noApi._
 
 trait ParsersModule[F[_]] { self: WithAst[F] =>
@@ -11,7 +12,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P(precedence0 ~ End)
 
     lazy val precedence0: Parser[Expr] =
-      P(lambda | precedence1)
+      P(lambdaOrLet | precedence1)
 
     lazy val precedence1Ops: Parser[PredefinedFunction] =
       P("+").map(_ => PredefinedFunction.Add)
@@ -62,8 +63,19 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val unaryPrefixOp: Parser[Expr] =
       P("-" ~ factor).map(e => Expr.FuncCall(PredefinedFunction.Inverse, List(e)))
 
-    lazy val lambda: Parser[Expr] =
-      P(identifier ~ "->" ~/ precedence0).map { case (identifier, body) => Expr.Lambda(Expr.Var(identifier), body) }
+    lazy val lambdaOrLet: Parser[Expr] = {
+      def lambdaTail(id: String): Parser[Expr] = P(whitespaces ~ "->" ~/ precedence0).map { expr =>
+        Expr.Lambda(Expr.Var(id), expr)
+      }
+      def letTail(id: String): Parser[Expr] =
+        P(whitespaces ~ "=" ~/ precedence0 ~ "in" ~/ precedence0).map {
+          case (value, body) =>
+            Expr.Let(Expr.Var(id), value, body)
+        }
+      def tail(id: String): Parser[Expr] = lambdaTail(id) | letTail(id)
+
+      identifier.flatMap(tail)
+    }
 
     lazy val let: Parser[Expr] = P("let(" ~/ identifier ~ "," ~ precedence0 ~ "," ~ precedence0 ~ ")").map {
       case (id, value, in) =>
