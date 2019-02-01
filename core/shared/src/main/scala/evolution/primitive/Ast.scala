@@ -85,6 +85,7 @@ class Ast[F[_]] {
 
     // Distribution
     case object Uniform extends PredefinedFunction
+    case object UniformDiscrete extends PredefinedFunction
     case object UniformChoice extends PredefinedFunction
   }
 

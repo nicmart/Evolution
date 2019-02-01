@@ -168,6 +168,14 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             (compile(from, ctx), compile(to, ctx)).mapN { (compiledFrom, compiledTo) =>
               alg.distribution.uniform(compiledFrom.asInstanceOf[R[Double]], compiledTo.asInstanceOf[R[Double]])
             }
+          case (UniformDiscrete, from :: to :: step :: Nil) =>
+            (compile(from, ctx), compile(to, ctx), compile(step, ctx)).mapN {
+              (compiledFrom, compiledTo, compiledStep) =>
+                alg.distribution.uniformDiscrete(
+                  compiledFrom.asInstanceOf[R[Double]],
+                  compiledTo.asInstanceOf[R[Double]],
+                  compiledStep.asInstanceOf[R[Double]])
+            }
           case (UniformChoice, choices) =>
             choices.traverse(choice => compile(choice, ctx)).map { compiledChoices =>
               alg.distribution.uniformChoice(compiledChoices.asInstanceOf[List[R[func.Out]]])

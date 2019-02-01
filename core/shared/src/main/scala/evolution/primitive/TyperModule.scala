@@ -194,6 +194,11 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         case (Uniform, from :: to :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl))
 
+        case (UniformDiscrete, from :: to :: step :: Nil) =>
+          (
+            typeVars,
+            Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl, step.tpe -> Type.Dbl))
+
         case (UniformChoice, vars) =>
           (typeVars, Constraints(vars.map(v => func.tpe -> Type.Evo(v.tpe)): _*))
       }
