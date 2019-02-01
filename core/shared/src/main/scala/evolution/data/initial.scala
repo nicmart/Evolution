@@ -87,6 +87,7 @@ object initial {
     }
     override val distribution: Distribution[F, R] = new Distribution[F, R] {
       override def uniform(from: R[Double], to: R[Double]): R[F[Double]] = ???
+      override def uniformDiscrete(from: R[Double], to: R[Double], step: R[Double]): R[F[Double]] = ???
       override def uniformChoice[T](ts: List[R[T]]): R[F[T]] = ???
     }
     override val derived: Derived[F, R] = new DefaultDerived[F, R](this)

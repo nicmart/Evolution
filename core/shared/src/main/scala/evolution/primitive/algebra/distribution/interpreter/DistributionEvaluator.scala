@@ -25,6 +25,15 @@ object DistributionEvaluator extends Distribution[RNGRepr, Evaluation] {
   override def uniformChoice[T](ts: List[Evaluation[T]]): Evaluation[RNGRepr[T]] =
     Value(ctx => uniformChoiceRepr(ts.map(_.evaluateWith(ctx))))
 
+  override def uniformDiscrete(
+    fromEval: Evaluation[Double],
+    toEval: Evaluation[Double],
+    stepEval: Evaluation[Double]): Evaluation[RNGRepr[Double]] =
+    Value { ctx =>
+      val (start, stop, step) = (fromEval.evaluateWith(ctx), toEval.evaluateWith(ctx), stepEval.evaluateWith(ctx))
+      uniformChoiceRepr((start to stop by step).toList)
+    }
+
   private def uniformRepr(from: Double, to: Double): RNGRepr[Double] = {
     lazy val self: RNGRepr[Double] = RNGRepr { rng =>
       val (n, rng2) = rng.nextInt

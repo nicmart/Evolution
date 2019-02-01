@@ -9,6 +9,13 @@ class DistributionExpr[F[_]] extends Distribution[F, Expr[F, ?]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[Double]] =
         alg.distribution.uniform(from.run(alg), to.run(alg))
     }
+
+  override def uniformDiscrete(from: Expr[F, Double], to: Expr[F, Double], step: Expr[F, Double]): Expr[F, F[Double]] =
+    new Expr[F, F[Double]] {
+      override def run[R[_]](alg: Evolution[F, R]): R[F[Double]] =
+        alg.distribution.uniformDiscrete(from.run(alg), to.run(alg), step.run(alg))
+    }
+
   override def uniformChoice[T](ts: List[Expr[F, T]]): Expr[F, F[T]] =
     new Expr[F, F[T]] {
       override def run[R[_]](alg: Evolution[F, R]): R[F[T]] =

@@ -20,4 +20,12 @@ object DistributionAnnotator extends Distribution[RNGRepr, Annotation] {
       },
       StatelessEvolution(builder.distribution.uniformChoice(tsEval.map(_.expr)))
     )
+  override def uniformDiscrete(
+    fromEval: Annotation[Double],
+    toEval: Annotation[Double],
+    stepEval: Annotation[Double]): Annotation[RNGRepr[Double]] =
+    Annotation(
+      fromEval.vars ++ toEval.vars ++ stepEval.vars,
+      StatelessEvolution(builder.distribution.uniformDiscrete(fromEval.expr, toEval.expr, stepEval.expr))
+    )
 }
