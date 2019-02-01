@@ -13,7 +13,7 @@ import evolution.geometry.Point
 import evolution.primitive.FullModule
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.interpreter.{
-  DeBrujinEvolutionSerializer,
+  DeBruijnEvolutionSerializer,
   DesugarEvolutionSerializer,
   EvolutionExpr,
   EvolutionSerializer
@@ -31,7 +31,7 @@ object dsl extends DrawingDefinition[Point] {
   private val initialVarContext = new module.VarContext(predefinedVars)
   private val serializer = new EvolutionSerializer[F]
   private val desugaringSerializer = new DesugarEvolutionSerializer[F]
-  private val deBrujinSerializer = new DeBrujinEvolutionSerializer[F]
+  private val deBrujinSerializer = new DeBruijnEvolutionSerializer[F]
   private val evolutionExpr = new EvolutionExpr[F]
 
   import module.ast.Type

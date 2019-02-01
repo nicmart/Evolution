@@ -1,5 +1,5 @@
 package evolution.primitive.algebra.evolution.interpreter
-import evolution.primitive.algebra.{ ConstString, CtxString }
+import evolution.primitive.algebra.CtxString
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.binding.interpreter.BindingSerializer
 import evolution.primitive.algebra.constants.Constants
@@ -25,7 +25,7 @@ class DesugarEvolutionSerializer[F[_]] extends EvolutionSerializer[F] {
   override val derived: Derived[F, CtxString] = new DefaultDerived[F, CtxString](new EvolutionSerializer[F])
 }
 
-class DeBrujinEvolutionSerializer[F[_]] extends EvolutionSerializer[F] {
+class DeBruijnEvolutionSerializer[F[_]] extends EvolutionSerializer[F] {
   override val bind: Binding[CtxString, String] = new BindingSerializer {
     override def var0[A](name: String): CtxString[A] =
       ctx => "var(0)"
