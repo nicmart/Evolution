@@ -1,11 +1,9 @@
 package evolution.primitive.algebra.evolution
-import evolution.primitive.algebra.Composed
 import evolution.primitive.algebra.binding.Binding
 import evolution.primitive.algebra.constants.Constants
 import evolution.primitive.algebra.chain.Chain
 import evolution.primitive.algebra.derived.Derived
 import evolution.primitive.algebra.distribution.Distribution
-import fastparse.noApi._
 
 trait Evolution[F[_], R[_]] {
   val chain: Chain[F, R]
