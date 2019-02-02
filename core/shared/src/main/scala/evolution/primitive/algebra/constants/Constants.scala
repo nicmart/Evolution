@@ -8,6 +8,7 @@ import evolution.typeclass.VectorSpace
 trait Constants[R[_]] {
   def int(n: Int): R[Int]
   def double(d: Double): R[Double]
+  def floor(d: R[Double]): R[Int]
   def point(x: R[Double], y: R[Double]): R[Point]
   def x(point: R[Point]): R[Double]
   def y(point: R[Point]): R[Double]

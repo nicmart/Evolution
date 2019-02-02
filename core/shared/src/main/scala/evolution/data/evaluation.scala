@@ -41,6 +41,7 @@ private[data] object EvaluationModuleImpl extends EvaluationModule {
 sealed trait Evaluation[T] {
   @inline def evaluateWith(ctx: Ctx): T = Evaluation.debug(s"$this", eval(ctx))
   @inline def evaluate: T = evaluateWith(emptyCtx)
+  def map[S](f: T => S): Evaluation[S] = Evaluation.map(this, f)
   @inline protected def eval(ctx: Ctx): T
 }
 
@@ -98,6 +99,18 @@ object Evaluation {
   case class Value[A](getA: Ctx => A, override val toString: String = "?") extends Evaluation[A] {
     @inline override def eval(ctx: Ctx): A = getA(ctx)
   }
+
+  def map[A, B](ea: Evaluation[A], f: A => B): Evaluation[B] =
+    ea match {
+      case Constant(a, label) => Constant(f(a), label)
+      case _                  => Value(ctx => f(ea.evaluateWith(ctx)))
+    }
+
+  def map2[A, B, C](ea: Evaluation[A], eb: Evaluation[B])(f: (A, B) => C): Evaluation[C] =
+    (ea, eb) match {
+      case (Constant(a, labelA), Constant(b, labelB)) => Constant(f(a, b), s"$labelA $labelB")
+      case _                                          => Value(ctx => f(ea.evaluateWith(ctx), eb.evaluateWith(ctx)))
+    }
 
   implicit val applicative: Applicative[Evaluation] = new Applicative[Evaluation] {
     override def pure[A](x: A): Evaluation[A] = Value(_ => x)

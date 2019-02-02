@@ -13,32 +13,34 @@ object ConstantsEvaluator extends Constants[Evaluation] {
     Constant(n)
   override def double(d: Double): Evaluation[Double] =
     Constant(d)
+  override def floor(d: Evaluation[Double]): Evaluation[Int] =
+    d.map(_.toInt)
   override def point(evalX: Evaluation[Double], evalY: Evaluation[Double]): Evaluation[Point] =
-    (evalX, evalY) match {
-      case (Constant(x, _), Constant(y, _)) => Constant(Point(x, y), s"constant-point($evalX, $evalY)")
-      case _ =>
-        Value(ctx => Point(evalX.evaluateWith(ctx), evalY.evaluateWith(ctx)), s"non-constant-point($evalX, $evalY)")
+    Evaluation.map2(evalX, evalY) { (x, y) =>
+      Point(x, y)
     }
   override def x(evalPoint: Evaluation[Point]): Evaluation[Double] =
-    Value(ctx => evalPoint.evaluateWith(ctx).x)
+    evalPoint.map(_.x)
   override def y(evalPoint: Evaluation[Point]): Evaluation[Double] =
-    Value(ctx => evalPoint.evaluateWith(ctx).y)
+    evalPoint.map(_.y)
   override def add[T: Semigroup](a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
-    Value(ctx => Semigroup[T].combine(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"add($a, $b)")
+    Evaluation.map2(a, b)(Semigroup[T].combine)
   override def div(a: Evaluation[Double], b: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => a.evaluateWith(ctx) / b.evaluateWith(ctx), s"div($a, $b)")
-  override def exp(a: Evaluation[Double], b: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => Math.pow(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"exp($a, $b)")
+    Evaluation.map2(a, b)(_ / _)
+  override def exp(evalA: Evaluation[Double], evalB: Evaluation[Double]): Evaluation[Double] =
+    Evaluation.map2(evalA, evalB) { (a, b) =>
+      Math.pow(a, b)
+    }
   override def inverse[T: Group](a: Evaluation[T]): Evaluation[T] =
-    Value(ctx => Group[T].inverse(a.evaluateWith(ctx)), s"inverse($a)")
-  override def sin(d: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => Math.sin(d.evaluateWith(ctx)))
-  override def cos(d: Evaluation[Double]): Evaluation[Double] =
-    Value(ctx => Math.cos(d.evaluateWith(ctx)))
-  override def multiply[T: VectorSpace](k: Evaluation[Double], t: Evaluation[T]): Evaluation[T] =
-    Value(ctx => VectorSpace[T].mult(k.evaluateWith(ctx), t.evaluateWith(ctx)))
+    a.map(Group[T].inverse)
+  override def sin(eval: Evaluation[Double]): Evaluation[Double] =
+    eval.map(d => Math.sin(d))
+  override def cos(eval: Evaluation[Double]): Evaluation[Double] =
+    eval.map(d => Math.cos(d))
+  override def multiply[T: VectorSpace](evalK: Evaluation[Double], evalT: Evaluation[T]): Evaluation[T] =
+    Evaluation.map2(evalK, evalT)(VectorSpace[T].mult)
   override def eq[T: Eq](a: Evaluation[T], b: Evaluation[T]): Evaluation[Boolean] =
-    Value(ctx => Eq[T].eqv(a.evaluateWith(ctx), b.evaluateWith(ctx)), s"eq($a, $b)")
+    Evaluation.map2(a, b)(Eq[T].eqv)
   override def ifThen[T](condition: Evaluation[Boolean], a: Evaluation[T], b: Evaluation[T]): Evaluation[T] =
     Value(ctx => if (condition.evaluateWith(ctx)) a.evaluateWith(ctx) else b.evaluateWith(ctx))
 }

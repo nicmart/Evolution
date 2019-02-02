@@ -11,6 +11,8 @@ object ConstantsSerializer extends Constants[CtxString] {
     _ => n.toString
   override def double(d: Double): CtxString[Double] =
     _ => d.toString
+  override def floor(d: CtxString[Double]): CtxString[Int] =
+    ctx => s"floor(${d(ctx)})"
   override def point(x: CtxString[Double], y: CtxString[Double]): CtxString[Point] =
     ctx => s"point(${x(ctx)}, ${y(ctx)})"
   override def x(point: CtxString[Point]): CtxString[Point] =

@@ -21,6 +21,12 @@ class ConstantsExpr[F[_]] extends Constants[Expr[F, ?]] {
         alg.constants.double(d)
     }
 
+  override def floor(d: Expr[F, Double]): Expr[F, Int] =
+    new Expr[F, Int] {
+      override def run[R[_]](alg: Evolution[F, R]): R[Int] =
+        alg.constants.floor(d.run(alg))
+    }
+
   override def point(x: Expr[F, Double], y: Expr[F, Double]): Expr[F, Point] =
     new Expr[F, Point] {
       override def run[R[_]](alg: Evolution[F, R]): R[Point] =

@@ -14,6 +14,7 @@ object initial {
   sealed trait R[T]
   final case class Evo[T](evo: F[T]) extends R[F[T]]
   final case class Dbl(d: Double) extends R[Double]
+  final case class Floor(d: R[Double]) extends R[Int]
   final case class Integer(n: Int) extends R[Int]
   final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
   final case class X(p: R[Point]) extends R[Double]
@@ -63,6 +64,7 @@ object initial {
     override val constants: Constants[R] = new Constants[R] {
       override def int(n: Int): R[Int] = Integer(n)
       override def double(d: Double): R[Double] = Dbl(d)
+      override def floor(d: R[Double]): R[Int] = Floor(d)
       override def point(x: R[Double], y: R[Double]): R[Point] = Pnt(x, y)
       override def x(point: R[Point]): R[Double] = X(point)
       override def y(point: R[Point]): R[Double] = Y(point)

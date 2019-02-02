@@ -46,6 +46,8 @@ trait CompilerModule[F[_]] { self: WithAst[F] =>
             compile(p, ctx).map { compiledP =>
               alg.constants.y(compiledP.asInstanceOf[R[geometry.Point]])
             }
+          case (Floor, d :: Nil) =>
+            compile(d, ctx).map(compiledD => alg.constants.floor(compiledD.asInstanceOf[R[Double]]))
           case (Add, x :: y :: Nil) =>
             (Type.group(func.tpe), compile(x, ctx), compile(y, ctx)).mapN { (sg, compiledX, compiledY) =>
               alg.constants.add(compiledX.asInstanceOf[R[func.Out]], compiledY.asInstanceOf[R[func.Out]])(sg)

@@ -48,6 +48,7 @@ class Ast[F[_]] {
 
     // Constants
     case object Point extends PredefinedFunction
+    case object Floor extends PredefinedFunction
     case object X extends PredefinedFunction
     case object Y extends PredefinedFunction
     case object Add extends PredefinedFunction
