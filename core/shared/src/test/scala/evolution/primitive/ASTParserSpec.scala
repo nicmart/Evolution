@@ -1,6 +1,6 @@
 package evolution.primitive
 import cats.Id
-import org.scalacheck.Shrink
+import org.scalacheck.{ Gen, Shrink }
 
 class ASTParserSpec extends CompilerSpecModule[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -126,6 +126,12 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
       "expressions with whitespaces at the beginning and at the end" in {
         forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
           unsafeParse(s"$wsStart$expr$wsEnd") shouldBe unsafeParse(expr)
+        }
+      }
+
+      "ignore comments" in {
+        forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
+          unsafeParse(s"//$comment1\n$expr\n//$comment2") shouldBe unsafeParse(expr)
         }
       }
 
