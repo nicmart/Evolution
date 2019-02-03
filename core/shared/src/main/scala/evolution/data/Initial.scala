@@ -10,9 +10,9 @@ import evolution.primitive.algebra.distribution.Distribution
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.typeclass.VectorSpace
 
-object initial {
+trait Initial[F[_]] {
+
   sealed trait R[T]
-  final case class Evo[T](evo: F[T]) extends R[F[T]]
   final case class Dbl(d: Double) extends R[Double]
   final case class Floor(d: R[Double]) extends R[Int]
   final case class Integer(n: Int) extends R[Int]
@@ -46,19 +46,21 @@ object initial {
   final case class App[A, B](f: R[A => B], a: R[A]) extends R[B]
   final case class Fix[A](expr: R[A => A]) extends R[A]
 
-  sealed trait F[T]
-  final case class Empty[A]() extends F[A]
-  final case class Cons[A](head: R[A], tail: R[F[A]]) extends F[A]
-  final case class MapEmpty[A](eva: R[F[A]], eva2: R[F[A]]) extends F[A]
-  final case class MapCons[A, B](eva: R[F[A]], f: R[A => F[A] => F[B]]) extends F[B]
-  final case class Uniform(from: R[Double], to: R[Double]) extends F[Double]
+  final case class Empty[A]() extends R[F[A]]
+  final case class Cons[A](head: R[A], tail: R[F[A]]) extends R[F[A]]
+  final case class MapEmpty[A](eva: R[F[A]], eva2: R[F[A]]) extends R[F[A]]
+  final case class MapCons[A, B](eva: R[F[A]], f: R[A => F[A] => F[B]]) extends R[F[B]]
+
+  final case class Uniform(from: R[Double], to: R[Double]) extends R[F[Double]]
+  final case class UniformDiscrete(from: R[Double], to: R[Double], step: R[Double]) extends R[F[Double]]
+  final case class UniformChoice[T](ts: List[R[T]]) extends R[F[T]]
 
   val evolution: Evolution[F, R] = new Evolution[F, R] {
     override val chain: Chain[F, R] = new Chain[F, R] {
-      override def empty[A]: R[F[A]] = Evo(Empty())
-      override def cons[A](head: R[A], tail: R[F[A]]): R[F[A]] = Evo(Cons(head, tail))
-      override def mapEmpty[A](eva: R[F[A]], eva2: R[F[A]]): R[F[A]] = Evo(MapEmpty(eva, eva2))
-      override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] = Evo(MapCons(eva, f))
+      override def empty[A]: R[F[A]] = Empty()
+      override def cons[A](head: R[A], tail: R[F[A]]): R[F[A]] = Cons(head, tail)
+      override def mapEmpty[A](eva: R[F[A]], eva2: R[F[A]]): R[F[A]] = MapEmpty(eva, eva2)
+      override def mapCons[A, B](eva: R[F[A]])(f: R[A => F[A] => F[B]]): R[F[B]] = MapCons(eva, f)
     }
 
     override val constants: Constants[R] = new Constants[R] {
@@ -88,9 +90,10 @@ object initial {
       override def fix[A](expr: R[A => A]): R[A] = Fix(expr)
     }
     override val distribution: Distribution[F, R] = new Distribution[F, R] {
-      override def uniform(from: R[Double], to: R[Double]): R[F[Double]] = ???
-      override def uniformDiscrete(from: R[Double], to: R[Double], step: R[Double]): R[F[Double]] = ???
-      override def uniformChoice[T](ts: List[R[T]]): R[F[T]] = ???
+      override def uniform(from: R[Double], to: R[Double]): R[F[Double]] = Uniform(from, to)
+      override def uniformDiscrete(from: R[Double], to: R[Double], step: R[Double]): R[F[Double]] =
+        UniformDiscrete(from, to, step)
+      override def uniformChoice[T](ts: List[R[T]]): R[F[T]] = UniformChoice(ts)
     }
     override val derived: Derived[F, R] = new DefaultDerived[F, R](this)
   }

@@ -1,9 +1,11 @@
 package evolution.primitive
-import evolution.data.initial
+import cats.Id
+import evolution.data.Initial
 import evolution.primitive.algebra.evolution.Evolution
 
-class CompilerSpec extends CompilerSpecModule[initial.F] {
-  val alg: Evolution[initial.F, initial.R] = initial.evolution
+class CompilerSpec extends CompilerSpecModule[Id] {
+  val initial = new Initial[Id] {}
+  val alg: Evolution[Id, initial.R] = initial.evolution
   import ast._, Expr._
   import Expr._
 

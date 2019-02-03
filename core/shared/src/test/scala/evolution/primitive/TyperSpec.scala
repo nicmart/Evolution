@@ -1,7 +1,7 @@
 package evolution.primitive
-import evolution.data.initial
+import cats.Id
 
-class TyperSpec extends CompilerSpecModule[initial.F] {
+class TyperSpec extends CompilerSpecModule[Id] {
   import Typer._, ast._, Expr._
   val typer = Typer
 

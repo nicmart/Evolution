@@ -8,6 +8,7 @@ import evolution.data.Evaluation._
 import evolution.primitive.algebra.constants.Constants
 import evolution.typeclass.VectorSpace
 
+// This really just need Evaluation to be an applicative
 object ConstantsEvaluator extends Constants[Evaluation] {
   override def int(n: Int): Evaluation[Int] =
     Constant(n)
