@@ -6,7 +6,7 @@ import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 object InitialCompilerModule {
-  val initial: Initial[RNGRepr] = new Initial[RNGRepr] {}
+  private val initial: Initial[RNGRepr] = new Initial[RNGRepr] {}
   import initial._
   type Out[T] = Ctx => T
 
@@ -134,13 +134,13 @@ object InitialCompilerModule {
 
   }
 
-  def compile1[A, B](a: R[A])(f: A => B): Out[B] =
+  private def compile1[A, B](a: R[A])(f: A => B): Out[B] =
     compile(a).map(f)
 
-  def compile2[A, B, C](a: R[A], b: R[B])(f: (A, B) => C): Out[C] =
+  private def compile2[A, B, C](a: R[A], b: R[B])(f: (A, B) => C): Out[C] =
     Out.map2(compile(a), compile(b))(f)
 
-  def compile3[A, B, C, D](a: R[A], b: R[B], c: R[C])(f: (A, B, C) => D): Out[D] =
+  private def compile3[A, B, C, D](a: R[A], b: R[B], c: R[C])(f: (A, B, C) => D): Out[D] =
     Out.map3(compile(a), compile(b), compile(c))(f)
 
   private object Out {
