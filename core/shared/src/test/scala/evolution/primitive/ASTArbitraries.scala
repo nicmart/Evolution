@@ -1,4 +1,5 @@
 package evolution.primitive
+import evolution.primitive.algebra.parser.ParserConfig
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
@@ -52,4 +53,7 @@ trait ASTArbitraries[F[_]] { self: WithAst[F] =>
       char <- Gen.alphaChar
       typeChar <- Gen.alphaChar
     } yield Expr.Var(char.toString, Type.Var(typeChar.toString.toUpperCase))
+
+  def genWhitespace: Gen[String] =
+    Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))
 }

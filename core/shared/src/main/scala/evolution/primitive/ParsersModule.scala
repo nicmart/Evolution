@@ -9,7 +9,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
 
   object Parsers {
     lazy val parser: Parser[Expr] =
-      P(precedence0 ~ End)
+      P(whitespaces ~ precedence0 ~ End)
 
     lazy val precedence0: Parser[Expr] =
       P(lambdaOrLet | precedence1)

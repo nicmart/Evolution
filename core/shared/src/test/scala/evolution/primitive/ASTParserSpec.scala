@@ -123,6 +123,12 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         }
       }
 
+      "expressions with whitespaces at the beginning and at the end" in {
+        forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
+          unsafeParse(s"$wsStart$expr$wsEnd") shouldBe unsafeParse(expr)
+        }
+      }
+
       "Parse a complex expression: a -> b -> ($c + 2) * app($d, inverse(-1))" in {
         val parsed = unsafeParse("a -> b -> ($c + 2) * app($d, inverse(-1))")
         val expected =
