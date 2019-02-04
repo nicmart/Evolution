@@ -1,12 +1,13 @@
 package evolution.primitive
+import cats.MonadError
+import cats.implicits._
 import evolution.primitive.algebra.evolution.Evolution
 
-class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with CompilerModule[F] with WithAst[F] {
+class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with InitialCompilerModule[F] with WithAst[F] {
   import ast._
   def parse[R[_]](
     serialisedExpr: String,
     expectedType: Type,
-    alg: Evolution[F, R],
     ctx: VarContext
   ): Either[String, R[expectedType.Out]] = {
 
@@ -27,7 +28,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
       _ = println("Done: unification")
       typedExpr = unification.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
-      result <- Compiler.compile[R](typedExpr, alg, ctx)
+      result <- Compiler.compile[Either[String, ?]](typedExpr, ctx)
       _ = println("Done: compilation")
     } yield result.asInstanceOf[R[expectedType.Out]]
   }

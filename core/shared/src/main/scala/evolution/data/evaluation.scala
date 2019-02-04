@@ -3,6 +3,7 @@ import cats.{ Applicative, Id }
 import evolution.algebra.representation.RNGRepr
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationContextModule._
+import evolution.primitive.InitialInterpreterModule
 import evolution.primitive.algebra.binding.interpreter.BindingEvaluator
 import evolution.primitive.algebra.evolution.Evolution
 import evolution.primitive.algebra.evolution.Evolution.Expr
@@ -11,31 +12,39 @@ import evolution.random.RNG
 
 import scala.util.Random
 
-trait EvaluationModule {
-  type R[T]
+trait EvaluationModule extends {
   type F[T]
+  type Result[T]
+
+  final val initial = new Initial[F] {}
+  final type Expr[T] = initial.R[T]
 
   // TODO it would be nice to make the seed abstract too
   def newSeed: Long
-  val interpreter: Evolution[F, R]
-  final def materialize[T](seed: Long, fa: R[F[T]]): Iterator[T] = materializeWith(seed, fa, emptyCtx)
-  def materializeWith[T](seed: Long, fa: R[F[T]], ctx: Ctx): Iterator[T]
-  def materializeConstant[T](t: R[T]): T
-  def materializeConstantWith[T](t: R[T], ctx: Ctx): T
 
-  final def materializeExpr[T](seed: Long, expr: Expr[F, F[T]]): Iterator[T] =
-    materialize(seed, expr.run[R](interpreter))
+  def interpret[T](expr: Expr[T]): Result[T]
+
+  final def materialize[T](seed: Long, fa: Result[F[T]]): Iterator[T] = materializeWith(seed, fa, emptyCtx)
+  def materializeWith[T](seed: Long, fa: Result[F[T]], ctx: Ctx): Iterator[T]
+  def materializeConstant[T](t: Result[T]): T
+  def materializeConstantWith[T](t: Result[T], ctx: Ctx): T
+
+  final def materializeExpr[T](seed: Long, expr: Expr[F[T]]): Iterator[T] =
+    materialize(seed, interpret(expr))
+
 }
 
-private[data] object EvaluationModuleImpl extends EvaluationModule {
-  override type R[T] = Evaluation[T]
+private[data] object EvaluationModuleImpl extends EvaluationModule with InitialInterpreterModule with Initial[RNGRepr] {
+  override type Result[T] = Out[T]
   override type F[T] = RNGRepr[T]
+
+  override def interpret[T](expr: Expr[T]): Out[T] =
+    Interpreter.interpret(expr)
   override def newSeed: Long = Random.nextLong()
-  override val interpreter: Evolution[F, R] = EvolutionEvaluator
-  override def materializeWith[T](seed: Long, fa: R[F[T]], ctx: Ctx): Iterator[T] =
-    fa.evaluateWith(ctx).iterator(RNG(seed))
-  override def materializeConstant[T](t: R[T]): T = materializeConstantWith(t, emptyCtx)
-  override def materializeConstantWith[T](t: R[T], ctx: Ctx): T = t.evaluateWith(ctx)
+  override def materializeWith[T](seed: Long, fa: Result[F[T]], ctx: Ctx): Iterator[T] =
+    fa(ctx).iterator(RNG(seed))
+  override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
+  override def materializeConstantWith[T](t: Result[T], ctx: Ctx): T = t(ctx)
 }
 
 sealed trait Evaluation[T] {

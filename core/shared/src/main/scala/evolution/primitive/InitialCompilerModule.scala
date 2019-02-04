@@ -98,7 +98,8 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
             initial.App(compiledF.asInstanceOf[R[x.Out => func.Out]], compiledX.asInstanceOf[R[x.Out]])
           }
         case (Empty, Nil) =>
-          initial.Empty.pure[M]
+          println("emptyness inside me")
+          initial.Empty().pure[M]
         case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
             initial.Cons[x.Out](compiledX.asInstanceOf[R[x.Out]], compiledY.asInstanceOf[R[F[x.Out]]])

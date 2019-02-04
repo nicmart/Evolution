@@ -1,47 +1,43 @@
 package evolution.primitive.algebra.binding.interpreter
 
-import evolution.data.Evaluation
-import evolution.data.Evaluation._
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationModule._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingEvaluatorSpec extends FreeSpec with Matchers {
-  val evaluator = interpreter.bind
-  import evaluator._
-
+  import initial._
   "a var0 expression" - {
     "evaluates to the first item in the stack" in {
-      val expr = var0[Double]("x")
-      materializeConstantWith(expr, ctxOf(12)) shouldBe 12
+      val expr = Var0[Double]("x")
+      materializeConstantWith(interpret(expr), ctxOf(12)) shouldBe 12
     }
   }
 
   "a shift expression" - {
     "evaluates to the second item in the stack" in {
-      val expr = shift(var0[Double]("x"))
-      materializeConstantWith(expr, ctxOf(1, 2)) shouldBe 2
+      val expr = Shift(Var0[Double]("x"))
+      materializeConstantWith(interpret(expr), ctxOf(1, 2)) shouldBe 2
     }
   }
 
   "a lambda expression" - {
     "evaluates to a function" in {
-      val expr = lambda[Int, Int]("x", var0[Int]("x"))
-      materializeConstant(expr)(13) shouldBe 13
+      val expr = Lambda[Int, Int]("x", Var0[Int]("x"))
+      materializeConstant(interpret(expr))(13) shouldBe 13
     }
   }
 
   "an app expression" - {
     "evaluates a lambda" in {
-      val expr = app(lambda[Int, Int]("x", var0("x")), var0("y"))
-      materializeConstantWith(expr, ctxOf(1)) shouldBe 1
+      val expr = App(Lambda[Int, Int]("x", Var0("x")), Var0("y"))
+      materializeConstantWith(interpret(expr), ctxOf(1)) shouldBe 1
     }
   }
 
   "a let expression" - {
     "evaluates to the substitution of the evaluations" in {
-      val expr = let[Double, Double]("x", interpreter.constants.double(1), var0("x"))
-      materializeConstant(expr) shouldBe 1
+      val expr = Let[Double, Double]("x", Dbl(1), Var0("x"))
+      materializeConstant(interpret(expr)) shouldBe 1
     }
   }
 }
