@@ -98,3 +98,7 @@ trait Initial[F[_]] {
     override val derived: Derived[F, R] = new DefaultDerived[F, R](this)
   }
 }
+
+trait WithInitial[F[_]] {
+  final val initial = new Initial[F] {}
+}
