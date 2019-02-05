@@ -1,11 +1,9 @@
 package evolution.primitive
 import cats.Id
 import evolution.data.Initial
-import evolution.primitive.algebra.evolution.Evolution
+import cats.implicits._
 
 class CompilerSpec extends CompilerSpecModule[Id] {
-  val initial = new Initial[Id] {}
-  val alg: Evolution[Id, initial.R] = initial.evolution
   import ast._, Expr._
   import Expr._
 
@@ -42,5 +40,5 @@ class CompilerSpec extends CompilerSpecModule[Id] {
   }
 
   private def unsafeCompile(expr: Expr, ctx: VarContext = VarContext.empty): initial.R[expr.Out] =
-    Compiler.compile[initial.R](expr, alg, ctx).right.get
+    Compiler.compile[Either[String, ?]](expr, ctx).right.get
 }

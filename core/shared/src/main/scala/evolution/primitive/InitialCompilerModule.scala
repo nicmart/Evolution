@@ -4,7 +4,6 @@ import cats.{ MonadError, Traverse }
 import cats.implicits._
 import evolution.data.Initial
 import evolution.geometry
-import evolution.primitive.algebra.derived.Derived
 import evolution.data.WithInitial
 
 // TODO Random extensions and self types, please to do something better
@@ -25,7 +24,7 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
         case Expr.Lambda(varName, body, tpe) =>
           compile[M](body, ctx.push(varName.name)).map(Lambda(varName.name, _))
         case Expr.Let(varName, value, in, tpe) =>
-          for {
+          for { 
             compiledValue <- compile[M](value, ctx)
             compiledIn <- compile[M](in, ctx.push(varName.name))
           } yield Let(varName.name, compiledValue, compiledIn)

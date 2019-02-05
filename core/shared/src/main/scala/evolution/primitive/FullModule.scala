@@ -1,7 +1,6 @@
 package evolution.primitive
 import cats.MonadError
 import cats.implicits._
-import evolution.primitive.algebra.evolution.Evolution
 
 class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with InitialCompilerModule[F] with WithAst[F] {
   import ast._
