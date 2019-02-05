@@ -42,9 +42,8 @@ trait InitialInterpreterModule {
         ctx =>
           interpret(e)(pop(ctx))
 
-      case Let(_, value, e) =>
-        ctx =>
-          interpret(e)(pushStrict(interpret(value)(ctx), ctx, ""))
+      case Let(name, value, e) =>
+        interpret(App(Lambda(name, e), value))
 
       case Lambda(_, e) =>
         ctx => a =>
