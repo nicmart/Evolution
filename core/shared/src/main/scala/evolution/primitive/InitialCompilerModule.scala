@@ -18,7 +18,7 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
     def compile[M[_]](expr: Expr, ctx: VarContext)(implicit M: MonadError[M, String]): M[R[expr.Out]] = {
       expr match {
         case Expr.Var(name, tpe) =>
-          Var0(name).pure[M]
+          VarN(ctx.indexOf(name), name).pure[M]
         case fc @ Expr.FuncCall(funcId, args, tpe) =>
           compileFuncCall[M](fc, ctx)
         case Expr.Lambda(varName, body, tpe) =>
@@ -112,7 +112,8 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
           (compile[M](x, ctx), compile[M](f, ctx)).mapN { (compiledX, compiledF) =>
             initial.MapCons[x.Out, func.Out](
               compiledX.asInstanceOf[R[F[x.Out]]],
-              compiledF.asInstanceOf[R[x.Out => F[x.Out] => F[func.Out]]])
+              compiledF.asInstanceOf[R[x.Out => F[x.Out] => F[func.Out]]]
+            )
           }
         case (Cartesian, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
@@ -161,7 +162,8 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
           (compile[M](x, ctx), compile[M](f, ctx)).mapN { (compiledX, compiledF) =>
             derived.map[x.Out, func.Out](
               compiledX.asInstanceOf[R[F[x.Out]]],
-              compiledF.asInstanceOf[R[x.Out => func.Out]])
+              compiledF.asInstanceOf[R[x.Out => func.Out]]
+            )
           }
         case (FlatMap, x :: f :: Nil) =>
           (M.fromEither(Type.unwrapF(func.tpe)), compile[M](x, ctx), compile[M](f, ctx)).mapN {
@@ -186,7 +188,8 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
               initial.UniformDiscrete(
                 compiledFrom.asInstanceOf[R[Double]],
                 compiledTo.asInstanceOf[R[Double]],
-                compiledStep.asInstanceOf[R[Double]])
+                compiledStep.asInstanceOf[R[Double]]
+              )
           }
         case (UniformChoice, choices) =>
           choices.traverse(choice => compile[M](choice, ctx).asInstanceOf[M[Any]]).map { compiledChoices =>

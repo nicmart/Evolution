@@ -55,6 +55,11 @@ trait Initial[F[_]] {
   final case class UniformDiscrete(from: R[Double], to: R[Double], step: R[Double]) extends R[F[Double]]
   final case class UniformChoice[T](ts: List[R[T]]) extends R[F[T]]
 
+  def VarN[A](n: Int, name: String): R[A] = {
+    println(n -> name)
+    if (n <= 0) Var0(name) else Shift(VarN(n - 1, name))
+  }
+
   val evolution: Evolution[F, R] = new Evolution[F, R] {
     override val chain: Chain[F, R] = new Chain[F, R] {
       override def empty[A]: R[F[A]] = Empty()
