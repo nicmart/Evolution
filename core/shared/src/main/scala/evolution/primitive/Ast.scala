@@ -3,7 +3,6 @@ import cats.{ Eq, Group }
 import cats.kernel.Semigroup
 import enumeratum.{ Enum, EnumEntry }
 import evolution.geometry
-import evolution.primitive.algebra.evolution.Evolution
 import cats.implicits._
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace

@@ -5,12 +5,13 @@ import cats.implicits._
 import evolution.data.Initial
 import evolution.geometry
 import evolution.primitive.algebra.derived.Derived
+import evolution.data.WithInitial
 
-trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
-  val initial = new Initial[F] {}
+// TODO Random extensions and self types, please to do something better
+trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: WithAst[F] =>
+
   import initial._
-
-  val derived: Derived[F, R] = initial.evolution.derived
+  import Desugarer._
 
   object Compiler {
     import ast._
@@ -117,27 +118,26 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
           }
         case (Cartesian, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            derived.cartesian(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
+            cartesian(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
           }
         case (Polar, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            derived.polar(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
+            polar(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[Double]]])
           }
         case (Constant, x :: Nil) =>
-          compile[M](x, ctx).map(compiledX => derived.constant(compiledX.asInstanceOf[R[func.Out]]))
+          compile[M](x, ctx).map(compiledX => constant(compiledX.asInstanceOf[R[func.Out]]))
         case (Integrate, x :: y :: Nil) =>
           for {
             compiledX <- compile[M](x, ctx)
             compiledY <- compile[M](y, ctx)
             vs <- M.fromEither(Type.vectorSpace(x.tpe))
-          } yield derived.integrate[x.Out](compiledX, compiledY.asInstanceOf[R[F[x.Out]]])(vs)
+          } yield integrate[x.Out](compiledX, compiledY.asInstanceOf[R[F[x.Out]]])(vs)
         case (Solve1, x :: y :: Nil) =>
           for {
             compiledX <- compile[M](x, ctx)
             compiledY <- compile[M](y, ctx)
             vs <- M.fromEither(Type.vectorSpace(y.tpe))
-          } yield
-            derived.solve1[y.Out](compiledX.asInstanceOf[R[F[y.Out => y.Out]]], compiledY.asInstanceOf[R[y.Out]])(vs)
+          } yield solve1[y.Out](compiledX.asInstanceOf[R[F[y.Out => y.Out]]], compiledY.asInstanceOf[R[y.Out]])(vs)
         case (Solve2, x :: y :: z :: Nil) =>
           for {
             compiledX <- compile[M](x, ctx)
@@ -145,7 +145,7 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
             compiledZ <- compile[M](z, ctx)
             vs <- M.fromEither(Type.vectorSpace(y.tpe))
           } yield
-            derived.solve2[y.Out](
+            solve2[y.Out](
               compiledX.asInstanceOf[R[F[y.Out => y.Out => y.Out]]],
               compiledY.asInstanceOf[R[y.Out]],
               compiledY.asInstanceOf[R[y.Out]]
@@ -153,14 +153,14 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
         case (Concat, x :: y :: Nil) => // TODO gen new vars
           (M.fromEither(Type.unwrapF(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
             (innerType, compiledX, compiledY) =>
-              derived.concat[innerType.Out](
+              concat[innerType.Out](
                 compiledX.asInstanceOf[R[F[innerType.Out]]],
                 compiledY.asInstanceOf[R[F[innerType.Out]]]
               )
           }
         case (Map, x :: f :: Nil) =>
           (compile[M](x, ctx), compile[M](f, ctx)).mapN { (compiledX, compiledF) =>
-            derived.map[x.Out, func.Out](
+            map[x.Out, func.Out](
               compiledX.asInstanceOf[R[F[x.Out]]],
               compiledF.asInstanceOf[R[x.Out => func.Out]]
             )
@@ -168,7 +168,7 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
         case (FlatMap, x :: f :: Nil) =>
           (M.fromEither(Type.unwrapF(func.tpe)), compile[M](x, ctx), compile[M](f, ctx)).mapN {
             (innerType, compiledX, compiledF) =>
-              derived.flatMap[x.Out, innerType.Out](
+              flatMap[x.Out, innerType.Out](
                 compiledX.asInstanceOf[R[F[x.Out]]],
                 compiledF.asInstanceOf[R[x.Out => F[innerType.Out]]]
               )
@@ -176,7 +176,7 @@ trait InitialCompilerModule[F[_]] { self: WithAst[F] =>
         case (Take, n :: e :: Nil) =>
           (M.fromEither(Type.unwrapF(func.tpe)), compile[M](n, ctx), compile[M](e, ctx)).mapN {
             (innerType, compiledN, compiledF) =>
-              derived.take(compiledN.asInstanceOf[R[Int]], compiledF.asInstanceOf[R[F[innerType.Out]]])
+              take(compiledN.asInstanceOf[R[Int]], compiledF.asInstanceOf[R[F[innerType.Out]]])
           }
         case (Uniform, from :: to :: Nil) =>
           (compile[M](from, ctx), compile[M](to, ctx)).mapN { (compiledFrom, compiledTo) =>
