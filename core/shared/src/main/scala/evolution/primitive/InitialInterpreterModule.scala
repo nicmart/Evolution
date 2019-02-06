@@ -58,7 +58,7 @@ trait InitialInterpreterModule {
 
       // Detect constant evolutions
       case Fix(Lambda(_, Cons(t, Var0(_)))) =>
-        ConstantEvolution(interpret(t))
+        ConstantEvolution(interpret(R.unshift(t)))
 
       case Fix(Lambda(_, lambdaBody)) =>
         val interpretedBody = interpret(lambdaBody)
