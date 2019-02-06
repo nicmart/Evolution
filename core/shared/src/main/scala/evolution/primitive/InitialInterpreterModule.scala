@@ -40,28 +40,31 @@ trait InitialInterpreterModule {
         }
 
       case Shift(e) =>
+        val interpretedE = interpret(e)
         new Contextual[T] {
-          override def apply(ctx: Ctx): T = interpret(e)(pop(ctx))
+          override def apply(ctx: Ctx): T = interpretedE(pop(ctx))
         }
 
       case Let(name, value, e) =>
         interpret(App(Lambda(name, e), value))
 
-      case Lambda(_, e) =>
+      case Lambda(_, body) =>
+        val interpretedBody = interpret(body)
         new Contextual[T] {
-          override def apply(ctx: Ctx): T = a => interpret(e)(pushStrict(a, ctx, ""))
+          override def apply(ctx: Ctx): T = a => interpretedBody(pushStrict(a, ctx, ""))
         }
 
       case App(f, a) => interpret2(f, a)(_(_))
 
+      // Detect constant evolutions
       case Fix(Lambda(_, Cons(t, Var0(_)))) =>
-        println("constant evolution detected!")
         ConstantEvolution(interpret(t))
 
       case Fix(Lambda(_, lambdaBody)) =>
+        val interpretedBody = interpret(lambdaBody)
         new Contextual[T] {
           override def apply(ctx: Ctx): T = {
-            lazy val a: T = interpret(lambdaBody)(pushLazy(() => a, ctx, ""))
+            lazy val a: T = interpretedBody(pushLazy(() => a, ctx, ""))
             a
           }
         }
@@ -76,11 +79,13 @@ trait InitialInterpreterModule {
       // TODO we need a well-defined strategy for lazyness. In this case, we deley the materialization of cons, to allow
       // recursive definitions
       case Cons(head, tail) =>
+        val interpretedHead = interpret(head)
+        val interpretedTail = interpret(tail)
         new Contextual[T] {
           override def apply(ctx: Ctx): T = {
-            val h = interpret(head)(ctx)
+            val h = interpretedHead(ctx)
             RNGRepr { rng =>
-              (rng, Some((h, interpret(tail)(ctx))))
+              (rng, Some((h, interpretedTail(ctx))))
             }
           }
         }
