@@ -35,28 +35,36 @@ trait InitialInterpreterModule {
         }
 
       case Var0(name) =>
-        ctx =>
-          get(ctx, 0).asInstanceOf[T]
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = get(ctx, 0).asInstanceOf[T]
+        }
 
       case Shift(e) =>
-        ctx =>
-          interpret(e)(pop(ctx))
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = interpret(e)(pop(ctx))
+        }
 
       case Let(name, value, e) =>
         interpret(App(Lambda(name, e), value))
 
       case Lambda(_, e) =>
-        ctx => a =>
-          interpret(e)(pushStrict(a, ctx, ""))
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = a => interpret(e)(pushStrict(a, ctx, ""))
+        }
 
       case App(f, a) => interpret2(f, a)(_(_))
 
+      case Fix(Lambda(_, Cons(t, Var0(_)))) =>
+        println("constant evolution detected!")
+        ConstantEvolution(interpret(t))
+
       case Fix(Lambda(_, lambdaBody)) =>
-        ctx =>
-          {
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = {
             lazy val a: T = interpret(lambdaBody)(pushLazy(() => a, ctx, ""))
             a
           }
+        }
 
       case Fix(_) => ???
 
@@ -68,13 +76,14 @@ trait InitialInterpreterModule {
       // TODO we need a well-defined strategy for lazyness. In this case, we deley the materialization of cons, to allow
       // recursive definitions
       case Cons(head, tail) =>
-        ctx =>
-          {
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = {
             val h = interpret(head)(ctx)
             RNGRepr { rng =>
               (rng, Some((h, interpret(tail)(ctx))))
             }
           }
+        }
 
       case MapEmpty(ev1, ev2) =>
         Out.map2(interpret(ev1), interpret(ev2)) { (compiled1, compiled2) =>
@@ -115,9 +124,9 @@ trait InitialInterpreterModule {
         }
 
       case UniformChoice(ts) =>
-        ctx =>
-          uniformChoiceRepr(ts.map(t => interpret(t)(ctx)))
-
+        new Contextual[T] {
+          override def apply(ctx: Ctx): T = uniformChoiceRepr(ts.map(t => interpret(t)(ctx)))
+        }
     }
 
     private def uniformChoiceRepr[T](ts: List[T]): RNGRepr[T] =
@@ -148,18 +157,45 @@ trait InitialInterpreterModule {
 }
 
 object InitialInterpreterModule {
-  type Out[T] = Ctx => T
 
-  implicit class OutOps[A](val out: Out[A]) extends AnyVal {
-    def map[B](f: A => B): Out[B] = ctx => f(out(ctx))
-
+  sealed trait Out[T] { self =>
+    def apply(ctx: Ctx): T
+    final def map[S](f: T => S): Out[S] = Out.map(this, f)
   }
 
+  case class Constant[T](t: T) extends Out[T] {
+    override def apply(ctx: Ctx): T = t
+  }
+
+  case class ConstantEvolution[T](t: Out[T]) extends Out[RNGRepr[T]] {
+    override def apply(ctx: Ctx): RNGRepr[T] = {
+      val tc = t(ctx)
+      lazy val rngRepr: RNGRepr[T] = RNGRepr[T] { rng =>
+        (rng, Some((tc, rngRepr)))
+      }
+      rngRepr
+    }
+  }
+
+  sealed abstract class Contextual[T] extends Out[T]
+
   object Out {
-    def pure[T](t: T): Out[T] = ctx => t
+    def pure[T](t: T): Out[T] = Constant(t)
+    def map[A, B](a: Out[A], f: A => B): Out[B] = a match {
+      case Constant(t)               => Constant(f(t))
+      case contextual: Contextual[_] => new Contextual[B] { override def apply(ctx: Ctx): B = f(contextual(ctx)) }
+    }
+
     def map2[A, B, C](a: Out[A], b: Out[B])(f: (A, B) => C): Out[C] =
-      ctx => f(a(ctx), b(ctx))
+      (a, b) match {
+        case (Constant(ac), Constant(bc)) => Constant(f(ac, bc))
+        case _                            => new Contextual[C] { override def apply(ctx: Ctx): C = f(a(ctx), b(ctx)) }
+      }
+
     def map3[A, B, C, D](a: Out[A], b: Out[B], c: Out[C])(f: (A, B, C) => D): Out[D] =
-      ctx => f(a(ctx), b(ctx), c(ctx))
+      (a, b, c) match {
+        case (Constant(ac), Constant(bc), Constant(cc)) => Constant(f(ac, bc, cc))
+        case _                                          => new Contextual[D] { override def apply(ctx: Ctx): D = f(a(ctx), b(ctx), c(ctx)) }
+      }
   }
 }
