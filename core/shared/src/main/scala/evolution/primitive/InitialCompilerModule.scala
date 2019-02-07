@@ -24,7 +24,7 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
         case Expr.Lambda(varName, body, tpe) =>
           compile[M](body, ctx.push(varName.name)).map(Lambda(varName.name, _))
         case Expr.Let(varName, value, in, tpe) =>
-          for { 
+          for {
             compiledValue <- compile[M](value, ctx)
             compiledIn <- compile[M](in, ctx.push(varName.name))
           } yield Let(varName.name, compiledValue, compiledIn)
@@ -53,11 +53,21 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
           }
         case (Floor, d :: Nil) =>
           compile[M](d, ctx).map(compiledD => initial.Floor(compiledD.asInstanceOf[R[Double]]))
+
         case (Add, x :: y :: Nil) =>
-          (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
-            (sg, compiledX, compiledY) =>
-              initial.Add(compiledX.asInstanceOf[R[func.Out]], compiledY.asInstanceOf[R[func.Out]])(sg)
+          func.tpe match {
+            case Type.Evo(tpe) =>
+              (M.fromEither(Type.group(tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
+                (sg, compiledX, compiledY) =>
+                  addEvo(compiledX.asInstanceOf[R[F[tpe.Out]]], compiledY.asInstanceOf[R[F[tpe.Out]]])(sg)
+              }
+            case tpe =>
+              (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
+                (sg, compiledX, compiledY) =>
+                  initial.Add(compiledX.asInstanceOf[R[func.Out]], compiledY.asInstanceOf[R[func.Out]])(sg)
+              }
           }
+
         case (Div, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
             initial.Div(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])

@@ -1,4 +1,5 @@
 package evolution.primitive
+import cats.Semigroup
 import evolution.data.WithInitial
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
@@ -12,18 +13,27 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
     def constant[A](a: R[A]): R[F[A]] =
       Fix[F[A]](Lambda("self", Cons(Shift(a), varN("self", 0))))
 
+    def zipWith[A, B, C](a: R[F[A]], b: R[F[B]], f: R[A => B => C]): R[F[C]] =
+      app2(zipWithLambda(f), a, b)
+
+    def addEvo[T: Semigroup](a: R[F[T]], b: R[F[T]]): R[F[T]] =
+      zipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](varN("a", 1), varN("b", 0))))
+
     def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
-      app2(zipWith(lambda2[Double, Double, Point]("fx", "fy", Pnt(varN("fx", 1), varN("fy", 0)))), x, y)
+      app2(zipWithLambda(lambda2[Double, Double, Point]("fx", "fy", Pnt(varN("fx", 1), varN("fy", 0)))), x, y)
 
     def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]] =
       app2(
-        zipWith(
+        zipWithLambda(
           lambda2[Double, Double, Point](
             "radius",
             "angle",
-            Multiply(varN("radius", 1), Pnt(Cos(varN("angle", 0)), Sin(varN("angle", 0)))))),
+            Multiply(varN("radius", 1), Pnt(Cos(varN("angle", 0)), Sin(varN("angle", 0))))
+          )
+        ),
         radius,
-        angle)
+        angle
+      )
 
     def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]] =
       app2(concatLambda, fa1, fa2)
@@ -56,7 +66,8 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
                 "head",
                 "tail",
                 Cons(App(shiftN(f, 4), varN[A]("head", 1)), App(varN[F[A] => F[B]]("self", 3), varN[F[A]]("tail", 0)))
-              ))
+              )
+            )
           )
         )
       )
@@ -129,11 +140,14 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
                   app2[T, F[T], F[T]](
                     varN("self", 4),
                     Add[T](varN[T]("start", 3), varN[T]("speedHead", 1)),
-                    varN[F[T]]("speedTail", 0)))
+                    varN[F[T]]("speedTail", 0)
+                  )
+                )
               )
             )
           )
-        ))
+        )
+      )
 
     private def solve1Lambda[X: VectorSpace]: R[F[X => X] => X => F[X]] =
       Fix[F[X => X] => X => F[X]](
@@ -244,7 +258,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
     private def varN[A](name: String, n: Int): R[A] = shiftN(Var0(name), n)
     private def shiftN[A](expr: R[A], n: Int): R[A] = if (n <= 0) expr else Shift(shiftN(expr, n - 1))
 
-    private def zipWith[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
+    private def zipWithLambda[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
       Fix[F[A] => F[B] => F[C]](
         Lambda[F[A] => F[B] => F[C], F[A] => F[B] => F[C]](
           "self",
@@ -263,7 +277,8 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
                     "bTail",
                     Cons(
                       app2(f, varN[A]("aHead", 3), varN[B]("bHead", 1)),
-                      app2(varN[F[A] => F[B] => F[C]]("self", 6), varN[F[A]]("aTail", 2), varN[F[B]]("bTail", 0)))
+                      app2(varN[F[A] => F[B] => F[C]]("self", 6), varN[F[A]]("aTail", 2), varN[F[B]]("bTail", 0))
+                    )
                   )
                 )
               )
