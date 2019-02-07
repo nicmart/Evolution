@@ -56,6 +56,7 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
 
         case (Add, x :: y :: Nil) =>
           func.tpe match {
+            // Overload + for evolutions
             case Type.Evo(tpe) =>
               (M.fromEither(Type.group(tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
                 (sg, compiledX, compiledY) =>
@@ -77,14 +78,34 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
             initial.Exp(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[Double]])
           }
         case (Inverse, x :: Nil) =>
-          (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx)).mapN { (g, compiledX) =>
-            initial.Inverse(compiledX.asInstanceOf[R[func.Out]])(g)
+          func.tpe match {
+            // Overload - for evolutions
+            case Type.Evo(tpe) =>
+              (M.fromEither(Type.group(tpe)), compile[M](x, ctx)).mapN { (group, compiledX) =>
+                inverseEvo(compiledX.asInstanceOf[R[F[tpe.Out]]])(group)
+              }
+            case tpe =>
+              (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx)).mapN { (g, compiledX) =>
+                initial.Inverse(compiledX.asInstanceOf[R[func.Out]])(g)
+              }
           }
+
         case (Multiply, x :: y :: Nil) =>
-          (M.fromEither(Type.vectorSpace(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
-            (vs, compiledX, compiledY) =>
-              initial.Multiply(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[func.Out]])(vs)
+          func.tpe match {
+            // Overload * for evolutions
+            // This cannot be overloaded, due to the constraint put by the typer on k,
+            // case Type.Evo(tpe) =>
+            //   (M.fromEither(Type.vectorSpace(tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
+            //     (vs, compiledX, compiledY) =>
+            //       multEvo(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[tpe.Out]]])(vs)
+            //   }
+            case tpe =>
+              (M.fromEither(Type.vectorSpace(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
+                (vs, compiledX, compiledY) =>
+                  initial.Multiply(compiledX.asInstanceOf[R[Double]], compiledY.asInstanceOf[R[func.Out]])(vs)
+              }
           }
+
         case (Cos, x :: Nil) =>
           compile[M](x, ctx).map(compiledX => initial.Cos(compiledX.asInstanceOf[R[Double]]))
         case (Sin, x :: Nil) =>

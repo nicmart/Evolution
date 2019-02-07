@@ -1,5 +1,6 @@
 package evolution.primitive
 import cats.Semigroup
+import cats.Group
 import evolution.data.WithInitial
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
@@ -18,6 +19,12 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
 
     def addEvo[T: Semigroup](a: R[F[T]], b: R[F[T]]): R[F[T]] =
       zipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](varN("a", 1), varN("b", 0))))
+
+    def multEvo[T: VectorSpace](k: R[F[Double]], t: R[F[T]]): R[F[T]] =
+      zipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](varN("k", 1), varN("t", 0))))
+
+    def inverseEvo[T: Group](t: R[F[T]]): R[F[T]] =
+      map(t, Lambda("t", Inverse(varN("t", 0))))
 
     def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
       app2(zipWithLambda(lambda2[Double, Double, Point]("fx", "fy", Pnt(varN("fx", 1), varN("fy", 0)))), x, y)
