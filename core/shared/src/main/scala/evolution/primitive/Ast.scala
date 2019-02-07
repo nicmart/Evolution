@@ -59,6 +59,7 @@ class Ast[F[_]] {
     case object Cos extends PredefinedFunction
     case object Eq extends PredefinedFunction
     case object If extends PredefinedFunction
+    case object PI extends PredefinedFunction
 
     // Bindings
     case object Fix extends PredefinedFunction

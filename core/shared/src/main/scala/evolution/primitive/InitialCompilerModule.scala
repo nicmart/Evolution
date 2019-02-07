@@ -110,6 +110,9 @@ trait InitialCompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] {
           compile[M](x, ctx).map(compiledX => initial.Cos(compiledX.asInstanceOf[R[Double]]))
         case (Sin, x :: Nil) =>
           compile[M](x, ctx).map(compiledX => initial.Sin(compiledX.asInstanceOf[R[Double]]))
+        case (PI, Nil) =>
+          M.pure(initial.Dbl(Math.PI))
+
         case (Eq, x :: y :: Nil) =>
           for {
             compiledX <- compile[M](x, ctx)

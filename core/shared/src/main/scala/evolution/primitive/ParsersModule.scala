@@ -58,7 +58,8 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
 
     // Functions with 0 arity
     lazy val func0Call: Parser[Expr] =
-      P("empty").map(_ => Expr.FuncCall(PredefinedFunction.Empty, Nil))
+      P("empty").map(_ => Expr.FuncCall(PredefinedFunction.Empty, Nil)) |
+        P("PI").map(_ => Expr.FuncCall(PredefinedFunction.PI, Nil))
 
     lazy val unaryPrefixOp: Parser[Expr] =
       P("-" ~ factor).map(e => Expr.FuncCall(PredefinedFunction.Inverse, List(e)))
