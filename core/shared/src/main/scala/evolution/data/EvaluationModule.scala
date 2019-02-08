@@ -4,16 +4,14 @@ import evolution.algebra.representation.RNGRepr
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationContextModule._
 import evolution.random.RNG
-import evolution.primitive.InitialInterpreterModule
+import evolution.primitive.InterpreterModule
 
 import scala.util.Random
 
-trait EvaluationModule extends {
-  type F[T]
+trait EvaluationModule[F[_]] extends WithInitial[F] {
   type Result[T]
 
-  final val initial = new Initial[F] {}
-  final type Expr[T] = initial.R[T]
+  import initial._
 
   // TODO it would be nice to make the seed abstract too
   def newSeed: Long
@@ -30,14 +28,17 @@ trait EvaluationModule extends {
 
 }
 
-private[data] object EvaluationModuleImpl extends EvaluationModule with InitialInterpreterModule with Initial[RNGRepr] {
+private[data] object EvaluationModuleImpl
+    extends EvaluationModule[RNGRepr]
+    with InterpreterModule
+    with WithInitial[RNGRepr] {
+  import initial._
   override type Result[T] = Out[T]
-  override type F[T] = RNGRepr[T]
 
   override def interpret[T](expr: Expr[T]): Out[T] =
     Interpreter.interpret(expr)
   override def newSeed: Long = Random.nextLong()
-  override def materializeWith[T](seed: Long, fa: Result[F[T]], ctx: Ctx): Iterator[T] =
+  override def materializeWith[T](seed: Long, fa: Result[RNGRepr[T]], ctx: Ctx): Iterator[T] =
     fa(ctx).iterator(RNG(seed))
   override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
   override def materializeConstantWith[T](t: Result[T], ctx: Ctx): T = t(ctx)

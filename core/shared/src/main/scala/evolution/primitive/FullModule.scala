@@ -2,7 +2,7 @@ package evolution.primitive
 import cats.MonadError
 import cats.implicits._
 
-class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with InitialCompilerModule[F] with WithAst[F] {
+class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with CompilerModule[F] with WithAst[F] {
   import ast._
   def parse[R[_]](
     serialisedExpr: String,
@@ -12,7 +12,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Initial
 
     println("Start Compilation")
 
-    val parsed: Either[String, Expr] =
+    val parsed: Either[String, AST] =
       Parsers.parser
         .parse(serialisedExpr)
         .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))

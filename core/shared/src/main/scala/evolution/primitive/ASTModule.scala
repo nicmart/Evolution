@@ -9,41 +9,43 @@ import evolution.typeclass.VectorSpace
 
 import scala.collection.immutable
 
-class Ast[F[_]] {
+class ASTModule[F[_]] {
 
-  sealed trait Expr {
+  sealed trait AST {
     val tpe: Type
     final type Out = tpe.Out
 
-    def withType(tpe: Type): Expr = this match {
-      case Expr.Var(name, _)                => Expr.Var(name, tpe)
-      case Expr.FuncCall(funcName, args, _) => Expr.FuncCall(funcName, args, tpe)
-      case Expr.Lambda(varName, expr, _)    => Expr.Lambda(varName, expr, tpe)
-      case Expr.Let(varName, expr, in, _)   => Expr.Let(varName, expr, in, tpe)
-      case Expr.Number(n, _)                => Expr.Number(n, tpe)
+    def withType(tpe: Type): AST = this match {
+      case AST.Var(name, _)                => AST.Var(name, tpe)
+      case AST.FuncCall(funcName, args, _) => AST.FuncCall(funcName, args, tpe)
+      case AST.Lambda(varName, expr, _)    => AST.Lambda(varName, expr, tpe)
+      case AST.Let(varName, expr, in, _)   => AST.Let(varName, expr, in, tpe)
+      case AST.Number(n, _)                => AST.Number(n, tpe)
     }
 
-    def children: List[Expr] = this match {
-      case Expr.Var(name, _)                => Nil
-      case Expr.FuncCall(funcName, args, _) => args
-      case Expr.Lambda(varName, expr, _)    => List(varName, expr)
-      case Expr.Let(varName, expr, in, _)   => List(varName, expr, in)
-      case Expr.Number(n, _)                => Nil
+    def children: List[AST] = this match {
+      case AST.Var(name, _)                => Nil
+      case AST.FuncCall(funcName, args, _) => args
+      case AST.Lambda(varName, expr, _)    => List(varName, expr)
+      case AST.Let(varName, expr, in, _)   => List(varName, expr, in)
+      case AST.Number(n, _)                => Nil
     }
   }
 
-  object Expr {
-    final case class Var(name: String, tpe: Type = Type.Var("")) extends Expr
-    final case class FuncCall(funcId: PredefinedFunction, args: List[Expr], tpe: Type = Type.Var("")) extends Expr
-    final case class Lambda(varName: Expr.Var, expr: Expr, tpe: Type = Type.Var("")) extends Expr
-    final case class Let(varName: Expr.Var, expr: Expr, in: Expr, tpe: Type = Type.Var("")) extends Expr
-    final case class Number(n: String, tpe: Type = Type.Var("")) extends Expr
+  object AST {
+    final case class Var(name: String, tpe: Type = Type.Var("")) extends AST
+    final case class FuncCall(funcId: PredefinedFunction, args: List[AST], tpe: Type = Type.Var("")) extends AST
+    final case class Lambda(varName: AST.Var, expr: AST, tpe: Type = Type.Var("")) extends AST
+    final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
+    final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
   }
 
   abstract sealed class PredefinedFunction extends EnumEntry
 
   object PredefinedFunction extends Enum[PredefinedFunction] {
     val values: immutable.IndexedSeq[PredefinedFunction] = findValues
+    val functions0: List[PredefinedFunction] = List(Empty, PI)
+    val nonFunctions0: List[PredefinedFunction] = values.toList.filter(!functions0.contains(_))
 
     // Constants
     case object Point extends PredefinedFunction
@@ -158,5 +160,5 @@ class Ast[F[_]] {
 }
 
 trait WithAst[F[_]] {
-  val ast: Ast[F] = new Ast
+  val ast: ASTModule[F] = new ASTModule
 }

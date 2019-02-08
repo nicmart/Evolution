@@ -1,20 +1,18 @@
 package evolution.primitive
 
 import evolution.algebra.representation.RNGRepr
-import evolution.data.{ Ctx, Initial }
+import evolution.data.{ Ctx, ExpressionModule, WithInitial }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 // TODO this is an implementation
-trait InitialInterpreterModule {
-  type Out[T] = InitialInterpreterModule.Out[T]
-  import InitialInterpreterModule._
-
-  val initial: Initial[RNGRepr]
+trait InterpreterModule { self: WithInitial[RNGRepr] =>
+  type Out[T] = InterpreterModule.Out[T]
   import initial._
+  import InterpreterModule._
 
   object Interpreter {
-    def interpret[T](expr: R[T]): Out[T] = expr match {
+    def interpret[T](expr: Expr[T]): Out[T] = expr match {
       case Dbl(d)                => Out.pure(d)
       case Floor(d)              => interpret(d).map(_.toInt)
       case Integer(n)            => Out.pure(n)
@@ -58,7 +56,7 @@ trait InitialInterpreterModule {
 
       // Detect constant evolutions
       case Fix(Lambda(_, Cons(t, Var0(_)))) =>
-        ConstantEvolution(interpret(R.unshift(t)))
+        ConstantEvolution(interpret(Expr.unshift(t)))
 
       case Fix(Lambda(_, lambdaBody)) =>
         val interpretedBody = interpret(lambdaBody)
@@ -150,18 +148,18 @@ trait InitialInterpreterModule {
           self
       }
 
-    private def interpret1[A, B](a: R[A])(f: A => B): Out[B] =
+    private def interpret1[A, B](a: Expr[A])(f: A => B): Out[B] =
       interpret(a).map(f)
 
-    private def interpret2[A, B, C](a: R[A], b: R[B])(f: (A, B) => C): Out[C] =
+    private def interpret2[A, B, C](a: Expr[A], b: Expr[B])(f: (A, B) => C): Out[C] =
       Out.map2(interpret(a), interpret(b))(f)
 
-    private def interpret3[A, B, C, D](a: R[A], b: R[B], c: R[C])(f: (A, B, C) => D): Out[D] =
+    private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Out[D] =
       Out.map3(interpret(a), interpret(b), interpret(c))(f)
   }
 }
 
-object InitialInterpreterModule {
+object InterpreterModule {
 
   sealed trait Out[T] { self =>
     def apply(ctx: Ctx): T

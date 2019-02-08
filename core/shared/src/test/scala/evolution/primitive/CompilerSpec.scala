@@ -1,11 +1,11 @@
 package evolution.primitive
 import cats.Id
-import evolution.data.Initial
+import evolution.data.ExpressionModule
 import cats.implicits._
 
 class CompilerSpec extends CompilerSpecModule[Id] {
-  import ast._, Expr._
-  import Expr._
+  import ast._, AST._
+  import AST._
 
   "The compiles" - {
     "should successfully compile" - {
@@ -24,8 +24,8 @@ class CompilerSpec extends CompilerSpecModule[Id] {
       }
 
       "let bindings" in forAll(genTypedVar, genTypedNumber, genTypedNumber) { (variable, n1, n2) =>
-        val variable1 = Expr.Var(variable.name, n1.tpe)
-        unsafeCompile(Expr.Let(variable1, n1, n2)) shouldBe initial.Let(
+        val variable1 = AST.Var(variable.name, n1.tpe)
+        unsafeCompile(AST.Let(variable1, n1, n2)) shouldBe initial.Let(
           variable1.name,
           unsafeCompile(n1),
           unsafeCompile(n2)
@@ -39,6 +39,6 @@ class CompilerSpec extends CompilerSpecModule[Id] {
     }
   }
 
-  private def unsafeCompile(expr: Expr, ctx: VarContext = VarContext.empty): initial.R[expr.Out] =
+  private def unsafeCompile(expr: AST, ctx: VarContext = VarContext.empty): initial.Expr[expr.Out] =
     Compiler.compile[Either[String, ?]](expr, ctx).right.get
 }

@@ -5,63 +5,63 @@ import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
 
-trait Initial[F[_]] {
+trait ExpressionModule[F[_]] {
 
-  sealed trait R[T] {
-    def transform(f: FunctionK[R, R]): R[T] = R.transform(this, f)
+  sealed trait Expr[T] {
+    def transform(f: FunctionK[Expr, Expr]): Expr[T] = Expr.transform(this, f)
   }
 
-  final case class Dbl(d: Double) extends R[Double]
-  final case class Floor(d: R[Double]) extends R[Int]
-  final case class Integer(n: Int) extends R[Int]
-  final case class Pnt(x: R[Double], y: R[Double]) extends R[Point]
-  final case class X(p: R[Point]) extends R[Double]
-  final case class Y(p: R[Point]) extends R[Double]
-  final case class Add[T: Semigroup](a: R[T], b: R[T]) extends R[T] {
+  final case class Dbl(d: Double) extends Expr[Double]
+  final case class Floor(d: Expr[Double]) extends Expr[Int]
+  final case class Integer(n: Int) extends Expr[Int]
+  final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point]
+  final case class X(p: Expr[Point]) extends Expr[Double]
+  final case class Y(p: Expr[Point]) extends Expr[Double]
+  final case class Add[T: Semigroup](a: Expr[T], b: Expr[T]) extends Expr[T] {
     val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
-    def map2(fa: R[T] => R[T], fb: R[T] => R[T]): Add[T] = Add(fa(a), fa(b))
+    def map2(fa: Expr[T] => Expr[T], fb: Expr[T] => Expr[T]): Add[T] = Add(fa(a), fa(b))
   }
-  final case class Div(a: R[Double], b: R[Double]) extends R[Double]
-  final case class Exp(a: R[Double], b: R[Double]) extends R[Double]
-  final case class Inverse[T: Group](t: R[T]) extends R[T] {
+  final case class Div(a: Expr[Double], b: Expr[Double]) extends Expr[Double]
+  final case class Exp(a: Expr[Double], b: Expr[Double]) extends Expr[Double]
+  final case class Inverse[T: Group](t: Expr[T]) extends Expr[T] {
     val group: Group[T] = implicitly[Group[T]]
   }
-  final case class Multiply[T: VectorSpace](k: R[Double], t: R[T]) extends R[T] {
+  final case class Multiply[T: VectorSpace](k: Expr[Double], t: Expr[T]) extends Expr[T] {
     val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
-    def map2(fk: R[Double] => R[Double], ft: R[T] => R[T]): Multiply[T] = Multiply(fk(k), ft(t))
+    def map2(fk: Expr[Double] => Expr[Double], ft: Expr[T] => Expr[T]): Multiply[T] = Multiply(fk(k), ft(t))
   }
-  final case class Sin(d: R[Double]) extends R[Double]
-  final case class Cos(d: R[Double]) extends R[Double]
-  final case class Equals[T: Eq](a: R[T], b: R[T]) extends R[Boolean] {
+  final case class Sin(d: Expr[Double]) extends Expr[Double]
+  final case class Cos(d: Expr[Double]) extends Expr[Double]
+  final case class Equals[T: Eq](a: Expr[T], b: Expr[T]) extends Expr[Boolean] {
     val eq: Eq[T] = implicitly[Eq[T]]
   }
-  final case class IfThen[T](condition: R[Boolean], a: R[T], b: R[T]) extends R[T]
+  final case class IfThen[T](condition: Expr[Boolean], a: Expr[T], b: Expr[T]) extends Expr[T]
 
-  final case class Var0[A](name: String) extends R[A]
-  final case class Shift[A](expr: R[A]) extends R[A]
-  final case class Let[A, B](variable: String, value: R[A], expr: R[B]) extends R[B]
-  final case class Lambda[A, B](variable: String, expr: R[B]) extends R[A => B]
-  final case class App[A, B](f: R[A => B], a: R[A]) extends R[B]
-  final case class Fix[A](expr: R[A => A]) extends R[A]
+  final case class Var0[A](name: String) extends Expr[A]
+  final case class Shift[A](expr: Expr[A]) extends Expr[A]
+  final case class Let[A, B](variable: String, value: Expr[A], expr: Expr[B]) extends Expr[B]
+  final case class Lambda[A, B](variable: String, expr: Expr[B]) extends Expr[A => B]
+  final case class App[A, B](f: Expr[A => B], a: Expr[A]) extends Expr[B]
+  final case class Fix[A](expr: Expr[A => A]) extends Expr[A]
 
-  final case class Empty[A]() extends R[F[A]]
-  final case class Cons[A](head: R[A], tail: R[F[A]]) extends R[F[A]]
-  final case class MapEmpty[A](eva: R[F[A]], eva2: R[F[A]]) extends R[F[A]]
-  final case class MapCons[A, B](eva: R[F[A]], f: R[A => F[A] => F[B]]) extends R[F[B]]
+  final case class Empty[A]() extends Expr[F[A]]
+  final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]]
+  final case class MapEmpty[A](eva: Expr[F[A]], eva2: Expr[F[A]]) extends Expr[F[A]]
+  final case class MapCons[A, B](eva: Expr[F[A]], f: Expr[A => F[A] => F[B]]) extends Expr[F[B]]
 
-  final case class Uniform(from: R[Double], to: R[Double]) extends R[F[Double]]
-  final case class UniformDiscrete(from: R[Double], to: R[Double], step: R[Double]) extends R[F[Double]]
-  final case class UniformChoice[T](ts: List[R[T]]) extends R[F[T]]
+  final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]]
+  final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double]) extends Expr[F[Double]]
+  final case class UniformChoice[T](ts: List[Expr[T]]) extends Expr[F[T]]
 
-  def VarN[A](n: Int, name: String): R[A] = {
+  def VarN[A](n: Int, name: String): Expr[A] = {
     println(n -> name)
     if (n <= 0) Var0(name) else Shift(VarN(n - 1, name))
   }
 
-  object R {
-    def transform[T](r: R[T], f: FunctionK[R, R]): R[T] = f(transformChildren(r, f))
+  object Expr {
+    def transform[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = f(transformChildren(r, f))
 
-    def transformChildren[T](r: R[T], f: FunctionK[R, R]): R[T] = r match {
+    def transformChildren[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = r match {
       case Dbl(d)                => Dbl(d)
       case Floor(d)              => Floor(transformChildren(d, f))
       case Integer(n)            => Integer(n)
@@ -94,9 +94,9 @@ trait Initial[F[_]] {
       case UniformChoice(ts) => UniformChoice(ts.map(t => transformChildren(t, f)))
     }
 
-    def unshift[T](r: R[T]): R[T] = {
-      val unshiftFK: FunctionK[R, R] = new FunctionK[R, R] {
-        def apply[T](t: R[T]): R[T] = t match {
+    def unshift[T](r: Expr[T]): Expr[T] = {
+      val unshiftFK: FunctionK[Expr, Expr] = new FunctionK[Expr, Expr] {
+        def apply[T](t: Expr[T]): Expr[T] = t match {
           case Shift(x) => x
           case _        => t
         }
@@ -107,6 +107,7 @@ trait Initial[F[_]] {
   }
 }
 
-trait WithInitial[F[_]] {
-  final val initial = new Initial[F] {}
+trait WithInitial[FF[_]] {
+  type F[T] = FF[T]
+  final val initial = new ExpressionModule[FF] {}
 }

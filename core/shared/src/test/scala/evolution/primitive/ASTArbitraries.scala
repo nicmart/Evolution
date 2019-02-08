@@ -28,31 +28,31 @@ trait ASTArbitraries[F[_]] { self: WithAst[F] =>
   } yield s"$id -> $body"
 
   def genPredefinedFunc: Gen[PredefinedFunction] =
-    Gen.oneOf(PredefinedFunction.values)
+    Gen.oneOf(PredefinedFunction.nonFunctions0)
 
-  def genNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Double].map(d => Expr.Number(d.toString)))
-  def genIntNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Int].map(d => Expr.Number(d.toString)))
-  def genNotIntNumber: Gen[Expr] = withRandomTypeVar(arbitrary[Int].map(d => Expr.Number((0.1 + d).toString)))
+  def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.Number(d.toString)))
+  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))
+  def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number((0.1 + d).toString)))
 
-  def genTypedNumber: Gen[Expr.Number] = arbitrary[Double].map(d => Expr.Number(d.toString, Type.Dbl))
-  def genTypedVar: Gen[Expr.Var] = for {
+  def genTypedNumber: Gen[AST.Number] = arbitrary[Double].map(d => AST.Number(d.toString, Type.Dbl))
+  def genTypedVar: Gen[AST.Var] = for {
     id <- genIdentifier
     tpe <- genType
-  } yield Expr.Var(id, tpe)
+  } yield AST.Var(id, tpe)
 
   def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
 
-  def withRandomTypeVar(gen: Gen[Expr]): Gen[Expr] =
+  def withRandomTypeVar(gen: Gen[AST]): Gen[AST] =
     for {
       expr <- gen
       typeChar <- Gen.alphaChar
     } yield expr.withType(Type.Var(typeChar.toString.toUpperCase))
 
-  def genVar: Gen[Expr.Var] =
+  def genVar: Gen[AST.Var] =
     for {
       char <- Gen.alphaChar
       typeChar <- Gen.alphaChar
-    } yield Expr.Var(char.toString, Type.Var(typeChar.toString.toUpperCase))
+    } yield AST.Var(char.toString, Type.Var(typeChar.toString.toUpperCase))
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))

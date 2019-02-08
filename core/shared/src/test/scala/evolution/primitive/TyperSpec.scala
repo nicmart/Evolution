@@ -2,7 +2,7 @@ package evolution.primitive
 import cats.Id
 
 class TyperSpec extends CompilerSpecModule[Id] {
-  import Typer._, ast._, Expr._
+  import Typer._, ast._, AST._
   val typer = Typer
 
   "The typer" - {
@@ -23,7 +23,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
       "pre-defined functions" - {
         "point" in {
           forAll(genNumber, genNumber) { (x, y) =>
-            val p = Expr.FuncCall(PredefinedFunction.Point, List(x, y), Type.Var("X"))
+            val p = AST.FuncCall(PredefinedFunction.Point, List(x, y), Type.Var("X"))
             typer.findConstraints(TypeVars.empty, p)._2 shouldBe Constraints(
               p.tpe -> Type.Point,
               x.tpe -> Type.Dbl,
@@ -36,9 +36,9 @@ class TyperSpec extends CompilerSpecModule[Id] {
         // TODO
         pending
         "mapCons" in {
-          val expr = Expr.FuncCall(
+          val expr = AST.FuncCall(
             PredefinedFunction.MapCons,
-            List(Expr.Var("fa"), Expr.Lambda(Expr.Var("head"), Expr.Lambda(Expr.Var("tail"), Expr.Var("tail")))))
+            List(AST.Var("fa"), AST.Lambda(AST.Var("head"), AST.Lambda(AST.Var("tail"), AST.Var("tail")))))
 
           val (vars1, withVars) = assignVars(TypeVars.empty, expr)
           val (vars2, constraints) = findConstraints(vars1, withVars)
@@ -48,7 +48,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
         "x -> point($x, $x)" in {
           val lambda =
-            Expr.Lambda(Expr.Var("x"), Expr.FuncCall(PredefinedFunction.Point, List(Expr.Var("x"), Expr.Var("x"))))
+            AST.Lambda(AST.Var("x"), AST.FuncCall(PredefinedFunction.Point, List(AST.Var("x"), AST.Var("x"))))
           val (vars1, typed) = typer.assignVars(TypeVars.empty, lambda)
           typer.findConstraints(vars1, typed)._2 shouldBe Constraints.empty
         }
@@ -57,15 +57,15 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
     "should unify" - {
       "point expressions" in {
-        val untyped = Expr.FuncCall(PredefinedFunction.Point, Expr.Var("a") :: Expr.Var("b") :: Nil)
+        val untyped = AST.FuncCall(PredefinedFunction.Point, AST.Var("a") :: AST.Var("b") :: Nil)
         val (expr, constraints) = assignVarsAndFindConstraints(untyped)
         val substitution = unify(constraints).right.get
         substitution.substitute(expr).tpe shouldBe Type.Point
       }
 
       "app(x -> $x, 2)" in {
-        val identity = Expr.Lambda(Expr.Var("x"), Expr.Var("x"))
-        val untyped = Expr.FuncCall(PredefinedFunction.App, List(identity, Expr.Number("2", Type.Dbl)))
+        val identity = AST.Lambda(AST.Var("x"), AST.Var("x"))
+        val untyped = AST.FuncCall(PredefinedFunction.App, List(identity, AST.Number("2", Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped)
         println(constraints)
         val substitution = unify(constraints).right.get

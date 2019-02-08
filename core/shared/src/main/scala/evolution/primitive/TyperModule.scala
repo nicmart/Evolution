@@ -4,7 +4,7 @@ import scala.util.Try
 
 trait TyperModule[F[_]] { self: WithAst[F] =>
   import ast._
-  import Expr._, PredefinedFunction._
+  import AST._, PredefinedFunction._
 
   object Typer {
 
@@ -12,7 +12,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
      * Traverse the AST and assign type variables to each expression.
      * No constraint is added at this stage
      */
-    def assignVars(vars: TypeVars, expr: Expr): (TypeVars, Expr) =
+    def assignVars(vars: TypeVars, expr: AST): (TypeVars, AST) =
       expr match {
         case _ if expr.tpe != Type.Var("") =>
           (vars, expr)
@@ -39,7 +39,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           vars3.withNext(next => Let(varName.copy(tpe = typedVar.tpe), typedValue, typedIn, next))
       }
 
-    def findConstraints(typeVars: TypeVars, expr: Expr): (TypeVars, Constraints) = {
+    def findConstraints(typeVars: TypeVars, expr: AST): (TypeVars, Constraints) = {
       val (vars1, constraints1) = expr match {
         case Var(_, _)              => (typeVars, Constraints.empty)
         case fc @ FuncCall(_, _, _) => findConstraintsOfPredefinedFunctionCall(typeVars, fc)
@@ -61,7 +61,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       (vars2, constraints1.merge(constraints2))
     }
 
-    def assignVarsAndFindConstraints(expr: Expr): (Expr, Constraints) = {
+    def assignVarsAndFindConstraints(expr: AST): (AST, Constraints) = {
       val (vars, exprWithVars) = assignVars(TypeVars.empty, expr)
       (exprWithVars, findConstraints(vars, exprWithVars)._2)
     }
@@ -208,7 +208,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           (typeVars, Constraints(vars.map(v => func.tpe -> Type.Evo(v.tpe)): _*))
       }
 
-    def varUsagesIn(varName: String, expr: Expr): List[Expr] =
+    def varUsagesIn(varName: String, expr: AST): List[AST] =
       expr match {
         case Var(name, _) if name == varName                         => List(expr)
         case Var(_, _)                                               => Nil
@@ -258,20 +258,20 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       final def substitute(c: Constraints): Constraints =
         Constraints(c.constraints.map(substitute))
 
-      final def substitute(expr: Expr): Expr =
+      final def substitute(expr: AST): AST =
         expr match {
-          case variable @ Expr.Var(name, tpe)   => substitute(variable)
-          case Expr.FuncCall(funcId, args, tpe) => Expr.FuncCall(funcId, args.map(substitute), substitute(tpe))
-          case Expr.Lambda(varName, lambdaExpr, tpe) =>
-            Expr.Lambda(substitute(varName), substitute(lambdaExpr), substitute(tpe))
-          case Expr.Let(varName, body, in, tpe) =>
-            Expr.Let(substitute(varName), substitute(body), substitute(in), substitute(tpe))
-          case Expr.Number(n, tpe) => Expr.Number(n, substitute(tpe))
+          case variable @ AST.Var(name, tpe)   => substitute(variable)
+          case AST.FuncCall(funcId, args, tpe) => AST.FuncCall(funcId, args.map(substitute), substitute(tpe))
+          case AST.Lambda(varName, lambdaExpr, tpe) =>
+            AST.Lambda(substitute(varName), substitute(lambdaExpr), substitute(tpe))
+          case AST.Let(varName, body, in, tpe) =>
+            AST.Let(substitute(varName), substitute(body), substitute(in), substitute(tpe))
+          case AST.Number(n, tpe) => AST.Number(n, substitute(tpe))
         }
 
-      final def substitute(expr: Expr.Var): Expr.Var =
+      final def substitute(expr: AST.Var): AST.Var =
         expr match {
-          case Expr.Var(name, tpe) => Expr.Var(name, substitute(tpe))
+          case AST.Var(name, tpe) => AST.Var(name, substitute(tpe))
         }
 
       final def andThen(other: Substitution): Substitution =

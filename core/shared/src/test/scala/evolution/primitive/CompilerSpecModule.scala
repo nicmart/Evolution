@@ -6,7 +6,7 @@ trait CompilerSpecModule[F[_]]
     extends FreeSpec
     with Matchers
     with GeneratorDrivenPropertyChecks
-    with InitialCompilerModule[F]
+    with CompilerModule[F]
     with TyperModule[F]
     with ParsersModule[F]
     with ASTArbitraries[F]

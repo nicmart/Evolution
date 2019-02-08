@@ -11,25 +11,25 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
   import initial._
 
   object Desugarer {
-    def constant[A](a: R[A]): R[F[A]] =
+    def constant[A](a: Expr[A]): Expr[F[A]] =
       Fix[F[A]](Lambda("self", Cons(Shift(a), varN("self", 0))))
 
-    def zipWith[A, B, C](a: R[F[A]], b: R[F[B]], f: R[A => B => C]): R[F[C]] =
+    def zipWith[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
       app2(zipWithLambda(f), a, b)
 
-    def addEvo[T: Semigroup](a: R[F[T]], b: R[F[T]]): R[F[T]] =
+    def addEvo[T: Semigroup](a: Expr[F[T]], b: Expr[F[T]]): Expr[F[T]] =
       zipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](varN("a", 1), varN("b", 0))))
 
-    def multEvo[T: VectorSpace](k: R[F[Double]], t: R[F[T]]): R[F[T]] =
+    def multEvo[T: VectorSpace](k: Expr[F[Double]], t: Expr[F[T]]): Expr[F[T]] =
       zipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](varN("k", 1), varN("t", 0))))
 
-    def inverseEvo[T: Group](t: R[F[T]]): R[F[T]] =
+    def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       map(t, Lambda("t", Inverse(varN("t", 0))))
 
-    def cartesian(x: R[F[Double]], y: R[F[Double]]): R[F[Point]] =
+    def cartesian(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
       app2(zipWithLambda(lambda2[Double, Double, Point]("fx", "fy", Pnt(varN("fx", 1), varN("fy", 0)))), x, y)
 
-    def polar(radius: R[F[Double]], angle: R[F[Double]]): R[F[Point]] =
+    def polar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
       app2(
         zipWithLambda(
           lambda2[Double, Double, Point](
@@ -42,26 +42,26 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         angle
       )
 
-    def concat[A](fa1: R[F[A]], fa2: R[F[A]]): R[F[A]] =
+    def concat[A](fa1: Expr[F[A]], fa2: Expr[F[A]]): Expr[F[A]] =
       app2(concatLambda, fa1, fa2)
 
-    def integrate[A: VectorSpace](start: R[A], speed: R[F[A]]): R[F[A]] =
+    def integrate[A: VectorSpace](start: Expr[A], speed: Expr[F[A]]): Expr[F[A]] =
       app2(integrateLambda[A], start, speed)
 
-    def solve1[X: VectorSpace](eq: R[F[X => X]], x0: R[X]): R[F[X]] =
+    def solve1[X: VectorSpace](eq: Expr[F[X => X]], x0: Expr[X]): Expr[F[X]] =
       app2(solve1Lambda[X], eq, x0)
 
-    def solve2[X: VectorSpace](eq: R[F[X => X => X]], x0: R[X], v0: R[X]): R[F[X]] =
+    def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
 
-    def map[A, B](fa: R[F[A]], f: R[A => B]): R[F[B]] =
+    def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
       App(mapLambda(f), fa)
 
-    def flatMap[A, B](fa: R[F[A]], f: R[A => F[B]]): R[F[B]] =
+    def flatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]): Expr[F[B]] =
       App(flatMapLambda(f), fa)
 
     // TODO f as parameter of lambda, so we can remove shiftN
-    private def mapLambda[A, B](f: R[A => B]): R[F[A] => F[B]] =
+    private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] =
       Fix[F[A] => F[B]](
         Lambda(
           "self",
@@ -80,7 +80,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
       )
 
     // TODO f as parameter of lambda, so we can remove shiftN
-    private def flatMapLambda[A, B](f: R[A => F[B]]): R[F[A] => F[B]] =
+    private def flatMapLambda[A, B](f: Expr[A => F[B]]): Expr[F[A] => F[B]] =
       Fix[F[A] => F[B]](
         Lambda(
           "self",
@@ -101,7 +101,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    private def concatLambda[A]: R[F[A] => F[A] => F[A]] =
+    private def concatLambda[A]: Expr[F[A] => F[A] => F[A]] =
       Fix[F[A] => F[A] => F[A]](
         Lambda(
           "self",
@@ -130,7 +130,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    private def integrateLambda[T: VectorSpace]: R[T => F[T] => F[T]] =
+    private def integrateLambda[T: VectorSpace]: Expr[T => F[T] => F[T]] =
       Fix[T => F[T] => F[T]](
         Lambda(
           "self",
@@ -156,7 +156,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    private def solve1Lambda[X: VectorSpace]: R[F[X => X] => X => F[X]] =
+    private def solve1Lambda[X: VectorSpace]: Expr[F[X => X] => X => F[X]] =
       Fix[F[X => X] => X => F[X]](
         Lambda(
           "self",
@@ -182,7 +182,7 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    private def solve2Lambda[X: VectorSpace]: R[F[X => X => X] => X => X => F[X]] =
+    private def solve2Lambda[X: VectorSpace]: Expr[F[X => X => X] => X => X => F[X]] =
       Fix[F[X => X => X] => X => X => F[X]](
         Lambda(
           "self",
@@ -213,10 +213,10 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    def take[T](n: R[Int], ft: R[F[T]]): R[F[T]] =
+    def take[T](n: Expr[Int], ft: Expr[F[T]]): Expr[F[T]] =
       app2(takeLambda, n, ft)
 
-    private def takeLambda[T]: R[Int => F[T] => F[T]] =
+    private def takeLambda[T]: Expr[Int => F[T] => F[T]] =
       Fix[Int => F[T] => F[T]](
         Lambda(
           "self",
@@ -250,22 +250,22 @@ trait DesugarModule[F[_]] { self: WithInitial[F] =>
         )
       )
 
-    private def lambda2[A, B, C](var1: String, var2: String, expr: R[C]): R[A => B => C] =
+    private def lambda2[A, B, C](var1: String, var2: String, expr: Expr[C]): Expr[A => B => C] =
       Lambda[A, B => C](var1, Lambda[B, C](var2, expr))
 
-    private def lambda3[A, B, C, D](var1: String, var2: String, var3: String, expr: R[D]): R[A => B => C => D] =
+    private def lambda3[A, B, C, D](var1: String, var2: String, var3: String, expr: Expr[D]): Expr[A => B => C => D] =
       Lambda[A, B => C => D](var1, lambda2[B, C, D](var2, var3, expr))
 
-    private def app2[A, B, C](f: R[A => B => C], a: R[A], b: R[B]): R[C] =
+    private def app2[A, B, C](f: Expr[A => B => C], a: Expr[A], b: Expr[B]): Expr[C] =
       App(App(f, a), b)
 
-    private def app3[A, B, C, D](f: R[A => B => C => D], a: R[A], b: R[B], c: R[C]): R[D] =
+    private def app3[A, B, C, D](f: Expr[A => B => C => D], a: Expr[A], b: Expr[B], c: Expr[C]): Expr[D] =
       App(App(App(f, a), b), c)
 
-    private def varN[A](name: String, n: Int): R[A] = shiftN(Var0(name), n)
-    private def shiftN[A](expr: R[A], n: Int): R[A] = if (n <= 0) expr else Shift(shiftN(expr, n - 1))
+    private def varN[A](name: String, n: Int): Expr[A] = shiftN(Var0(name), n)
+    private def shiftN[A](expr: Expr[A], n: Int): Expr[A] = if (n <= 0) expr else Shift(shiftN(expr, n - 1))
 
-    private def zipWithLambda[A, B, C](f: R[A => B => C]): R[F[A] => F[B] => F[C]] =
+    private def zipWithLambda[A, B, C](f: Expr[A => B => C]): Expr[F[A] => F[B] => F[C]] =
       Fix[F[A] => F[B] => F[C]](
         Lambda[F[A] => F[B] => F[C], F[A] => F[B] => F[C]](
           "self",
