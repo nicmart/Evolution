@@ -223,6 +223,15 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
             (innerType, compiledN, compiledF) =>
               take(compiledN.asInstanceOf[Expr[Int]], compiledF.asInstanceOf[Expr[F[innerType.Out]]])
           }
+
+        case (ZipWith, a :: b :: f :: Nil) =>
+          (compile[M](a, ctx), compile[M](b, ctx), compile[M](f, ctx)).mapN { (compiledA, compiledB, compiledF) =>
+            zipWith(
+              compiledA.asInstanceOf[Expr[F[Any]]],
+              compiledB.asInstanceOf[Expr[F[Any]]],
+              compiledF.asInstanceOf[Expr[Any => Any => Any]])
+          }
+
         case (Uniform, from :: to :: Nil) =>
           (compile[M](from, ctx), compile[M](to, ctx)).mapN { (compiledFrom, compiledTo) =>
             expressionModule.Uniform(compiledFrom.asInstanceOf[Expr[Double]], compiledTo.asInstanceOf[Expr[Double]])

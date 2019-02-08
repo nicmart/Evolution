@@ -86,6 +86,7 @@ class ASTModule[F[_]] {
     case object Map extends PredefinedFunction
     case object FlatMap extends PredefinedFunction
     case object Take extends PredefinedFunction
+    case object ZipWith extends PredefinedFunction
 
     // Distribution
     case object Uniform extends PredefinedFunction

@@ -197,6 +197,16 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             )
           }
 
+        case (ZipWith, a :: b :: f :: Nil) =>
+          typeVars.withNext3 { (typeOfA, typeOfB, typeOfResult) =>
+            Constraints(
+              a.tpe -> Type.Evo(typeOfA),
+              b.tpe -> Type.Evo(typeOfB),
+              func.tpe -> Type.Evo(typeOfResult),
+              f.tpe -> Type.Arrow(typeOfA, Type.Arrow(typeOfB, typeOfResult))
+            )
+          }
+
         case (Uniform, from :: to :: Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl))
 
@@ -306,11 +316,20 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     class TypeVars(total: Int) {
       def withNext[T](f: Type.Var => T): (TypeVars, T) =
         (new TypeVars(total + 1), f(Type.Var(s"T$total")))
+
       def withNext2[T](f: (Type.Var, Type.Var) => T): (TypeVars, T) = {
         val (vars1, var1) = withNext(identity)
         val (vars2, var2) = vars1.withNext(identity)
         (vars2, f(var1, var2))
       }
+
+      def withNext3[T](f: (Type.Var, Type.Var, Type.Var) => T): (TypeVars, T) = {
+        val (vars1, var1) = withNext(identity)
+        val (vars2, var2) = vars1.withNext(identity)
+        val (vars3, var3) = vars2.withNext(identity)
+        (vars3, f(var1, var2, var3))
+      }
+
       def traverse[A, B](ts: List[A])(f: (TypeVars, A) => (TypeVars, B)): (TypeVars, List[B]) =
         ts.foldLeft[(TypeVars, List[B])]((this, Nil)) {
           case ((accVars, bs), a) =>
