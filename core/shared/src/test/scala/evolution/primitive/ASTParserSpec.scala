@@ -58,6 +58,12 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         }
       }
 
+      "mods" in {
+        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+          unsafeParse(s"$a % $b") shouldBe AST.FuncCall(Mod, List(unsafeParse(a), unsafeParse(b)))
+        }
+      }
+
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe AST.FuncCall(

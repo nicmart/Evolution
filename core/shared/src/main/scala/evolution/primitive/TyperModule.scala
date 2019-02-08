@@ -114,6 +114,8 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           (typeVars, Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl))
         case (PI, Nil) =>
           (typeVars, Constraints(func.tpe -> Type.Dbl))
+        case (Mod, x :: y :: Nil) =>
+          (typeVars, Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
         case (Eq, x :: y :: Nil) =>
           (typeVars, Constraints(x.tpe -> y.tpe, func.tpe -> Type.Bool))
         case (If, x :: y :: z :: Nil) =>

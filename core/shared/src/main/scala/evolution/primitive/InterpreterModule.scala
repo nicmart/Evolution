@@ -1,27 +1,31 @@
 package evolution.primitive
 
 import evolution.algebra.representation.RNGRepr
-import evolution.data.{ Ctx, ExpressionModule, WithInitial }
+import evolution.data.{ Ctx, ExpressionModule, WithExpression }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 // TODO this is an implementation
-trait InterpreterModule { self: WithInitial[RNGRepr] =>
+trait InterpreterModule { self: WithExpression[RNGRepr] =>
   type Out[T] = InterpreterModule.Out[T]
-  import initial._
+  import expressionModule._
   import InterpreterModule._
 
   object Interpreter {
     def interpret[T](expr: Expr[T]): Out[T] = expr match {
-      case Dbl(d)                => Out.pure(d)
-      case Floor(d)              => interpret(d).map(_.toInt)
-      case Integer(n)            => Out.pure(n)
-      case Pnt(x, y)             => interpret2(x, y)(Point.apply)
-      case X(p)                  => interpret1(p)(_.x)
-      case Y(p)                  => interpret1(p)(_.y)
-      case add @ Add(a, b)       => interpret2(a, b)(add.semigroup.combine)
-      case Div(a, b)             => interpret2(a, b)(_ / _)
-      case Exp(a, b)             => interpret2(a, b)(Math.pow)
+      case Dbl(d)          => Out.pure(d)
+      case Floor(d)        => interpret(d).map(_.toInt)
+      case Integer(n)      => Out.pure(n)
+      case Pnt(x, y)       => interpret2(x, y)(Point.apply)
+      case X(p)            => interpret1(p)(_.x)
+      case Y(p)            => interpret1(p)(_.y)
+      case add @ Add(a, b) => interpret2(a, b)(add.semigroup.combine)
+      case Div(a, b)       => interpret2(a, b)(_ / _)
+      case Exp(a, b)       => interpret2(a, b)(Math.pow)
+      case Mod(a, b) =>
+        interpret2(a, b) { (ca, cb) =>
+          if (ca >= 0) ca % cb else (ca % cb) + cb
+        }
       case inv @ Inverse(t)      => interpret1(t)(inv.group.inverse)
       case mult @ Multiply(k, t) => interpret2(k, t)(mult.vectorSpace.mult)
       case Sin(d)                => interpret1(d)(Math.sin)

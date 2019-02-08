@@ -4,12 +4,12 @@ import cats.{ MonadError, Traverse }
 import cats.implicits._
 import evolution.data.ExpressionModule
 import evolution.geometry
-import evolution.data.WithInitial
+import evolution.data.WithExpression
 
 // TODO Random extensions and self types, please to do something better
-trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: WithAst[F] =>
+trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { self: WithAst[F] =>
 
-  import initial._
+  import expressionModule._
   import Desugarer._
 
   object Compiler {
@@ -42,18 +42,18 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
       (func.funcId, func.args) match {
         case (Point, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            initial.Pnt(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
+            expressionModule.Pnt(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
           }
         case (X, p :: Nil) =>
           compile[M](p, ctx).map { compiledP =>
-            initial.X(compiledP.asInstanceOf[Expr[geometry.Point]])
+            expressionModule.X(compiledP.asInstanceOf[Expr[geometry.Point]])
           }
         case (Y, p :: Nil) =>
           compile[M](p, ctx).map { compiledP =>
-            initial.Y(compiledP.asInstanceOf[Expr[geometry.Point]])
+            expressionModule.Y(compiledP.asInstanceOf[Expr[geometry.Point]])
           }
         case (Floor, d :: Nil) =>
-          compile[M](d, ctx).map(compiledD => initial.Floor(compiledD.asInstanceOf[Expr[Double]]))
+          compile[M](d, ctx).map(compiledD => expressionModule.Floor(compiledD.asInstanceOf[Expr[Double]]))
 
         case (Add, x :: y :: Nil) =>
           func.tpe match {
@@ -66,17 +66,18 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
             case tpe =>
               (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
                 (sg, compiledX, compiledY) =>
-                  initial.Add(compiledX.asInstanceOf[Expr[func.Out]], compiledY.asInstanceOf[Expr[func.Out]])(sg)
+                  expressionModule.Add(compiledX.asInstanceOf[Expr[func.Out]], compiledY.asInstanceOf[Expr[func.Out]])(
+                    sg)
               }
           }
 
         case (Div, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            initial.Div(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
+            expressionModule.Div(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
           }
         case (Exp, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            initial.Exp(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
+            expressionModule.Exp(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[Double]])
           }
         case (Inverse, x :: Nil) =>
           func.tpe match {
@@ -87,7 +88,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
               }
             case tpe =>
               (M.fromEither(Type.group(func.tpe)), compile[M](x, ctx)).mapN { (g, compiledX) =>
-                initial.Inverse(compiledX.asInstanceOf[Expr[func.Out]])(g)
+                expressionModule.Inverse(compiledX.asInstanceOf[Expr[func.Out]])(g)
               }
           }
 
@@ -103,50 +104,58 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
             case tpe =>
               (M.fromEither(Type.vectorSpace(func.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
                 (vs, compiledX, compiledY) =>
-                  initial.Multiply(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[func.Out]])(vs)
+                  expressionModule.Multiply(
+                    compiledX.asInstanceOf[Expr[Double]],
+                    compiledY.asInstanceOf[Expr[func.Out]])(vs)
               }
           }
 
         case (Cos, x :: Nil) =>
-          compile[M](x, ctx).map(compiledX => initial.Cos(compiledX.asInstanceOf[Expr[Double]]))
+          compile[M](x, ctx).map(compiledX => expressionModule.Cos(compiledX.asInstanceOf[Expr[Double]]))
         case (Sin, x :: Nil) =>
-          compile[M](x, ctx).map(compiledX => initial.Sin(compiledX.asInstanceOf[Expr[Double]]))
+          compile[M](x, ctx).map(compiledX => expressionModule.Sin(compiledX.asInstanceOf[Expr[Double]]))
         case (PI, Nil) =>
-          M.pure(initial.Dbl(Math.PI))
-
+          M.pure(expressionModule.Dbl(Math.PI))
+        case (Mod, x :: y :: Nil) =>
+          (compile[M](x, ctx), compile[M](y, ctx)).mapN { (cx, cy) =>
+            expressionModule.Mod(cx.asInstanceOf[Expr[Double]], cy.asInstanceOf[Expr[Double]])
+          }
         case (Eq, x :: y :: Nil) =>
           for {
             compiledX <- compile[M](x, ctx)
             compiledY <- compile[M](y, ctx)
             eqTypeClass <- M.fromEither(Type.eqTypeClass(x.tpe))
-          } yield initial.Equals[x.Out](compiledX, compiledY.asInstanceOf[Expr[x.Out]])(eqTypeClass)
+          } yield expressionModule.Equals[x.Out](compiledX, compiledY.asInstanceOf[Expr[x.Out]])(eqTypeClass)
         case (If, x :: y :: z :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx), compile[M](z, ctx)).mapN { (compiledX, compiledY, compiledZ) =>
-            initial.IfThen(compiledX.asInstanceOf[Expr[Boolean]], compiledY, compiledZ.asInstanceOf[Expr[y.Out]])
+            expressionModule.IfThen(
+              compiledX.asInstanceOf[Expr[Boolean]],
+              compiledY,
+              compiledZ.asInstanceOf[Expr[y.Out]])
           }
         case (Fix, f :: Nil) =>
           compile[M](f, ctx).map { compiledF =>
-            initial.Fix(compiledF.asInstanceOf[Expr[func.Out => func.Out]])
+            expressionModule.Fix(compiledF.asInstanceOf[Expr[func.Out => func.Out]])
           }
         case (App, f :: x :: Nil) =>
           (compile[M](f, ctx), compile[M](x, ctx)).mapN { (compiledF, compiledX) =>
-            initial.App(compiledF.asInstanceOf[Expr[x.Out => func.Out]], compiledX.asInstanceOf[Expr[x.Out]])
+            expressionModule.App(compiledF.asInstanceOf[Expr[x.Out => func.Out]], compiledX.asInstanceOf[Expr[x.Out]])
           }
         case (Empty, Nil) =>
           println("emptyness inside me")
-          initial.Empty().pure[M]
+          expressionModule.Empty().pure[M]
         case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            initial.Cons[x.Out](compiledX.asInstanceOf[Expr[x.Out]], compiledY.asInstanceOf[Expr[F[x.Out]]])
+            expressionModule.Cons[x.Out](compiledX.asInstanceOf[Expr[x.Out]], compiledY.asInstanceOf[Expr[F[x.Out]]])
           }
         case (MapEmpty, x :: y :: Nil) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
-            initial
+            expressionModule
               .MapEmpty[func.Out](compiledX.asInstanceOf[Expr[F[func.Out]]], compiledY.asInstanceOf[Expr[F[func.Out]]])
           }
         case (MapCons, x :: f :: Nil) =>
           (compile[M](x, ctx), compile[M](f, ctx)).mapN { (compiledX, compiledF) =>
-            initial.MapCons[x.Out, func.Out](
+            expressionModule.MapCons[x.Out, func.Out](
               compiledX.asInstanceOf[Expr[F[x.Out]]],
               compiledF.asInstanceOf[Expr[x.Out => F[x.Out] => F[func.Out]]]
             )
@@ -216,12 +225,12 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
           }
         case (Uniform, from :: to :: Nil) =>
           (compile[M](from, ctx), compile[M](to, ctx)).mapN { (compiledFrom, compiledTo) =>
-            initial.Uniform(compiledFrom.asInstanceOf[Expr[Double]], compiledTo.asInstanceOf[Expr[Double]])
+            expressionModule.Uniform(compiledFrom.asInstanceOf[Expr[Double]], compiledTo.asInstanceOf[Expr[Double]])
           }
         case (UniformDiscrete, from :: to :: step :: Nil) =>
           (compile[M](from, ctx), compile[M](to, ctx), compile[M](step, ctx)).mapN {
             (compiledFrom, compiledTo, compiledStep) =>
-              initial.UniformDiscrete(
+              expressionModule.UniformDiscrete(
                 compiledFrom.asInstanceOf[Expr[Double]],
                 compiledTo.asInstanceOf[Expr[Double]],
                 compiledStep.asInstanceOf[Expr[Double]]
@@ -229,7 +238,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithInitial[F] { self: 
           }
         case (UniformChoice, choices) =>
           choices.traverse(choice => compile[M](choice, ctx).asInstanceOf[M[Any]]).map { compiledChoices =>
-            initial.UniformChoice(compiledChoices.asInstanceOf[List[Expr[func.Out]]])
+            expressionModule.UniformChoice(compiledChoices.asInstanceOf[List[Expr[func.Out]]])
           }
         case _ => M.raiseError(s"Invalid type for expression $func")
       }

@@ -15,6 +15,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
+  import expressionModule._
   val name = "drawing dsl"
 
   private val module = new FullModule[F]
@@ -58,7 +59,7 @@ object dsl extends DrawingDefinition[Point] {
   }
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[F[Point]]): Expr[F[Point]] = {
-    import initial._
+    import expressionModule._
     Let[Double, F[Point]](
       "top",
       Dbl(ctx.top),

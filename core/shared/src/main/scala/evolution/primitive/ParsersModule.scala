@@ -23,7 +23,9 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       }
 
     lazy val precedence2Ops: Parser[PredefinedFunction] =
-      P("*").map(_ => PredefinedFunction.Multiply) | P("/").map(_ => PredefinedFunction.Div)
+      P("*").map(_ => PredefinedFunction.Multiply) |
+        P("/").map(_ => PredefinedFunction.Div) |
+        P("%").map(_ => PredefinedFunction.Mod)
 
     lazy val precedence2: Parser[AST] =
       P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {

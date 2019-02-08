@@ -62,6 +62,7 @@ class ASTModule[F[_]] {
     case object Eq extends PredefinedFunction
     case object If extends PredefinedFunction
     case object PI extends PredefinedFunction
+    case object Mod extends PredefinedFunction
 
     // Bindings
     case object Fix extends PredefinedFunction
