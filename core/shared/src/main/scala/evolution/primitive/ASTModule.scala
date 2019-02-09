@@ -159,6 +159,24 @@ class ASTModule[F[_]] {
   object Context {
     val empty: Context = new Context(Map.empty)
   }
+
+  object TypeClasses {
+    case class Predicate(id: String, types: List[Type])
+    case class Qualified[T](predicates: List[Predicate], t: T)
+    type Instance = Qualified[Predicate]
+    object Instance {
+      def apply(predicates: List[Predicate], predicate: Predicate): Instance = Qualified(predicates, predicate)
+    }
+    case class ClassDef(instances: List[Instance])
+
+    // example: Int is Ord, Dbl is Ord, Dbl Dbl Ord => Point Ord
+    ClassDef(
+      List(
+        Instance(Nil, Predicate("Ord", List(Type.Integer))),
+        Instance(Nil, Predicate("Ord", List(Type.Dbl))),
+        Instance(List(Predicate("Ord", List(Type.Dbl))), Predicate("Ord", List(Type.Point)))
+      ))
+  }
 }
 
 trait WithAst[F[_]] {
