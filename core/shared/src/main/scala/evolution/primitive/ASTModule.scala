@@ -38,6 +38,15 @@ class ASTModule[F[_]] {
     final case class Lambda(varName: AST.Var, expr: AST, tpe: Type = Type.Var("")) extends AST
     final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
     final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
+
+    // Note: f is not (and can't) be applied to variables
+    def transformChildren(tree: AST, f: AST => AST): AST = tree match {
+      case FuncCall(funcId, args, tpe) => FuncCall(funcId, args.map(transformChildren(_, f)), tpe)
+      case Lambda(varName, expr, tpe) =>
+        Lambda(varName, transformChildren(expr, f), tpe)
+      case Let(varName, expr, in, tpe) => Let(varName, transformChildren(expr, f), transformChildren(in, f), tpe)
+      case _                           => tree
+    }
   }
 
   abstract sealed class PredefinedFunction extends EnumEntry

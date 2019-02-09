@@ -240,10 +240,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         case _                                 => Nil
       }
 
-    case class Constraint(a: Type, b: Type) {
-      def reverse: Constraint = Constraint(b, a)
-      def isEquivalentTo(other: Constraint): Boolean = this == other || this == other.reverse
-    }
+    case class Constraint(a: Type, b: Type)
 
     case class Constraints(constraints: List[Constraint]) {
       def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
@@ -299,6 +296,23 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         new CanBeSubstituted[List[T]] {
           def substitute(s1: Subst, ts: List[T]): List[T] = ts.map(s1.substitute[T])
         }
+
+      implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
+        def substitute(s: Subst, ast: AST): AST =
+          doSubst(s)(AST.transformChildren(ast, doSubst(s)))
+
+        private def doSubst(s: Subst)(ast: AST): AST = ast.withType(s.substitute(ast.tpe))
+      }
+
+      implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
+        def substitute(s: Subst, constraint: Constraint): Constraint =
+          Constraint(s.substitute(constraint.a), s.substitute(constraint.b))
+      }
+
+      implicit val constraints: CanBeSubstituted[Constraints] = new CanBeSubstituted[Constraints] {
+        def substitute(s: Subst, constraints: Constraints): Constraints =
+          Constraints(s.substitute(constraints.constraints))
+      }
     }
 
     sealed trait Substitution {
