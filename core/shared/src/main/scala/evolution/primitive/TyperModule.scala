@@ -261,6 +261,46 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       })
     }
 
+    case class Assignment(variable: String, tpe: Type)
+
+    case class Subst(assignments: List[Assignment]) {
+      def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
+      def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
+      def compose(s2: Subst): Subst = Subst(substitute(s2).assignments ++ assignments)
+    }
+
+    object Subst {
+      val empty: Subst = Subst(Nil)
+    }
+
+    trait CanBeSubstituted[T] {
+      def substitute(s: Subst, t: T): T
+    }
+
+    object CanBeSubstituted {
+      implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
+        def substitute(s: Subst, t: Type): Type = t match {
+          case Type.Var(name)       => s.lookup(name).getOrElse(t)
+          case Type.Evo(inner)      => Type.Evo(substitute(s, inner))
+          case Type.Arrow(from, to) => Type.Arrow(substitute(s, from), substitute(s, to))
+          case _                    => t
+        }
+      }
+
+      implicit val assignment: CanBeSubstituted[Assignment] = new CanBeSubstituted[Assignment] {
+        def substitute(s: Subst, a: Assignment): Assignment = a.copy(tpe = s.substitute(a.tpe))
+      }
+
+      implicit val subst: CanBeSubstituted[Subst] = new CanBeSubstituted[Subst] {
+        def substitute(s1: Subst, s2: Subst): Subst = Subst(s1.substitute(s2.assignments))
+      }
+
+      implicit def list[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[List[T]] =
+        new CanBeSubstituted[List[T]] {
+          def substitute(s1: Subst, ts: List[T]): List[T] = ts.map(s1.substitute[T])
+        }
+    }
+
     sealed trait Substitution {
       def substitute(t: Type): Type
 
@@ -341,11 +381,5 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     object TypeVars {
       val empty = new TypeVars(0)
     }
-
-    private def parseInt(n: String): Either[String, Int] =
-      Try(n.toInt).toEither.left.map(_ => "")
-
-    private def parseDouble(n: String): Either[String, Double] =
-      Try(n.toDouble).toEither.left.map(_ => "")
   }
 }
