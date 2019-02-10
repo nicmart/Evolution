@@ -142,7 +142,6 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
             expressionModule.App(compiledF.asInstanceOf[Expr[x.Out => func.Out]], compiledX.asInstanceOf[Expr[x.Out]])
           }
         case (Empty, Nil) =>
-          println("emptyness inside me")
           expressionModule.Empty().pure[M]
         case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>

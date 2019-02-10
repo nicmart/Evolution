@@ -68,20 +68,20 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       (exprWithVars, findConstraints(vars, exprWithVars)._2)
     }
 
-    def unify(constraints: Constraints): Either[String, Substitution] =
+    def unify(constraints: Constraints): Either[String, Subst] =
       constraints.constraints match {
-        case Nil => Right(Substitution.Empty)
+        case Nil => Right(Subst.empty)
         case head :: tail =>
           head match {
             case Constraint(a, b) if a == b => unify(Constraints(tail))
             case Constraint(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
-              val substituteVar = Substitution.Simple(x, t)
+              val substituteVar = Subst(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
-              unify(constraints2).map(subst => Substitution.Composite(substituteVar, subst))
+              unify(constraints2).map(_.compose(substituteVar))
             case Constraint(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
-              val substituteVar = Substitution.Simple(x, t)
+              val substituteVar = Subst(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
-              unify(constraints2).map(subst => Substitution.Composite(substituteVar, subst))
+              unify(constraints2).map(_.compose(substituteVar))
             case Constraint(Type.Evo(a), Type.Evo(b)) =>
               unify(Constraints(a -> b).merge(Constraints(tail)))
             case Constraint(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
@@ -249,7 +249,6 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
         constraints.merge(current)
       }
-      def isEquivalentTo(other: Constraints): Boolean = ???
       override def toString: String = constraints.map(c => s"${c.a} = ${c.b}").mkString("\n")
     }
 
@@ -272,11 +271,12 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
         }
         if (agree) M.pure(Subst(assignments ++ s2.assignments))
-        else M.raiseError("Merge has failed ")
+        else M.raiseError("Merge has failed")
       }
     }
 
     object Subst {
+      def apply(assignments: (String, Type)*): Subst = Subst(assignments.toList.map { case (s, t) => Assignment(s, t) })
       val empty: Subst = Subst(Nil)
     }
 
@@ -309,9 +309,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
       implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
         def substitute(s: Subst, ast: AST): AST =
-          doSubst(s)(AST.transformChildren(ast, doSubst(s)))
-
-        private def doSubst(s: Subst)(ast: AST): AST = ast.withType(s.substitute(ast.tpe))
+          AST.transformRecursively(ast, tree => tree.withType(s.substitute(tree.tpe)))
       }
 
       implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
@@ -322,58 +320,6 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       implicit val constraints: CanBeSubstituted[Constraints] = new CanBeSubstituted[Constraints] {
         def substitute(s: Subst, constraints: Constraints): Constraints =
           Constraints(s.substitute(constraints.constraints))
-      }
-    }
-
-    sealed trait Substitution {
-      def substitute(t: Type): Type
-
-      final def substitute(c: Constraint): Constraint =
-        Constraint(substitute(c.a), substitute(c.b))
-
-      final def substitute(c: Constraints): Constraints =
-        Constraints(c.constraints.map(substitute))
-
-      final def substitute(expr: AST): AST =
-        expr match {
-          case variable @ AST.Var(name, tpe)   => substitute(variable)
-          case AST.FuncCall(funcId, args, tpe) => AST.FuncCall(funcId, args.map(substitute), substitute(tpe))
-          case AST.Lambda(varName, lambdaExpr, tpe) =>
-            AST.Lambda(substitute(varName), substitute(lambdaExpr), substitute(tpe))
-          case AST.Let(varName, body, in, tpe) =>
-            AST.Let(substitute(varName), substitute(body), substitute(in), substitute(tpe))
-          case AST.Number(n, tpe) => AST.Number(n, substitute(tpe))
-        }
-
-      final def substitute(expr: AST.Var): AST.Var =
-        expr match {
-          case AST.Var(name, tpe) => AST.Var(name, substitute(tpe))
-        }
-
-      final def andThen(other: Substitution): Substitution =
-        Substitution.Composite(this, other)
-    }
-
-    object Substitution {
-      final case class Simple(variable: String, withType: Type) extends Substitution {
-        override def substitute(t: Type): Type = t match {
-          case Type.Var(name) if name == variable => withType
-          case Type.Evo(inner)                    => Type.Evo(substitute(inner))
-          case Type.Arrow(from, to)               => Type.Arrow(substitute(from), substitute(to))
-          case Type.Var(name)                     => t
-          case Type.Integer                       => t
-          case Type.Dbl                           => t
-          case Type.Point                         => t
-          case Type.Bool                          => t
-        }
-      }
-
-      final case class Composite(a: Substitution, b: Substitution) extends Substitution {
-        override def substitute(t: Type): Type = b.substitute(a.substitute(t))
-      }
-
-      final case object Empty extends Substitution {
-        override def substitute(t: Type): Type = t
       }
     }
 

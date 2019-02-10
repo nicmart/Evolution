@@ -30,6 +30,15 @@ class TyperSpec extends CompilerSpecModule[Id] {
               y.tpe -> Type.Dbl)
           }
         }
+
+        "constant evolution of a point" in {
+          val point = AST.FuncCall(PredefinedFunction.Point, List(AST.Number("1"), AST.Number("1")))
+          val evolution = typer.assignVars(TypeVars.empty, AST.FuncCall(PredefinedFunction.Constant, List(point)))._2
+          val constraints = typer.findConstraints(TypeVars.empty, evolution)._2
+          val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
+          val unifier = unify(allConstraints).right.get
+          unifier.substitute(evolution.tpe) shouldBe Type.Evo(Type.Point)
+        }
       }
 
       "complex expressions" - {
@@ -42,8 +51,6 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
           val (vars1, withVars) = assignVars(TypeVars.empty, expr)
           val (vars2, constraints) = findConstraints(vars1, withVars)
-          println(withVars)
-          println(constraints)
         }
 
         "x -> point($x, $x)" in {
@@ -67,11 +74,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
         val identity = AST.Lambda(AST.Var("x"), AST.Var("x"))
         val untyped = AST.FuncCall(PredefinedFunction.App, List(identity, AST.Number("2", Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped)
-        println(constraints)
         val substitution = unify(constraints).right.get
-        println(substitution)
-        println(expr)
-        println(substitution.substitute(expr))
         substitution.substitute(expr).tpe shouldBe Type.Dbl
       }
 
@@ -93,7 +96,6 @@ class TyperSpec extends CompilerSpecModule[Id] {
         val substitution = unify(constraints).right.get
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Dbl)
       }
-
     }
   }
 }

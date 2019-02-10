@@ -41,12 +41,14 @@ class ASTModule[F[_]] {
 
     // Note: f is not (and can't) be applied to variables
     def transformChildren(tree: AST, f: AST => AST): AST = tree match {
-      case FuncCall(funcId, args, tpe) => FuncCall(funcId, args.map(transformChildren(_, f)), tpe)
-      case Lambda(varName, expr, tpe) =>
-        Lambda(varName, transformChildren(expr, f), tpe)
-      case Let(varName, expr, in, tpe) => Let(varName, transformChildren(expr, f), transformChildren(in, f), tpe)
+      case FuncCall(funcId, args, tpe) => FuncCall(funcId, args.map(f), tpe)
+      case Lambda(varName, expr, tpe)  => Lambda(varName, f(expr), tpe)
+      case Let(varName, expr, in, tpe) => Let(varName, f(expr), f(in), tpe)
       case _                           => tree
     }
+
+    def transformRecursively(tree: AST, f: AST => AST): AST =
+      f(transformChildren(tree, transformRecursively(_, f)))
   }
 
   abstract sealed class PredefinedFunction extends EnumEntry
