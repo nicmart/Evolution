@@ -1,8 +1,7 @@
 package evolution.primitive
 
 import cats.{ Monad, MonadError }
-
-import scala.util.Try
+import cats.implicits._
 
 trait TyperModule[F[_]] { self: WithAst[F] =>
   import ast._
@@ -68,25 +67,25 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       (exprWithVars, findConstraints(vars, exprWithVars)._2)
     }
 
-    def unify(constraints: Constraints): Either[String, Subst] =
+    def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Substitution] =
       constraints.constraints match {
-        case Nil => Right(Subst.empty)
+        case Nil => Substitution.empty.pure[M]
         case head :: tail =>
           head match {
-            case Constraint(a, b) if a == b => unify(Constraints(tail))
+            case Constraint(a, b) if a == b => unify[M](Constraints(tail))
             case Constraint(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
-              val substituteVar = Subst(x -> t)
+              val substituteVar = Substitution(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
-              unify(constraints2).map(_.compose(substituteVar))
+              unify[M](constraints2).map(_.compose(substituteVar))
             case Constraint(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
-              val substituteVar = Subst(x -> t)
+              val substituteVar = Substitution(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
-              unify(constraints2).map(_.compose(substituteVar))
+              unify[M](constraints2).map(_.compose(substituteVar))
             case Constraint(Type.Evo(a), Type.Evo(b)) =>
-              unify(Constraints(a -> b).merge(Constraints(tail)))
+              unify[M](Constraints(a -> b).merge(Constraints(tail)))
             case Constraint(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
-              unify(Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
-            case _ => Left(s"$head constraint can't be unified")
+              unify[M](Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
+            case _ => s"$head constraint can't be unified".raiseError[M, Substitution]
           }
       }
 
@@ -261,32 +260,34 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     case class Assignment(variable: String, tpe: Type)
 
-    case class Subst(assignments: List[Assignment]) {
+    case class Substitution(assignments: List[Assignment]) {
       def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
       def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
-      def compose(s2: Subst): Subst = Subst(substitute(s2).assignments ++ assignments)
-      def merge[M[_]](s2: Subst)(implicit M: MonadError[M, String]): M[Subst] = {
+      def compose(s2: Substitution): Substitution = Substitution(substitute(s2).assignments ++ assignments)
+      def merge[M[_]](s2: Substitution)(implicit M: MonadError[M, String]): M[Substitution] = {
         val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
         val agree = commonVars.forall { variable =>
           substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
         }
-        if (agree) M.pure(Subst(assignments ++ s2.assignments))
+        if (agree) M.pure(Substitution(assignments ++ s2.assignments))
         else M.raiseError("Merge has failed")
       }
     }
 
-    object Subst {
-      def apply(assignments: (String, Type)*): Subst = Subst(assignments.toList.map { case (s, t) => Assignment(s, t) })
-      val empty: Subst = Subst(Nil)
+    object Substitution {
+      def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
+        case (s, t) => Assignment(s, t)
+      })
+      val empty: Substitution = Substitution(Nil)
     }
 
     trait CanBeSubstituted[T] {
-      def substitute(s: Subst, t: T): T
+      def substitute(s: Substitution, t: T): T
     }
 
     object CanBeSubstituted {
       implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
-        def substitute(s: Subst, t: Type): Type = t match {
+        def substitute(s: Substitution, t: Type): Type = t match {
           case Type.Var(name)       => s.lookup(name).getOrElse(t)
           case Type.Evo(inner)      => Type.Evo(substitute(s, inner))
           case Type.Arrow(from, to) => Type.Arrow(substitute(s, from), substitute(s, to))
@@ -295,30 +296,30 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       }
 
       implicit val assignment: CanBeSubstituted[Assignment] = new CanBeSubstituted[Assignment] {
-        def substitute(s: Subst, a: Assignment): Assignment = a.copy(tpe = s.substitute(a.tpe))
+        def substitute(s: Substitution, a: Assignment): Assignment = a.copy(tpe = s.substitute(a.tpe))
       }
 
-      implicit val subst: CanBeSubstituted[Subst] = new CanBeSubstituted[Subst] {
-        def substitute(s1: Subst, s2: Subst): Subst = Subst(s1.substitute(s2.assignments))
+      implicit val subst: CanBeSubstituted[Substitution] = new CanBeSubstituted[Substitution] {
+        def substitute(s1: Substitution, s2: Substitution): Substitution = Substitution(s1.substitute(s2.assignments))
       }
 
       implicit def list[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[List[T]] =
         new CanBeSubstituted[List[T]] {
-          def substitute(s1: Subst, ts: List[T]): List[T] = ts.map(s1.substitute[T])
+          def substitute(s1: Substitution, ts: List[T]): List[T] = ts.map(s1.substitute[T])
         }
 
       implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
-        def substitute(s: Subst, ast: AST): AST =
+        def substitute(s: Substitution, ast: AST): AST =
           AST.transformRecursively(ast, tree => tree.withType(s.substitute(tree.tpe)))
       }
 
       implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
-        def substitute(s: Subst, constraint: Constraint): Constraint =
+        def substitute(s: Substitution, constraint: Constraint): Constraint =
           Constraint(s.substitute(constraint.a), s.substitute(constraint.b))
       }
 
       implicit val constraints: CanBeSubstituted[Constraints] = new CanBeSubstituted[Constraints] {
-        def substitute(s: Subst, constraints: Constraints): Constraints =
+        def substitute(s: Substitution, constraints: Constraints): Constraints =
           Constraints(s.substitute(constraints.constraints))
       }
     }

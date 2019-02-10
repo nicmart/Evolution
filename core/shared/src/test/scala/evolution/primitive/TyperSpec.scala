@@ -1,5 +1,6 @@
 package evolution.primitive
 import cats.Id
+import cats.implicits._
 
 class TyperSpec extends CompilerSpecModule[Id] {
   import Typer._, ast._, AST._
