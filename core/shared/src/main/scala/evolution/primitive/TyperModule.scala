@@ -1,5 +1,7 @@
 package evolution.primitive
 
+import cats.{ Monad, MonadError }
+
 import scala.util.Try
 
 trait TyperModule[F[_]] { self: WithAst[F] =>
@@ -264,6 +266,14 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
       def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
       def compose(s2: Subst): Subst = Subst(substitute(s2).assignments ++ assignments)
+      def merge[M[_]](s2: Subst)(implicit M: MonadError[M, String]): M[Subst] = {
+        val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
+        val agree = commonVars.forall { variable =>
+          substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
+        }
+        if (agree) M.pure(Subst(assignments ++ s2.assignments))
+        else M.raiseError("Merge has failed ")
+      }
     }
 
     object Subst {
