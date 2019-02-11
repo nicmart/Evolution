@@ -10,8 +10,19 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
   object Typer {
 
-    type TypeInference[A] = State[TypeVars, A]
-    def newVar: TypeInference[Type.Var] = State(_.withNext(identity))
+    type TypeInference[A] = State[TypeInference.State, A]
+
+    object TypeInference {
+      case class State(vars: TypeVars, subst: Substitution)
+      val empty = State(TypeVars.empty, Substitution.empty)
+      implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
+        def evaluate: T = ti.runA(TypeInference.empty).value
+      }
+    }
+
+    def newVar: TypeInference[Type.Var] = State { s =>
+      (s.copy(vars = s.vars.next), s.vars.current)
+    }
 
     /**
      * Traverse the AST and assign type variables to each expression.
@@ -68,13 +79,11 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       }
     }
 
-    def assignVarsAndFindConstraints(expr: AST): (AST, Constraints) = {
-      val state = for {
+    def assignVarsAndFindConstraints(expr: AST): TypeInference[(AST, Constraints)] =
+      for {
         exprWithVars <- assignVars(expr)
         constraints <- findConstraints(exprWithVars)
       } yield (exprWithVars, constraints)
-      state.runA(TypeVars.empty).value
-    }
 
     def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Substitution] =
       constraints.constraints match {
@@ -355,28 +364,8 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     }
 
     class TypeVars(total: Int) {
-      def withNext[T](f: Type.Var => T): (TypeVars, T) =
-        (new TypeVars(total + 1), f(Type.Var(s"T$total")))
-
-      def withNext2[T](f: (Type.Var, Type.Var) => T): (TypeVars, T) = {
-        val (vars1, var1) = withNext(identity)
-        val (vars2, var2) = vars1.withNext(identity)
-        (vars2, f(var1, var2))
-      }
-
-      def withNext3[T](f: (Type.Var, Type.Var, Type.Var) => T): (TypeVars, T) = {
-        val (vars1, var1) = withNext(identity)
-        val (vars2, var2) = vars1.withNext(identity)
-        val (vars3, var3) = vars2.withNext(identity)
-        (vars3, f(var1, var2, var3))
-      }
-
-      def traverse[A, B](ts: List[A])(f: (TypeVars, A) => (TypeVars, B)): (TypeVars, List[B]) =
-        ts.foldLeft[(TypeVars, List[B])]((this, Nil)) {
-          case ((accVars, bs), a) =>
-            val (newVars, b) = f(accVars, a)
-            (newVars, bs :+ b)
-        }
+      def current: Type.Var = Type.Var(s"T$total")
+      def next: TypeVars = new TypeVars(total + 1)
     }
 
     object TypeVars {

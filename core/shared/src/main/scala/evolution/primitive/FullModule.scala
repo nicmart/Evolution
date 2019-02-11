@@ -20,7 +20,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      (exprWithTypeVars, constraints) = Typer.assignVarsAndFindConstraints(expr)
+      (exprWithTypeVars, constraints) = Typer.assignVarsAndFindConstraints(expr).evaluate
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe))
       unification <- Typer.unify(constraintsWithExpectedType)
