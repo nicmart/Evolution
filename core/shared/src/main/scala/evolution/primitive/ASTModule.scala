@@ -180,7 +180,7 @@ class ASTModule[F[_]] {
     }
     case class ClassDef(instances: List[Instance])
 
-    // example: Int is Ord, Dbl is Ord, Dbl Dbl Ord => Point Ord
+    // example: Int is Ord, Dbl is Ord, Dbl Ord => Point Ord
     ClassDef(
       List(
         Instance(Nil, Predicate("Ord", List(Type.Integer))),

@@ -1,5 +1,6 @@
 package evolution.primitive
 
+import cats.data.State
 import cats.{ Monad, MonadError }
 import cats.implicits._
 
@@ -9,35 +10,38 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
   object Typer {
 
+    type TypeInference[A] = State[TypeVars, A]
+    def newVar: TypeInference[Type.Var] = State(_.withNext(identity))
+
     /**
      * Traverse the AST and assign type variables to each expression.
      * No constraint is added at this stage
      */
-    def assignVars(vars: TypeVars, expr: AST): (TypeVars, AST) =
+    def assignVars(expr: AST): TypeInference[AST] =
       expr match {
         case _ if expr.tpe != Type.Var("") =>
-          (vars, expr)
+          State.pure(expr)
+
         case Var(name, _) =>
-          vars.withNext(expr.withType)
+          newVar.map(expr.withType)
 
         case Number(n, _) =>
-          vars.withNext(expr.withType)
+          newVar.map(expr.withType)
 
         case FuncCall(funcName, funcArgs, _) =>
-          val (typeVarsWithArgsVars, transformedArgs) =
-            vars.traverse(funcArgs)(assignVars)
-          typeVarsWithArgsVars.withNext(next => FuncCall(funcName, transformedArgs, next))
+          (funcArgs.traverse(assignVars), newVar).mapN { (transformedArgs, variable) =>
+            FuncCall(funcName, transformedArgs, variable)
+          }
 
         case Lambda(varName, lambdaBody, _) =>
-          val (vars1, typedVar) = assignVars(vars, varName)
-          val (vars2, typedBody) = assignVars(vars1, lambdaBody)
-          vars2.withNext(next => Lambda(varName.copy(tpe = typedVar.tpe), typedBody, next))
+          (assignVars(varName), assignVars(lambdaBody), newVar).mapN { (v, b, t) =>
+            Lambda(varName.copy(tpe = v.tpe), b, t)
+          }
 
         case Let(varName, value, in, _) =>
-          val (vars1, typedVar) = assignVars(vars, varName)
-          val (vars2, typedValue) = assignVars(vars1, value)
-          val (vars3, typedIn) = assignVars(vars2, in)
-          vars3.withNext(next => Let(varName.copy(tpe = typedVar.tpe), typedValue, typedIn, next))
+          (assignVars(varName), assignVars(value), assignVars(in), newVar).mapN { (tVar, tValue, tIn, tLet) =>
+            Let(varName.copy(tpe = tVar.tpe), tValue, tIn, tLet)
+          }
       }
 
     def findConstraints(typeVars: TypeVars, expr: AST): (TypeVars, Constraints) = {
@@ -63,7 +67,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     }
 
     def assignVarsAndFindConstraints(expr: AST): (AST, Constraints) = {
-      val (vars, exprWithVars) = assignVars(TypeVars.empty, expr)
+      val (vars, exprWithVars) = assignVars(expr).run(TypeVars.empty).value
       (exprWithVars, findConstraints(vars, exprWithVars)._2)
     }
 

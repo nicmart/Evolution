@@ -34,7 +34,8 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
         "constant evolution of a point" in {
           val point = AST.FuncCall(PredefinedFunction.Point, List(AST.Number("1"), AST.Number("1")))
-          val evolution = typer.assignVars(TypeVars.empty, AST.FuncCall(PredefinedFunction.Constant, List(point)))._2
+          val evolution =
+            typer.assignVars(AST.FuncCall(PredefinedFunction.Constant, List(point))).run(TypeVars.empty).value._2
           val constraints = typer.findConstraints(TypeVars.empty, evolution)._2
           val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints).right.get
@@ -50,14 +51,14 @@ class TyperSpec extends CompilerSpecModule[Id] {
             PredefinedFunction.MapCons,
             List(AST.Var("fa"), AST.Lambda(AST.Var("head"), AST.Lambda(AST.Var("tail"), AST.Var("tail")))))
 
-          val (vars1, withVars) = assignVars(TypeVars.empty, expr)
+          val (vars1, withVars) = assignVars(expr).run(TypeVars.empty).value
           val (vars2, constraints) = findConstraints(vars1, withVars)
         }
 
         "x -> point($x, $x)" in {
           val lambda =
             AST.Lambda(AST.Var("x"), AST.FuncCall(PredefinedFunction.Point, List(AST.Var("x"), AST.Var("x"))))
-          val (vars1, typed) = typer.assignVars(TypeVars.empty, lambda)
+          val (vars1, typed) = typer.assignVars(lambda).run(TypeVars.empty).value
           typer.findConstraints(vars1, typed)._2 shouldBe Constraints.empty
         }
       }
