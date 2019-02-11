@@ -44,31 +44,36 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
       }
 
-    def findConstraints(typeVars: TypeVars, expr: AST): (TypeVars, Constraints) = {
-      val (vars1, constraints1) = expr match {
-        case Var(_, _)              => (typeVars, Constraints.empty)
-        case fc @ FuncCall(_, _, _) => findConstraintsOfPredefinedFunctionCall(typeVars, fc)
+    def findConstraints(expr: AST): TypeInference[Constraints] = {
+      val nodeConstraints: TypeInference[Constraints] = expr match {
+        case Var(_, _)              => State.pure(Constraints.empty)
+        case fc @ FuncCall(_, _, _) => findConstraintsOfPredefinedFunctionCall(fc)
         case Lambda(variable, lambdaExpr, tpe) =>
           val arrowConstraint = Constraints(tpe -> Type.Arrow(variable.tpe, lambdaExpr.tpe))
           val variableConstraints =
             Constraints(varUsagesIn(variable.name, lambdaExpr).map(u => u.tpe -> variable.tpe): _*)
-          (typeVars, arrowConstraint.merge(variableConstraints))
+          arrowConstraint.merge(variableConstraints).pure[TypeInference]
         case Let(variable, value, in, tpe) =>
-          (
-            typeVars,
-            Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
-              .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe))
-          )
-        case Number(n, tpe) => (typeVars, Constraints.empty)
+          Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
+            .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe))
+            .pure[TypeInference]
+
+        case Number(n, tpe) => Constraints.empty.pure[TypeInference]
         case _              => ???
       }
-      val (vars2, constraints2) = vars1.traverse(expr.children)(findConstraints)
-      (vars2, constraints1.merge(constraints2))
+
+      val childrenConstraints = expr.children.traverse(findConstraints)
+      (nodeConstraints, childrenConstraints).mapN { (n, c) =>
+        n.merge(c)
+      }
     }
 
     def assignVarsAndFindConstraints(expr: AST): (AST, Constraints) = {
-      val (vars, exprWithVars) = assignVars(expr).run(TypeVars.empty).value
-      (exprWithVars, findConstraints(vars, exprWithVars)._2)
+      val state = for {
+        exprWithVars <- assignVars(expr)
+        constraints <- findConstraints(exprWithVars)
+      } yield (exprWithVars, constraints)
+      state.runA(TypeVars.empty).value
     }
 
     def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Substitution] =
@@ -93,50 +98,72 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
       }
 
-    private def findConstraintsOfPredefinedFunctionCall(typeVars: TypeVars, func: FuncCall): (TypeVars, Constraints) =
+    private def findConstraintsOfPredefinedFunctionCall(func: FuncCall): TypeInference[Constraints] =
       (func.funcId, func.args) match {
+
         case (Point, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Point, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl).pure[TypeInference]
+
         case (X, p :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point))
+          Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point).pure[TypeInference]
+
         case (Y, p :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point))
+          Constraints(func.tpe -> Type.Dbl, p.tpe -> Type.Point).pure[TypeInference]
+
         case (Floor, d :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Integer, d.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Integer, d.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Add, x :: y :: Nil) =>
-          (typeVars, Constraints(x.tpe -> y.tpe, func.tpe -> x.tpe))
+          Constraints(x.tpe -> y.tpe, func.tpe -> x.tpe).pure[TypeInference]
+
         case (Div, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Exp, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Inverse, x :: Nil) =>
-          (typeVars, Constraints(x.tpe -> func.tpe))
+          Constraints(x.tpe -> func.tpe).pure[TypeInference]
+
         case (Multiply, x :: y :: Nil) =>
-          (typeVars, Constraints(x.tpe -> Type.Dbl, y.tpe -> func.tpe))
+          Constraints(x.tpe -> Type.Dbl, y.tpe -> func.tpe).pure[TypeInference]
+
         case (Cos, x :: Nil) =>
-          (typeVars, Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl))
+          Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Sin, x :: Nil) =>
-          (typeVars, Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl))
+          Constraints(x.tpe -> Type.Dbl, func.tpe -> Type.Dbl).pure[TypeInference]
+
         case (PI, Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Mod, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Dbl, x.tpe -> Type.Dbl, y.tpe -> Type.Dbl).pure[TypeInference]
+
         case (Eq, x :: y :: Nil) =>
-          (typeVars, Constraints(x.tpe -> y.tpe, func.tpe -> Type.Bool))
+          Constraints(x.tpe -> y.tpe, func.tpe -> Type.Bool).pure[TypeInference]
+
         case (If, x :: y :: z :: Nil) =>
-          (typeVars, Constraints(x.tpe -> Type.Bool, y.tpe -> z.tpe, func.tpe -> y.tpe))
+          Constraints(x.tpe -> Type.Bool, y.tpe -> z.tpe, func.tpe -> y.tpe).pure[TypeInference]
+
         case (Fix, f :: Nil) =>
-          (typeVars, Constraints(f.tpe -> Type.Arrow(func.tpe, func.tpe)))
+          Constraints(f.tpe -> Type.Arrow(func.tpe, func.tpe)).pure[TypeInference]
+
         case (App, f :: x :: Nil) =>
-          (typeVars, Constraints(f.tpe -> Type.Arrow(x.tpe, func.tpe)))
+          Constraints(f.tpe -> Type.Arrow(x.tpe, func.tpe)).pure[TypeInference]
+
         case (Empty, Nil) =>
-          typeVars.withNext(v => Constraints(func.tpe -> Type.Evo(v)))
-        case (Cons, x :: y :: Nil) => // TODO I am not sure if we can assume transitivity and remove redundant constraints
-          (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe), func.tpe -> Type.Evo(x.tpe)))
+          newVar.map(v => Constraints(func.tpe -> Type.Evo(v)))
+
+        case (Cons, x :: y :: Nil) =>
+          Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe), func.tpe -> Type.Evo(x.tpe))
+            .pure[TypeInference]
+
         case (MapEmpty, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> x.tpe, func.tpe -> y.tpe, x.tpe -> y.tpe))
+          Constraints(func.tpe -> x.tpe, func.tpe -> y.tpe, x.tpe -> y.tpe).pure[TypeInference]
+
         case (MapCons, x :: f :: Nil) =>
-          typeVars.withNext2 { (a, b) =>
+          (newVar, newVar).mapN { (a, b) =>
             Constraints(
               x.tpe -> Type.Evo(a),
               func.tpe -> Type.Evo(b),
@@ -145,48 +172,49 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
 
         case (Cartesian, x :: y :: Nil) =>
-          (
-            typeVars,
-            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
-          )
+          Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
+            .pure[TypeInference]
+
         case (Polar, x :: y :: Nil) =>
-          (
-            typeVars,
-            Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
-          )
+          Constraints(func.tpe -> Type.Evo(Type.Point), x.tpe -> Type.Evo(Type.Dbl), y.tpe -> Type.Evo(Type.Dbl))
+            .pure[TypeInference]
+
         case (Constant, x :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe)))
+          Constraints(func.tpe -> Type.Evo(x.tpe)).pure[TypeInference]
+
         case (Integrate, x :: y :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe))) // Here I omitted the redundant condition)
+          Constraints(func.tpe -> Type.Evo(x.tpe), y.tpe -> Type.Evo(x.tpe)).pure[TypeInference]
+
         case (Solve1, eq :: x :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Evo(x.tpe), eq.tpe -> Type.Evo(Type.Arrow(x.tpe, x.tpe))))
+          Constraints(func.tpe -> Type.Evo(x.tpe), eq.tpe -> Type.Evo(Type.Arrow(x.tpe, x.tpe))).pure[TypeInference]
+
         case (Solve2, eq :: x :: y :: Nil) =>
-          (
-            typeVars,
-            Constraints(
-              func.tpe -> Type.Evo(x.tpe),
-              x.tpe -> y.tpe,
-              eq.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))
-            )
-          )
+          Constraints(
+            func.tpe -> Type.Evo(x.tpe),
+            x.tpe -> y.tpe,
+            eq.tpe -> Type.Evo(Type.Arrow(x.tpe, Type.Arrow(x.tpe, x.tpe)))
+          ).pure[TypeInference]
+
         case (Concat, x :: y :: Nil) => // TODO gen new vars
-          typeVars.withNext { a =>
+          newVar.map { a =>
             Constraints(
               x.tpe -> Type.Evo(a),
               y.tpe -> Type.Evo(a),
               func.tpe -> Type.Evo(a)
             )
           }
+
         case (Map, x :: f :: Nil) =>
-          typeVars.withNext2 { (a, b) =>
+          (newVar, newVar).mapN { (a, b) =>
             Constraints(
               x.tpe -> Type.Evo(a),
               func.tpe -> Type.Evo(b),
               f.tpe -> Type.Arrow(a, b)
             )
           }
+
         case (FlatMap, x :: f :: Nil) =>
-          typeVars.withNext2 { (a, b) =>
+          (newVar, newVar).mapN { (a, b) =>
             Constraints(
               x.tpe -> Type.Evo(a),
               func.tpe -> Type.Evo(b),
@@ -194,7 +222,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             )
           }
         case (Take, n :: e :: Nil) =>
-          typeVars.withNext { a =>
+          newVar.map { a =>
             Constraints(
               n.tpe -> Type.Integer,
               e.tpe -> Type.Evo(a),
@@ -203,7 +231,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
 
         case (ZipWith, a :: b :: f :: Nil) =>
-          typeVars.withNext3 { (typeOfA, typeOfB, typeOfResult) =>
+          (newVar, newVar, newVar).mapN { (typeOfA, typeOfB, typeOfResult) =>
             Constraints(
               a.tpe -> Type.Evo(typeOfA),
               b.tpe -> Type.Evo(typeOfB),
@@ -213,16 +241,14 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
 
         case (Uniform, from :: to :: Nil) =>
-          (typeVars, Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl))
+          Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl).pure[TypeInference]
 
         case (UniformDiscrete, from :: to :: step :: Nil) =>
-          (
-            typeVars,
-            Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl, step.tpe -> Type.Dbl)
-          )
+          Constraints(func.tpe -> Type.Evo(Type.Dbl), from.tpe -> Type.Dbl, to.tpe -> Type.Dbl, step.tpe -> Type.Dbl)
+            .pure[TypeInference]
 
         case (UniformChoice, vars) =>
-          (typeVars, Constraints(vars.map(v => func.tpe -> Type.Evo(v.tpe)): _*))
+          Constraints(vars.map(v => func.tpe -> Type.Evo(v.tpe)): _*).pure[TypeInference]
       }
 
     def varUsagesIn(varName: String, expr: AST): List[AST] =

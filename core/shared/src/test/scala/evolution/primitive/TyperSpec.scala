@@ -25,7 +25,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
         "point" in {
           forAll(genNumber, genNumber) { (x, y) =>
             val p = AST.FuncCall(PredefinedFunction.Point, List(x, y), Type.Var("X"))
-            typer.findConstraints(TypeVars.empty, p)._2 shouldBe Constraints(
+            typer.findConstraints(p).runA(TypeVars.empty).value shouldBe Constraints(
               p.tpe -> Type.Point,
               x.tpe -> Type.Dbl,
               y.tpe -> Type.Dbl)
@@ -36,7 +36,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
           val point = AST.FuncCall(PredefinedFunction.Point, List(AST.Number("1"), AST.Number("1")))
           val evolution =
             typer.assignVars(AST.FuncCall(PredefinedFunction.Constant, List(point))).run(TypeVars.empty).value._2
-          val constraints = typer.findConstraints(TypeVars.empty, evolution)._2
+          val constraints = typer.findConstraints(evolution).runA(TypeVars.empty).value
           val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints).right.get
           unifier.substitute(evolution.tpe) shouldBe Type.Evo(Type.Point)
@@ -51,15 +51,13 @@ class TyperSpec extends CompilerSpecModule[Id] {
             PredefinedFunction.MapCons,
             List(AST.Var("fa"), AST.Lambda(AST.Var("head"), AST.Lambda(AST.Var("tail"), AST.Var("tail")))))
 
-          val (vars1, withVars) = assignVars(expr).run(TypeVars.empty).value
-          val (vars2, constraints) = findConstraints(vars1, withVars)
+          assignVars(expr).flatMap(findConstraints).runA(TypeVars.empty).value
         }
 
         "x -> point($x, $x)" in {
           val lambda =
             AST.Lambda(AST.Var("x"), AST.FuncCall(PredefinedFunction.Point, List(AST.Var("x"), AST.Var("x"))))
-          val (vars1, typed) = typer.assignVars(lambda).run(TypeVars.empty).value
-          typer.findConstraints(vars1, typed)._2 shouldBe Constraints.empty
+          assignVars(lambda).flatMap(findConstraints).runA(TypeVars.empty).value shouldBe Constraints.empty
         }
       }
     }
