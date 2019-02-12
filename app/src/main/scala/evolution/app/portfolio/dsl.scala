@@ -37,15 +37,16 @@ object dsl extends DrawingDefinition[Point] {
       val stringSnapshot =
         config2Snapshot.zoomState[String](config2 => config2.serialisedExpr) { serialized => previousConfig =>
           {
-            println("parsing inside configComponent")
-            Config.from(serialized) match {
-              case Right(cfg) =>
-                println(s"Parsed expression: ${cfg.expr}")
-                cfg
-              case Left(error) =>
-                println(error)
-                previousConfig
-            }
+            if (serialized == previousConfig.serialisedExpr) previousConfig
+            else
+              Config.from(serialized) match {
+                case Right(cfg) =>
+                  println(s"Parsed expression: ${cfg.expr}")
+                  cfg
+                case Left(error) =>
+                  println(error)
+                  previousConfig
+              }
           }
         }
 

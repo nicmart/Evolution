@@ -14,26 +14,26 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val precedence0: Parser[AST] =
       P(lambdaOrLet | precedence1)
 
-    lazy val precedence1Ops: Parser[PredefinedFunction] =
-      P("+").map(_ => PredefinedFunction.Add)
+    lazy val precedence1Ops: Parser[PredefinedConstant] =
+      P("+").map(_ => PredefinedConstant.Add)
 
     lazy val precedence1: Parser[AST] =
       P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
-    lazy val precedence2Ops: Parser[PredefinedFunction] =
-      P("*").map(_ => PredefinedFunction.Multiply) |
-        P("/").map(_ => PredefinedFunction.Div) |
-        P("%").map(_ => PredefinedFunction.Mod)
+    lazy val precedence2Ops: Parser[PredefinedConstant] =
+      P("*").map(_ => PredefinedConstant.Multiply) |
+        P("/").map(_ => PredefinedConstant.Div) |
+        P("%").map(_ => PredefinedConstant.Mod)
 
     lazy val precedence2: Parser[AST] =
       P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
-    lazy val precedence3Ops: Parser[PredefinedFunction] =
-      P("^").map(_ => PredefinedFunction.Exp)
+    lazy val precedence3Ops: Parser[PredefinedConstant] =
+      P("^").map(_ => PredefinedConstant.Exp)
 
     lazy val precedence3: Parser[AST] =
       P(appOrFactor ~ (precedence3Ops ~/ appOrFactor).rep).map {
@@ -41,7 +41,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       }
 
     lazy val factor: Parser[AST] =
-      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | funcCall)
+      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | predefinedConstant)
 
     lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ args ~ ")").?).map {
@@ -55,15 +55,9 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val variable: Parser[AST.Var] =
       P("$" ~~ identifier).map(AST.Var(_))
 
-    lazy val funcCall: Parser[AST] =
-      func0Call | P(functionName ~ "(" ~/ args ~ ")").map { case (func, args) => AST.FuncCall(func, args) }
-
-    // Functions with 0 arity
-    lazy val func0Call: Parser[AST] =
-      function0Name.map(predefinedFunc => AST.FuncCall(predefinedFunc, Nil))
-
+    // TODO can we parse the operator directly into a constant?
     lazy val unaryPrefixOp: Parser[AST] =
-      P("-" ~ factor).map(e => AST.FuncCall(PredefinedFunction.Inverse, List(e)))
+      P("-" ~ appOrFactor).map(e => AST.App(AST.Const(PredefinedConstant.Inverse), e))
 
     lazy val lambdaOrLet: Parser[AST] = {
       def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ precedence0).map { expr =>
@@ -89,26 +83,24 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
-    lazy val functionName: Parser[PredefinedFunction] = identifier
-      .filter(id => PredefinedFunction.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
-      .map(PredefinedFunction.withNameInsensitive)
-
-    lazy val function0Name: Parser[PredefinedFunction] =
-      functionName.filter(PredefinedFunction.functions0.contains)
+    lazy val predefinedConstant: Parser[AST.Const] = identifier
+      .filter(id => PredefinedConstant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
+      .map(PredefinedConstant.withNameInsensitive)
+      .map(AST.Const(_))
 
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-    def evalAssocBinaryOp(head: AST, tail: List[(PredefinedFunction, AST)]): AST =
+    def evalAssocBinaryOp(head: AST, tail: List[(PredefinedConstant, AST)]): AST =
       tail match {
         case Nil                        => head
-        case (op, tailHead) :: tailTail => AST.FuncCall(op, List(head, evalAssocBinaryOp(tailHead, tailTail)))
+        case (op, tailHead) :: tailTail => AST.App(AST.App(AST.Const(op), head), evalAssocBinaryOp(tailHead, tailTail))
       }
 
     def evalApp(f: AST, args: List[AST]): AST =
       args match {
         case Nil                => f
-        case argHead :: argTail => evalApp(AST.FuncCall(PredefinedFunction.App, List(f, argHead)), argTail)
+        case argHead :: argTail => evalApp(AST.App(f, argHead), argTail)
       }
 
     object numbers {

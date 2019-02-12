@@ -16,34 +16,38 @@ class ASTModule[F[_]] {
     final type Out = tpe.Out
 
     def withType(tpe: Type): AST = this match {
-      case AST.Var(name, _)                => AST.Var(name, tpe)
-      case AST.FuncCall(funcName, args, _) => AST.FuncCall(funcName, args, tpe)
-      case AST.Lambda(varName, expr, _)    => AST.Lambda(varName, expr, tpe)
-      case AST.Let(varName, expr, in, _)   => AST.Let(varName, expr, in, tpe)
-      case AST.Number(n, _)                => AST.Number(n, tpe)
+      case AST.Var(name, _)              => AST.Var(name, tpe)
+      case AST.Const(id, _)              => AST.Const(id, tpe)
+      case AST.App(f, x, _)              => AST.App(f, x, tpe)
+      case AST.Lambda(varName, expr, _)  => AST.Lambda(varName, expr, tpe)
+      case AST.Let(varName, expr, in, _) => AST.Let(varName, expr, in, tpe)
+      case AST.Number(n, _)              => AST.Number(n, tpe)
     }
 
     def children: List[AST] = this match {
-      case AST.Var(name, _)                => Nil
-      case AST.FuncCall(funcName, args, _) => args
-      case AST.Lambda(varName, expr, _)    => List(varName, expr)
-      case AST.Let(varName, expr, in, _)   => List(varName, expr, in)
-      case AST.Number(n, _)                => Nil
+      case AST.Lambda(varName, expr, _)  => List(varName, expr)
+      case AST.Let(varName, expr, in, _) => List(varName, expr, in)
+      case AST.App(f, x, _)              => List(f, x)
+      case _                             => Nil
     }
   }
 
   object AST {
     final case class Var(name: String, tpe: Type = Type.Var("")) extends AST
-    final case class FuncCall(funcId: PredefinedFunction, args: List[AST], tpe: Type = Type.Var("")) extends AST
     final case class Lambda(varName: AST.Var, expr: AST, tpe: Type = Type.Var("")) extends AST
+    final case class App(f: AST, x: AST, tpe: Type = Type.Var("")) extends AST
+    final case class Const(id: PredefinedConstant, tpe: Type = Type.Var("")) extends AST
     final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
     final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
 
+    def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
+    def App3(f: AST, x: AST, y: AST, z: AST): AST = App(App(App(f, x), y), z)
+
     // Note: f is not (and can't) be applied to variables
     def transformChildren(tree: AST, f: AST => AST): AST = tree match {
-      case FuncCall(funcId, args, tpe) => FuncCall(funcId, args.map(f), tpe)
       case Lambda(varName, expr, tpe)  => Lambda(varName, f(expr), tpe)
       case Let(varName, expr, in, tpe) => Let(varName, f(expr), f(in), tpe)
+      case App(g, x, tpe)              => App(f(g), f(x), tpe)
       case _                           => tree
     }
 
@@ -51,67 +55,76 @@ class ASTModule[F[_]] {
       f(transformChildren(tree, transformRecursively(_, f)))
   }
 
-  abstract sealed class PredefinedFunction extends EnumEntry
+  // TODO this name will evolve to "Constants"
+  abstract sealed class PredefinedConstant(val scheme: Type) extends EnumEntry
+  abstract sealed class PredefinedFunction(scheme: Type) extends PredefinedConstant(scheme)
 
-  object PredefinedFunction extends Enum[PredefinedFunction] {
-    val values: immutable.IndexedSeq[PredefinedFunction] = findValues
-    val functions0: List[PredefinedFunction] = List(Empty, PI)
-    val nonFunctions0: List[PredefinedFunction] = values.toList.filter(!functions0.contains(_))
+  object PredefinedConstant extends Enum[PredefinedConstant] {
+    import Type._
+    val values: immutable.IndexedSeq[PredefinedConstant] = findValues
+    val functions0: List[PredefinedConstant] = List(Empty, PI)
+    val nonFunctions0: List[PredefinedConstant] = values.toList.filter(!functions0.contains(_))
 
     // Constants
-    case object Point extends PredefinedFunction
-    case object Floor extends PredefinedFunction
-    case object X extends PredefinedFunction
-    case object Y extends PredefinedFunction
-    case object Add extends PredefinedFunction
-    case object Div extends PredefinedFunction
-    case object Exp extends PredefinedFunction
-    case object Inverse extends PredefinedFunction
-    case object Multiply extends PredefinedFunction
-    case object Sin extends PredefinedFunction
-    case object Cos extends PredefinedFunction
-    case object Eq extends PredefinedFunction
-    case object If extends PredefinedFunction
-    case object PI extends PredefinedFunction
-    case object Mod extends PredefinedFunction
-
-    // Bindings
-    case object Fix extends PredefinedFunction
-    case object App extends PredefinedFunction
-    //case object Let extends PredefinedFunction
+    case object Point extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point)
+    case object Floor extends PredefinedConstant(Dbl =>: Integer)
+    case object X extends PredefinedConstant(Type.Point =>: Dbl)
+    case object Y extends PredefinedConstant(Type.Point =>: Dbl)
+    case object Add extends PredefinedConstant(Var("T") =>: Var("T") =>: Var("T"))
+    case object Div extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
+    case object Exp extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
+    case object Inverse extends PredefinedConstant(Var("T") =>: Var("T"))
+    case object Multiply extends PredefinedConstant(Dbl =>: Var("T") =>: Var("T"))
+    case object Sin extends PredefinedConstant(Dbl =>: Dbl)
+    case object Cos extends PredefinedConstant(Dbl =>: Dbl)
+    case object Eq extends PredefinedConstant(Var("T") =>: Var("T") =>: Bool)
+    case object If extends PredefinedConstant(Bool =>: Var("T") =>: Var("T") =>: Var("T"))
+    case object PI extends PredefinedConstant(Dbl)
+    case object Mod extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
 
     // Chain
-    case object Empty extends PredefinedFunction
-    case object Cons extends PredefinedFunction
-    case object MapEmpty extends PredefinedFunction
-    case object MapCons extends PredefinedFunction
+    case object Empty extends PredefinedConstant(Var("T"))
+    case object Cons extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object MapEmpty extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object MapCons
+        extends PredefinedConstant(
+          Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
 
     // Derived
-    case object Cartesian extends PredefinedFunction
-    case object Polar extends PredefinedFunction
-    case object Constant extends PredefinedFunction
-    case object Integrate extends PredefinedFunction
-    case object Solve1 extends PredefinedFunction
-    case object Solve2 extends PredefinedFunction
-    case object Concat extends PredefinedFunction
-    case object Map extends PredefinedFunction
-    case object FlatMap extends PredefinedFunction
-    case object Take extends PredefinedFunction
-    case object ZipWith extends PredefinedFunction
+    case object Cartesian extends PredefinedConstant(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))
+    case object Polar extends PredefinedConstant(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))
+    case object Constant extends PredefinedConstant(Var("T") =>: Evo(Var("T")))
+    case object Integrate extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object Solve1 extends PredefinedConstant(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))
+    case object Solve2
+        extends PredefinedConstant(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+    case object Concat extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object Map extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))
+    case object FlatMap extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
+    case object Take extends PredefinedConstant(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object ZipWith
+        extends PredefinedConstant(
+          Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))
 
     // Distribution
-    case object Uniform extends PredefinedFunction
-    case object UniformDiscrete extends PredefinedFunction
-    case object UniformChoice extends PredefinedFunction
+    case object Uniform extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl))
+    case object UniformDiscrete extends PredefinedConstant(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl))
+    case object UniformChoice extends PredefinedConstant(Lst(Var("T")) =>: Evo(Var("T")))
+
+    // functions-only
+    case object Fix extends PredefinedFunction((Var("T") =>: Var("T")) =>: Var("T"))
   }
 
   sealed trait Type {
     type Out
     def children: List[Type] = this match {
       case Type.Evo(inner)      => List(inner)
+      case Type.Lst(inner)      => List(inner)
       case Type.Arrow(from, to) => List(from, to)
       case _                    => Nil
     }
+
+    def =>:(from: Type): Type = Type.Arrow(from, this)
   }
 
   object Type {
@@ -119,11 +132,13 @@ class ASTModule[F[_]] {
       type Out = Nothing
       override def toString: String = name
     }
+
     final case object Integer extends Type { type Out = Int }
     final case object Dbl extends Type { type Out = Double }
     final case object Point extends Type { type Out = geometry.Point }
     final case object Bool extends Type { type Out = Boolean }
     final case class Evo(inner: Type) extends Type { type Out = F[inner.type] }
+    final case class Lst(inner: Type) extends Type { type Out = List[inner.type] }
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
 
     def group(t: Type): Either[String, Group[t.Out]] = {
@@ -149,7 +164,7 @@ class ASTModule[F[_]] {
         case Type.Integer => Right(Eq[Int])
         case Type.Dbl     => Right(Eq[Double])
         case Type.Point   => Right(Eq[Point])
-        case _            => Left(s"Unable to find a vector space for type $t")
+        case _            => Left(s"Unable to find an eq typeclass for type $t")
       }
     }.asInstanceOf[Either[String, Eq[t.Out]]]
 

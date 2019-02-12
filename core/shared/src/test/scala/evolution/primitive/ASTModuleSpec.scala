@@ -11,10 +11,10 @@ class ASTModuleSpec extends CompilerSpecModule[Id] {
         case tree             => tree
       }
 
-      val expression = AST.FuncCall(PredefinedFunction.Add, List(AST.Number("1"), AST.Number("2")))
+      val expression = AST.App2(AST.Const(PredefinedConstant.Add), AST.Number("1"), AST.Number("2"))
       val transformed = AST.transformRecursively(expression, changeNumbers)
 
-      transformed shouldBe AST.FuncCall(PredefinedFunction.Add, List(AST.Number("1 1"), AST.Number("2 2")))
+      transformed shouldBe AST.App2(AST.Const(PredefinedConstant.Add), AST.Number("1 1"), AST.Number("2 2"))
     }
   }
 }

@@ -1,4 +1,5 @@
 package evolution.primitive
+
 import evolution.primitive.algebra.parser.ParserConfig
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -27,8 +28,8 @@ trait ASTArbitraries[F[_]] { self: WithAst[F] =>
     body <- genLeafExpr
   } yield s"$id -> $body"
 
-  def genPredefinedFunc: Gen[PredefinedFunction] =
-    Gen.oneOf(PredefinedFunction.nonFunctions0)
+  def genPredefinedFunc: Gen[PredefinedConstant] =
+    Gen.oneOf(PredefinedConstant.nonFunctions0)
 
   def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.Number(d.toString)))
   def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))

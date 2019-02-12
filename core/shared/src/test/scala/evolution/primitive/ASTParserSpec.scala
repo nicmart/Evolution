@@ -5,7 +5,7 @@ import org.scalacheck.{ Gen, Shrink }
 class ASTParserSpec extends CompilerSpecModule[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   import ast._
-  import PredefinedFunction._
+  import PredefinedConstant._
   import AST._
 
   "The expression parser" - {
@@ -24,8 +24,14 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
 
       "additions" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a + $b") shouldBe AST.FuncCall(Add, List(unsafeParse(a), unsafeParse(b)))
+          unsafeParse(s"$a + $b") shouldBe AST.App2(AST.Const(PredefinedConstant.Add), unsafeParse(a), unsafeParse(b))
         }
+      }
+
+      "inverses" in {
+        unsafeParse("-point(0, 0)") shouldBe AST.App(
+          AST.Const(PredefinedConstant.Inverse),
+          App2(AST.Const(PredefinedConstant.Point), AST.Number("0"), AST.Number("0")))
       }
 
       "bindings" - {
@@ -40,7 +46,7 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
             unsafeParse(s"$id = $expr in 1 + 2") shouldBe Let(
               Var(id),
               unsafeParse(expr),
-              FuncCall(Add, List(Number("1"), Number("2"))))
+              App2(Const(Add), Number("1"), Number("2")))
           }
         }
 
@@ -54,48 +60,43 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
 
       "multiplications" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a * $b") shouldBe AST.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b)))
+          unsafeParse(s"$a * $b") shouldBe App2(Const(Multiply), unsafeParse(a), unsafeParse(b))
         }
       }
 
       "mods" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a % $b") shouldBe AST.FuncCall(Mod, List(unsafeParse(a), unsafeParse(b)))
+          unsafeParse(s"$a % $b") shouldBe App2(Const(Mod), unsafeParse(a), unsafeParse(b))
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a * $b + $c") shouldBe AST.FuncCall(
-            Add,
-            List(AST.FuncCall(Multiply, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+          unsafeParse(s"$a * $b + $c") shouldBe AST.App2(
+            Const(Add),
+            AST.App2(Const(Multiply), unsafeParse(a), unsafeParse(b)),
+            unsafeParse(c)
           )
         }
       }
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a + $b * $c") shouldBe AST.FuncCall(
-            Add,
-            List(unsafeParse(a), AST.FuncCall(Multiply, List(unsafeParse(b), unsafeParse(c))))
+          unsafeParse(s"$a + $b * $c") shouldBe AST.App2(
+            Const(Add),
+            unsafeParse(a),
+            AST.App2(Const(Multiply), unsafeParse(b), unsafeParse(c))
           )
         }
       }
 
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"($a + $b) * $c") shouldBe AST.FuncCall(
-            Multiply,
-            List(AST.FuncCall(Add, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+          unsafeParse(s"($a + $b) * $c") shouldBe AST.App2(
+            Const(Multiply),
+            AST.App2(Const(Add), unsafeParse(a), unsafeParse(b)),
+            unsafeParse(c)
           )
-        }
-      }
-
-      "function calls" in {
-        forAll(genPredefinedFunc, genFunctionArgs) { (f, args) =>
-          val expr = s"${f.entryName}(${args.mkString(", ")})"
-          val expected = AST.FuncCall(f, args.map(unsafeParse))
-          unsafeParse(expr) shouldBe expected
         }
       }
 
@@ -124,7 +125,7 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe AST.Lambda(
             AST.Var(identifier1),
-            AST.FuncCall(Add, List(unsafeParse(expr1), unsafeParse(expr2)))
+            AST.App2(Const(Add), unsafeParse(expr1), unsafeParse(expr2))
           )
         }
       }
@@ -141,75 +142,51 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         }
       }
 
-      "Parse a complex expression: a -> b -> ($c + 2) * app($d, inverse(-1))" in {
-        val parsed = unsafeParse("a -> b -> ($c + 2) * app($d, inverse(-1))")
-        val expected =
-          AST.Lambda(
-            AST.Var("a"),
-            AST.Lambda(
-              AST.Var("b"),
-              AST.FuncCall(
-                Multiply,
-                List(
-                  AST.FuncCall(Add, List(AST.Var("c"), AST.Number("2"))),
-                  AST.FuncCall(App, List(AST.Var("d"), AST.FuncCall(Inverse, List(AST.Number("-1")))))
-                )
-              )
-            )
-          )
-        parsed shouldBe expected
-      }
-
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$$$identifier1($expr1, $expr2)") shouldBe AST.FuncCall(
-            App,
-            List(
-              AST.FuncCall(
-                App,
-                List(AST.Var(identifier1), unsafeParse(expr1))
-              ),
-              unsafeParse(expr2)
-            )
+          unsafeParse(s"$$$identifier1($expr1, $expr2)") shouldBe AST.App2(
+            AST.Var(identifier1),
+            unsafeParse(expr1),
+            unsafeParse(expr2)
           )
         }
       }
 
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
-          unsafeParse(s"($lambda)($expr)") shouldBe AST.FuncCall(
-            App,
-            List(
-              unsafeParse(lambda),
-              unsafeParse(expr)
-            )
+          unsafeParse(s"($lambda)($expr)") shouldBe AST.App(
+            unsafeParse(lambda),
+            unsafeParse(expr)
           )
         }
       }
 
       "parse exponentials" - {
         "2^3" in {
-          unsafeParse("2^3") shouldBe AST.FuncCall(Exp, List(AST.Number("2"), AST.Number("3")))
+          unsafeParse("2^3") shouldBe AST.App2(Const(Exp), AST.Number("2"), AST.Number("3"))
         }
 
         "2^3 + 1" in {
-          unsafeParse("2^3 + 1") shouldBe AST.FuncCall(
-            Add,
-            List(AST.FuncCall(Exp, List(AST.Number("2"), AST.Number("3"))), AST.Number("1"))
+          unsafeParse("2^3 + 1") shouldBe AST.App2(
+            Const(Add),
+            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3")),
+            AST.Number("1")
           )
         }
 
         "2^3 * 2" in {
-          unsafeParse("2^3 * 2") shouldBe AST.FuncCall(
-            Multiply,
-            List(AST.FuncCall(Exp, List(AST.Number("2"), AST.Number("3"))), AST.Number("2"))
+          unsafeParse("2^3 * 2") shouldBe AST.App2(
+            Const(Multiply),
+            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3")),
+            AST.Number("2")
           )
         }
 
         "2 * 2^3" in {
-          unsafeParse("2 * 2^3") shouldBe AST.FuncCall(
-            Multiply,
-            List(AST.Number("2"), AST.FuncCall(Exp, List(AST.Number("2"), AST.Number("3"))))
+          unsafeParse("2 * 2^3") shouldBe AST.App2(
+            Const(Multiply),
+            AST.Number("2"),
+            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3"))
           )
         }
       }
@@ -217,27 +194,30 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
       "parse divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a / $b + $c") shouldBe AST.FuncCall(
-              Add,
-              List(AST.FuncCall(Div, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+            unsafeParse(s"$a / $b + $c") shouldBe AST.App2(
+              Const(Add),
+              AST.App2(Const(Div), unsafeParse(a), unsafeParse(b)),
+              unsafeParse(c)
             )
           }
         }
 
         "a + b / c = a + (b / c)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a + $b / $c") shouldBe AST.FuncCall(
-              Add,
-              List(unsafeParse(a), AST.FuncCall(Div, List(unsafeParse(b), unsafeParse(c))))
+            unsafeParse(s"$a + $b / $c") shouldBe AST.App2(
+              Const(Add),
+              unsafeParse(a),
+              AST.App2(Const(Div), unsafeParse(b), unsafeParse(c))
             )
           }
         }
 
         "(a + b) / c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"($a + $b) / $c") shouldBe AST.FuncCall(
-              Div,
-              List(AST.FuncCall(Add, List(unsafeParse(a), unsafeParse(b))), unsafeParse(c))
+            unsafeParse(s"($a + $b) / $c") shouldBe AST.App2(
+              Const(Div),
+              AST.App2(Const(Add), unsafeParse(a), unsafeParse(b)),
+              unsafeParse(c)
             )
           }
         }
