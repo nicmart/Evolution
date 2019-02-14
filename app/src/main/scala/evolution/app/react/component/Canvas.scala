@@ -1,5 +1,6 @@
 package evolution.app.react.component
 
+import cats.Eval
 import evolution.app.canvas.drawer.FrameDrawer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
@@ -18,7 +19,7 @@ object Canvas {
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
     rendererState: RendererState,
-    points: Iterator[Point],
+    points: Eval[Iterator[Point]],
     onFrameDidDraw: Callback,
     running: Boolean
   )
@@ -58,7 +59,7 @@ object Canvas {
 
     def onMount(node: dom.Element, props: Props): Callback = Callback {
       props.canvasInitializer(canvas(node))
-      points = props.points
+      points = props.points.value
       start(node, props)
     }
 

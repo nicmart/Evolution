@@ -25,22 +25,22 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
         case AST.Lambda(varName, body, tpe) =>
           compile[M](body, ctx.push(varName.name)).map(Lambda(varName.name, _))
 
-        case AST.App(AST.Const(PredefinedConstant.Fix, _), x, _) =>
+        case App(PredefinedConstant.Fix, x) =>
           compile[M](x, ctx).map { compiledX =>
             expressionModule.Fix(compiledX.asInstanceOf[Expr[Any => Any]])
           }
 
-        case AST.App(AST.App(AST.Const(PredefinedConstant.Cons, _), head, _), tail, _) =>
+        case App2(PredefinedConstant.Cons, head, tail) =>
           (compile[M](head, ctx), compile[M](tail, ctx)).mapN { (head, tail) =>
             expressionModule.Cons(head.asInstanceOf[Expr[Any]], tail.asInstanceOf[Expr[F[Any]]])
           }
 
-        case AST.App(AST.App(AST.Const(PredefinedConstant.MapEmpty, _), a, _), b, _) =>
+        case App2(PredefinedConstant.MapEmpty, a, b) =>
           (compile[M](a, ctx), compile[M](b, ctx)).mapN { (compiledA, compiledB) =>
             expressionModule.MapEmpty(compiledA.asInstanceOf[Expr[F[Any]]], compiledB.asInstanceOf[Expr[F[Any]]])
           }
 
-        case AST.App(AST.App(AST.Const(PredefinedConstant.MapCons, _), a, _), f, _) =>
+        case App2(PredefinedConstant.MapCons, a, f) =>
           (compile[M](a, ctx), compile[M](f, ctx)).mapN { (compiledA, compiledF) =>
             expressionModule.MapCons(
               compiledA.asInstanceOf[Expr[F[Any]]],
@@ -153,6 +153,20 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
         case _               => M.raiseError(s"Invalid type for expression $const")
       }
     }.asInstanceOf[M[Expr[const.Out]]]
+
+    object App {
+      def unapply(arg: AST): Option[(PredefinedConstant, AST)] = arg match {
+        case AST.App(AST.Const(c, _), x, _) => Some((c, x))
+        case _                              => None
+      }
+    }
+
+    object App2 {
+      def unapply(arg: AST): Option[(PredefinedConstant, AST, AST)] = arg match {
+        case AST.App(App(c, x), y, _) => Some((c, x, y))
+        case _                        => None
+      }
+    }
   }
 
   class VarContext(vars: List[String]) {

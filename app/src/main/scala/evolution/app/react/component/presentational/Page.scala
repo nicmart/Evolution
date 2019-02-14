@@ -1,5 +1,6 @@
 package evolution.app.react.component.presentational
 
+import cats.Eval
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.{ DrawingState, RendererState }
@@ -24,7 +25,7 @@ object Page {
     running: StateSnapshot[Boolean],
     drawingContext: DrawingContext,
     rendererState: StateSnapshot[RendererState],
-    points: Iterator[Point],
+    points: Eval[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
     onRefresh: Callback,

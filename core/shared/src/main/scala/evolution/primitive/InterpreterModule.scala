@@ -13,7 +13,7 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
 
   object Interpreter {
     def interpret[T](expr: Expr[T]): Out[T] = {
-      //println(s"interpreting $expr")
+      println(s"interpreting $expr")
       expr match {
         case Dbl(d)      => Out.pure(d)
         case Integer(n)  => Out.pure(n)

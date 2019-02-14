@@ -47,7 +47,7 @@ object Conf {
     )
 
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(dsl :: rawBrownian :: drawings, brownian)
+    PointedSeq(dsl :: rawBrownian :: drawings, dsl)
 
   lazy val drawingDefinition: DrawingDefinition[Point] =
     new DrawingListDefinition(innerDrawingList)

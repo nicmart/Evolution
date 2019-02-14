@@ -1,5 +1,6 @@
 package evolution.app.react.component
 
+import cats.Eval
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
@@ -40,7 +41,7 @@ object App {
           stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           state.drawingContext,
           renderingStateSnapshot,
-          points(state.drawingContext, pageStateSnapshot.value.drawingState),
+          Eval.later(points(state.drawingContext, pageStateSnapshot.value.drawingState)),
           drawingStateSnapshot,
           state.pointRateCounter.rate.toInt,
           drawingStateSnapshot.modState(_.withNewSeed),
