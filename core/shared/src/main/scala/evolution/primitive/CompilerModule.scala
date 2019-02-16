@@ -15,14 +15,28 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
 
   object Compiler {
     import ast._
-    import PredefinedConstant._
+
     def compile[M[_]](expr: AST, ctx: VarContext)(implicit M: MonadError[M, String]): M[Expr[expr.Out]] = {
       expr match {
         case AST.Var(name, tpe) =>
           VarN(ctx.indexOf(name), name).pure[M]
+
         case fc @ AST.Const(id, tpe) => ???
+
         case AST.Lambda(varName, body, tpe) =>
           compile[M](body, ctx.push(varName.name)).map(Lambda(varName.name, _))
+
+        case AST.Let(varName, value, in, tpe) =>
+          for {
+            compiledValue <- compile[M](value, ctx)
+            compiledIn <- compile[M](in, ctx.push(varName.name))
+          } yield Let(varName.name, compiledValue, compiledIn)
+
+        case AST.Number(n, Type.Dbl) =>
+          Dbl(n.toDouble).pure[M]
+
+        case AST.Number(n, Type.Integer) =>
+          Integer(n.toInt).pure[M]
 
         case App(PredefinedConstant.Fix, x) =>
           compile[M](x, ctx).map { compiledX =>
@@ -101,38 +115,32 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
           }
 
         case App2(PredefinedConstant.Multiply, x, y) =>
-          y.tpe match {
-            // Overload * for evolutions
-            // This cannot be overloaded, due to the constraint put by the typer on k,
-            // case Type.Evo(tpe) =>
-            //   (M.fromEither(Type.vectorSpace(tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
-            //     (vs, compiledX, compiledY) =>
-            //       multEvo(compiledX.asInstanceOf[R[F[Double]]], compiledY.asInstanceOf[R[F[tpe.Out]]])(vs)
-            //   }
-            case tpe =>
-              (M.fromEither(Type.vectorSpace(y.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
-                (vs, compiledX, compiledY) =>
-                  expressionModule.Multiply(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[y.Out]])(
-                    vs)
-              }
+          (M.fromEither(Type.vectorSpace(y.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
+            (vs, compiledX, compiledY) =>
+              expressionModule.Multiply(compiledX.asInstanceOf[Expr[Double]], compiledY.asInstanceOf[Expr[y.Out]])(vs)
           }
 
         case App(PredefinedConstant.Cos, x) =>
           compile[M](x, ctx).map(compiledX => expressionModule.Cos(compiledX.asInstanceOf[Expr[Double]]))
+
         case App(PredefinedConstant.Sin, x) =>
           compile[M](x, ctx).map(compiledX => expressionModule.Sin(compiledX.asInstanceOf[Expr[Double]]))
+
         case AST.Const(PredefinedConstant.PI, _) =>
           M.pure(expressionModule.Dbl(Math.PI))
+
         case App2(PredefinedConstant.Mod, x, y) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (cx, cy) =>
             expressionModule.Mod(cx.asInstanceOf[Expr[Double]], cy.asInstanceOf[Expr[Double]])
           }
+
         case App2(PredefinedConstant.Eq, x, y) =>
           for {
             compiledX <- compile[M](x, ctx)
             compiledY <- compile[M](y, ctx)
             eqTypeClass <- M.fromEither(Type.eqTypeClass(x.tpe))
           } yield expressionModule.Equals[x.Out](compiledX, compiledY.asInstanceOf[Expr[x.Out]])(eqTypeClass)
+
         case App3(PredefinedConstant.If, x, y, z) =>
           (compile[M](x, ctx), compile[M](y, ctx), compile[M](z, ctx)).mapN { (compiledX, compiledY, compiledZ) =>
             expressionModule.IfThen(
@@ -140,8 +148,10 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
               compiledY,
               compiledZ.asInstanceOf[Expr[y.Out]])
           }
+
         case AST.Const(PredefinedConstant.Empty, _) =>
           expressionModule.Empty().pure[M]
+
         case App2(PredefinedConstant.Cartesian, x, y) =>
           (compile[M](x, ctx), compile[M](y, ctx)).mapN { (compiledX, compiledY) =>
             cartesian(compiledX.asInstanceOf[Expr[F[Double]]], compiledY.asInstanceOf[Expr[F[Double]]])
@@ -152,12 +162,14 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
           }
         case App(PredefinedConstant.Constant, x) =>
           compile[M](x, ctx).map(compiledX => constant(compiledX.asInstanceOf[Expr[Any]]))
+
         case App2(PredefinedConstant.Integrate, x, y) =>
           for {
             compiledX <- compile[M](x, ctx)
             compiledY <- compile[M](y, ctx)
             vs <- M.fromEither(Type.vectorSpace(x.tpe))
           } yield integrate[x.Out](compiledX, compiledY.asInstanceOf[Expr[F[x.Out]]])(vs)
+
         case App2(PredefinedConstant.Solve1, x, y) =>
           for {
             compiledX <- compile[M](x, ctx)
@@ -165,6 +177,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
             vs <- M.fromEither(Type.vectorSpace(y.tpe))
           } yield
             solve1[y.Out](compiledX.asInstanceOf[Expr[F[y.Out => y.Out]]], compiledY.asInstanceOf[Expr[y.Out]])(vs)
+
         case App3(PredefinedConstant.Solve2, x, y, z) =>
           for {
             compiledX <- compile[M](x, ctx)
@@ -177,6 +190,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
               compiledY.asInstanceOf[Expr[y.Out]],
               compiledY.asInstanceOf[Expr[y.Out]]
             )(vs)
+
         case App2(PredefinedConstant.Concat, x, y) => // TODO gen new vars
           (M.fromEither(Type.unwrapF(x.tpe)), compile[M](x, ctx), compile[M](y, ctx)).mapN {
             (innerType, compiledX, compiledY) =>
@@ -235,15 +249,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with WithExpression[F] { sel
           (compile[M](f, ctx), compile[M](x, ctx)).mapN { (compiledF, compiledX) =>
             expressionModule.App(compiledF.asInstanceOf[Expr[Any => Any]], compiledX.asInstanceOf[Expr[Any]])
           }
-        case AST.Let(varName, value, in, tpe) =>
-          for {
-            compiledValue <- compile[M](value, ctx)
-            compiledIn <- compile[M](in, ctx.push(varName.name))
-          } yield Let(varName.name, compiledValue, compiledIn)
-        case AST.Number(n, Type.Dbl) =>
-          Dbl(n.toDouble).pure[M]
-        case AST.Number(n, Type.Integer) =>
-          Integer(n.toInt).pure[M]
+
         case _ =>
           M.raiseError(s"Invalid AST for expression $expr")
       }

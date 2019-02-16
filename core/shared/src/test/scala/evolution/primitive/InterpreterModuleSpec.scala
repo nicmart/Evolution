@@ -12,7 +12,7 @@ class InterpreterModuleSpec extends FreeSpec with Matchers {
 
   "The interpreter" - {
     "should interpret Pnt" in {
-      interpret(App2(Pnt(), Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
+      interpret(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
     }
   }
 }

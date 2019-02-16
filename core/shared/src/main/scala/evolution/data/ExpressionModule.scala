@@ -57,12 +57,6 @@ trait ExpressionModule[F[_]] {
   def VarN[A](n: Int, name: String): Expr[A] =
     if (n <= 0) Var0(name) else Shift(VarN(n - 1, name))
 
-  def App2[A, B, C](f: Expr[A => B => C], a: Expr[A], b: Expr[B]): Expr[C] =
-    App(App(f, a), b)
-
-  def App3[A, B, C, D](f: Expr[A => B => C => D], a: Expr[A], b: Expr[B], c: Expr[C]): Expr[D] =
-    App(App(App(f, a), b), c)
-
   object Expr {
     def transform[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = f(transformChildren(r, f))
 
