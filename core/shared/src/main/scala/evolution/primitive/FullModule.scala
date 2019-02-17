@@ -27,7 +27,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
       _ = println("Done: unification")
       typedExpr = unification.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
-      result <- Compiler.compile[Either[String, ?]](typedExpr, ctx)
+      result <- Compiler.compile[Either[String, ?]](typedExpr).run(ctx)
       _ = println("Done: compilation")
     } yield result.asInstanceOf[R[expectedType.Out]]
   }

@@ -20,7 +20,8 @@ class CompilerSpec extends CompilerSpecModule[Id] {
       "variable usages in non-empty contexts" in forAll(genTypedVar) { v =>
         whenever(v.name != "x") {
           unsafeCompile(v, VarContext.empty.push(v.name).push("x")) shouldBe expressionModule.Shift(
-            expressionModule.Var0[v.Out](v.name))
+            expressionModule.Var0[v.Out](v.name)
+          )
         }
       }
 
@@ -41,5 +42,5 @@ class CompilerSpec extends CompilerSpecModule[Id] {
   }
 
   private def unsafeCompile(expr: AST, ctx: VarContext = VarContext.empty): expressionModule.Expr[expr.Out] =
-    Compiler.compile[Either[String, ?]](expr, ctx).right.get
+    Compiler.compile[Either[String, ?]](expr).run(ctx).right.get
 }
