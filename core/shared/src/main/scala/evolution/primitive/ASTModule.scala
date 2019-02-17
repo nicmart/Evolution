@@ -40,6 +40,7 @@ class ASTModule[F[_]] {
     final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
     final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
 
+    def Lift(ast: AST): AST = App(Const(PredefinedConstant.Lift), ast)
     def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
     def App3(f: AST, x: AST, y: AST, z: AST): AST = App(App(App(f, x), y), z)
 
@@ -175,6 +176,11 @@ class ASTModule[F[_]] {
       case Type.Evo(inner) => Right(inner)
       case _               => Left(s"Type $t is not an Evolution type")
     }
+  }
+
+  def lift(tpe: Type): Type = tpe match {
+    case Type.Arrow(from, to) => lift(from) =>: lift(to)
+    case _                    => Type.Evo(tpe)
   }
 
   final class Context(bindings: Map[String, Type]) {

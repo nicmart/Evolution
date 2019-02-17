@@ -58,9 +58,11 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
-        case Var(_, _)      => Constraints.empty.pure[TypeInference]
-        case Const(_, _)    => Constraints.empty.pure[TypeInference]
-        case Number(_, _)   => Constraints.empty.pure[TypeInference]
+        case Var(_, _)    => Constraints.empty.pure[TypeInference]
+        case Const(_, _)  => Constraints.empty.pure[TypeInference]
+        case Number(_, _) => Constraints.empty.pure[TypeInference]
+        case App(Const(PredefinedConstant.Lift, _), value, tpe) =>
+          Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
         case Lambda(variable, lambdaExpr, tpe) =>
           val arrowConstraint = Constraints(tpe -> Type.Arrow(variable.tpe, lambdaExpr.tpe))

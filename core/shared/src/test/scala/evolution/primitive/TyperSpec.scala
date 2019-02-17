@@ -66,6 +66,14 @@ class TyperSpec extends CompilerSpecModule[Id] {
         val substitution = unify(constraints).right.get
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Dbl)
       }
+
+      "<point>(<1>, <2>)" in {
+        val untyped = App2(Lift(Const(PredefinedConstant.Point)), Lift(Number("1")), Lift(Number("2")))
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
+        println(unify(constraints))
+        val substitution = unify(constraints).right.get
+        substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Point)
+      }
     }
   }
 }
