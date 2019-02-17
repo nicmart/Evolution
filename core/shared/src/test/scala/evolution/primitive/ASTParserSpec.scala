@@ -1,5 +1,6 @@
 package evolution.primitive
 import cats.Id
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 
 class ASTParserSpec extends CompilerSpecModule[Id] {
@@ -140,6 +141,7 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
         forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
           unsafeParse(s"//$comment1\n$expr\n//$comment2") shouldBe unsafeParse(expr)
         }
+
       }
 
       "parse applications of vars" in {
@@ -219,6 +221,22 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
               AST.App2(Const(Add), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
+          }
+        }
+
+        "<expr>(a, b)" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
+            unsafeParse(s"<$expr>($a, $b)") shouldBe AST.App2(
+              AST.App(AST.Const(PredefinedConstant.Lift), unsafeParse(expr)),
+              unsafeParse(a),
+              unsafeParse(b))
+          }
+        }
+
+        "<n>" in {
+          forAll(arbitrary[Double]) { d =>
+            unsafeParse(s"<$d>") shouldBe
+              AST.App(AST.Const(PredefinedConstant.Lift), unsafeParse(d.toString))
           }
         }
       }

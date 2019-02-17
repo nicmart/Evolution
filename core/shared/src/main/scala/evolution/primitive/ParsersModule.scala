@@ -41,7 +41,7 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       }
 
     lazy val factor: Parser[AST] =
-      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | predefinedConstant)
+      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | lifted | predefinedConstant)
 
     lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ args ~ ")").?).map {
@@ -82,6 +82,9 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       P(precedence0 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
+
+    lazy val lifted: Parser[AST] =
+      P("<" ~/ precedence0 ~ ">").map(ast => AST.App(AST.Const(PredefinedConstant.Lift), ast))
 
     lazy val predefinedConstant: Parser[AST.Const] = identifier
       .filter(id => PredefinedConstant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
