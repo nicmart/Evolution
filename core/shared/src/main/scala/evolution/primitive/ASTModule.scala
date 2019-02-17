@@ -92,8 +92,7 @@ class ASTModule[F[_]] {
           Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
 
     // Derived
-    case object Cartesian extends PredefinedConstant(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))
-    case object Polar extends PredefinedConstant(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))
+    case object Polar extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point)
     case object Constant extends PredefinedConstant(Var("T") =>: Evo(Var("T")))
     case object Integrate extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))
     case object Solve1 extends PredefinedConstant(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))

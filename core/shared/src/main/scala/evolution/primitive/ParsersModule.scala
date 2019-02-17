@@ -14,26 +14,28 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val precedence0: Parser[AST] =
       P(lambdaOrLet | precedence1)
 
-    lazy val precedence1Ops: Parser[PredefinedConstant] =
-      P("+").map(_ => PredefinedConstant.Add)
+    lazy val precedence1Ops: Parser[AST] =
+      P("+").map(_ => AST.Const(PredefinedConstant.Add)) |
+        P("<+>").map(_ => AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Add)))
 
     lazy val precedence1: Parser[AST] =
       P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
-    lazy val precedence2Ops: Parser[PredefinedConstant] =
-      P("*").map(_ => PredefinedConstant.Multiply) |
-        P("/").map(_ => PredefinedConstant.Div) |
-        P("%").map(_ => PredefinedConstant.Mod)
+    lazy val precedence2Ops: Parser[AST] =
+      P("*").map(_ => AST.Const(PredefinedConstant.Multiply)) |
+        P("/").map(_ => AST.Const(PredefinedConstant.Div)) |
+        P("%").map(_ => AST.Const(PredefinedConstant.Mod)) |
+        P("<*>").map(_ => AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Multiply)))
 
     lazy val precedence2: Parser[AST] =
       P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
-    lazy val precedence3Ops: Parser[PredefinedConstant] =
-      P("^").map(_ => PredefinedConstant.Exp)
+    lazy val precedence3Ops: Parser[AST] =
+      P("^").map(_ => AST.Const(PredefinedConstant.Exp))
 
     lazy val precedence3: Parser[AST] =
       P(appOrFactor ~ (precedence3Ops ~/ appOrFactor).rep).map {
@@ -94,10 +96,10 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-    def evalAssocBinaryOp(head: AST, tail: List[(PredefinedConstant, AST)]): AST =
+    def evalAssocBinaryOp(head: AST, tail: List[(AST, AST)]): AST =
       tail match {
         case Nil                        => head
-        case (op, tailHead) :: tailTail => AST.App(AST.App(AST.Const(op), head), evalAssocBinaryOp(tailHead, tailTail))
+        case (op, tailHead) :: tailTail => AST.App(AST.App(op, head), evalAssocBinaryOp(tailHead, tailTail))
       }
 
     def evalApp(f: AST, args: List[AST]): AST =

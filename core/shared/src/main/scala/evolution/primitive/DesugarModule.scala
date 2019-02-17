@@ -17,25 +17,28 @@ trait DesugarModule[F[_]] { self: WithExpression[F] =>
     def zipWith[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
       app2(zipWithLambda(f), a, b)
 
-    def addEvo[T: Semigroup](a: Expr[F[T]], b: Expr[F[T]]): Expr[F[T]] =
+    def liftedAdd[T: Semigroup](a: Expr[F[T]], b: Expr[F[T]]): Expr[F[T]] =
       zipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](varN("a", 1), varN("b", 0))))
 
-    def multEvo[T: VectorSpace](k: Expr[F[Double]], t: Expr[F[T]]): Expr[F[T]] =
+    def liftedMult[T: VectorSpace](k: Expr[F[Double]], t: Expr[F[T]]): Expr[F[T]] =
       zipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](varN("k", 1), varN("t", 0))))
 
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       map(t, Lambda("t", Inverse(varN("t", 0))))
 
-    def cartesian(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
+    def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
       app2(zipWithLambda(lambda2[Double, Double, Point]("fx", "fy", Pnt(varN("fx", 1), varN("fy", 0)))), x, y)
 
-    def polar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
+    def polar(radius: Expr[Double], angle: Expr[Double]): Expr[Point] =
+      Multiply(radius, Pnt(Cos(angle), Sin(angle)))
+
+    def liftedPolar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
       app2(
         zipWithLambda(
           lambda2[Double, Double, Point](
             "radius",
             "angle",
-            Multiply(varN("radius", 1), Pnt(Cos(varN("angle", 0)), Sin(varN("angle", 0))))
+            polar(varN("radius", 1), varN("angle", 0))
           )
         ),
         radius,

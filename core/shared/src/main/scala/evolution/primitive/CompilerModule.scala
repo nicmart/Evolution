@@ -80,6 +80,17 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
           (x, y).compileN[M] { (compiledX, compiledY) =>
             Pnt(compiledX.asExpr, compiledY.asExpr)
           }
+
+        case LiftApp2(Const.Point, x, y) =>
+          (x, y).compileN[M] { (cx, cy) =>
+            liftedPoint(cx.asExprF, cy.asExprF)
+          }
+
+        case LiftApp2(Const.Polar, x, y) =>
+          (x, y).compileN[M] { (cx, cy) =>
+            liftedPolar(cx.asExprF, cy.asExprF)
+          }
+
         case App(Const.X, p) =>
           compile[M](p).map { compiledP =>
             X(compiledP.asExpr)
@@ -92,17 +103,17 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
           compile[M](d).map(compiledD => Floor(compiledD.asExpr))
 
         case App2(Const.Add, x, y) =>
-          x.tpe match {
-            // Overload + for evolutions
-            case Type.Evo(tpe) =>
-              (K.fromEither(Type.group(tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
-                addEvo(compiledX.asExprF, compiledY.asExprF)(sg)
-              }
-            case tpe =>
-              (K.fromEither(Type.group(tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
-                Add(compiledX.asExpr, compiledY.asExpr)(sg)
-              }
+          (K.fromEither(Type.group(x.tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
+            Add(compiledX.asExpr, compiledY.asExpr)(sg)
           }
+
+        case LiftApp2(Const.Add, x, y) =>
+          for {
+            tpe <- K.fromEither(Type.unwrapF(x.tpe))
+            sg <- K.fromEither(Type.group(tpe))
+            cx <- compile[M](x)
+            cy <- compile[M](y)
+          } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
 
         case App2(Const.Div, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
@@ -114,6 +125,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
             Exp(compiledX.asExpr, compiledY.asExpr)
           }
 
+        // TODO this is not in-line with other liftings.
         case App(Const.Inverse, x) =>
           x.tpe match {
             // Overload - for evolutions
@@ -131,6 +143,14 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
           (K.fromEither(Type.vectorSpace(y.tpe)), compile[M](x), compile[M](y)).mapN { (vs, compiledX, compiledY) =>
             Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
           }
+
+        case LiftApp2(Const.Multiply, x, y) =>
+          for {
+            tpe <- K.fromEither(Type.unwrapF(y.tpe))
+            vs <- K.fromEither(Type.vectorSpace(tpe))
+            cx <- compile[M](x)
+            cy <- compile[M](y)
+          } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
 
         case App(Const.Cos, x) =>
           compile[M](x).map(compiledX => Cos(compiledX.asExpr))
@@ -155,13 +175,9 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
             IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
           }
 
-        case App2(Const.Cartesian, x, y) =>
-          (x, y).compileN[M] { (compiledX, compiledY) =>
-            cartesian(compiledX.asExprF, compiledY.asExprF)
-          }
         case App2(Const.Polar, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
-            polar(compiledX.asExprF, compiledY.asExprF)
+            polar(compiledX.asExpr, compiledY.asExpr)
           }
         case App(Const.Constant, x) =>
           compile[M](x).map(compiledX => constant(compiledX.asExpr))
@@ -215,11 +231,6 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
         case App2(Const.Take, n, e) =>
           (n, e).compileN[M] { (compiledN, compiledF) =>
             take(compiledN.asExpr, compiledF.asExprF)
-          }
-
-        case LiftApp2(Const.Point, x, y) =>
-          (x, y).compileN[M] { (cx, cy) =>
-            cartesian(cx.asExprF, cy.asExprF)
           }
 
         case App(Const.Lift, f) => compile[M](f).map(x => constant(x.asExpr))

@@ -71,7 +71,7 @@ object dsl extends DrawingDefinition[Point] {
     )
   }
 
-  val initialConfig: Config = Config.from("integrate(point(0, 0), cartesian(uniform(-2, 2), uniform(-2, 2)))").right.get
+  val initialConfig: Config = Config.from("integrate(point(0, 0), <point>(uniform(-2, 2), uniform(-2, 2)))").right.get
 
   override def configCodec: JsonCodec[Config] =
     DrawingJsonCodec

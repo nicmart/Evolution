@@ -3,7 +3,7 @@ import cats.Id
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 
-class ASTParserSpec extends CompilerSpecModule[Id] {
+class ParserModuleSpec extends CompilerSpecModule[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   import ast._
   import PredefinedConstant._
@@ -238,6 +238,14 @@ class ASTParserSpec extends CompilerSpecModule[Id] {
             unsafeParse(s"<$d>") shouldBe
               AST.App(AST.Const(PredefinedConstant.Lift), unsafeParse(d.toString))
           }
+        }
+
+        "1 <+> 2" in {
+          unsafeParse("1 <+> 2") shouldBe AST.App2(
+            AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Add)),
+            AST.Number("1"),
+            AST.Number("2")
+          )
         }
       }
     }
