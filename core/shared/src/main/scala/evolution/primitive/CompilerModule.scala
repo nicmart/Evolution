@@ -18,6 +18,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
 
   object Compiler {
     import ast._
+    val Const = PredefinedConstant
 
     def compile[M[_]](expr: AST)(implicit M: MonadError[M, String]): Result[M, Expr[expr.Out]] = {
       type K[T] = Result[M, T]
@@ -29,11 +30,11 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
         case AST.Var(name, tpe) =>
           Kleisli((ctx: VarContext) => VarN(ctx.indexOf(name), name).pure[M])
 
-        case AST.Const(PredefinedConstant.PI, _) =>
-          expressionModule.Dbl(Math.PI).pure[K]
+        case AST.Const(Const.PI, _) =>
+          Dbl(Math.PI).pure[K]
 
-        case AST.Const(PredefinedConstant.Empty, _) =>
-          expressionModule.Empty().pure[K]
+        case AST.Const(Const.Empty, _) =>
+          Empty().pure[K]
 
         case fc @ AST.Const(id, tpe) =>
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
@@ -52,45 +53,45 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
         case AST.Number(n, _) => // Default to Double for numeric literals
           Dbl(n.toDouble).pure[K]
 
-        case App(PredefinedConstant.Fix, x) =>
+        case App(Const.Fix, x) =>
           compile[M](x).map { compiledX =>
-            expressionModule.Fix(compiledX.asExpr[Any => Any])
+            Fix(compiledX.asExpr[Any => Any])
           }
 
-        case App2(PredefinedConstant.Cons, head, tail) =>
+        case App2(Const.Cons, head, tail) =>
           (head, tail).compileN[M] { (head, tail) =>
-            expressionModule.Cons(head.asExpr, tail.asExprF)
+            Cons(head.asExpr, tail.asExprF)
           }
 
-        case App2(PredefinedConstant.MapEmpty, a, b) =>
+        case App2(Const.MapEmpty, a, b) =>
           (a, b).compileN[M] { (compiledA, compiledB) =>
-            expressionModule.MapEmpty(compiledA.asExprF, compiledB.asExprF)
+            MapEmpty(compiledA.asExprF, compiledB.asExprF)
           }
 
-        case App2(PredefinedConstant.MapCons, a, f) =>
+        case App2(Const.MapCons, a, f) =>
           (a, f).compileN[M] { (compiledA, compiledF) =>
-            expressionModule.MapCons(
+            MapCons(
               compiledA.asExprF,
               compiledF.asExpr[Any => F[Any] => F[Any]]
             )
           }
 
-        case App2(PredefinedConstant.Point, x, y) =>
+        case App2(Const.Point, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
-            expressionModule.Pnt(compiledX.asExpr, compiledY.asExpr)
+            Pnt(compiledX.asExpr, compiledY.asExpr)
           }
-        case App(PredefinedConstant.X, p) =>
+        case App(Const.X, p) =>
           compile[M](p).map { compiledP =>
-            expressionModule.X(compiledP.asExpr)
+            X(compiledP.asExpr)
           }
-        case App(PredefinedConstant.Y, p) =>
+        case App(Const.Y, p) =>
           compile[M](p).map { compiledP =>
-            expressionModule.Y(compiledP.asExpr)
+            Y(compiledP.asExpr)
           }
-        case App(PredefinedConstant.Floor, d) =>
-          compile[M](d).map(compiledD => expressionModule.Floor(compiledD.asExpr))
+        case App(Const.Floor, d) =>
+          compile[M](d).map(compiledD => Floor(compiledD.asExpr))
 
-        case App2(PredefinedConstant.Add, x, y) =>
+        case App2(Const.Add, x, y) =>
           x.tpe match {
             // Overload + for evolutions
             case Type.Evo(tpe) =>
@@ -99,21 +100,21 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               }
             case tpe =>
               (K.fromEither(Type.group(tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
-                expressionModule.Add(compiledX.asExpr, compiledY.asExpr)(sg)
+                Add(compiledX.asExpr, compiledY.asExpr)(sg)
               }
           }
 
-        case App2(PredefinedConstant.Div, x, y) =>
+        case App2(Const.Div, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
-            expressionModule.Div(compiledX.asExpr, compiledY.asExpr)
+            Div(compiledX.asExpr, compiledY.asExpr)
           }
 
-        case App2(PredefinedConstant.Exp, x, y) =>
+        case App2(Const.Exp, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
-            expressionModule.Exp(compiledX.asExpr, compiledY.asExpr)
+            Exp(compiledX.asExpr, compiledY.asExpr)
           }
 
-        case App(PredefinedConstant.Inverse, x) =>
+        case App(Const.Inverse, x) =>
           x.tpe match {
             // Overload - for evolutions
             case Type.Evo(tpe) =>
@@ -122,64 +123,64 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               }
             case tpe =>
               (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (g, compiledX) =>
-                expressionModule.Inverse(compiledX.asExpr)(g)
+                Inverse(compiledX.asExpr)(g)
               }
           }
 
-        case App2(PredefinedConstant.Multiply, x, y) =>
+        case App2(Const.Multiply, x, y) =>
           (K.fromEither(Type.vectorSpace(y.tpe)), compile[M](x), compile[M](y)).mapN { (vs, compiledX, compiledY) =>
-            expressionModule.Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
+            Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
           }
 
-        case App(PredefinedConstant.Cos, x) =>
-          compile[M](x).map(compiledX => expressionModule.Cos(compiledX.asExpr))
+        case App(Const.Cos, x) =>
+          compile[M](x).map(compiledX => Cos(compiledX.asExpr))
 
-        case App(PredefinedConstant.Sin, x) =>
-          compile[M](x).map(compiledX => expressionModule.Sin(compiledX.asExpr))
+        case App(Const.Sin, x) =>
+          compile[M](x).map(compiledX => Sin(compiledX.asExpr))
 
-        case App2(PredefinedConstant.Mod, x, y) =>
+        case App2(Const.Mod, x, y) =>
           (x, y).compileN[M] { (cx, cy) =>
-            expressionModule.Mod(cx.asExpr, cy.asExpr)
+            Mod(cx.asExpr, cy.asExpr)
           }
 
-        case App2(PredefinedConstant.Eq, x, y) =>
+        case App2(Const.Eq, x, y) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe))
-          } yield expressionModule.Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
+          } yield Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
 
-        case App3(PredefinedConstant.If, x, y, z) =>
+        case App3(Const.If, x, y, z) =>
           (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
-            expressionModule.IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
+            IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
           }
 
-        case App2(PredefinedConstant.Cartesian, x, y) =>
+        case App2(Const.Cartesian, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
             cartesian(compiledX.asExprF, compiledY.asExprF)
           }
-        case App2(PredefinedConstant.Polar, x, y) =>
+        case App2(Const.Polar, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
             polar(compiledX.asExprF, compiledY.asExprF)
           }
-        case App(PredefinedConstant.Constant, x) =>
+        case App(Const.Constant, x) =>
           compile[M](x).map(compiledX => constant(compiledX.asExpr))
 
-        case App2(PredefinedConstant.Integrate, x, y) =>
+        case App2(Const.Integrate, x, y) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             vs <- K.fromEither(Type.vectorSpace(x.tpe))
           } yield integrate(compiledX, compiledY.asExprF)(vs)
 
-        case App2(PredefinedConstant.Solve1, x, y) =>
+        case App2(Const.Solve1, x, y) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             vs <- K.fromEither(Type.vectorSpace(y.tpe))
           } yield solve1[y.Out](compiledX.asExprF[y.Out => y.Out], compiledY.asExpr)(vs)
 
-        case App3(PredefinedConstant.Solve2, x, y, z) =>
+        case App3(Const.Solve2, x, y, z) =>
           K.fromEither(Type.vectorSpace(y.tpe)).flatMap { vs =>
             (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
               solve2[y.Out](
@@ -190,42 +191,49 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
             }
           }
 
-        case App2(PredefinedConstant.Concat, x, y) =>
+        case App2(Const.Concat, x, y) =>
           K.fromEither(Type.unwrapF(x.tpe)).flatMap { innerType =>
             (x, y).compileN[M] { (cx, cy) =>
               concat(cx.asExprF, cy.asExprF)
             }
           }
 
-        case App2(PredefinedConstant.Map, x, f) =>
+        case App2(Const.Map, x, f) =>
           (x, f).compileN[M] { (compiledX, compiledF) =>
             map(
               compiledX.asExprF,
               compiledF.asExpr[Any => Any]
             )
           }
-        case App2(PredefinedConstant.FlatMap, x, f) =>
+        case App2(Const.FlatMap, x, f) =>
           (x, f).compileN[M] { (compiledX, compiledF) =>
             flatMap(
               compiledX.asExprF,
               compiledF.asExpr[Any => F[Any]]
             )
           }
-        case App2(PredefinedConstant.Take, n, e) =>
+        case App2(Const.Take, n, e) =>
           (n, e).compileN[M] { (compiledN, compiledF) =>
             take(compiledN.asExpr, compiledF.asExprF)
           }
 
-        case App3(PredefinedConstant.ZipWith, a, b, c) =>
+        case LiftApp2(Const.Point, x, y) =>
+          (x, y).compileN[M] { (cx, cy) =>
+            cartesian(cx.asExprF, cy.asExprF)
+          }
+
+        case App(Const.Lift, f) => compile[M](f).map(x => constant(x.asExpr))
+
+        case App3(Const.ZipWith, a, b, c) =>
           (a, b, c).compileN[M] { (compiledA, compiledB, compiledF) =>
             zipWith(compiledA.asExprF, compiledB.asExprF, compiledF.asExpr[Any => Any => Any])
           }
 
-        case App2(PredefinedConstant.Uniform, from, to) =>
+        case App2(Const.Uniform, from, to) =>
           (from, to).compileN[M] { (compiledFrom, compiledTo) =>
             expressionModule.Uniform(compiledFrom.asExpr, compiledTo.asExpr)
           }
-        case App3(PredefinedConstant.UniformDiscrete, from, to, step) =>
+        case App3(Const.UniformDiscrete, from, to, step) =>
           (from, to, step).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
             expressionModule.UniformDiscrete(
               compiledFrom.asExpr,
@@ -233,7 +241,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               compiledStep.asExpr
             )
           }
-        case App(PredefinedConstant.UniformChoice, choices) =>
+        case App(Const.UniformChoice, choices) =>
           M.raiseError("We need to fix UniformChoice")
 //          choices.traverse(choice => compile[M](choice).asInstanceOf[M[Any]]).map { compiledChoices =>
 //            expressionModule.UniformChoice(compiledChoices.asInstanceOf[List[Expr[Any]]])
@@ -267,6 +275,14 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
       def unapply(arg: AST): Option[(PredefinedConstant, AST, AST, AST)] = arg match {
         case AST.App(App2(c, x, y), z, _) => Some((c, x, y, z))
         case _                            => None
+      }
+    }
+
+    object LiftApp2 {
+      def unapply(arg: AST): Option[(PredefinedConstant, AST, AST)] = arg match {
+        case AST.App(AST.App(AST.App(AST.Const(Const.Lift, _), AST.Const(const, _), _), x, _), y, _) =>
+          Some((const, x, y))
+        case _ => None
       }
     }
 
