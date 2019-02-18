@@ -19,7 +19,7 @@ object App {
   type ReactComponent[C] = Component[StateSnapshot[PageState[C]], State[C], Backend[C], CtorType.Props]
 
   case class State[C](
-    drawingContext: DrawingContext,
+    drawingContext: Option[DrawingContext],
     pointRateCounter: RateCounter,
     running: Boolean
   )
@@ -41,7 +41,9 @@ object App {
           stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           state.drawingContext,
           renderingStateSnapshot,
-          Eval.later(points(state.drawingContext, pageStateSnapshot.value.drawingState)),
+          Eval.later {
+            state.drawingContext.map(ctx => points(ctx, pageStateSnapshot.value.drawingState)).getOrElse(Iterator.empty)
+          },
           drawingStateSnapshot,
           state.pointRateCounter.rate.toInt,
           drawingStateSnapshot.modState(_.withNewSeed),
@@ -50,25 +52,28 @@ object App {
     }
 
     private[App] def key(p: PageState[C], s: State[C]): Int =
-      (s.pointRateCounter.rate, p, s.running).hashCode()
+      (s.pointRateCounter.rate, p, s.running, s.drawingContext).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
         state.copy(pointRateCounter = state.pointRateCounter.count(rendererState.iterations))
       }
 
-    def onResize: Callback =
-      bs.modState(s => s.copy(drawingContext = drawingContext))
+    def updateDrawingContext: Callback =
+      drawingContext.flatMap { ctx =>
+        bs.modState(s => s.copy(drawingContext = ctx))
+      }
   }
 
-  private def drawingContext: DrawingContext = {
-    val document = dom.window.document
-    DrawingContext(
-      DrawingContext.CanvasSize(
-        2 * Math.max(document.documentElement.clientWidth, dom.window.innerWidth).toInt,
-        2 * Math.max(document.documentElement.clientHeight, dom.window.innerHeight).toInt
+  private def drawingContext: CallbackTo[Option[DrawingContext]] = CallbackTo {
+    Option(dom.window.document.getElementById("canvas-column")).map { element =>
+      DrawingContext(
+        DrawingContext.CanvasSize(
+          2 * element.clientWidth,
+          2 * element.clientHeight
+        )
       )
-    )
+    }
   }
 
   def component[C](
@@ -79,7 +84,7 @@ object App {
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState[C]]]("App")
-      .initialState(State[C](drawingContext, rateCounter, true))
+      .initialState(State[C](None, rateCounter, true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
@@ -88,6 +93,8 @@ object App {
         }
       }
       .componentDidMount(s =>
-        Callback { dom.window.addEventListener("resize", (_: Any) => s.backend.onResize.runNow()) })
+        Callback {
+          dom.window.addEventListener("resize", (_: Any) => s.backend.updateDrawingContext.runNow())
+        } >> s.backend.updateDrawingContext)
       .build
 }

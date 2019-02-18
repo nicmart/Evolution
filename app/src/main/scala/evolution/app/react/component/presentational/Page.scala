@@ -23,7 +23,7 @@ object Page {
 
   case class Props[C](
     running: StateSnapshot[Boolean],
-    drawingContext: DrawingContext,
+    drawingContext: Option[DrawingContext],
     rendererState: StateSnapshot[RendererState],
     points: Eval[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState[C]],
@@ -31,8 +31,7 @@ object Page {
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey: String =
-      (rendererState.value, drawingState.value, drawingContext).hashCode().toString
+    def canvasKey: String = (rendererState.value, drawingState.value, drawingContext).hashCode().toString
   }
 
   class Backend[C](
@@ -73,15 +72,20 @@ object Page {
         ),
         <.div(
           ^.id := "page-content",
-          canvasComponent.withKey(props.canvasKey)(
-            Canvas.Props(
-              props.drawingContext,
-              canvasInitializer,
-              props.rendererState.value,
-              props.points,
-              props.onFrameDraw,
-              props.running.value
-            )),
+          ^.className := "columns is-gapless",
+          <.div(
+            ^.id := "canvas-column",
+            ^.className := "column is-paddingless",
+            canvasComponent.withKey(props.canvasKey)(
+              Canvas.Props(
+                props.drawingContext,
+                canvasInitializer,
+                props.rendererState.value,
+                props.points,
+                props.onFrameDraw,
+                props.running.value
+              ))
+          ),
           Sidebar.component(
             drawingConfig(configState)()
           )

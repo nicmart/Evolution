@@ -6,16 +6,17 @@ html {
   position: relative;
 }
 
+#canvas-column {
+  overflow: hidden;
+  padding: 0;
+}
+
 .sidebar {
-  height:100%;
-  position:absolute;
-  right:0;
-  top:0;
-  padding: 15px;
+
 }
 
 .sidebar.expanded {
-  width: 40%;
+
 }
 
 .sidebar label.label {

@@ -16,7 +16,7 @@ object Canvas {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
 
   case class Props(
-    context: DrawingContext,
+    context: Option[DrawingContext],
     canvasInitializer: dom.html.Canvas => Unit,
     rendererState: RendererState,
     points: Eval[Iterator[Point]],
@@ -32,7 +32,7 @@ object Canvas {
     var points: Iterator[Point] = Iterator.empty
 
     def render(props: Props): VdomElement = {
-      val size = props.context.canvasSize.point
+      val size = props.context.map(_.canvasSize.point).getOrElse(Point.zero)
       <.canvas(
         ^.width := (size.x / 2).toString,
         ^.height := (size.y / 2).toString,
@@ -64,11 +64,15 @@ object Canvas {
     }
 
     def start(node: dom.Element, props: Props): Unit = {
-      val drawer = drawerFromState(props.rendererState, props.context)
-      if (!running && props.running) {
-        running = true
-        stopPending = false
-        dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node), drawer))
+      props.context match {
+        case Some(ctx) =>
+          val drawer = drawerFromState(props.rendererState, ctx)
+          if (!running && props.running) {
+            running = true
+            stopPending = false
+            dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node), drawer))
+          }
+        case None => ()
       }
     }
 
