@@ -8,7 +8,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object Sidebar {
   type Expanded = Boolean
-  class Backend(bs: BackendScope[Unit, Expanded]) {
+  class Backend(bs: BackendScope[Expanded, Unit]) {
     def render(expanded: Expanded, children: PropsChildren): VdomElement = {
       <.div(
         ^.classSet(
@@ -16,14 +16,11 @@ object Sidebar {
           "expanded" -> expanded,
           "column" -> true
         ),
-        Button.component(bs.modState(!_)) {
-          <.i(^.className := s"fas fa-angle-${if (expanded) "right" else "left"}")
-        },
         children
       )
     }
   }
 
   val component =
-    react.ScalaComponent.builder[Unit]("sidebar").initialState(false).renderBackendWithChildren[Backend].build
+    react.ScalaComponent.builder[Expanded]("sidebar").renderBackendWithChildren[Backend].build
 }

@@ -29,7 +29,8 @@ object Page {
     drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
     onRefresh: Callback,
-    onFrameDraw: Callback
+    onFrameDraw: Callback,
+    sidebarExpanded: StateSnapshot[Boolean]
   ) {
     def canvasKey: String = (rendererState.value, drawingState.value, drawingContext).hashCode().toString
   }
@@ -68,14 +69,23 @@ object Page {
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
             ^.className := "navbar-item",
-            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}"))
+            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")),
+          <.div(
+            ^.className := "navbar-end",
+            <.div(
+              ^.className := "navbar-item",
+              Button.component(props.sidebarExpanded.modState(!_)) {
+                <.i(^.className := s"fas fa-angle-${if (props.sidebarExpanded.value) "right" else "left"}")
+              }
+            )
+          )
         ),
         <.div(
           ^.id := "page-content",
-          ^.className := "columns is-gapless",
+          ^.className := "columns is-gapless full-height",
           <.div(
             ^.id := "canvas-column",
-            ^.className := "column is-paddingless",
+            ^.className := "column is-paddingless full-height",
             canvasComponent.withKey(props.canvasKey)(
               Canvas.Props(
                 props.drawingContext,
@@ -86,9 +96,7 @@ object Page {
                 props.running.value
               ))
           ),
-          Sidebar.component(
-            drawingConfig(configState)()
-          )
+          Sidebar.component(props.sidebarExpanded.value)(drawingConfig(configState)())
         )
       )
     }

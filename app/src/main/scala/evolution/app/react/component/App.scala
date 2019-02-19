@@ -21,6 +21,7 @@ object App {
   case class State[C](
     drawingContext: Option[DrawingContext],
     pointRateCounter: RateCounter,
+    sidebarExpanded: Boolean,
     running: Boolean
   )
 
@@ -38,21 +39,23 @@ object App {
 
       pageComponent(
         Page.Props(
-          stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
-          state.drawingContext,
-          renderingStateSnapshot,
-          Eval.later {
+          running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
+          drawingContext = state.drawingContext,
+          rendererState = renderingStateSnapshot,
+          points = Eval.later {
             state.drawingContext.map(ctx => points(ctx, pageStateSnapshot.value.drawingState)).getOrElse(Iterator.empty)
           },
-          drawingStateSnapshot,
-          state.pointRateCounter.rate.toInt,
-          drawingStateSnapshot.modState(_.withNewSeed),
-          onRateCountUpdate(pageStateSnapshot.value.rendererState)
+          drawingState = drawingStateSnapshot,
+          pointRate = state.pointRateCounter.rate.toInt,
+          onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
+          onFrameDraw = onRateCountUpdate(pageStateSnapshot.value.rendererState),
+          sidebarExpanded = stateSnapshot.zoomState(_.sidebarExpanded)(isExpanded =>
+            pageState => pageState.copy(sidebarExpanded = isExpanded))
         ))
     }
 
     private[App] def key(p: PageState[C], s: State[C]): Int =
-      (s.pointRateCounter.rate, p, s.running, s.drawingContext).hashCode()
+      (s.pointRateCounter.rate, p, s.running, s.drawingContext, s.sidebarExpanded).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
@@ -84,7 +87,7 @@ object App {
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState[C]]]("App")
-      .initialState(State[C](None, rateCounter, true))
+      .initialState(State[C](None, rateCounter, sidebarExpanded = true, running = true))
       .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
@@ -92,6 +95,11 @@ object App {
           s.backend.key(s.currentProps.value, s.currentState) != s.backend.key(s.nextProps.value, s.nextState)
         }
       }
+      // The drawing context can be updated only after the sidebar has been resized
+      // That's why we have to update the drawing context after the the dom has been updated and rendered
+      .componentDidUpdate(s =>
+        if (s.prevState.sidebarExpanded != s.currentState.sidebarExpanded) s.backend.updateDrawingContext
+        else Callback.empty)
       .componentDidMount(s =>
         Callback {
           dom.window.addEventListener("resize", (_: Any) => s.backend.updateDrawingContext.runNow())
