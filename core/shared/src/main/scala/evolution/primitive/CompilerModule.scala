@@ -95,14 +95,17 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
           compile[M](p).map { compiledP =>
             X(compiledP.asExpr)
           }
-          
+
         case App(Const.Y, p) =>
           compile[M](p).map { compiledP =>
             Y(compiledP.asExpr)
           }
-          
+
         case App(Const.Floor, d) =>
           compile[M](d).map(compiledD => Floor(compiledD.asExpr))
+
+        case App(Const.ToDbl, n) =>
+          compile[M](n).map(compiledN => ToDbl(compiledN.asExpr))
 
         case App2(Const.Add, x, y) =>
           (K.fromEither(Type.group(x.tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
@@ -223,7 +226,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               compiledF.asExpr[Any => Any]
             )
           }
-          
+
         case App2(Const.FlatMap, x, f) =>
           (x, f).compileN[M] { (compiledX, compiledF) =>
             flatMap(
@@ -231,7 +234,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               compiledF.asExpr[Any => F[Any]]
             )
           }
-          
+
         case App2(Const.Take, n, e) =>
           (n, e).compileN[M] { (compiledN, compiledF) =>
             take(compiledN.asExpr, compiledF.asExprF)
@@ -248,7 +251,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
           (from, to).compileN[M] { (compiledFrom, compiledTo) =>
             expressionModule.Uniform(compiledFrom.asExpr, compiledTo.asExpr)
           }
-          
+
         case App3(Const.UniformDiscrete, from, to, step) =>
           (from, to, step).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
             expressionModule.UniformDiscrete(

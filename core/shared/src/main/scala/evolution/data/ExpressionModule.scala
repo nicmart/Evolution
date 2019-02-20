@@ -15,6 +15,7 @@ trait ExpressionModule[F[_]] {
   // in the interpreter module!
   final case class Dbl(d: Double) extends Expr[Double]
   final case class Floor(d: Expr[Double]) extends Expr[Int]
+  final case class ToDbl(n: Expr[Int]) extends Expr[Double]
   final case class Integer(n: Int) extends Expr[Int]
   final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point]
   final case class X(p: Expr[Point]) extends Expr[Double]
@@ -63,6 +64,7 @@ trait ExpressionModule[F[_]] {
     def transformChildren[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = r match {
       case Dbl(d)                => Dbl(d)
       case Floor(d)              => Floor(transformChildren(d, f))
+      case ToDbl(n)              => ToDbl(transformChildren(n, f))
       case Integer(n)            => Integer(n)
       case Pnt(x, y)             => Pnt(transformChildren(x, f), transformChildren(y, f))
       case X(p)                  => X(transformChildren(p, f))

@@ -15,6 +15,7 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
     def interpret[T](expr: Expr[T]): Out[T] = expr match {
       case Dbl(d)          => Out.pure(d)
       case Floor(d)        => interpret(d).map(_.toInt)
+      case ToDbl(n)        => interpret(n).map(_.toDouble)
       case Integer(n)      => Out.pure(n)
       case Pnt(x, y)       => interpret2(x, y)(Point.apply)
       case X(p)            => interpret1(p)(_.x)

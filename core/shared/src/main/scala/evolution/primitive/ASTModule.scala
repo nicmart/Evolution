@@ -69,6 +69,7 @@ class ASTModule[F[_]] {
     // Constants
     case object Point extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point)
     case object Floor extends PredefinedConstant(Dbl =>: Integer)
+    case object ToDbl extends PredefinedConstant(Integer =>: Dbl)
     case object X extends PredefinedConstant(Type.Point =>: Dbl)
     case object Y extends PredefinedConstant(Type.Point =>: Dbl)
     case object Add extends PredefinedConstant(Var("T") =>: Var("T") =>: Var("T"))
