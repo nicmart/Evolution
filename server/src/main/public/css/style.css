@@ -11,12 +11,14 @@ html {
   padding: 0;
 }
 
-.sidebar {
+#page-content .sidebar {
   display: none;
 }
 
-.sidebar.expanded {
+#page-content .sidebar.expanded {
   display: block;
+  padding-left: 1em!important;
+  padding-top: 3em!important;
 }
 
 .sidebar label.label {
@@ -64,6 +66,11 @@ nav .checkbox:hover {
   color: inherit;
 }
 
+.inner-config {
+  display: flex;
+  flex-direction: column;
+}
+
 .inner-config .inner-config {
   position: relative;
   padding: .7em .5em;
@@ -78,10 +85,27 @@ nav .checkbox:hover {
   font-family: monospace;
 }
 
+.code-wrapper {
+  flex: 2;
+}
+
+textarea.code-area {
+  font-family: monospace;
+  font-size: 0.8em;
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  background-color: Black;
+  color: White;
+  outline: none;
+  border: none;
+}
+
 html,
 body,
 #entrypoint,
 #entrypoint > div,
+.inner-config,
 .full-height {
   min-height: 100%;
   height: 100%;

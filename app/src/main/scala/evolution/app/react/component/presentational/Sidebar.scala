@@ -14,7 +14,8 @@ object Sidebar {
         ^.classSet(
           "sidebar" -> true,
           "expanded" -> expanded,
-          "column" -> true
+          "column" -> true,
+          "is-one-third" -> true
         ),
         children
       )
