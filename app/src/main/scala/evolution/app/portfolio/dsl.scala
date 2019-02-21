@@ -23,12 +23,14 @@ object dsl extends DrawingDefinition[Point] {
 
   import module.ast.Type
 
-  sealed abstract case class Config(serialisedExpr: String, expr: Expr[F[Point]])
+  sealed abstract case class Config(serialisedExpr: String, expr: Expr[F[Point]], message: Option[String]) {
+    def withMessage(newMessage: Option[String]): Config = new Config(serialisedExpr, expr, newMessage) {}
+  }
 
   object Config {
     def from(serialisedExpr: String): Either[String, Config] = for {
       expr <- module.parse[Expr](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
-    } yield new Config(serialisedExpr, expr.asInstanceOf[Expr[F[Point]]]) {}
+    } yield new Config(serialisedExpr, expr.asInstanceOf[Expr[F[Point]]], None) {}
   }
 
   override val configComponent: ConfigComponent[Config] = {
@@ -44,7 +46,8 @@ object dsl extends DrawingDefinition[Point] {
                   cfg
                 case Left(error) =>
                   println(error)
-                  previousConfig
+                  println(previousConfig.withMessage(Some(error)).message)
+                  previousConfig.withMessage(Some(error))
               }
           }
         }
@@ -55,8 +58,11 @@ object dsl extends DrawingDefinition[Point] {
         ^.className := "dsl-config",
         component.apply(stringSnapshot)(),
         <.div(
-          ^.className := "dsl-feedback",
-          "This is a message"
+          ^.classSet(
+            "dsl-feedback" -> true,
+            "dsl-error" -> config2Snapshot.value.message.isDefined
+          ),
+          <.span(config2Snapshot.value.message.getOrElse("").toString)
         )
       )
     }
