@@ -1,6 +1,5 @@
 package evolution.app.portfolio
 
-import cats.Id
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
@@ -51,7 +50,15 @@ object dsl extends DrawingDefinition[Point] {
         }
 
       val component: ConfigComponent[String] = instances.textConfig
-      component.apply(stringSnapshot)()
+
+      <.div(
+        ^.className := "dsl-config",
+        component.apply(stringSnapshot)(),
+        <.div(
+          ^.className := "dsl-feedback",
+          "This is a message"
+        )
+      )
     }
   }
 

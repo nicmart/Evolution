@@ -85,6 +85,12 @@ nav .checkbox:hover {
   font-family: monospace;
 }
 
+.dsl-config {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .code-wrapper {
   flex: 2;
 }
