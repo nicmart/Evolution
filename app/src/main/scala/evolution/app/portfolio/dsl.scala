@@ -25,12 +25,16 @@ object dsl extends DrawingDefinition[Point] {
 
   import module.ast.Type
 
-  sealed abstract case class Config(serialisedExpr: String, expr: Expr[F[Point]])
+  // TODO I would really like to move expr into the state, but that cannot be done at the moment because
+  // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
+  case class Config(serialisedExpr: String, expr: Option[Expr[F[Point]]])
 
   object Config {
-    def from(serialisedExpr: String): Either[String, Config] = for {
-      expr <- module.parse[Expr](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
-    } yield new Config(serialisedExpr, expr.asInstanceOf[Expr[F[Point]]]) {}
+    def from(serialisedExpr: String): (Config, State) = {
+      val eitherExprOrError =
+        module.parse[Expr](serialisedExpr, Type.Evo(Type.Point), initialVarContext).map(_.asInstanceOf[Expr[F[Point]]])
+      (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
+    }
   }
 
   case class State(message: Option[String])
@@ -39,15 +43,10 @@ object dsl extends DrawingDefinition[Point] {
     def render(snapshot: StateSnapshot[Config], state: State, children: PropsChildren): VdomElement = {
       val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { serialized =>
         if (serialized == snapshot.value.serialisedExpr) Callback.empty
-        else
-          Config.from(serialized) match {
-            case Right(cfg) =>
-              println(s"Parsed expression: ${cfg.expr}")
-              snapshot.setState(cfg) >> bs.setState(State(None))
-            case Left(error) =>
-              println(error)
-              bs.setState(State(message = Some(error)))
-          }
+        else {
+          val (config, state) = Config.from(serialized)
+          snapshot.setState(config) >> bs.setState(state)
+        }
       }
 
       val component: ConfigComponent[String] = instances.textConfig
@@ -74,9 +73,10 @@ object dsl extends DrawingDefinition[Point] {
       .renderBackendWithChildren[Backend]
       .build
 
-  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = {
-    data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, state.config.expr))
-  }
+  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = state.config.expr.map {
+    expr =>
+      data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
+  }.getOrElse(Iterator.empty)
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[F[Point]]): Expr[F[Point]] = {
     import expressionModule._
@@ -90,7 +90,7 @@ object dsl extends DrawingDefinition[Point] {
     )
   }
 
-  val initialConfig: Config = Config.from("integrate(point(0, 0), <point>(uniform(-2, 2), uniform(-2, 2)))").right.get
+  val initialConfig: Config = Config.from("integrate(point(0, 0), <point>(uniform(-2, 2), uniform(-2, 2)))")._1
 
   override def configCodec: JsonCodec[Config] =
     DrawingJsonCodec

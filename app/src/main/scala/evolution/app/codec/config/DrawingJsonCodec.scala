@@ -13,8 +13,7 @@ object DrawingJsonCodec extends JsonCodec[Config] {
     (for {
       serialized <- r.asString.toRight("Unable to parse Json")
       _ = println(s"Parsing inside Json Codec: $serialized")
-      parsedCfg = Config.from(serialized)
-      _ = parsedCfg.left.map(println)
-      cfg <- parsedCfg
-    } yield cfg).toOption
+      (config, state) = Config.from(serialized)
+      _ = state.message.foreach(println)
+    } yield config).toOption
 }
