@@ -69,7 +69,8 @@ object dsl extends DrawingDefinition[Point] {
   override val configComponent: ConfigComponent[Config] =
     japgolly.scalajs.react.ScalaComponent
       .builder[StateSnapshot[Config]]("DSL Config")
-      .initialState(State(None))
+      // A bit hacky here, we re-parse the expression to load the error message. See TODO above
+      .initialStateFromProps(props => Config.from(props.value.serialisedExpr)._2)
       .renderBackendWithChildren[Backend]
       .build
 
