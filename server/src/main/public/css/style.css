@@ -91,6 +91,19 @@ nav .checkbox:hover {
   flex-direction: column;
 }
 
+.dsl-feedback {
+  display: none;
+}
+
+.dsl-feedback.dsl-error {
+  display: block;
+  padding: .5em 1em;
+  background-color: #ff0047;
+  color: white;
+  text-shadow: none;
+  font-size: .8em;
+}
+
 .code-wrapper {
   flex: 2;
 }
