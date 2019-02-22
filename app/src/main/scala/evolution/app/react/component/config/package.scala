@@ -5,5 +5,5 @@ import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.StateSnapshot
 
 package object config {
-  type ConfigComponent[Config] = Component[StateSnapshot[Config], Unit, Unit, CtorType.PropsAndChildren]
+  type ConfigComponent[Config] = Component[StateSnapshot[Config], _, _, CtorType.PropsAndChildren]
 }

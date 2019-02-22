@@ -5,12 +5,14 @@ import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
-import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.geometry.Point
 import evolution.primitive.FullModule
+import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{ Callback, PropsChildren }
 
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
@@ -23,34 +25,30 @@ object dsl extends DrawingDefinition[Point] {
 
   import module.ast.Type
 
-  sealed abstract case class Config(serialisedExpr: String, expr: Expr[F[Point]], message: Option[String]) {
-    def withMessage(newMessage: Option[String]): Config = new Config(serialisedExpr, expr, newMessage) {}
-  }
+  sealed abstract case class Config(serialisedExpr: String, expr: Expr[F[Point]])
 
   object Config {
     def from(serialisedExpr: String): Either[String, Config] = for {
       expr <- module.parse[Expr](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
-    } yield new Config(serialisedExpr, expr.asInstanceOf[Expr[F[Point]]], None) {}
+    } yield new Config(serialisedExpr, expr.asInstanceOf[Expr[F[Point]]]) {}
   }
 
-  override val configComponent: ConfigComponent[Config] = {
-    instance[Config]("drawing config") { (config2Snapshot, children) =>
-      val stringSnapshot =
-        config2Snapshot.zoomState[String](config2 => config2.serialisedExpr) { serialized => previousConfig =>
-          {
-            if (serialized == previousConfig.serialisedExpr) previousConfig
-            else
-              Config.from(serialized) match {
-                case Right(cfg) =>
-                  println(s"Parsed expression: ${cfg.expr}")
-                  cfg
-                case Left(error) =>
-                  println(error)
-                  println(previousConfig.withMessage(Some(error)).message)
-                  previousConfig.withMessage(Some(error))
-              }
+  case class State(message: Option[String])
+
+  class Backend(bs: BackendScope[StateSnapshot[Config], State]) {
+    def render(snapshot: StateSnapshot[Config], state: State, children: PropsChildren): VdomElement = {
+      val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { serialized =>
+        if (serialized == snapshot.value.serialisedExpr) Callback.empty
+        else
+          Config.from(serialized) match {
+            case Right(cfg) =>
+              println(s"Parsed expression: ${cfg.expr}")
+              snapshot.setState(cfg) >> bs.setState(State(None))
+            case Left(error) =>
+              println(error)
+              bs.setState(State(message = Some(error)))
           }
-        }
+      }
 
       val component: ConfigComponent[String] = instances.textConfig
 
@@ -60,13 +58,21 @@ object dsl extends DrawingDefinition[Point] {
         <.div(
           ^.classSet(
             "dsl-feedback" -> true,
-            "dsl-error" -> config2Snapshot.value.message.isDefined
+            "dsl-error" -> state.message.isDefined
           ),
-          <.span(config2Snapshot.value.message.getOrElse("").toString)
+          <.span(state.message.getOrElse("").toString)
         )
       )
+
     }
   }
+
+  override val configComponent: ConfigComponent[Config] =
+    japgolly.scalajs.react.ScalaComponent
+      .builder[StateSnapshot[Config]]("DSL Config")
+      .initialState(State(None))
+      .renderBackendWithChildren[Backend]
+      .build
 
   override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = {
     data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, state.config.expr))
