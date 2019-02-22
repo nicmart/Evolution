@@ -247,6 +247,19 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
             AST.Number("2")
           )
         }
+
+        "[a, b, c]" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"[$a, $b, $c]") shouldBe AST.App2(
+              AST.Const(PredefinedConstant.Cons),
+              unsafeParse(a),
+              AST.App2(
+                AST.Const(PredefinedConstant.Cons),
+                unsafeParse(b),
+                AST.App2(AST.Const(PredefinedConstant.Cons), unsafeParse(c), AST.Const(PredefinedConstant.Empty)))
+            )
+          }
+        }
       }
     }
   }

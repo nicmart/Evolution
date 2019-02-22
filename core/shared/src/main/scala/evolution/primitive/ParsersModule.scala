@@ -43,13 +43,15 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
       }
 
     lazy val factor: Parser[AST] =
-      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | lifted | predefinedConstant)
+      P(("(" ~ precedence0 ~ ")") | number | unaryPrefixOp | variable | let | lifted | predefinedConstant | list)
 
     lazy val appOrFactor: Parser[AST] =
-      P(factor ~ ("(" ~/ args ~ ")").?).map {
+      P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
         case (f, None)       => f
         case (f, Some(args)) => evalApp(f, args)
       }
+
+    lazy val list: Parser[AST] = P("[" ~/ args ~ "]").map(evalList)
 
     lazy val number: Parser[AST.Number] =
       numbers.doubleLiteral.map(AST.Number(_))
@@ -80,8 +82,10 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
         AST.Let(AST.Var(id), value, in)
     }
 
-    lazy val args: Parser[List[AST]] =
-      P(precedence0 ~ ("," ~ args).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+    lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
+
+    lazy val nonEmptyArgs: Parser[List[AST]] =
+      P(precedence0 ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
@@ -107,6 +111,11 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
         case Nil                => f
         case argHead :: argTail => evalApp(AST.App(f, argHead), argTail)
       }
+
+    def evalList(asts: List[AST]): AST = asts match {
+      case Nil          => AST.Const(PredefinedConstant.Empty)
+      case head :: tail => AST.App2(AST.Const(PredefinedConstant.Cons), head, evalList(tail))
+    }
 
     object numbers {
 
