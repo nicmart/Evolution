@@ -25,6 +25,8 @@ trait ExpressionModule[F[_]] {
   }
   final case class Div(a: Expr[Double], b: Expr[Double]) extends Expr[Double]
   final case class Exp(a: Expr[Double], b: Expr[Double]) extends Expr[Double]
+  final case class Abs(a: Expr[Double]) extends Expr[Double]
+  final case class Sign(a: Expr[Double]) extends Expr[Double]
   final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double]
   final case class Inverse[T: Group](t: Expr[T]) extends Expr[T] {
     val group: Group[T] = implicitly[Group[T]]
@@ -72,6 +74,8 @@ trait ExpressionModule[F[_]] {
       case add @ Add(a, b)       => Add(transformChildren(a, f), transformChildren(b, f))(add.semigroup)
       case Div(a, b)             => Div(transformChildren(a, f), transformChildren(b, f))
       case Exp(a, b)             => Exp(transformChildren(a, f), transformChildren(b, f))
+      case Abs(a)                => Abs(transformChildren(a, f))
+      case Sign(a)               => Sign(transformChildren(a, f))
       case Mod(a, b)             => Mod(transformChildren(a, f), transformChildren(b, f))
       case inverse @ Inverse(t)  => Inverse(transformChildren(t, f))(inverse.group)
       case mult @ Multiply(k, t) => Multiply(transformChildren(k, f), transformChildren(t, f))(mult.vectorSpace)

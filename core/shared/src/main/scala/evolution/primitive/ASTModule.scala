@@ -75,6 +75,8 @@ class ASTModule[F[_]] {
     case object Add extends PredefinedConstant(Var("T") =>: Var("T") =>: Var("T"))
     case object Div extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
     case object Exp extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
+    case object Abs extends PredefinedConstant(Dbl =>: Dbl)
+    case object Sign extends PredefinedConstant(Dbl =>: Dbl)
     case object Inverse extends PredefinedConstant(Var("T") =>: Var("T"))
     case object Multiply extends PredefinedConstant(Dbl =>: Var("T") =>: Var("T"))
     case object Sin extends PredefinedConstant(Dbl =>: Dbl)

@@ -130,6 +130,9 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
             Exp(compiledX.asExpr, compiledY.asExpr)
           }
 
+        case App(Const.Abs, x)  => compile[M](x).map(compiledX => Abs(compiledX.asExpr))
+        case App(Const.Sign, x) => compile[M](x).map(compiledX => Sign(compiledX.asExpr))
+
         // TODO this is not in-line with other liftings.
         case App(Const.Inverse, x) =>
           x.tpe match {
