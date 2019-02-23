@@ -56,6 +56,7 @@ trait ExpressionModule[F[_]] {
   final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]]
   final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double]) extends Expr[F[Double]]
   final case class UniformChoice[T](ts: List[Expr[T]]) extends Expr[F[T]]
+  final case class Normal(μ: Expr[Double], σ: Expr[Double]) extends Expr[F[Double]]
 
   def VarN[A](n: Int, name: String): Expr[A] =
     if (n <= 0) Var0(name) else Shift(VarN(n - 1, name))
@@ -98,6 +99,7 @@ trait ExpressionModule[F[_]] {
       case UniformDiscrete(from, to, step) =>
         UniformDiscrete(transformChildren(from, f), transformChildren(to, f), transformChildren(step, f))
       case UniformChoice(ts) => UniformChoice(ts.map(t => transformChildren(t, f)))
+      case Normal(μ, σ)      => Normal(transformChildren(μ, f), transformChildren(σ, f))
     }
 
     def unshift[T](r: Expr[T]): Expr[T] = {

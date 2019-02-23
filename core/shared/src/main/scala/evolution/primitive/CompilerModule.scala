@@ -269,6 +269,11 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
 //            expressionModule.UniformChoice(compiledChoices.asInstanceOf[List[Expr[Any]]])
 //          }
 
+        case App2(Const.Normal, μ, σ) =>
+          (μ, σ).compileN[M] { (mu, sigma) =>
+            expressionModule.Normal(mu.asExpr, sigma.asExpr)
+          }
+
         case AST.App(f, x, _) =>
           (f, x).compileN[M] { (compiledF, compiledX) =>
             expressionModule.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])

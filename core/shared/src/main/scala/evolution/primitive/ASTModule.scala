@@ -113,6 +113,7 @@ class ASTModule[F[_]] {
     case object Uniform extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl))
     case object UniformDiscrete extends PredefinedConstant(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl))
     case object UniformChoice extends PredefinedConstant(Lst(Var("T")) =>: Evo(Var("T")))
+    case object Normal extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl))
 
     // Special functions
     case object Lift extends PredefinedConstant(Var("T"))

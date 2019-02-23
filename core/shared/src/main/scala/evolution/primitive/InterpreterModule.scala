@@ -96,7 +96,7 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
         }
 
       case MapEmpty(ev1, ev2) =>
-        Out.map2(interpret(ev1), interpret(ev2)) { (compiled1, compiled2) =>
+        interpret2(ev1, ev2) { (compiled1, compiled2) =>
           RNGRepr { rng =>
             val (rng2, next) = compiled1.run(rng)
             next match {
@@ -107,7 +107,7 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
         }
 
       case MapCons(eva, f) =>
-        Out.map2(interpret(eva), interpret(f)) { (compiledEva, compiledF) =>
+        interpret2(eva, f) { (compiledEva, compiledF) =>
           RNGRepr { rng =>
             val (rng2, next) = compiledEva.run(rng)
             next match {
@@ -118,10 +118,9 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
         }
 
       case Uniform(from, to) =>
-        Out.map2(interpret(from), interpret(to)) { (compiledFrom, compiledTo) =>
+        interpret2(from, to) { (compiledFrom, compiledTo) =>
           lazy val self: RNGRepr[Double] = RNGRepr { rng =>
-            val (n, rng2) = rng.nextInt
-            val d = (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
+            val (d, rng2) = rng.nextDouble
             val scaled = compiledFrom + d * (compiledTo - compiledFrom)
             (rng2, Some((scaled, self)))
           }
@@ -129,13 +128,29 @@ trait InterpreterModule { self: WithExpression[RNGRepr] =>
         }
 
       case UniformDiscrete(from, to, step) =>
-        Out.map3(interpret(from), interpret(to), interpret(step)) { (f, t, s) =>
+        interpret3(from, to, step) { (f, t, s) =>
           uniformChoiceRepr((f to t by s).toList)
         }
 
       case UniformChoice(ts) =>
         new Contextual[T] {
           override def apply(ctx: Ctx): T = uniformChoiceRepr(ts.map(t => interpret(t)(ctx)))
+        }
+
+      // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
+      case Normal(μ, σ) =>
+        interpret2(μ, σ) { (mu, sigma) =>
+          lazy val self: RNGRepr[Double] = RNGRepr { rng =>
+            val (u1, rng2) = rng.nextDouble
+            val (u2, rng3) = rng2.nextDouble
+
+            // TODO: missing check that u1 is not the smallest positive double number
+            val d = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+
+            (rng3, Some((d * sigma + mu, self)))
+          }
+
+          self
         }
     }
 
