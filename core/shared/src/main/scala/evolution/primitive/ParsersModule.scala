@@ -1,4 +1,5 @@
 package evolution.primitive
+import contextual._
 import fastparse.all
 import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.ParserConfig.whitespaces
@@ -6,6 +7,11 @@ import fastparse.noApi._
 
 trait ParsersModule[F[_]] { self: WithAst[F] =>
   import ast._
+
+  def parse(astString: String): Either[String, AST] =
+    Parsers.parser
+      .parse(astString)
+      .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))
 
   object Parsers {
     lazy val parser: Parser[AST] =
@@ -133,5 +139,24 @@ trait ParsersModule[F[_]] { self: WithAst[F] =>
 
       lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
     }
+  }
+
+  object ASTInterpolator extends Interpolator {
+    type Out = AST
+
+    def contextualize(interpolation: StaticInterpolation) = {
+      val lit @ Literal(_, astString) = interpolation.parts.head
+      if (parse(astString).isLeft)
+        interpolation.abort(lit, 0, "not a valid URL")
+
+      Nil
+    }
+
+    def evaluate(interpolation: RuntimeInterpolation): AST =
+      parse(interpolation.literals.head).right.get
+  }
+
+  implicit class ASTStringContext(sc: StringContext) {
+    val ast = Prefix(ASTInterpolator, sc)
   }
 }

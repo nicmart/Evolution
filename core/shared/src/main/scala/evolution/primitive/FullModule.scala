@@ -31,4 +31,5 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
       _ = println("Done: compilation")
     } yield result.asInstanceOf[R[expectedType.Out]]
   }
+
 }
