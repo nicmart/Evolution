@@ -88,9 +88,18 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         constraints <- findConstraints(exprWithVars)
       } yield (exprWithVars, constraints)
 
-    def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Substitution] =
+    case class Unification(substitution: Substitution, predicates: List[Predicate]) {
+      def compose(s2: Substitution): Unification = copy(substitution = substitution.compose(s2))
+      def withPredicate(predicate: Predicate): Unification = copy(predicates = predicate :: predicates)
+    }
+
+    object Unification {
+      val empty = Unification(Substitution.empty, Nil)
+    }
+
+    def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Unification] =
       constraints.constraints match {
-        case Nil => Substitution.empty.pure[M]
+        case Nil => Unification.empty.pure[M]
         case head :: tail =>
           head match {
             case Constraint.Eq(a, b) if a == b => unify[M](Constraints(tail))
@@ -106,7 +115,8 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
               unify[M](Constraints(a -> b).merge(Constraints(tail)))
             case Constraint.Eq(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
               unify[M](Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
-            case _ => s"$head constraint can't be unified".raiseError[M, Substitution]
+            case Constraint.Pred(p) => unify[M](Constraints(tail)).map(_.withPredicate(p))
+            case _                  => s"$head constraint can't be unified".raiseError[M, Unification]
           }
       }
 
@@ -249,5 +259,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     object TypeVars {
       val empty = new TypeVars(0)
     }
+
+    val instances: List[Predicate] = List(
+      Predicate("Num", List(Type.Dbl)),
+      Predicate("Num", List(Type.Integer))
+    )
   }
 }

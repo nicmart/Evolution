@@ -28,7 +28,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
             assignVars(AST.App(AST.Const(PredefinedConstant.Constant), point)).evaluate
           val constraints = findConstraints(evolution).evaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
-          val unifier = unify(allConstraints).right.get
+          val unifier = unify(allConstraints).right.get.substitution
           unifier.substitute(evolution.tpe) shouldBe Type.Evo(Type.Point)
         }
       }
@@ -38,7 +38,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
       "point expressions" in {
         val untyped = AST.App2(AST.Const(PredefinedConstant.Point), AST.Var("a"), AST.Var("b"))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
-        val substitution = unify(constraints).right.get
+        val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Point
       }
 
@@ -46,7 +46,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
         val identity = AST.Lambda(AST.Var("x"), AST.Var("x"))
         val untyped = AST.App(identity, AST.Number("2", Type.Dbl))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
-        val substitution = unify(constraints).right.get
+        val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Dbl
       }
 
@@ -63,7 +63,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
           )
         )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
-        val substitution = unify(constraints).right.get
+        val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Dbl)
       }
 
@@ -71,13 +71,12 @@ class TyperSpec extends CompilerSpecModule[Id] {
         val untyped = App2(Lift(Const(PredefinedConstant.Point)), Lift(Number("1")), Lift(Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         println(unify(constraints))
-        val substitution = unify(constraints).right.get
+        val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Point)
       }
 
       "predicates" - {
         "when the predicate is valid" in {
-          pending
           val constraints = Constraints(
             List(
               Constraint.Eq(Type.Var("X"), Type.Dbl),
@@ -85,7 +84,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
             ))
           val substitution = unify(constraints)
           substitution.isRight shouldBe true
-          substitution.right.get.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
+          substitution.right.get.substitution.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
         }
       }
     }

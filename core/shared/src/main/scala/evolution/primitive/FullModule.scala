@@ -25,7 +25,7 @@ class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with Compile
       constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe))
       unification <- Typer.unify(constraintsWithExpectedType)
       _ = println("Done: unification")
-      typedExpr = unification.substitute(exprWithTypeVars)
+      typedExpr = unification.substitution.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
       result <- Compiler.compile[Either[String, ?]](typedExpr).run(ctx)
       _ = println("Done: compilation")
