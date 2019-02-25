@@ -148,6 +148,7 @@ class ASTModule[F[_]] {
     final case class Lst(inner: Type) extends Type { type Out = List[inner.type] }
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
 
+    // TODO can we do better thant this?
     def group(t: Type): Either[String, Group[t.Out]] = {
       t match {
         case Type.Integer => Right(Group[Int])

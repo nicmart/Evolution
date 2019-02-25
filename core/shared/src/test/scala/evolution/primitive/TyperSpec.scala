@@ -3,7 +3,7 @@ import cats.Id
 import cats.implicits._
 
 class TyperSpec extends CompilerSpecModule[Id] {
-  import Typer._, ast._, AST._, Typer.TypeInference._
+  import Typer._, ast._, AST._, Typer.TypeInference._, TypeClasses._
 
   "The typer" - {
     "should generate constraints for" - {
@@ -73,6 +73,26 @@ class TyperSpec extends CompilerSpecModule[Id] {
         println(unify(constraints))
         val substitution = unify(constraints).right.get
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Point)
+      }
+
+      "predicates" - {
+        "when the predicate is valid" in {
+          pending
+          val constraints = Constraints(
+            List(
+              Constraint.Eq(Type.Var("X"), Type.Dbl),
+              Constraint.Pred(Predicate("Num", List(Type.Var("X"))))
+            ))
+          val substitution = unify(constraints)
+          substitution.isRight shouldBe true
+          substitution.right.get.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
+        }
+      }
+    }
+
+    "should not unify" - {
+      "predicates" - {
+        "when the predicate is not valid" in {}
       }
     }
   }

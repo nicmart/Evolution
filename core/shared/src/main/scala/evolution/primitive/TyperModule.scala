@@ -6,7 +6,7 @@ import cats.implicits._
 
 trait TyperModule[F[_]] { self: WithAst[F] =>
   import ast._
-  import AST._, PredefinedConstant._
+  import AST._, TypeClasses._
 
   object Typer {
 
@@ -93,18 +93,18 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         case Nil => Substitution.empty.pure[M]
         case head :: tail =>
           head match {
-            case Constraint(a, b) if a == b => unify[M](Constraints(tail))
-            case Constraint(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
+            case Constraint.Eq(a, b) if a == b => unify[M](Constraints(tail))
+            case Constraint.Eq(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
               val substituteVar = Substitution(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
               unify[M](constraints2).map(_.compose(substituteVar))
-            case Constraint(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
+            case Constraint.Eq(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
               val substituteVar = Substitution(x -> t)
               val constraints2 = substituteVar.substitute(Constraints(tail))
               unify[M](constraints2).map(_.compose(substituteVar))
-            case Constraint(Type.Evo(a), Type.Evo(b)) =>
+            case Constraint.Eq(Type.Evo(a), Type.Evo(b)) =>
               unify[M](Constraints(a -> b).merge(Constraints(tail)))
-            case Constraint(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
+            case Constraint.Eq(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
               unify[M](Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
             case _ => s"$head constraint can't be unified".raiseError[M, Substitution]
           }
@@ -140,20 +140,29 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       } yield substitution.substitute(scheme)
     }
 
-    case class Constraint(a: Type, b: Type)
+    sealed trait Constraint
+    object Constraint {
+      case class Eq(a: Type, b: Type) extends Constraint {
+        override def toString = s"$a = $b"
+      }
+
+      case class Pred(predicate: Predicate) extends Constraint {
+        override def toString = s"${predicate.id} ${predicate.types.mkString(" ")}"
+      }
+    }
 
     case class Constraints(constraints: List[Constraint]) {
       def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
       def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
         constraints.merge(current)
       }
-      override def toString: String = constraints.map(c => s"${c.a} = ${c.b}").mkString("\n")
+      override def toString: String = constraints.mkString("\n")
     }
 
     object Constraints {
       val empty: Constraints = Constraints(Nil)
       def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
-        case (a, b) => Constraint(a, b)
+        case (a, b) => Constraint.Eq(a, b)
       })
     }
 
@@ -203,6 +212,11 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
         def substitute(s1: Substitution, s2: Substitution): Substitution = Substitution(s1.substitute(s2.assignments))
       }
 
+      implicit val canBeSubstituted: CanBeSubstituted[Predicate] = new CanBeSubstituted[Predicate] {
+        def substitute(s: Substitution, predicate: Predicate): Predicate =
+          predicate.copy(types = s.substitute(predicate.types))
+      }
+
       implicit def list[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[List[T]] =
         new CanBeSubstituted[List[T]] {
           def substitute(s1: Substitution, ts: List[T]): List[T] = ts.map(s1.substitute[T])
@@ -215,7 +229,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
       implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
         def substitute(s: Substitution, constraint: Constraint): Constraint =
-          Constraint(s.substitute(constraint.a), s.substitute(constraint.b))
+          constraint match {
+            case Constraint.Eq(a, b) => Constraint.Eq(s.substitute(a), s.substitute(b))
+            case Constraint.Pred(p)  => Constraint.Pred(s.substitute(p))
+          }
       }
 
       implicit val constraints: CanBeSubstituted[Constraints] = new CanBeSubstituted[Constraints] {
