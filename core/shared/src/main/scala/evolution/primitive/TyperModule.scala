@@ -58,9 +58,9 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
-        case Var(_, _)    => Constraints.empty.pure[TypeInference]
-        case Const(_, _)  => Constraints.empty.pure[TypeInference]
-        case Number(_, _) => Constraints.empty.pure[TypeInference]
+        case Var(_, _)      => Constraints.empty.pure[TypeInference]
+        case Const(_, _)    => Constraints.empty.pure[TypeInference]
+        case Number(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
         case App(Const(PredefinedConstant.Lift, _), value, tpe) =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
@@ -91,6 +91,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
     case class Unification(substitution: Substitution, predicates: List[Predicate]) {
       def compose(s2: Substitution): Unification = copy(substitution = substitution.compose(s2))
       def withPredicate(predicate: Predicate): Unification = copy(predicates = predicate :: predicates)
+      def substitutedPredicates: List[Predicate] = substitution.substitute(predicates)
     }
 
     object Unification {
@@ -119,6 +120,12 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             case _                  => s"$head constraint can't be unified".raiseError[M, Unification]
           }
       }
+
+    // TODO: Very, Very naive typeclass checking, that works for now because we just have a typeclass
+    // without derivation
+    def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] =
+      if (predicates.forall(instances.contains)) M.pure(())
+      else M.raiseError(s"Not found instances for predicates $predicates")
 
     private def varUsagesIn(varName: String, expr: AST): List[AST] =
       expr match {
@@ -166,6 +173,12 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
         constraints.merge(current)
       }
+      def withPredicate(predicate: Predicate): Constraints =
+        Constraints(Constraint.Pred(predicate) :: constraints)
+
+      def withPredicates(predicates: List[Predicate]): Constraints =
+        Constraints(predicates.map(Constraint.Pred) ++ constraints)
+
       override def toString: String = constraints.mkString("\n")
     }
 

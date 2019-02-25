@@ -9,7 +9,6 @@ class TyperSpec extends CompilerSpecModule[Id] {
     "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
-          // Numbers literals are overloaded, we defer a decision on this
           assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).evaluate._2 shouldBe Constraints.empty
         }
       }
@@ -82,16 +81,24 @@ class TyperSpec extends CompilerSpecModule[Id] {
               Constraint.Eq(Type.Var("X"), Type.Dbl),
               Constraint.Pred(Predicate("Num", List(Type.Var("X"))))
             ))
-          val substitution = unify(constraints)
-          substitution.isRight shouldBe true
-          substitution.right.get.substitution.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
+
+          val unification = unify(constraints)
+          checkPredicates(unification.right.get.substitutedPredicates).isRight shouldBe true
         }
       }
     }
 
     "should not unify" - {
       "predicates" - {
-        "when the predicate is not valid" in {}
+        "when the predicate is not valid" in {
+          val constraints = Constraints(
+            List(
+              Constraint.Eq(Type.Var("X"), Type.Arrow(Type.Integer, Type.Integer)),
+              Constraint.Pred(Predicate("Num", List(Type.Var("X"))))
+            ))
+          val unification = unify(constraints)
+          checkPredicates(unification.right.get.substitutedPredicates).isLeft shouldBe true
+        }
       }
     }
   }
