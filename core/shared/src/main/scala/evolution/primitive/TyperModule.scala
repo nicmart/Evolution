@@ -125,9 +125,12 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     // TODO: Very, Very naive typeclass checking, that works for now because we just have a typeclass
     // without derivation
-    def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] =
-      if (predicates.forall(instances.contains)) M.pure(())
-      else M.raiseError(s"Not found instances for predicates $predicates")
+    def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] = {
+      val predicatesWithoutVars = predicates.filter(p => p.types.flatMap(typeVars).isEmpty)
+      val invalidPredicates = predicatesWithoutVars.filter(p => !instances.contains(p))
+      if (invalidPredicates.isEmpty) M.pure(())
+      else M.raiseError(s"Not found instances for predicates $invalidPredicates")
+    }
 
     private def varUsagesIn(varName: String, expr: AST): List[AST] =
       expr match {
