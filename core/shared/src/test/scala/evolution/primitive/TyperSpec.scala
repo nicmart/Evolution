@@ -10,6 +10,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
           assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).evaluate._2 shouldBe Constraints.empty
+            .withPredicate(Predicate("Num", List(Type.Var("X"))))
         }
       }
 

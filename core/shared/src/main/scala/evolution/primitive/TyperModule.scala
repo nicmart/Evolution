@@ -149,13 +149,16 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
       case _              => tpe.children.flatMap(typeVars).toSet
     }
 
-    private def freshInstance(scheme: Type): TypeInference[Type] = {
+    private def freshInstanceSubstitution(scheme: Type): TypeInference[Substitution] = {
       val varsInShceme = typeVars(scheme).toList
       for {
         assignments <- varsInShceme.traverse(schemeVar => newVar.map(typeVar => Assignment(schemeVar.name, typeVar)))
         substitution = Substitution(assignments)
-      } yield substitution.substitute(scheme)
+      } yield substitution
     }
+
+    private def freshInstance(scheme: Type): TypeInference[Type] =
+      freshInstanceSubstitution(scheme).map(_.substitute(scheme))
 
     sealed trait Constraint
     object Constraint {
