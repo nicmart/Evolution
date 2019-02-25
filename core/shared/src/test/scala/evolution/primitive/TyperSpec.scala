@@ -21,6 +21,12 @@ class TyperSpec extends CompilerSpecModule[Id] {
       }
 
       "pre-defined constants" - {
+        "point function" in {
+          val point = assignVars(AST.Const(PredefinedConstant.Point)).evaluate
+          val constraints = findConstraints(point).evaluate
+          val unifier = unify(constraints)
+          unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(Type.Dbl =>: Type.Dbl =>: Type.Point)
+        }
 
         "constant evolution of a point" in {
           val point = AST.App2(AST.Const(PredefinedConstant.Point), AST.Number("1"), AST.Number("1"))
@@ -28,8 +34,8 @@ class TyperSpec extends CompilerSpecModule[Id] {
             assignVars(AST.App(AST.Const(PredefinedConstant.Constant), point)).evaluate
           val constraints = findConstraints(evolution).evaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
-          val unifier = unify(allConstraints).right.get.substitution
-          unifier.substitute(evolution.tpe) shouldBe Type.Evo(Type.Point)
+          val unifier = unify(allConstraints)
+          unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(Type.Evo(Type.Point))
         }
       }
     }

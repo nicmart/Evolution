@@ -10,14 +10,14 @@ import evolution.typeclass.VectorSpace
 import scala.collection.immutable
 
 class ASTModule[F[_]] {
-
+  import TypeClasses._
   sealed trait AST {
     val tpe: Type
     final type Out = tpe.Out
 
     def withType(tpe: Type): AST = this match {
       case AST.Var(name, _)              => AST.Var(name, tpe)
-      case AST.Const(id, _)              => AST.Const(id, tpe)
+      case AST.Const(id, _, ps)          => AST.Const(id, tpe, ps)
       case AST.App(f, x, _)              => AST.App(f, x, tpe)
       case AST.Lambda(varName, expr, _)  => AST.Lambda(varName, expr, tpe)
       case AST.Let(varName, expr, in, _) => AST.Let(varName, expr, in, tpe)
@@ -36,7 +36,9 @@ class ASTModule[F[_]] {
     final case class Var(name: String, tpe: Type = Type.Var("")) extends AST
     final case class Lambda(varName: AST.Var, expr: AST, tpe: Type = Type.Var("")) extends AST
     final case class App(f: AST, x: AST, tpe: Type = Type.Var("")) extends AST
-    final case class Const(id: PredefinedConstant, tpe: Type = Type.Var("")) extends AST
+    // TODO predicates should not be here
+    final case class Const(id: PredefinedConstant, tpe: Type = Type.Var(""), predicates: List[Predicate] = Nil)
+        extends AST
     final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
     final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
 
@@ -57,8 +59,8 @@ class ASTModule[F[_]] {
   }
 
   // TODO this name will evolve to "Constants"
-  abstract sealed class PredefinedConstant(val scheme: Type) extends EnumEntry
-  abstract sealed class PredefinedFunction(scheme: Type) extends PredefinedConstant(scheme)
+  abstract sealed class PredefinedConstant(val scheme: Type, val predicates: List[Predicate]) extends EnumEntry
+  abstract sealed class PredefinedFunction(scheme: Type) extends PredefinedConstant(scheme, Nil)
 
   object PredefinedConstant extends Enum[PredefinedConstant] {
     import Type._
@@ -67,56 +69,62 @@ class ASTModule[F[_]] {
     val nonFunctions0: List[PredefinedConstant] = values.toList.filter(!functions0.contains(_))
 
     // Constants
-    case object Point extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point)
-    case object Floor extends PredefinedConstant(Dbl =>: Integer)
-    case object ToDbl extends PredefinedConstant(Integer =>: Dbl)
-    case object X extends PredefinedConstant(Type.Point =>: Dbl)
-    case object Y extends PredefinedConstant(Type.Point =>: Dbl)
-    case object Add extends PredefinedConstant(Var("T") =>: Var("T") =>: Var("T"))
-    case object Div extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
-    case object Exp extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
-    case object Abs extends PredefinedConstant(Dbl =>: Dbl)
-    case object Sign extends PredefinedConstant(Dbl =>: Dbl)
-    case object Inverse extends PredefinedConstant(Var("T") =>: Var("T"))
-    case object Multiply extends PredefinedConstant(Dbl =>: Var("T") =>: Var("T"))
-    case object Sin extends PredefinedConstant(Dbl =>: Dbl)
-    case object Cos extends PredefinedConstant(Dbl =>: Dbl)
-    case object Eq extends PredefinedConstant(Var("T") =>: Var("T") =>: Bool)
-    case object If extends PredefinedConstant(Bool =>: Var("T") =>: Var("T") =>: Var("T"))
-    case object PI extends PredefinedConstant(Dbl)
-    case object Mod extends PredefinedConstant(Dbl =>: Dbl =>: Dbl)
+    case object Point extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point, Nil)
+    case object Floor extends PredefinedConstant(Dbl =>: Integer, Nil)
+    case object ToDbl extends PredefinedConstant(Integer =>: Dbl, Nil)
+    case object X extends PredefinedConstant(Type.Point =>: Dbl, Nil)
+    case object Y extends PredefinedConstant(Type.Point =>: Dbl, Nil)
+    case object Add
+        extends PredefinedConstant(Var("T") =>: Var("T") =>: Var("T"), List(Predicate("Semigroup", List(Var("T")))))
+    case object Div extends PredefinedConstant(Dbl =>: Dbl =>: Dbl, Nil)
+    case object Exp extends PredefinedConstant(Dbl =>: Dbl =>: Dbl, Nil)
+    case object Abs extends PredefinedConstant(Dbl =>: Dbl, Nil)
+    case object Sign extends PredefinedConstant(Dbl =>: Dbl, Nil)
+    case object Inverse extends PredefinedConstant(Var("T") =>: Var("T"), Nil)
+    case object Multiply extends PredefinedConstant(Dbl =>: Var("T") =>: Var("T"), Nil)
+    case object Sin extends PredefinedConstant(Dbl =>: Dbl, Nil)
+    case object Cos extends PredefinedConstant(Dbl =>: Dbl, Nil)
+    case object Eq extends PredefinedConstant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object If extends PredefinedConstant(Bool =>: Var("T") =>: Var("T") =>: Var("T"), Nil)
+    case object PI extends PredefinedConstant(Dbl, Nil)
+    case object Mod extends PredefinedConstant(Dbl =>: Dbl =>: Dbl, Nil)
 
     // Chain
-    case object Empty extends PredefinedConstant(Var("T"))
-    case object Cons extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))
-    case object MapEmpty extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))
+    case object Empty extends PredefinedConstant(Var("T"), Nil)
+    case object Cons extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
+    case object MapEmpty extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
     case object MapCons
         extends PredefinedConstant(
-          Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
+          Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")),
+          Nil)
 
     // Derived
-    case object Polar extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point)
-    case object Constant extends PredefinedConstant(Var("T") =>: Evo(Var("T")))
-    case object Integrate extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))
-    case object Solve1 extends PredefinedConstant(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))
+    case object Polar extends PredefinedConstant(Dbl =>: Dbl =>: Type.Point, Nil)
+    case object Constant extends PredefinedConstant(Var("T") =>: Evo(Var("T")), Nil)
+    case object Integrate extends PredefinedConstant(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
+    case object Solve1 extends PredefinedConstant(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")), Nil)
     case object Solve2
-        extends PredefinedConstant(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
-    case object Concat extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))
-    case object Map extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))
-    case object FlatMap extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
-    case object Take extends PredefinedConstant(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))
+        extends PredefinedConstant(
+          Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")),
+          Nil)
+    case object Concat extends PredefinedConstant(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
+    case object Map extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")), Nil)
+    case object FlatMap
+        extends PredefinedConstant(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")), Nil)
+    case object Take extends PredefinedConstant(Integer =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
     case object ZipWith
         extends PredefinedConstant(
-          Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))
+          Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")),
+          Nil)
 
     // Distribution
-    case object Uniform extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl))
-    case object UniformDiscrete extends PredefinedConstant(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl))
-    case object UniformChoice extends PredefinedConstant(Lst(Var("T")) =>: Evo(Var("T")))
-    case object Normal extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl))
+    case object Uniform extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl), Nil)
+    case object UniformDiscrete extends PredefinedConstant(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl), Nil)
+    case object UniformChoice extends PredefinedConstant(Lst(Var("T")) =>: Evo(Var("T")), Nil)
+    case object Normal extends PredefinedConstant(Dbl =>: Dbl =>: Evo(Dbl), Nil)
 
     // Special functions
-    case object Lift extends PredefinedConstant(Var("T"))
+    case object Lift extends PredefinedConstant(Var("T"), Nil)
 
     // functions-only
     case object Fix extends PredefinedFunction((Var("T") =>: Var("T")) =>: Var("T"))

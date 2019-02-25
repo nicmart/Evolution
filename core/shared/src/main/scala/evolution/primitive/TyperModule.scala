@@ -26,6 +26,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     /**
      * TODO: can we express this with transformChildren or similar?
+     * TODO: can we assign vars directly when we unify?
      * Traverse the AST and assign type variables to each expression.
      * No constraint is added at this stage
      */
@@ -49,8 +50,9 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
             Let(varName.copy(tpe = tVar.tpe), tValue, tIn, tLet)
           }
 
-        case Const(id, _) =>
-          freshInstance(id.scheme).map(tpe => Const(id, tpe))
+        case Const(id, _, _) =>
+          freshInstanceSubstitution(id.scheme).map(subst =>
+            Const(id, subst.substitute(id.scheme), subst.substitute(id.predicates)))
 
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
@@ -58,10 +60,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
-        case Var(_, _)      => Constraints.empty.pure[TypeInference]
-        case Const(_, _)    => Constraints.empty.pure[TypeInference]
-        case Number(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
-        case App(Const(PredefinedConstant.Lift, _), value, tpe) =>
+        case Var(_, _)       => Constraints.empty.pure[TypeInference]
+        case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
+        case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
+        case App(Const(PredefinedConstant.Lift, _, _), value, tpe) =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
         case Lambda(variable, lambdaExpr, tpe) =>
@@ -278,7 +280,10 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
 
     val instances: List[Predicate] = List(
       Predicate("Num", List(Type.Dbl)),
-      Predicate("Num", List(Type.Integer))
+      Predicate("Num", List(Type.Integer)),
+      Predicate("Semigroup", List(Type.Integer)),
+      Predicate("Semigroup", List(Type.Dbl)),
+      Predicate("Semigroup", List(Type.Point))
     )
   }
 }

@@ -30,13 +30,13 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
         case AST.Var(name, tpe) =>
           Kleisli((ctx: VarContext) => VarN(ctx.indexOf(name), name).pure[M])
 
-        case AST.Const(Const.PI, _) =>
+        case AST.Const(Const.PI, _, _) =>
           Dbl(Math.PI).pure[K]
 
-        case AST.Const(Const.Empty, _) =>
+        case AST.Const(Const.Empty, _, _) =>
           Empty().pure[K]
 
-        case fc @ AST.Const(id, tpe) =>
+        case fc @ AST.Const(id, tpe, _) =>
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.Lambda(varName, body, tpe) =>
@@ -286,8 +286,8 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
 
     object App {
       def unapply(arg: AST): Option[(PredefinedConstant, AST)] = arg match {
-        case AST.App(AST.Const(c, _), x, _) => Some((c, x))
-        case _                              => None
+        case AST.App(AST.Const(c, _, _), x, _) => Some((c, x))
+        case _                                 => None
       }
     }
 
@@ -307,7 +307,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
 
     object LiftApp2 {
       def unapply(arg: AST): Option[(PredefinedConstant, AST, AST)] = arg match {
-        case AST.App(AST.App(AST.App(AST.Const(Const.Lift, _), AST.Const(const, _), _), x, _), y, _) =>
+        case AST.App(AST.App(AST.App(AST.Const(Const.Lift, _, _), AST.Const(const, _, _), _), x, _), y, _) =>
           Some((const, x, y))
         case _ => None
       }
