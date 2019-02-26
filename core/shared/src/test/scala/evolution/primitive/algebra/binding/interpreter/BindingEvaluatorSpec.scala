@@ -2,6 +2,7 @@ package evolution.primitive.algebra.binding.interpreter
 
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationModule._
+import Expr._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingEvaluatorSpec extends FreeSpec with Matchers {

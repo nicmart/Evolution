@@ -80,6 +80,7 @@ object dsl extends DrawingDefinition[Point] {
   }.getOrElse(Iterator.empty)
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[EvoRepr[Point]]): Expr[EvoRepr[Point]] = {
+    import Expr._
     Let[Double, EvoRepr[Point]](
       "top",
       Dbl(ctx.top),

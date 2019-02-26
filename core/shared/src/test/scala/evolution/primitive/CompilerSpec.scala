@@ -4,6 +4,7 @@ import evolution.data.ExpressionModule
 import cats.implicits._
 
 class CompilerSpec extends CompilerSpecModule[Id] {
+  import Expr._
 
   "The compiles" - {
     "should successfully compile" - {

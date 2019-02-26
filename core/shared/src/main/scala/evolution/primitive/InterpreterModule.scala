@@ -8,7 +8,7 @@ import evolution.geometry.Point
 // TODO this is an implementation
 trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   type Out[T] = InterpreterModule.Out[T]
-  import InterpreterModule._
+  import InterpreterModule._, Expr._
 
   object Interpreter {
     def interpret[T](expr: Expr[T]): Out[T] = expr match {

@@ -2,6 +2,7 @@ package evolution.primitive.algebra.evolution.interpreter
 
 import cats.instances.double._
 import evolution.data.EvaluationModule._
+import Expr._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {

@@ -8,7 +8,7 @@ import evolution.data.ExpressionModule
 // TODO Random extensions and self types, please to do something better
 trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] with ASTModule[F] {
 
-  import Desugarer._
+  import Desugarer._, Expr._
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 

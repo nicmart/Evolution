@@ -8,7 +8,7 @@ import evolution.typeclass.VectorSpace._
 import cats.implicits._
 
 trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
-
+  import Expr._
   object Desugarer {
     def constant[A](a: Expr[A]): Expr[F[A]] =
       Fix[F[A]](Lambda("self", Cons(Shift(a), varN("self", 0))))
