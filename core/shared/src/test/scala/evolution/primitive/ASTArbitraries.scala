@@ -4,8 +4,7 @@ import evolution.primitive.algebra.parser.ParserConfig
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-trait ASTArbitraries[F[_]] { self: HasAST[F] =>
-  import ast._
+trait ASTArbitraries[F[_]] { self: ASTModule[F] =>
 
   def genFunctionArgs: Gen[List[String]] =
     for {
@@ -28,8 +27,8 @@ trait ASTArbitraries[F[_]] { self: HasAST[F] =>
     body <- genLeafExpr
   } yield s"$id -> $body"
 
-  def genPredefinedFunc: Gen[PredefinedConstant] =
-    Gen.oneOf(PredefinedConstant.nonFunctions0)
+  def genPredefinedFunc: Gen[Constant] =
+    Gen.oneOf(Constant.nonFunctions0)
 
   def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.Number(d.toString)))
   def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))

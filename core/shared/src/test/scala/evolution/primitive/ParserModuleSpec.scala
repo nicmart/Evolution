@@ -1,13 +1,11 @@
 package evolution.primitive
 import cats.Id
+import evolution.primitive.InterpreterModule.Constant
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 
 class ParserModuleSpec extends CompilerSpecModule[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
-  import ast._
-  import PredefinedConstant._
-  import AST._
 
   "The expression parser" - {
     "should parse" - {
@@ -25,57 +23,57 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
 
       "additions" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a + $b") shouldBe AST.App2(AST.Const(PredefinedConstant.Add), unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a + $b") shouldBe AST.App2(AST.Const(Constant.Add), unsafeParse(a), unsafeParse(b))
         }
       }
 
       "inverses" in {
         unsafeParse("-point(0, 0)") shouldBe AST.App(
-          AST.Const(PredefinedConstant.Inverse),
-          App2(AST.Const(PredefinedConstant.Point), AST.Number("0"), AST.Number("0")))
+          AST.Const(Constant.Inverse),
+          AST.App2(AST.Const(Constant.Point), AST.Number("0"), AST.Number("0")))
       }
 
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id =$expr in $$$id") shouldBe Let(Var(id), unsafeParse(expr), Var(id))
+            unsafeParse(s"$id =$expr in $$$id") shouldBe AST.Let(AST.Var(id), unsafeParse(expr), AST.Var(id))
           }
         }
 
         "a = b in\\n 1 + 2" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id = $expr in 1 + 2") shouldBe Let(
-              Var(id),
+            unsafeParse(s"$id = $expr in 1 + 2") shouldBe AST.Let(
+              AST.Var(id),
               unsafeParse(expr),
-              App2(Const(Add), Number("1"), Number("2")))
+              AST.App2(AST.Const(Constant.Add), AST.Number("1"), AST.Number("2")))
           }
         }
 
         "a = aval in b = bval in body" in {
           forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
             unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldBe
-              Let(Var(a), unsafeParse(aVal), Let(Var(b), unsafeParse(bVal), unsafeParse(body)))
+              AST.Let(AST.Var(a), unsafeParse(aVal), AST.Let(AST.Var(b), unsafeParse(bVal), unsafeParse(body)))
           }
         }
       }
 
       "multiplications" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a * $b") shouldBe App2(Const(Multiply), unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a * $b") shouldBe AST.App2(AST.Const(Constant.Multiply), unsafeParse(a), unsafeParse(b))
         }
       }
 
       "mods" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a % $b") shouldBe App2(Const(Mod), unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a % $b") shouldBe AST.App2(AST.Const(Constant.Mod), unsafeParse(a), unsafeParse(b))
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe AST.App2(
-            Const(Add),
-            AST.App2(Const(Multiply), unsafeParse(a), unsafeParse(b)),
+            AST.Const(Constant.Add),
+            AST.App2(AST.Const(Constant.Multiply), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
           )
         }
@@ -84,9 +82,9 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a + $b * $c") shouldBe AST.App2(
-            Const(Add),
+            AST.Const(Constant.Add),
             unsafeParse(a),
-            AST.App2(Const(Multiply), unsafeParse(b), unsafeParse(c))
+            AST.App2(AST.Const(Constant.Multiply), unsafeParse(b), unsafeParse(c))
           )
         }
       }
@@ -94,8 +92,8 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"($a + $b) * $c") shouldBe AST.App2(
-            Const(Multiply),
-            AST.App2(Const(Add), unsafeParse(a), unsafeParse(b)),
+            AST.Const(Constant.Multiply),
+            AST.App2(AST.Const(Constant.Add), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
           )
         }
@@ -118,7 +116,7 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
 
       "Let bindings" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-          unsafeParse(s"let($id, $value, $in)") shouldBe Let(Var(id), unsafeParse(value), unsafeParse(in))
+          unsafeParse(s"let($id, $value, $in)") shouldBe AST.Let(AST.Var(id), unsafeParse(value), unsafeParse(in))
         }
       }
 
@@ -126,7 +124,7 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe AST.Lambda(
             AST.Var(identifier1),
-            AST.App2(Const(Add), unsafeParse(expr1), unsafeParse(expr2))
+            AST.App2(AST.Const(Constant.Add), unsafeParse(expr1), unsafeParse(expr2))
           )
         }
       }
@@ -165,30 +163,30 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
 
       "parse exponentials" - {
         "2^3" in {
-          unsafeParse("2^3") shouldBe AST.App2(Const(Exp), AST.Number("2"), AST.Number("3"))
+          unsafeParse("2^3") shouldBe AST.App2(AST.Const(Constant.Exp), AST.Number("2"), AST.Number("3"))
         }
 
         "2^3 + 1" in {
           unsafeParse("2^3 + 1") shouldBe AST.App2(
-            Const(Add),
-            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3")),
+            AST.Const(Constant.Add),
+            AST.App2(AST.Const(Constant.Exp), AST.Number("2"), AST.Number("3")),
             AST.Number("1")
           )
         }
 
         "2^3 * 2" in {
           unsafeParse("2^3 * 2") shouldBe AST.App2(
-            Const(Multiply),
-            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3")),
+            AST.Const(Constant.Multiply),
+            AST.App2(AST.Const(Constant.Exp), AST.Number("2"), AST.Number("3")),
             AST.Number("2")
           )
         }
 
         "2 * 2^3" in {
           unsafeParse("2 * 2^3") shouldBe AST.App2(
-            Const(Multiply),
+            AST.Const(Constant.Multiply),
             AST.Number("2"),
-            AST.App2(Const(Exp), AST.Number("2"), AST.Number("3"))
+            AST.App2(AST.Const(Constant.Exp), AST.Number("2"), AST.Number("3"))
           )
         }
       }
@@ -197,8 +195,8 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"$a / $b + $c") shouldBe AST.App2(
-              Const(Add),
-              AST.App2(Const(Div), unsafeParse(a), unsafeParse(b)),
+              AST.Const(Constant.Add),
+              AST.App2(AST.Const(Constant.Div), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
           }
@@ -207,9 +205,9 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "a + b / c = a + (b / c)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"$a + $b / $c") shouldBe AST.App2(
-              Const(Add),
+              AST.Const(Constant.Add),
               unsafeParse(a),
-              AST.App2(Const(Div), unsafeParse(b), unsafeParse(c))
+              AST.App2(AST.Const(Constant.Div), unsafeParse(b), unsafeParse(c))
             )
           }
         }
@@ -217,8 +215,8 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "(a + b) / c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"($a + $b) / $c") shouldBe AST.App2(
-              Const(Div),
-              AST.App2(Const(Add), unsafeParse(a), unsafeParse(b)),
+              AST.Const(Constant.Div),
+              AST.App2(AST.Const(Constant.Add), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
           }
@@ -227,7 +225,7 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "<expr>(a, b)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
             unsafeParse(s"<$expr>($a, $b)") shouldBe AST.App2(
-              AST.App(AST.Const(PredefinedConstant.Lift), unsafeParse(expr)),
+              AST.App(AST.Const(Constant.Lift), unsafeParse(expr)),
               unsafeParse(a),
               unsafeParse(b))
           }
@@ -236,13 +234,13 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "<n>" in {
           forAll(arbitrary[Double]) { d =>
             unsafeParse(s"<$d>") shouldBe
-              AST.App(AST.Const(PredefinedConstant.Lift), unsafeParse(d.toString))
+              AST.App(AST.Const(Constant.Lift), unsafeParse(d.toString))
           }
         }
 
         "1 <+> 2" in {
           unsafeParse("1 <+> 2") shouldBe AST.App2(
-            AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Add)),
+            AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
             AST.Number("1"),
             AST.Number("2")
           )
@@ -251,12 +249,12 @@ class ParserModuleSpec extends CompilerSpecModule[Id] {
         "[a, b, c]" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"[$a, $b, $c]") shouldBe AST.App2(
-              AST.Const(PredefinedConstant.Cons),
+              AST.Const(Constant.Cons),
               unsafeParse(a),
               AST.App2(
-                AST.Const(PredefinedConstant.Cons),
+                AST.Const(Constant.Cons),
                 unsafeParse(b),
-                AST.App2(AST.Const(PredefinedConstant.Cons), unsafeParse(c), AST.Const(PredefinedConstant.Empty)))
+                AST.App2(AST.Const(Constant.Cons), unsafeParse(c), AST.Const(Constant.Empty)))
             )
           }
         }

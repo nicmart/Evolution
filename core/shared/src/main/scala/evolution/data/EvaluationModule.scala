@@ -8,10 +8,9 @@ import evolution.primitive.InterpreterModule
 
 import scala.util.Random
 
-trait EvaluationModule[F[_]] extends HasExpression[F] {
+trait EvaluationModule[F[_]] extends ExpressionModule[F] {
   type Result[T]
   type EvoRepr[T] = F[T]
-  import expressionModule._
 
   // TODO it would be nice to make the seed abstract too
   def newSeed: Long
@@ -31,8 +30,7 @@ trait EvaluationModule[F[_]] extends HasExpression[F] {
 private[data] object EvaluationModuleImpl
     extends EvaluationModule[RNGRepr]
     with InterpreterModule
-    with HasExpression[RNGRepr] {
-  import expressionModule._
+    with ExpressionModule[RNGRepr] {
   override type Result[T] = Out[T]
 
   override def interpret[T](expr: Expr[T]): Out[T] =

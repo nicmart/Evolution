@@ -3,7 +3,7 @@ import cats.Id
 import cats.implicits._
 
 class TyperSpec extends CompilerSpecModule[Id] {
-  import Typer._, ast._, AST._, Typer.TypeInference._, TypeClasses._
+  import Typer._, Typer.TypeInference._, TypeClasses._
 
   "The typer" - {
     "should generate constraints for" - {
@@ -22,16 +22,16 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
       "pre-defined constants" - {
         "point function" in {
-          val point = assignVars(AST.Const(PredefinedConstant.Point)).evaluate
+          val point = assignVars(AST.Const(Constant.Point)).evaluate
           val constraints = findConstraints(point).evaluate
           val unifier = unify(constraints)
           unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(Type.Dbl =>: Type.Dbl =>: Type.Point)
         }
 
         "constant evolution of a point" in {
-          val point = AST.App2(AST.Const(PredefinedConstant.Point), AST.Number("1"), AST.Number("1"))
+          val point = AST.App2(AST.Const(Constant.Point), AST.Number("1"), AST.Number("1"))
           val evolution =
-            assignVars(AST.App(AST.Const(PredefinedConstant.Constant), point)).evaluate
+            assignVars(AST.App(AST.Const(Constant.Constant), point)).evaluate
           val constraints = findConstraints(evolution).evaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
@@ -42,7 +42,7 @@ class TyperSpec extends CompilerSpecModule[Id] {
 
     "should unify" - {
       "point expressions" in {
-        val untyped = AST.App2(AST.Const(PredefinedConstant.Point), AST.Var("a"), AST.Var("b"))
+        val untyped = AST.App2(AST.Const(Constant.Point), AST.Var("a"), AST.Var("b"))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Point
@@ -57,14 +57,14 @@ class TyperSpec extends CompilerSpecModule[Id] {
       }
 
       "mapCons(empty, head -> tail -> cons(1, tail))" in {
-        val untyped = App2(
-          AST.Const(PredefinedConstant.MapCons),
-          AST.Const(PredefinedConstant.Empty),
-          Lambda(
-            Var("head"),
-            Lambda(
-              Var("tail"),
-              App2(AST.Const(PredefinedConstant.Cons), Number("1", Type.Dbl), Var("tail"))
+        val untyped = AST.App2(
+          AST.Const(Constant.MapCons),
+          AST.Const(Constant.Empty),
+          AST.Lambda(
+            AST.Var("head"),
+            AST.Lambda(
+              AST.Var("tail"),
+              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Type.Dbl), AST.Var("tail"))
             )
           )
         )
@@ -74,7 +74,8 @@ class TyperSpec extends CompilerSpecModule[Id] {
       }
 
       "<point>(<1>, <2>)" in {
-        val untyped = App2(Lift(Const(PredefinedConstant.Point)), Lift(Number("1")), Lift(Number("2")))
+        val untyped =
+          AST.App2(AST.Lift(AST.Const(Constant.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         println(unify(constraints))
         val substitution = unify(constraints).right.get.substitution

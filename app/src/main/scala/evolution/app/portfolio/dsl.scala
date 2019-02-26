@@ -16,14 +16,12 @@ import japgolly.scalajs.react.{ Callback, PropsChildren }
 
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
-  import expressionModule._
   val name = "drawing dsl"
 
-  private val module = new FullModule[EvoRepr]
   private val predefinedVars = List("left", "bottom", "right", "top")
+  private val module = new FullModule[EvoRepr]
   private val initialVarContext = new module.VarContext(predefinedVars)
-
-  import module.ast.Type
+  import module.Type
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
   // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
@@ -82,7 +80,6 @@ object dsl extends DrawingDefinition[Point] {
   }.getOrElse(Iterator.empty)
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[EvoRepr[Point]]): Expr[EvoRepr[Point]] = {
-    import expressionModule._
     Let[Double, EvoRepr[Point]](
       "top",
       Dbl(ctx.top),

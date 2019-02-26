@@ -5,7 +5,6 @@ import evolution.data.EvaluationModule._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class EvolutionEvaluatorSpec extends FreeSpec with Matchers {
-  import expressionModule._
   type F[T] = EvoRepr[T]
   "The ToEvolution interpreter" - {
     "should correctly create recursive evolutions" in {

@@ -1,14 +1,13 @@
 package evolution.primitive
 import cats.Semigroup
 import cats.Group
-import evolution.data.HasExpression
+import evolution.data.{ ExpressionModule, HasExpression }
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
 import evolution.typeclass.VectorSpace._
 import cats.implicits._
 
-trait DesugarModule[F[_]] { self: HasExpression[F] =>
-  import expressionModule._
+trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
 
   object Desugarer {
     def constant[A](a: Expr[A]): Expr[F[A]] =

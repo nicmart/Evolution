@@ -5,8 +5,7 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.ParserConfig.whitespaces
 import fastparse.noApi._
 
-trait ParsersModule[F[_]] { self: HasAST[F] =>
-  import ast._
+trait ParsersModule[F[_]] { self: ASTModule[F] =>
 
   def parse(astString: String): Either[String, AST] =
     Parsers.parser
@@ -21,8 +20,8 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
       P(lambdaOrLet | precedence1)
 
     lazy val precedence1Ops: Parser[AST] =
-      P("+").map(_ => AST.Const(PredefinedConstant.Add)) |
-        P("<+>").map(_ => AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Add)))
+      P("+").map(_ => AST.Const(Constant.Add)) |
+        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)))
 
     lazy val precedence1: Parser[AST] =
       P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
@@ -30,10 +29,10 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
       }
 
     lazy val precedence2Ops: Parser[AST] =
-      P("*").map(_ => AST.Const(PredefinedConstant.Multiply)) |
-        P("/").map(_ => AST.Const(PredefinedConstant.Div)) |
-        P("%").map(_ => AST.Const(PredefinedConstant.Mod)) |
-        P("<*>").map(_ => AST.App(AST.Const(PredefinedConstant.Lift), AST.Const(PredefinedConstant.Multiply)))
+      P("*").map(_ => AST.Const(Constant.Multiply)) |
+        P("/").map(_ => AST.Const(Constant.Div)) |
+        P("%").map(_ => AST.Const(Constant.Mod)) |
+        P("<*>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply)))
 
     lazy val precedence2: Parser[AST] =
       P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
@@ -41,7 +40,7 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
       }
 
     lazy val precedence3Ops: Parser[AST] =
-      P("^").map(_ => AST.Const(PredefinedConstant.Exp))
+      P("^").map(_ => AST.Const(Constant.Exp))
 
     lazy val precedence3: Parser[AST] =
       P(appOrFactor ~ (precedence3Ops ~/ appOrFactor).rep).map {
@@ -67,7 +66,7 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
 
     // TODO can we parse the operator directly into a constant?
     lazy val unaryPrefixOp: Parser[AST] =
-      P("-" ~ appOrFactor).map(e => AST.App(AST.Const(PredefinedConstant.Inverse), e))
+      P("-" ~ appOrFactor).map(e => AST.App(AST.Const(Constant.Inverse), e))
 
     lazy val lambdaOrLet: Parser[AST] = {
       def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ precedence0).map { expr =>
@@ -96,11 +95,11 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
     lazy val lifted: Parser[AST] =
-      P("<" ~/ precedence0 ~ ">").map(ast => AST.App(AST.Const(PredefinedConstant.Lift), ast))
+      P("<" ~/ precedence0 ~ ">").map(ast => AST.App(AST.Const(Constant.Lift), ast))
 
     lazy val predefinedConstant: Parser[AST.Const] = identifier
-      .filter(id => PredefinedConstant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
-      .map(PredefinedConstant.withNameInsensitive)
+      .filter(id => Constant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
+      .map(Constant.withNameInsensitive)
       .map(AST.Const(_))
 
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
@@ -119,8 +118,8 @@ trait ParsersModule[F[_]] { self: HasAST[F] =>
       }
 
     def evalList(asts: List[AST]): AST = asts match {
-      case Nil          => AST.Const(PredefinedConstant.Empty)
-      case head :: tail => AST.App2(AST.Const(PredefinedConstant.Cons), head, evalList(tail))
+      case Nil          => AST.Const(Constant.Empty)
+      case head :: tail => AST.App2(AST.Const(Constant.Cons), head, evalList(tail))
     }
 
     object numbers {

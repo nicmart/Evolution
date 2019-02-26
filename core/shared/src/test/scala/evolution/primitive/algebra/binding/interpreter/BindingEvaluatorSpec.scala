@@ -5,7 +5,7 @@ import evolution.data.EvaluationModule._
 import org.scalatest.{ FreeSpec, Matchers }
 
 class BindingEvaluatorSpec extends FreeSpec with Matchers {
-  import expressionModule._
+
   "a var0 expression" - {
     "evaluates to the first item in the stack" in {
       val expr = Var0[Double]("x")

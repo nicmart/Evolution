@@ -4,8 +4,7 @@ import cats.data.State
 import cats.{ Monad, MonadError }
 import cats.implicits._
 
-trait TyperModule[F[_]] { self: HasAST[F] =>
-  import ast._
+trait TyperModule[F[_]] { self: ASTModule[F] =>
   import AST._, TypeClasses._
 
   object Typer {
@@ -63,7 +62,7 @@ trait TyperModule[F[_]] { self: HasAST[F] =>
         case Var(_, _)       => Constraints.empty.pure[TypeInference]
         case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
         case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
-        case App(Const(PredefinedConstant.Lift, _, _), value, tpe) =>
+        case App(Const(Constant.Lift, _, _), value, tpe) =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
         case Lambda(variable, lambdaExpr, tpe) =>

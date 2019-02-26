@@ -1,24 +1,19 @@
 package evolution.primitive
 
-import cats.arrow.Arrow
 import cats.data.Kleisli
-import cats.{ MonadError, Traverse }
+import cats.MonadError
 import cats.implicits._
 import evolution.data.ExpressionModule
-import evolution.geometry
-import evolution.data.HasExpression
 
 // TODO Random extensions and self types, please to do something better
-trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with HasAST[F] {
+trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] with ASTModule[F] {
 
-  import expressionModule._
   import Desugarer._
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 
   object Compiler {
-    import ast._
-    val Const = PredefinedConstant
+    val Const = Constant
 
     def compile[M[_]](expr: AST)(implicit M: MonadError[M, String]): Result[M, Expr[expr.Out]] = {
       type K[T] = Result[M, T]
@@ -53,7 +48,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
         case AST.Number(n, _) => // Default to Double for numeric literals
           Dbl(n.toDouble).pure[K]
 
-        case App(Const.Fix, x) =>
+        case App1(Const.Fix, x) =>
           compile[M](x).map { compiledX =>
             Fix(compiledX.asExpr[Any => Any])
           }
@@ -91,20 +86,20 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
             liftedPolar(cx.asExprF, cy.asExprF)
           }
 
-        case App(Const.X, p) =>
+        case App1(Const.X, p) =>
           compile[M](p).map { compiledP =>
             X(compiledP.asExpr)
           }
 
-        case App(Const.Y, p) =>
+        case App1(Const.Y, p) =>
           compile[M](p).map { compiledP =>
             Y(compiledP.asExpr)
           }
 
-        case App(Const.Floor, d) =>
+        case App1(Const.Floor, d) =>
           compile[M](d).map(compiledD => Floor(compiledD.asExpr))
 
-        case App(Const.ToDbl, n) =>
+        case App1(Const.ToDbl, n) =>
           compile[M](n).map(compiledN => ToDbl(compiledN.asExpr))
 
         case App2(Const.Add, x, y) =>
@@ -130,11 +125,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
             Exp(compiledX.asExpr, compiledY.asExpr)
           }
 
-        case App(Const.Abs, x)  => compile[M](x).map(compiledX => Abs(compiledX.asExpr))
-        case App(Const.Sign, x) => compile[M](x).map(compiledX => Sign(compiledX.asExpr))
+        case App1(Const.Abs, x)  => compile[M](x).map(compiledX => Abs(compiledX.asExpr))
+        case App1(Const.Sign, x) => compile[M](x).map(compiledX => Sign(compiledX.asExpr))
 
         // TODO this is not in-line with other liftings.
-        case App(Const.Inverse, x) =>
+        case App1(Const.Inverse, x) =>
           x.tpe match {
             // Overload - for evolutions
             case Type.Evo(tpe) =>
@@ -160,10 +155,10 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
             cy <- compile[M](y)
           } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
 
-        case App(Const.Cos, x) =>
+        case App1(Const.Cos, x) =>
           compile[M](x).map(compiledX => Cos(compiledX.asExpr))
 
-        case App(Const.Sin, x) =>
+        case App1(Const.Sin, x) =>
           compile[M](x).map(compiledX => Sin(compiledX.asExpr))
 
         case App2(Const.Mod, x, y) =>
@@ -187,7 +182,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
           (x, y).compileN[M] { (compiledX, compiledY) =>
             polar(compiledX.asExpr, compiledY.asExpr)
           }
-        case App(Const.Constant, x) =>
+        case App1(Const.Constant, x) =>
           compile[M](x).map(compiledX => constant(compiledX.asExpr))
 
         case App2(Const.Integrate, x, y) =>
@@ -243,7 +238,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
             take(compiledN.asExpr, compiledF.asExprF)
           }
 
-        case App(Const.Lift, f) => compile[M](f).map(x => constant(x.asExpr))
+        case App1(Const.Lift, f) => compile[M](f).map(x => constant(x.asExpr))
 
         case App3(Const.ZipWith, a, b, c) =>
           (a, b, c).compileN[M] { (compiledA, compiledB, compiledF) =>
@@ -252,19 +247,19 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
 
         case App2(Const.Uniform, from, to) =>
           (from, to).compileN[M] { (compiledFrom, compiledTo) =>
-            expressionModule.Uniform(compiledFrom.asExpr, compiledTo.asExpr)
+            Uniform(compiledFrom.asExpr, compiledTo.asExpr)
           }
 
         case App3(Const.UniformDiscrete, from, to, step) =>
           (from, to, step).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
-            expressionModule.UniformDiscrete(
+            UniformDiscrete(
               compiledFrom.asExpr,
               compiledTo.asExpr,
               compiledStep.asExpr
             )
           }
 
-        case App(Const.UniformChoice, choices) =>
+        case App1(Const.UniformChoice, choices) =>
           M.raiseError("We need to fix UniformChoice")
 //          choices.traverse(choice => compile[M](choice).asInstanceOf[M[Any]]).map { compiledChoices =>
 //            expressionModule.UniformChoice(compiledChoices.asInstanceOf[List[Expr[Any]]])
@@ -272,12 +267,12 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
 
         case App2(Const.Normal, μ, σ) =>
           (μ, σ).compileN[M] { (mu, sigma) =>
-            expressionModule.Normal(mu.asExpr, sigma.asExpr)
+            Normal(mu.asExpr, sigma.asExpr)
           }
 
         case AST.App(f, x, _) =>
           (f, x).compileN[M] { (compiledF, compiledX) =>
-            expressionModule.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
+            App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
           }
 
         case _ =>
@@ -285,29 +280,29 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with H
       }
     }.asInstanceOf[Result[M, Expr[expr.Out]]]
 
-    object App {
-      def unapply(arg: AST): Option[(PredefinedConstant, AST)] = arg match {
+    object App1 {
+      def unapply(arg: AST): Option[(Constant, AST)] = arg match {
         case AST.App(AST.Const(c, _, _), x, _) => Some((c, x))
         case _                                 => None
       }
     }
 
     object App2 {
-      def unapply(arg: AST): Option[(PredefinedConstant, AST, AST)] = arg match {
-        case AST.App(App(c, x), y, _) => Some((c, x, y))
-        case _                        => None
+      def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
+        case AST.App(App1(c, x), y, _) => Some((c, x, y))
+        case _                         => None
       }
     }
 
     object App3 {
-      def unapply(arg: AST): Option[(PredefinedConstant, AST, AST, AST)] = arg match {
+      def unapply(arg: AST): Option[(Constant, AST, AST, AST)] = arg match {
         case AST.App(App2(c, x, y), z, _) => Some((c, x, y, z))
         case _                            => None
       }
     }
 
     object LiftApp2 {
-      def unapply(arg: AST): Option[(PredefinedConstant, AST, AST)] = arg match {
+      def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
         case AST.App(AST.App(AST.App(AST.Const(Const.Lift, _, _), AST.Const(const, _, _), _), x, _), y, _) =>
           Some((const, x, y))
         case _ => None

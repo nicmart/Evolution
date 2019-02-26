@@ -10,4 +10,4 @@ trait CompilerSpecModule[F[_]]
     with TyperModule[F]
     with ParsersModule[F]
     with ASTArbitraries[F]
-    with HasAST[F] {}
+    with ASTModule[F] {}

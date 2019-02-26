@@ -6,9 +6,8 @@ import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 // TODO this is an implementation
-trait InterpreterModule { self: HasExpression[RNGRepr] =>
+trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   type Out[T] = InterpreterModule.Out[T]
-  import expressionModule._
   import InterpreterModule._
 
   object Interpreter {
