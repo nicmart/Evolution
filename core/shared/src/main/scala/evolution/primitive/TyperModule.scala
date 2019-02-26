@@ -123,7 +123,7 @@ trait TyperModule[F[_]] { self: WithAst[F] =>
           }
       }
 
-    // TODO: Very, Very naive typeclass checking, that works for now because we just have a typeclass
+    // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without
     // without derivation
     def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] = {
       val predicatesWithoutVars = predicates.filter(p => p.types.flatMap(typeVars).isEmpty)

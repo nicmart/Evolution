@@ -4,11 +4,12 @@ import cats.arrow.FunctionK
 import cats.kernel.{ Eq, Semigroup }
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
+import cats.~>
 
 trait ExpressionModule[F[_]] {
 
   sealed trait Expr[T] {
-    def transform(f: FunctionK[Expr, Expr]): Expr[T] = Expr.transform(this, f)
+    def transform(f: FunctionK[Expr, Expr]): Expr[T] = Expr.transform(f)(this)
   }
 
   // We are using case classes when we could have used objects because the pattern matching was failing with objects
@@ -62,52 +63,52 @@ trait ExpressionModule[F[_]] {
     if (n <= 0) Var0(name) else Shift(VarN(n - 1, name))
 
   object Expr {
-    def transform[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = f(transformChildren(r, f))
+    def transform[T](f: Expr ~> Expr): Expr ~> Expr =
+      λ[Expr ~> Expr](fa => f(transformChildren(transform(f))(fa)))
 
-    def transformChildren[T](r: Expr[T], f: FunctionK[Expr, Expr]): Expr[T] = r match {
-      case Dbl(d)                => Dbl(d)
-      case Floor(d)              => Floor(transformChildren(d, f))
-      case ToDbl(n)              => ToDbl(transformChildren(n, f))
-      case Integer(n)            => Integer(n)
-      case Pnt(x, y)             => Pnt(transformChildren(x, f), transformChildren(y, f))
-      case X(p)                  => X(transformChildren(p, f))
-      case Y(p)                  => Y(transformChildren(p, f))
-      case add @ Add(a, b)       => Add(transformChildren(a, f), transformChildren(b, f))(add.semigroup)
-      case Div(a, b)             => Div(transformChildren(a, f), transformChildren(b, f))
-      case Exp(a, b)             => Exp(transformChildren(a, f), transformChildren(b, f))
-      case Abs(a)                => Abs(transformChildren(a, f))
-      case Sign(a)               => Sign(transformChildren(a, f))
-      case Mod(a, b)             => Mod(transformChildren(a, f), transformChildren(b, f))
-      case inverse @ Inverse(t)  => Inverse(transformChildren(t, f))(inverse.group)
-      case mult @ Multiply(k, t) => Multiply(transformChildren(k, f), transformChildren(t, f))(mult.vectorSpace)
-      case Sin(d)                => Sin(transformChildren(d, f))
-      case Cos(d)                => Cos(transformChildren(d, f))
-      case eq @ Equals(a, b)     => Equals(transformChildren(a, f), transformChildren(b, f))(eq.eq)
-      case IfThen(condition, a, b) =>
-        IfThen(transformChildren(condition, f), transformChildren(a, f), transformChildren(b, f))
-      case Var0(name)                 => Var0(name)
-      case Shift(expr)                => Shift(transformChildren(expr, f))
-      case Let(variable, value, expr) => Let(variable, transformChildren(value, f), transformChildren(expr, f))
-      case Lambda(variable, expr)     => Lambda(variable, transformChildren(expr, f))
-      case App(func, a)               => App(transformChildren(func, f), transformChildren(a, f))
-      case Fix(expr)                  => Fix(transformChildren(expr, f))
-      case Empty()                    => Empty()
-      case Cons(head, tail)           => Cons(transformChildren(head, f), transformChildren(tail, f))
-      case MapEmpty(eva, eva2)        => MapEmpty(transformChildren(eva, f), transformChildren(eva2, f))
-      case MapCons(eva, func)         => MapCons(transformChildren(eva, f), transformChildren(func, f))
-      case Uniform(from, to)          => Uniform(transformChildren(from, f), transformChildren(to, f))
-      case UniformDiscrete(from, to, step) =>
-        UniformDiscrete(transformChildren(from, f), transformChildren(to, f), transformChildren(step, f))
-      case UniformChoice(ts) => UniformChoice(ts.map(t => transformChildren(t, f)))
-      case Normal(μ, σ)      => Normal(transformChildren(μ, f), transformChildren(σ, f))
-    }
+    def transformChildren[T](f: Expr ~> Expr): Expr ~> Expr =
+      λ[Expr ~> Expr] {
+        case Dbl(d)                => Dbl(d)
+        case Floor(d)              => Floor(f(d))
+        case ToDbl(n)              => ToDbl(f(n))
+        case Integer(n)            => Integer(n)
+        case Pnt(x, y)             => Pnt(f(x), f(y))
+        case X(p)                  => X(f(p))
+        case Y(p)                  => Y(f(p))
+        case add @ Add(a, b)       => Add(f(a), f(b))(add.semigroup)
+        case Div(a, b)             => Div(f(a), f(b))
+        case Exp(a, b)             => Exp(f(a), f(b))
+        case Abs(a)                => Abs(f(a))
+        case Sign(a)               => Sign(f(a))
+        case Mod(a, b)             => Mod(f(a), f(b))
+        case inverse @ Inverse(t)  => Inverse(f(t))(inverse.group)
+        case mult @ Multiply(k, t) => Multiply(f(k), f(t))(mult.vectorSpace)
+        case Sin(d)                => Sin(f(d))
+        case Cos(d)                => Cos(f(d))
+        case eq @ Equals(a, b)     => Equals(f(a), f(b))(eq.eq)
+        case IfThen(condition, a, b) =>
+          IfThen(f(condition), f(a), f(b))
+        case Var0(name)                 => Var0(name)
+        case Shift(expr)                => Shift(f(expr))
+        case Let(variable, value, expr) => Let(variable, f(value), f(expr))
+        case Lambda(variable, expr)     => Lambda(variable, f(expr))
+        case App(func, a)               => App(f(func), f(a))
+        case Fix(expr)                  => Fix(f(expr))
+        case Empty()                    => Empty()
+        case Cons(head, tail)           => Cons(f(head), f(tail))
+        case MapEmpty(eva, eva2)        => MapEmpty(f(eva), f(eva2))
+        case MapCons(eva, func)         => MapCons(f(eva), f(func))
+        case Uniform(from, to)          => Uniform(f(from), f(to))
+        case UniformDiscrete(from, to, step) =>
+          UniformDiscrete(f(from), f(to), f(step))
+        case UniformChoice(ts) => UniformChoice(ts.map(t => f(t)))
+        case Normal(μ, σ)      => Normal(f(μ), f(σ))
+      }
 
     def unshift[T](r: Expr[T]): Expr[T] = {
-      val unshiftFK: FunctionK[Expr, Expr] = new FunctionK[Expr, Expr] {
-        def apply[U](t: Expr[U]): Expr[U] = t match {
-          case Shift(x) => x
-          case _        => t
-        }
+      val unshiftFK: Expr ~> Expr = λ[Expr ~> Expr] {
+        case Shift(x) => x
+        case t        => t
       }
 
       r.transform(unshiftFK)
