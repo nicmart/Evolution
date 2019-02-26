@@ -1,12 +1,12 @@
 package evolution.primitive
 
 import evolution.algebra.representation.RNGRepr
-import evolution.data.{ Ctx, ExpressionModule, WithExpression }
+import evolution.data.{ Ctx, ExpressionModule, HasExpression }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 // TODO this is an implementation
-trait InterpreterModule { self: WithExpression[RNGRepr] =>
+trait InterpreterModule { self: HasExpression[RNGRepr] =>
   type Out[T] = InterpreterModule.Out[T]
   import expressionModule._
   import InterpreterModule._

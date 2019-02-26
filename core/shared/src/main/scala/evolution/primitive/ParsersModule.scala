@@ -5,7 +5,7 @@ import evolution.primitive.algebra.parser.ParserConfig.White._
 import evolution.primitive.algebra.parser.ParserConfig.whitespaces
 import fastparse.noApi._
 
-trait ParsersModule[F[_]] { self: WithAst[F] =>
+trait ParsersModule[F[_]] { self: HasAST[F] =>
   import ast._
 
   def parse(astString: String): Either[String, AST] =

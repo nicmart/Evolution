@@ -4,7 +4,7 @@ import cats.data.State
 import cats.{ Monad, MonadError }
 import cats.implicits._
 
-trait TyperModule[F[_]] { self: WithAst[F] =>
+trait TyperModule[F[_]] { self: HasAST[F] =>
   import ast._
   import AST._, TypeClasses._
 

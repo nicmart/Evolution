@@ -1,13 +1,13 @@
 package evolution.primitive
 import cats.Id
 import evolution.algebra.representation.RNGRepr
-import evolution.data.WithExpression
+import evolution.data.HasExpression
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 
 class InterpreterModuleSpec extends FreeSpec with Matchers {
-  val interpreter = new InterpreterModule with WithExpression[RNGRepr] {}
+  val interpreter = new InterpreterModule with HasExpression[RNGRepr] {}
   import interpreter.Interpreter._, interpreter.expressionModule._
 
   "The interpreter" - {

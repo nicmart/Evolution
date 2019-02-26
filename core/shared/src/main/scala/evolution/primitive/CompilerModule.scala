@@ -6,10 +6,10 @@ import cats.{ MonadError, Traverse }
 import cats.implicits._
 import evolution.data.ExpressionModule
 import evolution.geometry
-import evolution.data.WithExpression
+import evolution.data.HasExpression
 
 // TODO Random extensions and self types, please to do something better
-trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { self: WithAst[FF] =>
+trait CompilerModule[F[_]] extends DesugarModule[F] with HasExpression[F] with HasAST[F] {
 
   import expressionModule._
   import Desugarer._
@@ -263,6 +263,7 @@ trait CompilerModule[FF[_]] extends DesugarModule[FF] with WithExpression[FF] { 
               compiledStep.asExpr
             )
           }
+
         case App(Const.UniformChoice, choices) =>
           M.raiseError("We need to fix UniformChoice")
 //          choices.traverse(choice => compile[M](choice).asInstanceOf[M[Any]]).map { compiledChoices =>

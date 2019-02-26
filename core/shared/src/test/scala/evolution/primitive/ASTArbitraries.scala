@@ -4,7 +4,7 @@ import evolution.primitive.algebra.parser.ParserConfig
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-trait ASTArbitraries[F[_]] { self: WithAst[F] =>
+trait ASTArbitraries[F[_]] { self: HasAST[F] =>
   import ast._
 
   def genFunctionArgs: Gen[List[String]] =

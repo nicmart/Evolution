@@ -2,7 +2,7 @@ package evolution.primitive
 import cats.MonadError
 import cats.implicits._
 
-class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with CompilerModule[F] with WithAst[F] {
+class FullModule[F[_]] extends ParsersModule[F] with TyperModule[F] with CompilerModule[F] with HasAST[F] {
   import ast._
   def parse[R[_]](
     serialisedExpr: String,

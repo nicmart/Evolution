@@ -11,6 +11,7 @@ import scala.collection.immutable
 
 class ASTModule[F[_]] {
   import TypeClasses._
+
   sealed trait AST {
     val tpe: Type
     final type Out = tpe.Out
@@ -226,6 +227,6 @@ class ASTModule[F[_]] {
   }
 }
 
-trait WithAst[F[_]] {
+trait HasAST[F[_]] {
   val ast: ASTModule[F] = new ASTModule
 }

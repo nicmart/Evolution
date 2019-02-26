@@ -116,7 +116,6 @@ trait ExpressionModule[F[_]] {
   }
 }
 
-trait WithExpression[FF[_]] {
-  type F[T] = FF[T]
-  final val expressionModule = new ExpressionModule[FF] {}
+trait HasExpression[F[_]] {
+  final val expressionModule = new ExpressionModule[F] {}
 }
