@@ -17,6 +17,9 @@ object Sidebar {
           "column" -> true,
           "is-one-third" -> true
         ),
+        <.div(
+          ^.id := "sidebar-handle",
+        ),
         children
       )
     }

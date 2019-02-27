@@ -16,13 +16,21 @@ html {
 }
 
 #page-content .sidebar.expanded {
-  display: block;
-  padding-left: 1em!important;
+  display: flex;
+  flex-direction: row;
+  padding-left: 0!important;
   padding-top: 3em!important;
 }
 
 .sidebar label.label {
   color: White;
+}
+
+#sidebar-handle {
+  width: 1px;
+  height: 100%;
+  margin-right: 1.5em;
+  background-color: White;
 }
 
 nav.navbar,
@@ -68,6 +76,7 @@ nav .checkbox:hover {
 
 .inner-config {
   display: flex;
+  flex: 1;
   flex-direction: column;
 }
 
