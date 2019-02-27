@@ -27,7 +27,8 @@ object Sidebar {
         ^.width := (windowWidth - props.sidebarX.value).toString,
         <.div(
           ^.id := "sidebar-handle",
-          ^.onMouseDown --> bs.modState(_.copy(isDragging = true))
+          ^.onMouseDown --> bs.modState(_.copy(isDragging = true)),
+          <.div()
         ),
         children
       )
