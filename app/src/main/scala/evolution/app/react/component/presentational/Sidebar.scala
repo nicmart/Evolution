@@ -5,26 +5,26 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react
+import japgolly.scalajs.react.extra.StateSnapshot
 import org.scalajs.dom
 import org.scalajs.dom.raw.MouseEvent
 
 object Sidebar {
-  type Expanded = Boolean
-  type IsDragging = Boolean
-  case class State(isDragging: Boolean, sidebarX: Option[Double])
+  case class Props(expanded: Boolean, sidebarX: StateSnapshot[Double])
+  case class State(isDragging: Boolean)
   object State {
-    val empty: State = State(false, None)
+    val empty: State = State(false)
   }
-  class Backend(bs: BackendScope[Expanded, State]) {
+  class Backend(bs: BackendScope[Props, State]) {
     def windowWidth: Int = dom.document.documentElement.clientWidth
-    def render(expanded: Expanded, state: State, children: PropsChildren): VdomElement = {
+    def render(props: Props, state: State, children: PropsChildren): VdomElement = {
       <.div(
         ^.classSet(
           "sidebar" -> true,
-          "expanded" -> expanded,
+          "expanded" -> props.expanded,
           "column" -> false // TODO remove this?
         ),
-        ^.width := state.sidebarX.fold(windowWidth.toDouble / 3)(windowWidth - _).toString,
+        ^.width := (windowWidth - props.sidebarX.value).toString,
         <.div(
           ^.id := "sidebar-handle",
           ^.onMouseDown --> bs.modState(_.copy(isDragging = true))
@@ -34,16 +34,16 @@ object Sidebar {
     }
 
     def onMouseDrag(e: MouseEvent): Callback =
-      bs.state.flatMap { state =>
-        if (state.isDragging) {
-          bs.modState(_.copy(sidebarX = Some(e.clientX)))
-        } else Callback.empty
-      }
+      for {
+        state <- bs.state
+        props <- bs.props
+        _ <- if (state.isDragging) props.sidebarX.setState(e.clientX) else Callback.empty
+      } yield ()
   }
 
   val component =
     react.ScalaComponent
-      .builder[Expanded]("sidebar")
+      .builder[Props]("sidebar")
       .initialState(State.empty)
       .renderBackendWithChildren[Backend]
       .componentDidMount { s =>

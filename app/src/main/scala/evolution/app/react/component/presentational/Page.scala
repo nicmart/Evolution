@@ -23,7 +23,7 @@ object Page {
 
   case class Props[C](
     running: StateSnapshot[Boolean],
-    drawingContext: Option[DrawingContext],
+    drawingContext: StateSnapshot[DrawingContext],
     rendererState: StateSnapshot[RendererState],
     points: Eval[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState[C]],
@@ -32,7 +32,10 @@ object Page {
     onFrameDraw: Callback,
     sidebarExpanded: StateSnapshot[Boolean]
   ) {
-    def canvasKey: String = (rendererState.value, drawingState.value, drawingContext).hashCode().toString
+    def canvasKey: String = (rendererState.value, drawingState.value, drawingContext.value).hashCode().toString
+    def configState: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
+    def sidebarXState: StateSnapshot[Double] = drawingContext.zoomState(_.right)(x =>
+      state => state.copy(canvasSize = state.canvasSize.copy(width = x.toInt * 2)))
   }
 
   class Backend[C](
@@ -40,7 +43,6 @@ object Page {
     canvasComponent: Canvas.ReactComponent
   )(bs: BackendScope[Props[C], Unit]) {
     def render(props: Props[C]): VdomElement = {
-      val configState = props.drawingState.zoomState(_.config)(config => state => state.copy(config = config))
       <.div(
         Navbar.component(
           <.div(
@@ -88,7 +90,7 @@ object Page {
             ^.className := "column is-paddingless full-height",
             canvasComponent.withKey(props.canvasKey)(
               Canvas.Props(
-                props.drawingContext,
+                props.drawingContext.value,
                 canvasInitializer,
                 props.rendererState.value,
                 props.points,
@@ -96,7 +98,8 @@ object Page {
                 props.running.value
               ))
           ),
-          Sidebar.component(props.sidebarExpanded.value)(drawingConfig(configState)())
+          Sidebar.component(Sidebar.Props(props.sidebarExpanded.value, props.sidebarXState))(
+            drawingConfig(props.configState)())
         )
       )
     }
