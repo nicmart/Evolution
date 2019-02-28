@@ -33,11 +33,12 @@ object Canvas {
 
     def render(props: Props): VdomElement = {
       val size = props.context.canvasSize.point
+      val retinaSize = props.context.retina.canvasSize.point
       <.canvas(
-        ^.width := (size.x / 2).toString,
-        ^.height := (size.y / 2).toString,
-        VdomAttr("width") := size.x.toString,
-        VdomAttr("height") := size.y.toString
+        ^.width := size.x.toString,
+        ^.height := size.y.toString,
+        VdomAttr("width") := retinaSize.x.toString,
+        VdomAttr("height") := retinaSize.y.toString
       )
     }
 
@@ -64,7 +65,7 @@ object Canvas {
     }
 
     def start(node: dom.Element, props: Props): Unit = {
-      val drawer = drawerFromState(props.rendererState, props.context)
+      val drawer = drawerFromState(props.rendererState, props.context.retina)
       if (!running && props.running) {
         running = true
         stopPending = false

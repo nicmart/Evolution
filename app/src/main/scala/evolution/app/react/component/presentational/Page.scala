@@ -4,6 +4,7 @@ import cats.Eval
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.{ DrawingState, RendererState }
+import evolution.app.react.component.App.LayoutState
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
@@ -23,19 +24,20 @@ object Page {
 
   case class Props[C](
     running: StateSnapshot[Boolean],
-    drawingContext: StateSnapshot[DrawingContext],
-    rendererState: StateSnapshot[RendererState],
+    layout: StateSnapshot[LayoutState],
+    renderer: StateSnapshot[RendererState],
     points: Eval[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
     onRefresh: Callback,
-    onFrameDraw: Callback,
-    sidebarExpanded: StateSnapshot[Boolean]
+    onFrameDraw: Callback
   ) {
-    def canvasKey: String = (rendererState.value, drawingState.value, drawingContext.value).hashCode().toString
-    def configState: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
-    def sidebarXState: StateSnapshot[Double] = drawingContext.zoomState(_.right)(x =>
-      state => state.copy(canvasSize = state.canvasSize.copy(width = x.toInt * 2)))
+    def canvasKey: String = (renderer.value, drawingState.value, layout.value.drawingContext).hashCode().toString
+    def config: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
+    def sidebarWidth: StateSnapshot[Double] =
+      layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
+    def sidebarStatus: StateSnapshot[Boolean] =
+      layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
   }
 
   class Backend[C](
@@ -66,7 +68,7 @@ object Page {
           ),
           <.div(
             ^.className := "navbar-item is-hidden-touch",
-            RenderingSettings.component(props.rendererState)
+            RenderingSettings.component(props.renderer)
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
@@ -76,8 +78,8 @@ object Page {
             ^.className := "navbar-end",
             <.div(
               ^.className := "navbar-item",
-              Button.component(props.sidebarExpanded.modState(!_)) {
-                <.i(^.className := s"fas fa-angle-${if (props.sidebarExpanded.value) "right" else "left"}")
+              Button.component(props.sidebarStatus.modState(!_)) {
+                <.i(^.className := s"fas fa-angle-${if (props.sidebarStatus.value) "right" else "left"}")
               }
             )
           )
@@ -90,16 +92,15 @@ object Page {
             ^.className := "column is-paddingless full-height",
             canvasComponent.withKey(props.canvasKey)(
               Canvas.Props(
-                props.drawingContext.value,
+                props.layout.value.drawingContext,
                 canvasInitializer,
-                props.rendererState.value,
+                props.renderer.value,
                 props.points,
                 props.onFrameDraw,
                 props.running.value
               ))
           ),
-          Sidebar.component(Sidebar.Props(props.sidebarExpanded.value, props.sidebarXState))(
-            drawingConfig(props.configState)())
+          Sidebar.component(Sidebar.Props(props.sidebarStatus.value, props.sidebarWidth))(drawingConfig(props.config)())
         )
       )
     }

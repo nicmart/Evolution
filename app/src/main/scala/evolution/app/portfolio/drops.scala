@@ -1,12 +1,12 @@
 package evolution.app.portfolio
 
 import evolution.app.model.context.DrawingContext
-import evolution.app.model.definition.{DrawingDefinition, LegacyDrawingDefinition}
+import evolution.app.model.definition.{ DrawingDefinition, LegacyDrawingDefinition }
 import evolution.app.react.component.config.ConfigComponent
 import evolution.geometry.Point
 import evolution.app.react.component.config.instances._
 import evolution.algebra.MotionEvolutionAlgebra.AccelerationLaw
-import evolution.algebra.{FullAlgebra, LegacyEvolution}
+import evolution.algebra.{ FullAlgebra, LegacyEvolution }
 import evolution.algebra.syntax.all._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.JsonCodec._
@@ -58,7 +58,10 @@ object drops extends LegacyDrawingDefinition[Point] {
       sequenceParallel(
         Queue.apply(
           Point
-            .sequence(numberOfDrops, Point(context.right, context.top), Point(context.left, context.top))
+            .sequence(
+              numberOfDrops,
+              Point(context.retina.right, context.retina.top),
+              Point(context.retina.left, context.retina.top))
             .map(pointEvo): _*
         )
       )
