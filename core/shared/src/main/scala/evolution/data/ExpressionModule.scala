@@ -104,12 +104,12 @@ trait ExpressionModule[F[_]] {
       }
 
     def unshift[T](r: Expr[T]): Expr[T] = {
-      val unshiftFK: Expr ~> Expr = λ[Expr ~> Expr] {
+      lazy val unshiftFK: Expr ~> Expr = λ[Expr ~> Expr] {
         case Shift(x) => x
-        case t        => t
+        case t        => transformChildren(unshiftFK)(t)
       }
 
-      r.transform(unshiftFK)
+      unshiftFK(r)
     }
   }
 }
