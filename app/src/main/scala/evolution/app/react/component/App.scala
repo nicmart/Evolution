@@ -28,8 +28,9 @@ object App {
   }
 
   case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean) {
-    def drawingContext: DrawingContext =
-      DrawingContext(CanvasSize((windowSize.x - sidebarWidth).toInt, windowSize.y.toInt))
+    private val canvasWidth: Double = if (sidebarExpanded) windowSize.x - sidebarWidth else windowSize.x
+    val drawingContext: DrawingContext =
+      DrawingContext(CanvasSize(canvasWidth.toInt, windowSize.y.toInt))
   }
 
   class Backend[C](
