@@ -60,7 +60,7 @@ object App {
     }
 
     private[App] def key(p: PageState[C], s: State[C]): Int =
-      (s.pointRateCounter.rate, p, s.running, s.drawingContext, s.layout.sidebarExpanded).hashCode()
+      (s.pointRateCounter.rate, p, s.running, s.layout).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
@@ -103,6 +103,7 @@ object App {
       }
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
+      // TODO can we remove this?
       .componentDidUpdate(s =>
         if (s.prevState.layout != s.currentState.layout) s.backend.updateLayout
         else Callback.empty)

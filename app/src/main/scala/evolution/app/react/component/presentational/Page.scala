@@ -32,7 +32,7 @@ object Page {
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey: String = (renderer.value, drawingState.value, layout.value.drawingContext).hashCode().toString
+    def canvasKey: String = (renderer.value, drawingState.value, layout.value).hashCode().toString
     def config: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
     def sidebarWidth: StateSnapshot[Double] =
       layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
