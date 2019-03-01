@@ -2,19 +2,22 @@ package evolution.app.react.component.presentational
 
 import cats.Eval
 import evolution.app.conf.Conf
-import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.react.component.App.LayoutState
 import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
 import evolution.geometry.Point
-import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
 import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
 import org.scalajs.dom
+import org.scalajs.dom.raw.{ Blob, URL }
+
+import scala.scalajs.js
+import scala.scalajs.js.annotation.JSGlobal
 
 object Page {
   type ReactComponent[C] = Component[Props[C], Unit, Backend[C], CtorType.Props]
@@ -63,7 +66,17 @@ object Page {
                   ^.className := "icon",
                   <.i(^.className := "fas fa-random")
                 )
-              }
+              },
+              <.a(
+                ^.id := "button-download",
+                ^.className := "button is-black",
+                ^.download := "evolution.png",
+                ^.onClick --> downloadImage,
+                <.span(
+                  ^.className := "icon",
+                  <.i(^.className := "fas fa-download")
+                )
+              )
             )
           ),
           <.div(
@@ -104,6 +117,19 @@ object Page {
         )
       )
     }
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
+    val downloadImage: Callback = Callback {
+      val canvas = dom.document.getElementById(Canvas.canvasId).asInstanceOf[Canvas]
+      canvas.toBlob(blob => {
+        val a = dom.document.createElement("a").asInstanceOf[Anchor]
+        a.download = "evolution.png"
+        a.href = URL.createObjectURL(blob)
+        dom.document.body.appendChild(a)
+        a.click()
+        dom.document.body.removeChild(a)
+      })
+    }
   }
 
   def component[C](
@@ -115,4 +141,16 @@ object Page {
       .backend[Backend[C]](scope => new Backend[C](drawingConfig, canvasComponent)(scope))
       .render(scope => scope.backend.render(scope.props))
       .build
+}
+
+@js.native
+@JSGlobal
+class Canvas extends dom.html.Canvas {
+  def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
+}
+
+@js.native
+@JSGlobal
+class Anchor extends dom.html.Anchor {
+  var download: String = js.native
 }

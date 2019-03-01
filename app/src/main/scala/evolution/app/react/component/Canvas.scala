@@ -14,6 +14,7 @@ import evolution.geometry.Point
 object Canvas {
 
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
+  val canvasId = "drawing-canvas"
 
   case class Props(
     context: DrawingContext,
@@ -35,6 +36,7 @@ object Canvas {
       val size = props.context.canvasSize.point
       val retinaSize = props.context.retina.canvasSize.point
       <.canvas(
+        ^.id := canvasId,
         ^.width := size.x.toString,
         ^.height := size.y.toString,
         VdomAttr("width") := retinaSize.x.toString,
