@@ -19,11 +19,15 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
       type K[T] = Result[M, T]
       val K = MonadError[K, String]
 
-      def pushVar(name: String): K[VarContext] = Kleisli((ctx: VarContext) => ctx.push(name).pure[M])
+      def withVar[A](name: String)(ka: K[A]): K[A] = Kleisli.local[M, A, VarContext](_.push(name))(ka)
+      def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
       expr match {
         case AST.Var(name, tpe) =>
-          Kleisli((ctx: VarContext) => VarN(ctx.indexOf(name), name).pure[M])
+          varContext.flatMap[Expr[expr.tpe.Out]] { ctx =>
+            if (ctx.has(name)) VarN[expr.Out](ctx.indexOf(name), name).pure[K]
+            else K.raiseError(s"Variable $name is not defined")
+          }
 
         case AST.Const(Const.PI, _, _) =>
           Dbl(Math.PI).pure[K]
@@ -35,10 +39,10 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.Lambda(varName, body, tpe) =>
-          (pushVar(varName.name) andThen compile[M](body)).map(Lambda(varName.name, _))
+          withVar(varName.name)(compile[M](body)).map(Lambda(varName.name, _))
 
         case AST.Let(varName, value, in, tpe) =>
-          (compile[M](value), pushVar(varName.name) andThen compile[M](in)).mapN { (compiledValue, compiledIn) =>
+          (compile[M](value), withVar(varName.name)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
             Let(varName.name, compiledValue, compiledIn)
           }
 
@@ -328,6 +332,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
   }
 
   class VarContext(vars: List[String]) {
+    def has(variable: String): Boolean = vars.contains(variable)
     def indexOf(variable: String): Int = vars.indexOf(variable)
     def push(variable: String): VarContext = new VarContext(variable :: vars)
   }
