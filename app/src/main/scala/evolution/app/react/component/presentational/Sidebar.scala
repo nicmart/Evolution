@@ -32,7 +32,7 @@ object Sidebar {
         ^.width := props.width.value.toString,
         <.div(
           ^.id := "sidebar-handle",
-          ^.onMouseDown ==> (e => bs.setState(State(Some(DraggingStart(e.clientX, props.width.value))))),
+          ^.onMouseDown ==> onMouseDown(props.width.value),
           <.div()
         ),
         children
@@ -46,6 +46,9 @@ object Sidebar {
         _ <- state.draggingState.fold(Callback.empty)(start =>
           props.width.setState(start.oldWidth + start.startX - e.clientX))
       } yield ()
+
+    private def onMouseDown(currentWidth: Double)(e: ReactMouseEvent): Callback =
+      bs.setState(State(Some(DraggingStart(e.clientX, currentWidth))))
   }
 
   val component =
