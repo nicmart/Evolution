@@ -1,20 +1,19 @@
 package evolution.app.conf
 
-import evolution.app.model.definition.{ DrawingDefinition, LegacyDrawingDefinition }
-import evolution.app.portfolio._
-import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
+import evolution.app.canvas.drawer._
 import evolution.app.codec._
+import evolution.app.data.PointedSeq
 import evolution.app.model.context.DrawingContext
+import evolution.app.model.counter.RateCounter
+import evolution.app.model.definition.DrawingDefinition
+import evolution.app.model.state
 import evolution.app.model.state._
+import evolution.app.portfolio._
+import evolution.app.react.component.presentational.Page
+import evolution.app.react.component.{ App, Canvas }
 import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState }
 import evolution.app.react.routing.Routing
-import cats.implicits._
-import evolution.app.canvas.drawer._
-import evolution.app.data.PointedSeq
-import evolution.app.model.counter.RateCounter
-import evolution.app.model.state
-import evolution.app.react.component.{ App, Canvas }
-import evolution.app.react.component.presentational.Page
+import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
 import evolution.geometry.Point
 import japgolly.scalajs.react.extra.router.Router
 
@@ -24,30 +23,8 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val drawings: List[LegacyDrawingDefinition[Point]] =
-    List(
-      line,
-      circle,
-      segments,
-      brownian,
-      brownianWithRandomJumps,
-      drops,
-      waves,
-      circlesOnCircles,
-      brownianStraight,
-      dynamics,
-      singlePoint,
-      primes,
-      dynamicRotation,
-      nBodies,
-      bouncing,
-      lissajous,
-      oscillator,
-      new CompositeDrawingDefinition(PointedSeq(drawings, brownian))
-    )
-
   lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(dsl :: rawBrownian :: drawings, dsl)
+    PointedSeq(dsl :: Nil, dsl)
 
   lazy val drawingDefinition: DrawingDefinition[Point] =
     new DrawingListDefinition(innerDrawingList)

@@ -1,7 +1,7 @@
 package evolution.app.react.component.config
 
 import evolution.app.data.PointedSeq
-import evolution.app.model.definition.{CompositeDefinitionConfig, DrawingDefinition, LegacyDrawingDefinition}
+import evolution.app.model.definition.{ CompositeDefinitionConfig, DrawingDefinition }
 import evolution.app.react.component.DrawingList
 import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.presentational.styled.FormField
