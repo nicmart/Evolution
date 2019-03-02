@@ -2,13 +2,13 @@ package evolution.app.model.state
 
 import evolution.app.codec._
 import evolution.app.model.definition.DrawingDefinition
-import io.circe.{Decoder, Encoder, Json}
+import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.auto._
 import io.circe.syntax._
 
 import scala.util.Random
 
-case class DrawingState[+C](
+final case class DrawingState[+C](
   seed: Long,
   config: C
 ) {

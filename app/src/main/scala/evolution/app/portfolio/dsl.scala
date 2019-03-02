@@ -76,7 +76,7 @@ object dsl extends DrawingDefinition[Point] {
 
   override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = state.config.expr.map {
     expr =>
-      data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx.retina, expr))
+      data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
   }.getOrElse(Iterator.empty)
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[EvoRepr[Point]]): Expr[EvoRepr[Point]] = {

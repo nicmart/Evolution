@@ -3,6 +3,8 @@ package evolution.app.model.state
 import evolution.app.canvas.drawer._
 import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
+import io.circe.Decoder.Result
+import io.circe._
 import io.circe.generic.auto._
 
 final case class RendererState(
@@ -14,8 +16,13 @@ final case class RendererState(
 )
 
 object RendererState {
-  implicit val jsonCodec: JsonCodec[RendererState] =
-    JsonCodec[RendererState]
+  // This is for backward compatibility
+  implicit val rendererStateDecoder = Decoder[RendererState].prepare { cursor =>
+    cursor.withFocus(_.mapObject(addMissingResolutionFactor))
+  }
+
+  private def addMissingResolutionFactor(json: JsonObject): JsonObject =
+    if (json.contains("resolutionFactor")) json else json.add("resolutionFactor", Json.fromInt(2))
 }
 
 final case class TrailSettings(

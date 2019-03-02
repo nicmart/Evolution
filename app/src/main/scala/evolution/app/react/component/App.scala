@@ -51,7 +51,10 @@ object App {
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           layout = layoutSnapshot,
           rendererState = renderingStateSnapshot,
-          points = Eval.later(points(state.drawingContext, pageStateSnapshot.value.drawingState)),
+          points = Eval.later(
+            points(
+              state.drawingContext * pageStateSnapshot.value.rendererState.resolutionFactor,
+              pageStateSnapshot.value.drawingState)),
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
