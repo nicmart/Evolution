@@ -79,7 +79,12 @@ object Conf {
     LoadDrawingPage(
       PageState(
         DrawingState(Random.nextLong(), drawingDefinition.initialConfig),
-        RendererState(1000, 1, TrailSettings(false, 0.12), TorusCanvas)
+        RendererState(
+          iterations = 1000,
+          strokeSize = 1,
+          resolutionFactor = 2,
+          trail = TrailSettings(active = false, opacity = 0.12),
+          offCanvasSettings = TorusCanvas)
       )
     )
 

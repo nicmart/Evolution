@@ -50,7 +50,7 @@ object App {
         Page.Props[C](
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           layout = layoutSnapshot,
-          renderer = renderingStateSnapshot,
+          rendererState = renderingStateSnapshot,
           points = Eval.later(points(state.drawingContext, pageStateSnapshot.value.drawingState)),
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,

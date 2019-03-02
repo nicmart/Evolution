@@ -8,6 +8,7 @@ import io.circe.generic.auto._
 final case class RendererState(
   iterations: Int,
   strokeSize: Int,
+  resolutionFactor: Int,
   trail: TrailSettings,
   offCanvasSettings: OffCanvasStrategy
 )
@@ -29,8 +30,8 @@ final case class TrailSettings(
 
 sealed abstract class OffCanvasStrategy(name: String) {
   def decorate(pointDrawer: PointDrawer, ctx: DrawingContext): PointDrawer = this match {
-    case InfiniteCanvas => pointDrawer
-    case TorusCanvas => TorusPlaneDrawer(pointDrawer, ctx)
+    case InfiniteCanvas      => pointDrawer
+    case TorusCanvas         => TorusPlaneDrawer(pointDrawer, ctx)
     case RealProjectivePlane => RealProjectivePlaneDrawer(pointDrawer, ctx)
   }
 }
@@ -39,7 +40,9 @@ case object TorusCanvas extends OffCanvasStrategy("torus")
 case object RealProjectivePlane extends OffCanvasStrategy("real projective plane")
 
 object RendererStateToFrameDrawer {
-  def apply(f: (RendererState, DrawingContext) => PointDrawer)(state: RendererState, drawingContext: DrawingContext): FrameDrawer = {
+  def apply(f: (RendererState, DrawingContext) => PointDrawer)(
+    state: RendererState,
+    drawingContext: DrawingContext): FrameDrawer = {
     state.trail.decorate(
       BaseFrameDrawer(
         drawingContext,

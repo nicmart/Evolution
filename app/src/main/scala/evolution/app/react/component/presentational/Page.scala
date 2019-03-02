@@ -28,14 +28,14 @@ object Page {
   case class Props[C](
     running: StateSnapshot[Boolean],
     layout: StateSnapshot[LayoutState],
-    renderer: StateSnapshot[RendererState],
+    rendererState: StateSnapshot[RendererState],
     points: Eval[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState[C]],
     pointRate: Int,
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
-    def canvasKey: String = (renderer.value, drawingState.value, layout.value).hashCode().toString
+    def canvasKey: String = (rendererState.value, drawingState.value, layout.value).hashCode().toString
     def config: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
     def sidebarWidth: StateSnapshot[Double] =
       layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
@@ -81,7 +81,7 @@ object Page {
           ),
           <.div(
             ^.className := "navbar-item is-hidden-touch",
-            RenderingSettings.component(props.renderer)
+            RenderingSettings.component(props.rendererState)
           ),
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
@@ -107,7 +107,7 @@ object Page {
               Canvas.Props(
                 props.layout.value.drawingContext,
                 canvasInitializer,
-                props.renderer.value,
+                props.rendererState.value,
                 props.points,
                 props.onFrameDraw,
                 props.running.value

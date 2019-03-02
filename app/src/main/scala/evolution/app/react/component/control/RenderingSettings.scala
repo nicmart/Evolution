@@ -3,9 +3,9 @@ package evolution.app.react.component.control
 import evolution.app.data.PointedSeq
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Select.Item
-import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, Select}
+import evolution.app.react.component.presentational.{ DoubleInputComponent, IntInputComponent, Select }
 import evolution.app.react.component.presentational.styled.FormField
-import japgolly.scalajs.react.{Callback, ScalaComponent}
+import japgolly.scalajs.react.{ Callback, ScalaComponent }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,34 +20,42 @@ object RenderingSettings {
   class Backend(bs: BackendScope[StateSnapshot[RendererState], Unit]) {
     def render(props: StateSnapshot[RendererState]): VdomElement = {
       import props._
-      <.div(^.className := "dropdown is-hoverable",
-        <.div(^.className := "dropdown-trigger",
-          <.button(^.className := "button is-black", VdomAttr("aria-haspopup") := "true", VdomAttr("aria-controls") := "dropdown-menu",
+      <.div(
+        ^.className := "dropdown is-hoverable",
+        <.div(
+          ^.className := "dropdown-trigger",
+          <.button(
+            ^.className := "button is-black",
+            VdomAttr("aria-haspopup") := "true",
+            VdomAttr("aria-controls") := "dropdown-menu",
             <.span("Rendering Settings"),
-            <.span(^.className := "icon is-small",
-              <.i(^.className := "fa fa-angle-down", VdomAttr("aria-hidden") :="true")
-            )
+            <.span(
+              ^.className := "icon is-small",
+              <.i(^.className := "fa fa-angle-down", VdomAttr("aria-hidden") := "true"))
           )
         ),
-        <.div(^.className := "dropdown-menu", ^.id := "dropdown-menu", ^.role := "menu",
-          <.div(^.className := "dropdown-content",
-            <.div(^.className := "dropdown-item",
-              FormField.component(FormField.Props("Off-canvas strategy")) {
-                offCanvasSettingComponent(offCanvasStrategyItems(props))
-              }
-            ),
-            <.div(^.className := "dropdown-item",
-              FormField.component(FormField.Props("Stroke size")) {
-                IntInputComponent.component(strokeSize(props))
-              }
-            ),
-            <.div(^.className := "dropdown-item",
-              FormField.component(FormField.Props("Points per frame")) {
-                IntInputComponent.component(iterations(props))
-              }
-            ),
-            <.div(^.className := "dropdown-item",
-              <.label(^.className := "checkbox",
+        <.div(
+          ^.className := "dropdown-menu",
+          ^.id := "dropdown-menu",
+          ^.role := "menu",
+          <.div(
+            ^.className := "dropdown-content",
+            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Off-canvas strategy")) {
+              offCanvasSettingComponent(offCanvasStrategyItems(props))
+            }),
+            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Stroke size")) {
+              IntInputComponent.component(strokeSize(props))
+            }),
+            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Resolution Factor")) {
+              IntInputComponent.component(resolutionFactor(props))
+            }),
+            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Points per frame")) {
+              IntInputComponent.component(iterations(props))
+            }),
+            <.div(
+              ^.className := "dropdown-item",
+              <.label(
+                ^.className := "checkbox",
                 <.input(
                   ^.`type` := "checkbox",
                   ^.checked := !props.value.trail.active,
@@ -56,11 +64,9 @@ object RenderingSettings {
                 "Persist drawing on canvas"
               )
             ),
-            <.div(^.className := "dropdown-item",
-              FormField.component(FormField.Props("Trail opacity")) {
-                DoubleInputComponent.component(trailOpacity(props))
-              }
-            )
+            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Trail opacity")) {
+              DoubleInputComponent.component(trailOpacity(props))
+            })
           )
         )
       )
@@ -71,6 +77,9 @@ object RenderingSettings {
 
     private def strokeSize(s: StateSnapshot[RendererState]): StateSnapshot[Int] =
       s.zoomState(_.strokeSize)(n => state => state.copy(strokeSize = n))
+
+    private def resolutionFactor(s: StateSnapshot[RendererState]): StateSnapshot[Int] =
+      s.zoomState(_.resolutionFactor)(k => state => state.copy(resolutionFactor = k))
 
     private def trailSettings(s: StateSnapshot[RendererState]): StateSnapshot[TrailSettings] =
       s.zoomState(_.trail)(settings => state => state.copy(trail = settings))
@@ -84,7 +93,8 @@ object RenderingSettings {
     private def offCanvasSettings(s: StateSnapshot[RendererState]): StateSnapshot[OffCanvasStrategy] =
       s.zoomState(_.offCanvasSettings)(settings => state => state.copy(offCanvasSettings = settings))
 
-    private def offCanvasStrategyItems(s: StateSnapshot[RendererState]): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
+    private def offCanvasStrategyItems(
+      s: StateSnapshot[RendererState]): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
       def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
         PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))
       offCanvasSettings(s).xmapState(strategyToPointedSeq)(_.selected.value)
