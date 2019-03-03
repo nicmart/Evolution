@@ -1,13 +1,14 @@
 package evolution.language
-import evolution.data.{ Ctx, ExpressionModule, HasExpression }
 import evolution.data.EvaluationContext._
+import evolution.data.{ Ctx, ExpressionModule }
 import evolution.geometry.Point
 import evolution.materialization.RNGRepr
 
 // TODO this is an implementation
 trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   type Out[T] = InterpreterModule.Out[T]
-  import InterpreterModule._, Expr._
+  import Expr._
+  import InterpreterModule._
 
   object Interpreter {
     def interpret[T](expr: Expr[T]): Out[T] = expr match {
@@ -37,37 +38,31 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
           if (compiledCondition) compiledA else compiledB
         }
 
-      case Var0(name) =>
+      case Var(name) =>
         new Contextual[T] {
-          override def apply(ctx: Ctx): T = get(ctx, 0).asInstanceOf[T]
-        }
-
-      case Shift(e) =>
-        val interpretedE = interpret(e)
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = interpretedE(pop(ctx))
+          override def apply(ctx: Ctx): T = get(ctx, name).asInstanceOf[T]
         }
 
       case Let(name, value, e) =>
         interpret(App(Lambda(name, e), value))
 
-      case Lambda(_, body) =>
+      case Lambda(name, body) =>
         val interpretedBody = interpret(body)
         new Contextual[T] {
-          override def apply(ctx: Ctx): T = a => interpretedBody(pushStrict(a, ctx, ""))
+          override def apply(ctx: Ctx): T = a => interpretedBody(addStrict(name, a, ctx))
         }
 
       case App(f, a) => interpret2(f, a)(_(_))
 
       // Detect constant evolutions
-      case Fix(Lambda(_, Cons(t, Var0(_)))) =>
-        ConstantEvolution(interpret(Expr.unshift(t)))
+      case Fix(Lambda(_, Cons(t, Var(_)))) =>
+        ConstantEvolution(interpret(t))
 
-      case Fix(Lambda(_, lambdaBody)) =>
+      case Fix(Lambda(name, lambdaBody)) =>
         val interpretedBody = interpret(lambdaBody)
         new Contextual[T] {
           override def apply(ctx: Ctx): T = {
-            lazy val a: T = interpretedBody(pushLazy(() => a, ctx, ""))
+            lazy val a: T = interpretedBody(addLazy(name, () => a, ctx))
             a
           }
         }
@@ -128,11 +123,6 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
       case UniformDiscrete(from, to, step) =>
         interpret3(from, to, step) { (f, t, s) =>
           uniformChoiceRepr((f to t by s).toList)
-        }
-
-      case UniformChoice(ts) =>
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = uniformChoiceRepr(ts.map(t => interpret(t)(ctx)))
         }
 
       // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation

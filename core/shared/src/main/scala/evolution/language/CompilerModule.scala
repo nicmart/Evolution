@@ -25,7 +25,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
       expr match {
         case AST.Var(name, tpe) =>
           varContext.flatMap[Expr[expr.tpe.Out]] { ctx =>
-            if (ctx.has(name)) VarN[expr.Out](ctx.indexOf(name), name).pure[K]
+            if (ctx.has(name)) (Var[expr.Out](name): Expr[expr.Out]).pure[K]
             else K.raiseError(s"Variable $name is not defined")
           }
 

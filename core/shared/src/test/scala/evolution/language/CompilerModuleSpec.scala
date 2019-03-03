@@ -12,14 +12,12 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       }
 
       "variable usages" in forAll(genTypedVar) { v =>
-        unsafeCompile(v, VarContext.empty.push(v.name)) shouldBe Var0[v.Out](v.name)
+        unsafeCompile(v, VarContext.empty.push(v.name)) shouldBe Var[v.Out](v.name)
       }
 
       "variable usages in non-empty contexts" in forAll(genTypedVar) { v =>
         whenever(v.name != "x") {
-          unsafeCompile(v, VarContext.empty.push(v.name).push("x")) shouldBe Shift(
-            Var0[v.Out](v.name)
-          )
+          unsafeCompile(v, VarContext.empty.push(v.name).push("x")) shouldBe Var[v.Out](v.name)
         }
       }
 
