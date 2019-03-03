@@ -263,11 +263,13 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             )
           }
 
-        case App1(Const.UniformChoice, choices) =>
-          M.raiseError("We need to fix UniformChoice")
-//          choices.traverse(choice => compile[M](choice).asInstanceOf[M[Any]]).map { compiledChoices =>
-//            expressionModule.UniformChoice(compiledChoices.asInstanceOf[List[Expr[Any]]])
-//          }
+        case App2(Const.UniformFrom, n, ft) =>
+          (n, ft).compileN[M] { (compiledN, compiledFt) =>
+            UniformFrom(
+              compiledN.asExpr,
+              compiledFt.asExprF
+            )
+          }
 
         case App2(Const.Normal, μ, σ) =>
           (μ, σ).compileN[M] { (mu, sigma) =>

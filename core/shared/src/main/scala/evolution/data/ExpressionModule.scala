@@ -53,6 +53,7 @@ trait ExpressionModule[F[_]] {
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))
     final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double])
         extends Expr[F[Double]](List(from, to, step))
+    final case class UniformFrom[T](n: Expr[Int], ft: Expr[F[T]]) extends Expr[F[T]](List(n, ft))
     final case class Normal(μ: Expr[Double], σ: Expr[Double]) extends Expr[F[Double]](List(μ, σ))
 
     def extractVariableNames(expr: Expr[_]): List[String] = expr match {

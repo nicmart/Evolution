@@ -2,6 +2,7 @@ package evolution.materialization
 import scala.collection.immutable.Stream
 
 trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
+  def self: Self
   def run: S => (S, Option[(A, Self)])
   def unfold(rng1: S): Stream[A] = {
     val (rng2, next) = run(rng1)
@@ -11,6 +12,22 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
         a #:: eva2.unfold(rng2)
       }
     }
+  }
+
+  def collect(n: Int, rng: S): (S, Option[(List[A], Self)]) = {
+    def collectRec(fa: Self, n: Int, rng: S, acc: List[A]): (S, Option[(List[A], Self)]) = {
+      n match {
+        case _ if n <= 0 => (rng, Some((acc, self)))
+        case _ =>
+          val (rng2, next) = fa.run(rng)
+          next match {
+            case None            => (rng2, None)
+            case Some((a, eva2)) => collectRec(eva2, n - 1, rng2, a :: acc)
+          }
+      }
+    }
+
+    collectRec(self, n, rng, Nil)
   }
 
   def iterator(rng1: S): Iterator[A] = new Iterator[A] {

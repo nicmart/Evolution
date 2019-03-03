@@ -107,7 +107,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     // Distribution
     case object Uniform extends Constant(Dbl =>: Dbl =>: Evo(Dbl), Nil)
     case object UniformDiscrete extends Constant(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl), Nil)
-    case object UniformChoice extends Constant(Lst(Var("T")) =>: Evo(Var("T")), Nil)
+    case object UniformFrom extends Constant(Integer =>: Evo(Var("T")) =>: Evo(Var("T")), Nil)
     case object Normal extends Constant(Dbl =>: Dbl =>: Evo(Dbl), Nil)
 
     // Special functions
