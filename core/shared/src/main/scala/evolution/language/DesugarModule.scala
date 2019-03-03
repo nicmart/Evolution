@@ -245,7 +245,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                         app2(
                           Var[Int => F[T] => F[T]]("self"),
                           Add(Var[Int]("n"), Inverse(Integer(1))),
-                          Var[F[T]]("ft")
+                          Var[F[T]]("tail")
                         )
                       )
                     )

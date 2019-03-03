@@ -8,6 +8,7 @@ trait LanguageSpec[F[_]]
     with GeneratorDrivenPropertyChecks
     with CompilerModule[F]
     with TyperModule[F]
+    with DesugarModule[F]
     with ParsersModule[F]
     with ASTArbitraries[F]
     with ASTModule[F] {}
