@@ -19,14 +19,16 @@ final case class BaseFrameDrawer(
 
   @inline def drawFrame(context: dom.CanvasRenderingContext2D, pointStream: Iterator[Point]): Iterator[Point] = {
     var currentStream = pointStream
-    (1 to iterations).foreach { _ =>
-      currentStream = drawAndNext(currentStream, context)
+    if (currentStream.hasNext) {
+      (1 to iterations).foreach { _ =>
+        currentStream = drawAndNext(currentStream, context)
+      }
     }
     currentStream
   }
 
   @inline private def drawAndNext(points: Iterator[Point], context: CanvasRenderingContext2D): Iterator[Point] = {
-    drawPoint(points.next(), context)
+    if (points.hasNext) drawPoint(points.next(), context)
     points
   }
 
