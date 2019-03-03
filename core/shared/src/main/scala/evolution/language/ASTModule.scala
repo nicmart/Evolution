@@ -1,4 +1,4 @@
-package evolution.primitive
+package evolution.language
 
 import enumeratum.{ Enum, EnumEntry }
 import scala.collection.immutable

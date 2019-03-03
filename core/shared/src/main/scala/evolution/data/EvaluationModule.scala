@@ -1,10 +1,7 @@
 package evolution.data
-import cats.{ Applicative, Id }
-import evolution.algebra.representation.RNGRepr
 import evolution.data.EvaluationContext._
-import evolution.data.EvaluationContextModule._
-import evolution.random.RNG
-import evolution.primitive.InterpreterModule
+import evolution.language.InterpreterModule
+import evolution.materialization.{ RNG, RNGRepr }
 
 import scala.util.Random
 

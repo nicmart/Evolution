@@ -1,4 +1,4 @@
-package evolution.primitive
+package evolution.language
 import cats.Semigroup
 import cats.Group
 import evolution.data.{ ExpressionModule, HasExpression }

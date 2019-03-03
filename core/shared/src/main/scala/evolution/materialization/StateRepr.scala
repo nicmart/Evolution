@@ -1,5 +1,4 @@
-package evolution.algebra.representation
-
+package evolution.materialization
 import scala.collection.immutable.Stream
 
 trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {

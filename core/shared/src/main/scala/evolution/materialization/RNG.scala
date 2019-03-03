@@ -1,4 +1,4 @@
-package evolution.random
+package evolution.materialization
 
 final case class RNG(seed: Long) {
   def nextInt: (Int, RNG) = {

@@ -1,6 +1,4 @@
-package evolution.primitive
-
-import evolution.primitive.algebra.parser.ParserConfig
+package evolution.language
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 

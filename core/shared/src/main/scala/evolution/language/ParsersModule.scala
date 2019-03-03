@@ -1,8 +1,8 @@
-package evolution.primitive
+package evolution.language
 import contextual._
 import fastparse.all
-import evolution.primitive.algebra.parser.ParserConfig.White._
-import evolution.primitive.algebra.parser.ParserConfig.whitespaces
+import ParserConfig.White._
+import ParserConfig.whitespaces
 import fastparse.noApi._
 
 trait ParsersModule[F[_]] { self: ASTModule[F] =>

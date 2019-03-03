@@ -1,5 +1,5 @@
 package evolution
-import evolution.algebra.representation.RNGRepr
+import evolution.materialization.RNGRepr
 
 package object data {
   final val EvaluationContext: EvaluationContextModule = EvaluationContextDebugModuleImpl

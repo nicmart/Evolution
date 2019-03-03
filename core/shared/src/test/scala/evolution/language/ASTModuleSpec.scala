@@ -1,8 +1,8 @@
-package evolution.primitive
+package evolution.language
 import cats.Id
 import org.scalatest.{ FreeSpec, Matchers }
 
-class ASTModuleSpec extends CompilerSpecModule[Id] {
+class ASTModuleSpec extends LanguageSpec[Id] {
   "An AST" - {
     "should recursively transform all the nodes" in {
       def changeNumbers(ast: AST): AST = ast match {

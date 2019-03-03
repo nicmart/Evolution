@@ -1,9 +1,8 @@
-package evolution.primitive
-
-import evolution.algebra.representation.RNGRepr
+package evolution.language
 import evolution.data.{ Ctx, ExpressionModule, HasExpression }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
+import evolution.materialization.RNGRepr
 
 // TODO this is an implementation
 trait InterpreterModule { self: ExpressionModule[RNGRepr] =>

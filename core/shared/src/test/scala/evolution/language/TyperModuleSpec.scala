@@ -1,8 +1,8 @@
-package evolution.primitive
+package evolution.language
 import cats.Id
 import cats.implicits._
 
-class TyperSpec extends CompilerSpecModule[Id] {
+class TyperModuleSpec extends LanguageSpec[Id] {
   import Typer._, Typer.TypeInference._, TypeClasses._
 
   "The typer" - {

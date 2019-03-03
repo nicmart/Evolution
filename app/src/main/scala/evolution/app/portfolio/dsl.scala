@@ -8,7 +8,7 @@ import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.geometry.Point
-import evolution.primitive.FullModule
+import evolution.language.FullModule
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._

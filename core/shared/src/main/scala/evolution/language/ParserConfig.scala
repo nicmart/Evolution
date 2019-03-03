@@ -1,6 +1,5 @@
-package evolution.primitive.algebra.parser
-
-import fastparse.{ WhitespaceApi, all, core }
+package evolution.language
+import fastparse.WhitespaceApi
 
 object ParserConfig {
   import fastparse.all._

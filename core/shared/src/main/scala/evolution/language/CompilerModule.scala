@@ -1,4 +1,4 @@
-package evolution.primitive
+package evolution.language
 
 import cats.data.Kleisli
 import cats.MonadError

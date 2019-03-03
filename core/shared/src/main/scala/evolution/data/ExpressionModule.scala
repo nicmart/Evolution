@@ -13,6 +13,13 @@ trait ExpressionModule[F[_]] {
   }
 
   object Expr {
+    final case class Var0[A](name: String) extends Expr[A]
+    final case class Shift[A](expr: Expr[A]) extends Expr[A]
+    final case class Let[A, B](variable: String, value: Expr[A], expr: Expr[B]) extends Expr[B]
+    final case class Lambda[A, B](variable: String, expr: Expr[B]) extends Expr[A => B]
+    final case class App[A, B](f: Expr[A => B], a: Expr[A]) extends Expr[B]
+    final case class Fix[A](expr: Expr[A => A]) extends Expr[A]
+
     final case class Dbl(d: Double) extends Expr[Double]
     final case class Floor(d: Expr[Double]) extends Expr[Int]
     final case class ToDbl(n: Expr[Int]) extends Expr[Double]
@@ -40,13 +47,6 @@ trait ExpressionModule[F[_]] {
       val eq: Eq[T] = implicitly[Eq[T]]
     }
     final case class IfThen[T](condition: Expr[Boolean], a: Expr[T], b: Expr[T]) extends Expr[T]
-
-    final case class Var0[A](name: String) extends Expr[A]
-    final case class Shift[A](expr: Expr[A]) extends Expr[A]
-    final case class Let[A, B](variable: String, value: Expr[A], expr: Expr[B]) extends Expr[B]
-    final case class Lambda[A, B](variable: String, expr: Expr[B]) extends Expr[A => B]
-    final case class App[A, B](f: Expr[A => B], a: Expr[A]) extends Expr[B]
-    final case class Fix[A](expr: Expr[A => A]) extends Expr[A]
 
     final case class Empty[A]() extends Expr[F[A]]
     final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]]

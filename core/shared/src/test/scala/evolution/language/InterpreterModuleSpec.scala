@@ -1,10 +1,10 @@
-package evolution.primitive
+package evolution.language
 import cats.Id
-import evolution.algebra.representation.RNGRepr
 import evolution.data.ExpressionModule
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
+import evolution.materialization.RNGRepr
 
 class InterpreterModuleSpec extends FreeSpec with Matchers {
   val interpreter = new InterpreterModule with ExpressionModule[RNGRepr] {}

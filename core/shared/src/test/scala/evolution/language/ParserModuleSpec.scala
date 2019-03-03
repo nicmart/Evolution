@@ -1,10 +1,10 @@
-package evolution.primitive
+package evolution.language
 import cats.Id
-import evolution.primitive.InterpreterModule.Constant
+import evolution.language.InterpreterModule.Constant
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 
-class ParserModuleSpec extends CompilerSpecModule[Id] {
+class ParserModuleSpec extends LanguageSpec[Id] {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {
