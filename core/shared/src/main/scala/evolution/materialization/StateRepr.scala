@@ -14,14 +14,14 @@ trait StateRepr[+A, S, +Self <: StateRepr[A, S, Self]] {
     }
   }
 
-  def collect(n: Int, rng: S): (S, Option[(List[A], Self)]) = {
-    def collectRec(fa: Self, n: Int, rng: S, acc: List[A]): (S, Option[(List[A], Self)]) = {
+  def collect(n: Int, rng: S): (S, List[A]) = {
+    def collectRec(fa: Self, n: Int, rng: S, acc: List[A]): (S, List[A]) = {
       n match {
-        case _ if n <= 0 => (rng, Some((acc, self)))
+        case _ if n <= 0 => (rng, acc)
         case _ =>
           val (rng2, next) = fa.run(rng)
           next match {
-            case None            => (rng2, None)
+            case None            => (rng2, acc)
             case Some((a, eva2)) => collectRec(eva2, n - 1, rng2, a :: acc)
           }
       }

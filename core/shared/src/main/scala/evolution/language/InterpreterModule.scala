@@ -127,18 +127,10 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
       case UniformFrom(n, ft) =>
         interpret2(n, ft) { (compiledN, compiledFt) =>
-          lazy val self: RNGRepr[Any] = RNGRepr { rng =>
-            val (rng2, next) = compiledFt.collect(compiledN, rng)
-            val (d, rng3) = rng2.nextDouble
-            val n = (d * compiledN).toInt
-
-            next match {
-              case None          => (rng3, None)
-              case Some((ts, _)) => (rng3, Some((ts(n), self)))
-            }
+          RNGRepr { rng =>
+            val (rng2, ts) = compiledFt.collect(compiledN, rng)
+            uniformChoiceRepr(ts).run(rng2)
           }
-
-          self
         }
 
       // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
