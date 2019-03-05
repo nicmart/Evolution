@@ -99,6 +99,16 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
+      "a - b" in {
+        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+          unsafeParse(s"$a - $b") shouldBe AST.App2(
+            AST.Const(Constant.Minus),
+            unsafeParse(a),
+            unsafeParse(b)
+          )
+        }
+      }
+
       "lambdas" in {
         forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
           unsafeParse(s"$identifier -> $expr") shouldBe AST.Lambda(AST.Var(identifier), unsafeParse(expr))

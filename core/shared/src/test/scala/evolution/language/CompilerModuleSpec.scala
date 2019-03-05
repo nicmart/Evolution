@@ -50,6 +50,12 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
         unsafeCompile(AST.Bool(b)) shouldBe Bool(b)
       }
 
+      "binary minus" in forAll { (a: Double, b: Double) =>
+        val ast =
+          AST.App2(AST.Const(Constant.Minus), AST.Number(a.toString, Type.Dbl), AST.Number(b.toString, Type.Dbl))
+        unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b)))
+      }
+
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda(AST.Var("x"), b)
         val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))

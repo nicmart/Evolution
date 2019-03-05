@@ -70,6 +70,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     case object X extends Constant(Type.Point =>: Dbl, Nil)
     case object Y extends Constant(Type.Point =>: Dbl, Nil)
     case object Add extends Constant(Var("T") =>: Var("T") =>: Var("T"), List(Predicate("Semigroup", List(Var("T")))))
+    case object Minus extends Constant(Var("T") =>: Var("T") =>: Var("T"), List(Predicate("Semigroup", List(Var("T")))))
     case object Div extends Constant(Dbl =>: Dbl =>: Dbl, Nil)
     case object Exp extends Constant(Dbl =>: Dbl =>: Dbl, Nil)
     case object Abs extends Constant(Dbl =>: Dbl, Nil)

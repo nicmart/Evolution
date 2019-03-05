@@ -14,6 +14,9 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       Fix[F[A]](Lambda(self, Cons(a, Var(self))))
     }
 
+    def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
+      Add(a, Inverse(b))
+
     def zipWith[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
       app2(zipWithLambda(f), a, b)
 

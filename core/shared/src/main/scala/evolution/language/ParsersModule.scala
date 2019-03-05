@@ -37,7 +37,8 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
 
     lazy val precedence3Ops: Parser[AST] =
       P("+").map(_ => AST.Const(Constant.Add)) |
-        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)))
+        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add))) |
+        P("-").map(_ => AST.Const(Constant.Minus))
 
     lazy val precedence3: Parser[AST] =
       P(precedence4 ~ (precedence3Ops ~/ precedence4).rep).map {

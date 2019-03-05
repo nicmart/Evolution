@@ -11,6 +11,10 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
 
   "Desugarer module" - {
     "should desugar" - {
+      "minus" in {
+        toValue(minus(Dbl(3), Dbl(2))) shouldBe 1.0
+      }
+
       "take" in {
         toList(take(Integer(10), constant(Integer(1)))) shouldBe List.fill(10)(1)
         toList(take(Integer(10), constant(Pnt(Dbl(0), Dbl(1.1))))) shouldBe List.fill(10)(Point(0, 1.1))
@@ -39,5 +43,6 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
     }
   }
 
+  def toValue[T](expr: Expr[T]): T = interpret(expr)(emptyCtx)
   def toList[T](expr: Expr[RNGRepr[T]]): List[T] = interpret(expr)(emptyCtx).iterator(RNG(0L)).take(1000).toList
 }

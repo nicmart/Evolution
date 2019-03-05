@@ -123,6 +123,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             cy <- compile[M](y)
           } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
 
+        case App2(Const.Minus, x, y) =>
+          (K.fromEither(Type.group(x.tpe)), compile[M](x), compile[M](y)).mapN { (group, compiledX, compiledY) =>
+            minus(compiledX.asExpr, compiledY.asExpr)(group)
+          }
+
         case App2(Const.Div, x, y) =>
           (x, y).compileN[M] { (compiledX, compiledY) =>
             Div(compiledX.asExpr, compiledY.asExpr)
