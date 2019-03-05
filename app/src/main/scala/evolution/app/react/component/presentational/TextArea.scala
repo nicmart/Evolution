@@ -14,6 +14,7 @@ object TextArea {
       <.div(
         ^.className := "code-wrapper",
         <.textarea(
+          ^.value := props.value,
           ^.spellCheck := "false",
           ^.className := "code-area",
           ^.onChange ==> onChange(props),
