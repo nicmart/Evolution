@@ -20,8 +20,7 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
       P(lambdaOrLet | precedence1)
 
     lazy val precedence1Ops: Parser[AST] =
-      P("+").map(_ => AST.Const(Constant.Add)) |
-        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)))
+      P("||").map(_ => AST.Const(Constant.Or))
 
     lazy val precedence1: Parser[AST] =
       P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
@@ -29,10 +28,7 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
       }
 
     lazy val precedence2Ops: Parser[AST] =
-      P("*").map(_ => AST.Const(Constant.Multiply)) |
-        P("/").map(_ => AST.Const(Constant.Div)) |
-        P("%").map(_ => AST.Const(Constant.Mod)) |
-        P("<*>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply)))
+      P("&&").map(_ => AST.Const(Constant.And))
 
     lazy val precedence2: Parser[AST] =
       P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
@@ -40,10 +36,30 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
       }
 
     lazy val precedence3Ops: Parser[AST] =
-      P("^").map(_ => AST.Const(Constant.Exp))
+      P("+").map(_ => AST.Const(Constant.Add)) |
+        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)))
 
     lazy val precedence3: Parser[AST] =
-      P(appOrFactor ~ (precedence3Ops ~/ appOrFactor).rep).map {
+      P(precedence4 ~ (precedence3Ops ~/ precedence4).rep).map {
+        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+      }
+
+    lazy val precedence4Ops: Parser[AST] =
+      P("*").map(_ => AST.Const(Constant.Multiply)) |
+        P("/").map(_ => AST.Const(Constant.Div)) |
+        P("%").map(_ => AST.Const(Constant.Mod)) |
+        P("<*>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply)))
+
+    lazy val precedence4: Parser[AST] =
+      P(precedence5 ~ (precedence4Ops ~/ precedence5).rep).map {
+        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+      }
+
+    lazy val precedence5Ops: Parser[AST] =
+      P("^").map(_ => AST.Const(Constant.Exp))
+
+    lazy val precedence5: Parser[AST] =
+      P(appOrFactor ~ (precedence5Ops ~/ appOrFactor).rep).map {
         case (head, tail) => evalAssocBinaryOp(head, tail.toList)
       }
 
@@ -64,9 +80,12 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
     lazy val variable: Parser[AST.Var] =
       P("$" ~~ identifier).map(AST.Var(_))
 
-    // TODO can we parse the operator directly into a constant?
+    lazy val unaryOps: Parser[AST.Const] =
+      P("-").map(_ => AST.Const(Constant.Inverse)) |
+        P("!").map(_ => AST.Const(Constant.Not))
+
     lazy val unaryPrefixOp: Parser[AST] =
-      P("-" ~ appOrFactor).map(e => AST.App(AST.Const(Constant.Inverse), e))
+      P(unaryOps ~ appOrFactor).map { case (op, e) => AST.App(op, e) }
 
     lazy val lambdaOrLet: Parser[AST] = {
       def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ precedence0).map { expr =>

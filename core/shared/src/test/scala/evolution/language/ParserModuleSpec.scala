@@ -259,6 +259,37 @@ class ParserModuleSpec extends LanguageSpec[Id] {
           }
         }
       }
+
+      "parse ands" in {
+        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+          unsafeParse(s"$a && $b") shouldBe
+            AST.App2(AST.Const(Constant.And), unsafeParse(a), unsafeParse(b))
+        }
+      }
+
+      "parse ors" in {
+        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+          unsafeParse(s"$a || $b") shouldBe
+            AST.App2(AST.Const(Constant.Or), unsafeParse(a), unsafeParse(b))
+        }
+      }
+
+      "parse not" in {
+        forAll(genLeafExpr) { a =>
+          unsafeParse(s"!$a") shouldBe
+            AST.App(AST.Const(Constant.Not), unsafeParse(a))
+        }
+      }
+
+      "parse logical operators with the right precedence" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a || $b && $c") shouldBe
+            AST.App2(
+              AST.Const(Constant.Or),
+              unsafeParse(a),
+              AST.App2(AST.Const(Constant.And), unsafeParse(b), unsafeParse(c)))
+        }
+      }
     }
   }
 

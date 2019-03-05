@@ -61,6 +61,8 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     val nonFunctions0: List[Constant] = values.toList.filter(!functions0.contains(_))
 
     // Constants
+
+    // Math
     case object Point extends Constant(Dbl =>: Dbl =>: Type.Point, Nil)
     case object Floor extends Constant(Dbl =>: Integer, Nil)
     case object ToDbl extends Constant(Integer =>: Dbl, Nil)
@@ -75,10 +77,15 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     case object Multiply extends Constant(Dbl =>: Var("T") =>: Var("T"), Nil)
     case object Sin extends Constant(Dbl =>: Dbl, Nil)
     case object Cos extends Constant(Dbl =>: Dbl, Nil)
-    case object Eq extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
-    case object If extends Constant(Bool =>: Var("T") =>: Var("T") =>: Var("T"), Nil)
     case object PI extends Constant(Dbl, Nil)
     case object Mod extends Constant(Dbl =>: Dbl =>: Dbl, Nil)
+
+    // Boolean
+    case object Eq extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object If extends Constant(Bool =>: Var("T") =>: Var("T") =>: Var("T"), Nil)
+    case object Not extends Constant(Bool =>: Bool, Nil)
+    case object And extends Constant(Bool =>: Bool =>: Bool, Nil)
+    case object Or extends Constant(Bool =>: Bool =>: Bool, Nil)
 
     // Chain
     case object Empty extends Constant(Var("T"), Nil)
