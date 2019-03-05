@@ -27,6 +27,15 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
 
         toList(expr) shouldBe List(1, 1)
       }
+
+      "until" in {
+        val expr = takeUntil(
+          Cons(Integer(1), Cons(Integer(2), Cons(Integer(3), Empty()))),
+          Lambda("x", Equals[Int](Var("x"), Integer(3)))
+        )
+
+        toList(expr) shouldBe List(1, 2)
+      }
     }
   }
 

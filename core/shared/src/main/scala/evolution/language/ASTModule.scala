@@ -111,6 +111,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
           Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")),
           Nil)
     case object While extends Constant(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")), Nil)
+    case object Until extends Constant(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")), Nil)
     case object InRect extends Constant(Type.Point =>: Type.Point =>: Type.Point =>: Bool, Nil)
 
     // Distribution

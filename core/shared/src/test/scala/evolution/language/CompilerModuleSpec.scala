@@ -3,7 +3,7 @@ import cats.Id
 import cats.implicits._
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
-  import Expr._
+  import Expr._, Desugarer._
 
   "The compiler" - {
     "should successfully compile" - {
@@ -48,6 +48,20 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
       "boolean literals" in forAll { b: Boolean =>
         unsafeCompile(AST.Bool(b)) shouldBe Bool(b)
+      }
+
+      "whiles" in forAll(genBool, genNumber) { (b, n) =>
+        val predicate = AST.Lambda(AST.Var("x"), b)
+        val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
+        val expected = takeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
+        unsafeCompile(AST.App2(AST.Const(Constant.While), evolution, predicate)) shouldBe expected
+      }
+
+      "untils" in forAll(genBool, genNumber) { (b, n) =>
+        val predicate = AST.Lambda(AST.Var("x"), b)
+        val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
+        val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
+        unsafeCompile(AST.App2(AST.Const(Constant.Until), evolution, predicate)) shouldBe expected
       }
     }
   }
