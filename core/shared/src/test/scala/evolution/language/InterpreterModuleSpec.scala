@@ -16,8 +16,8 @@ class InterpreterModuleSpec extends FreeSpec with Matchers {
     }
 
     "should interpret inRect statements" in {
-      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5)))) shouldBe true
-      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5)))) shouldBe false
+      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
+      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
     }
   }
 }

@@ -40,8 +40,7 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
       case InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
-          val Point(x, y) = compiledP
-          ???
+          compiledP.inRectangle(compiledTopLeft, compiledBottomRight)
         }
 
       case Var(name) =>

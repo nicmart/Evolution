@@ -4,6 +4,7 @@ import cats.data.Kleisli
 import cats.MonadError
 import cats.implicits._
 import evolution.data.ExpressionModule
+import evolution.geometry.Point
 
 // TODO Random extensions and self types, please to do something better
 trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] with ASTModule[F] {
@@ -180,6 +181,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
         case App3(Const.If, x, y, z) =>
           (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
             IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
+          }
+
+        case App3(Const.InRect, tl, br, p) =>
+          (tl, br, p).compileN[M] { (compiledTl, compiledBr, compiledP) =>
+            InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
           }
 
         case App2(Const.Polar, x, y) =>
