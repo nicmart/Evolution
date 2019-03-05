@@ -63,6 +63,9 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def flatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]): Expr[F[B]] =
       App(flatMapLambda(f), fa)
 
+    def takeWhile[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] =
+      App(takeWhileLambda(p), fa)
+
     // TODO f as parameter of lambda, so we can remove shiftN
     private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] = {
       val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")
@@ -256,6 +259,28 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
           )
         )
       )
+
+    private def takeWhileLambda[T](p: Expr[T => Boolean]): Expr[F[T] => F[T]] = {
+      val (self, fa, head, tail) = p.freshVarName4("self", "fa", "head", "tail")
+      Fix(
+        lambda2(
+          self,
+          fa,
+          MapCons(
+            Var[F[T]](fa),
+            lambda2[T, F[T], F[T]](
+              head,
+              tail,
+              IfThen(
+                App(p, Var(head)),
+                Cons(Var(head), App(Var[F[T] => F[T]](self), Var[F[T]](tail))),
+                Empty()
+              )
+            )
+          )
+        )
+      )
+    }
 
     private def lambda2[A, B, C](var1: String, var2: String, expr: Expr[C]): Expr[A => B => C] =
       Lambda[A, B => C](var1, Lambda[B, C](var2, expr))

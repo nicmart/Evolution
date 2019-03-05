@@ -249,6 +249,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             zipWith(compiledA.asExprF, compiledB.asExprF, compiledF.asExpr[Any => Any => Any])
           }
 
+        case App2(Const.While, fa, p) =>
+          (fa, p).compileN[M] { (compiledFa, compiledP) =>
+            takeWhile(compiledFa.asExprF, compiledP.asExpr[Any => Boolean])
+          }
+
         case App2(Const.Uniform, from, to) =>
           (from, to).compileN[M] { (compiledFrom, compiledTo) =>
             Uniform(compiledFrom.asExpr, compiledTo.asExpr)

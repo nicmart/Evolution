@@ -38,6 +38,12 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
           if (compiledCondition) compiledA else compiledB
         }
 
+      case InRect(topLeft, bottomRight, p) =>
+        interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
+          val Point(x, y) = compiledP
+          ???
+        }
+
       case Var(name) =>
         new Contextual[T] {
           override def apply(ctx: Ctx): T = get(ctx, name).asInstanceOf[T]

@@ -33,7 +33,6 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>
         unsafeCompile(AST.Lambda(variable, n)) shouldBe Lambda(variable.name, unsafeCompile(n))
       }
-
     }
   }
 

@@ -44,6 +44,8 @@ trait ExpressionModule[F[_]] {
       val eq: Eq[T] = implicitly[Eq[T]]
     }
     final case class IfThen[T](condition: Expr[Boolean], a: Expr[T], b: Expr[T]) extends Expr[T](List(condition, a, b))
+    final case class InRect(topLeft: Expr[Point], bottomDown: Expr[Point], point: Expr[Point])
+        extends Expr[Boolean](List(topLeft, bottomDown))
 
     final case class Empty[A]() extends Expr[F[A]](Nil)
     final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]](List(head, tail))
