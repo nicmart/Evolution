@@ -43,15 +43,23 @@ trait ExpressionModule[F[_]] {
     final case class Equals[T: Eq](a: Expr[T], b: Expr[T]) extends Expr[Boolean](List(a, b)) {
       val eq: Eq[T] = implicitly[Eq[T]]
     }
+
+    // Boolean
+    final case class Bool(b: Boolean) extends Expr[Boolean](Nil)
     final case class IfThen[T](condition: Expr[Boolean], a: Expr[T], b: Expr[T]) extends Expr[T](List(condition, a, b))
     final case class InRect(topLeft: Expr[Point], bottomDown: Expr[Point], point: Expr[Point])
         extends Expr[Boolean](List(topLeft, bottomDown))
+    final case class And(a: Expr[Boolean], b: Expr[Boolean]) extends Expr[Boolean](List(a, b))
+    final case class Or(a: Expr[Boolean], b: Expr[Boolean]) extends Expr[Boolean](List(a, b))
+    final case class Not(a: Expr[Boolean]) extends Expr[Boolean](List(a))
 
+    // Chain
     final case class Empty[A]() extends Expr[F[A]](Nil)
     final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]](List(head, tail))
     final case class MapEmpty[A](eva: Expr[F[A]], eva2: Expr[F[A]]) extends Expr[F[A]](List(eva, eva2))
     final case class MapCons[A, B](eva: Expr[F[A]], f: Expr[A => F[A] => F[B]]) extends Expr[F[B]](List(eva, f))
 
+    // Distributions
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))
     final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double])
         extends Expr[F[Double]](List(from, to, step))

@@ -33,9 +33,25 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>
         unsafeCompile(AST.Lambda(variable, n)) shouldBe Lambda(variable.name, unsafeCompile(n))
       }
+
+      "ands" in forAll(genBool, genBool) { (a, b) =>
+        unsafeCompile(AST.App2(AST.Const(Constant.And), a, b)) shouldBe And(unsafeCompile(a), unsafeCompile(b))
+      }
+
+      "ors" in forAll(genBool, genBool) { (a, b) =>
+        unsafeCompile(AST.App2(AST.Const(Constant.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
+      }
+
+      "nots" in forAll(genBool) { a =>
+        unsafeCompile(AST.App(AST.Const(Constant.Not), a)) shouldBe Not(unsafeCompile(a))
+      }
+
+      "boolean literals" in forAll { b: Boolean =>
+        unsafeCompile(AST.Bool(b)) shouldBe Bool(b)
+      }
     }
   }
 
-  private def unsafeCompile(expr: AST, ctx: VarContext = VarContext.empty): Expr[expr.Out] =
-    Compiler.compile[Either[String, ?]](expr).run(ctx).right.get
+  private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
+    Compiler.compile[Either[String, ?]](expr).run(ctx).right.get.asInstanceOf[Expr[T]]
 }

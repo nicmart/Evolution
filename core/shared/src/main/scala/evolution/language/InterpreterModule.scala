@@ -38,6 +38,17 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
           if (compiledCondition) compiledA else compiledB
         }
 
+      case Bool(b) => Out.pure(b)
+
+      case And(a, b) =>
+        interpret2(a, b)(_ && _)
+
+      case Or(a, b) =>
+        interpret2(a, b)(_ || _)
+
+      case Not(a) =>
+        interpret(a).map(!_)
+
       case InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
           compiledP.inRectangle(compiledTopLeft, compiledBottomRight)

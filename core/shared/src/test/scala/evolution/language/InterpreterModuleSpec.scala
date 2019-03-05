@@ -3,9 +3,11 @@ import evolution.data.EvaluationContext._
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.materialization.RNGRepr
+import org.scalacheck.Gen
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 
-class InterpreterModuleSpec extends FreeSpec with Matchers {
+class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
   val interpreter = new InterpreterModule with ExpressionModule[RNGRepr] {}
   import interpreter.Expr._
   import interpreter.Interpreter._
@@ -15,9 +17,27 @@ class InterpreterModuleSpec extends FreeSpec with Matchers {
       interpret(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
     }
 
+    "should interpret booleans literals" in forAll(genBooleanLiteral) { literal =>
+      interpret(literal)(emptyCtx) shouldBe literal.b
+    }
+
+    "should interpret ands" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
+      interpret(And(a, b))(emptyCtx) shouldBe a.b && b.b
+    }
+
+    "should interpret ors" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
+      interpret(Or(a, b))(emptyCtx) shouldBe a.b || b.b
+    }
+
+    "should interpret nots" in forAll(genBooleanLiteral) { a =>
+      interpret(Not(a))(emptyCtx) shouldBe !a.b
+    }
+
     "should interpret inRect statements" in {
       interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
       interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
     }
   }
+
+  val genBooleanLiteral: Gen[Bool] = Gen.oneOf(false, true).map(Bool)
 }

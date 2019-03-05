@@ -260,6 +260,11 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
+      "parse boolean literals" in {
+        unsafeParse("true") shouldBe AST.Bool(true)
+        unsafeParse("false") shouldBe AST.Bool(false)
+      }
+
       "parse ands" in {
         forAll(genLeafExpr, genLeafExpr) { (a, b) =>
           unsafeParse(s"$a && $b") shouldBe

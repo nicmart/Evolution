@@ -62,6 +62,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         case Var(_, _)       => Constraints.empty.pure[TypeInference]
         case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
         case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
+        case Bool(_, tpe)    => Constraints(tpe -> Type.Bool).pure[TypeInference]
         case App(Const(Constant.Lift, _, _), value, tpe) =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]

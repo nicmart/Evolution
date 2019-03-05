@@ -38,6 +38,8 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] =>
     tpe <- genType
   } yield AST.Var(id, tpe)
 
+  def genBool: Gen[AST.Bool] = Gen.oneOf(true, false).map(AST.Bool(_))
+
   def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
 
   def withRandomTypeVar(gen: Gen[AST]): Gen[AST] =

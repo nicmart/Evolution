@@ -53,6 +53,9 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
         case AST.Number(n, _) => // Default to Double for numeric literals
           Dbl(n.toDouble).pure[K]
 
+        case AST.Bool(b, _) =>
+          Bool(b).pure[K]
+
         case App1(Const.Fix, x) =>
           compile[M](x).map { compiledX =>
             Fix(compiledX.asExpr[Any => Any])
@@ -130,8 +133,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             Exp(compiledX.asExpr, compiledY.asExpr)
           }
 
-        case App1(Const.Abs, x)  => compile[M](x).map(compiledX => Abs(compiledX.asExpr))
-        case App1(Const.Sign, x) => compile[M](x).map(compiledX => Sign(compiledX.asExpr))
+        case App1(Const.Abs, x) =>
+          compile[M](x).map(compiledX => Abs(compiledX.asExpr))
+
+        case App1(Const.Sign, x) =>
+          compile[M](x).map(compiledX => Sign(compiledX.asExpr))
 
         // TODO this is not in-line with other liftings.
         case App1(Const.Inverse, x) =>
@@ -186,6 +192,21 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
         case App3(Const.InRect, tl, br, p) =>
           (tl, br, p).compileN[M] { (compiledTl, compiledBr, compiledP) =>
             InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
+          }
+
+        case App2(Const.And, a, b) =>
+          (a, b).compileN[M] { (compiledA, compiledB) =>
+            And(compiledA.asExpr, compiledB.asExpr)
+          }
+
+        case App2(Const.Or, a, b) =>
+          (a, b).compileN[M] { (compiledA, compiledB) =>
+            Or(compiledA.asExpr, compiledB.asExpr)
+          }
+
+        case App1(Const.Not, a) =>
+          compile[M](a).map { compiledA =>
+            Not(compiledA.asExpr)
           }
 
         case App2(Const.Polar, x, y) =>
