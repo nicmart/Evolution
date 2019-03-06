@@ -14,58 +14,43 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
 
   object Parsers {
     lazy val parser: Parser[AST] =
-      P(whitespaces ~ precedence0 ~ End)
+      P(whitespaces ~ ast ~ End)
 
-    lazy val precedence0: Parser[AST] =
-      P(lambdaOrLet | precedence1)
+    lazy val ast: Parser[AST] =
+      P(lambdaOrLet | precedenceGroups.parser)
 
-    lazy val precedence1Ops: Parser[AST] =
-      P("||").map(_ => AST.Const(Constant.Or))
-
-    lazy val precedence1: Parser[AST] =
-      P(precedence2 ~ (precedence1Ops ~/ precedence2).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-      }
-
-    lazy val precedence2Ops: Parser[AST] =
-      P("&&").map(_ => AST.Const(Constant.And))
-
-    lazy val precedence2: Parser[AST] =
-      P(precedence3 ~ (precedence2Ops ~/ precedence3).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-      }
-
-    lazy val precedence3Ops: Parser[AST] =
-      P("+").map(_ => AST.Const(Constant.Add)) |
-        P("<+>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add))) |
-        P("-").map(_ => AST.Const(Constant.Minus))
-
-    lazy val precedence3: Parser[AST] =
-      P(precedence4 ~ (precedence3Ops ~/ precedence4).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-      }
-
-    lazy val precedence4Ops: Parser[AST] =
-      P("*").map(_ => AST.Const(Constant.Multiply)) |
-        P("/").map(_ => AST.Const(Constant.Div)) |
-        P("%").map(_ => AST.Const(Constant.Mod)) |
-        P("<*>").map(_ => AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply)))
-
-    lazy val precedence4: Parser[AST] =
-      P(precedence5 ~ (precedence4Ops ~/ precedence5).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-      }
-
-    lazy val precedence5Ops: Parser[AST] =
-      P("^").map(_ => AST.Const(Constant.Exp))
-
-    lazy val precedence5: Parser[AST] =
-      P(appOrFactor ~ (precedence5Ops ~/ appOrFactor).rep).map {
-        case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-      }
+    // Operator groups, order by ascending Precedence
+    lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
+      appOrFactor,
+      List(
+        PrecedenceGroup("||" -> AST.Const(Constant.Or)),
+        PrecedenceGroup("&&" -> AST.Const(Constant.And)),
+        PrecedenceGroup(
+          ">=" -> AST.Const(Constant.GreaterThanOrEqual),
+          ">" -> AST.Const(Constant.GreaterThan),
+          "<=" -> AST.Const(Constant.LessThanOrEqual),
+          "<" -> AST.Const(Constant.LessThan)
+        ),
+        PrecedenceGroup("==" -> AST.Const(Constant.Eq)),
+        PrecedenceGroup(
+          "+" -> AST.Const(Constant.Add),
+          "{+}" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
+          "-" -> AST.Const(Constant.Minus)
+        ),
+        PrecedenceGroup(
+          "*" -> AST.Const(Constant.Multiply),
+          "/" -> AST.Const(Constant.Div),
+          "%" -> AST.Const(Constant.Mod),
+          "{*}" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply))
+        ),
+        PrecedenceGroup(
+          "^" -> AST.Const(Constant.Exp)
+        )
+      )
+    )
 
     lazy val factor: Parser[AST] =
-      P(("(" ~ precedence0 ~ ")") | number | boolean | unaryPrefixOp | variable | let | lifted | predefinedConstant | list)
+      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | variable | let | lifted | predefinedConstant | list)
 
     lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
@@ -92,11 +77,11 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
       P(unaryOps ~ appOrFactor).map { case (op, e) => AST.App(op, e) }
 
     lazy val lambdaOrLet: Parser[AST] = {
-      def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ precedence0).map { expr =>
+      def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ ast).map { expr =>
         AST.Lambda(AST.Var(id), expr)
       }
       def letTail(id: String): Parser[AST] =
-        P(whitespaces ~ "=" ~/ precedence0 ~ "in" ~/ precedence0).map {
+        P(whitespaces ~ "=" ~/ ast ~ "in" ~/ ast).map {
           case (value, body) =>
             AST.Let(AST.Var(id), value, body)
         }
@@ -105,7 +90,7 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
       identifier.flatMap(tail)
     }
 
-    lazy val let: Parser[AST] = P("let(" ~/ identifier ~ "," ~ precedence0 ~ "," ~ precedence0 ~ ")").map {
+    lazy val let: Parser[AST] = P("let(" ~/ identifier ~ "," ~ ast ~ "," ~ ast ~ ")").map {
       case (id, value, in) =>
         AST.Let(AST.Var(id), value, in)
     }
@@ -113,12 +98,12 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
     lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
 
     lazy val nonEmptyArgs: Parser[List[AST]] =
-      P(precedence0 ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+      P(ast ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
     lazy val lifted: Parser[AST] =
-      P("<" ~/ precedence0 ~ ">").map(ast => AST.App(AST.Const(Constant.Lift), ast))
+      P("{" ~/ ast ~ "}").map(ast => AST.App(AST.Const(Constant.Lift), ast))
 
     lazy val predefinedConstant: Parser[AST.Const] = identifier
       .filter(id => Constant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
@@ -127,12 +112,6 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
 
     lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
-
-    def evalAssocBinaryOp(head: AST, tail: List[(AST, AST)]): AST =
-      tail match {
-        case Nil                        => head
-        case (op, tailHead) :: tailTail => AST.App(AST.App(op, head), evalAssocBinaryOp(tailHead, tailTail))
-      }
 
     def evalApp(f: AST, args: List[AST]): AST =
       args match {
@@ -160,6 +139,29 @@ trait ParsersModule[F[_]] { self: ASTModule[F] =>
         P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!
 
       lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
+    }
+  }
+
+  private[language] case class PrecedenceGroup(operators: (String, AST)*) {
+    def parser(next: Parser[AST]): Parser[AST] = P(next ~ (opsParser ~/ next).rep).map {
+      case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+    }
+
+    private def opsParser: Parser[AST] = operators.foldLeft[Parser[AST]](Fail) {
+      case (accParser, (opString, ast)) =>
+        accParser | P(opString).map(_ => ast)
+    }
+
+    private def evalAssocBinaryOp(head: AST, tail: List[(AST, AST)]): AST =
+      tail match {
+        case Nil                        => head
+        case (op, tailHead) :: tailTail => AST.App(AST.App(op, head), evalAssocBinaryOp(tailHead, tailTail))
+      }
+  }
+
+  private[language] case class PrecedenceGroups(last: Parser[AST], groups: List[PrecedenceGroup]) {
+    def parser: Parser[AST] = groups.foldRight(last) { (group, accParser) =>
+      group.parser(accParser)
     }
   }
 

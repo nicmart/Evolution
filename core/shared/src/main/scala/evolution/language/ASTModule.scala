@@ -83,11 +83,15 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     case object Mod extends Constant(Dbl =>: Dbl =>: Dbl, Nil)
 
     // Boolean
-    case object Eq extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
     case object If extends Constant(Bool =>: Var("T") =>: Var("T") =>: Var("T"), Nil)
     case object Not extends Constant(Bool =>: Bool, Nil)
     case object And extends Constant(Bool =>: Bool =>: Bool, Nil)
     case object Or extends Constant(Bool =>: Bool =>: Bool, Nil)
+    case object Eq extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object GreaterThan extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object GreaterThanOrEqual extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object LessThan extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
+    case object LessThanOrEqual extends Constant(Var("T") =>: Var("T") =>: Bool, Nil)
 
     // Chain
     case object Empty extends Constant(Var("T"), Nil)

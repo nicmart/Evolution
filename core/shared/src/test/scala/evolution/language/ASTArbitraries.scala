@@ -13,6 +13,15 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] =>
   def genLeafExpr: Gen[String] =
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
 
+  // TODO move all operators here
+  def genOperatorWithAST: Gen[(String, AST)] =
+    Gen.oneOf[(String, AST)](
+      ">" -> AST.Const(Constant.GreaterThan),
+      ">=" -> AST.Const(Constant.GreaterThanOrEqual),
+      "<" -> AST.Const(Constant.LessThan),
+      "<=" -> AST.Const(Constant.LessThanOrEqual)
+    )
+
   def genVarUsage: Gen[String] = genIdentifier.map(v => s"$$$v")
 
   def genIdentifier: Gen[String] = for {

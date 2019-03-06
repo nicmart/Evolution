@@ -234,22 +234,22 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
         "<expr>(a, b)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"<$expr>($a, $b)") shouldBe AST.App2(
+            unsafeParse(s"{$expr}($a, $b)") shouldBe AST.App2(
               AST.App(AST.Const(Constant.Lift), unsafeParse(expr)),
               unsafeParse(a),
               unsafeParse(b))
           }
         }
 
-        "<n>" in {
+        "{n}" in {
           forAll(arbitrary[Double]) { d =>
-            unsafeParse(s"<$d>") shouldBe
+            unsafeParse(s"{$d}") shouldBe
               AST.App(AST.Const(Constant.Lift), unsafeParse(d.toString))
           }
         }
 
-        "1 <+> 2" in {
-          unsafeParse("1 <+> 2") shouldBe AST.App2(
+        "1 {+} 2" in {
+          unsafeParse("1 {+} 2") shouldBe AST.App2(
             AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
             AST.Number("1"),
             AST.Number("2")
@@ -293,6 +293,14 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldBe
             AST.App(AST.Const(Constant.Not), unsafeParse(a))
+        }
+      }
+
+      // TODO test all the operators in this way
+      "parse comparison operators" in {
+        forAll(genLeafExpr, genOperatorWithAST, genLeafExpr) {
+          case (a, (op, opAST), b) =>
+            unsafeParse(s"$a $op $b") shouldBe AST.App2(opAST, unsafeParse(a), unsafeParse(b))
         }
       }
 
