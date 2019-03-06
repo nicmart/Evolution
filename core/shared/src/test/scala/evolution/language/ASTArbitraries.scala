@@ -2,7 +2,7 @@ package evolution.language
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-trait ASTArbitraries[F[_]] { self: ASTModule[F] =>
+trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
 
   def genFunctionArgs: Gen[List[String]] =
     for {
@@ -15,12 +15,7 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] =>
 
   // TODO move all operators here
   def genOperatorWithAST: Gen[(String, AST)] =
-    Gen.oneOf[(String, AST)](
-      ">" -> AST.Const(Constant.GreaterThan),
-      ">=" -> AST.Const(Constant.GreaterThanOrEqual),
-      "<" -> AST.Const(Constant.LessThan),
-      "<=" -> AST.Const(Constant.LessThanOrEqual)
-    )
+    Gen.oneOf[(String, AST)](Parsers.binaryOperators)
 
   def genVarUsage: Gen[String] = genIdentifier.map(v => s"$$$v")
 

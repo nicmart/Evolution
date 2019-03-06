@@ -9,6 +9,6 @@ trait LanguageSpec[F[_]]
     with CompilerModule[F]
     with TyperModule[F]
     with DesugarModule[F]
-    with ParsersModule[F]
+    with ParserModule[F]
     with ASTArbitraries[F]
     with ASTModule[F] {}

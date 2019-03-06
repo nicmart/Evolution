@@ -21,9 +21,10 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
-      "additions" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a + $b") shouldBe AST.App2(AST.Const(Constant.Add), unsafeParse(a), unsafeParse(b))
+      "parse binary operators" in {
+        forAll(genLeafExpr, genOperatorWithAST, genLeafExpr) {
+          case (a, (op, opAST), b) =>
+            unsafeParse(s"$a $op $b") shouldBe AST.App2(opAST, unsafeParse(a), unsafeParse(b))
         }
       }
 
@@ -57,18 +58,6 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
-      "multiplications" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a * $b") shouldBe AST.App2(AST.Const(Constant.Multiply), unsafeParse(a), unsafeParse(b))
-        }
-      }
-
-      "mods" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a % $b") shouldBe AST.App2(AST.Const(Constant.Mod), unsafeParse(a), unsafeParse(b))
-        }
-      }
-
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe AST.App2(
@@ -95,16 +84,6 @@ class ParserModuleSpec extends LanguageSpec[Id] {
             AST.Const(Constant.Multiply),
             AST.App2(AST.Const(Constant.Add), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
-          )
-        }
-      }
-
-      "a - b" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a - $b") shouldBe AST.App2(
-            AST.Const(Constant.Minus),
-            unsafeParse(a),
-            unsafeParse(b)
           )
         }
       }
@@ -172,10 +151,6 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       }
 
       "parse exponentials" - {
-        "2^3" in {
-          unsafeParse("2^3") shouldBe AST.App2(AST.Const(Constant.Exp), AST.Number("2"), AST.Number("3"))
-        }
-
         "2^3 + 1" in {
           unsafeParse("2^3 + 1") shouldBe AST.App2(
             AST.Const(Constant.Add),
@@ -248,14 +223,6 @@ class ParserModuleSpec extends LanguageSpec[Id] {
           }
         }
 
-        "1 {+} 2" in {
-          unsafeParse("1 {+} 2") shouldBe AST.App2(
-            AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
-            AST.Number("1"),
-            AST.Number("2")
-          )
-        }
-
         "[a, b, c]" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"[$a, $b, $c]") shouldBe AST.App2(
@@ -275,32 +242,10 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         unsafeParse("false") shouldBe AST.Bool(false)
       }
 
-      "parse ands" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a && $b") shouldBe
-            AST.App2(AST.Const(Constant.And), unsafeParse(a), unsafeParse(b))
-        }
-      }
-
-      "parse ors" in {
-        forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-          unsafeParse(s"$a || $b") shouldBe
-            AST.App2(AST.Const(Constant.Or), unsafeParse(a), unsafeParse(b))
-        }
-      }
-
       "parse not" in {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldBe
             AST.App(AST.Const(Constant.Not), unsafeParse(a))
-        }
-      }
-
-      // TODO test all the operators in this way
-      "parse comparison operators" in {
-        forAll(genLeafExpr, genOperatorWithAST, genLeafExpr) {
-          case (a, (op, opAST), b) =>
-            unsafeParse(s"$a $op $b") shouldBe AST.App2(opAST, unsafeParse(a), unsafeParse(b))
         }
       }
 
