@@ -189,6 +189,13 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe))
           } yield Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
 
+        case App2(Const.Neq, x, y) =>
+          for {
+            compiledX <- compile[M](x)
+            compiledY <- compile[M](y)
+            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe))
+          } yield Neq[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
+
         case App3(Const.If, x, y, z) =>
           (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
             IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
@@ -198,6 +205,34 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           (tl, br, p).compileN[M] { (compiledTl, compiledBr, compiledP) =>
             InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
           }
+
+        case App2(Const.GreaterThan, a, b) =>
+          for {
+            compiledA <- compile[M](a)
+            compiledB <- compile[M](b)
+            ordering <- K.fromEither(Type.ordering(a.tpe))
+          } yield GreaterThan[a.Out](compiledA, compiledB.asExpr)(ordering)
+
+        case App2(Const.GreaterThanOrEqual, a, b) =>
+          for {
+            compiledA <- compile[M](a)
+            compiledB <- compile[M](b)
+            ordering <- K.fromEither(Type.ordering(a.tpe))
+          } yield GreaterThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
+
+        case App2(Const.LessThan, a, b) =>
+          for {
+            compiledA <- compile[M](a)
+            compiledB <- compile[M](b)
+            ordering <- K.fromEither(Type.ordering(a.tpe))
+          } yield LessThan[a.Out](compiledA, compiledB.asExpr)(ordering)
+
+        case App2(Const.LessThanOrEqual, a, b) =>
+          for {
+            compiledA <- compile[M](a)
+            compiledB <- compile[M](b)
+            ordering <- K.fromEither(Type.ordering(a.tpe))
+          } yield LessThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
 
         case App2(Const.And, a, b) =>
           (a, b).compileN[M] { (compiledA, compiledB) =>

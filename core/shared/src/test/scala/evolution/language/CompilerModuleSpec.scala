@@ -1,6 +1,8 @@
 package evolution.language
 import cats.Id
 import cats.implicits._
+import cats.kernel.Eq
+import org.scalacheck.Gen
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
   import Expr._, Desugarer._
@@ -69,8 +71,32 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
         val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
         unsafeCompile(AST.App2(AST.Const(Constant.Until), evolution, predicate)) shouldBe expected
       }
+
+      "equality operators" in forAll(equalityOperators[Double], genTypedNumber, genTypedNumber) {
+        case ((ast, f), a, b) =>
+          unsafeCompile(AST.App2(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+      }
+
+      "relation operators" in forAll(relationOperators[Double], genTypedNumber, genTypedNumber) {
+        case ((ast, f), a, b) =>
+          unsafeCompile(AST.App2(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+      }
     }
   }
+
+  def equalityOperators[T: Eq]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
+    Gen.oneOf(
+      AST.Const(Constant.Eq) -> Equals.apply[T] _,
+      AST.Const(Constant.Neq) -> Neq.apply[T] _
+    )
+
+  def relationOperators[T: Ordering]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
+    Gen.oneOf(
+      AST.Const(Constant.GreaterThan) -> GreaterThan.apply[T] _,
+      AST.Const(Constant.GreaterThanOrEqual) -> GreaterThanOrEqual.apply[T] _,
+      AST.Const(Constant.LessThan) -> LessThan.apply[T] _,
+      AST.Const(Constant.LessThanOrEqual) -> LessThanOrEqual.apply[T] _
+    )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
     Compiler.compile[Either[String, ?]](expr).run(ctx).right.get.asInstanceOf[Expr[T]]

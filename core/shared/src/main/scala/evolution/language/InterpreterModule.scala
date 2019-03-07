@@ -33,6 +33,7 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
       case eq @ Equals(a, b)     => interpret2(a, b)(eq.eq.eqv)
+      case neq @ Neq(a, b)       => interpret2(a, b)(neq.eq.neqv)
       case IfThen(condition, a, b) =>
         interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB
@@ -48,6 +49,11 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
       case Not(a) =>
         interpret(a).map(!_)
+
+      case expr @ GreaterThan(a, b)        => interpret2(a, b)(expr.ord.gt)
+      case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteq)
+      case expr @ LessThan(a, b)           => interpret2(a, b)(expr.ord.lt)
+      case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteq)
 
       case InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>

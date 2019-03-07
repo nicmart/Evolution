@@ -40,9 +40,8 @@ trait ExpressionModule[F[_]] {
     }
     final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
     final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
-    final case class Equals[T: Eq](a: Expr[T], b: Expr[T]) extends Expr[Boolean](List(a, b)) {
-      val eq: Eq[T] = implicitly[Eq[T]]
-    }
+    final case class Equals[T](a: Expr[T], b: Expr[T])(implicit val eq: Eq[T]) extends Expr[Boolean](List(a, b))
+    final case class Neq[T](a: Expr[T], b: Expr[T])(implicit val eq: Eq[T]) extends Expr[Boolean](List(a, b))
 
     // Boolean
     final case class Bool(b: Boolean) extends Expr[Boolean](Nil)
@@ -52,6 +51,16 @@ trait ExpressionModule[F[_]] {
     final case class And(a: Expr[Boolean], b: Expr[Boolean]) extends Expr[Boolean](List(a, b))
     final case class Or(a: Expr[Boolean], b: Expr[Boolean]) extends Expr[Boolean](List(a, b))
     final case class Not(a: Expr[Boolean]) extends Expr[Boolean](List(a))
+
+    // Relations
+    final case class GreaterThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+        extends Expr[Boolean](List(a, b))
+    final case class GreaterThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+        extends Expr[Boolean](List(a, b))
+    final case class LessThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+        extends Expr[Boolean](List(a, b))
+    final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+        extends Expr[Boolean](List(a, b))
 
     // Chain
     final case class Empty[A]() extends Expr[F[A]](Nil)

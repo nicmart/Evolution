@@ -1,14 +1,18 @@
 package evolution.language
+import cats.Eq
+import cats.implicits._
 import evolution.data.EvaluationContext._
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.materialization.RNGRepr
-import org.scalacheck.Gen
+import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 
 class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
   val interpreter = new InterpreterModule with ExpressionModule[RNGRepr] {}
+  import interpreter.Expr
   import interpreter.Expr._
   import interpreter.Interpreter._
 
@@ -37,7 +41,41 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
       interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
       interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
     }
+
+    "should interpret relational operators" in forAll(
+      genRelationOperatorExpectations[Double],
+      arbitrary[Dbl],
+      arbitrary[Dbl]) {
+      case ((op, expected), a, b) =>
+        interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
+    }
+
+    "should interpret equality operators" in forAll(
+      genEqualityOperatorExpectations[Double],
+      arbitrary[Dbl],
+      arbitrary[Dbl]) {
+      case ((op, expected), a, b) =>
+        interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
+    }
   }
 
   val genBooleanLiteral: Gen[Bool] = Gen.oneOf(false, true).map(Bool)
+  implicit val arbDouble: Arbitrary[Dbl] = Arbitrary(arbitrary[Double].map(Dbl))
+
+  // TODO are we just replicating the implementation here?
+  def genEqualityOperatorExpectations[T](
+    implicit eq: Eq[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
+    Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
+      Equals.apply[T] _ -> eq.eqv _,
+      Neq.apply[T] _ -> eq.neqv _
+    )
+
+  def genRelationOperatorExpectations[T](
+    implicit ord: Ordering[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
+    Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
+      GreaterThan.apply[T] _ -> ord.gt _,
+      GreaterThanOrEqual.apply[T] _ -> ord.gteq _,
+      LessThan.apply[T] _ -> ord.lt _,
+      LessThanOrEqual.apply[T] _ -> ord.lteq _
+    )
 }

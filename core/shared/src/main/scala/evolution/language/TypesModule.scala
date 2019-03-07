@@ -57,9 +57,18 @@ trait TypesModule[F[_]] {
         case Type.Integer => Right(Eq[Int])
         case Type.Dbl     => Right(Eq[Double])
         case Type.Point   => Right(Eq[Point])
+        case Type.Bool    => Right(Eq[Boolean])
         case _            => Left(s"Unable to find an eq typeclass for type $t")
       }
     }.asInstanceOf[Either[String, Eq[t.Out]]]
+
+    def ordering(t: Type): Either[String, Ordering[t.Out]] = {
+      t match {
+        case Type.Integer => Right(Ordering[Int])
+        case Type.Dbl     => Right(Ordering[Double])
+        case _            => Left(s"Unable to find an eq typeclass for type $t")
+      }
+    }.asInstanceOf[Either[String, Ordering[t.Out]]]
 
     def unwrapF(t: Type): Either[String, Type] = t match {
       case Type.Evo(inner) => Right(inner)

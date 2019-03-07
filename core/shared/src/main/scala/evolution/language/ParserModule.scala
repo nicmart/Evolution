@@ -38,7 +38,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
           "<" -> AST.Const(Constant.LessThan)
         ),
         PrecedenceGroup(
-          "==" -> AST.Const(Constant.Eq)
+          "==" -> AST.Const(Constant.Eq),
+          "!=" -> AST.Const(Constant.Neq)
         ),
         PrecedenceGroup(
           "+" -> AST.Const(Constant.Add),
@@ -121,18 +122,18 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-    def evalApp(f: AST, args: List[AST]): AST =
+    private def evalApp(f: AST, args: List[AST]): AST =
       args match {
         case Nil                => f
         case argHead :: argTail => evalApp(AST.App(f, argHead), argTail)
       }
 
-    def evalList(asts: List[AST]): AST = asts match {
+    private def evalList(asts: List[AST]): AST = asts match {
       case Nil          => AST.Const(Constant.Empty)
       case head :: tail => AST.App2(AST.Const(Constant.Cons), head, evalList(tail))
     }
 
-    object numbers {
+    private object numbers {
 
       lazy val digit: Parser[Unit] =
         P(CharIn('0' to '9'))
