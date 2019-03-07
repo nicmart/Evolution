@@ -1,6 +1,5 @@
 package evolution.language
 import cats.Id
-import evolution.language.InterpreterModule.Constant
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 

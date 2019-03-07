@@ -1,11 +1,12 @@
 package evolution.language
 
+import cats.MonadError
 import cats.data.State
-import cats.{ Monad, MonadError }
 import cats.implicits._
 
 trait TyperModule[F[_]] { self: ASTModule[F] =>
-  import AST._, TypeClasses._
+  import AST._
+  import TypeClasses._
 
   object Typer {
 
@@ -14,14 +15,15 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
     object TypeInference {
       case class State(vars: TypeVars, subst: Substitution)
       val empty = State(TypeVars.empty, Substitution.empty)
+      def newVar: TypeInference[Type.Var] = cats.data.State { s =>
+        (s.copy(vars = s.vars.next), s.vars.current)
+      }
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
         def evaluate: T = ti.runA(TypeInference.empty).value
       }
     }
 
-    def newVar: TypeInference[Type.Var] = State { s =>
-      (s.copy(vars = s.vars.next), s.vars.current)
-    }
+    import TypeInference.newVar
 
     /**
      * TODO: can we express this with transformChildren or similar?
@@ -75,7 +77,6 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
             .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe))
             .pure[TypeInference]
-        case _ => ???
       }
 
       val childrenConstraints = expr.children.traverse(findConstraints)
@@ -123,8 +124,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
       }
 
-    // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without
-    // without derivation
+    // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
     def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] = {
       val predicatesWithoutVars = predicates.filter(p => p.types.flatMap(typeVars).isEmpty)
       val invalidPredicates = predicatesWithoutVars.filter(p => !instances.contains(p))
@@ -161,9 +161,6 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         substitution = Substitution(assignments)
       } yield substitution
     }
-
-    private def freshInstance(scheme: Type): TypeInference[Type] =
-      freshInstanceSubstitution(scheme).map(_.substitute(scheme))
 
     sealed trait Constraint
     object Constraint {
@@ -220,11 +217,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       val empty: Substitution = Substitution(Nil)
     }
 
-    trait CanBeSubstituted[T] {
+    private trait CanBeSubstituted[T] {
       def substitute(s: Substitution, t: T): T
     }
 
-    object CanBeSubstituted {
+    private object CanBeSubstituted {
       implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
         def substitute(s: Substitution, t: Type): Type = t match {
           case Type.Var(name)       => s.lookup(name).getOrElse(t)
