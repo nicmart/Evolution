@@ -49,7 +49,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       }
 
       "app(x -> $x, 2)" in {
-        val identity = AST.Lambda(AST.Var("x"), AST.Var("x"))
+        val identity = AST.Lambda("x", AST.Var("x"))
         val untyped = AST.App(identity, AST.Number("2", Type.Dbl))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
@@ -61,9 +61,9 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           AST.Const(Constant.MapCons),
           AST.Const(Constant.Empty),
           AST.Lambda(
-            AST.Var("head"),
+            "head",
             AST.Lambda(
-              AST.Var("tail"),
+              "tail",
               AST.App2(AST.Const(Constant.Cons), AST.Number("1", Type.Dbl), AST.Var("tail"))
             )
           )

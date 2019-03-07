@@ -42,13 +42,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Lambda(varName, lambdaBody, _) =>
-          (assignVars(varName), assignVars(lambdaBody), newVar).mapN { (v, b, t) =>
-            Lambda(varName.copy(tpe = v.tpe), b, t)
+          (assignVars(lambdaBody), newVar).mapN { (b, t) =>
+            Lambda(varName, b, t)
           }
 
         case Let(varName, value, in, _) =>
-          (assignVars(varName), assignVars(value), assignVars(in), newVar).mapN { (tVar, tValue, tIn, tLet) =>
-            Let(varName.copy(tpe = tVar.tpe), tValue, tIn, tLet)
+          (assignVars(value), assignVars(in), newVar).mapN { (tValue, tIn, tLet) =>
+            Let(varName, tValue, tIn, tLet)
           }
 
         case Const(id, _, _) =>
@@ -69,14 +69,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
         case Lambda(variable, lambdaExpr, tpe) =>
-          val arrowConstraint = Constraints(tpe -> Type.Arrow(variable.tpe, lambdaExpr.tpe))
-          val variableConstraints =
-            Constraints(varUsagesIn(variable.name, lambdaExpr).map(u => u.tpe -> variable.tpe): _*)
-          arrowConstraint.merge(variableConstraints).pure[TypeInference]
+          for {
+            variableType <- newVar
+            arrowConstraint = Constraints(tpe -> Type.Arrow(variableType, lambdaExpr.tpe))
+            variableConstraints = Constraints(varUsagesIn(variable, lambdaExpr).map(u => u.tpe -> variableType): _*)
+          } yield arrowConstraint.merge(variableConstraints)
         case Let(variable, value, in, tpe) =>
-          Constraints(varUsagesIn(variable.name, in).map(u => u.tpe -> variable.tpe): _*)
-            .merge(Constraints(variable.tpe -> value.tpe, in.tpe -> tpe))
-            .pure[TypeInference]
+          findConstraints(App(Lambda(variable, in), value))
       }
 
       val childrenConstraints = expr.children.traverse(findConstraints)
@@ -134,10 +133,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     private def varUsagesIn(varName: String, expr: AST): List[AST] =
       expr match {
-        case Var(name, _) if name == varName                         => List(expr)
-        case Lambda(Var(lambdaVar, _), _, _) if lambdaVar == varName => Nil // Shadowing
-        case Let(Var(letVar, _), value, in, _) if letVar == varName  => varUsagesIn(varName, value) // Shadowing
-        case _                                                       => expr.children.flatMap(varUsagesIn(varName, _))
+        case Var(name, _) if name == varName                 => List(expr)
+        case Lambda(lambdaVar, _, _) if lambdaVar == varName => Nil // Shadowing
+        case Let(letVar, value, in, _) if letVar == varName  => varUsagesIn(varName, value) // Shadowing
+        case _                                               => expr.children.flatMap(varUsagesIn(varName, _))
       }
 
     private def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =

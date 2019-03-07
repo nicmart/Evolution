@@ -40,11 +40,11 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.Lambda(varName, body, tpe) =>
-          withVar(varName.name)(compile[M](body)).map(Lambda(varName.name, _))
+          withVar(varName)(compile[M](body)).map(Lambda(varName, _))
 
         case AST.Let(varName, value, in, tpe) =>
-          (compile[M](value), withVar(varName.name)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
-            Let(varName.name, compiledValue, compiledIn)
+          (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
+            Let(varName, compiledValue, compiledIn)
           }
 
         case AST.Number(n, Type.Integer) =>

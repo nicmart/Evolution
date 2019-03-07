@@ -21,8 +21,8 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     }
 
     def children: List[AST] = this match {
-      case AST.Lambda(varName, expr, _)  => List(varName, expr)
-      case AST.Let(varName, expr, in, _) => List(varName, expr, in)
+      case AST.Lambda(varName, expr, _)  => List(expr)
+      case AST.Let(varName, expr, in, _) => List(expr, in)
       case AST.App(f, x, _)              => List(f, x)
       case _                             => Nil
     }
@@ -30,10 +30,10 @@ trait ASTModule[F[_]] extends TypesModule[F] {
 
   object AST {
     final case class Var(name: String, tpe: Type = Type.Var("")) extends AST
-    final case class Lambda(varName: AST.Var, expr: AST, tpe: Type = Type.Var("")) extends AST
+    final case class Lambda(varName: String, expr: AST, tpe: Type = Type.Var("")) extends AST
     final case class App(f: AST, x: AST, tpe: Type = Type.Var("")) extends AST
     final case class Const(id: Constant, tpe: Type = Type.Var(""), predicates: List[Predicate] = Nil) extends AST
-    final case class Let(varName: AST.Var, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
+    final case class Let(varName: String, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
     final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
     final case class Bool(b: Boolean, tpe: Type = Type.Var("")) extends AST
 

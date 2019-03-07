@@ -24,16 +24,15 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       }
 
       "let bindings" in forAll(genTypedVar, genTypedNumber, genTypedNumber) { (variable, n1, n2) =>
-        val variable1 = AST.Var(variable.name, n1.tpe)
-        unsafeCompile(AST.Let(variable1, n1, n2)) shouldBe Let(
-          variable1.name,
+        unsafeCompile(AST.Let(variable.name, n1, n2)) shouldBe Let(
+          variable.name,
           unsafeCompile(n1),
           unsafeCompile(n2)
         )
       }
 
       "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>
-        unsafeCompile(AST.Lambda(variable, n)) shouldBe Lambda(variable.name, unsafeCompile(n))
+        unsafeCompile(AST.Lambda(variable.name, n)) shouldBe Lambda(variable.name, unsafeCompile(n))
       }
 
       "ands" in forAll(genBool, genBool) { (a, b) =>
@@ -59,14 +58,14 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       }
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
-        val predicate = AST.Lambda(AST.Var("x"), b)
+        val predicate = AST.Lambda("x", b)
         val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
         val expected = takeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
         unsafeCompile(AST.App2(AST.Const(Constant.While), evolution, predicate)) shouldBe expected
       }
 
       "untils" in forAll(genBool, genNumber) { (b, n) =>
-        val predicate = AST.Lambda(AST.Var("x"), b)
+        val predicate = AST.Lambda("x", b)
         val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
         val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
         unsafeCompile(AST.App2(AST.Const(Constant.Until), evolution, predicate)) shouldBe expected

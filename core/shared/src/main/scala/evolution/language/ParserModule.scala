@@ -86,12 +86,12 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
 
     private lazy val lambdaOrLet: Parser[AST] = {
       def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ ast).map { expr =>
-        AST.Lambda(AST.Var(id), expr)
+        AST.Lambda(id, expr)
       }
       def letTail(id: String): Parser[AST] =
         P(whitespaces ~ "=" ~/ ast ~ "in" ~/ ast).map {
           case (value, body) =>
-            AST.Let(AST.Var(id), value, body)
+            AST.Let(id, value, body)
         }
       def tail(id: String): Parser[AST] = lambdaTail(id) | letTail(id)
 
@@ -100,7 +100,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
 
     private lazy val let: Parser[AST] = P("let(" ~/ identifier ~ "," ~ ast ~ "," ~ ast ~ ")").map {
       case (id, value, in) =>
-        AST.Let(AST.Var(id), value, in)
+        AST.Let(id, value, in)
     }
 
     private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
