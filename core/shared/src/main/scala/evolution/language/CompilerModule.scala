@@ -210,29 +210,29 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.ordering(a.tpe))
-          } yield GreaterThan[a.Out](compiledA, compiledB.asExpr)(ordering)
+            order <- K.fromEither(Type.order(a.tpe))
+          } yield GreaterThan[a.Out](compiledA, compiledB.asExpr)(order)
 
         case App2(Const.GreaterThanOrEqual, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.ordering(a.tpe))
+            ordering <- K.fromEither(Type.order(a.tpe))
           } yield GreaterThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
 
         case App2(Const.LessThan, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.ordering(a.tpe))
+            ordering <- K.fromEither(Type.order(a.tpe))
           } yield LessThan[a.Out](compiledA, compiledB.asExpr)(ordering)
 
         case App2(Const.LessThanOrEqual, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.ordering(a.tpe))
-          } yield LessThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
+            order <- K.fromEither(Type.order(a.tpe))
+          } yield LessThanOrEqual[a.Out](compiledA, compiledB.asExpr)(order)
 
         case App2(Const.And, a, b) =>
           (a, b).compileN[M] { (compiledA, compiledB) =>

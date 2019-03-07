@@ -4,6 +4,7 @@ import evolution.geometry
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
 import cats.implicits._
+import cats.kernel.Order
 
 trait TypesModule[F[_]] {
 
@@ -62,13 +63,13 @@ trait TypesModule[F[_]] {
       }
     }.asInstanceOf[Either[String, Eq[t.Out]]]
 
-    def ordering(t: Type): Either[String, Ordering[t.Out]] = {
+    def order(t: Type): Either[String, Order[t.Out]] = {
       t match {
-        case Type.Integer => Right(Ordering[Int])
-        case Type.Dbl     => Right(Ordering[Double])
+        case Type.Integer => Right(Order[Int])
+        case Type.Dbl     => Right(Order[Double])
         case _            => Left(s"Unable to find an eq typeclass for type $t")
       }
-    }.asInstanceOf[Either[String, Ordering[t.Out]]]
+    }.asInstanceOf[Either[String, Order[t.Out]]]
 
     def unwrapF(t: Type): Either[String, Type] = t match {
       case Type.Evo(inner) => Right(inner)

@@ -1,6 +1,7 @@
 package evolution.language
 import cats.Eq
 import cats.implicits._
+import cats.kernel.Order
 import evolution.data.EvaluationContext._
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
@@ -71,11 +72,11 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
     )
 
   def genRelationOperatorExpectations[T](
-    implicit ord: Ordering[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
+    implicit ord: Order[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
       GreaterThan.apply[T] _ -> ord.gt _,
-      GreaterThanOrEqual.apply[T] _ -> ord.gteq _,
+      GreaterThanOrEqual.apply[T] _ -> ord.gteqv _,
       LessThan.apply[T] _ -> ord.lt _,
-      LessThanOrEqual.apply[T] _ -> ord.lteq _
+      LessThanOrEqual.apply[T] _ -> ord.lteqv _
     )
 }

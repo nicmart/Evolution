@@ -1,10 +1,8 @@
 package evolution.data
-import cats.{ Group, Id }
-import cats.arrow.FunctionK
-import cats.kernel.{ Eq, Semigroup }
+import cats.Group
+import cats.kernel.{ Eq, Order, Semigroup }
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
-import cats.~>
 
 trait ExpressionModule[F[_]] {
 
@@ -24,20 +22,15 @@ trait ExpressionModule[F[_]] {
     final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point](List(x, y))
     final case class X(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
-    final case class Add[T: Semigroup](a: Expr[T], b: Expr[T]) extends Expr[T](List(a, b)) {
-      val semigroup: Semigroup[T] = implicitly[Semigroup[T]]
-    }
+    final case class Add[T](a: Expr[T], b: Expr[T])(implicit val semigroup: Semigroup[T]) extends Expr[T](List(a, b))
     final case class Div(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Exp(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Abs(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Sign(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
-    final case class Inverse[T: Group](t: Expr[T]) extends Expr[T](List(t)) {
-      val group: Group[T] = implicitly[Group[T]]
-    }
-    final case class Multiply[T: VectorSpace](k: Expr[Double], t: Expr[T]) extends Expr[T](List(k, t)) {
-      val vectorSpace: VectorSpace[T] = implicitly[VectorSpace[T]]
-    }
+    final case class Inverse[T](t: Expr[T])(implicit val group: Group[T]) extends Expr[T](List(t))
+    final case class Multiply[T](k: Expr[Double], t: Expr[T])(implicit val vectorSpace: VectorSpace[T])
+        extends Expr[T](List(k, t))
     final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
     final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
     final case class Equals[T](a: Expr[T], b: Expr[T])(implicit val eq: Eq[T]) extends Expr[Boolean](List(a, b))
@@ -53,13 +46,12 @@ trait ExpressionModule[F[_]] {
     final case class Not(a: Expr[Boolean]) extends Expr[Boolean](List(a))
 
     // Relations
-    final case class GreaterThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+    final case class GreaterThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Order[T])
         extends Expr[Boolean](List(a, b))
-    final case class GreaterThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+    final case class GreaterThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Order[T])
         extends Expr[Boolean](List(a, b))
-    final case class LessThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
-        extends Expr[Boolean](List(a, b))
-    final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Ordering[T])
+    final case class LessThan[T](a: Expr[T], b: Expr[T])(implicit val ord: Order[T]) extends Expr[Boolean](List(a, b))
+    final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T])(implicit val ord: Order[T])
         extends Expr[Boolean](List(a, b))
 
     // Chain

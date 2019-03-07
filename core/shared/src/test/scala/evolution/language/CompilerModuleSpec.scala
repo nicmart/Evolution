@@ -1,7 +1,7 @@
 package evolution.language
 import cats.Id
 import cats.implicits._
-import cats.kernel.Eq
+import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
@@ -90,7 +90,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       AST.Const(Constant.Neq) -> Neq.apply[T] _
     )
 
-  def relationOperators[T: Ordering]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
+  def relationOperators[T: Order]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
       AST.Const(Constant.GreaterThan) -> GreaterThan.apply[T] _,
       AST.Const(Constant.GreaterThanOrEqual) -> GreaterThanOrEqual.apply[T] _,

@@ -51,9 +51,9 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
         interpret(a).map(!_)
 
       case expr @ GreaterThan(a, b)        => interpret2(a, b)(expr.ord.gt)
-      case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteq)
+      case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteqv)
       case expr @ LessThan(a, b)           => interpret2(a, b)(expr.ord.lt)
-      case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteq)
+      case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteqv)
 
       case InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
