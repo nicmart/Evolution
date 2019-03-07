@@ -1,8 +1,7 @@
 package evolution.language
 import contextual._
-import fastparse.all
-import ParserConfig.White._
-import ParserConfig.whitespaces
+import evolution.language.ParserConfig.White._
+import evolution.language.ParserConfig.whitespaces
 import fastparse.noApi._
 
 trait ParserModule[F[_]] { self: ASTModule[F] =>
@@ -43,14 +42,14 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
         ),
         PrecedenceGroup(
           "+" -> AST.Const(Constant.Add),
-          "{+}" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
+          "@+" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
           "-" -> AST.Const(Constant.Minus)
         ),
         PrecedenceGroup(
           "*" -> AST.Const(Constant.Multiply),
           "/" -> AST.Const(Constant.Div),
           "%" -> AST.Const(Constant.Mod),
-          "{*}" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply))
+          "@*" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply))
         ),
         PrecedenceGroup(
           "^" -> AST.Const(Constant.Exp)
@@ -112,7 +111,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
     private lazy val lifted: Parser[AST] =
-      P("{" ~/ ast ~ "}").map(ast => AST.App(AST.Const(Constant.Lift), ast))
+      P("@" ~/ factor).map(ast => AST.App(AST.Const(Constant.Lift), ast))
 
     private lazy val predefinedConstant: Parser[AST.Const] = identifier
       .filter(id => Constant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))

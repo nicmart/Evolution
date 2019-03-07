@@ -207,18 +207,18 @@ class ParserModuleSpec extends LanguageSpec[Id] {
           }
         }
 
-        "<expr>(a, b)" in {
+        "@expr(a, b)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"{$expr}($a, $b)") shouldBe AST.App2(
+            unsafeParse(s"@$expr($a, $b)") shouldBe AST.App2(
               AST.App(AST.Const(Constant.Lift), unsafeParse(expr)),
               unsafeParse(a),
               unsafeParse(b))
           }
         }
 
-        "{n}" in {
+        "@n" in {
           forAll(arbitrary[Double]) { d =>
-            unsafeParse(s"{$d}") shouldBe
+            unsafeParse(s"@$d") shouldBe
               AST.App(AST.Const(Constant.Lift), unsafeParse(d.toString))
           }
         }
