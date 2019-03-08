@@ -75,7 +75,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
             variableConstraints = Constraints(varUsagesIn(variable, lambdaExpr).map(u => u.tpe -> variableType): _*)
           } yield arrowConstraint.merge(variableConstraints)
         case Let(variable, value, in, tpe) =>
-          findConstraints(App(Lambda(variable, in), value))
+          for {
+            variableType <- newVar
+            mainConstraint = Constraints(tpe -> in.tpe, variableType -> value.tpe)
+            variableConstraints = Constraints(varUsagesIn(variable, in).map(u => u.tpe -> variableType): _*)
+          } yield mainConstraint.merge(variableConstraints)
       }
 
       val childrenConstraints = expr.children.traverse(findConstraints)
