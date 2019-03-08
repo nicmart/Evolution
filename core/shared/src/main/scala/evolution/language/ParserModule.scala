@@ -58,7 +58,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     )
 
     private lazy val factor: Parser[AST] =
-      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | variable | let | lifted | predefinedConstant | list)
+      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | predefinedConstant | let | variable | lifted | list)
 
     private lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
@@ -75,7 +75,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
       (P("true").map(_ => true) | P("false").map(_ => false)).map(AST.Bool(_))
 
     private lazy val variable: Parser[AST.Var] =
-      P("$" ~~ identifier).map(AST.Var(_))
+      P(identifier).map(AST.Var(_))
 
     private lazy val unaryOps: Parser[AST.Const] =
       P("-").map(_ => AST.Const(Constant.Inverse)) |

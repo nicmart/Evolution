@@ -16,7 +16,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "variables" in {
         forAll(genIdentifier) { varName =>
-          unsafeParse(s"$$$varName") shouldBe AST.Var(varName)
+          unsafeParse(s"$varName") shouldBe AST.Var(varName)
         }
       }
 
@@ -36,7 +36,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id =$expr in $$$id") shouldBe AST.Let(id, unsafeParse(expr), AST.Var(id))
+            unsafeParse(s"$id =$expr in $id") shouldBe AST.Let(id, unsafeParse(expr), AST.Var(id))
           }
         }
 
@@ -132,7 +132,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$$$identifier1($expr1, $expr2)") shouldBe AST.App2(
+          unsafeParse(s"$identifier1($expr1, $expr2)") shouldBe AST.App2(
             AST.Var(identifier1),
             unsafeParse(expr1),
             unsafeParse(expr2)
