@@ -45,7 +45,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         val untyped = AST.App2(AST.Const(Constant.Point), AST.Var("a"), AST.Var("b"))
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped).evaluateWith(
-            Map("a" -> Qualified(Type.Dbl), "b" -> Qualified(Type.Dbl)))
+            Map("a" -> TIS.pure(Qualified(Type.Dbl)), "b" -> TIS.pure(Qualified(Type.Dbl))))
         val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Point
       }

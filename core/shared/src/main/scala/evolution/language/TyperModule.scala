@@ -10,15 +10,22 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
   object Typer {
 
-    // Type to be extended to Qualified Type
-    type BindingContext = Map[String, Qualified[Type]]
+    type TypeInferenceState[T] = StateT[Either[String, ?], TypeInference.State, T]
+    val TIS = Monad[TypeInferenceState]
+
+    type BindingContext = Map[String, TypeInferenceState[Qualified[Type]]]
 
     implicit class BindingContextOps(ctx: BindingContext) {
-      def getBinding(name: String): Either[String, Qualified[Type]] =
-        ctx.get(name).toRight(s"Unable to find type binding for variable $name")
+      def getBinding(name: String): TypeInferenceState[Qualified[Type]] =
+        ctx.get(name) match {
+          case None =>
+            StateT(s =>
+              Left[String, (TypeInference.State, Qualified[Type])](s"Unable to find type binding for variable $name"))
+          case Some(tis) => tis
+        }
     }
 
-    type TypeInference[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], BindingContext, T]
+    type TypeInference[T] = ReaderT[TypeInferenceState, BindingContext, T]
     val TI = MonadError[TypeInference, String]
 
     object TypeInference {
@@ -28,18 +35,20 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       def stateless[T](f: BindingContext => Either[String, T]): TypeInference[T] = ReaderT(
         ctx => StateT(s => f(ctx).map(t => (s, t))))
 
-      def newVar: TypeInference[Type.Var] = ReaderT(_ =>
+      def newVarS: TypeInferenceState[Type.Var] =
         StateT { s =>
           Right((s.copy(vars = s.vars.next), s.vars.current))
-      })
+        }
+
+      def newVar: TypeInference[Type.Var] = ReaderT(_ => newVarS)
 
       //def pushVar(name: String, tpe: Type): TypeInference[]
-      def getBinding(name: String): TypeInference[Qualified[Type]] = stateless(_.getBinding(name))
+      def getBinding(name: String): TypeInference[Qualified[Type]] = ReaderT(_.getBinding(name))
 
       def pushFreshBinding[T](name: String)(ti: TypeInference[T]): TypeInference[T] =
         for {
           tpe <- newVar
-          t <- ti.local[BindingContext](_.updated(name, Qualified(tpe)))
+          t <- ti.local[BindingContext](_.updated(name, StateT.pure(Qualified(tpe))))
         } yield t
 
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
@@ -48,7 +57,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       }
     }
 
-    import TypeInference.newVar
+    import TypeInference._
 
     /**
      * TODO: can we express this with transformChildren or similar?
@@ -67,24 +76,32 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Lambda(varName, lambdaBody, _) =>
-          (TypeInference.pushFreshBinding(varName)(assignVars(lambdaBody)), newVar).mapN { (b, t) =>
+          (pushFreshBinding(varName)(assignVars(lambdaBody)), newVar).mapN { (b, t) =>
             Lambda(varName, b, t)
           }
 
         case Let(varName, value, in, _) =>
-          (assignVars(value), TypeInference.pushFreshBinding(varName)(assignVars(in)), newVar).mapN {
-            (tValue, tIn, tLet) =>
-              Let(varName, tValue, tIn, tLet)
+          (assignVars(value), pushFreshBinding(varName)(assignVars(in)), newVar).mapN { (tValue, tIn, tLet) =>
+            Let(varName, tValue, tIn, tLet)
           }
 
         case Const(id, _, _) =>
           freshInstanceSubstitution(id.scheme).map(subst =>
             Const(id, subst.substitute(id.scheme), subst.substitute(id.predicates)))
 
-        case Var(name, _) => TypeInference.getBinding(name).map(qt => Var(name, qt.t))
+        case Var(name, _) =>
+          getBinding(name).map(qt => Var(name, qt.t))
+
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
       }
+
+//    val constantQualifiedTypes: BindingContext = {
+//        Constant.values.map { constant =>
+//          constant.entryName -> ???
+//
+//        }
+//    }
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
@@ -192,6 +209,14 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       } yield substitution
     }
 
+    private def freshQualifiedType(qt: Qualified[Type]): TypeInferenceState[Qualified[Type]] = {
+      val varsInShceme = typeVars(qt.t).toList
+      for {
+        assignments <- varsInShceme.traverse(schemeVar => newVarS.map(typeVar => Assignment(schemeVar.name, typeVar)))
+        substitution = Substitution(assignments)
+      } yield substitution.substitute(qt)
+    }
+
     sealed trait Constraint
     object Constraint {
       case class Eq(a: Type, b: Type) extends Constraint {
@@ -278,6 +303,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       implicit def list[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[List[T]] =
         new CanBeSubstituted[List[T]] {
           def substitute(s1: Substitution, ts: List[T]): List[T] = ts.map(s1.substitute[T])
+        }
+
+      implicit def qualified[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[Qualified[T]] =
+        new CanBeSubstituted[Qualified[T]] {
+          def substitute(s: Substitution, qt: Qualified[T]): Qualified[T] =
+            Qualified(s.substitute(qt.predicates), s.substitute(qt.t))
         }
 
       implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
