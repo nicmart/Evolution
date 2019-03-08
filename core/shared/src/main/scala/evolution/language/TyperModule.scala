@@ -11,10 +11,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
   object Typer {
 
     // Type to be extended to Qualified Type
-    type BindingContext = Map[String, Type]
+    type BindingContext = Map[String, Qualified[Type]]
 
     implicit class BindingContextOps(ctx: BindingContext) {
-      def getBinding(name: String): Either[String, Type] =
+      def getBinding(name: String): Either[String, Qualified[Type]] =
         ctx.get(name).toRight(s"Unable to find type binding for variable $name")
     }
 
@@ -34,12 +34,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       })
 
       //def pushVar(name: String, tpe: Type): TypeInference[]
-      def getBinding(name: String): TypeInference[Type] = stateless(_.getBinding(name))
+      def getBinding(name: String): TypeInference[Qualified[Type]] = stateless(_.getBinding(name))
 
       def pushFreshBinding[T](name: String)(ti: TypeInference[T]): TypeInference[T] =
         for {
           tpe <- newVar
-          t <- ti.local[BindingContext](_.updated(name, tpe))
+          t <- ti.local[BindingContext](_.updated(name, Qualified(tpe)))
         } yield t
 
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
@@ -81,7 +81,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           freshInstanceSubstitution(id.scheme).map(subst =>
             Const(id, subst.substitute(id.scheme), subst.substitute(id.predicates)))
 
-        case Var(name, _) => TypeInference.getBinding(name).map(tpe => Var(name, tpe))
+        case Var(name, _) => TypeInference.getBinding(name).map(qt => Var(name, qt.t))
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
       }
