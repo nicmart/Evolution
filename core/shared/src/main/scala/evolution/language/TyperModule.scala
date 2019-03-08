@@ -52,8 +52,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         } yield t
 
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
-        def evaluate: T = ti.run(Map.empty).runA(TypeInference.empty).value.right.get
-        def evaluateWith(ctx: BindingContext): T = ti.run(ctx).runA(TypeInference.empty).value.right.get
+        def evaluate: T = ti.run(constantQualifiedTypes).runA(TypeInference.empty).value.right.get
+        def evaluateWith(ctx: BindingContext): T =
+          ti.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).value.right.get
       }
     }
 
@@ -86,8 +87,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Const(id, _, _) =>
-          freshInstanceSubstitution(id.scheme).map(subst =>
-            Const(id, subst.substitute(id.scheme), subst.substitute(id.predicates)))
+          getBinding(id.entryName).map(qt => Const(id, qt.t, qt.predicates))
 
         case Var(name, _) =>
           getBinding(name).map(qt => Var(name, qt.t))
@@ -96,12 +96,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           newVar.map(expr.withType)
       }
 
-//    val constantQualifiedTypes: BindingContext = {
-//        Constant.values.map { constant =>
-//          constant.entryName -> ???
-//
-//        }
-//    }
+    val constantQualifiedTypes: BindingContext =
+      Constant.values
+        .map(constant => constant.entryName -> freshQualifiedType(Qualified(constant.predicates, constant.scheme)))
+        .toMap
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
