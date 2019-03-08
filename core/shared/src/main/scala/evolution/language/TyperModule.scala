@@ -1,7 +1,7 @@
 package evolution.language
 
-import cats.MonadError
-import cats.data.State
+import cats.{ Monad, MonadError }
+import cats.data.{ ReaderT, State, StateT }
 import cats.implicits._
 
 trait TyperModule[F[_]] { self: ASTModule[F] =>
@@ -10,16 +10,41 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
   object Typer {
 
-    type TypeInference[A] = State[TypeInference.State, A]
+    // Type to be extended to Qualified Type
+    type BindingContext = Map[String, Type]
+
+    implicit class BindingContextOps(ctx: BindingContext) {
+      def getBinding(name: String): Either[String, Type] =
+        ctx.get(name).toRight(s"Unable to find type binding for variable $name")
+    }
+
+    type TypeInference[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], BindingContext, T]
+    val TI = MonadError[TypeInference, String]
 
     object TypeInference {
       case class State(vars: TypeVars, subst: Substitution)
       val empty = State(TypeVars.empty, Substitution.empty)
-      def newVar: TypeInference[Type.Var] = cats.data.State { s =>
-        (s.copy(vars = s.vars.next), s.vars.current)
-      }
+
+      def stateless[T](f: BindingContext => Either[String, T]): TypeInference[T] = ReaderT(
+        ctx => StateT(s => f(ctx).map(t => (s, t))))
+
+      def newVar: TypeInference[Type.Var] = ReaderT(_ =>
+        StateT { s =>
+          Right((s.copy(vars = s.vars.next), s.vars.current))
+      })
+
+      //def pushVar(name: String, tpe: Type): TypeInference[]
+      def getBinding(name: String): TypeInference[Type] = stateless(_.getBinding(name))
+
+      def pushFreshBinding[T](name: String)(ti: TypeInference[T]): TypeInference[T] =
+        for {
+          tpe <- newVar
+          t <- ti.local[BindingContext](_.updated(name, tpe))
+        } yield t
+
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
-        def evaluate: T = ti.runA(TypeInference.empty).value
+        def evaluate: T = ti.run(Map.empty).runA(TypeInference.empty).value.right.get
+        def evaluateWith(ctx: BindingContext): T = ti.run(ctx).runA(TypeInference.empty).value.right.get
       }
     }
 
@@ -34,7 +59,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
     def assignVars(expr: AST): TypeInference[AST] =
       expr match {
         case _ if expr.tpe != Type.Var("") =>
-          State.pure(expr)
+          TI.pure(expr)
 
         case AST.App(f, in, _) =>
           (assignVars(f), assignVars(in), newVar).mapN { (transformedF, transformedIn, t) =>
@@ -42,19 +67,21 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Lambda(varName, lambdaBody, _) =>
-          (assignVars(lambdaBody), newVar).mapN { (b, t) =>
+          (TypeInference.pushFreshBinding(varName)(assignVars(lambdaBody)), newVar).mapN { (b, t) =>
             Lambda(varName, b, t)
           }
 
         case Let(varName, value, in, _) =>
-          (assignVars(value), assignVars(in), newVar).mapN { (tValue, tIn, tLet) =>
-            Let(varName, tValue, tIn, tLet)
+          (assignVars(value), TypeInference.pushFreshBinding(varName)(assignVars(in)), newVar).mapN {
+            (tValue, tIn, tLet) =>
+              Let(varName, tValue, tIn, tLet)
           }
 
         case Const(id, _, _) =>
           freshInstanceSubstitution(id.scheme).map(subst =>
             Const(id, subst.substitute(id.scheme), subst.substitute(id.predicates)))
 
+        case Var(name, _) => TypeInference.getBinding(name).map(tpe => Var(name, tpe))
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
       }
