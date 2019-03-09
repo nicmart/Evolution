@@ -9,7 +9,7 @@ import evolution.geometry.Point
 // TODO Random extensions and self types, please to do something better
 trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] with ASTModule[F] {
 
-  import Desugarer._, Expr._
+  import Desugarer._, Expr._, TypeClasses._
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 
@@ -25,7 +25,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
 
       expr match {
         case AST.Identifier(name, tpe, _) =>
-          varContext.flatMap[Expr[expr.tpe.Out]] { ctx =>
+          varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
             if (ctx.has(name)) (Var[expr.Out](name): Expr[expr.Out]).pure[K]
             else K.raiseError(s"Variable $name is not defined")
           }
@@ -47,7 +47,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
             Let(varName, compiledValue, compiledIn)
           }
 
-        case AST.Number(n, Type.Integer) =>
+        case AST.Number(n, Qualified(_, Type.Integer)) =>
           Integer(n.toInt).pure[K]
 
         case AST.Number(n, _) => // Default to Double for numeric literals
@@ -111,20 +111,20 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           compile[M](n).map(compiledN => ToDbl(compiledN.asExpr))
 
         case App2(Const.Add, x, y) =>
-          (K.fromEither(Type.group(x.tpe)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
+          (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
             Add(compiledX.asExpr, compiledY.asExpr)(sg)
           }
 
         case LiftApp2(Const.Add, x, y) =>
           for {
-            tpe <- K.fromEither(Type.unwrapF(x.tpe))
+            tpe <- K.fromEither(Type.unwrapF(x.tpe.t))
             sg <- K.fromEither(Type.group(tpe))
             cx <- compile[M](x)
             cy <- compile[M](y)
           } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
 
         case App2(Const.Minus, x, y) =>
-          (K.fromEither(Type.group(x.tpe)), compile[M](x), compile[M](y)).mapN { (group, compiledX, compiledY) =>
+          (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (group, compiledX, compiledY) =>
             minus(compiledX.asExpr, compiledY.asExpr)(group)
           }
 
@@ -146,7 +146,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
 
         // TODO this is not in-line with other liftings.
         case App1(Const.Inverse, x) =>
-          x.tpe match {
+          x.tpe.t match {
             // Overload - for evolutions
             case Type.Evo(tpe) =>
               (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (group, compiledX) =>
@@ -159,13 +159,13 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           }
 
         case App2(Const.Multiply, x, y) =>
-          (K.fromEither(Type.vectorSpace(y.tpe)), compile[M](x), compile[M](y)).mapN { (vs, compiledX, compiledY) =>
+          (K.fromEither(Type.vectorSpace(y.tpe.t)), compile[M](x), compile[M](y)).mapN { (vs, compiledX, compiledY) =>
             Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
           }
 
         case LiftApp2(Const.Multiply, x, y) =>
           for {
-            tpe <- K.fromEither(Type.unwrapF(y.tpe))
+            tpe <- K.fromEither(Type.unwrapF(y.tpe.t))
             vs <- K.fromEither(Type.vectorSpace(tpe))
             cx <- compile[M](x)
             cy <- compile[M](y)
@@ -186,14 +186,14 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
-            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe))
+            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
           } yield Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
 
         case App2(Const.Neq, x, y) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
-            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe))
+            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
           } yield Neq[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
 
         case App3(Const.If, x, y, z) =>
@@ -210,28 +210,28 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            order <- K.fromEither(Type.order(a.tpe))
+            order <- K.fromEither(Type.order(a.tpe.t))
           } yield GreaterThan[a.Out](compiledA, compiledB.asExpr)(order)
 
         case App2(Const.GreaterThanOrEqual, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.order(a.tpe))
+            ordering <- K.fromEither(Type.order(a.tpe.t))
           } yield GreaterThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
 
         case App2(Const.LessThan, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.order(a.tpe))
+            ordering <- K.fromEither(Type.order(a.tpe.t))
           } yield LessThan[a.Out](compiledA, compiledB.asExpr)(ordering)
 
         case App2(Const.LessThanOrEqual, a, b) =>
           for {
             compiledA <- compile[M](a)
             compiledB <- compile[M](b)
-            order <- K.fromEither(Type.order(a.tpe))
+            order <- K.fromEither(Type.order(a.tpe.t))
           } yield LessThanOrEqual[a.Out](compiledA, compiledB.asExpr)(order)
 
         case App2(Const.And, a, b) =>
@@ -260,18 +260,18 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
-            vs <- K.fromEither(Type.vectorSpace(x.tpe))
+            vs <- K.fromEither(Type.vectorSpace(x.tpe.t))
           } yield integrate(compiledX, compiledY.asExprF)(vs)
 
         case App2(Const.Solve1, x, y) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
-            vs <- K.fromEither(Type.vectorSpace(y.tpe))
+            vs <- K.fromEither(Type.vectorSpace(y.tpe.t))
           } yield solve1[y.Out](compiledX.asExprF[y.Out => y.Out], compiledY.asExpr)(vs)
 
         case App3(Const.Solve2, x, y, z) =>
-          K.fromEither(Type.vectorSpace(y.tpe)).flatMap { vs =>
+          K.fromEither(Type.vectorSpace(y.tpe.t)).flatMap { vs =>
             (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
               solve2[y.Out](
                 compiledX.asExprF[y.Out => y.Out => y.Out],
@@ -282,7 +282,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
           }
 
         case App2(Const.Concat, x, y) =>
-          K.fromEither(Type.unwrapF(x.tpe)).flatMap { innerType =>
+          K.fromEither(Type.unwrapF(x.tpe.t)).flatMap { innerType =>
             (x, y).compileN[M] { (cx, cy) =>
               concat(cx.asExprF, cy.asExprF)
             }

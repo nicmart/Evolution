@@ -5,7 +5,7 @@ import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
-  import Expr._, Desugarer._
+  import Expr._, Desugarer._, TypeClasses._
 
   "The compiler" - {
     "should successfully compile" - {
@@ -53,7 +53,10 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
       "binary minus" in forAll { (a: Double, b: Double) =>
         val ast =
-          AST.App2(AST.Const(Constant.Minus), AST.Number(a.toString, Type.Dbl), AST.Number(b.toString, Type.Dbl))
+          AST.App2(
+            AST.Const(Constant.Minus),
+            AST.Number(a.toString, Qualified(Type.Dbl)),
+            AST.Number(b.toString, Qualified(Type.Dbl)))
         unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b)))
       }
 

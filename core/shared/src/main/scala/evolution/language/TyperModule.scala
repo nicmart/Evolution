@@ -38,20 +38,20 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       def stateless[T](f: BindingContext => Either[String, T]): TypeInference[T] = ReaderT(
         ctx => StateT(s => f(ctx).map(t => (s, t))))
 
-      def newVarS: TypeInferenceState[Type.Var] =
+      def newVarS: TypeInferenceState[Qualified[Type]] =
         StateT { s =>
-          Right((s.copy(vars = s.vars.next), s.vars.current))
+          Right((s.copy(vars = s.vars.next), Qualified(s.vars.current)))
         }
 
-      def newVar: TypeInference[Type.Var] = ReaderT(_ => newVarS)
+      def newVar: TypeInference[Qualified[Type]] = ReaderT(_ => newVarS)
 
       //def pushVar(name: String, tpe: Type): TypeInference[]
       def getBinding(name: String): TypeInference[Qualified[Type]] = ReaderT(_.getBinding(name))
 
       def pushFreshBinding[T](name: String)(ti: TypeInference[T]): TypeInference[T] =
         for {
-          tpe <- newVar
-          t <- ti.local[BindingContext](_.updated(name, StateT.pure(Qualified(tpe))))
+          qt <- newVar
+          t <- ti.local[BindingContext](_.updated(name, StateT.pure(qt)))
         } yield t
 
       // TODO value.right.get???
@@ -72,7 +72,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
      */
     def assignVars(expr: AST): TypeInference[AST] =
       expr match {
-        case _ if expr.tpe != Type.Var("") =>
+        case _ if expr.tpe.t != Type.Var("") =>
           TI.pure(expr)
 
         case AST.App(f, in, _) =>
@@ -85,7 +85,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
             for {
               qt <- getBinding(varName)
               b <- assignVars(lambdaBody)
-            } yield Lambda(varName, b, qt.t =>: b.tpe)
+            } yield Lambda(varName, b, Qualified(qt.t =>: b.tpe.t))
           )
 
         // TODO this is broken
@@ -95,10 +95,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Const(id, _, _) =>
-          getBinding(id.entryName).map(qt => Const(id, qt.t, qt.predicates))
+          getBinding(id.entryName).map(qt => Const(id, qt, qt.predicates))
 
         case Identifier(name, _, _) =>
-          getBinding(name).map(qt => Identifier(name, qt.t))
+          getBinding(name).map(qt => Identifier(name, qt))
 
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
@@ -114,11 +114,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         case Identifier(_, _, _) => Constraints.empty.pure[TypeInference]
         // TODO predicates
         case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
-        case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
-        case Bool(_, tpe)    => Constraints(tpe -> Type.Bool).pure[TypeInference]
+        case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[TypeInference]
+        case Bool(_, tpe)    => Constraints(tpe.t -> Type.Bool).pure[TypeInference]
         case App(Const(Constant.Lift, _, _), value, tpe) =>
-          Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
-        case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
+          Constraints(tpe.t -> lift(value.tpe.t)).pure[TypeInference]
+        case App(f, x, tpe) => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[TypeInference]
         case Lambda(_, _, _) =>
           Constraints.empty.pure[TypeInference]
         case Let(_, _, _, _) =>
@@ -200,18 +200,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       case _              => tpe.children.flatMap(typeVars).toSet
     }
 
-    private def freshInstanceSubstitution(scheme: Type): TypeInference[Substitution] = {
-      val varsInShceme = typeVars(scheme).toList
-      for {
-        assignments <- varsInShceme.traverse(schemeVar => newVar.map(typeVar => Assignment(schemeVar.name, typeVar)))
-        substitution = Substitution(assignments)
-      } yield substitution
-    }
-
     private def freshQualifiedType(qt: Qualified[Type]): TypeInferenceState[Qualified[Type]] = {
       val varsInShceme = typeVars(qt.t).toList
       for {
-        assignments <- varsInShceme.traverse(schemeVar => newVarS.map(typeVar => Assignment(schemeVar.name, typeVar)))
+        assignments <- varsInShceme.traverse(schemeVar => newVarS.map(typeVar => Assignment(schemeVar.name, typeVar.t)))
         substitution = Substitution(assignments)
       } yield substitution.substitute(qt)
     }

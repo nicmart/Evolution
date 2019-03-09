@@ -3,7 +3,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
 trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
-
+  import TypeClasses._
   def genFunctionArgs: Gen[List[String]] =
     for {
       n <- Gen.choose(1, 6)
@@ -37,11 +37,11 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
   def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))
   def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number((0.1 + d).toString)))
 
-  def genTypedNumber: Gen[AST.Number] = arbitrary[Double].map(d => AST.Number(d.toString, Type.Dbl))
+  def genTypedNumber: Gen[AST.Number] = arbitrary[Double].map(d => AST.Number(d.toString, Qualified(Type.Dbl)))
   def genTypedVar: Gen[AST.Identifier] = for {
     id <- genIdentifier
     tpe <- genType
-  } yield AST.Identifier(id, tpe)
+  } yield AST.Identifier(id, Qualified(tpe))
 
   def genBool: Gen[AST.Bool] = Gen.oneOf(true, false).map(AST.Bool(_))
 
@@ -57,7 +57,7 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
     for {
       char <- Gen.alphaChar
       typeChar <- Gen.alphaChar
-    } yield AST.Identifier(char.toString, Type.Var(typeChar.toString.toUpperCase))
+    } yield AST.Identifier(char.toString, Qualified(Type.Var(typeChar.toString.toUpperCase)))
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))

@@ -25,7 +25,8 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           val point = assignVars(AST.Const(Constant.Point)).evaluate
           val constraints = findConstraints(point).evaluate
           val unifier = unify(constraints)
-          unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(Type.Dbl =>: Type.Dbl =>: Type.Point)
+          unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(
+            Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point))
         }
 
         "constant evolution of a point" in {
@@ -33,9 +34,9 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           val evolution =
             assignVars(AST.App(AST.Const(Constant.Constant), point)).evaluate
           val constraints = findConstraints(evolution).evaluate
-          val allConstraints = constraints.merge(Constraints(evolution.tpe -> Type.Evo(Type.Point)))
+          val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
-          unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(Type.Evo(Type.Point))
+          unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(Qualified(Type.Evo(Type.Point)))
         }
       }
     }
@@ -47,15 +48,15 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           assignVarsAndFindConstraints(untyped).evaluateWith(
             Map("a" -> TIS.pure(Qualified(Type.Dbl)), "b" -> TIS.pure(Qualified(Type.Dbl))))
         val substitution = unify(constraints).right.get.substitution
-        substitution.substitute(expr).tpe shouldBe Type.Point
+        substitution.substitute(expr).tpe.t shouldBe Type.Point
       }
 
       "app(x -> x, 2)" in {
         val identity = AST.Lambda("x", AST.Identifier("x"))
-        val untyped = AST.App(identity, AST.Number("2", Type.Dbl))
+        val untyped = AST.App(identity, AST.Number("2", Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
-        substitution.substitute(expr).tpe shouldBe Type.Dbl
+        substitution.substitute(expr).tpe.t shouldBe Type.Dbl
       }
 
       "mapCons(empty, head -> tail -> cons(1, tail))" in {
@@ -66,13 +67,13 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             "head",
             AST.Lambda(
               "tail",
-              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Type.Dbl), AST.Identifier("tail"))
+              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Qualified(Type.Dbl)), AST.Identifier("tail"))
             )
           )
         )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
-        substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Dbl)
+        substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
       }
 
       "<point>(<1>, <2>)" in {
@@ -80,7 +81,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           AST.App2(AST.Lift(AST.Const(Constant.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
-        substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Point)
+        substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Point)
       }
 
       "predicates" - {

@@ -7,10 +7,10 @@ trait ASTModule[F[_]] extends TypesModule[F] {
   import TypeClasses._
 
   sealed trait AST {
-    val tpe: Type
-    final type Out = tpe.Out
+    val tpe: Qualified[Type]
+    final type Out = tpe.t.Out
 
-    def withType(tpe: Type): AST = this match {
+    def withType(tpe: Qualified[Type]): AST = this match {
       case AST.Identifier(name, _, _)    => AST.Identifier(name, tpe)
       case AST.Const(id, _, ps)          => AST.Const(id, tpe, ps)
       case AST.App(f, x, _)              => AST.App(f, x, tpe)
@@ -19,6 +19,8 @@ trait ASTModule[F[_]] extends TypesModule[F] {
       case AST.Number(n, _)              => AST.Number(n, tpe)
       case AST.Bool(b, _)                => AST.Bool(b, tpe)
     }
+
+    def withType(tpe: Type): AST = withType(Qualified(tpe))
 
     def children: List[AST] = this match {
       case AST.Lambda(varName, expr, _)  => List(expr)
@@ -29,13 +31,22 @@ trait ASTModule[F[_]] extends TypesModule[F] {
   }
 
   object AST {
-    final case class Identifier(name: String, tpe: Type = Type.Var(""), primitive: Boolean = false) extends AST
-    final case class Lambda(varName: String, expr: AST, tpe: Type = Type.Var("")) extends AST
-    final case class App(f: AST, x: AST, tpe: Type = Type.Var("")) extends AST
-    final case class Const(id: Constant, tpe: Type = Type.Var(""), predicates: List[Predicate] = Nil) extends AST
-    final case class Let(varName: String, expr: AST, in: AST, tpe: Type = Type.Var("")) extends AST
-    final case class Number(n: String, tpe: Type = Type.Var("")) extends AST
-    final case class Bool(b: Boolean, tpe: Type = Type.Var("")) extends AST
+    final case class Identifier(
+      name: String,
+      tpe: Qualified[Type] = Qualified(Type.Var("")),
+      primitive: Boolean = false)
+        extends AST
+    final case class Lambda(varName: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+    final case class App(f: AST, x: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+    final case class Const(
+      id: Constant,
+      tpe: Qualified[Type] = Qualified(Type.Var("")),
+      predicates: List[Predicate] = Nil)
+        extends AST
+    final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var("")))
+        extends AST
+    final case class Number(n: String, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+    final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
 
     def Lift(ast: AST): AST = App(Const(Constant.Lift), ast)
     def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
