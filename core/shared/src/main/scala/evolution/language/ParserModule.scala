@@ -25,40 +25,40 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
       appOrFactor,
       List(
         PrecedenceGroup(
-          "||" -> AST.Const(Constant.Or)
+          "||" -> AST.Identifier(Constant.Or.entryName)
         ),
         PrecedenceGroup(
-          "&&" -> AST.Const(Constant.And)
+          "&&" -> AST.Identifier(Constant.And.entryName)
         ),
         PrecedenceGroup(
-          ">=" -> AST.Const(Constant.GreaterThanOrEqual),
-          ">" -> AST.Const(Constant.GreaterThan),
-          "<=" -> AST.Const(Constant.LessThanOrEqual),
-          "<" -> AST.Const(Constant.LessThan)
+          ">=" -> AST.Identifier(Constant.GreaterThanOrEqual.entryName),
+          ">" -> AST.Identifier(Constant.GreaterThan.entryName),
+          "<=" -> AST.Identifier(Constant.LessThanOrEqual.entryName),
+          "<" -> AST.Identifier(Constant.LessThan.entryName)
         ),
         PrecedenceGroup(
-          "==" -> AST.Const(Constant.Eq),
-          "!=" -> AST.Const(Constant.Neq)
+          "==" -> AST.Identifier(Constant.Eq.entryName),
+          "!=" -> AST.Identifier(Constant.Neq.entryName)
         ),
         PrecedenceGroup(
-          "+" -> AST.Const(Constant.Add),
-          "@+" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Add)),
-          "-" -> AST.Const(Constant.Minus)
+          "+" -> AST.Identifier(Constant.Add.entryName),
+          "@+" -> AST.App(AST.Identifier(Constant.Lift.entryName), AST.Identifier(Constant.Add.entryName)),
+          "-" -> AST.Identifier(Constant.Minus.entryName)
         ),
         PrecedenceGroup(
-          "*" -> AST.Const(Constant.Multiply),
-          "/" -> AST.Const(Constant.Div),
-          "%" -> AST.Const(Constant.Mod),
-          "@*" -> AST.App(AST.Const(Constant.Lift), AST.Const(Constant.Multiply))
+          "*" -> AST.Identifier(Constant.Multiply.entryName),
+          "/" -> AST.Identifier(Constant.Div.entryName),
+          "%" -> AST.Identifier(Constant.Mod.entryName),
+          "@*" -> AST.App(AST.Identifier(Constant.Lift.entryName), AST.Identifier(Constant.Multiply.entryName))
         ),
         PrecedenceGroup(
-          "^" -> AST.Const(Constant.Exp)
+          "^" -> AST.Identifier(Constant.Exp.entryName)
         )
       )
     )
 
     private lazy val factor: Parser[AST] =
-      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | predefinedConstant | let | variable | lifted | list)
+      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | let | variable | lifted | list)
 
     private lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
@@ -77,9 +77,9 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val variable: Parser[AST.Identifier] =
       P(identifier).map(AST.Identifier(_))
 
-    private lazy val unaryOps: Parser[AST.Const] =
-      P("-").map(_ => AST.Const(Constant.Inverse)) |
-        P("!").map(_ => AST.Const(Constant.Not))
+    private lazy val unaryOps: Parser[AST.Identifier] =
+      P("-").map(_ => AST.Identifier(Constant.Inverse.entryName)) |
+        P("!").map(_ => AST.Identifier(Constant.Not.entryName))
 
     private lazy val unaryPrefixOp: Parser[AST] =
       P(unaryOps ~ appOrFactor).map { case (op, e) => AST.App(op, e) }
@@ -111,12 +111,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
 
     private lazy val lifted: Parser[AST] =
-      P("@" ~/ factor).map(ast => AST.App(AST.Const(Constant.Lift), ast))
-
-    private lazy val predefinedConstant: Parser[AST.Const] = identifier
-      .filter(id => Constant.lowerCaseNamesToValuesMap.isDefinedAt(id.toLowerCase))
-      .map(Constant.withNameInsensitive)
-      .map(AST.Const(_))
+      P("@" ~/ factor).map(ast => AST.App(AST.Identifier(Constant.Lift.entryName), ast))
 
     private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
@@ -128,8 +123,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
       }
 
     private def evalList(asts: List[AST]): AST = asts match {
-      case Nil          => AST.Const(Constant.Empty)
-      case head :: tail => AST.App2(AST.Const(Constant.Cons), head, evalList(tail))
+      case Nil          => AST.Identifier(Constant.Empty.entryName)
+      case head :: tail => AST.App2(AST.Identifier(Constant.Cons.entryName), head, evalList(tail))
     }
 
     private object numbers {

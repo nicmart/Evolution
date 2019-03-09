@@ -1,6 +1,5 @@
 package evolution.language
 import cats.Id
-import org.scalatest.{ FreeSpec, Matchers }
 
 class ASTModuleSpec extends LanguageSpec[Id] {
   "An AST" - {

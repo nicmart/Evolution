@@ -17,7 +17,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     implicit class BindingContextOps(ctx: BindingContext) {
       def getBinding(name: String): TypeInferenceState[Identifier] =
-        ctx.get(name) match {
+        ctx.get(name.toLowerCase) match {
           case None =>
             StateT(
               s => Left[String, (TypeInference.State, Identifier)](s"Unable to find type binding for variable $name"))
@@ -94,9 +94,6 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
             Let(varName, tValue, tIn, tLet)
           }
 
-        case Const(id, _, _) =>
-          getBinding(id.entryName).map(identifier => Const(id, identifier.tpe, identifier.tpe.predicates))
-
         case Identifier(name, _, _) =>
           getBinding(name).map[AST](ast => ast)
 
@@ -115,12 +112,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
-        case Identifier(_, _, _) => Constraints.empty.pure[TypeInference]
+        case Identifier(_, qt, _) => Constraints.empty.withPredicates(qt.predicates).pure[TypeInference]
         // TODO predicates
-        case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
-        case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[TypeInference]
-        case Bool(_, tpe)    => Constraints(tpe.t -> Type.Bool).pure[TypeInference]
-        case App(Const(Constant.Lift, _, _), value, tpe) =>
+        case Number(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[TypeInference]
+        case Bool(_, tpe)   => Constraints(tpe.t -> Type.Bool).pure[TypeInference]
+        case App(Identifier(id, _, _), value, tpe) if id == Constant.Lift.entryName =>
           Constraints(tpe.t -> lift(value.tpe.t)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[TypeInference]
         case Lambda(_, _, _) =>

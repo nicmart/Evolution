@@ -24,19 +24,19 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
       def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
       expr match {
-        case AST.Identifier(name, tpe, _) =>
+        case AST.Identifier(name, tpe, false) =>
           varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
             if (ctx.has(name)) (Var[expr.Out](name): Expr[expr.Out]).pure[K]
-            else K.raiseError(s"Variable $name is not defined")
+            else K.raiseError(s"Variable $name is not defined for identifier $expr")
           }
 
-        case AST.Const(Const.PI, _, _) =>
+        case App0(Const.PI) =>
           Dbl(Math.PI).pure[K]
 
-        case AST.Const(Const.Empty, _, _) =>
+        case App0(Const.Empty) =>
           Empty().pure[K]
 
-        case fc @ AST.Const(id, tpe, _) =>
+        case fc @ App0(id) =>
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.Lambda(varName, body, tpe) =>
@@ -363,10 +363,17 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
       }
     }.asInstanceOf[Result[M, Expr[expr.Out]]]
 
+    object App0 {
+      def unapply(arg: AST): Option[Constant] = arg match {
+        case AST.Identifier(id, _, true) => Some(Constant.namesToValuesMap(id))
+        case _                           => None
+      }
+    }
+
     object App1 {
       def unapply(arg: AST): Option[(Constant, AST)] = arg match {
-        case AST.App(AST.Const(c, _, _), x, _) => Some((c, x))
-        case _                                 => None
+        case AST.App(App0(constant), x, _) => Some((constant, x))
+        case _                             => None
       }
     }
 
@@ -386,8 +393,8 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
 
     object LiftApp2 {
       def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
-        case AST.App(AST.App(AST.App(AST.Const(Const.Lift, _, _), AST.Const(const, _, _), _), x, _), y, _) =>
-          Some((const, x, y))
+        case AST.App(AST.App(AST.App(AST.Identifier("Lift", _, true), AST.Identifier(id, _, _), _), x, _), y, _) =>
+          Some((Constant.namesToValuesMap(id), x, y))
         case _ => None
       }
     }

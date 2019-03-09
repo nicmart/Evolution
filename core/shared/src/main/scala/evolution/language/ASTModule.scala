@@ -12,7 +12,6 @@ trait ASTModule[F[_]] extends TypesModule[F] {
 
     def withType(tpe: Qualified[Type]): AST = this match {
       case AST.Identifier(name, _, _)    => AST.Identifier(name, tpe)
-      case AST.Const(id, _, ps)          => AST.Const(id, tpe, ps)
       case AST.App(f, x, _)              => AST.App(f, x, tpe)
       case AST.Lambda(varName, expr, _)  => AST.Lambda(varName, expr, tpe)
       case AST.Let(varName, expr, in, _) => AST.Let(varName, expr, in, tpe)
@@ -38,17 +37,14 @@ trait ASTModule[F[_]] extends TypesModule[F] {
         extends AST
     final case class Lambda(varName: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class App(f: AST, x: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-    final case class Const(
-      id: Constant,
-      tpe: Qualified[Type] = Qualified(Type.Var("")),
-      predicates: List[Predicate] = Nil)
-        extends AST
     final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var("")))
         extends AST
     final case class Number(n: String, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
 
-    def Lift(ast: AST): AST = App(Const(Constant.Lift), ast)
+    def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
+    def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)
+    def Lift(ast: AST): AST = App(Identifier(Constant.Lift.entryName), ast)
     def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
     def App3(f: AST, x: AST, y: AST, z: AST): AST = App(App(App(f, x), y), z)
 

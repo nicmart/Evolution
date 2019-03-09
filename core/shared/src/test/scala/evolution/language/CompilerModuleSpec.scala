@@ -36,15 +36,15 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       }
 
       "ands" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.App2(AST.Const(Constant.And), a, b)) shouldBe And(unsafeCompile(a), unsafeCompile(b))
+        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant.And), a, b)) shouldBe And(unsafeCompile(a), unsafeCompile(b))
       }
 
       "ors" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.App2(AST.Const(Constant.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
+        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
       }
 
       "nots" in forAll(genBool) { a =>
-        unsafeCompile(AST.App(AST.Const(Constant.Not), a)) shouldBe Not(unsafeCompile(a))
+        unsafeCompile(AST.App(AST.PrimitiveConst(Constant.Not), a)) shouldBe Not(unsafeCompile(a))
       }
 
       "boolean literals" in forAll { b: Boolean =>
@@ -54,7 +54,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       "binary minus" in forAll { (a: Double, b: Double) =>
         val ast =
           AST.App2(
-            AST.Const(Constant.Minus),
+            AST.PrimitiveConst(Constant.Minus),
             AST.Number(a.toString, Qualified(Type.Dbl)),
             AST.Number(b.toString, Qualified(Type.Dbl)))
         unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b)))
@@ -62,16 +62,16 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda("x", b)
-        val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
+        val evolution = AST.App2(AST.PrimitiveConst(Constant.Cons), n, AST.PrimitiveConst(Constant.Empty))
         val expected = takeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.App2(AST.Const(Constant.While), evolution, predicate)) shouldBe expected
+        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant.While), evolution, predicate)) shouldBe expected
       }
 
       "untils" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda("x", b)
-        val evolution = AST.App2(AST.Const(Constant.Cons), n, AST.Const(Constant.Empty))
+        val evolution = AST.App2(AST.PrimitiveConst(Constant.Cons), n, AST.PrimitiveConst(Constant.Empty))
         val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.App2(AST.Const(Constant.Until), evolution, predicate)) shouldBe expected
+        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant.Until), evolution, predicate)) shouldBe expected
       }
 
       "equality operators" in forAll(equalityOperators[Double], genTypedNumber, genTypedNumber) {
@@ -88,18 +88,18 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
   def equalityOperators[T: Eq]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.Const(Constant.Eq) -> Equals.apply[T] _,
-      AST.Const(Constant.Neq) -> Neq.apply[T] _
+      AST.PrimitiveConst(Constant.Eq) -> Equals.apply[T] _,
+      AST.PrimitiveConst(Constant.Neq) -> Neq.apply[T] _
     )
 
   def relationOperators[T: Order]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.Const(Constant.GreaterThan) -> GreaterThan.apply[T] _,
-      AST.Const(Constant.GreaterThanOrEqual) -> GreaterThanOrEqual.apply[T] _,
-      AST.Const(Constant.LessThan) -> LessThan.apply[T] _,
-      AST.Const(Constant.LessThanOrEqual) -> LessThanOrEqual.apply[T] _
+      AST.PrimitiveConst(Constant.GreaterThan) -> GreaterThan.apply[T] _,
+      AST.PrimitiveConst(Constant.GreaterThanOrEqual) -> GreaterThanOrEqual.apply[T] _,
+      AST.PrimitiveConst(Constant.LessThan) -> LessThan.apply[T] _,
+      AST.PrimitiveConst(Constant.LessThanOrEqual) -> LessThanOrEqual.apply[T] _
     )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
-    Compiler.compile[Either[String, ?]](expr).run(ctx).right.get.asInstanceOf[Expr[T]]
+    Compiler.compile[Either[String, ?]](expr).run(ctx).fold(s => throw new Exception(s), _.asInstanceOf[Expr[T]])
 }
