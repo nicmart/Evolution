@@ -38,10 +38,10 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
   def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number((0.1 + d).toString)))
 
   def genTypedNumber: Gen[AST.Number] = arbitrary[Double].map(d => AST.Number(d.toString, Type.Dbl))
-  def genTypedVar: Gen[AST.Var] = for {
+  def genTypedVar: Gen[AST.Identifier] = for {
     id <- genIdentifier
     tpe <- genType
-  } yield AST.Var(id, tpe)
+  } yield AST.Identifier(id, tpe)
 
   def genBool: Gen[AST.Bool] = Gen.oneOf(true, false).map(AST.Bool(_))
 
@@ -53,11 +53,11 @@ trait ASTArbitraries[F[_]] { self: ASTModule[F] with ParserModule[F] =>
       typeChar <- Gen.alphaChar
     } yield expr.withType(Type.Var(typeChar.toString.toUpperCase))
 
-  def genVar: Gen[AST.Var] =
+  def genVar: Gen[AST.Identifier] =
     for {
       char <- Gen.alphaChar
       typeChar <- Gen.alphaChar
-    } yield AST.Var(char.toString, Type.Var(typeChar.toString.toUpperCase))
+    } yield AST.Identifier(char.toString, Type.Var(typeChar.toString.toUpperCase))
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))

@@ -24,7 +24,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
       def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
       expr match {
-        case AST.Var(name, tpe) =>
+        case AST.Identifier(name, tpe, _) =>
           varContext.flatMap[Expr[expr.tpe.Out]] { ctx =>
             if (ctx.has(name)) (Var[expr.Out](name): Expr[expr.Out]).pure[K]
             else K.raiseError(s"Variable $name is not defined")

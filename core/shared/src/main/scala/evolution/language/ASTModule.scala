@@ -11,7 +11,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     final type Out = tpe.Out
 
     def withType(tpe: Type): AST = this match {
-      case AST.Var(name, _)              => AST.Var(name, tpe)
+      case AST.Identifier(name, _, _)    => AST.Identifier(name, tpe)
       case AST.Const(id, _, ps)          => AST.Const(id, tpe, ps)
       case AST.App(f, x, _)              => AST.App(f, x, tpe)
       case AST.Lambda(varName, expr, _)  => AST.Lambda(varName, expr, tpe)
@@ -29,7 +29,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
   }
 
   object AST {
-    final case class Var(name: String, tpe: Type = Type.Var("")) extends AST
+    final case class Identifier(name: String, tpe: Type = Type.Var(""), primitive: Boolean = false) extends AST
     final case class Lambda(varName: String, expr: AST, tpe: Type = Type.Var("")) extends AST
     final case class App(f: AST, x: AST, tpe: Type = Type.Var("")) extends AST
     final case class Const(id: Constant, tpe: Type = Type.Var(""), predicates: List[Predicate] = Nil) extends AST

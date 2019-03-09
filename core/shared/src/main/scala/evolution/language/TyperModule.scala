@@ -21,7 +21,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           case None =>
             StateT(s =>
               Left[String, (TypeInference.State, Qualified[Type])](s"Unable to find type binding for variable $name"))
-          case Some(tis) => tis
+          case Some(tis) =>
+            StateT { s =>
+              tis.run(s)
+            }
         }
     }
 
@@ -51,6 +54,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           t <- ti.local[BindingContext](_.updated(name, StateT.pure(Qualified(tpe))))
         } yield t
 
+      // TODO value.right.get???
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
         def evaluate: T = ti.run(constantQualifiedTypes).runA(TypeInference.empty).value.right.get
         def evaluateWith(ctx: BindingContext): T =
@@ -77,10 +81,14 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Lambda(varName, lambdaBody, _) =>
-          (pushFreshBinding(varName)(assignVars(lambdaBody)), newVar).mapN { (b, t) =>
-            Lambda(varName, b, t)
-          }
+          pushFreshBinding(varName)(
+            for {
+              qt <- getBinding(varName)
+              b <- assignVars(lambdaBody)
+            } yield Lambda(varName, b, qt.t =>: b.tpe)
+          )
 
+        // TODO this is broken
         case Let(varName, value, in, _) =>
           (assignVars(value), pushFreshBinding(varName)(assignVars(in)), newVar).mapN { (tValue, tIn, tLet) =>
             Let(varName, tValue, tIn, tLet)
@@ -89,8 +97,8 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         case Const(id, _, _) =>
           getBinding(id.entryName).map(qt => Const(id, qt.t, qt.predicates))
 
-        case Var(name, _) =>
-          getBinding(name).map(qt => Var(name, qt.t))
+        case Identifier(name, _, _) =>
+          getBinding(name).map(qt => Identifier(name, qt.t))
 
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
@@ -103,25 +111,18 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
       val nodeConstraints: TypeInference[Constraints] = expr match {
-        case Var(_, _)       => Constraints.empty.pure[TypeInference]
+        case Identifier(_, _, _) => Constraints.empty.pure[TypeInference]
+        // TODO predicates
         case Const(_, _, ps) => Constraints.empty.withPredicates(ps).pure[TypeInference]
         case Number(_, tpe)  => Constraints.empty.withPredicate(Predicate("Num", List(tpe))).pure[TypeInference]
         case Bool(_, tpe)    => Constraints(tpe -> Type.Bool).pure[TypeInference]
         case App(Const(Constant.Lift, _, _), value, tpe) =>
           Constraints(tpe -> lift(value.tpe)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe -> (x.tpe =>: tpe)).pure[TypeInference]
-        case Lambda(variable, lambdaExpr, tpe) =>
-          for {
-            variableType <- newVar
-            arrowConstraint = Constraints(tpe -> Type.Arrow(variableType, lambdaExpr.tpe))
-            variableConstraints = Constraints(varUsagesIn(variable, lambdaExpr).map(u => u.tpe -> variableType): _*)
-          } yield arrowConstraint.merge(variableConstraints)
-        case Let(variable, value, in, tpe) =>
-          for {
-            variableType <- newVar
-            mainConstraint = Constraints(tpe -> in.tpe, variableType -> value.tpe)
-            variableConstraints = Constraints(varUsagesIn(variable, in).map(u => u.tpe -> variableType): _*)
-          } yield mainConstraint.merge(variableConstraints)
+        case Lambda(_, _, _) =>
+          Constraints.empty.pure[TypeInference]
+        case Let(_, _, _, _) =>
+          Constraints.empty.pure[TypeInference]
       }
 
       val childrenConstraints = expr.children.traverse(findConstraints)
@@ -179,7 +180,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     private def varUsagesIn(varName: String, expr: AST): List[AST] =
       expr match {
-        case Var(name, _) if name == varName                 => List(expr)
+        case Identifier(name, _, _) if name == varName       => List(expr)
         case Lambda(lambdaVar, _, _) if lambdaVar == varName => Nil // Shadowing
         case Let(letVar, value, in, _) if letVar == varName  => varUsagesIn(varName, value) // Shadowing
         case _                                               => expr.children.flatMap(varUsagesIn(varName, _))

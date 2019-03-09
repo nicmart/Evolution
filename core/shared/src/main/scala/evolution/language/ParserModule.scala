@@ -74,8 +74,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val boolean: Parser[AST.Bool] =
       (P("true").map(_ => true) | P("false").map(_ => false)).map(AST.Bool(_))
 
-    private lazy val variable: Parser[AST.Var] =
-      P(identifier).map(AST.Var(_))
+    private lazy val variable: Parser[AST.Identifier] =
+      P(identifier).map(AST.Identifier(_))
 
     private lazy val unaryOps: Parser[AST.Const] =
       P("-").map(_ => AST.Const(Constant.Inverse)) |

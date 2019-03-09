@@ -42,7 +42,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
     "should unify" - {
       "point expressions" in {
-        val untyped = AST.App2(AST.Const(Constant.Point), AST.Var("a"), AST.Var("b"))
+        val untyped = AST.App2(AST.Const(Constant.Point), AST.Identifier("a"), AST.Identifier("b"))
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped).evaluateWith(
             Map("a" -> TIS.pure(Qualified(Type.Dbl)), "b" -> TIS.pure(Qualified(Type.Dbl))))
@@ -50,8 +50,8 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         substitution.substitute(expr).tpe shouldBe Type.Point
       }
 
-      "app(x -> $x, 2)" in {
-        val identity = AST.Lambda("x", AST.Var("x"))
+      "app(x -> x, 2)" in {
+        val identity = AST.Lambda("x", AST.Identifier("x"))
         val untyped = AST.App(identity, AST.Number("2", Type.Dbl))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
         val substitution = unify(constraints).right.get.substitution
@@ -66,7 +66,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             "head",
             AST.Lambda(
               "tail",
-              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Type.Dbl), AST.Var("tail"))
+              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Type.Dbl), AST.Identifier("tail"))
             )
           )
         )
@@ -79,7 +79,6 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         val untyped =
           AST.App2(AST.Lift(AST.Const(Constant.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
-        println(unify(constraints))
         val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe shouldBe Type.Evo(Type.Point)
       }
