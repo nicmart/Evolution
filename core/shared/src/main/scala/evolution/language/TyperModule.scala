@@ -13,14 +13,14 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
     type TypeInferenceState[T] = StateT[Either[String, ?], TypeInference.State, T]
     val TIS = Monad[TypeInferenceState]
 
-    type BindingContext = Map[String, TypeInferenceState[Qualified[Type]]]
+    type BindingContext = Map[String, TypeInferenceState[Identifier]]
 
     implicit class BindingContextOps(ctx: BindingContext) {
-      def getBinding(name: String): TypeInferenceState[Qualified[Type]] =
+      def getBinding(name: String): TypeInferenceState[Identifier] =
         ctx.get(name) match {
           case None =>
-            StateT(s =>
-              Left[String, (TypeInference.State, Qualified[Type])](s"Unable to find type binding for variable $name"))
+            StateT(
+              s => Left[String, (TypeInference.State, Identifier)](s"Unable to find type binding for variable $name"))
           case Some(tis) =>
             StateT { s =>
               tis.run(s)
@@ -46,12 +46,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       def newVar: TypeInference[Qualified[Type]] = ReaderT(_ => newVarS)
 
       //def pushVar(name: String, tpe: Type): TypeInference[]
-      def getBinding(name: String): TypeInference[Qualified[Type]] = ReaderT(_.getBinding(name))
+      def getBinding(name: String): TypeInference[Identifier] = ReaderT(_.getBinding(name))
 
       def pushFreshBinding[T](name: String)(ti: TypeInference[T]): TypeInference[T] =
         for {
           qt <- newVar
-          t <- ti.local[BindingContext](_.updated(name, StateT.pure(qt)))
+          t <- ti.local[BindingContext](_.updated(name, StateT.pure(Identifier(name, qt, false))))
         } yield t
 
       // TODO value.right.get???
@@ -83,9 +83,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
         case Lambda(varName, lambdaBody, _) =>
           pushFreshBinding(varName)(
             for {
-              qt <- getBinding(varName)
+              binding <- getBinding(varName)
               b <- assignVars(lambdaBody)
-            } yield Lambda(varName, b, Qualified(qt.t =>: b.tpe.t))
+            } yield Lambda(varName, b, Qualified(binding.tpe.t =>: b.tpe.t))
           )
 
         // TODO this is broken
@@ -95,10 +95,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           }
 
         case Const(id, _, _) =>
-          getBinding(id.entryName).map(qt => Const(id, qt, qt.predicates))
+          getBinding(id.entryName).map(identifier => Const(id, identifier.tpe, identifier.tpe.predicates))
 
         case Identifier(name, _, _) =>
-          getBinding(name).map(qt => Identifier(name, qt))
+          getBinding(name).map[AST](ast => ast)
 
         case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
           newVar.map(expr.withType)
@@ -106,7 +106,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     val constantQualifiedTypes: BindingContext =
       Constant.values
-        .map(constant => constant.entryName -> freshQualifiedType(Qualified(constant.predicates, constant.scheme)))
+        .map(
+          constant =>
+            constant.entryName -> freshPrimitiveIdentifier(
+              constant.entryName,
+              Qualified(constant.predicates, constant.scheme)))
         .toMap
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {
@@ -200,12 +204,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       case _              => tpe.children.flatMap(typeVars).toSet
     }
 
-    private def freshQualifiedType(qt: Qualified[Type]): TypeInferenceState[Qualified[Type]] = {
-      val varsInShceme = typeVars(qt.t).toList
+    private def freshPrimitiveIdentifier(name: String, qt: Qualified[Type]): TypeInferenceState[Identifier] = {
+      val varsInScheme = typeVars(qt.t).toList
       for {
-        assignments <- varsInShceme.traverse(schemeVar => newVarS.map(typeVar => Assignment(schemeVar.name, typeVar.t)))
+        assignments <- varsInScheme.traverse(schemeVar => newVarS.map(typeVar => Assignment(schemeVar.name, typeVar.t)))
         substitution = Substitution(assignments)
-      } yield substitution.substitute(qt)
+      } yield Identifier(name, substitution.substitute(qt), primitive = true)
     }
 
     sealed trait Constraint
