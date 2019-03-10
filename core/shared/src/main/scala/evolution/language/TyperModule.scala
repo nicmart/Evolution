@@ -23,7 +23,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
               s =>
                 Left[String, (TypeInference.State, Identifier)](
                   s"Unable to find type binding for variable $name in ctx $ctx"
-                )
+              )
             )
           case Some(tis) =>
             StateT { s =>
@@ -61,15 +61,16 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
 
       // TODO value.right.get???
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
-        def evaluate: T =
-          ti.run(constantQualifiedTypes)
-            .runA(TypeInference.empty)
-            .value
-            .fold(
-              s => throw new Exception(s),
-              identity
-            )
-        def evaluateWith(ctx: BindingContext): T =
+        def evaluateEither: Either[String, T] =
+          ti.run(constantQualifiedTypes).runA(TypeInference.empty).value
+
+        def unsafeEvaluate: T =
+          evaluateEither.fold(
+            s => throw new Exception(s),
+            identity
+          )
+
+        def unsafeEvaluateWith(ctx: BindingContext): T =
           ti.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).value.right.get
       }
     }
@@ -120,7 +121,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
             constant.entryName -> freshPrimitiveIdentifier(
               constant.entryName,
               Qualified(constant.predicates, constant.scheme)
-            )
+          )
         )
         .toMap
 

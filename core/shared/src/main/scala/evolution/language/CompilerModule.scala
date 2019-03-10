@@ -121,6 +121,39 @@ trait CompilerModule[F[_]] {
 
           }
 
+        case AST.App(
+            AST.App(AST.App(AST.Identifier(Const(Constant.Lift), _, true), AST.Identifier(Const(c), _, true), _), x, _),
+            y,
+            _) =>
+          c match {
+            case Const.Point =>
+              (x, y).compileN[M] { (cx, cy) =>
+                liftedPoint(cx.asExprF, cy.asExprF)
+              }
+
+            case Const.Polar =>
+              (x, y).compileN[M] { (cx, cy) =>
+                liftedPolar(cx.asExprF, cy.asExprF)
+              }
+
+            case Const.Add =>
+              for {
+                tpe <- K.fromEither(Type.unwrapF(x.tpe.t))
+                sg <- K.fromEither(Type.group(tpe))
+                cx <- compile[M](x)
+                cy <- compile[M](y)
+              } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
+
+            case Const.Multiply =>
+              for {
+                tpe <- K.fromEither(Type.unwrapF(y.tpe.t))
+                vs <- K.fromEither(Type.vectorSpace(tpe))
+                cx <- compile[M](x)
+                cy <- compile[M](y)
+              } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
+
+          }
+
         // App 2
         case AST.App(AST.App(AST.Identifier(Const(c), _, true), x, _), y, _) =>
           c match {
@@ -341,40 +374,6 @@ trait CompilerModule[F[_]] {
                   compiledStep.asExpr
                 )
               }
-          }
-
-        // Lift App2
-        case AST.App(
-            AST.App(AST.App(AST.Identifier(Const(Constant.Lift), _, true), AST.Identifier(Const(c), _, true), _), x, _),
-            y,
-            _) =>
-          c match {
-            case Const.Point =>
-              (x, y).compileN[M] { (cx, cy) =>
-                liftedPoint(cx.asExprF, cy.asExprF)
-              }
-
-            case Const.Polar =>
-              (x, y).compileN[M] { (cx, cy) =>
-                liftedPolar(cx.asExprF, cy.asExprF)
-              }
-
-            case Const.Add =>
-              for {
-                tpe <- K.fromEither(Type.unwrapF(x.tpe.t))
-                sg <- K.fromEither(Type.group(tpe))
-                cx <- compile[M](x)
-                cy <- compile[M](y)
-              } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
-
-            case Const.Multiply =>
-              for {
-                tpe <- K.fromEither(Type.unwrapF(y.tpe.t))
-                vs <- K.fromEither(Type.vectorSpace(tpe))
-                cx <- compile[M](x)
-                cy <- compile[M](y)
-              } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
-
           }
 
         case AST.App(f, x, _) =>

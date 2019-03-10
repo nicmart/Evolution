@@ -29,7 +29,8 @@ class FullModule[F[_]]
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      (exprWithTypeVars, constraints) = Typer.assignVarsAndFindConstraints(expr).evaluate
+      exprAndConstraints <- Typer.assignVarsAndFindConstraints(expr).evaluateEither
+      (exprWithTypeVars, constraints) = exprAndConstraints
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe.t))
       unification <- Typer.unify(constraintsWithExpectedType)
