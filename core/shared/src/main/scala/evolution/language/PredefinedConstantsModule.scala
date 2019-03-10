@@ -4,11 +4,12 @@ import enumeratum.{ Enum, EnumEntry }
 import enumeratum.EnumEntry.Lowercase
 import evolution.data.ExpressionModule
 import cats.implicits._
+import evolution.geometry.Point
 
 import scala.collection.immutable
 
-trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
-  import TypeClasses._, Type._
+trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] with DesugarModule[F] =>
+  import TypeClasses._, Type._, Desugarer._
 
   abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
 
@@ -39,24 +40,82 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   abstract sealed class Constant1(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
-      with Lowercase
+      with Lowercase {
+    def compile[M[_]](x: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] = ???
+  }
+
+  abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Constant1(qualifiedType) {
+    def compilePlain(x: Expr[_]): Expr[_]
+    override def compile[M[_]](x: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+      compilePlain(x.value).pure[M].widen
+  }
 
   object Constant1 extends Enum[Constant1] {
     val values: immutable.IndexedSeq[Constant1] = findValues
 
-    case object X extends Constant1(Qualified(Type.Point =>: Dbl))
-    case object Y extends Constant1(Qualified(Type.Point =>: Dbl))
-    case object Floor extends Constant1(Qualified(Dbl =>: Integer))
-    case object ToDbl extends Constant1(Qualified(Integer =>: Dbl))
-    case object Abs extends Constant1(Qualified(Dbl =>: Dbl))
-    case object Sign extends Constant1(Qualified(Dbl =>: Dbl))
-    case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T")))
-    case object Sin extends Constant1(Qualified(Dbl =>: Dbl))
-    case object Cos extends Constant1(Qualified(Dbl =>: Dbl))
-    case object Not extends Constant1(Qualified(Bool =>: Bool))
-    case object Lift extends Constant1(Qualified(Var("T")))
-    case object Fix extends Constant1(Qualified((Var("T") =>: Var("T")) =>: Var("T")))
-    case object Constant extends Constant1(Qualified(Var("T") =>: Evo(Var("T"))))
+    case object X extends Constant1Plain(Qualified(Type.Point =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.X(x.value.asExpr)
+    }
+
+    case object Y extends Constant1Plain(Qualified(Type.Point =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Y(x.value.asExpr)
+    }
+
+    case object Floor extends Constant1Plain(Qualified(Dbl =>: Integer)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Floor(x.asExpr)
+    }
+
+    case object ToDbl extends Constant1Plain(Qualified(Integer =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.ToDbl(x.asExpr)
+    }
+
+    case object Abs extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Abs(x.asExpr)
+    }
+
+    case object Sign extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Sign(x.asExpr)
+    }
+
+    case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
+      override def compile[M[_]](x: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        x.tpe match {
+          // Overload - for evolutions
+          case Type.Evo(tpe) =>
+            M.fromEither(Type.group(tpe)).map { group =>
+              inverseEvo(x.value.asExprF)(group)
+            }
+
+          case tpe =>
+            M.fromEither(Type.group(tpe)).map { g =>
+              Expr.Inverse(x.value.asExpr)(g)
+            }
+        }
+    }
+
+    case object Sin extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Sin(x.asExpr)
+    }
+
+    case object Cos extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Cos(x.asExpr)
+    }
+
+    case object Not extends Constant1Plain(Qualified(Bool =>: Bool)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Not(x.asExpr)
+    }
+
+    case object Lift extends Constant1Plain(Qualified(Var("T"))) {
+      override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
+    }
+
+    case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
+    }
+
+    case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
+    }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
   }
@@ -136,5 +195,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       : immutable.IndexedSeq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
     val functions0: List[Constant0] = List(Constant0.Empty, Constant0.PI)
     val nonFunctions0: List[Constant] = values.toList.filter(!functions0.contains(_))
+  }
+
+  implicit class CastingOps(value: Any) {
+    def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
+    def asExprF[T]: Expr[F[T]] = value.asInstanceOf[Expr[F[T]]]
   }
 }

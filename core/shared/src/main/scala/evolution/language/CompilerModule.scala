@@ -61,62 +61,7 @@ trait CompilerModule[F[_]] {
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.App(AST.Identifier(Constant1(c), _, true), x, _) =>
-          c match {
-            case Constant1.Fix =>
-              compile[M](x).map { compiledX =>
-                Fix(compiledX.asExpr[Any => Any])
-              }
-            case Constant1.X =>
-              compile[M](x).map { compiledP =>
-                X(compiledP.asExpr)
-              }
-            case Constant1.Y =>
-              compile[M](x).map { compiledP =>
-                Y(compiledP.asExpr)
-              }
-            case Constant1.Floor =>
-              compile[M](x).map(compiledD => Floor(compiledD.asExpr))
-
-            case Constant1.ToDbl =>
-              compile[M](x).map(compiledN => ToDbl(compiledN.asExpr))
-
-            case Constant1.Abs =>
-              compile[M](x).map(compiledX => Abs(compiledX.asExpr))
-
-            case Constant1.Sign =>
-              compile[M](x).map(compiledX => Sign(compiledX.asExpr))
-
-            case Constant1.Inverse =>
-              x.tpe.t match {
-                // Overload - for evolutions
-                case Type.Evo(tpe) =>
-                  (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (group, compiledX) =>
-                    inverseEvo(compiledX.asExprF)(group)
-                  }
-                case tpe =>
-                  (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (g, compiledX) =>
-                    Inverse(compiledX.asExpr)(g)
-                  }
-              }
-
-            case Constant1.Cos =>
-              compile[M](x).map(compiledX => Cos(compiledX.asExpr))
-
-            case Constant1.Sin =>
-              compile[M](x).map(compiledX => Sin(compiledX.asExpr))
-
-            case Constant1.Constant =>
-              compile[M](x).map(compiledX => constant(compiledX.asExpr))
-
-            case Constant1.Lift =>
-              compile[M](x).map(x => constant(x.asExpr))
-
-            case Constant1.Not =>
-              compile[M](x).map { compiledA =>
-                Not(compiledA.asExpr)
-              }
-
-          }
+          compile[M](x).flatMap(compiledX => c.compile[K](Typed(x.tpe.t, compiledX)))
 
         // Lift of arity 2 constants
         case AST.App(
