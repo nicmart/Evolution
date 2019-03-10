@@ -120,7 +120,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           constant =>
             constant.entryName -> freshPrimitiveIdentifier(
               constant.entryName,
-              Qualified(constant.predicates, constant.scheme)
+              constant.qualifiedType
           )
         )
         .toMap
