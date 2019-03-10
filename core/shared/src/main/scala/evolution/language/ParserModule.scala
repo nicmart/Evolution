@@ -108,7 +108,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] =>
     private lazy val nonEmptyArgs: Parser[List[AST]] =
       P(ast ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
-    private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!
+    private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
 
     private lazy val lifted: Parser[AST] =
       P("@" ~/ factor).map(ast => AST.App(AST.Identifier(Constant.Lift.entryName), ast))

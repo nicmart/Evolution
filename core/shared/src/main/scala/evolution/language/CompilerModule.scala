@@ -365,7 +365,7 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
 
     object App0 {
       def unapply(arg: AST): Option[Constant] = arg match {
-        case AST.Identifier(id, _, true) => Some(Constant.namesToValuesMap(id))
+        case AST.Identifier(id, _, true) => Constant.withNameInsensitiveOption(id)
         case _                           => None
       }
     }
@@ -393,8 +393,9 @@ trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] wit
 
     object LiftApp2 {
       def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
-        case AST.App(AST.App(AST.App(AST.Identifier("Lift", _, true), AST.Identifier(id, _, _), _), x, _), y, _) =>
-          Some((Constant.namesToValuesMap(id), x, y))
+        case AST.App(AST.App(AST.App(AST.Identifier(liftId, _, true), AST.Identifier(id, _, _), _), x, _), y, _)
+            if liftId == Constant.Lift.entryName =>
+          Constant.withNameInsensitiveOption(id).map(c => (c, x, y))
         case _ => None
       }
     }

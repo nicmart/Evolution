@@ -36,14 +36,14 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id =$expr in $id") shouldBe AST.Let(id, unsafeParse(expr), AST.Identifier(id))
+            unsafeParse(s"$id =$expr in $id") shouldBe AST.Let(id.toLowerCase, unsafeParse(expr), AST.Identifier(id))
           }
         }
 
         "a = b in\\n 1 + 2" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
             unsafeParse(s"$id = $expr in 1 + 2") shouldBe AST.Let(
-              id,
+              id.toLowerCase,
               unsafeParse(expr),
               AST.App2(AST.Const(Constant.Add), AST.Number("1"), AST.Number("2")))
           }
@@ -52,7 +52,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         "a = aval in b = bval in body" in {
           forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
             unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldBe
-              AST.Let(a, unsafeParse(aVal), AST.Let(b, unsafeParse(bVal), unsafeParse(body)))
+              AST.Let(a.toLowerCase, unsafeParse(aVal), AST.Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)))
           }
         }
       }
@@ -89,29 +89,29 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "lambdas" in {
         forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
-          unsafeParse(s"$identifier -> $expr") shouldBe AST.Lambda(identifier, unsafeParse(expr))
+          unsafeParse(s"$identifier -> $expr") shouldBe AST.Lambda(identifier.toLowerCase, unsafeParse(expr))
         }
       }
 
       "HO lambdas" in {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
           unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldBe AST.Lambda(
-            identifier1,
-            AST.Lambda(identifier2, unsafeParse(expr))
+            identifier1.toLowerCase,
+            AST.Lambda(identifier2.toLowerCase, unsafeParse(expr))
           )
         }
       }
 
       "Let bindings" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-          unsafeParse(s"let($id, $value, $in)") shouldBe AST.Let(id, unsafeParse(value), unsafeParse(in))
+          unsafeParse(s"let($id, $value, $in)") shouldBe AST.Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
         }
       }
 
       "a -> b + c = a -> (b + c)" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe AST.Lambda(
-            identifier1,
+            identifier1.toLowerCase,
             AST.App2(AST.Const(Constant.Add), unsafeParse(expr1), unsafeParse(expr2))
           )
         }
@@ -212,6 +212,14 @@ class ParserModuleSpec extends LanguageSpec[Id] {
               AST.App(AST.Const(Constant.Lift), unsafeParse(expr)),
               unsafeParse(a),
               unsafeParse(b))
+          }
+        }
+
+        "@(expr(a, b))" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
+            unsafeParse(s"@($expr($a, $b))") shouldBe AST.App(
+              AST.Const(Constant.Lift),
+              AST.App2(unsafeParse(expr), unsafeParse(a), unsafeParse(b)))
           }
         }
 

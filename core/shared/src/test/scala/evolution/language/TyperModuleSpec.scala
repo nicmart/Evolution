@@ -78,7 +78,18 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
       }
 
-      "<point>(<1>, <2>)" in {
+      "@1" in {
+        val untyped = AST.Lift(AST.Number("1", Qualified(Type.Dbl)))
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate
+        val substitution = unify(constraints).right.get.substitution
+        val finalExpr = substitution.substitute(expr)
+        finalExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
+
+        val AST.App(AST.Identifier(id, _, isPrimitive), x, _) = finalExpr
+        isPrimitive shouldBe true
+      }
+
+      "@point(@1, @2)" in {
         val untyped =
           AST.App2(AST.Lift(AST.Const(Constant.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).evaluate

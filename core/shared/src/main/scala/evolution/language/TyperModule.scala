@@ -17,10 +17,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
     implicit class BindingContextOps(ctx: BindingContext) {
       def getBinding(name: String): TypeInferenceState[Identifier] =
-        ctx.get(name.toLowerCase) match {
+        ctx.get(name) match {
           case None =>
             StateT(
-              s => Left[String, (TypeInference.State, Identifier)](s"Unable to find type binding for variable $name"))
+              s =>
+                Left[String, (TypeInference.State, Identifier)](
+                  s"Unable to find type binding for variable $name in ctx $ctx"))
           case Some(tis) =>
             StateT { s =>
               tis.run(s)
@@ -56,7 +58,14 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
 
       // TODO value.right.get???
       implicit class TypeInferenceOps[T](ti: TypeInference[T]) {
-        def evaluate: T = ti.run(constantQualifiedTypes).runA(TypeInference.empty).value.right.get
+        def evaluate: T =
+          ti.run(constantQualifiedTypes)
+            .runA(TypeInference.empty)
+            .value
+            .fold(
+              s => throw new Exception(s),
+              identity
+            )
         def evaluateWith(ctx: BindingContext): T =
           ti.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).value.right.get
       }

@@ -1,6 +1,8 @@
 package evolution.language
 
+import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
+
 import scala.collection.immutable
 
 trait ASTModule[F[_]] extends TypesModule[F] {
@@ -11,12 +13,12 @@ trait ASTModule[F[_]] extends TypesModule[F] {
     final type Out = tpe.t.Out
 
     def withType(tpe: Qualified[Type]): AST = this match {
-      case AST.Identifier(name, _, _)    => AST.Identifier(name, tpe)
-      case AST.App(f, x, _)              => AST.App(f, x, tpe)
-      case AST.Lambda(varName, expr, _)  => AST.Lambda(varName, expr, tpe)
-      case AST.Let(varName, expr, in, _) => AST.Let(varName, expr, in, tpe)
-      case AST.Number(n, _)              => AST.Number(n, tpe)
-      case AST.Bool(b, _)                => AST.Bool(b, tpe)
+      case AST.Identifier(name, _, isPrimitive) => AST.Identifier(name, tpe, isPrimitive)
+      case AST.App(f, x, _)                     => AST.App(f, x, tpe)
+      case AST.Lambda(varName, expr, _)         => AST.Lambda(varName, expr, tpe)
+      case AST.Let(varName, expr, in, _)        => AST.Let(varName, expr, in, tpe)
+      case AST.Number(n, _)                     => AST.Number(n, tpe)
+      case AST.Bool(b, _)                       => AST.Bool(b, tpe)
     }
 
     def withType(tpe: Type): AST = withType(Qualified(tpe))
@@ -30,11 +32,18 @@ trait ASTModule[F[_]] extends TypesModule[F] {
   }
 
   object AST {
-    final case class Identifier(
+
+    sealed abstract case class Identifier(
       name: String,
       tpe: Qualified[Type] = Qualified(Type.Var("")),
       primitive: Boolean = false)
         extends AST
+
+    object Identifier {
+      def apply(name: String, tpe: Qualified[Type] = Qualified(Type.Var("")), primitive: Boolean = false): Identifier =
+        new Identifier(name.toLowerCase, tpe, primitive) {}
+    }
+
     final case class Lambda(varName: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class App(f: AST, x: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var("")))
@@ -60,7 +69,7 @@ trait ASTModule[F[_]] extends TypesModule[F] {
       f(transformChildren(tree, transformRecursively(_, f)))
   }
 
-  abstract sealed class Constant(val scheme: Type, val predicates: List[Predicate]) extends EnumEntry
+  abstract sealed class Constant(val scheme: Type, val predicates: List[Predicate]) extends EnumEntry with Lowercase
 
   object Constant extends Enum[Constant] {
     import Type._
