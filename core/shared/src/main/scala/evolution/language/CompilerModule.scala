@@ -1,7 +1,7 @@
 package evolution.language
 
-import cats.data.Kleisli
 import cats.MonadError
+import cats.data.Kleisli
 import cats.implicits._
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
@@ -14,7 +14,9 @@ trait CompilerModule[F[_]] {
     with TypesModule[F]
     with PredefinedConstantsModule[F] =>
 
-  import Desugarer._, Expr._, TypeClasses._
+  import Desugarer._
+  import Expr._
+  import TypeClasses._
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 
@@ -35,13 +37,13 @@ trait CompilerModule[F[_]] {
             else K.raiseError(s"Variable $name is not defined for identifier $expr")
           }
 
-        case App0(Const.PI) =>
+        case AST.Identifier(Const(Const.PI), _, _) =>
           Dbl(Math.PI).pure[K]
 
-        case App0(Const.Empty) =>
+        case AST.Identifier(Const(Const.Empty), _, _) =>
           Empty().pure[K]
 
-        case fc @ App0(id) =>
+        case fc @ AST.Identifier(Const(id), _, _) =>
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.Lambda(varName, body, tpe) =>
@@ -61,301 +63,318 @@ trait CompilerModule[F[_]] {
         case AST.Bool(b, _) =>
           Bool(b).pure[K]
 
-        case App1(Const.Fix, x) =>
-          compile[M](x).map { compiledX =>
-            Fix(compiledX.asExpr[Any => Any])
-          }
-
-        case App2(Const.Cons, head, tail) =>
-          (head, tail).compileN[M] { (head, tail) =>
-            Cons(head.asExpr, tail.asExprF)
-          }
-
-        case App2(Const.MapEmpty, a, b) =>
-          (a, b).compileN[M] { (compiledA, compiledB) =>
-            MapEmpty(compiledA.asExprF, compiledB.asExprF)
-          }
-
-        case App2(Const.MapCons, a, f) =>
-          (a, f).compileN[M] { (compiledA, compiledF) =>
-            MapCons(
-              compiledA.asExprF,
-              compiledF.asExpr[Any => F[Any] => F[Any]]
-            )
-          }
-
-        case App2(Const.Point, x, y) =>
-          (x, y).compileN[M] { (compiledX, compiledY) =>
-            Pnt(compiledX.asExpr, compiledY.asExpr)
-          }
-
-        case LiftApp2(Const.Point, x, y) =>
-          (x, y).compileN[M] { (cx, cy) =>
-            liftedPoint(cx.asExprF, cy.asExprF)
-          }
-
-        case LiftApp2(Const.Polar, x, y) =>
-          (x, y).compileN[M] { (cx, cy) =>
-            liftedPolar(cx.asExprF, cy.asExprF)
-          }
-
-        case App1(Const.X, p) =>
-          compile[M](p).map { compiledP =>
-            X(compiledP.asExpr)
-          }
-
-        case App1(Const.Y, p) =>
-          compile[M](p).map { compiledP =>
-            Y(compiledP.asExpr)
-          }
-
-        case App1(Const.Floor, d) =>
-          compile[M](d).map(compiledD => Floor(compiledD.asExpr))
-
-        case App1(Const.ToDbl, n) =>
-          compile[M](n).map(compiledN => ToDbl(compiledN.asExpr))
-
-        case App2(Const.Add, x, y) =>
-          (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
-            Add(compiledX.asExpr, compiledY.asExpr)(sg)
-          }
-
-        case LiftApp2(Const.Add, x, y) =>
-          for {
-            tpe <- K.fromEither(Type.unwrapF(x.tpe.t))
-            sg <- K.fromEither(Type.group(tpe))
-            cx <- compile[M](x)
-            cy <- compile[M](y)
-          } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
-
-        case App2(Const.Minus, x, y) =>
-          (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (group, compiledX, compiledY) =>
-            minus(compiledX.asExpr, compiledY.asExpr)(group)
-          }
-
-        case App2(Const.Div, x, y) =>
-          (x, y).compileN[M] { (compiledX, compiledY) =>
-            Div(compiledX.asExpr, compiledY.asExpr)
-          }
-
-        case App2(Const.Exp, x, y) =>
-          (x, y).compileN[M] { (compiledX, compiledY) =>
-            Exp(compiledX.asExpr, compiledY.asExpr)
-          }
-
-        case App1(Const.Abs, x) =>
-          compile[M](x).map(compiledX => Abs(compiledX.asExpr))
-
-        case App1(Const.Sign, x) =>
-          compile[M](x).map(compiledX => Sign(compiledX.asExpr))
-
-        // TODO this is not in-line with other liftings.
-        case App1(Const.Inverse, x) =>
-          x.tpe.t match {
-            // Overload - for evolutions
-            case Type.Evo(tpe) =>
-              (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (group, compiledX) =>
-                inverseEvo(compiledX.asExprF)(group)
+        case AST.App(AST.Identifier(Const(c), _, true), x, _) =>
+          c match {
+            case Const.Fix =>
+              compile[M](x).map { compiledX =>
+                Fix(compiledX.asExpr[Any => Any])
               }
-            case tpe =>
-              (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (g, compiledX) =>
-                Inverse(compiledX.asExpr)(g)
+            case Const.X =>
+              compile[M](x).map { compiledP =>
+                X(compiledP.asExpr)
+              }
+            case Const.Y =>
+              compile[M](x).map { compiledP =>
+                Y(compiledP.asExpr)
+              }
+            case Const.Floor =>
+              compile[M](x).map(compiledD => Floor(compiledD.asExpr))
+
+            case Const.ToDbl =>
+              compile[M](x).map(compiledN => ToDbl(compiledN.asExpr))
+
+            case Const.Abs =>
+              compile[M](x).map(compiledX => Abs(compiledX.asExpr))
+
+            case Const.Sign =>
+              compile[M](x).map(compiledX => Sign(compiledX.asExpr))
+
+            case Const.Inverse =>
+              x.tpe.t match {
+                // Overload - for evolutions
+                case Type.Evo(tpe) =>
+                  (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (group, compiledX) =>
+                    inverseEvo(compiledX.asExprF)(group)
+                  }
+                case tpe =>
+                  (K.fromEither(Type.group(tpe)), compile[M](x)).mapN { (g, compiledX) =>
+                    Inverse(compiledX.asExpr)(g)
+                  }
+              }
+
+            case Const.Cos =>
+              compile[M](x).map(compiledX => Cos(compiledX.asExpr))
+
+            case Const.Sin =>
+              compile[M](x).map(compiledX => Sin(compiledX.asExpr))
+
+            case Const.Constant =>
+              compile[M](x).map(compiledX => constant(compiledX.asExpr))
+
+            case Const.Lift =>
+              compile[M](x).map(x => constant(x.asExpr))
+
+            case Const.Not =>
+              compile[M](x).map { compiledA =>
+                Not(compiledA.asExpr)
+              }
+
+          }
+
+        // App 2
+        case AST.App(AST.App(AST.Identifier(Const(c), _, true), x, _), y, _) =>
+          c match {
+            case Const.Cons =>
+              (x, y).compileN[M] { (head, tail) =>
+                Cons(head.asExpr, tail.asExprF)
+              }
+
+            case Const.MapEmpty =>
+              (x, y).compileN[M] { (compiledA, compiledB) =>
+                MapEmpty(compiledA.asExprF, compiledB.asExprF)
+              }
+
+            case Const.MapCons =>
+              (x, y).compileN[M] { (compiledA, compiledF) =>
+                MapCons(
+                  compiledA.asExprF,
+                  compiledF.asExpr[Any => F[Any] => F[Any]]
+                )
+              }
+
+            case Const.Point =>
+              (x, y).compileN[M] { (compiledX, compiledY) =>
+                Pnt(compiledX.asExpr, compiledY.asExpr)
+              }
+
+            case Const.Add =>
+              (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (sg, compiledX, compiledY) =>
+                Add(compiledX.asExpr, compiledY.asExpr)(sg)
+              }
+
+            case Const.Minus =>
+              (K.fromEither(Type.group(x.tpe.t)), compile[M](x), compile[M](y)).mapN { (group, compiledX, compiledY) =>
+                minus(compiledX.asExpr, compiledY.asExpr)(group)
+              }
+
+            case Const.Div =>
+              (x, y).compileN[M] { (compiledX, compiledY) =>
+                Div(compiledX.asExpr, compiledY.asExpr)
+              }
+
+            case Const.Exp =>
+              (x, y).compileN[M] { (compiledX, compiledY) =>
+                Exp(compiledX.asExpr, compiledY.asExpr)
+              }
+
+            case Const.Multiply =>
+              (K.fromEither(Type.vectorSpace(y.tpe.t)), compile[M](x), compile[M](y)).mapN {
+                (vs, compiledX, compiledY) =>
+                  Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
+              }
+
+            case Const.Mod =>
+              (x, y).compileN[M] { (cx, cy) =>
+                Mod(cx.asExpr, cy.asExpr)
+              }
+
+            case Const.Eq =>
+              for {
+                compiledX <- compile[M](x)
+                compiledY <- compile[M](y)
+                eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
+              } yield Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
+
+            case Const.Neq =>
+              for {
+                compiledX <- compile[M](x)
+                compiledY <- compile[M](y)
+                eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
+              } yield Neq[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
+
+            case Const.GreaterThan =>
+              for {
+                compiledA <- compile[M](x)
+                compiledB <- compile[M](y)
+                order <- K.fromEither(Type.order(x.tpe.t))
+              } yield GreaterThan[x.Out](compiledA, compiledB.asExpr)(order)
+
+            case Const.GreaterThanOrEqual =>
+              for {
+                compiledA <- compile[M](x)
+                compiledB <- compile[M](y)
+                ordering <- K.fromEither(Type.order(x.tpe.t))
+              } yield GreaterThanOrEqual[x.Out](compiledA, compiledB.asExpr)(ordering)
+
+            case Const.LessThan =>
+              for {
+                compiledA <- compile[M](x)
+                compiledB <- compile[M](y)
+                ordering <- K.fromEither(Type.order(x.tpe.t))
+              } yield LessThan[x.Out](compiledA, compiledB.asExpr)(ordering)
+
+            case Const.LessThanOrEqual =>
+              for {
+                compiledA <- compile[M](x)
+                compiledB <- compile[M](y)
+                order <- K.fromEither(Type.order(x.tpe.t))
+              } yield LessThanOrEqual[x.Out](compiledA, compiledB.asExpr)(order)
+
+            case Const.And =>
+              (x, y).compileN[M] { (compiledA, compiledB) =>
+                And(compiledA.asExpr, compiledB.asExpr)
+              }
+
+            case Const.Or =>
+              (x, y).compileN[M] { (compiledA, compiledB) =>
+                Or(compiledA.asExpr, compiledB.asExpr)
+              }
+            case Const.Polar =>
+              (x, y).compileN[M] { (compiledX, compiledY) =>
+                polar(compiledX.asExpr, compiledY.asExpr)
+              }
+
+            case Const.Integrate =>
+              for {
+                compiledX <- compile[M](x)
+                compiledY <- compile[M](y)
+                vs <- K.fromEither(Type.vectorSpace(x.tpe.t))
+              } yield integrate(compiledX, compiledY.asExprF)(vs)
+
+            case Const.Solve1 =>
+              for {
+                compiledX <- compile[M](x)
+                compiledY <- compile[M](y)
+                vs <- K.fromEither(Type.vectorSpace(y.tpe.t))
+              } yield solve1[y.Out](compiledX.asExprF[y.Out => y.Out], compiledY.asExpr)(vs)
+
+            case Const.Concat =>
+              K.fromEither(Type.unwrapF(x.tpe.t)).flatMap { innerType =>
+                (x, y).compileN[M] { (cx, cy) =>
+                  concat(cx.asExprF, cy.asExprF)
+                }
+              }
+
+            case Const.Map =>
+              (x, y).compileN[M] { (compiledX, compiledF) =>
+                map(
+                  compiledX.asExprF,
+                  compiledF.asExpr[Any => Any]
+                )
+              }
+
+            case Const.FlatMap =>
+              (x, y).compileN[M] { (compiledX, compiledF) =>
+                flatMap(
+                  compiledX.asExprF,
+                  compiledF.asExpr[Any => F[Any]]
+                )
+              }
+
+            case Const.Take =>
+              (x, y).compileN[M] { (compiledN, compiledF) =>
+                take(compiledN.asExpr, compiledF.asExprF)
+              }
+            case Const.While =>
+              (x, y).compileN[M] { (compiledFa, compiledP) =>
+                takeWhile(compiledFa.asExprF, compiledP.asExpr[Any => Boolean])
+              }
+
+            case Const.Until =>
+              (x, y).compileN[M] { (compiledFa, compiledP) =>
+                takeUntil(compiledFa.asExprF, compiledP.asExpr[Any => Boolean])
+              }
+
+            case Const.Uniform =>
+              (x, y).compileN[M] { (compiledFrom, compiledTo) =>
+                Uniform(compiledFrom.asExpr, compiledTo.asExpr)
+              }
+
+            case Const.UniformFrom =>
+              (x, y).compileN[M] { (compiledN, compiledFt) =>
+                UniformFrom(
+                  compiledN.asExpr,
+                  compiledFt.asExprF
+                )
+              }
+
+            case Const.Normal =>
+              (x, y).compileN[M] { (mu, sigma) =>
+                Normal(mu.asExpr, sigma.asExpr)
               }
           }
 
-        case App2(Const.Multiply, x, y) =>
-          (K.fromEither(Type.vectorSpace(y.tpe.t)), compile[M](x), compile[M](y)).mapN { (vs, compiledX, compiledY) =>
-            Multiply(compiledX.asExpr, compiledY.asExpr)(vs)
+        case AST.App(AST.App(AST.App(AST.Identifier(Const(c), _, true), x, _), y, _), z, _) =>
+          c match {
+
+            case Const.If =>
+              (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
+                IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
+              }
+
+            case Const.InRect =>
+              (x, y, z).compileN[M] { (compiledTl, compiledBr, compiledP) =>
+                InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
+              }
+
+            case Const.Solve2 =>
+              K.fromEither(Type.vectorSpace(y.tpe.t)).flatMap { vs =>
+                (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
+                  solve2[y.Out](
+                    compiledX.asExprF[y.Out => y.Out => y.Out],
+                    compiledY.asExpr[y.Out],
+                    compiledZ.asExpr[y.Out]
+                  )(vs)
+                }
+              }
+
+            case Const.ZipWith =>
+              (x, y, z).compileN[M] { (compiledA, compiledB, compiledF) =>
+                zipWith(compiledA.asExprF, compiledB.asExprF, compiledF.asExpr[Any => Any => Any])
+              }
+
+            case Const.UniformDiscrete =>
+              (x, y, z).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
+                UniformDiscrete(
+                  compiledFrom.asExpr,
+                  compiledTo.asExpr,
+                  compiledStep.asExpr
+                )
+              }
           }
 
-        case LiftApp2(Const.Multiply, x, y) =>
-          for {
-            tpe <- K.fromEither(Type.unwrapF(y.tpe.t))
-            vs <- K.fromEither(Type.vectorSpace(tpe))
-            cx <- compile[M](x)
-            cy <- compile[M](y)
-          } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
+        // Lift App2
+        case AST.App(
+            AST.App(AST.App(AST.Identifier(Const(Constant.Lift), _, true), AST.Identifier(Const(c), _, true), _), x, _),
+            y,
+            _) =>
+          c match {
+            case Const.Point =>
+              (x, y).compileN[M] { (cx, cy) =>
+                liftedPoint(cx.asExprF, cy.asExprF)
+              }
 
-        case App1(Const.Cos, x) =>
-          compile[M](x).map(compiledX => Cos(compiledX.asExpr))
+            case Const.Polar =>
+              (x, y).compileN[M] { (cx, cy) =>
+                liftedPolar(cx.asExprF, cy.asExprF)
+              }
 
-        case App1(Const.Sin, x) =>
-          compile[M](x).map(compiledX => Sin(compiledX.asExpr))
+            case Const.Add =>
+              for {
+                tpe <- K.fromEither(Type.unwrapF(x.tpe.t))
+                sg <- K.fromEither(Type.group(tpe))
+                cx <- compile[M](x)
+                cy <- compile[M](y)
+              } yield liftedAdd(cx.asExprF, cy.asExprF)(sg).asExprF
 
-        case App2(Const.Mod, x, y) =>
-          (x, y).compileN[M] { (cx, cy) =>
-            Mod(cx.asExpr, cy.asExpr)
-          }
+            case Const.Multiply =>
+              for {
+                tpe <- K.fromEither(Type.unwrapF(y.tpe.t))
+                vs <- K.fromEither(Type.vectorSpace(tpe))
+                cx <- compile[M](x)
+                cy <- compile[M](y)
+              } yield liftedMult(cx.asExprF, cy.asExprF)(vs).asExprF
 
-        case App2(Const.Eq, x, y) =>
-          for {
-            compiledX <- compile[M](x)
-            compiledY <- compile[M](y)
-            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
-          } yield Equals[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
-
-        case App2(Const.Neq, x, y) =>
-          for {
-            compiledX <- compile[M](x)
-            compiledY <- compile[M](y)
-            eqTypeClass <- K.fromEither(Type.eqTypeClass(x.tpe.t))
-          } yield Neq[x.Out](compiledX, compiledY.asExpr)(eqTypeClass)
-
-        case App3(Const.If, x, y, z) =>
-          (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
-            IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
-          }
-
-        case App3(Const.InRect, tl, br, p) =>
-          (tl, br, p).compileN[M] { (compiledTl, compiledBr, compiledP) =>
-            InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
-          }
-
-        case App2(Const.GreaterThan, a, b) =>
-          for {
-            compiledA <- compile[M](a)
-            compiledB <- compile[M](b)
-            order <- K.fromEither(Type.order(a.tpe.t))
-          } yield GreaterThan[a.Out](compiledA, compiledB.asExpr)(order)
-
-        case App2(Const.GreaterThanOrEqual, a, b) =>
-          for {
-            compiledA <- compile[M](a)
-            compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.order(a.tpe.t))
-          } yield GreaterThanOrEqual[a.Out](compiledA, compiledB.asExpr)(ordering)
-
-        case App2(Const.LessThan, a, b) =>
-          for {
-            compiledA <- compile[M](a)
-            compiledB <- compile[M](b)
-            ordering <- K.fromEither(Type.order(a.tpe.t))
-          } yield LessThan[a.Out](compiledA, compiledB.asExpr)(ordering)
-
-        case App2(Const.LessThanOrEqual, a, b) =>
-          for {
-            compiledA <- compile[M](a)
-            compiledB <- compile[M](b)
-            order <- K.fromEither(Type.order(a.tpe.t))
-          } yield LessThanOrEqual[a.Out](compiledA, compiledB.asExpr)(order)
-
-        case App2(Const.And, a, b) =>
-          (a, b).compileN[M] { (compiledA, compiledB) =>
-            And(compiledA.asExpr, compiledB.asExpr)
-          }
-
-        case App2(Const.Or, a, b) =>
-          (a, b).compileN[M] { (compiledA, compiledB) =>
-            Or(compiledA.asExpr, compiledB.asExpr)
-          }
-
-        case App1(Const.Not, a) =>
-          compile[M](a).map { compiledA =>
-            Not(compiledA.asExpr)
-          }
-
-        case App2(Const.Polar, x, y) =>
-          (x, y).compileN[M] { (compiledX, compiledY) =>
-            polar(compiledX.asExpr, compiledY.asExpr)
-          }
-        case App1(Const.Constant, x) =>
-          compile[M](x).map(compiledX => constant(compiledX.asExpr))
-
-        case App2(Const.Integrate, x, y) =>
-          for {
-            compiledX <- compile[M](x)
-            compiledY <- compile[M](y)
-            vs <- K.fromEither(Type.vectorSpace(x.tpe.t))
-          } yield integrate(compiledX, compiledY.asExprF)(vs)
-
-        case App2(Const.Solve1, x, y) =>
-          for {
-            compiledX <- compile[M](x)
-            compiledY <- compile[M](y)
-            vs <- K.fromEither(Type.vectorSpace(y.tpe.t))
-          } yield solve1[y.Out](compiledX.asExprF[y.Out => y.Out], compiledY.asExpr)(vs)
-
-        case App3(Const.Solve2, x, y, z) =>
-          K.fromEither(Type.vectorSpace(y.tpe.t)).flatMap { vs =>
-            (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
-              solve2[y.Out](
-                compiledX.asExprF[y.Out => y.Out => y.Out],
-                compiledY.asExpr[y.Out],
-                compiledZ.asExpr[y.Out]
-              )(vs)
-            }
-          }
-
-        case App2(Const.Concat, x, y) =>
-          K.fromEither(Type.unwrapF(x.tpe.t)).flatMap { innerType =>
-            (x, y).compileN[M] { (cx, cy) =>
-              concat(cx.asExprF, cy.asExprF)
-            }
-          }
-
-        case App2(Const.Map, x, f) =>
-          (x, f).compileN[M] { (compiledX, compiledF) =>
-            map(
-              compiledX.asExprF,
-              compiledF.asExpr[Any => Any]
-            )
-          }
-
-        case App2(Const.FlatMap, x, f) =>
-          (x, f).compileN[M] { (compiledX, compiledF) =>
-            flatMap(
-              compiledX.asExprF,
-              compiledF.asExpr[Any => F[Any]]
-            )
-          }
-
-        case App2(Const.Take, n, e) =>
-          (n, e).compileN[M] { (compiledN, compiledF) =>
-            take(compiledN.asExpr, compiledF.asExprF)
-          }
-
-        case App1(Const.Lift, f) => compile[M](f).map(x => constant(x.asExpr))
-
-        case App3(Const.ZipWith, a, b, c) =>
-          (a, b, c).compileN[M] { (compiledA, compiledB, compiledF) =>
-            zipWith(compiledA.asExprF, compiledB.asExprF, compiledF.asExpr[Any => Any => Any])
-          }
-
-        case App2(Const.While, fa, p) =>
-          (fa, p).compileN[M] { (compiledFa, compiledP) =>
-            takeWhile(compiledFa.asExprF, compiledP.asExpr[Any => Boolean])
-          }
-
-        case App2(Const.Until, fa, p) =>
-          (fa, p).compileN[M] { (compiledFa, compiledP) =>
-            takeUntil(compiledFa.asExprF, compiledP.asExpr[Any => Boolean])
-          }
-
-        case App2(Const.Uniform, from, to) =>
-          (from, to).compileN[M] { (compiledFrom, compiledTo) =>
-            Uniform(compiledFrom.asExpr, compiledTo.asExpr)
-          }
-
-        case App3(Const.UniformDiscrete, from, to, step) =>
-          (from, to, step).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
-            UniformDiscrete(
-              compiledFrom.asExpr,
-              compiledTo.asExpr,
-              compiledStep.asExpr
-            )
-          }
-
-        case App2(Const.UniformFrom, n, ft) =>
-          (n, ft).compileN[M] { (compiledN, compiledFt) =>
-            UniformFrom(
-              compiledN.asExpr,
-              compiledFt.asExprF
-            )
-          }
-
-        case App2(Const.Normal, μ, σ) =>
-          (μ, σ).compileN[M] { (mu, sigma) =>
-            Normal(mu.asExpr, sigma.asExpr)
           }
 
         case AST.App(f, x, _) =>
@@ -367,43 +386,6 @@ trait CompilerModule[F[_]] {
           M.raiseError(s"Invalid AST for expression $expr")
       }
     }.asInstanceOf[Result[M, Expr[expr.Out]]]
-
-    object App0 {
-      def unapply(arg: AST): Option[Constant] = arg match {
-        case AST.Identifier(id, _, true) => Constant.withNameInsensitiveOption(id)
-        case _                           => None
-      }
-    }
-
-    object App1 {
-      def unapply(arg: AST): Option[(Constant, AST)] = arg match {
-        case AST.App(App0(constant), x, _) => Some((constant, x))
-        case _                             => None
-      }
-    }
-
-    object App2 {
-      def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
-        case AST.App(App1(c, x), y, _) => Some((c, x, y))
-        case _                         => None
-      }
-    }
-
-    object App3 {
-      def unapply(arg: AST): Option[(Constant, AST, AST, AST)] = arg match {
-        case AST.App(App2(c, x, y), z, _) => Some((c, x, y, z))
-        case _                            => None
-      }
-    }
-
-    object LiftApp2 {
-      def unapply(arg: AST): Option[(Constant, AST, AST)] = arg match {
-        case AST.App(AST.App(AST.App(AST.Identifier(liftId, _, true), AST.Identifier(id, _, _), _), x, _), y, _)
-            if liftId == Constant.Lift.entryName =>
-          Constant.withNameInsensitiveOption(id).map(c => (c, x, y))
-        case _ => None
-      }
-    }
 
     implicit class Tuple2Ops(ts: (AST, AST)) {
       def compileN[M[_]](f: (Expr[_], Expr[_]) => Expr[_])(implicit E: MonadError[M, String]): Result[M, Expr[_]] =

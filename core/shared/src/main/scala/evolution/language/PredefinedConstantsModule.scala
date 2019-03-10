@@ -15,6 +15,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
     val functions0: List[Constant] = List(Empty, PI)
     val nonFunctions0: List[Constant] = values.toList.filter(!functions0.contains(_))
 
+    def unapply(s: String): Option[Constant] = withNameInsensitiveOption(s)
+
     // Constants
 
     // Math
@@ -85,5 +87,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
 
     // functions-only
     case object Fix extends Constant((Var("T") =>: Var("T")) =>: Var("T"), Nil)
+
   }
 }
