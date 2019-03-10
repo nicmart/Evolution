@@ -41,7 +41,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       extends Constant(qualifiedType)
       with EnumEntry
       with Lowercase {
-    def compile[M[_]](x: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] = ???
+    def compile[M[_]](x: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]]
   }
 
   abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Constant1(qualifiedType) {
@@ -123,47 +123,163 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   abstract sealed class Constant2(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
-      with Lowercase
+      with Lowercase {
+    def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]]
+  }
+
+  abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Constant2(qualifiedType) {
+
+    override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+      compilePlain(x.value, y.value).pure[M].widen
+
+    def compilePlain(x: Expr[_], y: Expr[_]): Expr[_]
+  }
 
   object Constant2 extends Enum[Constant2] {
     val values: immutable.IndexedSeq[Constant2] = findValues
 
-    case object Point extends Constant2(Qualified(Dbl =>: Dbl =>: Type.Point))
-    case object Polar extends Constant2(Qualified(Dbl =>: Dbl =>: Type.Point))
-    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T")))
-    case object Add
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T")))
-    case object Minus
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T")))
-    case object Div extends Constant2(Qualified(Dbl =>: Dbl =>: Dbl))
-    case object Exp extends Constant2(Qualified(Dbl =>: Dbl =>: Dbl))
-    case object Mod extends Constant2(Qualified(Dbl =>: Dbl =>: Dbl))
-    case object And extends Constant2(Qualified(Bool =>: Bool =>: Bool))
-    case object Or extends Constant2(Qualified(Bool =>: Bool =>: Bool))
-    case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool))
-    case object Cons extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object MapEmpty extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object MapCons
-        extends Constant2(
-          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2"))))
+    case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
+    }
 
-    case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T"))))
-    case object Concat extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object Map extends Constant2(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2"))))
+    case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = polar(x.asExpr, y.asExpr)
+    }
+
+    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.vectorSpace(y.tpe)).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr)(vs))
+    }
+
+    case object Add
+        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.group(y.tpe)).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr)(vs))
+    }
+
+    case object Minus
+        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.group(x.tpe)).map(group => minus(x.value.asExpr, y.value.asExpr)(group))
+    }
+
+    case object Div extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Div(x.asExpr, y.asExpr)
+    }
+
+    case object Exp extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Exp(x.asExpr, y.asExpr)
+    }
+
+    case object Mod extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Mod(x.asExpr, y.asExpr)
+    }
+
+    case object And extends Constant2Plain(Qualified(Bool =>: Bool =>: Bool)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.And(x.asExpr, y.asExpr)
+    }
+
+    case object Or extends Constant2Plain(Qualified(Bool =>: Bool =>: Bool)) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Or(x.asExpr, y.asExpr)
+    }
+
+    case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.eqTypeClass(y.tpe)).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr)(eq))
+
+    }
+
+    case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.eqTypeClass(y.tpe)).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr)(eq))
+    }
+
+    case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.order(y.tpe)).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr)(order))
+    }
+
+    case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.order(y.tpe)).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
+    }
+
+    case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.order(y.tpe)).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr)(order))
+    }
+
+    case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.order(y.tpe)).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
+    }
+
+    case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Cons(x.asExpr, y.asExprF)
+    }
+
+    case object MapEmpty extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapEmpty(x.asExprF, y.asExprF)
+    }
+
+    case object MapCons
+        extends Constant2Plain(
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapCons(
+        x.asExprF,
+        y.asExpr[Any => F[Any] => F[Any]]
+      )
+    }
+
+    case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.vectorSpace(y.tpe)).map(vs => integrate(x.value.asExpr, y.value.asExprF)(vs))
+    }
+
+    case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.vectorSpace(y.tpe))
+          .map(vs => solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr)(vs))
+    }
+
+    case object Concat extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.unwrapF(x.tpe)).map(innerType => concat(x.value.asExprF, y.value.asExprF))
+    }
+
+    case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Desugarer.map(x.asExprF, y.asExpr[Any => Any])
+    }
+
     case object FlatMap
-        extends Constant2(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2"))))
-    case object Take extends Constant2(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object While extends Constant2(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1"))))
-    case object Until extends Constant2(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1"))))
-    case object Uniform extends Constant2(Qualified(Dbl =>: Dbl =>: Evo(Dbl)))
-    case object UniformFrom extends Constant2(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T"))))
-    case object Normal extends Constant2(Qualified(Dbl =>: Dbl =>: Evo(Dbl)))
+        extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+        Desugarer.flatMap(x.asExprF, y.asExpr[Any => F[Any]])
+    }
+
+    case object Take extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = take(x.asExpr, y.asExprF)
+    }
+
+    case object While extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = takeWhile(x.asExprF, y.asExpr[Any => Boolean])
+    }
+
+    case object Until extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = takeUntil(x.asExprF, y.asExpr[Any => Boolean])
+    }
+
+    case object Uniform extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Evo(Dbl))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Uniform(x.asExpr, y.asExpr)
+    }
+
+    case object UniformFrom extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.UniformFrom(x.asExpr, y.asExprF)
+    }
+
+    case object Normal extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Evo(Dbl))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Normal(x.asExpr, y.asExpr)
+    }
 
     def unapply(s: String): Option[Constant2] = withNameInsensitiveOption(s)
   }
