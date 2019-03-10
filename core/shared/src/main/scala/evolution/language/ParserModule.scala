@@ -25,34 +25,34 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       appOrFactor,
       List(
         PrecedenceGroup(
-          "||" -> AST.Identifier(Constant.Or.entryName)
+          "||" -> AST.Identifier(Constant2.Or.entryName)
         ),
         PrecedenceGroup(
-          "&&" -> AST.Identifier(Constant.And.entryName)
+          "&&" -> AST.Identifier(Constant2.And.entryName)
         ),
         PrecedenceGroup(
-          ">=" -> AST.Identifier(Constant.GreaterThanOrEqual.entryName),
-          ">" -> AST.Identifier(Constant.GreaterThan.entryName),
-          "<=" -> AST.Identifier(Constant.LessThanOrEqual.entryName),
-          "<" -> AST.Identifier(Constant.LessThan.entryName)
+          ">=" -> AST.Identifier(Constant2.GreaterThanOrEqual.entryName),
+          ">" -> AST.Identifier(Constant2.GreaterThan.entryName),
+          "<=" -> AST.Identifier(Constant2.LessThanOrEqual.entryName),
+          "<" -> AST.Identifier(Constant2.LessThan.entryName)
         ),
         PrecedenceGroup(
-          "==" -> AST.Identifier(Constant.Eq.entryName),
-          "!=" -> AST.Identifier(Constant.Neq.entryName)
+          "==" -> AST.Identifier(Constant2.Eq.entryName),
+          "!=" -> AST.Identifier(Constant2.Neq.entryName)
         ),
         PrecedenceGroup(
-          "+" -> AST.Identifier(Constant.Add.entryName),
-          "@+" -> AST.App(AST.Identifier(Constant.Lift.entryName), AST.Identifier(Constant.Add.entryName)),
-          "-" -> AST.Identifier(Constant.Minus.entryName)
+          "+" -> AST.Identifier(Constant2.Add.entryName),
+          "@+" -> AST.App(AST.Identifier(Constant1.Lift.entryName), AST.Identifier(Constant2.Add.entryName)),
+          "-" -> AST.Identifier(Constant2.Minus.entryName)
         ),
         PrecedenceGroup(
-          "*" -> AST.Identifier(Constant.Multiply.entryName),
-          "/" -> AST.Identifier(Constant.Div.entryName),
-          "%" -> AST.Identifier(Constant.Mod.entryName),
-          "@*" -> AST.App(AST.Identifier(Constant.Lift.entryName), AST.Identifier(Constant.Multiply.entryName))
+          "*" -> AST.Identifier(Constant2.Multiply.entryName),
+          "/" -> AST.Identifier(Constant2.Div.entryName),
+          "%" -> AST.Identifier(Constant2.Mod.entryName),
+          "@*" -> AST.App(AST.Identifier(Constant1.Lift.entryName), AST.Identifier(Constant2.Multiply.entryName))
         ),
         PrecedenceGroup(
-          "^" -> AST.Identifier(Constant.Exp.entryName)
+          "^" -> AST.Identifier(Constant2.Exp.entryName)
         )
       )
     )
@@ -78,8 +78,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       P(identifier).map(AST.Identifier(_))
 
     private lazy val unaryOps: Parser[AST.Identifier] =
-      P("-").map(_ => AST.Identifier(Constant.Inverse.entryName)) |
-        P("!").map(_ => AST.Identifier(Constant.Not.entryName))
+      P("-").map(_ => AST.Identifier(Constant1.Inverse.entryName)) |
+        P("!").map(_ => AST.Identifier(Constant1.Not.entryName))
 
     private lazy val unaryPrefixOp: Parser[AST] =
       P(unaryOps ~ appOrFactor).map { case (op, e) => AST.App(op, e) }
@@ -111,7 +111,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
 
     private lazy val lifted: Parser[AST] =
-      P("@" ~/ factor).map(ast => AST.App(AST.Identifier(Constant.Lift.entryName), ast))
+      P("@" ~/ factor).map(ast => AST.App(AST.Identifier(Constant1.Lift.entryName), ast))
 
     private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
@@ -123,8 +123,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       }
 
     private def evalList(asts: List[AST]): AST = asts match {
-      case Nil          => AST.Identifier(Constant.Empty.entryName)
-      case head :: tail => AST.App2(AST.Identifier(Constant.Cons.entryName), head, evalList(tail))
+      case Nil          => AST.Identifier(Constant0.Empty.entryName)
+      case head :: tail => AST.App2(AST.Identifier(Constant2.Cons.entryName), head, evalList(tail))
     }
 
     private object numbers {

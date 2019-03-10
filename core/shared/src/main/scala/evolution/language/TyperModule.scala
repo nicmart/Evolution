@@ -131,7 +131,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
         // TODO predicates
         case Number(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[TypeInference]
         case Bool(_, tpe)   => Constraints(tpe.t -> Type.Bool).pure[TypeInference]
-        case App(Identifier(id, _, _), value, tpe) if id == Constant.Lift.entryName =>
+        case App(Identifier(Constant1(Constant1.Lift), _, _), value, tpe) =>
           Constraints(tpe.t -> lift(value.tpe.t)).pure[TypeInference]
         case App(f, x, tpe) => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[TypeInference]
         case Lambda(_, _, _) =>

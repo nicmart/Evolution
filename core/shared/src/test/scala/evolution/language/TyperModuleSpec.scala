@@ -22,7 +22,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
       "pre-defined constants" - {
         "point function" in {
-          val point = assignVars(AST.Const(Constant.Point)).unsafeEvaluate
+          val point = assignVars(AST.Const(Constant2.Point)).unsafeEvaluate
           val constraints = findConstraints(point).unsafeEvaluate
           val unifier = unify(constraints)
           unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(
@@ -30,9 +30,9 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         }
 
         "constant evolution of a point" in {
-          val point = AST.App2(AST.Const(Constant.Point), AST.Number("1"), AST.Number("1"))
+          val point = AST.App2(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("1"))
           val evolution =
-            assignVars(AST.App(AST.Const(Constant.Constant), point)).unsafeEvaluate
+            assignVars(AST.App(AST.Const(Constant1.Constant), point)).unsafeEvaluate
           val constraints = findConstraints(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
@@ -43,7 +43,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
     "should unify" - {
       "point expressions" in {
-        val untyped = AST.App2(AST.Const(Constant.Point), AST.Identifier("a"), AST.Identifier("b"))
+        val untyped = AST.App2(AST.Const(Constant2.Point), AST.Identifier("a"), AST.Identifier("b"))
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped).unsafeEvaluateWith(
             Map(
@@ -63,13 +63,13 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
       "mapCons(empty, head -> tail -> cons(1, tail))" in {
         val untyped = AST.App2(
-          AST.Const(Constant.MapCons),
-          AST.Const(Constant.Empty),
+          AST.Const(Constant2.MapCons),
+          AST.Const(Constant0.Empty),
           AST.Lambda(
             "head",
             AST.Lambda(
               "tail",
-              AST.App2(AST.Const(Constant.Cons), AST.Number("1", Qualified(Type.Dbl)), AST.Identifier("tail"))
+              AST.App2(AST.Const(Constant2.Cons), AST.Number("1", Qualified(Type.Dbl)), AST.Identifier("tail"))
             )
           )
         )
@@ -91,7 +91,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
       "@point(@1, @2)" in {
         val untyped =
-          AST.App2(AST.Lift(AST.Const(Constant.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
+          AST.App2(AST.Lift(AST.Const(Constant2.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).right.get.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Point)
