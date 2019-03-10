@@ -94,6 +94,8 @@ trait TypesModule[F[_]] {
     val empty: Context = new Context(Map.empty)
   }
 
+  case class Typed[T](tpe: Type, value: T)
+
   // Not everything defined here is used yet, but let's keep it, since it is a valid modeling
   // of the data types in the paper "Typing Haskell in Haskell"
   object TypeClasses {

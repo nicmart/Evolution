@@ -1,10 +1,13 @@
 package evolution.language
+import cats.MonadError
 import enumeratum.{ Enum, EnumEntry }
 import enumeratum.EnumEntry.Lowercase
+import evolution.data.ExpressionModule
+import cats.implicits._
 
 import scala.collection.immutable
 
-trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
+trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
   import TypeClasses._, Type._
 
   abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
@@ -12,13 +15,23 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
   abstract sealed class Constant0(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
-      with Lowercase
+      with Lowercase {
+
+    def compile[M[_]](implicit M: MonadError[M, String]): M[Expr[_]]
+  }
 
   object Constant0 extends Enum[Constant0] {
     val values: immutable.IndexedSeq[Constant0] = findValues
 
-    case object PI extends Constant0(Qualified(Dbl))
-    case object Empty extends Constant0(Qualified(Var("T")))
+    case object PI extends Constant0(Qualified(Dbl)) {
+      def compile[M[_]](implicit M: MonadError[M, String]): M[Expr[_]] =
+        Expr.Dbl(Math.PI).pure[M].widen
+    }
+
+    case object Empty extends Constant0(Qualified(Var("T"))) {
+      def compile[M[_]](implicit M: MonadError[M, String]): M[Expr[_]] =
+        Expr.Empty().pure[M].widen
+    }
 
     def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
   }

@@ -37,15 +37,6 @@ trait CompilerModule[F[_]] {
             else K.raiseError(s"Variable $name is not defined for identifier $expr")
           }
 
-        case AST.Identifier(Constant0(Constant0.PI), _, _) =>
-          Dbl(Math.PI).pure[K]
-
-        case AST.Identifier(Constant0(Constant0.Empty), _, _) =>
-          Empty().pure[K]
-
-        case fc @ AST.Identifier(id, _, _) =>
-          s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
-
         case AST.Lambda(varName, body, tpe) =>
           withVar(varName)(compile[M](body)).map(Lambda(varName, _))
 
@@ -62,6 +53,12 @@ trait CompilerModule[F[_]] {
 
         case AST.Bool(b, _) =>
           Bool(b).pure[K]
+
+        case AST.Identifier(Constant0(c), _, true) =>
+          c.compile[K]
+
+        case fc @ AST.Identifier(id, _, _) =>
+          s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
         case AST.App(AST.Identifier(Constant1(c), _, true), x, _) =>
           c match {
