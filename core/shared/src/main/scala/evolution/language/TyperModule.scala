@@ -4,7 +4,7 @@ import cats.{ Monad, MonadError }
 import cats.data.{ ReaderT, State, StateT }
 import cats.implicits._
 
-trait TyperModule[F[_]] { self: ASTModule[F] =>
+trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
   import AST._
   import TypeClasses._
 
@@ -22,7 +22,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
             StateT(
               s =>
                 Left[String, (TypeInference.State, Identifier)](
-                  s"Unable to find type binding for variable $name in ctx $ctx"))
+                  s"Unable to find type binding for variable $name in ctx $ctx"
+                )
+            )
           case Some(tis) =>
             StateT { s =>
               tis.run(s)
@@ -38,7 +40,8 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
       val empty = State(TypeVars.empty, Substitution.empty)
 
       def stateless[T](f: BindingContext => Either[String, T]): TypeInference[T] = ReaderT(
-        ctx => StateT(s => f(ctx).map(t => (s, t))))
+        ctx => StateT(s => f(ctx).map(t => (s, t)))
+      )
 
       def newVarS: TypeInferenceState[Qualified[Type]] =
         StateT { s =>
@@ -116,7 +119,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] =>
           constant =>
             constant.entryName -> freshPrimitiveIdentifier(
               constant.entryName,
-              Qualified(constant.predicates, constant.scheme)))
+              Qualified(constant.predicates, constant.scheme)
+            )
+        )
         .toMap
 
     def findConstraints(expr: AST): TypeInference[Constraints] = {

@@ -1,8 +1,17 @@
 package evolution.language
 import cats.MonadError
 import cats.implicits._
+import evolution.data.ExpressionModule
 
-class FullModule[F[_]] extends ParserModule[F] with TyperModule[F] with CompilerModule[F] with ASTModule[F] {
+class FullModule[F[_]]
+    extends ParserModule[F]
+    with CompilerModule[F]
+    with DesugarModule[F]
+    with ExpressionModule[F]
+    with TyperModule[F]
+    with ASTModule[F]
+    with PredefinedConstantsModule[F]
+    with TypesModule[F] {
 
   def parse[R[_]](
     serialisedExpr: String,

@@ -4,7 +4,7 @@ import evolution.language.ParserConfig.White._
 import evolution.language.ParserConfig.whitespaces
 import fastparse.noApi._
 
-trait ParserModule[F[_]] { self: ASTModule[F] =>
+trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] =>
 
   def parse(astString: String): Either[String, AST] =
     Parsers.parser

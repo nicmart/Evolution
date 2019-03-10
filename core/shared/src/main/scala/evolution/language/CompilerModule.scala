@@ -7,7 +7,12 @@ import evolution.data.ExpressionModule
 import evolution.geometry.Point
 
 // TODO Random extensions and self types, please to do something better
-trait CompilerModule[F[_]] extends DesugarModule[F] with ExpressionModule[F] with ASTModule[F] {
+trait CompilerModule[F[_]] {
+  self: DesugarModule[F]
+    with ExpressionModule[F]
+    with ASTModule[F]
+    with TypesModule[F]
+    with PredefinedConstantsModule[F] =>
 
   import Desugarer._, Expr._, TypeClasses._
 
