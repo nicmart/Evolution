@@ -287,21 +287,53 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   abstract sealed class Constant3(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
-      with Lowercase
+      with Lowercase {
+    def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
+      implicit M: MonadError[M, String]): M[Expr[_]]
+  }
+
+  abstract sealed class Constant3Plain(qualifiedType: Qualified[Type]) extends Constant3(qualifiedType) {
+    def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_]
+    def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
+      implicit M: MonadError[M, String]): M[Expr[_]] = compilePlain(x.value, y.value, z.value).pure[M].widen
+  }
 
   object Constant3 extends Enum[Constant3] {
     val values: immutable.IndexedSeq[Constant3] = findValues
 
     case object ZipWith
-        extends Constant3(
-          Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3"))))
+        extends Constant3Plain(
+          Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
+        zipWith(x.asExprF, y.asExprF, y.asExpr[Any => Any => Any])
+    }
     case object Solve2
         extends Constant3(
-          Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T"))))
+          Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
+        implicit M: MonadError[M, String]): M[Expr[_]] =
+        M.fromEither(Type.vectorSpace(y.tpe)).map { vs =>
+          solve2[y.tpe.Out](
+            x.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
+            y.asExpr[y.tpe.Out],
+            z.asExpr[y.tpe.Out]
+          )(vs)
+        }
+    }
 
-    case object InRect extends Constant3(Qualified(Type.Point =>: Type.Point =>: Type.Point =>: Bool))
-    case object If extends Constant3(Qualified(Bool =>: Var("T") =>: Var("T") =>: Var("T")))
-    case object UniformDiscrete extends Constant3(Qualified(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl)))
+    case object InRect extends Constant3Plain(Qualified(Type.Point =>: Type.Point =>: Type.Point =>: Bool)) {
+      override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
+        Expr.InRect(x.asExpr[Point], y.asExpr[Point], z.asExpr[Point])
+    }
+    case object If extends Constant3Plain(Qualified(Bool =>: Var("T") =>: Var("T") =>: Var("T"))) {
+      override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
+        Expr.IfThen(x.asExpr, y, z.asExpr)
+    }
+
+    case object UniformDiscrete extends Constant3Plain(Qualified(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl))) {
+      override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
+        Expr.UniformDiscrete(x.asExpr, y.asExpr, z.asExpr)
+    }
 
     def unapply(s: String): Option[Constant3] = withNameInsensitiveOption(s)
   }

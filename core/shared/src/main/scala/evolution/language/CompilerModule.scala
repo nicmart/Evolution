@@ -15,13 +15,12 @@ trait CompilerModule[F[_]] {
     with PredefinedConstantsModule[F] =>
 
   import Desugarer._
-  import Expr._
+  import AST._
   import TypeClasses._
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 
   object Compiler {
-    val Const = Constant
 
     def compile[M[_]](expr: AST)(implicit M: MonadError[M, String]): Result[M, Expr[expr.Out]] = {
       type K[T] = Result[M, T]
@@ -31,44 +30,41 @@ trait CompilerModule[F[_]] {
       def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
       expr match {
-        case AST.Identifier(name, tpe, false) =>
+        case Identifier(name, tpe, false) =>
           varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
-            if (ctx.has(name)) (Var[expr.Out](name): Expr[expr.Out]).pure[K]
+            if (ctx.has(name)) (Expr.Var[expr.Out](name): Expr[expr.Out]).pure[K]
             else K.raiseError(s"Variable $name is not defined for identifier $expr")
           }
 
-        case AST.Lambda(varName, body, tpe) =>
-          withVar(varName)(compile[M](body)).map(Lambda(varName, _))
+        case Lambda(varName, body, tpe) =>
+          withVar(varName)(compile[M](body)).map(Expr.Lambda(varName, _))
 
-        case AST.Let(varName, value, in, tpe) =>
+        case Let(varName, value, in, tpe) =>
           (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
-            Let(varName, compiledValue, compiledIn)
+            Expr.Let(varName, compiledValue, compiledIn)
           }
 
-        case AST.Number(n, Qualified(_, Type.Integer)) =>
-          Integer(n.toInt).pure[K]
+        case Number(n, Qualified(_, Type.Integer)) =>
+          Expr.Integer(n.toInt).pure[K]
 
-        case AST.Number(n, _) => // Default to Double for numeric literals
-          Dbl(n.toDouble).pure[K]
+        case Number(n, _) => // Default to Double for numeric literals
+          Expr.Dbl(n.toDouble).pure[K]
 
-        case AST.Bool(b, _) =>
-          Bool(b).pure[K]
+        case Bool(b, _) =>
+          Expr.Bool(b).pure[K]
 
-        case AST.Identifier(Constant0(c), _, true) =>
+        case Identifier(Constant0(c), _, true) =>
           c.compile[K]
 
-        case fc @ AST.Identifier(id, _, _) =>
+        case fc @ Identifier(id, _, _) =>
           s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
 
-        case AST.App(AST.Identifier(Constant1(c), _, true), x, _) =>
+        case App(Identifier(Constant1(c), _, true), x, _) =>
           compile[M](x).flatMap(compiledX => c.compile[K](Typed(x.tpe.t, compiledX)))
 
         // Lift of arity 2 constants
-        case AST.App(
-            AST.App(
-              AST.App(AST.Identifier(Constant1(Constant1.Lift), _, true), AST.Identifier(Constant2(c), _, true), _),
-              x,
-              _),
+        case App(
+            App(App(Identifier(Constant1(Constant1.Lift), _, true), Identifier(Constant2(c), _, true), _), x, _),
             y,
             _) =>
           c match {
@@ -102,55 +98,25 @@ trait CompilerModule[F[_]] {
           }
 
         // App 2
-        case AST.App(AST.App(AST.Identifier(Constant2(c), _, true), x, _), y, _) =>
+        case App(App(Identifier(Constant2(c), _, true), x, _), y, _) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY))
           } yield result
 
-        case AST.App(AST.App(AST.App(AST.Identifier(Constant3(c), _, true), x, _), y, _), z, _) =>
-          c match {
+        // App 3
+        case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, _) =>
+          for {
+            compiledX <- compile[M](x)
+            compiledY <- compile[M](y)
+            compiledZ <- compile[M](z)
+            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ))
+          } yield result
 
-            case Constant3.If =>
-              (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
-                IfThen(compiledX.asExpr, compiledY, compiledZ.asExpr)
-              }
-
-            case Constant3.InRect =>
-              (x, y, z).compileN[M] { (compiledTl, compiledBr, compiledP) =>
-                InRect(compiledTl.asExpr[Point], compiledBr.asExpr[Point], compiledP.asExpr[Point])
-              }
-
-            case Constant3.Solve2 =>
-              K.fromEither(Type.vectorSpace(y.tpe.t)).flatMap { vs =>
-                (x, y, z).compileN[M] { (compiledX, compiledY, compiledZ) =>
-                  solve2[y.Out](
-                    compiledX.asExprF[y.Out => y.Out => y.Out],
-                    compiledY.asExpr[y.Out],
-                    compiledZ.asExpr[y.Out]
-                  )(vs)
-                }
-              }
-
-            case Constant3.ZipWith =>
-              (x, y, z).compileN[M] { (compiledA, compiledB, compiledF) =>
-                zipWith(compiledA.asExprF, compiledB.asExprF, compiledF.asExpr[Any => Any => Any])
-              }
-
-            case Constant3.UniformDiscrete =>
-              (x, y, z).compileN[M] { (compiledFrom, compiledTo, compiledStep) =>
-                UniformDiscrete(
-                  compiledFrom.asExpr,
-                  compiledTo.asExpr,
-                  compiledStep.asExpr
-                )
-              }
-          }
-
-        case AST.App(f, x, _) =>
+        case App(f, x, _) =>
           (f, x).compileN[M] { (compiledF, compiledX) =>
-            App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
+            Expr.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
           }
 
         case _ =>
@@ -161,13 +127,6 @@ trait CompilerModule[F[_]] {
     implicit class Tuple2Ops(ts: (AST, AST)) {
       def compileN[M[_]](f: (Expr[_], Expr[_]) => Expr[_])(implicit E: MonadError[M, String]): Result[M, Expr[_]] =
         (compile[M](ts._1), compile[M](ts._2)).mapN(f)
-    }
-
-    implicit class Tuple3Ops(ts: (AST, AST, AST)) {
-      def compileN[M[_]](
-        f: (Expr[_], Expr[_], Expr[_]) => Expr[_]
-      )(implicit E: MonadError[M, String]): Result[M, Expr[_]] =
-        (compile[M](ts._1), compile[M](ts._2), compile[M](ts._3)).mapN(f)
     }
 
     implicit class CastingOps(value: Any) {
