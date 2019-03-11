@@ -5,7 +5,6 @@ import cats.data.Kleisli
 import cats.implicits._
 import evolution.data.ExpressionModule
 
-// TODO Random extensions and self types, please to do something better
 trait CompilerModule[F[_]] {
   self: ExpressionModule[F] with ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
 

@@ -15,4 +15,5 @@ trait LanguageSpec[F[_]]
     with TypesModule[F]
     with ParserModule[F]
     with ASTArbitraries[F]
-    with ASTModule[F] {}
+    with ASTModule[F]
+    with InstancesModule[F]

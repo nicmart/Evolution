@@ -71,6 +71,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "core",
     inThisBuild(commonSettings),
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
       "org.typelevel" %%% "cats-core" % "1.3.1",
