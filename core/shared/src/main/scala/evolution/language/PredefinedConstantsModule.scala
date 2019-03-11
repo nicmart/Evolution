@@ -128,7 +128,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   }
 
   abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Constant2(qualifiedType) {
-
     override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
       compilePlain(x.value, y.value).pure[M].widen
 
@@ -137,24 +136,51 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
   object Constant2 extends Enum[Constant2] {
     val values: immutable.IndexedSeq[Constant2] = findValues
+    val liftables: List[Constant2 with Liftable] = List(Point, Polar, Add, Multiply)
 
-    case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
+    sealed trait Liftable {
+      def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+        implicit M: MonadError[M, String]): M[Expr[F[_]]]
+    }
+
+    case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) with Liftable {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
+      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+        implicit M: MonadError[M, String]): M[Expr[F[_]]] =
+        liftedPoint(x.value.asExprF, y.value.asExprF).asExpr[F[_]].pure[M]
     }
 
-    case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
+    case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) with Liftable {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = polar(x.asExpr, y.asExpr)
+      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+        implicit M: MonadError[M, String]): M[Expr[F[_]]] =
+        liftedPolar(x.value.asExprF, y.value.asExprF).asExpr[F[_]].pure[M]
     }
 
-    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
+    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) with Liftable {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
         M.fromEither(Type.vectorSpace(y.tpe)).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr)(vs))
+
+      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+        implicit M: MonadError[M, String]): M[Expr[F[_]]] =
+        for {
+          tpe <- M.fromEither(Type.unwrapF(y.tpe))
+          vs <- M.fromEither(Type.vectorSpace(tpe))
+        } yield liftedMult(x.asExprF, y.asExprF)(vs).asExpr[F[_]]
     }
 
     case object Add
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
+        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T")))
+        with Liftable {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(implicit M: MonadError[M, String]): M[Expr[_]] =
         M.fromEither(Type.group(y.tpe)).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr)(vs))
+      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+        implicit M: MonadError[M, String]): M[Expr[F[_]]] =
+        for {
+          tpe <- M.fromEither(Type.unwrapF(x.tpe))
+          sg <- M.fromEither(Type.group(tpe))
+        } yield liftedAdd(x.value.asExprF, y.value.asExprF)(sg).asExpr[F[_]]
+
     }
 
     case object Minus
@@ -282,6 +308,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     def unapply(s: String): Option[Constant2] = withNameInsensitiveOption(s)
+  }
+
+  object Constant2Liftable {
+    def unapply(s: String): Option[Constant2 with Constant2.Liftable] = Constant2.liftables.find(_.entryName == s)
   }
 
   abstract sealed class Constant3(qualifiedType: Qualified[Type])
