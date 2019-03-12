@@ -6,7 +6,7 @@ import cats.mtl.implicits._
 trait InstancesModule[F[_]] { self: TyperModule[F] =>
   import Typer._
   type TypeInferenceResult[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], BindingContext, T]
-  implicit val typeInference: TypeInf[TypeInferenceResult] = TypeInf.instance[TypeInferenceResult]
+  implicit val typeInference: TypeInference[TypeInferenceResult] = instance[TypeInferenceResult]
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
     def evaluateEither: Either[String, T] =

@@ -3,16 +3,14 @@ import cats.Id
 import cats.implicits._
 
 class TyperModuleSpec extends LanguageSpec[Id] {
-  import Typer._, Typer.TypeInference._, TypeClasses._
+  import Typer._, TypeClasses._
 
   "The typer" - {
     "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
-          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X")))
-        //assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate shouldBe 1
-//          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints.empty
-//            .withPredicate(Predicate("Num", List(Type.Var("X"))))
+          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints.empty
+            .withPredicate(Predicate("Num", List(Type.Var("X"))))
         }
       }
 
