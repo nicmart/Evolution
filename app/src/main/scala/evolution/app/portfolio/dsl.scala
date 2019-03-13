@@ -8,7 +8,8 @@ import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.geometry.Point
-import evolution.language.FullModule
+import cats.implicits._
+import evolution.language.{ FullModule, InstancesModule }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
@@ -16,12 +17,14 @@ import japgolly.scalajs.react.{ Callback, PropsChildren }
 
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
+
   val name = "drawing dsl"
 
   private val predefinedVars = List("left", "bottom", "right", "top")
-  private val module = new FullModule[EvoRepr]
+  private val module = new FullModule[EvoRepr] with InstancesModule[EvoRepr]
   private val initialVarContext = new module.VarContext(predefinedVars)
-  import module.Type
+  import module.{ Type, typeInference, TypeInferenceResult }
+  import module.TypeInferenceOps
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
   // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
@@ -31,8 +34,9 @@ object dsl extends DrawingDefinition[Point] {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
         module
-          .parse[Expr](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
+          .parse[Expr, TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
           .map(_.asInstanceOf[Expr[EvoRepr[Point]]])
+          .evaluateEither
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
   }

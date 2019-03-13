@@ -6,12 +6,12 @@ import fastparse.noApi._
 
 trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] =>
 
-  def parse(astString: String): Either[String, AST] =
-    Parsers.parser
-      .parse(astString)
-      .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))
-
   object Parsers {
+    def parse(astString: String): Either[String, AST] =
+      Parsers.parser
+        .parse(astString)
+        .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))
+
     val parser: Parser[AST] =
       P(whitespaces ~ ast ~ End)
 
@@ -175,14 +175,14 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     def contextualize(interpolation: StaticInterpolation) = {
       val lit @ Literal(_, astString) = interpolation.parts.head
-      if (parse(astString).isLeft)
+      if (Parsers.parse(astString).isLeft)
         interpolation.abort(lit, 0, "not a valid URL")
 
       Nil
     }
 
     def evaluate(interpolation: RuntimeInterpolation): AST =
-      parse(interpolation.literals.head).right.get
+      Parsers.parse(interpolation.literals.head).right.get
   }
 
   implicit class ASTStringContext(sc: StringContext) {
