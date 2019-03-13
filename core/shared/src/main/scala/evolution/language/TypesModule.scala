@@ -1,10 +1,11 @@
 package evolution.language
-import cats.{ Eq, Group }
+import cats.{ Applicative, Eq, Group }
 import evolution.geometry
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
 import cats.implicits._
 import cats.kernel.Order
+import cats.mtl.FunctorRaise
 
 trait TypesModule[F[_]] {
 
@@ -35,45 +36,45 @@ trait TypesModule[F[_]] {
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
 
     // TODO can we do better thant this?
-    def group(t: Type): Either[String, Group[t.Out]] = {
+    def group[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Group[t.Out]] = {
       t match {
-        case Type.Integer => Right(Group[Int])
-        case Type.Dbl     => Right(Group[Double])
-        case Type.Point   => Right(Group[Point])
-        case _            => Left(s"Unable to find a group for type $t")
+        case Type.Integer => Group[Int].pure[M]
+        case Type.Dbl     => Group[Double].pure[M]
+        case Type.Point   => Group[Point].pure[M]
+        case _            => E.raise(s"Unable to find a group for type $t")
       }
-    }.asInstanceOf[Either[String, Group[t.Out]]]
+    }.asInstanceOf[M[Group[t.Out]]]
 
-    def vectorSpace(t: Type): Either[String, VectorSpace[t.Out]] = {
+    def vectorSpace[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[VectorSpace[t.Out]] = {
       t match {
-        case Type.Integer => Right(VectorSpace[Int])
-        case Type.Dbl     => Right(VectorSpace[Double])
-        case Type.Point   => Right(VectorSpace[Point])
-        case _            => Left(s"Unable to find a vector space for type $t")
+        case Type.Integer => VectorSpace[Int].pure[M]
+        case Type.Dbl     => VectorSpace[Double].pure[M]
+        case Type.Point   => VectorSpace[Point].pure[M]
+        case _            => E.raise(s"Unable to find a vector space for type $t")
       }
-    }.asInstanceOf[Either[String, VectorSpace[t.Out]]]
+    }.asInstanceOf[M[VectorSpace[t.Out]]]
 
-    def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
+    def eqTypeClass[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Eq[t.Out]] = {
       t match {
-        case Type.Integer => Right(Eq[Int])
-        case Type.Dbl     => Right(Eq[Double])
-        case Type.Point   => Right(Eq[Point])
-        case Type.Bool    => Right(Eq[Boolean])
-        case _            => Left(s"Unable to find an eq typeclass for type $t")
+        case Type.Integer => Eq[Int].pure[M]
+        case Type.Dbl     => Eq[Double].pure[M]
+        case Type.Point   => Eq[Point].pure[M]
+        case Type.Bool    => Eq[Boolean].pure[M]
+        case _            => E.raise(s"Unable to find an eq typeclass for type $t")
       }
-    }.asInstanceOf[Either[String, Eq[t.Out]]]
+    }.asInstanceOf[M[Eq[t.Out]]]
 
-    def order(t: Type): Either[String, Order[t.Out]] = {
+    def order[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Order[t.Out]] = {
       t match {
-        case Type.Integer => Right(Order[Int])
-        case Type.Dbl     => Right(Order[Double])
-        case _            => Left(s"Unable to find an eq typeclass for type $t")
+        case Type.Integer => Order[Int].pure[M]
+        case Type.Dbl     => Order[Double].pure[M]
+        case _            => E.raise(s"Unable to find an eq typeclass for type $t")
       }
-    }.asInstanceOf[Either[String, Order[t.Out]]]
+    }.asInstanceOf[M[Order[t.Out]]]
 
-    def unwrapF(t: Type): Either[String, Type] = t match {
-      case Type.Evo(inner) => Right(inner)
-      case _               => Left(s"Type $t is not an Evolution type")
+    def unwrapF[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
+      case Type.Evo(inner) => inner.pure[M]
+      case _               => E.raise(s"Type $t is not an Evolution type")
     }
   }
 

@@ -1,6 +1,7 @@
 package evolution.language
 import cats.MonadError
 import cats.implicits._
+import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import evolution.data.ExpressionModule
 
@@ -12,36 +13,39 @@ class FullModule[F[_]]
     with TyperModule[F]
     with ASTModule[F]
     with PredefinedConstantsModule[F]
-    with TypesModule[F]
-    with InstancesModule[F] {
+    with TypesModule[F] {
 
-  def parse[R[_]](
+  def parse[R[_], M[_]](
     serialisedExpr: String,
     expectedType: Type,
     ctx: VarContext
-  ): Either[String, R[expectedType.Out]] = {
+  )(implicit M: Typer.TypeInference[M]): M[R[expectedType.Out]] = {
+
+    import Typer.TypeInferenceInstances._
 
     println("Start Compilation")
 
-    val parsed: Either[String, AST] =
+    val parsed: M[AST] =
       Parsers.parser
         .parse(serialisedExpr)
-        .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))
+        .fold(
+          (_, failIndex, extra) => s"Failed at $failIndex: ${extra.traced.trace}".raise[M, AST],
+          (expr, _) => expr.pure[M])
 
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      exprAndConstraints <- Typer.assignVarsAndFindConstraints(expr).evaluateEither
+      exprAndConstraints <- Typer.assignVarsAndFindConstraints(expr)
       (exprWithTypeVars, constraints) = exprAndConstraints
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe.t))
-      unification <- Typer.unify(constraintsWithExpectedType)
+      unification <- Typer.unify[M](constraintsWithExpectedType)
       _ = println("Done: unification")
       _ <- Typer.checkPredicates(unification.substitutedPredicates)
       _ = println(s"Checked Predicates: ${unification.substitutedPredicates} on $unification")
       typedExpr = unification.substitution.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
-      result <- Compiler.compile[Either[String, ?]](typedExpr).run(ctx)
+      result <- Compiler.compile[M](typedExpr).run(ctx)
       _ = println("Done: compilation")
     } yield result.asInstanceOf[R[expectedType.Out]]
   }

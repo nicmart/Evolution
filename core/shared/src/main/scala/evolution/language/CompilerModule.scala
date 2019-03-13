@@ -1,8 +1,10 @@
 package evolution.language
 
-import cats.MonadError
-import cats.data.Kleisli
+import cats.{ Functor, Monad, MonadError }
+import cats.data.{ Kleisli, ReaderT }
 import cats.implicits._
+import cats.mtl.implicits._
+import cats.mtl.FunctorRaise
 import evolution.data.ExpressionModule
 
 trait CompilerModule[F[_]] {
@@ -15,9 +17,13 @@ trait CompilerModule[F[_]] {
 
   object Compiler {
 
-    def compile[M[_]](expr: AST)(implicit M: MonadError[M, String]): Result[M, Expr[expr.Out]] = {
+    def compile[M[_]](expr: AST)(implicit E: FunctorRaise[M, String], M: Monad[M]): Result[M, Expr[expr.Out]] = {
       type K[T] = Result[M, T]
-      val K = MonadError[K, String]
+
+      implicit val KE: FunctorRaise[K, String] = new FunctorRaise[K, String] {
+        override val functor: Functor[K] = Functor[K]
+        override def raise[A](e: String): K[A] = Kleisli(_ => E.raise[A](e))
+      }
 
       def withVar[A](name: String)(ka: K[A]): K[A] = Kleisli.local[M, A, VarContext](_.push(name))(ka)
       def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
@@ -26,7 +32,7 @@ trait CompilerModule[F[_]] {
         case Identifier(name, tpe, false) =>
           varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
             if (ctx.has(name)) (Expr.Var[expr.Out](name): Expr[expr.Out]).pure[K]
-            else K.raiseError(s"Variable $name is not defined for identifier $expr")
+            else KE.raise(s"Variable $name is not defined for identifier $expr")
           }
 
         case Lambda(varName, body, tpe) =>
@@ -51,7 +57,7 @@ trait CompilerModule[F[_]] {
 
         // Arity 0 identifiers
         case fc @ Identifier(id, _, _) =>
-          s"Constant $id is not supported as first class value".raiseError[K, Expr[Any]]
+          s"Constant $id is not supported as first class value".raise[K, Expr[Any]]
 
         // Arity 1 identifiers
         case App(Identifier(Constant1(c), _, true), x, _) =>
@@ -94,7 +100,7 @@ trait CompilerModule[F[_]] {
           }
 
         case _ =>
-          M.raiseError(s"Invalid AST for expression $expr")
+          KE.raise(s"Invalid AST for expression $expr")
       }
     }.asInstanceOf[Result[M, Expr[expr.Out]]]
 

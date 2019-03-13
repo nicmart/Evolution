@@ -1,10 +1,9 @@
 package evolution.language
 
-import cats.{ Monad, MonadError }
-import cats.data.{ ReaderT, State, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
-import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, MonadState }
+import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
+import cats.{ Applicative, Monad }
 
 trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
   import AST._
@@ -13,20 +12,20 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
   object Typer {
 
     trait TypeInference[M[_]] {
-      def E: MonadError[M, String]
+      def E: FunctorRaise[M, String]
       def S: MonadState[M, TypeInference.State]
       def A: ApplicativeAsk[M, BindingContext]
       def L: ApplicativeLocal[M, BindingContext]
     }
 
-    implicit def instance[M[_]](
+    def instance[M[_]](
       implicit
-      me: MonadError[M, String],
+      me: FunctorRaise[M, String],
       ms: MonadState[M, TypeInference.State],
       aa: ApplicativeAsk[M, BindingContext],
       al: ApplicativeLocal[M, BindingContext]): TypeInference[M] =
       new TypeInference[M] {
-        override def E: MonadError[M, String] = me
+        override def E: FunctorRaise[M, String] = me
         override def S: MonadState[M, TypeInference.State] = ms
         override def A: ApplicativeAsk[M, BindingContext] = aa
         override def L: ApplicativeLocal[M, BindingContext] = al
@@ -38,7 +37,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
 
       def apply[M[_]](implicit ti: TypeInference[M]): TypeInference[M] = ti
 
-      implicit def monad[M[_]](implicit ti: TypeInference[M]): Monad[M] = ti.E
+      implicit def monad[M[_]](implicit ti: TypeInference[M]): Monad[M] = ti.S.monad
 
       def newVar[M[_]](implicit TI: TypeInference[M]): M[Qualified[Type]] = for {
         state <- TI.S.get
@@ -56,12 +55,20 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
         } yield t
     }
 
+    object TypeInferenceInstances {
+      implicit def monadInstance[M[_]](implicit M: TypeInference[M]): Monad[M] = M.S.monad
+      implicit def functorRaise[M[_]](implicit M: TypeInference[M]): FunctorRaise[M, String] = M.E
+      implicit def monadState[M[_]](implicit M: TypeInference[M]): MonadState[M, TypeInference.State] = M.S
+      implicit def applicativeAsk[M[_]](implicit M: TypeInference[M]): ApplicativeAsk[M, BindingContext] = M.A
+      implicit def applicativeLocal[M[_]](implicit M: TypeInference[M]): ApplicativeLocal[M, BindingContext] = M.L
+    }
+
     type BindingContext = Map[String, Binding]
 
     implicit class BindingContextOps[M[_]](ctx: BindingContext) {
       def getBinding(name: String)(implicit TI: TypeInference[M]): M[Identifier] = {
         ctx.get(name) match {
-          case None      => TI.E.raiseError("Unable to find type binding for variable $name in ctx $ctx")
+          case None      => TI.E.raise("Unable to find type binding for variable $name in ctx $ctx")
           case Some(tis) => tis.get[M]
         }
       }
@@ -150,7 +157,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       val empty = Unification(Substitution.empty, Nil)
     }
 
-    def unify[M[_]](constraints: Constraints)(implicit M: MonadError[M, String]): M[Unification] =
+    def unify[M[_]](constraints: Constraints)(implicit R: FunctorRaise[M, String], A: Applicative[M]): M[Unification] =
       constraints.constraints match {
         case Nil => Unification.empty.pure[M]
         case head :: tail =>
@@ -169,16 +176,17 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
             case Constraint.Eq(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
               unify[M](Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
             case Constraint.Pred(p) => unify[M](Constraints(tail)).map(_.withPredicate(p))
-            case _                  => s"$head constraint can't be unified".raiseError[M, Unification]
+            case _                  => s"$head constraint can't be unified".raise[M, Unification]
           }
       }
 
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
-    def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: MonadError[M, String]): M[Unit] = {
+    def checkPredicates[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Unit] = {
+      import TypeInferenceInstances._
       val predicatesWithoutVars = predicates.filter(p => p.types.flatMap(typeVars).isEmpty)
       val invalidPredicates = predicatesWithoutVars.filter(p => !instances.contains(p))
-      if (invalidPredicates.isEmpty) M.pure(())
-      else M.raiseError(s"Not found instances for predicates $invalidPredicates")
+      if (invalidPredicates.isEmpty) ().pure[M]
+      else s"Not found instances for predicates $invalidPredicates".raise[M, Unit]
     }
 
     private def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =
@@ -253,13 +261,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
       def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
       def compose(s2: Substitution): Substitution = Substitution(substitute(s2).assignments ++ assignments)
-      def merge[M[_]](s2: Substitution)(implicit M: MonadError[M, String]): M[Substitution] = {
+      def merge[M[_]](s2: Substitution)(implicit M: FunctorRaise[M, String], A: Applicative[M]): M[Substitution] = {
         val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
         val agree = commonVars.forall { variable =>
           substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
         }
-        if (agree) M.pure(Substitution(assignments ++ s2.assignments))
-        else M.raiseError("Merge has failed")
+        if (agree) Substitution(assignments ++ s2.assignments).pure[M]
+        else M.raise("Merge has failed")
       }
     }
 
