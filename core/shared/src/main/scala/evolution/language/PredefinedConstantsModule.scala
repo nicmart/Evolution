@@ -193,7 +193,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         for {
           tpe <- Type.unwrapF[M](y.tpe)
           vs <- Type.vectorSpace[M](tpe)
-        } yield liftedMult(x.asExprF, y.asExprF)(vs).asExpr[F[_]]
+        } yield liftedMult(x.value.asExprF, y.value.asExprF)(vs).asExpr[F[_]]
     }
 
     case object Add
@@ -395,9 +395,9 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.vectorSpace[M](y.tpe).map { vs =>
           solve2[y.tpe.Out](
-            x.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
-            y.asExpr[y.tpe.Out],
-            z.asExpr[y.tpe.Out]
+            x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
+            y.value.asExpr[y.tpe.Out],
+            z.value.asExpr[y.tpe.Out]
           )(vs)
         }
     }
@@ -426,7 +426,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     val nonFunctions0: List[Constant] = values.toList.filter(!functions0.contains(_))
   }
 
-  implicit class CastingOps(value: Any) {
+  implicit class CastingOps(value: Expr[_]) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
     def asExprF[T]: Expr[F[T]] = value.asInstanceOf[Expr[F[T]]]
   }
