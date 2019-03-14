@@ -56,7 +56,6 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
 
     def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
     def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)
-    def Lift(ast: AST): AST = App(Identifier(Constant1.Lift.entryName), ast)
     def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
     def App3(f: AST, x: AST, y: AST, z: AST): AST = App(App(App(f, x), y), z)
 

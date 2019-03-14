@@ -63,20 +63,6 @@ trait CompilerModule[F[_]] {
         case App(Identifier(Constant1(c), _, true), x, _) =>
           compile[M](x).flatMap(compiledX => c.compile[K](Typed(x.tpe.t, compiledX)))
 
-        // Arity 2 lifted identifiers
-        case App(
-            App(
-              App(Identifier(Constant1(Constant1.Lift), _, true), Identifier(Constant2Liftable(c), _, true), _),
-              x,
-              _),
-            y,
-            _) =>
-          for {
-            compiledX <- compile[M](x)
-            compiledY <- compile[M](y)
-            result <- c.compileLifted[K](Typed(x.tpe.t, compiledX.asExpr[F[_]]), Typed(y.tpe.t, compiledY.asExpr[F[_]]))
-          } yield result
-
         // Arity 2 identifiers
         case App(App(Identifier(Constant2(c), _, true), x, _), y, _) =>
           for {

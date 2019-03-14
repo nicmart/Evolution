@@ -87,9 +87,9 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
           unsafeCompile(AST.App2(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
       }
 
-      "liftings" - {
+      "constant" - {
         "of numbers" in {
-          unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Lift), AST.Number("1"))) shouldBe constant(Dbl(1))
+          unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Constant), AST.Number("1"))) shouldBe constant(Dbl(1))
         }
       }
     }

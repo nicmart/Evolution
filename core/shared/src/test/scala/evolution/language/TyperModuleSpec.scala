@@ -81,8 +81,8 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
       }
 
-      "@1" in {
-        val untyped = AST.Lift(AST.Number("1", Qualified(Type.Dbl)))
+      "@(1)" in {
+        val untyped = AST.App(AST.Const(Constant1.Constant), AST.Number("1", Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
@@ -92,12 +92,46 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         isPrimitive shouldBe true
       }
 
-      "@point(@1, @2)" in {
+      "@point(@(1), @(2))" in {
         val untyped =
-          AST.App2(AST.Lift(AST.Const(Constant2.Point)), AST.Lift(AST.Number("1")), AST.Lift(AST.Number("2")))
+          AST.App2(
+            AST.Const(Constant2.LiftedPoint),
+            AST.App(AST.Const(Constant1.Constant), AST.Number("1")),
+            AST.App(AST.Const(Constant1.Constant), AST.Number("2"))
+          )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Point)
+      }
+
+      "@((x -> 2 * x)(1))" in {
+        val untyped =
+          AST.App(
+            AST.Const(Constant1.Constant),
+            AST.App(
+              AST.Lambda("x", AST.App2(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x"))),
+              AST.App2(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
+            )
+          )
+
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
+        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val typedExpr = substitution.substitute(expr)
+        typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
+      }
+
+      "solve1(@(x -> x), point(0, 0))" in {
+        val untyped =
+          AST.App2(
+            AST.Const(Constant2.Solve1),
+            AST.App(AST.Const(Constant1.Constant), AST.Lambda("x", AST.Identifier("x"))),
+            AST.App2(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
+          )
+
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
+        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val typedExpr = substitution.substitute(expr)
+        typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
       }
 
       "predicates" - {

@@ -42,14 +42,14 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
         ),
         PrecedenceGroup(
           "+" -> AST.Identifier(Constant2.Add.entryName),
-          "@+" -> AST.App(AST.Identifier(Constant1.Lift.entryName), AST.Identifier(Constant2.Add.entryName)),
+          "@+" -> AST.Identifier(Constant2.LiftedAdd.entryName),
           "-" -> AST.Identifier(Constant2.Minus.entryName)
         ),
         PrecedenceGroup(
           "*" -> AST.Identifier(Constant2.Multiply.entryName),
+          "@*" -> AST.Identifier(Constant2.LiftedMultiply.entryName),
           "/" -> AST.Identifier(Constant2.Div.entryName),
           "%" -> AST.Identifier(Constant2.Mod.entryName),
-          "@*" -> AST.App(AST.Identifier(Constant1.Lift.entryName), AST.Identifier(Constant2.Multiply.entryName))
         ),
         PrecedenceGroup(
           "^" -> AST.Identifier(Constant2.Exp.entryName)
@@ -58,7 +58,9 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     )
 
     private lazy val factor: Parser[AST] =
-      P(("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | let | variable | lifted | list)
+      P(
+        ("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | let |
+          variable | list)
 
     private lazy val appOrFactor: Parser[AST] =
       P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
@@ -108,10 +110,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     private lazy val nonEmptyArgs: Parser[List[AST]] =
       P(ast ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
-    private lazy val identifier: Parser[String] = (alpha ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
-
-    private lazy val lifted: Parser[AST] =
-      P("@" ~/ factor).map(ast => AST.App(AST.Identifier(Constant1.Lift.entryName), ast))
+    private lazy val identifier: Parser[String] =
+      ((alpha | CharIn(Seq('@'))) ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
 
     private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)

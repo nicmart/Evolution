@@ -206,10 +206,10 @@ class ParserModuleSpec extends LanguageSpec[Id] {
           }
         }
 
-        "@expr(a, b)" in {
-          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"@$expr($a, $b)") shouldBe AST.App2(
-              AST.App(AST.Const(Constant1.Lift), unsafeParse(expr)),
+        "@point(a, b)" in {
+          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+            unsafeParse(s"@point($a, $b)") shouldBe AST.App2(
+              AST.Const(Constant2.LiftedPoint),
               unsafeParse(a),
               unsafeParse(b))
           }
@@ -218,15 +218,15 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         "@(expr(a, b))" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
             unsafeParse(s"@($expr($a, $b))") shouldBe AST.App(
-              AST.Const(Constant1.Lift),
+              AST.Const(Constant1.Constant),
               AST.App2(unsafeParse(expr), unsafeParse(a), unsafeParse(b)))
           }
         }
 
         "@n" in {
           forAll(arbitrary[Double]) { d =>
-            unsafeParse(s"@$d") shouldBe
-              AST.App(AST.Const(Constant1.Lift), unsafeParse(d.toString))
+            unsafeParse(s"@($d)") shouldBe
+              AST.App(AST.Const(Constant1.Constant), unsafeParse(d.toString))
           }
         }
 

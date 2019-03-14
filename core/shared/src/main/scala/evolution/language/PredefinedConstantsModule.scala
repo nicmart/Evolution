@@ -107,16 +107,13 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Not(x.asExpr)
     }
 
-    case object Lift extends Constant1Plain(Qualified(Var("T"))) {
+    case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
+      override def entryName: String = "@"
       override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
     }
 
     case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
-    }
-
-    case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
-      override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
     }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -142,39 +139,38 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
   object Constant2 extends Enum[Constant2] {
     val values: immutable.IndexedSeq[Constant2] = findValues
-    val liftables: List[Constant2 with Liftable] = List(Point, Polar, Add, Multiply)
 
-    sealed trait Liftable {
-      def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[F[_]]]
-    }
-
-    case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) with Liftable {
+    case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
-      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[F[_]]] =
-        liftedPoint(x.value.asExprF, y.value.asExprF).asExpr[F[_]].pure[M]
     }
 
-    case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) with Liftable {
+    case object LiftedPoint extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
+      override def entryName: String = "@point"
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+        liftedPoint(x.value.asExprF, y.value.asExprF).asExpr[F[_]]
+    }
+
+    case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = polar(x.asExpr, y.asExpr)
-      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[F[_]]] =
-        liftedPolar(x.value.asExprF, y.value.asExprF).asExpr[F[_]].pure[M]
     }
 
-    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) with Liftable {
+    case object LiftedPolar extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
+      override def entryName: String = "@polar"
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+        liftedPolar(x.value.asExprF, y.value.asExprF).asExpr[F[_]]
+    }
+
+    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
         E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.vectorSpace[M](y.tpe).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr)(vs))
+    }
 
-      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+    case object LiftedMultiply extends Constant2(Qualified(Evo(Dbl) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[F[_]]] =
+        E: FunctorRaise[M, String]): M[Expr[_]] =
         for {
           tpe <- Type.unwrapF[M](y.tpe)
           vs <- Type.vectorSpace[M](tpe)
@@ -182,20 +178,21 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Add
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T")))
-        with Liftable {
+        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
         E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.group[M](y.tpe).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr)(vs))
-      override def compileLifted[M[_]](x: Typed[Expr[F[_]]], y: Typed[Expr[F[_]]])(
+    }
+
+    case object LiftedAdd extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[F[_]]] =
+        E: FunctorRaise[M, String]): M[Expr[_]] =
         for {
           tpe <- Type.unwrapF[M](x.tpe)
           sg <- Type.group[M](tpe)
         } yield liftedAdd(x.value.asExprF, y.value.asExprF)(sg).asExpr[F[_]]
-
     }
 
     case object Minus
@@ -290,7 +287,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
         E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.vectorSpace[M](y.tpe).map(vs => integrate(x.value.asExpr, y.value.asExprF)(vs))
+        Type.vectorSpace[M](x.tpe).map(vs => integrate(x.value.asExpr, y.value.asExprF)(vs))
     }
 
     case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
@@ -344,10 +341,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     def unapply(s: String): Option[Constant2] = withNameInsensitiveOption(s)
-  }
-
-  object Constant2Liftable {
-    def unapply(s: String): Option[Constant2 with Constant2.Liftable] = Constant2.liftables.find(_.entryName == s)
   }
 
   abstract sealed class Constant3(qualifiedType: Qualified[Type])
