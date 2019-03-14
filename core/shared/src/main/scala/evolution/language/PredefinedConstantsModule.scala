@@ -21,20 +21,38 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       with EnumEntry
       with Lowercase {
 
-    def compile[M[_]](implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]]
+    def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]]
   }
 
   object Constant0 extends Enum[Constant0] {
     val values: immutable.IndexedSeq[Constant0] = findValues
 
     case object PI extends Constant0(Qualified(Dbl)) {
-      def compile[M[_]](implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+      def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.Dbl(Math.PI).pure[M].widen
     }
 
     case object Empty extends Constant0(Qualified(Var("T"))) {
-      def compile[M[_]](implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+      def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.Empty().pure[M].widen
+    }
+
+    case object Derive extends Constant0(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        for {
+          domain <- Type.domain[M](tpe.t)
+          inner <- Type.unwrapF[M](domain)
+          vs <- Type.vectorSpace[M](inner)
+        } yield derive(vs).asExpr[F[_] => F[_]]
+    }
+
+    case object Derive2 extends Constant0(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        for {
+          domain <- Type.domain[M](tpe.t)
+          inner <- Type.unwrapF[M](domain)
+          vs <- Type.vectorSpace[M](inner)
+        } yield derive2(vs).asExpr[F[_] => F[_]]
     }
 
     def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
@@ -111,22 +129,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
       override def entryName: String = "@"
       override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
-    }
-
-    case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          inner <- Type.unwrapF[M](x.tpe)
-          vs <- Type.vectorSpace[M](inner)
-        } yield Expr.App(derive(vs).asExpr[F[_] => F[_]], x.value.asExpr[F[_]])
-    }
-
-    case object Derive2 extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          inner <- Type.unwrapF[M](x.tpe)
-          vs <- Type.vectorSpace[M](inner)
-        } yield Expr.App(derive2(vs).asExpr[F[_] => F[_]], x.value.asExpr[F[_]])
     }
 
     case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {

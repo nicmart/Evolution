@@ -52,8 +52,8 @@ trait CompilerModule[F[_]] {
         case Bool(b, _) =>
           Expr.Bool(b).pure[K]
 
-        case Identifier(Constant0(c), _, true) =>
-          c.compile[K]
+        case Identifier(Constant0(c), tpe, true) =>
+          c.compile[K](tpe)
 
         // Arity 0 identifiers
         case Identifier(id, _, _) =>

@@ -76,6 +76,16 @@ trait TypesModule[F[_]] {
       case Type.Evo(inner) => inner.pure[M]
       case _               => E.raise(s"Type $t is not an Evolution type")
     }
+
+    def domain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
+      case Type.Arrow(from, to) => from.pure[M]
+      case _                    => E.raise(s"Type $t is not an Arrow type")
+    }
+
+    def codomain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
+      case Type.Arrow(from, to) => to.pure[M]
+      case _                    => E.raise(s"Type $t is not an Arrow type")
+    }
   }
 
   def lift(tpe: Type): Type = tpe match {
