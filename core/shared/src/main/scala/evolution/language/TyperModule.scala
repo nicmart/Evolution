@@ -48,9 +48,8 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       def getBinding[M[_]](name: String)(implicit TI: TypeInference[M]): M[Identifier] =
         TI.A.ask.flatMap(_.getBinding(name))
 
-      def pushFreshBinding[M[_], T](name: String)(t: M[T])(implicit TI: TypeInference[M]): M[T] =
+      def withVarBinding[M[_], T](name: String, qt: Qualified[Type])(t: M[T])(implicit TI: TypeInference[M]): M[T] =
         for {
-          qt <- newVar
           t <- TI.L.local(_.updated(name, Binding.Variable(name, qt)))(t)
         } yield t
     }
@@ -91,18 +90,18 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
             App(transformedF, transformedIn, t)
           }
 
+        // TODO here and in Let we compute constraints. That's because later on it is not possible to find the bindings attached to varName
         case Lambda(varName, lambdaBody, _) =>
-          pushFreshBinding(varName)(
-            for {
-              binding <- getBinding(varName)
-              b <- assignVars(lambdaBody)
-            } yield Lambda(varName, b, Qualified(binding.tpe.t =>: b.tpe.t))
-          )
+          newVar.flatMap(qt =>
+            withVarBinding(varName, qt) {
+              assignVars(lambdaBody).map(b => Lambda(varName, b, Qualified(qt.t =>: b.tpe.t)))
+          })
 
-        // TODO this is broken
-        case Let(varName, value, in, _) =>
-          (assignVars(value), pushFreshBinding(varName)(assignVars(in)), newVar).mapN { (tValue, tIn, tLet) =>
-            Let(varName, tValue, tIn, tLet)
+        case Let(varName, value, body, _) =>
+          assignVars(value).flatMap { valueWithVars =>
+            withVarBinding(varName, valueWithVars.tpe) {
+              assignVars(body).map(bodyWithVars => Let(varName, valueWithVars, bodyWithVars, bodyWithVars.tpe))
+            }
           }
 
         case Identifier(name, _, _) =>
