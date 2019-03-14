@@ -62,7 +62,7 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
       case Var(name) =>
         new Contextual[T] {
-          override def apply(ctx: Ctx): T = get(ctx, name).asInstanceOf[T]
+          override def apply(ctx: Ctx): T = get[Any](ctx, name).asInstanceOf[T]
         }
 
       case Let(name, value, e) =>
@@ -225,8 +225,8 @@ object InterpreterModule {
   object Out {
     def pure[T](t: T): Out[T] = Constant(t)
     def map[A, B](a: Out[A], f: A => B): Out[B] = a match {
-      case Constant(t)               => Constant(f(t))
-      case contextual: Contextual[_] => new Contextual[B] { override def apply(ctx: Ctx): B = f(contextual(ctx)) }
+      case Constant(t) => Constant(f(t))
+      case contextual  => new Contextual[B] { override def apply(ctx: Ctx): B = f(contextual(ctx)) }
     }
 
     def map2[A, B, C](a: Out[A], b: Out[B])(f: (A, B) => C): Out[C] =

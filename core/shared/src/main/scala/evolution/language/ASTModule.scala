@@ -1,10 +1,5 @@
 package evolution.language
 
-import enumeratum.EnumEntry.Lowercase
-import enumeratum.{ Enum, EnumEntry }
-
-import scala.collection.immutable
-
 trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =>
   import TypeClasses._
 
@@ -24,10 +19,10 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
     def withType(tpe: Type): AST = withType(Qualified(tpe))
 
     def children: List[AST] = this match {
-      case AST.Lambda(varName, expr, _)  => List(expr)
-      case AST.Let(varName, expr, in, _) => List(expr, in)
-      case AST.App(f, x, _)              => List(f, x)
-      case _                             => Nil
+      case AST.Lambda(_, expr, _)  => List(expr)
+      case AST.Let(_, expr, in, _) => List(expr, in)
+      case AST.App(f, x, _)        => List(f, x)
+      case _                       => Nil
     }
   }
 

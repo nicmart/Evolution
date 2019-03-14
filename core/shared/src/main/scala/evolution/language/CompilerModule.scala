@@ -1,10 +1,10 @@
 package evolution.language
 
-import cats.{ Functor, Monad, MonadError }
-import cats.data.{ Kleisli, ReaderT }
+import cats.data.Kleisli
 import cats.implicits._
-import cats.mtl.implicits._
 import cats.mtl.FunctorRaise
+import cats.mtl.implicits._
+import cats.{ Functor, Monad }
 import evolution.data.ExpressionModule
 
 trait CompilerModule[F[_]] {
@@ -29,16 +29,16 @@ trait CompilerModule[F[_]] {
       def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
       expr match {
-        case Identifier(name, tpe, false) =>
+        case Identifier(name, _, false) =>
           varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
             if (ctx.has(name)) (Expr.Var[expr.Out](name): Expr[expr.Out]).pure[K]
             else KE.raise(s"Variable $name is not defined for identifier $expr")
           }
 
-        case Lambda(varName, body, tpe) =>
+        case Lambda(varName, body, _) =>
           withVar(varName)(compile[M](body)).map(Expr.Lambda(varName, _))
 
-        case Let(varName, value, in, tpe) =>
+        case Let(varName, value, in, _) =>
           (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
             Expr.Let(varName, compiledValue, compiledIn)
           }
@@ -56,7 +56,7 @@ trait CompilerModule[F[_]] {
           c.compile[K]
 
         // Arity 0 identifiers
-        case fc @ Identifier(id, _, _) =>
+        case Identifier(id, _, _) =>
           s"Constant $id is not supported as first class value".raise[K, Expr[Any]]
 
         // Arity 1 identifiers

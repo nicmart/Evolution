@@ -1,17 +1,18 @@
 package evolution.language
-import cats.{ Applicative, Monad, MonadError }
-import enumeratum.{ Enum, EnumEntry }
-import enumeratum.EnumEntry.Lowercase
-import evolution.data.ExpressionModule
 import cats.implicits._
-import cats.mtl.implicits._
 import cats.mtl.FunctorRaise
+import cats.{ Applicative, Monad }
+import enumeratum.EnumEntry.Lowercase
+import enumeratum.{ Enum, EnumEntry }
+import evolution.data.ExpressionModule
 import evolution.geometry.Point
 
 import scala.collection.immutable
 
 trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] with DesugarModule[F] =>
-  import TypeClasses._, Type._, Desugarer._
+  import Desugarer._
+  import Type._
+  import TypeClasses._
 
   abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
 
@@ -303,7 +304,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],
         E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.unwrapF[M](x.tpe).map(innerType => concat(x.value.asExprF, y.value.asExprF))
+        Type.unwrapF[M](x.tpe).map(_ => concat(x.value.asExprF, y.value.asExprF))
     }
 
     case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {

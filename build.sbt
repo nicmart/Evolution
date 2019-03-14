@@ -56,8 +56,18 @@ lazy val commonSettings = List(
   organization := "nicmart",
   scalaVersion := "2.12.8", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
   version := "0.1.0-SNAPSHOT",
-  scalacOptions += "-Ypartial-unification",
-  Test / testOptions ++= List(
+  scalacOptions ++= Seq(
+    "-Ypartial-unification",
+    "-Ywarn-unused:implicits",           // Warn if an implicit parameter is unused.
+    "-Ywarn-unused:imports",             // Warn if an import selector is not referenced.
+    "-Ywarn-unused:locals",              // Warn if a local definition is unused.
+    "-Ywarn-unused:params",              // Warn if a value parameter is unused.
+    "-Ywarn-unused:patvars",             // Warn if a variable bound in a pattern is unused.
+    "-Ywarn-unused:privates",
+    "-Ywarn-inaccessible",
+    "-Ywarn-dead-code"
+  ),
+    Test / testOptions ++= List(
     Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
     Tests.Argument(TestFrameworks.ScalaTest, "-W", "1", "1")
   ),

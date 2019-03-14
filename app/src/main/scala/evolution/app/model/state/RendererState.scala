@@ -1,9 +1,7 @@
 package evolution.app.model.state
 
 import evolution.app.canvas.drawer._
-import evolution.app.codec.JsonCodec
 import evolution.app.model.context.DrawingContext
-import io.circe.Decoder.Result
 import io.circe._
 import io.circe.generic.auto._
 
@@ -35,16 +33,16 @@ final case class TrailSettings(
   }
 }
 
-sealed abstract class OffCanvasStrategy(name: String) {
+sealed abstract class OffCanvasStrategy {
   def decorate(pointDrawer: PointDrawer, ctx: DrawingContext): PointDrawer = this match {
     case InfiniteCanvas      => pointDrawer
     case TorusCanvas         => TorusPlaneDrawer(pointDrawer, ctx)
     case RealProjectivePlane => RealProjectivePlaneDrawer(pointDrawer, ctx)
   }
 }
-case object InfiniteCanvas extends OffCanvasStrategy("infinite")
-case object TorusCanvas extends OffCanvasStrategy("torus")
-case object RealProjectivePlane extends OffCanvasStrategy("real projective plane")
+case object InfiniteCanvas extends OffCanvasStrategy
+case object TorusCanvas extends OffCanvasStrategy
+case object RealProjectivePlane extends OffCanvasStrategy
 
 object RendererStateToFrameDrawer {
   def apply(f: (RendererState, DrawingContext) => PointDrawer)(

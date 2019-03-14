@@ -1,13 +1,13 @@
 package evolution.language
-import evolution.data.ExpressionModule
-import evolution.materialization.{ RNG, RNGRepr }
-import evolution.data.EvaluationContext._
 import cats.implicits._
+import evolution.data.EvaluationContext._
 import evolution.geometry.Point
+import evolution.materialization.{ RNG, RNGRepr }
 
 class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
+  import Desugarer._
   import Expr._
-  import Interpreter._, Desugarer._
+  import Interpreter._
 
   "Desugarer module" - {
     "should desugar" - {

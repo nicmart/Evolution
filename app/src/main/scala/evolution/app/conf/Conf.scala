@@ -86,7 +86,7 @@ object Conf {
     Page.component[DrawingConfig](drawingConfComponent, canvasComponent)
 
   lazy val appComponent: App.ReactComponent[DrawingConfig] =
-    App.component[DrawingConfig](points, canvasInitializer, initialRateCounter, pageComponent)
+    App.component[DrawingConfig](points, initialRateCounter, pageComponent)
 
   lazy val routingConfig: Routing[DrawingConfig] =
     new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageStringCodec)

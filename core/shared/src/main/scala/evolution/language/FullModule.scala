@@ -1,7 +1,5 @@
 package evolution.language
-import cats.MonadError
 import cats.implicits._
-import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import evolution.data.ExpressionModule
 

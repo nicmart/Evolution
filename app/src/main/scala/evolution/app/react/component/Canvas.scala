@@ -4,12 +4,12 @@ import cats.Eval
 import evolution.app.canvas.drawer.FrameDrawer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
-import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
+import evolution.geometry.Point
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
 import org.scalajs.dom
-import evolution.geometry.Point
 
 object Canvas {
 
@@ -25,9 +25,7 @@ object Canvas {
     running: Boolean
   )
 
-  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer)(
-    bs: BackendScope[Props, Unit]
-  ) {
+  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) {
     var running = false
     var stopPending = false
     var points: Iterator[Point] = Iterator.empty
@@ -92,7 +90,7 @@ object Canvas {
   def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
     ScalaComponent
       .builder[Props]("Canvas")
-      .backend[Backend](scope => new Backend(drawerFromState)(scope))
+      .backend[Backend](_ => new Backend(drawerFromState))
       .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
         s.backend.onMount(s.getDOMNode, s.props)

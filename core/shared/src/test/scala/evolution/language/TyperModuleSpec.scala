@@ -1,10 +1,11 @@
 package evolution.language
-import cats.{ Applicative, Id, Monad }
 import cats.implicits._
 import cats.mtl.implicits._
+import cats.{ Id, Monad }
 
 class TyperModuleSpec extends LanguageSpec[Id] {
-  import Typer._, TypeClasses._
+  import TypeClasses._
+  import Typer._
 
   // TODO this is to avoid ambiguities. Can we do better than that?
   implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
@@ -90,7 +91,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         val finalExpr = substitution.substitute(expr)
         finalExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
 
-        val AST.App(AST.Identifier(id, _, isPrimitive), x, _) = finalExpr
+        val AST.App(AST.Identifier(_, _, isPrimitive), _, _) = finalExpr
         isPrimitive shouldBe true
       }
 

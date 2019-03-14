@@ -3,23 +3,20 @@ package evolution.app.react.component.control
 import evolution.app.data.PointedSeq
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Select.Item
-import evolution.app.react.component.presentational.{ DoubleInputComponent, IntInputComponent, Select }
 import evolution.app.react.component.presentational.styled.FormField
-import japgolly.scalajs.react.{ Callback, ScalaComponent }
-import japgolly.scalajs.react.component.Scala.BackendScope
+import evolution.app.react.component.presentational.{ DoubleInputComponent, IntInputComponent, Select }
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.StateSnapshot
+import japgolly.scalajs.react.{ ScalaComponent, _ }
 
 object RenderingSettings {
 
   val offCanvasSettingComponent =
     Select.component[OffCanvasStrategy]
 
-  class Backend(bs: BackendScope[StateSnapshot[RendererState], Unit]) {
+  class Backend {
     def render(props: StateSnapshot[RendererState]): VdomElement = {
-      import props._
       <.div(
         ^.className := "dropdown is-hoverable",
         <.div(
@@ -110,7 +107,7 @@ object RenderingSettings {
   val component = ScalaComponent
     .builder[StateSnapshot[RendererState]]("rendering settings")
     .stateless
-    .backend[Backend](new Backend(_))
+    .backend[Backend](_ => new Backend)
     .render(scope => scope.backend.render(scope.props))
     .build
 }

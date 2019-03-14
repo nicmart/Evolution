@@ -7,8 +7,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object OptionalConfigComponent {
   def apply[T](component: ConfigComponent[T]): ConfigComponent[Option[T]] =
-    instance("optional config") { (props, children) =>
-      def tSnapshot(t: T): StateSnapshot[T] = props.zoomState(_ => t)(tt => opt => Some(tt))
+    instance("optional config") { (props, _) =>
+      def tSnapshot(t: T): StateSnapshot[T] = props.zoomState(_ => t)(tt => _ => Some(tt))
       props.value.fold(empty)(t => component(tSnapshot(t))())
     }
 }

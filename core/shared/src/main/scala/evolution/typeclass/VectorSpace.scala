@@ -1,6 +1,5 @@
 package evolution.typeclass
 import cats.Group
-import cats.kernel.Monoid
 import cats.instances.double._
 import cats.instances.int._
 

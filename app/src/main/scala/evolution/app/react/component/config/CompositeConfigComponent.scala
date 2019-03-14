@@ -12,14 +12,14 @@ object CompositeConfigComponent {
   def apply[T](drawings: PointedSeq[DrawingDefinition[T]]): ConfigComponent[CompositeDefinitionConfig[T]] = {
     val drawingListComponent = DrawingList.component[T]
 
-    instance("composite config component") { (props, children) =>
+    instance("composite config component") { (props, _) =>
       val config = props.value
       val innerComponent: ConfigComponent[config.InnerConfig] =
         config.definition.configComponent
       val innerConfig: config.InnerConfig = config.config
 
       val dropdown = FormField.component(FormField.Props("Drawing")) {
-        <.div(drawingListComponent(props.zoomState(cfg => drawings.select(cfg.definition)) { drawings => cfg =>
+        <.div(drawingListComponent(props.zoomState(cfg => drawings.select(cfg.definition)) { drawings => _ =>
           CompositeDefinitionConfig[T, drawings.selected.Config](drawings.selected.initialConfig, drawings.selected)
         }))
       }

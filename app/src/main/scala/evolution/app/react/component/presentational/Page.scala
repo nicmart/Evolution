@@ -8,7 +8,7 @@ import evolution.app.react.component.Canvas
 import evolution.app.react.component.config.ConfigComponent
 import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
 import evolution.geometry.Point
-import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -46,7 +46,7 @@ object Page {
   class Backend[C](
     drawingConfig: ConfigComponent[C],
     canvasComponent: Canvas.ReactComponent
-  )(bs: BackendScope[Props[C], Unit]) {
+  ) {
     def render(props: Props[C]): VdomElement = {
       <.div(
         Navbar.component(
@@ -138,7 +138,7 @@ object Page {
   ): Page.ReactComponent[C] =
     ScalaComponent
       .builder[Props[C]]("Page")
-      .backend[Backend[C]](scope => new Backend[C](drawingConfig, canvasComponent)(scope))
+      .backend[Backend[C]](_ => new Backend[C](drawingConfig, canvasComponent))
       .render(scope => scope.backend.render(scope.props))
       .build
 }

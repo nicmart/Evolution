@@ -1,5 +1,6 @@
 package evolution.app.portfolio
 
+import cats.implicits._
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
@@ -8,12 +9,11 @@ import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
 import evolution.geometry.Point
-import cats.implicits._
 import evolution.language.{ FullModule, InstancesModule }
+import japgolly.scalajs.react.{ Callback, PropsChildren }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ Callback, PropsChildren }
 
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
@@ -23,8 +23,7 @@ object dsl extends DrawingDefinition[Point] {
   private val predefinedVars = List("left", "bottom", "right", "top")
   private val module = new FullModule[EvoRepr] with InstancesModule[EvoRepr]
   private val initialVarContext = new module.VarContext(predefinedVars)
-  import module.{ Type, typeInference, TypeInferenceResult }
-  import module.TypeInferenceOps
+  import module.{ Type, TypeInferenceOps, TypeInferenceResult, typeInference }
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
   // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.

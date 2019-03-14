@@ -6,7 +6,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 object SeqConfigComponent {
   def apply[T](innerComponent: ConfigComponent[T]): ConfigComponent[Seq[T]] =
-    instance[Seq[T]]("sequence config") { (props, children) =>
+    instance[Seq[T]]("sequence config") { (props, _) =>
       val components = for {
         i <- props.value.indices
         snapshot = tSnapshot(props)(i)

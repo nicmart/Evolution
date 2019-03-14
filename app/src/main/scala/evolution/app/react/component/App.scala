@@ -35,7 +35,6 @@ object App {
 
   class Backend[C](
     points: (DrawingContext, DrawingState[C]) => Iterator[Point],
-    canvasInitializer: dom.html.Canvas => Unit,
     pageComponent: Page.ReactComponent[C]
   )(bs: BackendScope[StateSnapshot[PageState[C]], State[C]]) {
     def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State[C]): VdomElement = {
@@ -91,14 +90,13 @@ object App {
 
   def component[C](
     points: (DrawingContext, DrawingState[C]) => Iterator[Point],
-    canvasInitializer: dom.html.Canvas => Unit,
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent[C]
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState[C]]]("App")
       .initialStateCallback(initialLayout.map(layout => State[C](rateCounter, running = true, layout)))
-      .backend[Backend[C]](scope => new Backend[C](points, canvasInitializer, pageComponent)(scope))
+      .backend[Backend[C]](scope => new Backend[C](points, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
         CallbackTo.pure {

@@ -1,7 +1,7 @@
 package evolution.geometry
 
 import cats.Eq
-import cats.kernel.{ Group, Monoid }
+import cats.kernel.Group
 import evolution.typeclass.VectorSpace
 
 final case class Point(x: Double, y: Double) {

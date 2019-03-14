@@ -2,8 +2,8 @@ package evolution.app.react.pages
 
 import evolution.app.codec.JsonCodec
 import evolution.app.model.state.{ DrawingState, RendererState }
-import io.circe.{ Decoder, Encoder, ObjectEncoder }
 import io.circe.generic.auto._
+import io.circe.{ Decoder, Encoder }
 
 sealed trait MyPages[+C]
 
@@ -18,7 +18,7 @@ final case class PageState[C](
 
 object PageState {
   def jsonCodec[C](implicit drawingStateCodec: JsonCodec[DrawingState[C]]): JsonCodec[PageState[C]] = {
-    import JsonCodec._, RendererState._
+    import JsonCodec._
     implicit val decoder: Decoder[DrawingState[C]] = toCirceDecoder(drawingStateCodec)
     implicit val encoder: Encoder[DrawingState[C]] = toCirceEncoder(drawingStateCodec)
     JsonCodec[PageState[C]]

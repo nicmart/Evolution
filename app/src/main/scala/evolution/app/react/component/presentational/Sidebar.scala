@@ -22,7 +22,7 @@ object Sidebar {
     val empty: State = State(None)
   }
   class Backend(bs: BackendScope[Props, State]) {
-    def render(props: Props, state: State, children: PropsChildren): VdomElement = {
+    def render(props: Props, children: PropsChildren): VdomElement = {
       <.div(
         ^.classSet(
           "sidebar" -> true,
@@ -58,7 +58,7 @@ object Sidebar {
       .renderBackendWithChildren[Backend]
       .componentDidMount { s =>
         Callback(dom.window.onmousemove = (e: MouseEvent) => s.backend.onMouseDrag(e).runNow()) >>
-          Callback(dom.window.onmouseup = (e: MouseEvent) => s.setState(State.empty).runNow())
+          Callback(dom.window.onmouseup = (_: MouseEvent) => s.setState(State.empty).runNow())
       }
       .build
 }
