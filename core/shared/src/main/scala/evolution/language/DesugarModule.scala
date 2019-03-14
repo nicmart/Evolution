@@ -60,6 +60,34 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
 
+    def derive[X: VectorSpace]: Expr[F[X] => F[X]] =
+      Fix[F[X] => F[X]](
+        lambda2(
+          "self",
+          "fx",
+          MapCons[X, X](
+            Var("fx"),
+            lambda2(
+              "head1",
+              "tail1",
+              MapCons[X, X](
+                Var("tail1"),
+                lambda2(
+                  "head2",
+                  "tail2",
+                  Cons[X](
+                    minus(Var("head2"), Var("head1")),
+                    App[F[X], F[X]](Var("self"), Cons(Var("head2"), Var("tail2"))))
+                )
+              )
+            )
+          )
+        )
+      )
+
+    def derive2[X: VectorSpace]: Expr[F[X] => F[X]] =
+      Lambda("fx", App(derive[X], App(derive[X], Var("fx"))))
+
     def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
       App(mapLambda(f), fa)
 

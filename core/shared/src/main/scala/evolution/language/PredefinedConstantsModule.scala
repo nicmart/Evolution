@@ -113,6 +113,22 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compilePlain(x: Expr[_]): Expr[_] = constant(x.asExpr)
     }
 
+    case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        for {
+          inner <- Type.unwrapF[M](x.tpe)
+          vs <- Type.vectorSpace[M](inner)
+        } yield Expr.App(derive(vs).asExpr[F[_] => F[_]], x.value.asExpr[F[_]])
+    }
+
+    case object Derive2 extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compile[M[_]](x: Typed[Expr[_]])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        for {
+          inner <- Type.unwrapF[M](x.tpe)
+          vs <- Type.vectorSpace[M](inner)
+        } yield Expr.App(derive2(vs).asExpr[F[_] => F[_]], x.value.asExpr[F[_]])
+    }
+
     case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
     }
