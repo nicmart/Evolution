@@ -1,5 +1,6 @@
 package evolution.app.react.pages
 
+import com.github.ghik.silencer.silent
 import evolution.app.codec.JsonCodec
 import evolution.app.model.state.{ DrawingState, RendererState }
 import io.circe.generic.auto._
@@ -19,8 +20,8 @@ final case class PageState[C](
 object PageState {
   def jsonCodec[C](implicit drawingStateCodec: JsonCodec[DrawingState[C]]): JsonCodec[PageState[C]] = {
     import JsonCodec._
-    implicit val decoder: Decoder[DrawingState[C]] = toCirceDecoder(drawingStateCodec)
-    implicit val encoder: Encoder[DrawingState[C]] = toCirceEncoder(drawingStateCodec)
+    @silent implicit val decoder: Decoder[DrawingState[C]] = toCirceDecoder(drawingStateCodec)
+    @silent implicit val encoder: Encoder[DrawingState[C]] = toCirceEncoder(drawingStateCodec)
     JsonCodec[PageState[C]]
   }
 }

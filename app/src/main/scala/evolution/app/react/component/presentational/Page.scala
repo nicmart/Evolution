@@ -1,6 +1,7 @@
 package evolution.app.react.component.presentational
 
 import cats.Eval
+import com.github.ghik.silencer.silent
 import evolution.app.conf.Conf
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.react.component.App.LayoutState
@@ -145,12 +146,14 @@ object Page {
 
 @js.native
 @JSGlobal
+@silent
 class Canvas extends dom.html.Canvas {
   def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
 }
 
 @js.native
 @JSGlobal
+@silent
 class Anchor extends dom.html.Anchor {
   var download: String = js.native
 }

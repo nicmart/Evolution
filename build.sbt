@@ -73,7 +73,11 @@ lazy val commonSettings = List(
   ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
+  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary),
+  libraryDependencies ++= Seq(
+    compilerPlugin("com.github.ghik" %%% "silencer-plugin" % "1.3.1"),
+    "com.github.ghik" %%% "silencer-lib" % "1.3.1" % Provided
+  )
 )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)

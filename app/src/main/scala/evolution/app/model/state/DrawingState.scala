@@ -5,6 +5,7 @@ import evolution.app.model.definition.DrawingDefinition
 import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.auto._
 import io.circe.syntax._
+import com.github.ghik.silencer.silent
 
 import scala.util.Random
 
@@ -20,9 +21,11 @@ object DrawingState {
   def jsonCodec[T](definition: DrawingDefinition[T]): JsonCodec[DrawingState[definition.Config]] =
     new JsonCodec[DrawingState[definition.Config]] {
 
+      @silent
       implicit private val encoder: Encoder[definition.Config] =
         JsonCodec.toCirceEncoder(definition.configCodec)
 
+      @silent
       implicit private val decoder: Decoder[definition.Config] =
         JsonCodec.toCirceDecoder(definition.configCodec)
 

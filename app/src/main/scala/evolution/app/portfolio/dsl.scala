@@ -1,6 +1,7 @@
 package evolution.app.portfolio
 
 import cats.implicits._
+import com.github.ghik.silencer.silent
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
@@ -43,7 +44,7 @@ object dsl extends DrawingDefinition[Point] {
   case class State(message: Option[String])
 
   class Backend(bs: BackendScope[StateSnapshot[Config], State]) {
-    def render(snapshot: StateSnapshot[Config], state: State, children: PropsChildren): VdomElement = {
+    def render(snapshot: StateSnapshot[Config], state: State, @silent children: PropsChildren): VdomElement = {
       val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { serialized =>
         if (serialized == snapshot.value.serialisedExpr) Callback.empty
         else {
