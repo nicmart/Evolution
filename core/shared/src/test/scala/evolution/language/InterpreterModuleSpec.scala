@@ -58,6 +58,7 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
       case ((op, expected), a, b) =>
         interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
     }
+
   }
 
   val genBooleanLiteral: Gen[Bool] = Gen.oneOf(false, true).map(Bool)

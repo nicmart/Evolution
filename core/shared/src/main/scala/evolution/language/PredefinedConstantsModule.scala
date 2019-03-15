@@ -98,6 +98,14 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Sign(x.asExpr)
     }
 
+    case object Norm extends Constant1Plain(Qualified(Type.Point =>: Type.Dbl)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = norm(x.asExpr)
+    }
+
+    case object Versor extends Constant1Plain(Qualified(Type.Point =>: Type.Point)) {
+      override def compilePlain(x: Expr[_]): Expr[_] = versor(x.asExpr)
+    }
+
     case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
       override def compile[M[_]](x: Typed[Expr[_]])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         x.tpe match {
@@ -385,7 +393,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         extends Constant3Plain(
           Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))) {
       override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
-        zipWith(x.asExprF, y.asExprF, y.asExpr[Any => Any => Any])
+        zipWith(x.asExprF, y.asExprF, z.asExpr[Any => Any => Any])
     }
     case object Solve2
         extends Constant3(

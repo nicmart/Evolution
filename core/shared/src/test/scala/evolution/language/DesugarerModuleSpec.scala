@@ -4,6 +4,7 @@ import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 import evolution.materialization.{ RNG, RNGRepr }
 
+// TODO This is testing the desugaring through the interpreter.
 class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
   import Desugarer._
   import Expr._
@@ -39,6 +40,22 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
         )
 
         toList(expr) shouldBe List(1, 2)
+      }
+
+      "zipWith" in {
+        val expr = zipWith(
+          constant(Dbl(0)),
+          constant(Dbl(0)),
+          Lambda[Double, Double => Point]("x", Lambda[Double, Point]("y", Pnt(Var("x"), Var("y")))))
+        toList(expr).take(10) shouldBe List.fill(10)(Point(0, 0))
+      }
+
+      "versor" in {
+        toValue(versor(Pnt(Dbl(0), Dbl(2)))) shouldBe Point(0, 1)
+      }
+
+      "norm" in {
+        toValue(norm(Pnt(Dbl(3), Dbl(4)))) shouldBe 5
       }
     }
   }

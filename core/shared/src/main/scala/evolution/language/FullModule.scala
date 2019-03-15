@@ -40,10 +40,11 @@ class FullModule[F[_]]
       unification <- Typer.unify[M](constraintsWithExpectedType)
       _ = println("Done: unification")
       _ <- Typer.checkPredicates(unification.substitutedPredicates)
-      _ = println(s"Checked Predicates: ${unification.substitutedPredicates} on $unification")
       typedExpr = unification.substitution.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
+      _ = println(s"Typed expression: $typedExpr")
       result <- Compiler.compile[M](typedExpr).run(ctx)
+      _ = println(s"Compiled to $result")
       _ = println("Done: compilation")
     } yield result.asInstanceOf[R[expectedType.Out]]
   }

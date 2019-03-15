@@ -92,6 +92,22 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
           unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Constant), AST.Number("1"))) shouldBe constant(Dbl(1))
         }
       }
+
+      "zipWith" - {
+        "of vars" in {
+          unsafeCompile(
+            AST.App3(
+              AST.PrimitiveConst(Constant3.ZipWith),
+              AST.Identifier("x"),
+              AST.Identifier("y"),
+              AST.Identifier("z")
+            ),
+            new VarContext(List("x", "y", "z"))) shouldBe zipWith(
+            Var[Any]("x"),
+            Var[Any]("y"),
+            Var[Any => Any => Any]("z"))
+        }
+      }
     }
   }
 

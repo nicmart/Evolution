@@ -102,6 +102,12 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       App(takeWhileLambda(Lambda(t, Not(App(p, Var(t))))), fa)
     }
 
+    def norm(point: Expr[Point]): Expr[Double] =
+      Exp(Add(Exp(X(point), Dbl(2)), Exp(Y(point), Dbl(2))), Dbl(0.5))
+
+    def versor(point: Expr[Point]): Expr[Point] =
+      Multiply(Div(Dbl(1), norm(point)), point)
+
     // TODO f as parameter of lambda, so we can remove shiftN
     private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] = {
       val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")
