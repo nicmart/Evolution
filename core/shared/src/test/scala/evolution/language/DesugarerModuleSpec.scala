@@ -57,6 +57,12 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
       "norm" in {
         toValue(norm(Pnt(Dbl(3), Dbl(4)))) shouldBe 5
       }
+
+      "flatten" in {
+        toList(App(flatten[Double], Cons(Cons(Dbl(1), Empty()), Cons(Cons(Dbl(2), Empty()), Empty())))) shouldBe List(
+          1,
+          2)
+      }
     }
   }
 

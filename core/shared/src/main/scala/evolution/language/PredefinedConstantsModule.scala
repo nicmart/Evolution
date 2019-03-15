@@ -55,6 +55,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         } yield derive2(vs).asExpr[F[_] => F[_]]
     }
 
+    case object Flatten extends Constant0(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
+      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        flatten.asExpr[F[F[_]] => F[_]].pure[M].widen
+    }
+
     def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
   }
 
