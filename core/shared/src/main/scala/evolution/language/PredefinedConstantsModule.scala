@@ -37,6 +37,17 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Expr.Empty().pure[M].widen
     }
 
+    case object MapWithDerivative
+        extends Constant0(Qualified((Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2")))) {
+      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        for {
+          fType <- Type.domain[M](tpe.t)
+          inner <- Type.domain[M](fType)
+          vs <- Type.vectorSpace[M](inner)
+        } yield mapWithDerivative(vs).asExpr[F[_] => F[_]]
+
+    }
+
     case object Derive extends Constant0(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
       override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         for {

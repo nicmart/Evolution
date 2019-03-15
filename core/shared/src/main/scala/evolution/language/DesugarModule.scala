@@ -60,30 +60,36 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
 
-    def derive[X: VectorSpace]: Expr[F[X] => F[X]] =
-      Fix[F[X] => F[X]](
-        lambda2(
-          "self",
-          "fx",
-          MapCons[X, X](
-            Var("fx"),
-            lambda2(
-              "head1",
-              "tail1",
-              MapCons[X, X](
-                Var("tail1"),
-                lambda2(
-                  "head2",
-                  "tail2",
-                  Cons[X](
-                    minus(Var("head2"), Var("head1")),
-                    App[F[X], F[X]](Var("self"), Cons(Var("head2"), Var("tail2"))))
+    def mapWithDerivative[X: VectorSpace, Y]: Expr[(X => X => Y) => F[X] => F[Y]] =
+      Lambda[X => X => Y, F[X] => F[Y]](
+        "f",
+        Fix[F[X] => F[Y]](
+          lambda2(
+            "self",
+            "fx",
+            MapCons[X, Y](
+              Var("fx"),
+              lambda2(
+                "head1",
+                "tail1",
+                MapCons[X, Y](
+                  Var("tail1"),
+                  lambda2(
+                    "head2",
+                    "tail2",
+                    Cons[Y](
+                      app2[X, X, Y](Var("f"), Var("head1"), minus(Var("head2"), Var("head1"))),
+                      App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2"))))
+                  )
                 )
               )
             )
           )
         )
       )
+
+    def derive[X: VectorSpace]: Expr[F[X] => F[X]] =
+      App(mapWithDerivative[X, X], lambda2[X, X, X]("x", "v", Var("v")))
 
     def derive2[X: VectorSpace]: Expr[F[X] => F[X]] =
       Lambda("fx", App(derive[X], App(derive[X], Var("fx"))))
