@@ -71,6 +71,12 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         flatten.asExpr[F[F[_]] => F[_]].pure[M].widen
     }
 
+    case object Noise extends Constant0(Qualified(Evo(Dbl =>: Dbl =>: Dbl))) {
+      override def compile[M[_]](
+        tpe: TypeClasses.Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        Expr.Noise().asExpr.pure[M].widen
+    }
+
     def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
   }
 

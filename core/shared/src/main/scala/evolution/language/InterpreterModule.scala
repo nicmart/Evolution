@@ -3,6 +3,7 @@ import evolution.data.EvaluationContext._
 import evolution.data.{ Ctx, ExpressionModule }
 import evolution.geometry.Point
 import evolution.materialization.RNGRepr
+import evolution.rng.PerlinNoise
 
 // TODO this is an implementation
 trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
@@ -170,6 +171,9 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
           self
         }
+
+      case Noise() =>
+        ConstantEvolution(Constant((PerlinNoise.noise _).curried))
     }
 
     private def uniformChoiceRepr[T](ts: List[T]): RNGRepr[T] =
