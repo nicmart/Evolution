@@ -23,7 +23,15 @@ object dsl extends DrawingDefinition[Point] {
 
   private val predefinedVars = List("left", "bottom", "right", "top")
   private val module = new FullModule[EvoRepr] with InstancesModule[EvoRepr]
+  import module.Typer.TypeBinding, module.TypeClasses.Qualified, module.Type
   private val initialVarContext = new module.VarContext(predefinedVars)
+  private val predefinedVarsTypeBindings: module.Typer.TypeContext = Map(
+    "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
+    "right" -> TypeBinding.Variable("right", Qualified(Type.Dbl)),
+    "top" -> TypeBinding.Variable("top", Qualified(Type.Dbl)),
+    "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
+  )
+
   import module.{ Type, TypeInferenceOps, TypeInferenceResult, typeInference }
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
@@ -36,7 +44,7 @@ object dsl extends DrawingDefinition[Point] {
         module
           .parse[Expr, TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
           .map(_.asInstanceOf[Expr[EvoRepr[Point]]])
-          .evaluateEither
+          .evaluateEither(predefinedVarsTypeBindings)
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
   }

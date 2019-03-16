@@ -9,11 +9,11 @@ trait InstancesModule[F[_]] { self: TyperModule[F] =>
   implicit val typeInference: TypeInference[TypeInferenceResult] = instance[TypeInferenceResult]
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
-    def evaluateEither: Either[String, T] =
-      t.run(constantQualifiedTypes).runA(TypeInference.empty).value
+    def evaluateEither(additionalVarTypeBindings: TypeContext = Map.empty): Either[String, T] =
+      t.run(constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty).value
 
     def unsafeEvaluate: T =
-      evaluateEither.fold(
+      evaluateEither().fold(
         s => throw new Exception(s),
         identity
       )
