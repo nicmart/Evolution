@@ -14,6 +14,15 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       Fix[F[A]](Lambda(self, Cons(a, Var(self))))
     }
 
+    val range: Expr[Double => Double => Double => F[Double]] =
+      lambda3(
+        "from",
+        "to",
+        "step",
+        takeWhile(
+          integrate(Var("from"), constant(Var("step"))),
+          Lambda[Double, Boolean]("x", LessThanOrEqual[Double](Var("x"), Var("to")))))
+
     def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
       Add(a, Inverse(b))
 

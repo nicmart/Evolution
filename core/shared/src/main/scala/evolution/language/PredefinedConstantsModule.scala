@@ -37,6 +37,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Expr.Empty().pure[M].widen
     }
 
+    case object Range extends Constant0(Qualified(Dbl =>: Dbl =>: Dbl =>: Evo(Dbl))) {
+      def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        range.pure[M].widen
+    }
+
     case object MapWithDerivative
         extends Constant0(Qualified((Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2")))) {
       override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
