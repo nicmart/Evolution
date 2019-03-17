@@ -67,7 +67,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     implicit class BindingContextOps[M[_]](ctx: TypeContext) {
       def getBinding(name: String)(implicit TI: TypeInference[M]): M[Identifier] = {
         ctx.get(name) match {
-          case None      => TI.E.raise(s"Unable to find type binding for variable $name in ctx $ctx")
+          case None      => TI.E.raise(s"Unable to find type binding for variable $name")
           case Some(tis) => tis.get[M]
         }
       }

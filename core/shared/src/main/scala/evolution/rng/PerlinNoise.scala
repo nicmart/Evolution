@@ -23,6 +23,22 @@ class PerlinNoise(permutation256: Array[Int]) {
     yInter
   }
 
+  // See https://flafla2.github.io/2014/08/09/perlinnoise.html
+  def octaveNoise(octaves: Int, persistence: Double, x: Double, y: Double): Double = {
+    var total: Double = 0
+    var frequency = 1
+    var amplitude: Double = 1
+    var maxValue: Double = 0 // Used for normalizing result to 0.0 - 1.0
+    (0 until octaves).foreach { _ =>
+      total += noise(x * frequency, y * frequency) * amplitude
+      maxValue += amplitude
+      amplitude *= persistence
+      frequency *= 2
+    }
+
+    total / maxValue
+  }
+
   private val p = new Array[Int](512)
 
   (0 to 255).foreach { i: Int =>
@@ -52,11 +68,14 @@ class PerlinNoise(permutation256: Array[Int]) {
 object PerlinNoise {
   private val range: List[Int] = (0 to 255).toList
 
-  def rngRepr: RNGRepr[Double => Double => Double] = {
-    lazy val self: RNGRepr[Double => Double => Double] =
-      RNGRepr.map(
-        RNGRepr.shuffle(range),
-        (permutation: List[Int]) => (new PerlinNoise(permutation.toArray).noise _).curried)
-    self
-  }
+  def noiseRNGRepr: RNGRepr[Double => Double => Double] =
+    RNGRepr.map(
+      RNGRepr.shuffle(range),
+      (permutation: List[Int]) => (new PerlinNoise(permutation.toArray).noise _).curried)
+
+  def octaveNoiseRNGRepr: RNGRepr[Int => Double => Double => Double => Double] =
+    RNGRepr.map(
+      RNGRepr.shuffle(range),
+      (permutation: List[Int]) => (new PerlinNoise(permutation.toArray).octaveNoise _).curried)
+
 }
