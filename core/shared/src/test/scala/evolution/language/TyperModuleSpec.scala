@@ -30,7 +30,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           val point = assignVars(AST.Const(Constant2.Point)).unsafeEvaluate
           val constraints = findConstraints(point).unsafeEvaluate
           val unifier = unify[TypeInferenceResult](constraints)
-          unifier.map(_.substitution.substitute(point.tpe)).evaluateEither shouldBe Right(
+          unifier.map(_.substitution.substitute(point.tpe)).evaluateEither() shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point))
         }
 
@@ -41,7 +41,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           val constraints = findConstraints(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify[TypeInferenceResult](allConstraints)
-          unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither shouldBe Right(
+          unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither() shouldBe Right(
             Qualified(Type.Evo(Type.Point)))
         }
       }
@@ -146,7 +146,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             ))
 
           val unification = unify[TypeInferenceResult](constraints)
-          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isRight shouldBe true
+          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isRight shouldBe true
         }
       }
     }
@@ -160,7 +160,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
               Constraint.Pred(Predicate("Num", List(Type.Var("X"))))
             ))
           val unification = unify[TypeInferenceResult](constraints)
-          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isLeft shouldBe true
+          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isLeft shouldBe true
         }
       }
     }

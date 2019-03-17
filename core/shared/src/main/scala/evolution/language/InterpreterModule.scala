@@ -173,7 +173,7 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
         }
 
       case Noise() =>
-        ConstantEvolution(Constant((PerlinNoise.noise _).curried))
+        Constant(PerlinNoise.rngRepr)
     }
 
     private def uniformChoiceRepr[T](ts: List[T]): RNGRepr[T] =
