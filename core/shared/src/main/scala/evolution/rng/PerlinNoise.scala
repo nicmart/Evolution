@@ -1,4 +1,5 @@
 package evolution.rng
+import evolution.geometry.Point
 import evolution.materialization.RNGRepr
 
 class PerlinNoise(permutation256: Array[Int]) {
@@ -58,14 +59,24 @@ class PerlinNoise(permutation256: Array[Int]) {
 object PerlinNoise {
   private val range: List[Int] = (0 to 255).toList
 
-  def noiseRNGRepr: RNGRepr[Double => Double => Double] =
+  val noiseRNGRepr: RNGRepr[Point => Double] =
     RNGRepr.map(
       RNGRepr.shuffle(range),
-      (permutation: List[Int]) => (new PerlinNoise(permutation.toArray).noise _).curried)
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        point =>
+          perlinNoise.noise(point.x, point.y)
+      }
+    )
 
-  def octaveNoiseRNGRepr: RNGRepr[Int => Double => Double => Double => Double] =
+  val octaveNoiseRNGRepr: RNGRepr[Int => Double => Point => Double] =
     RNGRepr.map(
       RNGRepr.shuffle(range),
-      (permutation: List[Int]) => (new PerlinNoise(permutation.toArray).octaveNoise _).curried)
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        octaves => presistence => point =>
+          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+      }
+    )
 
 }

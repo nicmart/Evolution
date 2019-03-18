@@ -78,13 +78,13 @@ trait TypesModule[F[_]] {
     }
 
     def domain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
-      case Type.Arrow(from, to) => from.pure[M]
-      case _                    => E.raise(s"Type $t is not an Arrow type")
+      case Type.Arrow(from, _) => from.pure[M]
+      case _                   => E.raise(s"Type $t is not an Arrow type")
     }
 
     def codomain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
-      case Type.Arrow(from, to) => to.pure[M]
-      case _                    => E.raise(s"Type $t is not an Arrow type")
+      case Type.Arrow(_, to) => to.pure[M]
+      case _                 => E.raise(s"Type $t is not an Arrow type")
     }
   }
 

@@ -76,13 +76,13 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         flatten.asExpr[F[F[_]] => F[_]].pure[M].widen
     }
 
-    case object Noise extends Constant0(Qualified(Evo(Dbl =>: Dbl =>: Dbl))) {
+    case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
       override def compile[M[_]](
         tpe: TypeClasses.Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.Noise().asExpr.pure[M].widen
     }
 
-    case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: Dbl =>: Dbl =>: Dbl =>: Dbl))) {
+    case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: Dbl =>: Type.Point =>: Dbl))) {
       override def compile[M[_]](
         tpe: TypeClasses.Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.OctaveNoise().asExpr.pure[M].widen
