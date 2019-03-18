@@ -33,8 +33,15 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
       case mult @ Multiply(k, t) => interpret2(k, t)(mult.vectorSpace.mult)
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
-      case eq @ Equals(a, b)     => interpret2(a, b)(eq.eq.eqv)
-      case neq @ Neq(a, b)       => interpret2(a, b)(neq.eq.neqv)
+      case SmoothStep(f, t, p) =>
+        interpret3(f, t, p) { (from, to, position) =>
+          val t = (position - from) / (to - from)
+          if (t <= 0) 0.0
+          else if (t >= 1) 1.0
+          else t * t * (3.0 - 2.0 * t)
+        }
+      case eq @ Equals(a, b) => interpret2(a, b)(eq.eq.eqv)
+      case neq @ Neq(a, b)   => interpret2(a, b)(neq.eq.neqv)
       case IfThen(condition, a, b) =>
         interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB

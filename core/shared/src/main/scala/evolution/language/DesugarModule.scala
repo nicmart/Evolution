@@ -341,10 +341,10 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       )
     }
 
-    private def lambda2[A, B, C](var1: String, var2: String, expr: Expr[C]): Expr[A => B => C] =
+    def lambda2[A, B, C](var1: String, var2: String, expr: Expr[C]): Expr[A => B => C] =
       Lambda[A, B => C](var1, Lambda[B, C](var2, expr))
 
-    private def lambda3[A, B, C, D](var1: String, var2: String, var3: String, expr: Expr[D]): Expr[A => B => C => D] =
+    def lambda3[A, B, C, D](var1: String, var2: String, var3: String, expr: Expr[D]): Expr[A => B => C => D] =
       Lambda[A, B => C => D](var1, lambda2[B, C, D](var2, var3, expr))
 
     private def app2[A, B, C](f: Expr[A => B => C], a: Expr[A], b: Expr[B]): Expr[C] =

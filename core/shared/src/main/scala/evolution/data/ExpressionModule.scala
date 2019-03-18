@@ -33,6 +33,9 @@ trait ExpressionModule[F[_]] {
         extends Expr[T](List(k, t))
     final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
     final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
+    final case class SmoothStep(from: Expr[Double], to: Expr[Double], position: Expr[Double])
+        extends Expr[Double](List(from, to, position))
+
     final case class Equals[T](a: Expr[T], b: Expr[T])(implicit val eq: Eq[T]) extends Expr[Boolean](List(a, b))
     final case class Neq[T](a: Expr[T], b: Expr[T])(implicit val eq: Eq[T]) extends Expr[Boolean](List(a, b))
 

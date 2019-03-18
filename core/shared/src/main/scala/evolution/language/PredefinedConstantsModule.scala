@@ -422,6 +422,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   object Constant3 extends Enum[Constant3] {
     val values: immutable.IndexedSeq[Constant3] = findValues
 
+    case object SmoothStep extends Constant3Plain(Qualified(Dbl =>: Dbl =>: Dbl =>: Dbl)) {
+      override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
+        Expr.SmoothStep(x.asExpr, y.asExpr, z.asExpr)
+    }
+
     case object ZipWith
         extends Constant3Plain(
           Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))) {
