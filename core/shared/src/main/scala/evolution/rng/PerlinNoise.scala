@@ -51,18 +51,8 @@ class PerlinNoise(permutation256: Array[Int]) {
 
   private def fade(t: Double): Double = t * t * t * (t * (t * 6 - 15) + 10)
 
-  private def grad(hash: Int, x: Double, y: Double): Double = hash & 3 match {
-    case 0 =>
-      x + y
-    case 1 =>
-      -x + y
-    case 2 =>
-      x - y
-    case 3 =>
-      -x - y
-    case _ =>
-      0
-  }
+  private def grad(hash: Int, x: Double, y: Double): Double =
+    x * Math.cos(2 * Math.PI * hash / 256) + y * Math.sin(2 * Math.PI * hash / 256)
 }
 
 object PerlinNoise {
