@@ -24,11 +24,12 @@ class FullModule[F[_]]
     println("Start Compilation")
 
     val parsed: M[AST] =
-      Parsers.parser
+      Parsers
         .parse(serialisedExpr)
         .fold(
-          (_, failIndex, extra) => s"Failed at $failIndex: ${extra.traced.trace}".raise[M, AST],
-          (expr, _) => expr.pure[M])
+          _.raise[M, AST],
+          _.pure[M]
+        )
 
     for {
       expr <- parsed

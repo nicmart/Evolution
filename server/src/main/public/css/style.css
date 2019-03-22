@@ -123,6 +123,10 @@ nav .checkbox:hover {
   font-size: .8em;
 }
 
+.dsl-feedback.dsl-error > span {
+  white-space: pre-wrap;
+}
+
 .code-wrapper {
   flex: 2;
 }

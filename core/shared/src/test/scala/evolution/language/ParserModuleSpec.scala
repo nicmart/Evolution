@@ -104,7 +104,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "Let bindings" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-          unsafeParse(s"let($id, $value, $in)") shouldBe AST.Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
+          unsafeParse(s"$id = $value in $in") shouldBe AST.Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
         }
       }
 

@@ -10,7 +10,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     def parse(astString: String): Either[String, AST] =
       Parsers.parser
         .parse(astString)
-        .fold((_, failIndex, extra) => Left(s"Failed at $failIndex: ${extra.traced.trace}"), (expr, _) => Right(expr))
+        .fold((_, failIndex, extra) => Left(ParserFailure(failIndex, extra).message), (expr, _) => Right(expr))
 
     val parser: Parser[AST] =
       P(whitespaces ~ ast ~ End)
@@ -59,16 +59,16 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private lazy val factor: Parser[AST] =
       P(
-        ("(" ~ ast ~ ")") | number | boolean | unaryPrefixOp | let |
+        ("(" ~/ ast ~/ ")") | number | boolean | unaryPrefixOp |
           variable | list)
 
     private lazy val appOrFactor: Parser[AST] =
-      P(factor ~ ("(" ~/ nonEmptyArgs ~ ")").?).map {
+      P(factor ~ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
         case (f, None)       => f
         case (f, Some(args)) => evalApp(f, args)
       }
 
-    private lazy val list: Parser[AST] = P("[" ~/ args ~ "]").map(evalList)
+    private lazy val list: Parser[AST] = P("[" ~/ args ~/ "]").map(evalList)
 
     private lazy val number: Parser[AST.Number] =
       numbers.doubleLiteral.map(AST.Number(_))
@@ -77,7 +77,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       (P("true").map(_ => true) | P("false").map(_ => false)).map(AST.Bool(_))
 
     private lazy val variable: Parser[AST.Identifier] =
-      P(identifier).map(AST.Identifier(_))
+      P(identifier).map(AST.Identifier(_)) ~/ Pass
 
     private lazy val unaryOps: Parser[AST.Identifier] =
       P("-").map(_ => AST.Identifier(Constant1.Inverse.entryName)) |
@@ -90,19 +90,15 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ ast).map { expr =>
         AST.Lambda(id, expr)
       }
+
       def letTail(id: String): Parser[AST] =
-        P(whitespaces ~ "=" ~/ ast ~ "in" ~/ ast).map {
+        P(whitespaces ~ "=" ~/ ast ~/ "in" ~/ ast).map {
           case (value, body) =>
             AST.Let(id, value, body)
         }
       def tail(id: String): Parser[AST] = lambdaTail(id) | letTail(id)
 
       identifier.flatMap(tail)
-    }
-
-    private lazy val let: Parser[AST] = P("let(" ~/ identifier ~ "," ~ ast ~ "," ~ ast ~ ")").map {
-      case (id, value, in) =>
-        AST.Let(id, value, in)
     }
 
     private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
@@ -187,5 +183,28 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
   implicit class ASTStringContext(sc: StringContext) {
     val ast = Prefix(ASTInterpolator, sc)
+  }
+
+  private case class ParserFailure(index: Int, extra: Parsed.Failure.Extra[Char, String]) {
+    val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
+    private val lineAndColumn = findLineAndColumn(inputLines, index)
+    val lineNumber: Int = lineAndColumn._1
+    val columnNumber: Int = lineAndColumn._2
+    val line: String = inputLines(lineNumber)
+
+    def message: String =
+      s"""Parsing failed at line ${lineNumber + 1}:${columnNumber + 1}:
+         |$line
+         |Expected: ${extra.traced.expected}
+       """.stripMargin
+
+    private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
+      lines match {
+        case head :: _ if index <= head.length => (0, index)
+        case head :: tail =>
+          val (l, c) = findLineAndColumn(tail, index - head.length - 1)
+          (l + 1, c)
+        case _ => (0, 0)
+      }
   }
 }
