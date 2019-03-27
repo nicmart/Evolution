@@ -1,5 +1,4 @@
 package evolution.language
-import contextual._
 import evolution.language.ParserConfig.White._
 import evolution.language.ParserConfig.whitespaces
 import fastparse.noApi._
@@ -7,15 +6,15 @@ import fastparse.noApi._
 trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] =>
 
   object Parsers {
-    def parse(astString: String): Either[String, AST] =
+    def parse(astString: String): Either[ParserFailure, AST] =
       Parsers.parser
         .parse(astString)
-        .fold((_, failIndex, extra) => Left(ParserFailure(failIndex, extra).message), (expr, _) => Right(expr))
-
-    val parser: Parser[AST] =
-      P(whitespaces ~ ast ~ End)
+        .fold((_, failIndex, extra) => Left(new ParserFailure(failIndex, extra)), (expr, _) => Right(expr))
 
     def binaryOperators: List[(String, AST)] = precedenceGroups.allOperators
+
+    private val parser: Parser[AST] =
+      P(whitespaces ~ ast ~ End)
 
     private lazy val ast: Parser[AST] =
       P(lambdaOrLet | precedenceGroups.parser)
@@ -165,46 +164,28 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     def allOperators: List[(String, AST)] = groups.flatMap(group => group.operators)
   }
+}
 
-  object ASTInterpolator extends Interpolator {
-    type Out = AST
+// TODO Too OOP 😂
+class ParserFailure(index: Int, extra: Parsed.Failure.Extra[Char, String]) {
+  val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
+  private val lineAndColumn = findLineAndColumn(inputLines, index)
+  val lineNumber: Int = lineAndColumn._1
+  val columnNumber: Int = lineAndColumn._2
+  val line: String = inputLines(lineNumber)
 
-    def contextualize(interpolation: StaticInterpolation) = {
-      val lit @ Literal(_, astString) = interpolation.parts.head
-      if (Parsers.parse(astString).isLeft)
-        interpolation.abort(lit, 0, "not a valid URL")
-
-      Nil
-    }
-
-    def evaluate(interpolation: RuntimeInterpolation): AST =
-      Parsers.parse(interpolation.literals.head).right.get
-  }
-
-  implicit class ASTStringContext(sc: StringContext) {
-    val ast = Prefix(ASTInterpolator, sc)
-  }
-
-  private case class ParserFailure(index: Int, extra: Parsed.Failure.Extra[Char, String]) {
-    val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
-    private val lineAndColumn = findLineAndColumn(inputLines, index)
-    val lineNumber: Int = lineAndColumn._1
-    val columnNumber: Int = lineAndColumn._2
-    val line: String = inputLines(lineNumber)
-
-    def message: String =
-      s"""Parsing failed at line ${lineNumber + 1}:${columnNumber + 1}:
-         |$line
-         |Expected: ${extra.traced.expected}
+  def message: String =
+    s"""Parsing failed at line ${lineNumber + 1}:${columnNumber + 1}:
+       |$line
+       |Expected: ${extra.traced.expected}
        """.stripMargin
 
-    private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
-      lines match {
-        case head :: _ if index <= head.length => (0, index)
-        case head :: tail =>
-          val (l, c) = findLineAndColumn(tail, index - head.length - 1)
-          (l + 1, c)
-        case _ => (0, 0)
-      }
-  }
+  private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
+    lines match {
+      case head :: _ if index <= head.length => (0, index)
+      case head :: tail =>
+        val (l, c) = findLineAndColumn(tail, index - head.length - 1)
+        (l + 1, c)
+      case _ => (0, 0)
+    }
 }

@@ -27,7 +27,7 @@ class FullModule[F[_]]
       Parsers
         .parse(serialisedExpr)
         .fold(
-          _.raise[M, AST],
+          _.message.raise[M, AST],
           _.pure[M]
         )
 

@@ -268,5 +268,5 @@ class ParserModuleSpec extends LanguageSpec[Id] {
     }
   }
 
-  def unsafeParse(string: String): AST = Parsers.parser.parse(string).get.value
+  def unsafeParse(string: String): AST = Parsers.parse(string).right.get
 }
