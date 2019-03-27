@@ -175,7 +175,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
-      "parse divisions" - {
+      "divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"$a / $b + $c") shouldBe AST.App2(
@@ -244,19 +244,19 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
-      "parse boolean literals" in {
+      "boolean literals" in {
         unsafeParse("true") shouldBe AST.Bool(true)
         unsafeParse("false") shouldBe AST.Bool(false)
       }
 
-      "parse not" in {
+      "not" in {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldBe
             AST.App(AST.Const(Constant1.Not), unsafeParse(a))
         }
       }
 
-      "parse logical operators with the right precedence" in {
+      "logical operators with the right precedence" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a || $b && $c") shouldBe
             AST.App2(
@@ -266,7 +266,21 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
     }
+
+    "when it fails" - {
+      "it should report the line number" in {
+        val expr = """|a = 10 in
+                      |g(a a)
+                   """.stripMargin
+
+        val failure = Parser.parse(expr).left.get
+
+        val traced = failure.extra.traced
+        failure.lineNumber shouldBe 1
+        failure.extra.traced.traceParsers
+      }
+    }
   }
 
-  def unsafeParse(string: String): AST = Parsers.parse(string).right.get
+  def unsafeParse(string: String): AST = Parser.parse(string).right.get
 }

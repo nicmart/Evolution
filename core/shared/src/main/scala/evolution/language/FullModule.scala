@@ -24,7 +24,7 @@ class FullModule[F[_]]
     println("Start Compilation")
 
     val parsed: M[AST] =
-      Parsers
+      Parser
         .parse(serialisedExpr)
         .fold(
           _.message.raise[M, AST],

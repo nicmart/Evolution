@@ -5,18 +5,18 @@ import fastparse.noApi._
 
 trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] =>
 
-  object Parsers {
+  object Parser {
     def parse(astString: String): Either[ParserFailure, AST] =
-      Parsers.parser
+      Parser.program
         .parse(astString)
         .fold((_, failIndex, extra) => Left(new ParserFailure(failIndex, extra)), (expr, _) => Right(expr))
 
     def binaryOperators: List[(String, AST)] = precedenceGroups.allOperators
 
-    private val parser: Parser[AST] =
-      P(whitespaces ~ ast ~ End)
+    private val program: Parser[AST] =
+      P(whitespaces ~ expression ~ End)
 
-    private lazy val ast: Parser[AST] =
+    private lazy val expression: Parser[AST] =
       P(lambdaOrLet | precedenceGroups.parser)
 
     // Operator groups, order by ascending Precedence
@@ -58,7 +58,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private lazy val factor: Parser[AST] =
       P(
-        ("(" ~/ ast ~/ ")") | number | boolean | unaryPrefixOp |
+        ("(" ~/ expression ~/ ")") | number | boolean | unaryPrefixOp |
           variable | list)
 
     private lazy val appOrFactor: Parser[AST] =
@@ -86,12 +86,12 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       P(unaryOps ~ appOrFactor).map { case (op, e) => AST.App(op, e) }
 
     private lazy val lambdaOrLet: Parser[AST] = {
-      def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ ast).map { expr =>
+      def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ expression).map { expr =>
         AST.Lambda(id, expr)
       }
 
       def letTail(id: String): Parser[AST] =
-        P(whitespaces ~ "=" ~/ ast ~/ "in" ~/ ast).map {
+        P(whitespaces ~ "=" ~/ expression ~/ "in" ~/ expression).map {
           case (value, body) =>
             AST.Let(id, value, body)
         }
@@ -103,7 +103,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
 
     private lazy val nonEmptyArgs: Parser[List[AST]] =
-      P(ast ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+      P(expression ~ ("," ~ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
     private lazy val identifier: Parser[String] =
       ((alpha | CharIn(Seq('@'))) ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
@@ -145,10 +145,12 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       case (head, tail) => evalAssocBinaryOp(head, tail.toList)
     }
 
-    private def opsParser: Parser[AST] = operators.foldLeft[Parser[AST]](Fail) {
-      case (accParser, (opString, ast)) =>
-        accParser | P(opString).map(_ => ast)
-    }
+    private def opsParser: Parser[AST] = operators
+      .foldLeft[Parser[AST]](Fail) {
+        case (accParser, (opString, ast)) =>
+          accParser | P(opString).map(_ => ast)
+      }
+      .opaque(operators.map(_._1).mkString(", "))
 
     private def evalAssocBinaryOp(head: AST, tail: List[(AST, AST)]): AST =
       tail match {
@@ -167,7 +169,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 }
 
 // TODO Too OOP 😂
-class ParserFailure(index: Int, extra: Parsed.Failure.Extra[Char, String]) {
+class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) {
   val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
   private val lineAndColumn = findLineAndColumn(inputLines, index)
   val lineNumber: Int = lineAndColumn._1
