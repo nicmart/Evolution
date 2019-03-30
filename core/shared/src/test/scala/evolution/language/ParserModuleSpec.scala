@@ -276,6 +276,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         val failure = Parser.parse(expr).left.get
 
         val traced = failure.extra.traced
+        failure.message shouldBe "a"
         failure.lineNumber shouldBe 1
         failure.extra.traced.traceParsers
       }

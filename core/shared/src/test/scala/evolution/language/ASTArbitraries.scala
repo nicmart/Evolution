@@ -16,7 +16,7 @@ trait ASTArbitraries[F[_]] {
 
   // TODO move all operators here
   def genOperatorWithAST: Gen[(String, AST)] =
-    Gen.oneOf[(String, AST)](Parsers.binaryOperators)
+    Gen.oneOf[(String, AST)](Parser.binaryOperators)
 
   def genVarUsage: Gen[String] =
     genIdentifier.map(v => s"$v").filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))
