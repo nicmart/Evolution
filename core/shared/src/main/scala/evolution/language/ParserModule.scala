@@ -38,7 +38,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     // Operator groups, order by ascending Precedence
     private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
-      appOrFactor.opaque("app or factor"),
+      appOrFactor,
       List(
         PrecedenceGroup(
           "||" -> AST.Identifier(Constant2.Or.entryName)
@@ -161,7 +161,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
   private[language] case class PrecedenceGroups(last: Parser[AST], groups: List[PrecedenceGroup]) {
     def parser: Parser[AST] = groups.foldRight(last) { (group, accParser) =>
-      group.parser(accParser).opaque(s"Op Expr(${group.operators.head._1} of ${accParser})")
+      group.parser(accParser)
     }
 
     def allOperators: List[(String, AST)] = groups.flatMap(group => group.operators)
@@ -176,11 +176,12 @@ class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) e
   val columnNumber: Int = lineAndColumn._2
   val line: String = inputLines(lineNumber)
 
+  private val columnIndicator: String = (" " * line.length).updated(columnNumber, '^')
+
   def message: String =
     s"""Parsing failed at line ${lineNumber + 1}, column ${columnNumber + 1}:
        |$line
-       |Expected: ${extra.traced.expected}
-       """.stripMargin
+       |$columnIndicator""".stripMargin
 
   override def getMessage: String = message
 
