@@ -19,6 +19,23 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     private lazy val expression: Parser[AST] =
       P(lambdaOrLet | precedenceGroups.parser)
 
+    private lazy val lambdaOrLet: Parser[AST] = {
+      def lambdaTail: Parser[String => AST] = P(whitespaces ~ "->" ~/ expression).map { expr =>
+        AST.Lambda(_, expr)
+      }
+
+      def letTail: Parser[String => AST] =
+        P(whitespaces ~ "=" ~/ expression ~/ "in" ~/ expression).map {
+          case (value, body) =>
+            AST.Let(_, value, body)
+        }
+
+      // Note: a previous solution based on flatMap caused undesired back-tracking
+      P(identifier ~ (lambdaTail | letTail)).map {
+        case (id, f) => f(id)
+      }
+    }
+
     // Operator groups, order by ascending Precedence
     private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
       appOrFactor.opaque("app or factor"),
@@ -84,21 +101,6 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private lazy val unaryPrefixOp: Parser[AST] =
       P(unaryOps ~/ appOrFactor).map { case (op, e) => AST.App(op, e) }
-
-    private lazy val lambdaOrLet: Parser[AST] = {
-      def lambdaTail(id: String): Parser[AST] = P(whitespaces ~ "->" ~/ expression).map { expr =>
-        AST.Lambda(id, expr)
-      }
-
-      def letTail(id: String): Parser[AST] =
-        P(whitespaces ~ "=" ~/ expression ~/ "in" ~/ expression).map {
-          case (value, body) =>
-            AST.Let(id, value, body)
-        }
-      def tail(id: String): Parser[AST] = lambdaTail(id) | letTail(id)
-
-      identifier.flatMap(tail)
-    }
 
     private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
 
@@ -167,7 +169,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 }
 
 // TODO Too OOP 😂
-class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) {
+class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) extends Throwable {
   val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
   private val lineAndColumn = findLineAndColumn(inputLines, index)
   val lineNumber: Int = lineAndColumn._1
@@ -175,10 +177,12 @@ class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) {
   val line: String = inputLines(lineNumber)
 
   def message: String =
-    s"""Parsing failed at line ${lineNumber + 1}:${columnNumber + 1}:
+    s"""Parsing failed at line ${lineNumber + 1}, column ${columnNumber + 1}:
        |$line
        |Expected: ${extra.traced.expected}
        """.stripMargin
+
+  override def getMessage: String = message
 
   private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
     lines match {

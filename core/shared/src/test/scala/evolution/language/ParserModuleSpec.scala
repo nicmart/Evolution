@@ -269,19 +269,17 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
     "when it fails" - {
       "it should report the line number" in {
-        val expr = """|a = 10 in
+        val expr = """|a    = 10 in
                       |g(a a)
                    """.stripMargin
 
-        val failure = Parser.parse(expr).left.get
-
-        val traced = failure.extra.traced
-        failure.message shouldBe "a"
-        failure.lineNumber shouldBe 1
-        failure.extra.traced.traceParsers
+        val failure = Parser.parse(expr)
+        // The first line is 0
+        val lineNumber = failure.left.map(_.lineNumber)
+        lineNumber shouldBe Left(1)
       }
     }
   }
 
-  def unsafeParse(string: String): AST = Parser.parse(string).right.get
+  def unsafeParse(string: String): AST = Parser.parse(string).toTry.get
 }
