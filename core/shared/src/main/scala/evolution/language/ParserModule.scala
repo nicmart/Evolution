@@ -24,8 +24,9 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
         AST.Lambda(_, expr)
       }
 
+      // `a = 2 in` ... and `a == 2` share the same prefix, so the cut must be after the negative lookahead
       def letTail: Parser[String => AST] =
-        P(whitespaces ~ "=" ~/ expression ~/ "in" ~/ expression).map {
+        P(whitespaces ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
           case (value, body) =>
             AST.Let(_, value, body)
         }

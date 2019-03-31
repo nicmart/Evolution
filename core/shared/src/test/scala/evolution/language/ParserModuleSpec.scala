@@ -277,7 +277,6 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         // The first line is 0
         val lineNumber = failure.left.map(_.lineNumber)
         lineNumber shouldBe Left(1)
-        failure.left.get.message shouldBe "a"
       }
     }
   }
