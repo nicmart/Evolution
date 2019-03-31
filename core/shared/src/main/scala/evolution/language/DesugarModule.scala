@@ -125,6 +125,42 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def versor(point: Expr[Point]): Expr[Point] =
       Multiply(Div(Dbl(1), norm(point)), point)
 
+    def withFirst[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => F[T2]]): Expr[F[T2]] = {
+      val (head, tail) = f.freshVarName2("head", "tail")
+      MapCons(expr, lambda2[T1, F[T1], F[T2]](head, tail, App(f, Var(head))))
+    }
+
+    def withFirst2[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => T1 => F[T2]]): Expr[F[T2]] = {
+      val (head1, tail1, head2, tail2) = f.freshVarName4("head1", "tail1", "head2", "tail2")
+      MapCons(
+        expr,
+        lambda2[T1, F[T1], F[T2]](
+          head1,
+          tail1,
+          MapCons(Var[F[T1]](tail1), lambda2[T1, F[T1], F[T2]](head2, tail2, app2(f, Var(head1), Var(head2))))))
+    }
+
+    def withFirst3[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => T1 => T1 => F[T2]]): Expr[F[T2]] = {
+      val (head1, tail1, head2, tail2) = f.freshVarName4("head1", "tail1", "head2", "tail2")
+      val (head3, tail3) = f.freshVarName2("head3", "tail3")
+      MapCons(
+        expr,
+        lambda2[T1, F[T1], F[T2]](
+          head1,
+          tail1,
+          MapCons(
+            Var[F[T1]](tail1),
+            lambda2[T1, F[T1], F[T2]](
+              head2,
+              tail2,
+              MapCons(
+                Var[F[T1]](tail2),
+                lambda2[T1, F[T1], F[T2]](head3, tail3, app3(f, Var(head1), Var(head2), Var(head3)))))
+          )
+        )
+      )
+    }
+
     // TODO f as parameter of lambda, so we can remove shiftN
     private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] = {
       val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")

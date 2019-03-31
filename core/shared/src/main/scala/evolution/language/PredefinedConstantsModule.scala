@@ -343,6 +343,24 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       )
     }
 
+    case object WithFirst
+        extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = withFirst(x.asExprF, y.asExpr[Any => F[Any]])
+    }
+
+    case object WithFirst2
+        extends Constant2Plain(
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = withFirst2(x.asExprF, y.asExpr[Any => Any => F[Any]])
+    }
+
+    case object WithFirst3
+        extends Constant2Plain(
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+        withFirst3(x.asExprF, y.asExpr[Any => Any => Any => F[Any]])
+    }
+
     case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
         implicit M: Monad[M],

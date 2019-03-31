@@ -63,6 +63,27 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
           1,
           2)
       }
+
+      "withFirst" in {
+        val expr = withFirst[Double, Double](
+          Cons(Dbl(1), Cons(Dbl(2), Empty())),
+          Lambda[Double, RNGRepr[Double]]("x", constant(Var("x"))))
+        toList(expr).take(2) shouldBe List(1, 1)
+      }
+
+      "withFirst2" in {
+        val expr = withFirst2[Double, Double](
+          Cons(Dbl(1), Cons(Dbl(2), Empty())),
+          lambda2[Double, Double, RNGRepr[Double]]("x", "y", constant(Var("y"))))
+        toList(expr).take(2) shouldBe List(2, 2)
+      }
+
+      "withFirst3" in {
+        val expr = withFirst3[Double, Double](
+          Cons(Dbl(1), Cons(Dbl(2), Cons(Dbl(3), Empty()))),
+          lambda3[Double, Double, Double, RNGRepr[Double]]("x", "y", "z", constant(Var("z"))))
+        toList(expr).take(2) shouldBe List(3, 3)
+      }
     }
   }
 
