@@ -52,6 +52,11 @@ lazy val options = Seq(
   "-Ywarn-value-discard"               // Warn when non-Unit expression results are unused.
 )
 
+lazy val jvmScalatestSettings = Test / testOptions ++= Seq(
+    Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
+    Tests.Argument(TestFrameworks.ScalaTest, "-W", "1", "1")
+)
+
 lazy val commonSettings = List(
   organization := "nicmart",
   scalaVersion := "2.12.8", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
@@ -67,10 +72,6 @@ lazy val commonSettings = List(
     "-Ywarn-inaccessible",
     "-Ywarn-dead-code"
   ),
-    Test / testOptions ++= List(
-    Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
-    Tests.Argument(TestFrameworks.ScalaTest, "-W", "1", "1")
-  ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary),
@@ -85,7 +86,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "core",
     inThisBuild(commonSettings),
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
       "org.typelevel" %%% "cats-core" % "1.3.1",
@@ -98,10 +98,10 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 
     )
   )
-  .jsSettings(
-    )
-  .jsSettings(
-    )
+  .jvmSettings(
+    jvmScalatestSettings
+  )
+
 
 lazy val jsApp = project
   .in(file("app"))
