@@ -81,13 +81,28 @@ lazy val commonSettings = List(
   )
 )
 
+lazy val BenchmarkTest = config("bench") extend Test
+
+def makeCrossSources(sharedSrcDir: Option[File], scalaBinaryVersion: String): Seq[File] = {
+  sharedSrcDir match {
+    case Some(dir) =>
+        Seq(dir.getParentFile / s"${dir.name}-$scalaBinaryVersion", dir)
+    case None => Seq()
+  }
+}
+
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
+  .configs(BenchmarkTest)
   .settings(
     name := "core",
+    inConfig(BenchmarkTest)(Defaults.testSettings),
+    unmanagedSourceDirectories in BenchmarkTest ++= {
+      makeCrossSources(CrossType.Full.sharedSrcDir(baseDirectory.value, "bench"), scalaBinaryVersion.value)
+    },
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.0.4" % Test,
+      "org.scalatest" %%% "scalatest" % "3.0.4" % "test",
       "org.typelevel" %%% "cats-core" % "1.3.1",
       "org.typelevel" %%% "cats-mtl-core" % "0.4.0",
       "com.chuusai" %%% "shapeless" % "2.3.3",

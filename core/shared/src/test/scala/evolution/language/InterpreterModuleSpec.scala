@@ -12,6 +12,7 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 
 class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
+  // TODO Rubbish, rubbish, rubbish!!!
   val interpreter = new InterpreterModule with ExpressionModule[RNGRepr] {}
   import interpreter.Expr
   import interpreter.Expr._
