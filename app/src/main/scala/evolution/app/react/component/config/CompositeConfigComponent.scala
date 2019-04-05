@@ -18,11 +18,11 @@ object CompositeConfigComponent {
         config.definition.configComponent
       val innerConfig: config.InnerConfig = config.config
 
-      val dropdown = FormField.component(FormField.Props("Drawing")) {
-        <.div(drawingListComponent(props.zoomState(cfg => drawings.select(cfg.definition)) { drawings => _ =>
-          CompositeDefinitionConfig[T, drawings.selected.Config](drawings.selected.initialConfig, drawings.selected)
-        }))
-      }
+//      val dropdown = FormField.component(FormField.Props("Drawing")) {
+//        <.div(drawingListComponent(props.zoomState(cfg => drawings.select(cfg.definition)) { drawings => _ =>
+//          CompositeDefinitionConfig[T, drawings.selected.Config](drawings.selected.initialConfig, drawings.selected)
+//        }))
+//      }
 
       val innerConfigComp = innerComponent(
         StateSnapshot[config.InnerConfig](innerConfig)(
@@ -30,7 +30,7 @@ object CompositeConfigComponent {
         )
       )()
 
-      <.div(^.className := "inner-config", dropdown, innerConfigComp)
+      <.div(^.className := "inner-config", innerConfigComp)
     }
   }
 }
