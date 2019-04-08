@@ -236,6 +236,12 @@ object InterpreterModule {
 
   sealed abstract class Contextual[T] extends Out[T]
 
+  object Contextual {
+    def instance[T](f: Ctx => T): Out[T] = new Contextual[T] {
+      override def apply(ctx: Ctx): T = f(ctx)
+    }
+  }
+
   object Out {
     def pure[T](t: T): Out[T] = Constant(t)
     def map[A, B](a: Out[A], f: A => B): Out[B] = a match {
