@@ -2,6 +2,7 @@ package evolution.language
 import InterpreterModule._
 import evolution.data.{ Ctx, ExpressionModule }
 import evolution.data.EvaluationContext._
+import evolution.geometry.Point
 
 sealed trait Evo[T]
 
@@ -21,17 +22,22 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
         interpreter.interpret(t1)
     }
 
-    implicit val double: Interpreter[Double, Double] =
-      Interpreter.instance[Double, Double] {
-        case Dbl(d)    => Out.pure(d)
-        case ToDbl(n)  => n.interpret[Int].map(_.toDouble)
-        case Var(name) => Contextual.instance[Double](get[Any](_, name).asInstanceOf[Double])
-      }
+    implicit val double: Interpreter[Double, Double] = {
+      case Dbl(d)    => Out.pure(d)
+      case ToDbl(n)  => n.interpret[Int].map(_.toDouble)
+      case Var(name) => Contextual.instance[Double](get[Any](_, name).asInstanceOf[Double])
+    }
 
     implicit val integer: Interpreter[Int, Int] =
       Interpreter.instance[Int, Int] {
-        case Floor(d)  => d.interpret[Double].map(_.toInt)
-        case Var(name) => Contextual.instance[Int](get[Any](_, name).asInstanceOf[Int])
+        case Integer(n) => Out.pure(n)
+        case Floor(d)   => d.interpret[Double].map(_.toInt)
+        case Var(name)  => Contextual.instance[Int](get[Any](_, name).asInstanceOf[Int])
+      }
+
+    implicit val point: Interpreter[Point, Point] =
+      Interpreter.instance[Point, Point] {
+        case Pnt(x, y) => Out.map2(x.interpret[Double], y.interpret[Double])(Point.apply)
       }
   }
 }
