@@ -28,24 +28,33 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
         Out.map2(pairOfExprs._1.interpret[T1], pairOfExprs._2.interpret[T2])(f)
     }
 
-    implicit val double: Interpreter[Double, Double] = {
-      case Dbl(d)    => Out.pure(d)
-      case ToDbl(n)  => n.interpret[Int].map(_.toDouble)
-      case Var(name) => Contextual.instance[Double](get[Any](_, name).asInstanceOf[Double])
-      case X(p)      => p.interpret[Point].map(_.x)
-      case Y(p)      => p.interpret[Point].map(_.y)
-    }
+    implicit val double: Interpreter[Double, Double] =
+      interpreter[Double, Double] {
+        case Dbl(d)   => Out.pure(d)
+        case ToDbl(n) => n.interpret[Int].map(_.toDouble)
+        case X(p)     => p.interpret[Point].map(_.x)
+        case Y(p)     => p.interpret[Point].map(_.y)
+      }
 
     implicit val integer: Interpreter[Int, Int] =
-      Interpreter.instance[Int, Int] {
+      interpreter[Int, Int] {
         case Integer(n) => Out.pure(n)
         case Floor(d)   => d.interpret[Double].map(_.toInt)
-        case Var(name)  => Contextual.instance[Int](get[Any](_, name).asInstanceOf[Int])
       }
 
     implicit val point: Interpreter[Point, Point] =
-      Interpreter.instance[Point, Point] {
+      interpreter[Point, Point] {
         case Pnt(x, y) => (x, y).interpret[Double, Double, Point](Point.apply)
       }
+
+    private def common[T]: PartialFunction[Expr[T], Out[T]] = {
+      case Var(name) => Contextual.instance[T](get[Any](_, name).asInstanceOf[T])
+      //case add @ Add(a, b) => interpret2(a, b)(add.semigroup.combine)
+    }
+
+    private def interpreter[T1, T2](f: PartialFunction[Expr[T1], Out[T2]]): Interpreter[T1, T2] =
+      Interpreter.instance[T1, T2](f orElse {
+        case Var(name) => Contextual.instance[T2](get[Any](_, name).asInstanceOf[T2])
+      })
   }
 }
