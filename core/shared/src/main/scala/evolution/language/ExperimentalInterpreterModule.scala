@@ -22,10 +22,18 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
         interpreter.interpret(t1)
     }
 
+    implicit class Ops2[A1, A2](pairOfExprs: (Expr[A1], Expr[A2])) {
+      def interpret[T1, T2, T3](
+        f: (T1, T2) => T3)(implicit int1: Interpreter[A1, T1], int2: Interpreter[A2, T2]): Out[T3] =
+        Out.map2(pairOfExprs._1.interpret[T1], pairOfExprs._2.interpret[T2])(f)
+    }
+
     implicit val double: Interpreter[Double, Double] = {
       case Dbl(d)    => Out.pure(d)
       case ToDbl(n)  => n.interpret[Int].map(_.toDouble)
       case Var(name) => Contextual.instance[Double](get[Any](_, name).asInstanceOf[Double])
+      case X(p)      => p.interpret[Point].map(_.x)
+      case Y(p)      => p.interpret[Point].map(_.y)
     }
 
     implicit val integer: Interpreter[Int, Int] =
@@ -37,7 +45,7 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
 
     implicit val point: Interpreter[Point, Point] =
       Interpreter.instance[Point, Point] {
-        case Pnt(x, y) => Out.map2(x.interpret[Double], y.interpret[Double])(Point.apply)
+        case Pnt(x, y) => (x, y).interpret[Double, Double, Point](Point.apply)
       }
   }
 }
