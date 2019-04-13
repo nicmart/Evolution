@@ -29,7 +29,8 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
 
     implicit class Ops2[A1, A2](pairOfExprs: (Expr[A1], Expr[A2])) {
       def interpret2[T1, T2, T3](
-        f: (T1, T2) => T3)(implicit int1: Interpreter[A1, T1], int2: Interpreter[A2, T2]): Out[T3] =
+        f: (T1, T2) => T3
+      )(implicit int1: Interpreter[A1, T1], int2: Interpreter[A2, T2]): Out[T3] =
         Out.map2(pairOfExprs._1.interpret[T1], pairOfExprs._2.interpret[T2])(f)
     }
 
@@ -77,6 +78,7 @@ trait ExperimentalInterpreterModule extends ExpressionModule[Evo] {
           }
 
         case MapCons(eva, f) => ???
+
 //          (eva, f).interpret2[RNGRepr[T2], RNGRepr[T2], RNGRepr[T2]] { (compiledEva, compiledF) =>
 //            RNGRepr { rng =>
 //              val (rng2, next) = compiledEva.run(rng)
