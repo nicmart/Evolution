@@ -61,17 +61,27 @@ object Test2 {
   sealed abstract class Expr[T](implicit val `type`: Type[T])
 
   case class Number(n: Int) extends Expr[Int]
-  case class Func[A: Type, B: Type](f: A => B) extends Expr[A => B]
   case class Cons[T: Type](h: Expr[T], t: Expr[Lst[T]]) extends Expr[Lst[T]]
   case class Empty[T: Type]() extends Expr[Lst[T]]
   case class Map[T1: Type, T2: Type](as: Expr[Lst[T1]], f: Expr[T1 => T2]) extends Expr[Lst[T2]]
+  case class Constant[T1: Type, T2: Type](c: Expr[T2]) extends Expr[T1 => T2]
+  case object PlusOne extends Expr[Int => Int]
+  case class Head[T: Type]() extends Expr[Lst[T] => T]
 
   val n: Expr[Int] = Number(10)
   val lst: Expr[Lst[Int]] = Cons(n, Empty())
   val lstLst: Expr[Lst[Lst[Int]]] = Cons(lst, Empty())
 
-  sealed trait Compiler[G, H] {
-    def compile(expr: Expr[G]): H
+  sealed trait Compiler[A, B] {
+    def compile(expr: Expr[A]): B
+  }
+
+  object Compiler {
+    def apply[T1, T2](implicit c: Compiler[T1, T2]): Compiler[T1, T2] = c
+    def instance[A, B](f: Expr[A] => B): Compiler[A, B] =
+      new Compiler[A, B] {
+        def compile(expr: Expr[A]): B = f(expr)
+      }
   }
 
   implicit val intCompiler: Compiler[Int, Int] = new Compiler[Int, Int] {
@@ -79,6 +89,20 @@ object Test2 {
       case Number(int) => int
     }
   }
+
+  implicit def headCompiler[T1, T2](implicit c: Compiler[Lst[T1], List[T2]]): Compiler[Lst[T1] => T1, List[T2] => T2] =
+    Compiler.instance {
+      case Head() => list => list.head
+    }
+
+  implicit def funcCompiler[A1, A2, B1, B2](
+    implicit c1: Compiler[A1, A2],
+    c2: Compiler[B1, B2]
+  ): Compiler[A1 => B1, A2 => B2] =
+    Compiler.instance {
+      case Constant(c) => _ => c2.compile(c)
+      case _: Head[t]  => lst => ???
+    }
 
   implicit def lstCompiler[T1, T2](implicit innerCompiler: Compiler[T1, T2]): Compiler[Lst[T1], List[T2]] =
     new Compiler[Lst[T1], List[T2]] {
