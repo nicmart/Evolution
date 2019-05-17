@@ -177,7 +177,7 @@ class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) e
   val columnNumber: Int = lineAndColumn._2
   val line: String = inputLines(lineNumber)
 
-  private val columnIndicator: String = (" " * line.length).updated(columnNumber, '^')
+  private val columnIndicator: String = (" " * (line.length + 1)).updated(columnNumber, '^')
 
   def message: String =
     s"""Parsing failed at line ${lineNumber + 1}, column ${columnNumber + 1}:
