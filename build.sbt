@@ -131,7 +131,7 @@ lazy val jsApp = project
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.1",
-      "com.github.japgolly.scalajs-react" %%% "test" % "1.1.1" % "test",
+      "com.github.japgolly.scalajs-react" %%% "test" % "1.4.2" % "test",
       "com.lihaoyi" %%% "scalatags" % "0.6.2",
       "io.circe" %%% "circe-core" % "0.9.3",
       "io.circe" %%% "circe-generic" % "0.9.3",
