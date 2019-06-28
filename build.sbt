@@ -152,7 +152,7 @@ lazy val server = (project in file("server"))
     scalaJSProjects := Seq(jsApp),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % "10.0.11"
+      "com.typesafe.akka" %% "akka-http" % "10.0.15"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     packagePrefix in Assets := "public/",
