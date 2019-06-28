@@ -128,7 +128,7 @@ lazy val jsApp = project
     inThisBuild(commonSettings),
     version := "0.1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.2",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.1",
       "com.github.japgolly.scalajs-react" %%% "test" % "1.1.1" % "test",
