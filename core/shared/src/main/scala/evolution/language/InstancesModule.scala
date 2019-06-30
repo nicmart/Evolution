@@ -10,7 +10,7 @@ trait InstancesModule[F[_]] { self: TyperModule[F] =>
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
     def evaluateEither(additionalVarTypeBindings: TypeContext = Map.empty): Either[String, T] =
-      t.run(constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty).value
+      t.run(constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty)
 
     def unsafeEvaluate: T =
       evaluateEither().fold(
@@ -19,6 +19,6 @@ trait InstancesModule[F[_]] { self: TyperModule[F] =>
       )
 
     def unsafeEvaluateWith(ctx: TypeContext): T =
-      t.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).value.right.get
+      t.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).right.get
   }
 }
