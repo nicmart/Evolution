@@ -142,9 +142,9 @@ lazy val jsApp = project
       "org.webjars.bower" % "react" % "15.6.1" / "react-dom-server.js" minified "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer"
     ),
     scalaJSUseMainModuleInitializer := true,
-    scalaJSStage in Global := FastOptStage,
+    scalaJSStage in Global := FastOptStage
     // jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value),
-    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
+    //jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
   )
 
 lazy val server = (project in file("server"))
