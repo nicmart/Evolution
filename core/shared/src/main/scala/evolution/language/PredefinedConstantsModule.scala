@@ -108,11 +108,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     val values: immutable.IndexedSeq[Constant1] = findValues
 
     case object X extends Constant1Plain(Qualified(Type.Point =>: Dbl)) {
-      override def compilePlain(x: Expr[_]): Expr[_] = Expr.X(x.value.asExpr)
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.X(x.asExpr)
     }
 
     case object Y extends Constant1Plain(Qualified(Type.Point =>: Dbl)) {
-      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Y(x.value.asExpr)
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Y(x.asExpr)
     }
 
     case object Floor extends Constant1Plain(Qualified(Dbl =>: Integer)) {
@@ -207,7 +207,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object LiftedPoint extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
       override def entryName: String = "@point"
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        liftedPoint(x.value.asExprF, y.value.asExprF).asExpr[F[_]]
+        liftedPoint(x.asExprF, y.asExprF).asExpr[F[_]]
     }
 
     case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
@@ -217,7 +217,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object LiftedPolar extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
       override def entryName: String = "@polar"
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        liftedPolar(x.value.asExprF, y.value.asExprF).asExpr[F[_]]
+        liftedPolar(x.asExprF, y.asExprF).asExpr[F[_]]
     }
 
     case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
