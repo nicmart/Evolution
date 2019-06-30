@@ -4,7 +4,10 @@ resolvers += Resolver.sonatypeRepo("releases")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.28")
 addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.14.0")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1")
-addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.9")
+
+// Use Scalajs 0.6 specific version
+addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.9-0.6")
+
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.3.2")
 //addCompilerPlugin("ch.epfl.scala" %% "scalac-profiling" % "1.0.0")
