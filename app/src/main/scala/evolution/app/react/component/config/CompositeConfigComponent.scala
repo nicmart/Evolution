@@ -6,6 +6,7 @@ import evolution.app.react.component.DrawingList
 import evolution.app.react.component.config.ConfigComponent.instance
 import evolution.app.react.component.presentational.styled.FormField
 import japgolly.scalajs.react.extra.StateSnapshot
+import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.vdom.html_<^._
 
 object CompositeConfigComponent {
@@ -25,7 +26,7 @@ object CompositeConfigComponent {
 //      }
 
       val innerConfigComp = innerComponent(
-        StateSnapshot[config.InnerConfig](innerConfig)(
+        SnapshotUnderware.simpleSnapshot[config.InnerConfig](innerConfig)(
           newInnerConfig => props.setState(CompositeDefinitionConfig(newInnerConfig, config.definition))
         )
       )()

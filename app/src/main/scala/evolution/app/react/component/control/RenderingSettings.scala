@@ -56,7 +56,7 @@ object RenderingSettings {
                 <.input(
                   ^.`type` := "checkbox",
                   ^.checked := !props.value.trail.active,
-                  ^.onChange ==> isTrailActive(props).setState.compose[ReactEventFromInput](e => !e.target.checked)
+                  ^.onChange ==> ((b: Boolean) => isTrailActive(props).setState(b)).compose[ReactEventFromInput](e => !e.target.checked)
                 ),
                 "Persist drawing on canvas"
               )

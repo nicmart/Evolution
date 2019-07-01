@@ -3,6 +3,7 @@ package evolution.app.react.routing
 import evolution.app.codec.Codec
 import evolution.app.react.component.App
 import evolution.app.react.pages._
+import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
@@ -53,7 +54,7 @@ class Routing[C](
     private def renderPage: LoadDrawingPage[C] => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         appComponent(
-          StateSnapshot[PageState[C]](loadDrawingPage.state)(pageState =>
+          SnapshotUnderware.simpleSnapshot[PageState[C]](loadDrawingPage.state)(pageState =>
             Callback(println("PageStateSnapshot Callback called")) >> router.set(LoadDrawingPage(pageState)))
         )
       }

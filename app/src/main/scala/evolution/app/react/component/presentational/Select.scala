@@ -23,7 +23,7 @@ object Select {
       <.select(
         options.toTagMod,
         ^.className := "select",
-        ^.onChange ==> props.setState.compose[ReactEventFromInput](e =>
+        ^.onChange ==> ((ts: PointedSeq[Item[T]]) => props.setState(ts)).compose[ReactEventFromInput](e =>
           props.value.selectByPredicate(_.key == e.target.value)),
         ^.value := props.value.selected.key
       )

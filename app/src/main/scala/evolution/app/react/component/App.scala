@@ -7,10 +7,11 @@ import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
 import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
 import org.scalajs.dom
+import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
 import evolution.geometry.Point
 import evolution.app.model.state.{ DrawingState, RendererState }
+import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
 
@@ -38,10 +39,10 @@ object App {
     pageComponent: Page.ReactComponent[C]
   )(bs: BackendScope[StateSnapshot[PageState[C]], State[C]]) {
     def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State[C]): VdomElement = {
-      val stateSnapshot = StateSnapshot(state)(s => bs.setState(s))
+      val stateSnapshot =   SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(drawingState =>
         pageState => pageState.copy(drawingState = drawingState))
-      val layoutSnapshot = StateSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
+      val layoutSnapshot = SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
       val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(renderingState =>
         pageState => pageState.copy(rendererState = renderingState))
 

@@ -8,6 +8,7 @@ import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
 import org.scalajs.dom
 
@@ -93,12 +94,12 @@ object Canvas {
       .backend[Backend](_ => new Backend(drawerFromState))
       .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
-        s.backend.onMount(s.getDOMNode, s.props)
+        s.backend.onMount(s.getDOMNode.asElement, s.props)
       }
       .componentWillUnmount(s =>
         Callback {
           s.backend.scheduleStop()
       })
-      .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode, s.nextProps))
+      .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode.asElement, s.nextProps))
       .build
 }
