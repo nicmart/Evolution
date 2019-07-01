@@ -60,7 +60,7 @@ lazy val jvmScalatestSettings = Test / testOptions ++= Seq(
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.12.8", // Can't upgrade to 2.12.7 until https://github.com/scala/bug/issues/11174 is fixed
+  scalaVersion := "2.12.8",
   version := "0.1.0-SNAPSHOT",
   scalacOptions ++= Seq(
     "-Ypartial-unification",
@@ -122,7 +122,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 lazy val jsApp = project
   .in(file("app"))
   .dependsOn(core.js % "test->test;compile->compile")
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, ScalaJSBundlerPlugin)
   .settings(
     inThisBuild(commonSettings),
     version := "0.1.0-SNAPSHOT",
@@ -136,15 +136,13 @@ lazy val jsApp = project
       "io.circe" %%% "circe-generic" % "0.11.1",
       "io.circe" %%% "circe-parser" % "0.11.1"
     ),
-    jsDependencies ++= Seq(
-      "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-      "org.webjars.bower" % "react" % "15.6.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
-      "org.webjars.bower" % "react" % "15.6.1" / "react-dom-server.js" minified "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer"
+    npmDependencies in Compile ++= Seq(
+      "react" -> "15.6.1",
+      "react-dom" -> "15.6.1",
+      "react-dom-server" -> "15.6.1"
     ),
     scalaJSUseMainModuleInitializer := true,
     scalaJSStage in Global := FastOptStage
-    // jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value),
-    //jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
   )
 
 lazy val server = (project in file("server"))
