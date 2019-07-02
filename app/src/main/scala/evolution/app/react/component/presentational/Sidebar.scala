@@ -29,7 +29,7 @@ object Sidebar {
           "expanded" -> props.expanded,
           "column" -> false // TODO remove this?
         ),
-        ^.width := props.width.value.toString,
+        ^.width := props.width.value.toString + "px",
         <.div(
           ^.id := "sidebar-handle",
           ^.onMouseDown ==> onMouseDown(props.width.value),

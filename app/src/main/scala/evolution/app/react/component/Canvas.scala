@@ -36,8 +36,8 @@ object Canvas {
       val retinaSize = props.context.canvasSize.point * props.rendererState.resolutionFactor
       <.canvas(
         ^.id := canvasId,
-        ^.width := size.x.toString,
-        ^.height := size.y.toString,
+        ^.width := size.x.toString + "px",
+        ^.height := size.y.toString + "px",
         VdomAttr("width") := retinaSize.x.toString,
         VdomAttr("height") := retinaSize.y.toString
       )
