@@ -173,9 +173,9 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) extends Throwable {
   val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
   private val lineAndColumn = findLineAndColumn(inputLines, index)
-  val lineNumber: Int = lineAndColumn._1
-  val columnNumber: Int = lineAndColumn._2
+  val lineNumber: Int = Math.min(lineAndColumn._1, inputLines.length - 1)
   val line: String = inputLines(lineNumber)
+  val columnNumber: Int = lineAndColumn._2
 
   private val columnIndicator: String = (" " * (line.length + 1)).updated(columnNumber, '^')
 
