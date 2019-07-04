@@ -31,9 +31,6 @@ trait ASTArbitraries[F[_]] {
     body <- genLeafExpr
   } yield s"$id -> $body"
 
-  def genPredefinedFunc: Gen[Constant] =
-    Gen.oneOf(Constant.nonFunctions0)
-
   def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.Number(d.toString)))
   def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))
   def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number((0.1 + d).toString)))

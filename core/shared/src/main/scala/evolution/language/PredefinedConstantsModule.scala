@@ -484,10 +484,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   }
 
   object Constant {
-    val values
-      : immutable.IndexedSeq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
-    val functions0: List[Constant0] = List(Constant0.Empty, Constant0.PI)
-    val nonFunctions0: List[Constant] = values.toList.filter(!functions0.contains(_))
+    val values: Seq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
   }
 
   implicit class CastingOps(value: Expr[_]) {
