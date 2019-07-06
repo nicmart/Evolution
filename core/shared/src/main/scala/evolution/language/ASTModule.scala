@@ -34,16 +34,13 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
       primitive: Boolean = false
     ) extends AST
 
-    // TODO Either we lowercase all the identifiers (i.e. also let and lambda names) or we do not do it at all.
-    // TODO: Note, we could use an Identifier case class that does the job, and it will be shared between lambda and let
-
     object Identifier {
       def apply(name: String, tpe: Qualified[Type] = Qualified(Type.Var("")), primitive: Boolean = false): Identifier =
         new Identifier(name.toLowerCase, tpe, primitive) {}
     }
 
     final case class Lambda(varName: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-    final case class App(f: AST, x: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+    final case class App(f: AST, args: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var("")))
         extends AST
     final case class Number(n: String, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
@@ -51,9 +48,35 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
 
     def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
     def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)
-    def App2(f: AST, x: AST, y: AST): AST = App(App(f, x), y)
-    def App3(f: AST, x: AST, y: AST, z: AST): AST = App(App(App(f, x), y), z)
 
+    def AppN(f: AST, args: AST*): AST =
+      args.toList match {
+        case arg1 :: arg2 :: arg3 :: rest if f == AST.Const(Constant3.ZipWith) =>
+          variadicZipWith(args.last, arg1, arg2, (arg3 :: rest).dropRight(1))
+        case _ => nestedApp(f, args: _*)
+      }
+
+    private def nestedApp(f: AST, args: AST*): AST = args.toList match {
+      case Nil                => f
+      case argHead :: argTail => nestedApp(AST.App(f, argHead), argTail: _*)
+    }
+
+    def ConsN(asts: List[AST]): AST = asts match {
+      case Nil          => AST.Identifier(Constant0.Empty.entryName)
+      case head :: tail => AST.AppN(AST.Identifier(Constant2.Cons.entryName), head, ConsN(tail))
+    }
+
+    private def variadicZipWith(f: AST, arg1: AST, arg2: AST, rest: List[AST]): AST =
+      rest match {
+        case Nil => nestedApp(AST.Const(Constant3.ZipWith), arg1, arg2, f)
+        case nonEmptyRest =>
+          nestedApp(
+            AST.Const(Constant3.ZipWith),
+            variadicZipWith(f, arg1, arg2, nonEmptyRest.dropRight(1)),
+            nonEmptyRest.last,
+            AST.Lambda("f", AST.Lambda("x", AST.App(AST.Identifier("f"), AST.Identifier("x"))))
+          )
+      }
     // Note: f is not (and can't) be applied to variables
     def transformChildren(tree: AST, f: AST => AST): AST = tree match {
       case Lambda(varName, expr, tpe)  => Lambda(varName, f(expr), tpe)

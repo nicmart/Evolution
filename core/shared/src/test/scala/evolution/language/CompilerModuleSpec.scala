@@ -37,13 +37,14 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       }
 
       "ands" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant2.And), a, b)) shouldBe And(
+        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.And), a, b)) shouldBe And(
           unsafeCompile(a),
-          unsafeCompile(b))
+          unsafeCompile(b)
+        )
       }
 
       "ors" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant2.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
+        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
       }
 
       "nots" in forAll(genBool) { a =>
@@ -56,35 +57,36 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
       "binary minus" in forAll { (a: Double, b: Double) =>
         val ast =
-          AST.App2(
+          AST.AppN(
             AST.PrimitiveConst(Constant2.Minus),
             AST.Number(a.toString, Qualified(Type.Dbl)),
-            AST.Number(b.toString, Qualified(Type.Dbl)))
+            AST.Number(b.toString, Qualified(Type.Dbl))
+          )
         unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b)))
       }
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda("x", b)
-        val evolution = AST.App2(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
+        val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
         val expected = takeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant2.While), evolution, predicate)) shouldBe expected
+        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.While), evolution, predicate)) shouldBe expected
       }
 
       "untils" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda("x", b)
-        val evolution = AST.App2(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
+        val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
         val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.App2(AST.PrimitiveConst(Constant2.Until), evolution, predicate)) shouldBe expected
+        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.Until), evolution, predicate)) shouldBe expected
       }
 
       "equality operators" in forAll(equalityOperators[Double], genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
-          unsafeCompile(AST.App2(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+          unsafeCompile(AST.AppN(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
       }
 
       "relation operators" in forAll(relationOperators[Double], genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
-          unsafeCompile(AST.App2(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+          unsafeCompile(AST.AppN(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
       }
 
       "constant" - {
@@ -96,16 +98,14 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       "zipWith" - {
         "of vars" in {
           unsafeCompile(
-            AST.App3(
+            AST.AppN(
               AST.PrimitiveConst(Constant3.ZipWith),
               AST.Identifier("x"),
               AST.Identifier("y"),
               AST.Identifier("z")
             ),
-            new VarContext(List("x", "y", "z"))) shouldBe zipWith(
-            Var[Any]("x"),
-            Var[Any]("y"),
-            Var[Any => Any => Any]("z"))
+            new VarContext(List("x", "y", "z"))
+          ) shouldBe zipWith(Var[Any]("x"), Var[Any]("y"), Var[Any => Any => Any]("z"))
         }
       }
     }

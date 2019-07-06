@@ -9,10 +9,10 @@ class ASTModuleSpec extends LanguageSpec[Id] {
         case tree             => tree
       }
 
-      val expression = AST.App2(AST.Const(Constant2.Add), AST.Number("1"), AST.Number("2"))
+      val expression = AST.AppN(AST.Const(Constant2.Add), AST.Number("1"), AST.Number("2"))
       val transformed = AST.transformRecursively(expression, changeNumbers)
 
-      transformed shouldBe AST.App2(AST.Const(Constant2.Add), AST.Number("1 1"), AST.Number("2 2"))
+      transformed shouldBe AST.AppN(AST.Const(Constant2.Add), AST.Number("1 1"), AST.Number("2 2"))
     }
   }
 }

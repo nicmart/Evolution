@@ -23,14 +23,15 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "parse binary operators" in {
         forAll(genLeafExpr, genOperatorWithAST, genLeafExpr) {
           case (a, (op, opAST), b) =>
-            unsafeParse(s"$a $op $b") shouldBe AST.App2(opAST, unsafeParse(a), unsafeParse(b))
+            unsafeParse(s"$a $op $b") shouldBe AST.AppN(opAST, unsafeParse(a), unsafeParse(b))
         }
       }
 
       "inverses" in {
         unsafeParse("-point(0, 0)") shouldBe AST.App(
           AST.Const(Constant1.Inverse),
-          AST.App2(AST.Const(Constant2.Point), AST.Number("0"), AST.Number("0")))
+          AST.AppN(AST.Const(Constant2.Point), AST.Number("0"), AST.Number("0"))
+        )
       }
 
       "bindings" - {
@@ -45,7 +46,8 @@ class ParserModuleSpec extends LanguageSpec[Id] {
             unsafeParse(s"$id = $expr in 1 + 2") shouldBe AST.Let(
               id.toLowerCase,
               unsafeParse(expr),
-              AST.App2(AST.Const(Constant2.Add), AST.Number("1"), AST.Number("2")))
+              AST.AppN(AST.Const(Constant2.Add), AST.Number("1"), AST.Number("2"))
+            )
           }
         }
 
@@ -59,9 +61,9 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a * $b + $c") shouldBe AST.App2(
+          unsafeParse(s"$a * $b + $c") shouldBe AST.AppN(
             AST.Const(Constant2.Add),
-            AST.App2(AST.Const(Constant2.Multiply), unsafeParse(a), unsafeParse(b)),
+            AST.AppN(AST.Const(Constant2.Multiply), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
           )
         }
@@ -69,19 +71,19 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a + $b * $c") shouldBe AST.App2(
+          unsafeParse(s"$a + $b * $c") shouldBe AST.AppN(
             AST.Const(Constant2.Add),
             unsafeParse(a),
-            AST.App2(AST.Const(Constant2.Multiply), unsafeParse(b), unsafeParse(c))
+            AST.AppN(AST.Const(Constant2.Multiply), unsafeParse(b), unsafeParse(c))
           )
         }
       }
 
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"($a + $b) * $c") shouldBe AST.App2(
+          unsafeParse(s"($a + $b) * $c") shouldBe AST.AppN(
             AST.Const(Constant2.Multiply),
-            AST.App2(AST.Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
+            AST.AppN(AST.Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
           )
         }
@@ -112,7 +114,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe AST.Lambda(
             identifier1.toLowerCase,
-            AST.App2(AST.Const(Constant2.Add), unsafeParse(expr1), unsafeParse(expr2))
+            AST.AppN(AST.Const(Constant2.Add), unsafeParse(expr1), unsafeParse(expr2))
           )
         }
       }
@@ -132,7 +134,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$identifier1($expr1, $expr2)") shouldBe AST.App2(
+          unsafeParse(s"$identifier1($expr1, $expr2)") shouldBe AST.AppN(
             AST.Identifier(identifier1),
             unsafeParse(expr1),
             unsafeParse(expr2)
@@ -151,26 +153,26 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
       "parse exponentials" - {
         "2^3 + 1" in {
-          unsafeParse("2^3 + 1") shouldBe AST.App2(
+          unsafeParse("2^3 + 1") shouldBe AST.AppN(
             AST.Const(Constant2.Add),
-            AST.App2(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
+            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
             AST.Number("1")
           )
         }
 
         "2^3 * 2" in {
-          unsafeParse("2^3 * 2") shouldBe AST.App2(
+          unsafeParse("2^3 * 2") shouldBe AST.AppN(
             AST.Const(Constant2.Multiply),
-            AST.App2(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
+            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
             AST.Number("2")
           )
         }
 
         "2 * 2^3" in {
-          unsafeParse("2 * 2^3") shouldBe AST.App2(
+          unsafeParse("2 * 2^3") shouldBe AST.AppN(
             AST.Const(Constant2.Multiply),
             AST.Number("2"),
-            AST.App2(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3"))
+            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3"))
           )
         }
       }
@@ -178,9 +180,9 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a / $b + $c") shouldBe AST.App2(
+            unsafeParse(s"$a / $b + $c") shouldBe AST.AppN(
               AST.Const(Constant2.Add),
-              AST.App2(AST.Const(Constant2.Div), unsafeParse(a), unsafeParse(b)),
+              AST.AppN(AST.Const(Constant2.Div), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
           }
@@ -188,19 +190,19 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
         "a + b / c = a + (b / c)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a + $b / $c") shouldBe AST.App2(
+            unsafeParse(s"$a + $b / $c") shouldBe AST.AppN(
               AST.Const(Constant2.Add),
               unsafeParse(a),
-              AST.App2(AST.Const(Constant2.Div), unsafeParse(b), unsafeParse(c))
+              AST.AppN(AST.Const(Constant2.Div), unsafeParse(b), unsafeParse(c))
             )
           }
         }
 
         "(a + b) / c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"($a + $b) / $c") shouldBe AST.App2(
+            unsafeParse(s"($a + $b) / $c") shouldBe AST.AppN(
               AST.Const(Constant2.Div),
-              AST.App2(AST.Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
+              AST.AppN(AST.Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
           }
@@ -208,10 +210,11 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
         "@point(a, b)" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-            unsafeParse(s"@point($a, $b)") shouldBe AST.App2(
+            unsafeParse(s"@point($a, $b)") shouldBe AST.AppN(
               AST.Const(Constant2.LiftedPoint),
               unsafeParse(a),
-              unsafeParse(b))
+              unsafeParse(b)
+            )
           }
         }
 
@@ -219,7 +222,8 @@ class ParserModuleSpec extends LanguageSpec[Id] {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
             unsafeParse(s"@($expr($a, $b))") shouldBe AST.App(
               AST.Const(Constant1.Constant),
-              AST.App2(unsafeParse(expr), unsafeParse(a), unsafeParse(b)))
+              AST.AppN(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
+            )
           }
         }
 
@@ -232,24 +236,25 @@ class ParserModuleSpec extends LanguageSpec[Id] {
 
         "[a, b, c]" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"[$a, $b, $c]") shouldBe AST.App2(
+            unsafeParse(s"[$a, $b, $c]") shouldBe AST.AppN(
               AST.Const(Constant2.Cons),
               unsafeParse(a),
-              AST.App2(
+              AST.AppN(
                 AST.Const(Constant2.Cons),
                 unsafeParse(b),
-                AST.App2(AST.Const(Constant2.Cons), unsafeParse(c), AST.Const(Constant0.Empty)))
+                AST.AppN(AST.Const(Constant2.Cons), unsafeParse(c), AST.Const(Constant0.Empty))
+              )
             )
           }
         }
       }
 
-      "zipWith(a, b, c, f)" in {
+      "variadic zipWith(a, b, c, f)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
           val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
-          val expected = AST.App3(
+          val expected = AST.AppN(
             AST.Const(Constant3.ZipWith),
-            AST.App3(
+            AST.AppN(
               AST.Const(Constant3.ZipWith),
               unsafeParse(a),
               unsafeParse(b),
@@ -257,10 +262,10 @@ class ParserModuleSpec extends LanguageSpec[Id] {
             ),
             unsafeParse(c),
             AST.Lambda(
-              "argf",
+              "f",
               AST.Lambda(
-                "arg3",
-                AST.App(AST.Identifier("argf"), AST.Identifier("arg3"))
+                "x",
+                AST.App(AST.Identifier("f"), AST.Identifier("x"))
               )
             )
           )
@@ -284,10 +289,11 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "logical operators with the right precedence" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a || $b && $c") shouldBe
-            AST.App2(
+            AST.AppN(
               AST.Const(Constant2.Or),
               unsafeParse(a),
-              AST.App2(AST.Const(Constant2.And), unsafeParse(b), unsafeParse(c)))
+              AST.AppN(AST.Const(Constant2.And), unsafeParse(b), unsafeParse(c))
+            )
         }
       }
     }

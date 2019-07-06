@@ -66,7 +66,7 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
           "*" -> AST.Identifier(Constant2.Multiply.entryName),
           "@*" -> AST.Identifier(Constant2.LiftedMultiply.entryName),
           "/" -> AST.Identifier(Constant2.Div.entryName),
-          "%" -> AST.Identifier(Constant2.Mod.entryName),
+          "%" -> AST.Identifier(Constant2.Mod.entryName)
         ),
         PrecedenceGroup(
           "^" -> AST.Identifier(Constant2.Exp.entryName)
@@ -77,15 +77,16 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
     private lazy val factor: Parser[AST] =
       P(
         ("(" ~/ expression ~/ ")") | number | boolean | unaryPrefixOp |
-          variable | list)
+          variable | list
+      )
 
     private lazy val appOrFactor: Parser[AST] =
       P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
-        case (f, None)       => f
-        case (f, Some(args)) => evalApp(f, args)
+        case (f, None)            => f
+        case (f, Some(arguments)) => AST.AppN(f, arguments: _*)
       }
 
-    private lazy val list: Parser[AST] = P("[" ~/ args ~/ "]").map(evalList)
+    private lazy val list: Parser[AST] = P("[" ~/ args ~/ "]").map(AST.ConsN)
 
     private lazy val number: Parser[AST.Number] =
       numbers.doubleLiteral.map(AST.Number(_))
@@ -113,34 +114,6 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
     private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
-
-    private def evalApp(f: AST, args: List[AST]): AST =
-      args match {
-        case arg1 :: arg2 :: arg3 :: rest if f == AST.Const(Constant3.ZipWith) =>
-          evalZipWith(args.last, arg1, arg2, (arg3 :: rest).dropRight(1))
-        case Nil                => f
-        case argHead :: argTail => evalApp(AST.App(f, argHead), argTail)
-      }
-
-    // TODO these re-writes should not be here
-    private def evalZipWith(f: AST, arg1: AST, arg2: AST, rest: List[AST]): AST =
-      rest match {
-        case Nil => AST.App3(AST.Const(Constant3.ZipWith), arg1, arg2, f)
-        case arg3 :: tail =>
-          AST.App3(
-            AST.Const(Constant3.ZipWith),
-            evalZipWith(f, arg1, arg2, tail),
-            arg3,
-            AST.Lambda("argf", AST.Lambda("arg3",
-              AST.App(AST.Identifier("argf"), AST.Identifier("arg3"))
-            ))
-          )
-      }
-
-    private def evalList(asts: List[AST]): AST = asts match {
-      case Nil          => AST.Identifier(Constant0.Empty.entryName)
-      case head :: tail => AST.App2(AST.Identifier(Constant2.Cons.entryName), head, evalList(tail))
-    }
 
     private object numbers {
 
