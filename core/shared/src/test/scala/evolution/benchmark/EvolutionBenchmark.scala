@@ -12,13 +12,20 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
   import evolution.data.EvaluationContext._
   import module._
 
-  "an evolution" - {
-    "should be fast" in {
-      //val result = benchmark(10)(unsafeRun("@(1)", 60000))
-      //result.average.toMillis should be < 10L
-      unsafeRun("y = 1 in map(map(@(1), x -> x), x -> y)", 60000)
-      interpreterRuns should be(0)
-      outAllocations should be(0)
+  "benchmark for evolution" - {
+    val expressions = List(
+      "@(1)",
+      "map(@(1), x -> x)",
+      "y = 1 in map(map(@(1), x -> x), x -> y)"
+      )
+
+    expressions foreach { expression =>
+      expression in {
+        unsafeRun(expression, 60000)
+        interpreterRuns should be(0)
+        outAllocations should be(0)
+        RNGRepr.allocationsCount should be(0)
+      }
     }
   }
 
@@ -48,7 +55,8 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       .apply(emptyCtx)
       .iterator(RNG(0L))
 
-    //resetCounts()
+    resetCounts()
+    RNGRepr.resetAllocationsCount()
 
     iterator.drop(n)
   }

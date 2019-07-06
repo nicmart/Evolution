@@ -4,10 +4,16 @@ import scala.annotation.tailrec
 final case class RNGRepr[+A](
   run: RNG => (RNG, Option[(A, RNGRepr[A])])
 ) extends StateRepr[A, RNG, RNGRepr[A]] {
+  RNGRepr.allocations += 1
   override def self: RNGRepr[A] = this
 }
 
 object RNGRepr {
+  private var allocations: Int = 0
+  
+  def resetAllocationsCount(): Unit = allocations = 0
+  def allocationsCount: Int = allocations
+
   def constant[T](t: T): RNGRepr[T] = {
     lazy val self: RNGRepr[T] = RNGRepr(rng => (rng, Some((t, self))))
     self
