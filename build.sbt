@@ -82,8 +82,6 @@ lazy val commonSettings = List(
   )
 )
 
-lazy val BenchmarkTest = config("bench") extend Test
-
 // FROM https://github.com/portable-scala/sbt-crossproject/blob/ec514cb96892cb27e3376a5c5d9914b5ae86c69b/sbt-crossproject/src/main/scala/sbtcrossproject/CrossProject.scala#L207
 // Since CrossBuild by default do things only for Test Config
 def makeCrossSources(sharedSrcDir: Option[File], scalaBinaryVersion: String): Seq[File] = {
@@ -96,13 +94,8 @@ def makeCrossSources(sharedSrcDir: Option[File], scalaBinaryVersion: String): Se
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
-  .configs(BenchmarkTest)
   .settings(
     name := "core",
-    inConfig(BenchmarkTest)(Defaults.testSettings),
-    unmanagedSourceDirectories in BenchmarkTest ++= {
-      makeCrossSources(CrossType.Full.sharedSrcDir(baseDirectory.value, "bench"), scalaBinaryVersion.value)
-    },
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.8" % "test",

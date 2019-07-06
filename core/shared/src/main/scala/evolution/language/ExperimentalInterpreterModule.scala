@@ -1,11 +1,9 @@
 package evolution.language
-import cats.Eval
 import evolution.data.EvaluationContext._
-import evolution.data.{ Ctx, ExpressionModule }
+import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.language.InterpreterModule._
 import evolution.materialization.RNGRepr
-import shapeless.Lazy
 
 sealed trait Evo[T]
 

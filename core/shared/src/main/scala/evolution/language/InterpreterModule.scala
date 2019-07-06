@@ -12,178 +12,182 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   import InterpreterModule._
 
   object Interpreter {
-    def interpret[T](expr: Expr[T]): Out[T] = expr match {
-      case Dbl(d)          => Out.pure(d)
-      case Floor(d)        => interpret(d).map(_.toInt)
-      case ToDbl(n)        => interpret(n).map(_.toDouble)
-      case Integer(n)      => Out.pure(n)
-      case Pnt(x, y)       => interpret2(x, y)(Point.apply)
-      case X(p)            => interpret1(p)(_.x)
-      case Y(p)            => interpret1(p)(_.y)
-      case add @ Add(a, b) => interpret2(a, b)(add.semigroup.combine)
-      case Div(a, b)       => interpret2(a, b)(_ / _)
-      case Exp(a, b)       => interpret2(a, b)(Math.pow)
-      case Abs(a)          => interpret(a).map(Math.abs)
-      case Sign(a)         => interpret(a).map(Math.signum)
-      case Mod(a, b) =>
-        interpret2(a, b) { (ca, cb) =>
-          if (ca >= 0) ca % cb else (ca % cb) + cb
-        }
-      case inv @ Inverse(t)      => interpret1(t)(inv.group.inverse)
-      case mult @ Multiply(k, t) => interpret2(k, t)(mult.vectorSpace.mult)
-      case Sin(d)                => interpret1(d)(Math.sin)
-      case Cos(d)                => interpret1(d)(Math.cos)
-      case SmoothStep(f, t, p) =>
-        interpret3(f, t, p) { (from, to, position) =>
-          val t = (position - from) / (to - from)
-          if (t <= 0) 0.0
-          else if (t >= 1) 1.0
-          else t * t * (3.0 - 2.0 * t)
-        }
-      case eq @ Equals(a, b) => interpret2(a, b)(eq.eq.eqv)
-      case neq @ Neq(a, b)   => interpret2(a, b)(neq.eq.neqv)
-      case IfThen(condition, a, b) =>
-        interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
-          if (compiledCondition) compiledA else compiledB
-        }
 
-      case Bool(b) => Out.pure(b)
-
-      case And(a, b) =>
-        interpret2(a, b)(_ && _)
-
-      case Or(a, b) =>
-        interpret2(a, b)(_ || _)
-
-      case Not(a) =>
-        interpret(a).map(!_)
-
-      case expr @ GreaterThan(a, b)        => interpret2(a, b)(expr.ord.gt)
-      case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteqv)
-      case expr @ LessThan(a, b)           => interpret2(a, b)(expr.ord.lt)
-      case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteqv)
-
-      case InRect(topLeft, bottomRight, p) =>
-        interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
-          compiledP.inRectangle(compiledTopLeft, compiledBottomRight)
-        }
-
-      case Var(name) =>
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = get[Any](ctx, name).asInstanceOf[T]
-        }
-
-      case Let(name, value, e) =>
-        interpret(App(Lambda(name, e), value))
-
-      case Lambda(name, body) =>
-        val interpretedBody = interpret(body)
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = a => interpretedBody(addStrict(name, a, ctx))
-        }
-
-      case App(f, a) => interpret2(f, a)(_(_))
-
-      // Detect constant evolutions
-      case Fix(Lambda(_, Cons(t, Var(_)))) =>
-        ConstantEvolution(interpret(t))
-
-      case Fix(Lambda(name, lambdaBody)) =>
-        val interpretedBody = interpret(lambdaBody)
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = {
-            lazy val a: T = interpretedBody(addLazy(name, () => a, ctx))
-            a
+    def interpret[T](expr: Expr[T]): Out[T] = {
+      _runs = _runs + 1
+      expr match {
+        case Dbl(d)          => Out.pure(d)
+        case Floor(d)        => interpret(d).map(_.toInt)
+        case ToDbl(n)        => interpret(n).map(_.toDouble)
+        case Integer(n)      => Out.pure(n)
+        case Pnt(x, y)       => interpret2(x, y)(Point.apply)
+        case X(p)            => interpret1(p)(_.x)
+        case Y(p)            => interpret1(p)(_.y)
+        case add @ Add(a, b) => interpret2(a, b)(add.semigroup.combine)
+        case Div(a, b)       => interpret2(a, b)(_ / _)
+        case Exp(a, b)       => interpret2(a, b)(Math.pow)
+        case Abs(a)          => interpret(a).map(Math.abs)
+        case Sign(a)         => interpret(a).map(Math.signum)
+        case Mod(a, b) =>
+          interpret2(a, b) { (ca, cb) =>
+            if (ca >= 0) ca % cb else (ca % cb) + cb
           }
-        }
+        case inv @ Inverse(t)      => interpret1(t)(inv.group.inverse)
+        case mult @ Multiply(k, t) => interpret2(k, t)(mult.vectorSpace.mult)
+        case Sin(d)                => interpret1(d)(Math.sin)
+        case Cos(d)                => interpret1(d)(Math.cos)
+        case SmoothStep(f, t, p) =>
+          interpret3(f, t, p) { (from, to, position) =>
+            val t = (position - from) / (to - from)
+            if (t <= 0) 0.0
+            else if (t >= 1) 1.0
+            else t * t * (3.0 - 2.0 * t)
+          }
+        case eq @ Equals(a, b) => interpret2(a, b)(eq.eq.eqv)
+        case neq @ Neq(a, b)   => interpret2(a, b)(neq.eq.neqv)
+        case IfThen(condition, a, b) =>
+          interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
+            if (compiledCondition) compiledA else compiledB
+          }
 
-      case Fix(_) => ???
+        case Bool(b) => Out.pure(b)
 
-      case Empty() =>
-        Out.pure(RNGRepr { rng =>
-          (rng, None)
-        })
+        case And(a, b) =>
+          interpret2(a, b)(_ && _)
 
-      // TODO we need a well-defined strategy for lazyness. In this case, we deley the materialization of cons, to allow
-      // recursive definitions
-      case Cons(head, tail) =>
-        val interpretedHead = interpret(head)
-        val interpretedTail = interpret(tail)
-        new Contextual[T] {
-          override def apply(ctx: Ctx): T = {
-            val h = interpretedHead(ctx)
+        case Or(a, b) =>
+          interpret2(a, b)(_ || _)
+
+        case Not(a) =>
+          interpret(a).map(!_)
+
+        case expr @ GreaterThan(a, b)        => interpret2(a, b)(expr.ord.gt)
+        case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteqv)
+        case expr @ LessThan(a, b)           => interpret2(a, b)(expr.ord.lt)
+        case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteqv)
+
+        case InRect(topLeft, bottomRight, p) =>
+          interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
+            compiledP.inRectangle(compiledTopLeft, compiledBottomRight)
+          }
+
+        case Var(name) =>
+          new Contextual[T] {
+            override def apply(ctx: Ctx): T = get[Any](ctx, name).asInstanceOf[T]
+          }
+
+        case Let(name, value, e) =>
+          interpret(App(Lambda(name, e), value))
+
+        case Lambda(name, body) =>
+          val interpretedBody = interpret(body)
+          new Contextual[T] {
+            override def apply(ctx: Ctx): T = a => interpretedBody(addStrict(name, a, ctx))
+          }
+
+        case App(f, a) => interpret2(f, a)(_(_))
+
+        // Detect constant evolutions
+        case Fix(Lambda(_, Cons(t, Var(_)))) =>
+          ConstantEvolution(interpret(t))
+
+        case Fix(Lambda(name, lambdaBody)) =>
+          val interpretedBody = interpret(lambdaBody)
+          new Contextual[T] {
+            override def apply(ctx: Ctx): T = {
+              lazy val a: T = interpretedBody(addLazy(name, () => a, ctx))
+              a
+            }
+          }
+
+        case Fix(_) => ???
+
+        case Empty() =>
+          Out.pure(RNGRepr { rng =>
+            (rng, None)
+          })
+
+        // TODO we need a well-defined strategy for lazyness. In this case, we deley the materialization of cons, to allow
+        // recursive definitions
+        case Cons(head, tail) =>
+          val interpretedHead = interpret(head)
+          val interpretedTail = interpret(tail)
+          new Contextual[T] {
+            override def apply(ctx: Ctx): T = {
+              val h = interpretedHead(ctx)
+              RNGRepr { rng =>
+                (rng, Some((h, interpretedTail(ctx))))
+              }
+            }
+          }
+
+        case MapEmpty(ev1, ev2) =>
+          interpret2(ev1, ev2) { (compiled1, compiled2) =>
             RNGRepr { rng =>
-              (rng, Some((h, interpretedTail(ctx))))
+              val (rng2, next) = compiled1.run(rng)
+              next match {
+                case None => compiled2.run(rng2)
+                case _    => (rng2, next)
+              }
             }
           }
-        }
 
-      case MapEmpty(ev1, ev2) =>
-        interpret2(ev1, ev2) { (compiled1, compiled2) =>
-          RNGRepr { rng =>
-            val (rng2, next) = compiled1.run(rng)
-            next match {
-              case None => compiled2.run(rng2)
-              case _    => (rng2, next)
+        case MapCons(eva, f) =>
+          interpret2(eva, f) { (compiledEva, compiledF) =>
+            RNGRepr { rng =>
+              val (rng2, next) = compiledEva.run(rng)
+              next match {
+                case None            => (rng2, None)
+                case Some((a, eva2)) => compiledF(a)(eva2).run(rng2)
+              }
             }
           }
-        }
 
-      case MapCons(eva, f) =>
-        interpret2(eva, f) { (compiledEva, compiledF) =>
-          RNGRepr { rng =>
-            val (rng2, next) = compiledEva.run(rng)
-            next match {
-              case None            => (rng2, None)
-              case Some((a, eva2)) => compiledF(a)(eva2).run(rng2)
+        case Uniform(from, to) =>
+          interpret2(from, to) { (compiledFrom, compiledTo) =>
+            lazy val self: RNGRepr[Double] = RNGRepr { rng =>
+              val (d, rng2) = rng.nextDouble
+              val scaled = compiledFrom + d * (compiledTo - compiledFrom)
+              (rng2, Some((scaled, self)))
+            }
+            self
+          }
+
+        case UniformDiscrete(from, to, step) =>
+          interpret3(from, to, step) { (f, t, s) =>
+            uniformChoiceRepr((f to t by s).toList)
+          }
+
+        case UniformFrom(n, ft) =>
+          interpret2(n, ft) { (compiledN, compiledFt) =>
+            RNGRepr { rng =>
+              val (rng2, ts) = compiledFt.collect(compiledN, rng)
+              uniformChoiceRepr(ts).run(rng2)
             }
           }
-        }
 
-      case Uniform(from, to) =>
-        interpret2(from, to) { (compiledFrom, compiledTo) =>
-          lazy val self: RNGRepr[Double] = RNGRepr { rng =>
-            val (d, rng2) = rng.nextDouble
-            val scaled = compiledFrom + d * (compiledTo - compiledFrom)
-            (rng2, Some((scaled, self)))
-          }
-          self
-        }
+        // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
+        case Normal(μ, σ) =>
+          interpret2(μ, σ) { (mu, sigma) =>
+            lazy val self: RNGRepr[Double] = RNGRepr { rng =>
+              val (u1, rng2) = rng.nextDouble
+              val (u2, rng3) = rng2.nextDouble
 
-      case UniformDiscrete(from, to, step) =>
-        interpret3(from, to, step) { (f, t, s) =>
-          uniformChoiceRepr((f to t by s).toList)
-        }
+              // TODO: missing check that u1 is not the smallest positive double number
+              val d = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
 
-      case UniformFrom(n, ft) =>
-        interpret2(n, ft) { (compiledN, compiledFt) =>
-          RNGRepr { rng =>
-            val (rng2, ts) = compiledFt.collect(compiledN, rng)
-            uniformChoiceRepr(ts).run(rng2)
-          }
-        }
+              (rng3, Some((d * sigma + mu, self)))
+            }
 
-      // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
-      case Normal(μ, σ) =>
-        interpret2(μ, σ) { (mu, sigma) =>
-          lazy val self: RNGRepr[Double] = RNGRepr { rng =>
-            val (u1, rng2) = rng.nextDouble
-            val (u2, rng3) = rng2.nextDouble
-
-            // TODO: missing check that u1 is not the smallest positive double number
-            val d = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-
-            (rng3, Some((d * sigma + mu, self)))
+            self
           }
 
-          self
-        }
+        case Noise() =>
+          Constant(PerlinNoise.noiseRNGRepr)
 
-      case Noise() =>
-        Constant(PerlinNoise.noiseRNGRepr)
-
-      case OctaveNoise() =>
-        Constant(PerlinNoise.octaveNoiseRNGRepr)
+        case OctaveNoise() =>
+          Constant(PerlinNoise.octaveNoiseRNGRepr)
+      }
     }
 
     private def uniformChoiceRepr[T](ts: List[T]): RNGRepr[T] =
@@ -211,6 +215,10 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
     private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Out[D] =
       Out.map3(interpret(a), interpret(b), interpret(c))(f)
   }
+
+  private var _runs = 0
+  def resetInterpreterRunsCount(): Unit = _runs = 0
+  def interpreterRuns: Int = _runs
 }
 
 object InterpreterModule {
