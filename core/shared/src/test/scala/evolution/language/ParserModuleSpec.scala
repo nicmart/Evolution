@@ -244,6 +244,31 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         }
       }
 
+      "zipWith(a, b, c, f)" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
+          val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
+          val expected = AST.App3(
+            AST.Const(Constant3.ZipWith),
+            AST.App3(
+              AST.Const(Constant3.ZipWith),
+              unsafeParse(a),
+              unsafeParse(b),
+              unsafeParse(f)
+            ),
+            unsafeParse(c),
+            AST.Lambda(
+              "argf",
+              AST.Lambda(
+                "arg3",
+                AST.App(AST.Identifier("argf"), AST.Identifier("arg3"))
+              )
+            )
+          )
+
+          parsed shouldBe expected
+        }
+      }
+
       "boolean literals" in {
         unsafeParse("true") shouldBe AST.Bool(true)
         unsafeParse("false") shouldBe AST.Bool(false)

@@ -116,8 +116,25 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private def evalApp(f: AST, args: List[AST]): AST =
       args match {
+        case arg1 :: arg2 :: arg3 :: rest if f == AST.Const(Constant3.ZipWith) =>
+          evalZipWith(args.last, arg1, arg2, (arg3 :: rest).dropRight(1))
         case Nil                => f
         case argHead :: argTail => evalApp(AST.App(f, argHead), argTail)
+      }
+
+    // TODO these re-writes should not be here
+    private def evalZipWith(f: AST, arg1: AST, arg2: AST, rest: List[AST]): AST =
+      rest match {
+        case Nil => AST.App3(AST.Const(Constant3.ZipWith), arg1, arg2, f)
+        case arg3 :: tail =>
+          AST.App3(
+            AST.Const(Constant3.ZipWith),
+            evalZipWith(f, arg1, arg2, tail),
+            arg3,
+            AST.Lambda("argf", AST.Lambda("arg3",
+              AST.App(AST.Identifier("argf"), AST.Identifier("arg3"))
+            ))
+          )
       }
 
     private def evalList(asts: List[AST]): AST = asts match {

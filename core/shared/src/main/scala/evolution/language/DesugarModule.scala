@@ -161,7 +161,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       )
     }
 
-    // TODO f as parameter of lambda, so we can remove shiftN
     private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] = {
       val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")
       Fix[F[A] => F[B]](
