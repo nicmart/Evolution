@@ -18,6 +18,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       //result.average.toMillis should be < 10L
       unsafeRun("y = 1 in map(map(@(1), x -> x), x -> y)", 60000)
       interpreterRuns should be(0)
+      outAllocations should be(0)
     }
   }
 
@@ -39,14 +40,15 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
   private def unsafeRun(expr: String, n: Int): Unit = {
     val iterator = Interpreter
-    .interpret[RNGRepr[Double]](
-      parse(expr, Type.Evo(Type.Dbl), VarContext.empty)
-        .asInstanceOf[TypeInferenceResult[Expr[RNGRepr[Double]]]]
-        .unsafeEvaluate)
-    .apply(emptyCtx)
-    .iterator(RNG(0L))
+      .interpret[RNGRepr[Double]](
+        parse(expr, Type.Evo(Type.Dbl), VarContext.empty)
+          .asInstanceOf[TypeInferenceResult[Expr[RNGRepr[Double]]]]
+          .unsafeEvaluate
+      )
+      .apply(emptyCtx)
+      .iterator(RNG(0L))
 
-    resetInterpreterRunsCount()
+    //resetCounts()
 
     iterator.drop(n)
   }

@@ -217,13 +217,19 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   }
 
   private var _runs = 0
-  def resetInterpreterRunsCount(): Unit = _runs = 0
+  def resetCounts(): Unit = {
+    _runs = 0
+    InterpreterModule.outAllocations = 0
+  }
   def interpreterRuns: Int = _runs
+  def outAllocations: Int = InterpreterModule.outAllocations
 }
 
 object InterpreterModule {
+  private var outAllocations: Int = 0
 
   sealed trait Out[T] { self =>
+    outAllocations += 1
     def apply(ctx: Ctx): T
     final def map[S](f: T => S): Out[S] = Out.map(this, f)
   }
