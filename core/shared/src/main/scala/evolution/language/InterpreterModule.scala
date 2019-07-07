@@ -95,8 +95,8 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
           val interpretedBody = interpret(lambdaBody)
           new Contextual[T] {
             override def apply(ctx: Ctx): T = {
-              lazy val a: T = interpretedBody(addLazy(name, () => a, ctx))
-              a
+              lazy val self: T = interpretedBody(addLazy(name, () => self, ctx))
+              self
             }
           }
 
@@ -107,7 +107,7 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
             (rng, None)
           })
 
-        // TODO we need a well-defined strategy for lazyness. In this case, we deley the materialization of cons, to allow
+        // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
         // recursive definitions
         case Cons(head, tail) =>
           val interpretedHead = interpret(head)
