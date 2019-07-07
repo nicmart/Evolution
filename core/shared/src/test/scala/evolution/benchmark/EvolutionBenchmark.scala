@@ -35,10 +35,16 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
         Goal.MaxRngReprAllocations(0)
       ),
       Benchmark(
+        Type.Dbl,
+        "uniform(0, 1)",
+        Goal.MaxRngAllocations(10)
+      ),
+      Benchmark(
         Type.Point,
         veryLongExpression,
         Goal.MaxExprAllocations(0),
-        Goal.MaxRngReprAllocations(440)
+        Goal.MaxRngReprAllocations(440),
+        Goal.MaxRngAllocations(0) // Why is this passing???
       )
     )
 
@@ -52,7 +58,13 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
   case class Benchmark(tpe: Type, expression: String, goals: Goal*) {
     def run: Unit = {
       unsafeRun(tpe, expression, 10)
-      val result = BenchmarkResult(RNGRepr.allocationsCount, interpreterRuns, outAllocations, exprAllocationsCount)
+      val result = BenchmarkResult(
+        RNGRepr.allocationsCount,
+        RNG.allocationsCount,
+        interpreterRuns,
+        outAllocations,
+        exprAllocationsCount
+      )
       goals.foreach { goal =>
         goal.toString in {
           assertGoal(result)(goal)
@@ -64,18 +76,29 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
   sealed trait Goal
   object Goal {
     case class MaxRngReprAllocations(value: Int) extends Goal {
-      override def toString: String = s"RngRepr allocations should be less than $value"
+      override def toString: String = s"RngRepr allocations should be not more than $value"
+    }
+    case class MaxRngAllocations(value: Int) extends Goal {
+      override def toString: String = s"Rng allocations should be not more than $value"
     }
     case class MaxExprAllocations(value: Int) extends Goal {
-      override def toString: String = s"Expr allocations should be less than $value"
+      override def toString: String = s"Expr allocations should be not more than $value"
     }
   }
 
-  case class BenchmarkResult(rngReprAllocations: Int, interpreterRuns: Int, outAllocations: Int, exprAllocations: Int)
+  case class BenchmarkResult(
+    rngReprAllocations: Int,
+    rngAllocations: Int,
+    interpreterRuns: Int,
+    outAllocations: Int,
+    exprAllocations: Int
+  )
 
   def assertGoal(result: BenchmarkResult)(goal: Goal) = goal match {
     case Goal.MaxRngReprAllocations(goal) =>
       assert(result.rngReprAllocations <= goal)
+    case Goal.MaxRngAllocations(goal) =>
+      assert(result.rngAllocations <= goal)
     case Goal.MaxExprAllocations(goal) =>
       assert(result.exprAllocations <= goal)
   }
@@ -93,6 +116,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     resetCounts()
     RNGRepr.resetAllocationsCount()
     resetExprAllocationsCount()
+    RNG.resetAllocationsCount()
 
     iterator.drop(n)
   }

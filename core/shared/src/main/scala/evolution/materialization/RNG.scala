@@ -1,8 +1,10 @@
 package evolution.materialization
 
 final case class RNG(seed: Long) {
+  RNG.allocations += 1
+
   def nextInt: (Int, RNG) = {
-    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
+    val newSeed = (seed * 0X5DEECE66DL + 0XBL) & 0XFFFFFFFFFFFFL
     val nextRNG = RNG(newSeed)
     val n = (newSeed >>> 16).toInt
     (n, nextRNG)
@@ -17,8 +19,12 @@ final case class RNG(seed: Long) {
 }
 
 object RNG {
+  private var allocations: Int = 0
+  def resetAllocationsCount(): Unit = allocations = 0
+  def allocationsCount: Int = allocations
+
   def next(seed: Long): (Int, Long) = {
-    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
+    val newSeed = (seed * 0X5DEECE66DL + 0XBL) & 0XFFFFFFFFFFFFL
     val n = (newSeed >>> 16).toInt
     (n, newSeed)
   }

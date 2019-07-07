@@ -1,7 +1,7 @@
 package evolution.data
 import evolution.data.EvaluationContext._
-import evolution.language.InterpreterModule
-import evolution.materialization.{ RNG, RNGRepr }
+import evolution.language.IterableInterpreterModule
+import evolution.materialization.{ RNG, Iterable }
 
 import scala.util.Random
 
@@ -25,16 +25,18 @@ trait EvaluationModule[F[_]] extends ExpressionModule[F] {
 }
 
 private[data] object EvaluationModuleImpl
-    extends EvaluationModule[RNGRepr]
-    with InterpreterModule
-    with ExpressionModule[RNGRepr] {
+    extends EvaluationModule[Iterable]
+    with IterableInterpreterModule
+    with ExpressionModule[Iterable] {
   override type Result[T] = Out[T]
 
   override def interpret[T](expr: Expr[T]): Out[T] =
     Interpreter.interpret(expr)
   override def newSeed: Long = Random.nextLong()
-  override def materializeWith[T](seed: Long, fa: Result[RNGRepr[T]], ctx: Ctx): Iterator[T] =
-    fa(ctx).iterator(RNG(seed))
+  override def materializeWith[T](seed: Long, fa: Result[Iterable[T]], ctx: Ctx): Iterator[T] = {
+    Random.setSeed(seed)
+    fa(ctx).run
+  }
   override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
   override def materializeConstantWith[T](t: Result[T], ctx: Ctx): T = t(ctx)
 }
