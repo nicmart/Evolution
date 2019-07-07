@@ -4,8 +4,6 @@ import evolution.language.{ FullModule, InstancesModule, InterpreterModule }
 import evolution.materialization.{ RNG, RNGRepr }
 import org.scalatest.{ FreeSpec, Matchers }
 
-import scala.concurrent.duration.Duration
-
 class EvolutionBenchmark extends FreeSpec with Matchers {
   // TODO Rubbish, rubbish, rubbish!!!
   val module = new FullModule[RNGRepr] with InstancesModule[RNGRepr] with InterpreterModule
@@ -13,36 +11,48 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
   import module._
 
   "benchmark for evolution" - {
-    val expressions = List(
-      "@(1)",
-      "map(@(1), x -> x)",
-      "y = 1 in map(map(@(1), x -> x), x -> y)"
+    val benchmarks = List(
+      Benchmark("@(1)", Goal.MaxRngReprAllocations(0)),
+      Benchmark("map(@(1), x -> x)", Goal.MaxRngReprAllocations(20), Goal.MaxExprAllocations(0)),
+      Benchmark("y = 1 in map(map(@(1), x -> x), x -> y)", Goal.MaxRngReprAllocations(40), Goal.MaxExprAllocations(0))
       )
 
-    expressions foreach { expression =>
-      expression in {
-        unsafeRun(expression, 60000)
-        interpreterRuns should be(0)
-        outAllocations should be(0)
-        RNGRepr.allocationsCount should be(0)
+    benchmarks foreach { benchmark =>
+      benchmark.expression - {
+        benchmark.run
       }
     }
   }
 
-  case class BenchmarkResult(times: Int, totalDuration: Duration) {
-    def average: Duration = totalDuration / times
+  case class Benchmark(expression: String, goals: Goal*) {
+    def run: Unit = {
+      unsafeRun(expression, 10)
+      val result = BenchmarkResult(RNGRepr.allocationsCount, interpreterRuns, outAllocations, exprAllocationsCount)
+      goals.foreach { goal =>
+        goal.toString in {
+          assertGoal(result)(goal)
+        }
+      }
+    }
   }
 
-  private def benchmark[T](times: Int)(chunk: => T): BenchmarkResult = {
-    var totalDuration = 0L
-    (1 to times).foreach { _ =>
-      val start = System.nanoTime()
-      chunk
-      val duration = System.nanoTime() - start
-      totalDuration += duration
+  sealed trait Goal
+  object Goal {
+    case class MaxRngReprAllocations(value: Int) extends Goal {
+      override def toString: String = s"RngRepr allocations should be less than $value"
     }
+    case class MaxExprAllocations(value: Int) extends Goal {
+      override def toString: String = s"Expr allocations should be less than $value"
+    }
+  }
 
-    BenchmarkResult(times, Duration.fromNanos(totalDuration))
+  case class BenchmarkResult(rngReprAllocations: Int, interpreterRuns: Int, outAllocations: Int, exprAllocations: Int)
+
+  def assertGoal(result: BenchmarkResult)(goal: Goal) = goal match {
+    case Goal.MaxRngReprAllocations(goal) =>
+      assert(result.rngReprAllocations <= goal)
+    case Goal.MaxExprAllocations(goal) =>
+      assert(result.exprAllocations <= goal)
   }
 
   private def unsafeRun(expr: String, n: Int): Unit = {
@@ -57,6 +67,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
     resetCounts()
     RNGRepr.resetAllocationsCount()
+    resetExprAllocationsCount()
 
     iterator.drop(n)
   }

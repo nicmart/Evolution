@@ -6,7 +6,9 @@ import evolution.typeclass.VectorSpace
 
 trait ExpressionModule[F[_]] {
 
-  sealed abstract class Expr[T](val children: List[Expr[_]])
+  sealed abstract class Expr[T](val children: List[Expr[_]]) {
+    allocations += 1
+  }
 
   object Expr {
     final case class Var[A](name: String) extends Expr[A](Nil)
@@ -107,4 +109,8 @@ trait ExpressionModule[F[_]] {
       def freshVar[S](prefix: String): Var[S] = Var(Expr.freshVar(expr, prefix))
     }
   }
+
+  private var allocations: Int = 0
+  def resetExprAllocationsCount(): Unit = allocations = 0
+  def exprAllocationsCount: Int = allocations
 }
