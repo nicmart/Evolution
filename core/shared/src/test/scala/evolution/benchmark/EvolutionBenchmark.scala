@@ -1,12 +1,13 @@
 package evolution.benchmark
 
-import evolution.language.{ FullModule, InstancesModule, InterpreterModule }
+import evolution.language.{ FullModule, InstancesModule, IterableInterpreterModule }
 import evolution.materialization.{ RNG, RNGRepr }
 import org.scalatest.{ FreeSpec, Matchers }
+import evolution.materialization.Iterable
 
 class EvolutionBenchmark extends FreeSpec with Matchers {
   // TODO Rubbish, rubbish, rubbish!!!
-  val module = new FullModule[RNGRepr] with InstancesModule[RNGRepr] with InterpreterModule
+  val module = new FullModule[Iterable] with InstancesModule[Iterable] with IterableInterpreterModule
   import evolution.data.EvaluationContext._
   import module._
 
@@ -15,36 +16,36 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       Benchmark(
         Type.Dbl,
         "@(1)",
-        Goal.MaxRngReprAllocations(0)
+        Goal.MaxReprAllocations(0)
       ),
       Benchmark(
         Type.Dbl,
         "map(@(1), x -> x)",
-        Goal.MaxRngReprAllocations(20),
+        Goal.MaxReprAllocations(20),
         Goal.MaxExprAllocations(0)
       ),
       Benchmark(
         Type.Dbl,
         "y = 1 in map(map(@(1), x -> x), x -> y)",
-        Goal.MaxRngReprAllocations(40),
+        Goal.MaxReprAllocations(40),
         Goal.MaxExprAllocations(0)
       ),
       Benchmark(
         Type.Dbl,
         "f = x -> x in @(f(1))",
-        Goal.MaxRngReprAllocations(0)
+        Goal.MaxReprAllocations(0)
       ),
       Benchmark(
         Type.Dbl,
         "uniform(0, 1)",
-        Goal.MaxRngAllocations(10)
+        Goal.MaxRuns(10)
       ),
       Benchmark(
         Type.Point,
         veryLongExpression,
         Goal.MaxExprAllocations(0),
-        Goal.MaxRngReprAllocations(440),
-        Goal.MaxRngAllocations(0) // Why is this passing???
+        Goal.MaxReprAllocations(396),
+        Goal.MaxRuns(396) // Why is this passing???
       )
     )
 
@@ -59,8 +60,8 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     def run: Unit = {
       unsafeRun(tpe, expression, 10)
       val result = BenchmarkResult(
-        RNGRepr.allocationsCount,
-        RNG.allocationsCount,
+        Iterable.allocationCount,
+        Iterable.runsCount,
         interpreterRuns,
         outAllocations,
         exprAllocationsCount
@@ -75,11 +76,11 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
   sealed trait Goal
   object Goal {
-    case class MaxRngReprAllocations(value: Int) extends Goal {
-      override def toString: String = s"RngRepr allocations should be not more than $value"
+    case class MaxReprAllocations(value: Int) extends Goal {
+      override def toString: String = s"Repr allocations should be not more than $value"
     }
-    case class MaxRngAllocations(value: Int) extends Goal {
-      override def toString: String = s"Rng allocations should be not more than $value"
+    case class MaxRuns(value: Int) extends Goal {
+      override def toString: String = s"Iterable runs should be not more than $value"
     }
     case class MaxExprAllocations(value: Int) extends Goal {
       override def toString: String = s"Expr allocations should be not more than $value"
@@ -87,36 +88,37 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
   }
 
   case class BenchmarkResult(
-    rngReprAllocations: Int,
-    rngAllocations: Int,
+    reprAllocations: Int,
+    runsCount: Int,
     interpreterRuns: Int,
     outAllocations: Int,
     exprAllocations: Int
   )
 
   def assertGoal(result: BenchmarkResult)(goal: Goal) = goal match {
-    case Goal.MaxRngReprAllocations(goal) =>
-      assert(result.rngReprAllocations <= goal)
-    case Goal.MaxRngAllocations(goal) =>
-      assert(result.rngAllocations <= goal)
+    case Goal.MaxReprAllocations(goal) =>
+      assert(result.reprAllocations <= goal)
+    case Goal.MaxRuns(goal) =>
+      assert(result.runsCount <= goal)
     case Goal.MaxExprAllocations(goal) =>
       assert(result.exprAllocations <= goal)
   }
 
   private def unsafeRun(tpe: Type, expr: String, n: Int): Unit = {
     val iterator = Interpreter
-      .interpret[RNGRepr[tpe.Out]](
+      .interpret[Iterable[tpe.Out]](
         parse(expr, Type.Evo(tpe), VarContext.empty)
-          .asInstanceOf[TypeInferenceResult[Expr[RNGRepr[tpe.Out]]]]
+          .asInstanceOf[TypeInferenceResult[Expr[Iterable[tpe.Out]]]]
           .unsafeEvaluate
       )
       .apply(emptyCtx)
-      .iterator(RNG(0L))
+      .run
 
     resetCounts()
     RNGRepr.resetAllocationsCount()
     resetExprAllocationsCount()
     RNG.resetAllocationsCount()
+    Iterable.resetCounts()
 
     iterator.drop(n)
   }
