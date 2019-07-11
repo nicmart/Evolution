@@ -43,10 +43,11 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
       }
 
       "zipWith" in {
-        val expr = zipWith(
+        val expr = ZipWith(
           constant(Dbl(0)),
           constant(Dbl(0)),
-          Lambda[Double, Double => Point]("x", Lambda[Double, Point]("y", Pnt(Var("x"), Var("y")))))
+          Lambda[Double, Double => Point]("x", Lambda[Double, Point]("y", Pnt(Var("x"), Var("y"))))
+        )
         toList(expr).take(10) shouldBe List.fill(10)(Point(0, 0))
       }
 
@@ -61,27 +62,31 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
       "flatten" in {
         toList(App(flatten[Double], Cons(Cons(Dbl(1), Empty()), Cons(Cons(Dbl(2), Empty()), Empty())))) shouldBe List(
           1,
-          2)
+          2
+        )
       }
 
       "withFirst" in {
         val expr = withFirst[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          Lambda[Double, RNGRepr[Double]]("x", constant(Var("x"))))
+          Lambda[Double, RNGRepr[Double]]("x", constant(Var("x")))
+        )
         toList(expr).take(2) shouldBe List(1, 1)
       }
 
       "withFirst2" in {
         val expr = withFirst2[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          lambda2[Double, Double, RNGRepr[Double]]("x", "y", constant(Var("y"))))
+          lambda2[Double, Double, RNGRepr[Double]]("x", "y", constant(Var("y")))
+        )
         toList(expr).take(2) shouldBe List(2, 2)
       }
 
       "withFirst3" in {
         val expr = withFirst3[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Cons(Dbl(3), Empty()))),
-          lambda3[Double, Double, Double, RNGRepr[Double]]("x", "y", "z", constant(Var("z"))))
+          lambda3[Double, Double, Double, RNGRepr[Double]]("x", "y", "z", constant(Var("z")))
+        )
         toList(expr).take(2) shouldBe List(3, 3)
       }
     }

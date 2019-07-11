@@ -78,13 +78,15 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
       override def compile[M[_]](
-        tpe: TypeClasses.Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        tpe: TypeClasses.Qualified[Type]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.Noise().asExpr.pure[M].widen
     }
 
     case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: Dbl =>: Type.Point =>: Dbl))) {
       override def compile[M[_]](
-        tpe: TypeClasses.Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        tpe: TypeClasses.Qualified[Type]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Expr.OctaveNoise().asExpr.pure[M].widen
     }
 
@@ -185,13 +187,15 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       with Lowercase {
     def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
       implicit M: Monad[M],
-      E: FunctorRaise[M, String]): M[Expr[_]]
+      E: FunctorRaise[M, String]
+    ): M[Expr[_]]
   }
 
   abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Constant2(qualifiedType) {
-    override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-      implicit M: Monad[M],
-      E: FunctorRaise[M, String]): M[Expr[_]] =
+    override def compile[M[_]](
+      x: Typed[Expr[_]],
+      y: Typed[Expr[_]]
+    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
       compilePlain(x.value, y.value).pure[M].widen
 
     def compilePlain(x: Expr[_], y: Expr[_]): Expr[_]
@@ -221,16 +225,18 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.vectorSpace[M](y.tpe).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr)(vs))
     }
 
     case object LiftedMultiply extends Constant2(Qualified(Evo(Dbl) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         for {
           tpe <- Type.unwrapF[M](y.tpe)
           vs <- Type.vectorSpace[M](tpe)
@@ -239,16 +245,18 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Add
         extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.group[M](y.tpe).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr)(vs))
     }
 
     case object LiftedAdd extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         for {
           tpe <- Type.unwrapF[M](x.tpe)
           sg <- Type.group[M](tpe)
@@ -257,9 +265,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Minus
         extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.group[M](x.tpe).map(group => minus(x.value.asExpr, y.value.asExpr)(group))
     }
 
@@ -284,45 +293,51 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.eqTypeClass[M](y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr)(eq))
 
     }
 
     case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.eqTypeClass[M](y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr)(eq))
     }
 
     case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.order[M](y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr)(order))
     }
 
     case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.order[M](y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
     }
 
     case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.order[M](y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr)(order))
     }
 
     case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.order[M](y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
     }
 
@@ -336,7 +351,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object MapCons
         extends Constant2Plain(
-          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
+        ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapCons(
         x.asExprF,
         y.asExpr[Any => F[Any] => F[Any]]
@@ -350,37 +366,42 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object WithFirst2
         extends Constant2Plain(
-          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
+        ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = withFirst2(x.asExprF, y.asExpr[Any => Any => F[Any]])
     }
 
     case object WithFirst3
         extends Constant2Plain(
-          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+          Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
+        ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
         withFirst3(x.asExprF, y.asExpr[Any => Any => Any => F[Any]])
     }
 
     case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.vectorSpace[M](x.tpe).map(vs => integrate(x.value.asExpr, y.value.asExprF)(vs))
     }
 
     case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type
           .vectorSpace[M](y.tpe)
           .map(vs => solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr)(vs))
     }
 
     case object Concat extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]])(
-        implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.unwrapF[M](x.tpe).map(_ => concat(x.value.asExprF, y.value.asExprF))
     }
 
@@ -427,14 +448,16 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       with Lowercase {
     def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
       implicit M: Monad[M],
-      E: FunctorRaise[M, String]): M[Expr[_]]
+      E: FunctorRaise[M, String]
+    ): M[Expr[_]]
   }
 
   abstract sealed class Constant3Plain(qualifiedType: Qualified[Type]) extends Constant3(qualifiedType) {
     def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_]
     def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
       implicit M: Monad[M],
-      E: FunctorRaise[M, String]): M[Expr[_]] = compilePlain(x.value, y.value, z.value).pure[M].widen
+      E: FunctorRaise[M, String]
+    ): M[Expr[_]] = compilePlain(x.value, y.value, z.value).pure[M].widen
   }
 
   object Constant3 extends Enum[Constant3] {
@@ -447,16 +470,19 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object ZipWith
         extends Constant3Plain(
-          Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))) {
+          Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))
+        ) {
       override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
-        zipWith(x.asExprF, y.asExprF, z.asExpr[Any => Any => Any])
+        Expr.ZipWith(x.asExprF, y.asExprF, z.asExpr[Any => Any => Any])
     }
     case object Solve2
         extends Constant3(
-          Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))) {
+          Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+        ) {
       override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]])(
         implicit M: Monad[M],
-        E: FunctorRaise[M, String]): M[Expr[_]] =
+        E: FunctorRaise[M, String]
+      ): M[Expr[_]] =
         Type.vectorSpace[M](y.tpe).map { vs =>
           solve2[y.tpe.Out](
             x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],

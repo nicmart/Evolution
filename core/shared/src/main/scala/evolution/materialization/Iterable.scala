@@ -1,6 +1,7 @@
 package evolution.materialization
 import scala.collection.AbstractIterator
 import scala.util.Random
+import fastparse.utils.Generator.Iter
 
 trait Iterable[+T] {
   def run: Iterator[T]
@@ -84,4 +85,14 @@ object Iterable {
   def normal(mu: Double, gamma: Double): Iterable[Double] = countAllocation(new Iterable[Double] {
     def run: Iterator[Double] = countRun(Iterator.continually(Random.nextGaussian() * gamma + mu))
   })
+
+  def zipWith[A, B, C](fa: Iterable[A], fb: Iterable[B], f: A => B => C): Iterable[C] =
+    countAllocation(new Iterable[C] {
+      def run: Iterator[C] = countRun(new AbstractIterator[C] {
+        val it1 = fa.run
+        val it2 = fb.run
+        def hasNext = it1.hasNext && it2.hasNext
+        def next = f(it1.next())(it2.next())
+      })
+    })
 }

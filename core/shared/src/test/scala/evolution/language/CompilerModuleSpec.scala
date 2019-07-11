@@ -105,7 +105,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
               AST.Identifier("z")
             ),
             new VarContext(List("x", "y", "z"))
-          ) shouldBe zipWith(Var[Any]("x"), Var[Any]("y"), Var[Any => Any => Any]("z"))
+          ) shouldBe ZipWith(Var[Any]("x"), Var[Any]("y"), Var[Any => Any => Any]("z"))
         }
       }
     }

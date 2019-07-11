@@ -21,19 +21,21 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         "step",
         takeWhile(
           integrate(Var("from"), constant(Var("step"))),
-          Lambda[Double, Boolean]("x", LessThanOrEqual[Double](Var("x"), Var("to")))))
+          Lambda[Double, Boolean]("x", LessThanOrEqual[Double](Var("x"), Var("to")))
+        )
+      )
 
     def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
       Add(a, Inverse(b))
 
-    def zipWith[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
+    def zipWithInTermsOfMapCons[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
       app2(zipWithLambda(f), a, b)
 
     def liftedAdd[T: Semigroup](a: Expr[F[T]], b: Expr[F[T]]): Expr[F[T]] =
-      zipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](Var("a"), Var("b"))))
+      ZipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](Var("a"), Var("b"))))
 
     def liftedMult[T: VectorSpace](k: Expr[F[Double]], t: Expr[F[T]]): Expr[F[T]] =
-      zipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](Var("k"), Var("t"))))
+      ZipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](Var("k"), Var("t"))))
 
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       map(t, Lambda("t", Inverse(Var("t"))))
@@ -88,7 +90,8 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                     "tail2",
                     Cons[Y](
                       app2[X, X, Y](Var("f"), Var("head1"), minus(Var("head2"), Var("head1"))),
-                      App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2"))))
+                      App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2")))
+                    )
                   )
                 )
               )
@@ -137,7 +140,9 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         lambda2[T1, F[T1], F[T2]](
           head1,
           tail1,
-          MapCons(Var[F[T1]](tail1), lambda2[T1, F[T1], F[T2]](head2, tail2, app2(f, Var(head1), Var(head2))))))
+          MapCons(Var[F[T1]](tail1), lambda2[T1, F[T1], F[T2]](head2, tail2, app2(f, Var(head1), Var(head2))))
+        )
+      )
     }
 
     def withFirst3[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => T1 => T1 => F[T2]]): Expr[F[T2]] = {
@@ -155,7 +160,9 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
               tail2,
               MapCons(
                 Var[F[T1]](tail2),
-                lambda2[T1, F[T1], F[T2]](head3, tail3, app3(f, Var(head1), Var(head2), Var(head3)))))
+                lambda2[T1, F[T1], F[T2]](head3, tail3, app3(f, Var(head1), Var(head2), Var(head3)))
+              )
+            )
           )
         )
       )

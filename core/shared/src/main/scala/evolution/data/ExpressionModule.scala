@@ -64,6 +64,8 @@ trait ExpressionModule[F[_]] {
     final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]](List(head, tail))
     final case class MapEmpty[A](eva: Expr[F[A]], eva2: Expr[F[A]]) extends Expr[F[A]](List(eva, eva2))
     final case class MapCons[A, B](eva: Expr[F[A]], f: Expr[A => F[A] => F[B]]) extends Expr[F[B]](List(eva, f))
+    final case class ZipWith[A, B, C](fa: Expr[F[A]], fb: Expr[F[B]], f: Expr[A => B => C])
+        extends Expr[F[C]](List(fa, fb, f))
 
     // Distributions
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))
@@ -100,12 +102,14 @@ trait ExpressionModule[F[_]] {
         prefix1: String,
         prefix2: String,
         prefix3: String,
-        prefix4: String): (String, String, String, String) =
+        prefix4: String
+      ): (String, String, String, String) =
         (
           Expr.freshVar(expr, prefix1),
           Expr.freshVar(expr, prefix2),
           Expr.freshVar(expr, prefix3),
-          Expr.freshVar(expr, prefix4))
+          Expr.freshVar(expr, prefix4)
+        )
       def freshVar[S](prefix: String): Var[S] = Var(Expr.freshVar(expr, prefix))
     }
   }

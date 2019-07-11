@@ -44,8 +44,8 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
         Type.Point,
         veryLongExpression,
         Goal.MaxExprAllocations(0),
-        Goal.MaxReprAllocations(396),
-        Goal.MaxRuns(396) // Why is this passing???
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0) // Why is this passing???
       )
     )
 
