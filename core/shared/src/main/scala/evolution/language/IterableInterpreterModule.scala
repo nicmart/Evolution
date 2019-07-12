@@ -135,6 +135,15 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case ZipWith(fa, fb, f) =>
           interpret3(fa, fb, f)(Iterable.zipWith)
 
+        case Take(nExpr, faExpr) =>
+          interpret2(nExpr, faExpr)(Iterable.take)
+
+        case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Iterable.flatMap)
+
+        case Flatten(ffa) => interpret1(ffa)(Iterable.flatten)
+
+        case Map(fa, f) => interpret2(fa, f)(Iterable.map)
+
         case Uniform(from, to) =>
           interpret2(from, to)(Iterable.uniform)
 

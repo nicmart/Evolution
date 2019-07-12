@@ -71,11 +71,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         } yield derive2(vs).asExpr[F[_] => F[_]]
     }
 
-    case object Flatten extends Constant0(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
-      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        flatten.asExpr[F[F[_]] => F[_]].pure[M].widen
-    }
-
     case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
       override def compile[M[_]](
         tpe: TypeClasses.Qualified[Type]
@@ -176,6 +171,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
+    }
+
+    case object Flatten extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[F[Any]])
     }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -406,17 +405,17 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Desugarer.map(x.asExprF, y.asExpr[Any => Any])
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Map(x.asExprF, y.asExpr[Any => Any])
     }
 
     case object FlatMap
         extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        Desugarer.flatMap(x.asExprF, y.asExpr[Any => F[Any]])
+        Expr.FlatMap(x.asExprF, y.asExpr[Any => F[Any]])
     }
 
     case object Take extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = take(x.asExpr, y.asExprF)
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExpr, y.asExprF)
     }
 
     case object While extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {

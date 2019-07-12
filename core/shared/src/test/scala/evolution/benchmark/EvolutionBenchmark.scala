@@ -16,24 +16,28 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       Benchmark(
         Type.Dbl,
         "@(1)",
-        Goal.MaxReprAllocations(0)
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0)
       ),
       Benchmark(
         Type.Dbl,
         "map(@(1), x -> x)",
-        Goal.MaxReprAllocations(20),
-        Goal.MaxExprAllocations(0)
+        Goal.MaxReprAllocations(0),
+        Goal.MaxExprAllocations(0),
+        Goal.MaxRuns(0)
       ),
       Benchmark(
         Type.Dbl,
         "y = 1 in map(map(@(1), x -> x), x -> y)",
-        Goal.MaxReprAllocations(40),
-        Goal.MaxExprAllocations(0)
+        Goal.MaxReprAllocations(0),
+        Goal.MaxExprAllocations(0),
+        Goal.MaxRuns(0)
       ),
       Benchmark(
         Type.Dbl,
         "f = x -> x in @(f(1))",
-        Goal.MaxReprAllocations(0)
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0)
       ),
       Benchmark(
         Type.Dbl,
@@ -45,7 +49,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
         veryLongExpression,
         Goal.MaxExprAllocations(0),
         Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0) // Why is this passing???
+        Goal.MaxRuns(0)
       )
     )
 

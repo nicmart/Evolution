@@ -109,11 +109,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
       App(mapLambda(f), fa)
 
-    def flatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]): Expr[F[B]] =
-      App(flatMapLambda(f), fa)
-
-    def flatten[A]: Expr[F[F[A]] => F[A]] = flatMapLambda(Lambda("x", Var("x")))
-
     def takeWhile[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] =
       App(takeWhileLambda(p), fa)
 

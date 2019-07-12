@@ -95,4 +95,20 @@ object Iterable {
         def next = f(it1.next())(it2.next())
       })
     })
+
+  def take[A](n: Int, fa: Iterable[A]): Iterable[A] = countAllocation(new Iterable[A] {
+    def run: Iterator[A] = countRun(fa.run.take(n))
+  })
+
+  def map[A, B](fa: Iterable[A], f: A => B): Iterable[B] = countAllocation(new Iterable[B] {
+    def run: Iterator[B] = countRun(fa.run.map(f))
+  })
+
+  def flatMap[A, B](fa: Iterable[A], f: A => Iterable[B]): Iterable[B] = countAllocation(new Iterable[B] {
+    def run: Iterator[B] = countRun(fa.run.flatMap(a => f(a).run))
+  })
+
+  def flatten[A, B](fa: Iterable[Iterable[A]]): Iterable[A] = countAllocation(new Iterable[A] {
+    def run: Iterator[A] = countRun(fa.run.map(_.run).flatten)
+  })
 }
