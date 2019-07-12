@@ -67,9 +67,12 @@ trait ExpressionModule[F[_]] {
     final case class ZipWith[A, B, C](fa: Expr[F[A]], fb: Expr[F[B]], f: Expr[A => B => C])
         extends Expr[F[C]](List(fa, fb, f))
     final case class Take[A](n: Expr[Int], fa: Expr[F[A]]) extends Expr[F[A]](List(n, fa))
+    final case class TakeWhile[A](fa: Expr[F[A]], predicate: Expr[A => Boolean]) extends Expr[F[A]](List(fa, predicate))
     final case class Map[A, B](fa: Expr[F[A]], f: Expr[A => B]) extends Expr[F[B]](List(fa, f))
     final case class FlatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]) extends Expr[F[B]](List(fa, f))
     final case class Flatten[A, B](ffa: Expr[F[F[A]]]) extends Expr[F[B]](List(ffa))
+    final case class Integrate[A](start: Expr[A], speed: Expr[F[A]], vs: VectorSpace[A])
+        extends Expr[F[A]](List(start, speed))
 
     // Distributions
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))

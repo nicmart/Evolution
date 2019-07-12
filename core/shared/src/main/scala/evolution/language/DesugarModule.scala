@@ -19,8 +19,8 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         "from",
         "to",
         "step",
-        takeWhile(
-          integrate(Var("from"), constant(Var("step"))),
+        Expr.TakeWhile(
+          Expr.Integrate(Var("from"), constant(Var("step")), VectorSpace[Double]),
           Lambda[Double, Boolean]("x", LessThanOrEqual[Double](Var("x"), Var("to")))
         )
       )
@@ -41,22 +41,20 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       map(t, Lambda("t", Inverse(Var("t"))))
 
     def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
-      app2(zipWithLambda(lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy")))), x, y)
+      ZipWith(x, y, lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy"))))
 
     def polar(radius: Expr[Double], angle: Expr[Double]): Expr[Point] =
       Multiply(radius, Pnt(Cos(angle), Sin(angle)))
 
     def liftedPolar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
-      app2(
-        zipWithLambda(
-          lambda2[Double, Double, Point](
-            "radius",
-            "angle",
-            polar(Var("radius"), Var("angle"))
-          )
-        ),
+      ZipWith(
         radius,
-        angle
+        angle,
+        lambda2[Double, Double, Point](
+          "radius",
+          "angle",
+          polar(Var("radius"), Var("angle"))
+        )
       )
 
     def concat[A](fa1: Expr[F[A]], fa2: Expr[F[A]]): Expr[F[A]] =
@@ -108,9 +106,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
 
     def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
       App(mapLambda(f), fa)
-
-    def takeWhile[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] =
-      App(takeWhileLambda(p), fa)
 
     def takeUntil[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] = {
       val t = p.freshVarName("t")

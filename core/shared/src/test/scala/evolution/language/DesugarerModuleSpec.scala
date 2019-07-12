@@ -25,7 +25,7 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
       }
 
       "while" in {
-        val expr = takeWhile(
+        val expr = TakeWhile(
           Cons(Integer(1), Cons(Integer(1), Cons(Integer(3), Empty()))),
           Lambda("x", Equals[Int](Var("x"), Integer(1)))
         )

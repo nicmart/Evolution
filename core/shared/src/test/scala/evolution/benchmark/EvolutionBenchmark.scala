@@ -42,7 +42,25 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       Benchmark(
         Type.Dbl,
         "uniform(0, 1)",
-        Goal.MaxRuns(10)
+        Goal.MaxRuns(0)
+      ),
+      Benchmark(
+        Type.Dbl,
+        "(x -> y -> while(@(y), z -> z < 100))(1, 1)",
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0)
+      ),
+      Benchmark(
+        Type.Dbl,
+        "(x -> y -> z -> range(x, y, z))(1, 1, 1)",
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0)
+      ),
+      Benchmark(
+        Type.Point,
+        foo,
+        Goal.MaxReprAllocations(0),
+        Goal.MaxRuns(0)
       ),
       Benchmark(
         Type.Point,
@@ -62,7 +80,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
   case class Benchmark(tpe: Type, expression: String, goals: Goal*) {
     def run: Unit = {
-      unsafeRun(tpe, expression, 10)
+      unsafeRun(tpe, expression, 1000)
       val result = BenchmarkResult(
         Iterable.allocationCount,
         Iterable.runsCount,
@@ -118,6 +136,8 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
       .apply(emptyCtx)
       .run
 
+    iterator.drop(100)
+
     resetCounts()
     RNGRepr.resetAllocationsCount()
     resetExprAllocationsCount()
@@ -127,11 +147,24 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     iterator.drop(n)
   }
 
+  lazy val foo = """
+  left = -10 in right = 10 in top = 10 in bottom = -10 in
+  grid = gridSize -> flatMap(
+    range(left, right, gridSize),
+    y -> map(
+      range(bottom, top, gridSize),
+      x -> point(x, y)
+    )
+  ) in
+
+  grid(100)
+  """
+
   lazy val veryLongExpression = """
     left = -10 in right = 10 in top = 10 in bottom = -10 in
     
     grid = gridSize -> flatMap(
-      range(bottom, top, gridSize),
+      range(left, top, gridSize),
       y -> map(
         range(left, right, gridSize),
         x -> point(x, y)
@@ -189,7 +222,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     
     
     k = .01 in
-    length = 20 in
+    length = 1 in
     
     onPoints(grid(150), circles(k), floor(length / k))
   """

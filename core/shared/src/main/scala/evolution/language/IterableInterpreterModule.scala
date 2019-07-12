@@ -138,6 +138,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Take(nExpr, faExpr) =>
           interpret2(nExpr, faExpr)(Iterable.take)
 
+        case TakeWhile(fa, p) =>
+          interpret2(fa, p)(Iterable.takeWhile)
+
         case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Iterable.flatMap)
 
         case Flatten(ffa) => interpret1(ffa)(Iterable.flatten)
@@ -152,6 +155,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case UniformFrom(n, ft) =>
           interpret2(n, ft)(Iterable.uniformFrom)
+
+        case Integrate(startExpr, speedExpr, vectorSpace) =>
+          interpret2(startExpr, speedExpr)((start, speed) => Iterable.integrate(start, speed, vectorSpace))
 
         // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
         case Normal(μ, σ) =>

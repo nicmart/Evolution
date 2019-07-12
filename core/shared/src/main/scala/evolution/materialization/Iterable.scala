@@ -1,7 +1,7 @@
 package evolution.materialization
 import scala.collection.AbstractIterator
 import scala.util.Random
-import fastparse.utils.Generator.Iter
+import evolution.typeclass.VectorSpace
 
 trait Iterable[+T] {
   def run: Iterator[T]
@@ -100,6 +100,10 @@ object Iterable {
     def run: Iterator[A] = countRun(fa.run.take(n))
   })
 
+  def takeWhile[A](fa: Iterable[A], predicate: A => Boolean): Iterable[A] = countAllocation(new Iterable[A] {
+    def run: Iterator[A] = countRun(fa.run.takeWhile(predicate))
+  })
+
   def map[A, B](fa: Iterable[A], f: A => B): Iterable[B] = countAllocation(new Iterable[B] {
     def run: Iterator[B] = countRun(fa.run.map(f))
   })
@@ -111,4 +115,26 @@ object Iterable {
   def flatten[A, B](fa: Iterable[Iterable[A]]): Iterable[A] = countAllocation(new Iterable[A] {
     def run: Iterator[A] = countRun(fa.run.map(_.run).flatten)
   })
+
+  def integrate[A](start: A, speed: Iterable[A], vs: VectorSpace[A]): Iterable[A] = countAllocation(
+    new Iterable[A] {
+      def run: Iterator[A] = countRun(new AbstractIterator[A] {
+        private val speedIterator = speed.run
+        private var _hasNext = true
+        private var _next = start
+        def hasNext: Boolean = _hasNext
+        def next(): A = {
+          val current = _next
+          if (speedIterator.hasNext) {
+            _hasNext = true
+            _next = vs.add(current, speedIterator.next())
+          } else {
+            _hasNext = false
+          }
+
+          current
+        }
+      })
+    }
+  )
 }

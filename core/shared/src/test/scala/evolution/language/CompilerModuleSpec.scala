@@ -68,7 +68,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
         val predicate = AST.Lambda("x", b)
         val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
-        val expected = takeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
+        val expected = TakeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
         unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.While), evolution, predicate)) shouldBe expected
       }
 

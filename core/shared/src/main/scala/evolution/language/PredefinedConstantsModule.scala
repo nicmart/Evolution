@@ -383,7 +383,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.vectorSpace[M](x.tpe).map(vs => integrate(x.value.asExpr, y.value.asExprF)(vs))
+        Type.vectorSpace[M](x.tpe).map(vs => Expr.Integrate(x.value.asExpr, y.value.asExprF, vs))
     }
 
     case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
@@ -419,7 +419,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object While extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = takeWhile(x.asExprF, y.asExpr[Any => Boolean])
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.TakeWhile(x.asExprF, y.asExpr[Any => Boolean])
     }
 
     case object Until extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
