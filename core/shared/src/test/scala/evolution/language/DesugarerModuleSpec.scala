@@ -5,7 +5,7 @@ import evolution.geometry.Point
 import evolution.materialization.{ RNG, RNGRepr }
 
 // TODO This is testing the desugaring through the interpreter.
-class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with InterpreterModule {
+class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModule {
   import Desugarer._
   import Expr._
   import Interpreter._

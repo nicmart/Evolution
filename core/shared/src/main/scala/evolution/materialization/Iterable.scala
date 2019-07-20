@@ -137,4 +137,14 @@ object Iterable {
       })
     }
   )
+
+  def variadicZipWith(iterables: Seq[Iterable[Any]], f: Seq[Any] => Any): Iterable[Any] = countAllocation(
+    new Iterable[Any] {
+      def run: Iterator[Any] = countRun(new AbstractIterator[Any] {
+        val iterators = iterables.map(_.run)
+        def hasNext = iterators.forall(_.hasNext)
+        def next = f(iterators.map(_.next()))
+      })
+    }
+  )
 }

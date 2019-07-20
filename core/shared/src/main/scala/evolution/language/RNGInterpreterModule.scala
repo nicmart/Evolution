@@ -6,10 +6,10 @@ import evolution.materialization.RNGRepr
 import evolution.rng.PerlinNoise
 
 // TODO this is an implementation
-trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
-  type Out[T] = InterpreterModule.Out[T]
+trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
+  type Out[T] = RNGInterpreterModule.Out[T]
   import Expr._
-  import InterpreterModule._
+  import RNGInterpreterModule._
 
   object Interpreter {
 
@@ -102,35 +102,15 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
 
         case Fix(_) => ???
 
-        case Empty() =>
-          Out.pure(RNGRepr { rng =>
-            (rng, None)
-          })
+        case Empty() => Out.pure(RNGRepr.empty)
 
         // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
         // recursive definitions
         case Cons(head, tail) =>
-          val interpretedHead = interpret(head)
-          val interpretedTail = interpret(tail)
-          new Contextual[T] {
-            override def apply(ctx: Ctx): T = {
-              val h = interpretedHead(ctx)
-              RNGRepr { rng =>
-                (rng, Some((h, interpretedTail(ctx))))
-              }
-            }
-          }
+          interpret2(head, tail)(RNGRepr.cons)
 
         case MapEmpty(ev1, ev2) =>
-          interpret2(ev1, ev2) { (compiled1, compiled2) =>
-            RNGRepr { rng =>
-              val (rng2, next) = compiled1.run(rng)
-              next match {
-                case None => compiled2.run(rng2)
-                case _    => (rng2, next)
-              }
-            }
-          }
+          interpret2(ev1, ev2)(RNGRepr.mapEmpty)
 
         case MapCons(eva, f) =>
           interpret2(eva, f) { (compiledEva, compiledF) =>
@@ -143,44 +123,36 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
             }
           }
 
+        case ZipWith(fa, fb, f) =>
+          interpret3(fa, fb, f)(RNGRepr.zipWith)
+
+        case Take(nExpr, faExpr) =>
+          interpret2(nExpr, faExpr)(RNGRepr.take)
+
+        case TakeWhile(fa, p) =>
+          interpret2(fa, p)(RNGRepr.takeWhile)
+
+        case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(RNGRepr.flatMap)
+
+        case Flatten(ffa) => interpret1(ffa)(RNGRepr.flatten)
+
+        case Map(fa, f) => interpret2(fa, f)(RNGRepr.map)
+
         case Uniform(from, to) =>
-          interpret2(from, to) { (compiledFrom, compiledTo) =>
-            lazy val self: RNGRepr[Double] = RNGRepr { rng =>
-              val (d, rng2) = rng.nextDouble
-              val scaled = compiledFrom + d * (compiledTo - compiledFrom)
-              (rng2, Some((scaled, self)))
-            }
-            self
-          }
+          interpret2(from, to)(RNGRepr.uniform)
 
         case UniformDiscrete(from, to, step) =>
-          interpret3(from, to, step) { (f, t, s) =>
-            uniformChoiceRepr((f to t by s).toList)
-          }
+          interpret3(from, to, step)(RNGRepr.uniformDiscrete)
 
         case UniformFrom(n, ft) =>
-          interpret2(n, ft) { (compiledN, compiledFt) =>
-            RNGRepr { rng =>
-              val (rng2, ts) = compiledFt.collect(compiledN, rng)
-              uniformChoiceRepr(ts).run(rng2)
-            }
-          }
+          interpret2(n, ft)(RNGRepr.uniformFrom)
+
+        case Integrate(startExpr, speedExpr, vectorSpace) =>
+          interpret2(startExpr, speedExpr)((start, speed) => RNGRepr.integrate(start, speed, vectorSpace))
 
         // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
         case Normal(μ, σ) =>
-          interpret2(μ, σ) { (mu, sigma) =>
-            lazy val self: RNGRepr[Double] = RNGRepr { rng =>
-              val (u1, rng2) = rng.nextDouble
-              val (u2, rng3) = rng2.nextDouble
-
-              // TODO: missing check that u1 is not the smallest positive double number
-              val d = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-
-              (rng3, Some((d * sigma + mu, self)))
-            }
-
-            self
-          }
+          interpret2(μ, σ)(RNGRepr.normal)
 
         case Noise() =>
           Constant(PerlinNoise.noiseRNGRepr)
@@ -189,22 +161,6 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
           Constant(PerlinNoise.octaveNoiseRNGRepr)
       }
     }
-
-    private def uniformChoiceRepr[T](ts: List[T]): RNGRepr[T] =
-      ts match {
-        case Nil =>
-          RNGRepr[T] { rng =>
-            (rng, None)
-          }
-        case _ =>
-          lazy val self: RNGRepr[T] = RNGRepr { rng =>
-            val (n, rng2) = rng.nextInt
-            val d = (n.toDouble - Int.MinValue) / (Int.MaxValue.toDouble - Int.MinValue.toDouble)
-            val index = (d * ts.size).toInt
-            (rng2, Some((ts(index), self)))
-          }
-          self
-      }
 
     private def interpret1[A, B](a: Expr[A])(f: A => B): Out[B] =
       interpret(a).map(f)
@@ -219,13 +175,13 @@ trait InterpreterModule { self: ExpressionModule[RNGRepr] =>
   private var _runs = 0
   def resetCounts(): Unit = {
     _runs = 0
-    InterpreterModule.outAllocations = 0
+    RNGInterpreterModule.outAllocations = 0
   }
   def interpreterRuns: Int = _runs
-  def outAllocations: Int = InterpreterModule.outAllocations
+  def outAllocations: Int = RNGInterpreterModule.outAllocations
 }
 
-object InterpreterModule {
+object RNGInterpreterModule {
   private var outAllocations: Int = 0
 
   sealed trait Out[T] { self =>

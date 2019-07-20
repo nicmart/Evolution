@@ -48,7 +48,7 @@ object dsl extends DrawingDefinition[Point] {
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
   }
-
+ 
   case class State(message: Option[String])
 
   class Backend(bs: BackendScope[StateSnapshot[Config], State]) {

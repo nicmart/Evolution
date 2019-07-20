@@ -13,7 +13,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 
 class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
   // TODO Rubbish, rubbish, rubbish!!!
-  val interpreter = new InterpreterModule with ExpressionModule[RNGRepr] {}
+  val interpreter = new RNGInterpreterModule with ExpressionModule[RNGRepr] {}
   import interpreter.Expr
   import interpreter.Expr._
   import interpreter.Interpreter._
@@ -47,7 +47,8 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
     "should interpret relational operators" in forAll(
       genRelationOperatorExpectations[Double],
       arbitrary[Dbl],
-      arbitrary[Dbl]) {
+      arbitrary[Dbl]
+    ) {
       case ((op, expected), a, b) =>
         interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
     }
@@ -55,7 +56,8 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
     "should interpret equality operators" in forAll(
       genEqualityOperatorExpectations[Double],
       arbitrary[Dbl],
-      arbitrary[Dbl]) {
+      arbitrary[Dbl]
+    ) {
       case ((op, expected), a, b) =>
         interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
     }
@@ -67,14 +69,16 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
 
   // TODO are we just replicating the implementation here?
   def genEqualityOperatorExpectations[T](
-    implicit eq: Eq[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
+    implicit eq: Eq[T]
+  ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
       Equals.apply[T] _ -> eq.eqv _,
       Neq.apply[T] _ -> eq.neqv _
     )
 
   def genRelationOperatorExpectations[T](
-    implicit ord: Order[T]): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
+    implicit ord: Order[T]
+  ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
       GreaterThan.apply[T] _ -> ord.gt _,
       GreaterThanOrEqual.apply[T] _ -> ord.gteqv _,
