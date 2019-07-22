@@ -17,26 +17,26 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
     def interpret[T](expr: Expr[T]): Out[T] = {
       _runs = _runs + 1
       expr match {
-        case Dbl(d)          => Out.pure(d)
-        case Floor(d)        => interpret(d).map(_.toInt)
-        case ToDbl(n)        => interpret(n).map(_.toDouble)
-        case Integer(n)      => Out.pure(n)
-        case Pnt(x, y)       => interpret2(x, y)(Point.apply)
-        case X(p)            => interpret1(p)(_.x)
-        case Y(p)            => interpret1(p)(_.y)
-        case add @ Add(a, b) => interpret2(a, b)(add.semigroup.combine)
-        case Div(a, b)       => interpret2(a, b)(_ / _)
-        case Exp(a, b)       => interpret2(a, b)(Math.pow)
-        case Abs(a)          => interpret(a).map(Math.abs)
-        case Sign(a)         => interpret(a).map(Math.signum)
+        case Dbl(d)      => Out.pure(d)
+        case Floor(d)    => interpret(d).map(_.toInt)
+        case ToDbl(n)    => interpret(n).map(_.toDouble)
+        case Integer(n)  => Out.pure(n)
+        case Pnt(x, y)   => interpret2(x, y)(Point.apply)
+        case X(p)        => interpret1(p)(_.x)
+        case Y(p)        => interpret1(p)(_.y)
+        case add: Add[T] => interpret2(add.a, add.b)(add.semigroup.combine)
+        case Div(a, b)   => interpret2(a, b)(_ / _)
+        case Exp(a, b)   => interpret2(a, b)(Math.pow)
+        case Abs(a)      => interpret(a).map(Math.abs)
+        case Sign(a)     => interpret(a).map(Math.signum)
         case Mod(a, b) =>
           interpret2(a, b) { (ca, cb) =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
-        case inv @ Inverse(t)      => interpret1(t)(inv.group.inverse)
-        case mult @ Multiply(k, t) => interpret2(k, t)(mult.vectorSpace.mult)
-        case Sin(d)                => interpret1(d)(Math.sin)
-        case Cos(d)                => interpret1(d)(Math.cos)
+        case inv: Inverse[T]   => interpret1(inv.t)(inv.group.inverse)
+        case mult: Multiply[T] => interpret2(mult.k, mult.t)(mult.vectorSpace.mult)
+        case Sin(d)            => interpret1(d)(Math.sin)
+        case Cos(d)            => interpret1(d)(Math.cos)
         case SmoothStep(f, t, p) =>
           interpret3(f, t, p) { (from, to, position) =>
             val t = (position - from) / (to - from)
@@ -80,10 +80,10 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Let(name, value, e) =>
           interpret(App(Lambda(name, e), value))
 
-        case Lambda(name, body) =>
-          val interpretedBody = interpret(body)
+        case lambda: Lambda[s, t] =>
+          val interpretedBody = interpret(lambda.expr)
           new Contextual[T] {
-            override def apply(ctx: Ctx): T = a => interpretedBody(addStrict(name, a, ctx))
+            override def apply(ctx: Ctx): T = (a: s) => interpretedBody(addStrict(lambda.variable, a, ctx))
           }
 
         case App(f, a) => interpret2(f, a)(_(_))
@@ -176,6 +176,14 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
       Out.map3(interpret(a), interpret(b), interpret(c))(f)
   }
 
+  // private def extractVariadicZipWith(zipWith: ZipWith[Any, Any, Any]): Option[(Seq[Iterable[Any]], Seq[Any] => Any)] = {
+  //   def isApplyLambda[T](expr: Expr[T]): Boolean = expr match {
+  //     case Lambda(f, Lambda(x, App(Var(fVar), Var(xVar)))) if f == fVar && x == xVar => true
+  //     case _                                                                         => false
+  //   }
+  //   ???
+  // }
+
   private var _runs = 0
   def resetCounts(): Unit = {
     _runs = 0
@@ -188,7 +196,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 object IterableInterpreterModule {
   private var outAllocations: Int = 0
 
-  sealed trait Out[T] { self =>
+  sealed trait Out[+T] { self =>
     outAllocations += 1
     def apply(ctx: Ctx): T
     final def map[S](f: T => S): Out[S] = Out.map(this, f)

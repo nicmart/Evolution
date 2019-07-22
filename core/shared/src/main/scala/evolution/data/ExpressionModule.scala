@@ -6,14 +6,14 @@ import evolution.typeclass.VectorSpace
 
 trait ExpressionModule[F[_]] {
 
-  sealed abstract class Expr[T](val children: List[Expr[_]]) {
+  sealed abstract class Expr[+T](val children: List[Expr[_]]) {
     allocations += 1
   }
 
   object Expr {
     final case class Var[A](name: String) extends Expr[A](Nil)
     final case class Let[A, B](variable: String, value: Expr[A], expr: Expr[B]) extends Expr[B](List(value))
-    final case class Lambda[A, B](variable: String, expr: Expr[B]) extends Expr[A => B](List(expr))
+    final case class Lambda[-A, +B](variable: String, expr: Expr[B]) extends Expr[A => B](List(expr))
     final case class App[A, B](f: Expr[A => B], a: Expr[A]) extends Expr[B](List(f, a))
     final case class Fix[A](expr: Expr[A => A]) extends Expr[A](List(expr))
 

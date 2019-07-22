@@ -24,7 +24,7 @@ class EvaluationSpec extends FreeSpec with Matchers {
 
   "an app expression" - {
     "evaluates a lambda" in {
-      val expr = App(Lambda[Int, Int]("x", Var("x")), Var("y"))
+      val expr = App(Lambda[Int, Int]("x", Var[Int]("x")), Var[Int]("y"))
       materializeConstantWith(interpret(expr), ctxOf("y" -> 1)) shouldBe 1
     }
   }

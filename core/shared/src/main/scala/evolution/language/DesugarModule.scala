@@ -1,6 +1,7 @@
 package evolution.language
 import cats.{ Group, Semigroup }
-import cats.implicits._
+import cats.instances.double.catsKernelStdOrderForDouble
+import cats.instances.int.catsKernelStdOrderForInt
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
@@ -87,7 +88,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                     "head2",
                     "tail2",
                     Cons[Y](
-                      app2[X, X, Y](Var("f"), Var("head1"), minus(Var("head2"), Var("head1"))),
+                      app2[X, X, Y](Var("f"), Var("head1"), minus[X](Var("head2"), Var("head1"))),
                       App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2")))
                     )
                   )
@@ -102,14 +103,14 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       App(mapWithDerivative[X, X], lambda2[X, X, X]("x", "v", Var("v")))
 
     def derive2[X: VectorSpace]: Expr[F[X] => F[X]] =
-      Lambda("fx", App(derive[X], App(derive[X], Var("fx"))))
+      Lambda("fx", App(derive[X], App(derive[X], Var[F[X]]("fx"))))
 
     def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
       App(mapLambda(f), fa)
 
     def takeUntil[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] = {
       val t = p.freshVarName("t")
-      App(takeWhileLambda(Lambda(t, Not(App(p, Var(t))))), fa)
+      App(takeWhileLambda(Lambda(t, Not(App(p, Var[T](t))))), fa)
     }
 
     def norm(point: Expr[Point]): Expr[Double] =
@@ -120,7 +121,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
 
     def withFirst[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => F[T2]]): Expr[F[T2]] = {
       val (head, tail) = f.freshVarName2("head", "tail")
-      MapCons(expr, lambda2[T1, F[T1], F[T2]](head, tail, App(f, Var(head))))
+      MapCons(expr, lambda2[T1, F[T1], F[T2]](head, tail, App(f, Var[T1](head))))
     }
 
     def withFirst2[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => T1 => F[T2]]): Expr[F[T2]] = {
@@ -301,7 +302,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                   app3[F[X => X => X], X, X, F[X]](
                     Var("self"),
                     Var("aTail"),
-                    Add(Var("x0"), Var("v0")),
+                    Add(Var[X]("x0"), Var("v0")),
                     Add(
                       Var("v0"),
                       app2[X, X, X](Var("aHead"), Var("x0"), Var("v0"))
@@ -363,7 +364,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
               head,
               tail,
               IfThen(
-                App(p, Var(head)),
+                App(p, Var[T](head)),
                 Cons(Var(head), App(Var[F[T] => F[T]](self), Var[F[T]](tail))),
                 Empty()
               )
