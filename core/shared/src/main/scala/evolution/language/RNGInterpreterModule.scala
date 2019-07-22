@@ -107,7 +107,17 @@ trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
         // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
         // recursive definitions
         case Cons(head, tail) =>
-          interpret2(head, tail)(RNGRepr.cons)
+          val interpretedHead = interpret(head)
+          val interpretedTail = interpret(tail)
+
+          new Contextual[T] {
+            override def apply(ctx: Ctx): T = {
+              val h = interpretedHead(ctx)
+              RNGRepr { rng =>
+                (rng, Some((h, interpretedTail(ctx))))
+              }
+            }
+          }
 
         case MapEmpty(ev1, ev2) =>
           interpret2(ev1, ev2)(RNGRepr.mapEmpty)

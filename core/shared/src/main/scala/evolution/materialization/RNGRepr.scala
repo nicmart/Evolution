@@ -24,7 +24,7 @@ object RNGRepr {
     (rng, None)
   }
 
-  def cons[T](head: T, tail: RNGRepr[T]): RNGRepr[T] = RNGRepr { rng =>
+  def cons[T](head: T, tail: => RNGRepr[T]): RNGRepr[T] = RNGRepr { rng =>
     (rng, Some((head, tail)))
   }
 

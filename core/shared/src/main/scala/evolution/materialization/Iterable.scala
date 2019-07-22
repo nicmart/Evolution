@@ -39,7 +39,7 @@ object Iterable {
     })
   })
 
-  def cons[T](head: T, tail: Iterable[T]): Iterable[T] = countAllocation(new Iterable[T] {
+  def cons[T](head: T, tail: => Iterable[T]): Iterable[T] = countAllocation(new Iterable[T] {
     def run: Iterator[T] = countRun(Iterator.single(head) ++ tail.run)
   })
 
