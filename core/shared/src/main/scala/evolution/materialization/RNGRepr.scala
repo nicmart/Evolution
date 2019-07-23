@@ -1,6 +1,8 @@
 package evolution.materialization
 import scala.annotation.tailrec
 import evolution.typeclass.VectorSpace
+import evolution.geometry.Point
+import evolution.rng.PerlinNoise
 
 final case class RNGRepr[+A](
   run: RNG => (RNG, Option[(A, RNGRepr[A])])
@@ -167,6 +169,28 @@ object RNGRepr {
     }
     self
   }
+
+  private val range: List[Int] = (0 to 255).toList
+
+  val noiseRNGRepr: RNGRepr[Point => Double] =
+    RNGRepr.map(
+      RNGRepr.shuffle(range),
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        point =>
+          perlinNoise.noise(point.x, point.y)
+      }
+    )
+
+  val octaveNoiseRNGRepr: RNGRepr[Int => Double => Point => Double] =
+    RNGRepr.map(
+      RNGRepr.shuffle(range),
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        octaves => presistence => point =>
+          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+      }
+    )
 
   private def shuffled[T](rng: RNG, ts: Vector[T]): (Vector[T], RNG) = shuffledRec(rng, ts, Vector.empty)
 

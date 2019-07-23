@@ -165,10 +165,10 @@ trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
           interpret2(μ, σ)(RNGRepr.normal)
 
         case Noise() =>
-          Constant(PerlinNoise.noiseRNGRepr)
+          Constant(RNGRepr.noiseRNGRepr)
 
         case OctaveNoise() =>
-          Constant(PerlinNoise.octaveNoiseRNGRepr)
+          Constant(RNGRepr.octaveNoiseRNGRepr)
       }
     }
 

@@ -55,28 +55,3 @@ class PerlinNoise(permutation256: Array[Int]) {
   private def grad(hash: Int, x: Double, y: Double): Double =
     x * Math.cos(2 * Math.PI * hash / 256) + y * Math.sin(2 * Math.PI * hash / 256)
 }
-
-object PerlinNoise {
-  private val range: List[Int] = (0 to 255).toList
-
-  val noiseRNGRepr: RNGRepr[Point => Double] =
-    RNGRepr.map(
-      RNGRepr.shuffle(range),
-      (permutation: List[Int]) => {
-        val perlinNoise = new PerlinNoise(permutation.toArray)
-        point =>
-          perlinNoise.noise(point.x, point.y)
-      }
-    )
-
-  val octaveNoiseRNGRepr: RNGRepr[Int => Double => Point => Double] =
-    RNGRepr.map(
-      RNGRepr.shuffle(range),
-      (permutation: List[Int]) => {
-        val perlinNoise = new PerlinNoise(permutation.toArray)
-        octaves => presistence => point =>
-          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
-      }
-    )
-
-}

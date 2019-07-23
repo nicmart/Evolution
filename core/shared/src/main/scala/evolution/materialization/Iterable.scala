@@ -1,6 +1,8 @@
 package evolution.materialization
 import scala.collection.AbstractIterator
 import scala.util.Random
+import evolution.geometry.Point
+import evolution.rng.PerlinNoise
 import evolution.typeclass.VectorSpace
 
 trait Iterable[+T] {
@@ -147,4 +149,30 @@ object Iterable {
       })
     }
   )
+
+  def shuffle[T](ts: List[T]): Iterable[List[T]] = countAllocation(new Iterable[List[T]] {
+    def run: Iterator[List[T]] = countRun(Iterator.continually(Random.shuffle(ts)))
+  })
+
+  private val range: List[Int] = (0 to 255).toList
+
+  val noiseIterable: Iterable[Point => Double] =
+    map(
+      shuffle(range),
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        point =>
+          perlinNoise.noise(point.x, point.y)
+      }
+    )
+
+  val octaveNoiseIterable: Iterable[Int => Double => Point => Double] =
+    map(
+      shuffle(range),
+      (permutation: List[Int]) => {
+        val perlinNoise = new PerlinNoise(permutation.toArray)
+        octaves => presistence => point =>
+          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+      }
+    )
 }

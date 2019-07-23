@@ -156,13 +156,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)
 
-        // TODO
-        case Noise() => ???
-        //Constant(PerlinNoise.noiseIterable)
+        case Noise() => Constant(Iterable.noiseIterable)
 
-        // TODO
-        case OctaveNoise() => ???
-        //Constant(PerlinNoise.octaveNoiseIterable)
+        case OctaveNoise() => Constant(Iterable.octaveNoiseIterable)
       }
     }
 
