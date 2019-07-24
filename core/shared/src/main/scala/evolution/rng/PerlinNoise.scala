@@ -1,6 +1,4 @@
 package evolution.rng
-import evolution.geometry.Point
-import evolution.materialization.RNGRepr
 
 class PerlinNoise(permutation256: Array[Int]) {
   def noise(x: Double, y: Double): Double = {

@@ -2,10 +2,10 @@ package evolution.language
 import cats.implicits._
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
-import evolution.materialization.{ RNG, RNGRepr }
+import evolution.materialization.Iterable
 
 // TODO This is testing the desugaring through the interpreter.
-class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModule {
+class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterpreterModule {
   import Desugarer._
   import Expr._
   import Interpreter._
@@ -54,7 +54,7 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModul
       "withFirst" in {
         val expr = withFirst[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          Lambda[Double, RNGRepr[Double]]("x", constant(Var("x")))
+          Lambda[Double, Iterable[Double]]("x", constant(Var("x")))
         )
         toList(expr).take(2) shouldBe List(1, 1)
       }
@@ -62,7 +62,7 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModul
       "withFirst2" in {
         val expr = withFirst2[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          lambda2[Double, Double, RNGRepr[Double]]("x", "y", constant(Var("y")))
+          lambda2[Double, Double, Iterable[Double]]("x", "y", constant(Var("y")))
         )
         toList(expr).take(2) shouldBe List(2, 2)
       }
@@ -70,7 +70,7 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModul
       "withFirst3" in {
         val expr = withFirst3[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Cons(Dbl(3), Empty()))),
-          lambda3[Double, Double, Double, RNGRepr[Double]]("x", "y", "z", constant(Var("z")))
+          lambda3[Double, Double, Double, Iterable[Double]]("x", "y", "z", constant(Var("z")))
         )
         toList(expr).take(2) shouldBe List(3, 3)
       }
@@ -78,5 +78,5 @@ class DesugarerModuleSpec extends LanguageSpec[RNGRepr] with RNGInterpreterModul
   }
 
   def toValue[T](expr: Expr[T]): T = interpret(expr)(emptyCtx)
-  def toList[T](expr: Expr[RNGRepr[T]]): List[T] = interpret(expr)(emptyCtx).iterator(RNG(0L)).take(1000).toList
+  def toList[T](expr: Expr[Iterable[T]]): List[T] = interpret(expr)(emptyCtx).run.take(1000).toList
 }

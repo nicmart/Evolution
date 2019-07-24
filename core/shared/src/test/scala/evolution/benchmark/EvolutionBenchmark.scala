@@ -1,7 +1,6 @@
 package evolution.benchmark
 
 import evolution.language.{ FullModule, InstancesModule, IterableInterpreterModule }
-import evolution.materialization.{ RNG, RNGRepr }
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.materialization.Iterable
 
@@ -139,9 +138,7 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     iterator.drop(100)
 
     resetCounts()
-    RNGRepr.resetAllocationsCount()
     resetExprAllocationsCount()
-    RNG.resetAllocationsCount()
     Iterable.resetCounts()
 
     iterator.drop(n)

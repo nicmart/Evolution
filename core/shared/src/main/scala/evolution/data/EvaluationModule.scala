@@ -1,8 +1,7 @@
 package evolution.data
 import evolution.data.EvaluationContext._
 import evolution.language.IterableInterpreterModule
-import evolution.language.RNGInterpreterModule
-import evolution.materialization.{ RNG, RNGRepr, Iterable }
+import evolution.materialization.Iterable
 
 import scala.util.Random
 
@@ -38,21 +37,6 @@ private[data] object IterableEvaluationModuleImpl
     Random.setSeed(seed)
     fa(ctx).run
   }
-  override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
-  override def materializeConstantWith[T](t: Result[T], ctx: Ctx): T = t(ctx)
-}
-
-private[data] object RNGReprEvaluationModuleImpl
-    extends EvaluationModule[RNGRepr]
-    with RNGInterpreterModule
-    with ExpressionModule[RNGRepr] {
-  override type Result[T] = Out[T]
-
-  override def interpret[T](expr: Expr[T]): Out[T] =
-    Interpreter.interpret(expr)
-  override def newSeed: Long = Random.nextLong()
-  override def materializeWith[T](seed: Long, fa: Result[RNGRepr[T]], ctx: Ctx): Iterator[T] =
-    fa(ctx).iterator(RNG(seed))
   override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
   override def materializeConstantWith[T](t: Result[T], ctx: Ctx): T = t(ctx)
 }
