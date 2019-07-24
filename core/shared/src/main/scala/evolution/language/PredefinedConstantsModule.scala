@@ -396,12 +396,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
           .map(vs => solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr)(vs))
     }
 
-    case object Concat extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](
-        x: Typed[Expr[_]],
-        y: Typed[Expr[_]]
-      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.unwrapF[M](x.tpe).map(_ => concat(x.value.asExprF, y.value.asExprF))
+    case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Concat(x.asExprF, y.asExprF)
     }
 
     case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {

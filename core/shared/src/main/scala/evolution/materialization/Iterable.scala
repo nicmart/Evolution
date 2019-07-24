@@ -45,6 +45,12 @@ object Iterable {
     def run: Iterator[T] = countRun(Iterator.single(head) ++ tail.run)
   })
 
+  def concat[T](it1: Iterable[T], it2: Iterable[T]): Iterable[T] = countAllocation(
+    new Iterable[T] {
+      def run: Iterator[T] = countRun(it1.run ++ it2.run)
+    }
+  )
+
   def mapEmpty[T](it1: Iterable[T], it2: Iterable[T]): Iterable[T] = countAllocation(new Iterable[T] {
     def run: Iterator[T] = countRun {
       val iterator1 = it1.run

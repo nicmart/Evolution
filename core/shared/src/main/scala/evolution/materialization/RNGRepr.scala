@@ -30,6 +30,14 @@ object RNGRepr {
     (rng, Some((head, tail)))
   }
 
+  def concat[T](ts1: RNGRepr[T], ts2: RNGRepr[T]): RNGRepr[T] = RNGRepr { rng =>
+    val (rng2, next) = ts1.run(rng)
+    next match {
+      case None => ts2.run(rng2)
+      case Some((t, ts12))    => (rng2, Some((t, concat(ts12, ts2))))
+    }
+  }
+
   def mapEmpty[T](ts1: RNGRepr[T], ts2: RNGRepr[T]): RNGRepr[T] = RNGRepr { rng =>
     val (rng2, next) = ts1.run(rng)
     next match {

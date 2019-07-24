@@ -39,7 +39,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       ZipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](Var("k"), Var("t"))))
 
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
-      map(t, Lambda("t", Inverse(Var("t"))))
+      Map(t, Lambda("t", Inverse(Var("t"))))
 
     def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
       ZipWith(x, y, lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy"))))
@@ -57,12 +57,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
           polar(Var("radius"), Var("angle"))
         )
       )
-
-    def concat[A](fa1: Expr[F[A]], fa2: Expr[F[A]]): Expr[F[A]] =
-      app2(concatLambda, fa1, fa2)
-
-    def integrate[A: VectorSpace](start: Expr[A], speed: Expr[F[A]]): Expr[F[A]] =
-      app2(integrateLambda[A], start, speed)
 
     def solve1[X: VectorSpace](eq: Expr[F[X => X]], x0: Expr[X]): Expr[F[X]] =
       app2(solve1Lambda[X], eq, x0)
@@ -180,57 +174,8 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     }
 
     // TODO f as parameter of lambda, so we can remove shiftN
-    private def flatMapLambda[A, B](f: Expr[A => F[B]]): Expr[F[A] => F[B]] = {
-      val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")
-      Fix[F[A] => F[B]](
-        Lambda(
-          self,
-          Lambda(
-            fa,
-            MapCons[A, B](
-              Var[F[A]](fa),
-              lambda2[A, F[A], F[B]](
-                head,
-                tail,
-                concat(
-                  App(f, Var[A](head)),
-                  App(Var[F[A] => F[B]](self), Var[F[A]](tail))
-                )
-              )
-            )
-          )
-        )
-      )
-    }
 
-    private def concatLambda[A]: Expr[F[A] => F[A] => F[A]] =
-      Fix[F[A] => F[A] => F[A]](
-        Lambda(
-          "self",
-          lambda2[F[A], F[A], F[A]](
-            "fa1",
-            "fa2",
-            MapEmpty[A](
-              MapCons[A, A](
-                Var[F[A]]("fa1"),
-                lambda2(
-                  "head1",
-                  "tail1",
-                  Cons(
-                    Var[A]("head1"),
-                    app2(
-                      Var[F[A] => F[A] => F[A]]("self"),
-                      Var[F[A]]("tail1"),
-                      Var[F[A]]("fa2")
-                    )
-                  )
-                )
-              ),
-              Var[F[A]]("fa2")
-            )
-          )
-        )
-      )
+    
 
     private def integrateLambda[T: VectorSpace]: Expr[T => F[T] => F[T]] =
       Fix[T => F[T] => F[T]](

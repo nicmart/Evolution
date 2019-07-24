@@ -62,6 +62,7 @@ trait ExpressionModule[F[_]] {
     // Chain
     final case class Empty[A]() extends Expr[F[A]](Nil)
     final case class Cons[A](head: Expr[A], tail: Expr[F[A]]) extends Expr[F[A]](List(head, tail))
+    final case class Concat[A](as1: Expr[F[A]], as2: Expr[F[A]]) extends Expr[F[A]](List(as1, as2))
     final case class MapEmpty[A](eva: Expr[F[A]], eva2: Expr[F[A]]) extends Expr[F[A]](List(eva, eva2))
     final case class MapCons[A, B](eva: Expr[F[A]], f: Expr[A => F[A] => F[B]]) extends Expr[F[B]](List(eva, f))
     final case class ZipWith[A, B, C](fa: Expr[F[A]], fb: Expr[F[B]], f: Expr[A => B => C])

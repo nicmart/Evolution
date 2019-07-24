@@ -3,7 +3,6 @@ import evolution.data.EvaluationContext._
 import evolution.data.{ Ctx, ExpressionModule }
 import evolution.geometry.Point
 import evolution.materialization.RNGRepr
-import evolution.rng.PerlinNoise
 
 // TODO this is an implementation
 trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
