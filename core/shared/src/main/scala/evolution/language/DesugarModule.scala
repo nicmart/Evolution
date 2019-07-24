@@ -173,36 +173,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       )
     }
 
-    // TODO f as parameter of lambda, so we can remove shiftN
-
-    
-
-    private def integrateLambda[T: VectorSpace]: Expr[T => F[T] => F[T]] =
-      Fix[T => F[T] => F[T]](
-        Lambda(
-          "self",
-          lambda2[T, F[T], F[T]](
-            "start",
-            "speed",
-            MapCons(
-              Var[F[T]]("speed"),
-              lambda2[T, F[T], F[T]](
-                "speedHead",
-                "speedTail",
-                Cons(
-                  Var("start"),
-                  app2[T, F[T], F[T]](
-                    Var("self"),
-                    Add[T](Var[T]("start"), Var[T]("speedHead")),
-                    Var[F[T]]("speedTail")
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-
     private def solve1Lambda[X: VectorSpace]: Expr[F[X => X] => X => F[X]] =
       Fix[F[X => X] => X => F[X]](
         Lambda(

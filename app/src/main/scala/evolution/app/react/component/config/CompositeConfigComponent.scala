@@ -1,17 +1,12 @@
 package evolution.app.react.component.config
 
-import evolution.app.data.PointedSeq
-import evolution.app.model.definition.{ CompositeDefinitionConfig, DrawingDefinition }
-import evolution.app.react.component.DrawingList
+import evolution.app.model.definition.CompositeDefinitionConfig
 import evolution.app.react.component.config.ConfigComponent.instance
-import evolution.app.react.component.presentational.styled.FormField
-import japgolly.scalajs.react.extra.StateSnapshot
 import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.vdom.html_<^._
 
 object CompositeConfigComponent {
-  def apply[T](drawings: PointedSeq[DrawingDefinition[T]]): ConfigComponent[CompositeDefinitionConfig[T]] = {
-    val drawingListComponent = DrawingList.component[T]
+  def apply[T]: ConfigComponent[CompositeDefinitionConfig[T]] = {
 
     instance("composite config component") { (props, _) =>
       val config = props.value

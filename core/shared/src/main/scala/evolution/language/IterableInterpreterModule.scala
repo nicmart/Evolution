@@ -2,9 +2,7 @@ package evolution.language
 import evolution.data.EvaluationContext._
 import evolution.data.{ Ctx, ExpressionModule }
 import evolution.geometry.Point
-import evolution.rng.PerlinNoise
 import evolution.materialization.Iterable
-import scala.collection.AbstractIterator
 
 // TODO this is an implementation
 trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
@@ -24,7 +22,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Pnt(x, y)   => interpret2(x, y)(Point.apply)
         case X(p)        => interpret1(p)(_.x)
         case Y(p)        => interpret1(p)(_.y)
-        case add: Add[T] => interpret2(add.a, add.b)(add.semigroup.combine)
+        case add: Add[_] => interpret2(add.a, add.b)(add.semigroup.combine)
         case Div(a, b)   => interpret2(a, b)(_ / _)
         case Exp(a, b)   => interpret2(a, b)(Math.pow)
         case Abs(a)      => interpret(a).map(Math.abs)
@@ -33,8 +31,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
           interpret2(a, b) { (ca, cb) =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
-        case inv: Inverse[T]   => interpret1(inv.t)(inv.group.inverse)
-        case mult: Multiply[T] => interpret2(mult.k, mult.t)(mult.vectorSpace.mult)
+        case inv: Inverse[_]   => interpret1(inv.t)(inv.group.inverse)
+        case mult: Multiply[_] => interpret2(mult.k, mult.t)(mult.vectorSpace.mult)
         case Sin(d)            => interpret1(d)(Math.sin)
         case Cos(d)            => interpret1(d)(Math.cos)
         case SmoothStep(f, t, p) =>
@@ -116,6 +114,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
               Iterable.cons(interpretedHead(ctx), interpretedTail(ctx))
             }
           }
+
+        case Concat(ev1, ev2) =>
+          interpret2(ev1, ev2)(Iterable.concat)
 
         case MapEmpty(ev1, ev2) =>
           interpret2(ev1, ev2)(Iterable.mapEmpty)

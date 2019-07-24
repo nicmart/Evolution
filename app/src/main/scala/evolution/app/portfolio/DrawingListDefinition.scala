@@ -20,7 +20,7 @@ class DrawingListDefinition[T](drawingList: PointedSeq[DrawingDefinition[T]]) ex
     state.config.definition.stream(ctx, DrawingState(state.seed, state.config.config))
 
   override val configComponent: ConfigComponent[Config] =
-    CompositeConfigComponent[T](drawingList)
+    CompositeConfigComponent[T]
 
   override def configCodec: JsonCodec[Config] =
     CompositeDefinitionConfig.jsonCodec[T](drawingList)

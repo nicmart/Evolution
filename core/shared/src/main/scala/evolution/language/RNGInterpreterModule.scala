@@ -22,7 +22,7 @@ trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
         case Pnt(x, y)   => interpret2(x, y)(Point.apply)
         case X(p)        => interpret1(p)(_.x)
         case Y(p)        => interpret1(p)(_.y)
-        case add: Add[T] => interpret2(add.a, add.b)(add.semigroup.combine)
+        case add: Add[_] => interpret2(add.a, add.b)(add.semigroup.combine)
         case Div(a, b)   => interpret2(a, b)(_ / _)
         case Exp(a, b)   => interpret2(a, b)(Math.pow)
         case Abs(a)      => interpret(a).map(Math.abs)
@@ -31,8 +31,8 @@ trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
           interpret2(a, b) { (ca, cb) =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
-        case inv: Inverse[T]   => interpret1(inv.t)(inv.group.inverse)
-        case mult: Multiply[T] => interpret2(mult.k, mult.t)(mult.vectorSpace.mult)
+        case inv: Inverse[_]   => interpret1(inv.t)(inv.group.inverse)
+        case mult: Multiply[_] => interpret2(mult.k, mult.t)(mult.vectorSpace.mult)
         case Sin(d)            => interpret1(d)(Math.sin)
         case Cos(d)            => interpret1(d)(Math.cos)
         case SmoothStep(f, t, p) =>
@@ -117,6 +117,9 @@ trait RNGInterpreterModule { self: ExpressionModule[RNGRepr] =>
               }
             }
           }
+
+        case Concat(ev1, ev2) =>
+          interpret2(ev1, ev2)(RNGRepr.concat)
 
         case MapEmpty(ev1, ev2) =>
           interpret2(ev1, ev2)(RNGRepr.mapEmpty)

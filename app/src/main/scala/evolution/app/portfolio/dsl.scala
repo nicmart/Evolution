@@ -53,7 +53,7 @@ object dsl extends DrawingDefinition[Point] {
 
   class Backend(bs: BackendScope[StateSnapshot[Config], State]) {
     def render(snapshot: StateSnapshot[Config], state: State, @silent children: PropsChildren): VdomElement = {
-      val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { case (Some(serialized), clb) =>
+      val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { case (Some(serialized), _) =>
         if (serialized == snapshot.value.serialisedExpr) Callback.empty
         else {
           val (config, state) = Config.from(serialized)
