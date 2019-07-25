@@ -141,6 +141,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case Map(fa, f) => interpret2(fa, f)(Iterable.map)
 
+        case Range(from, to, step) => interpret3(from, to, step)(Iterable.range)
+
         case Uniform(from, to) =>
           interpret2(from, to)(Iterable.uniform)
 

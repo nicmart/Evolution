@@ -76,6 +76,7 @@ trait ExpressionModule[F[_]] {
         extends Expr[F[A]](List(start, speed))
 
     // Distributions
+    final case class Range(from: Expr[Double], to: Expr[Double], step: Expr[Double]) extends Expr[F[Double]](List(from, to, step))
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))
     final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double])
         extends Expr[F[Double]](List(from, to, step))

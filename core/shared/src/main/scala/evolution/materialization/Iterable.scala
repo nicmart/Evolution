@@ -73,6 +73,14 @@ object Iterable {
       }
     })
 
+    def range(start: Double, end: Double, step: Double): Iterable[Double] = countAllocation(
+      new Iterable[Double] {
+        def run: Iterator[Double] = countRun(
+          (start to end by step).toIterator
+        )
+      }
+    )
+
   def uniform(from: Double, to: Double): Iterable[Double] = countAllocation(new Iterable[Double] {
     def run: Iterator[Double] = countRun(Iterator.continually(from + Random.nextDouble() * (to - from)))
   })
