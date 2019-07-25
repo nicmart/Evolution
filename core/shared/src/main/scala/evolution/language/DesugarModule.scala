@@ -1,6 +1,5 @@
 package evolution.language
 import cats.{ Group, Semigroup }
-import cats.instances.double.catsKernelStdOrderForDouble
 import cats.instances.int.catsKernelStdOrderForInt
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
@@ -10,21 +9,6 @@ import evolution.typeclass.VectorSpace._
 trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
   import Expr._
   object Desugarer {
-    def constant[A](a: Expr[A]): Expr[F[A]] = {
-      val self = a.freshVarName("self")
-      Fix[F[A]](Lambda(self, Cons(a, Var(self))))
-    }
-
-    val range: Expr[Double => Double => Double => F[Double]] =
-      lambda3(
-        "from",
-        "to",
-        "step",
-        Expr.TakeWhile(
-          Expr.Integrate(Var("from"), constant(Var("step")), VectorSpace[Double]),
-          Lambda[Double, Boolean]("x", LessThanOrEqual[Double](Var("x"), Var("to")))
-        )
-      )
 
     def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
       Add(a, Inverse(b))

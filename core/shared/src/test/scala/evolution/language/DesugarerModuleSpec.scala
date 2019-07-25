@@ -36,8 +36,8 @@ class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterprete
 
       "zipWith" in {
         val expr = ZipWith(
-          constant(Dbl(0)),
-          constant(Dbl(0)),
+          Expr.Constant(Dbl(0)),
+          Expr.Constant(Dbl(0)),
           Lambda[Double, Double => Point]("x", Lambda[Double, Point]("y", Pnt(Var("x"), Var("y"))))
         )
         toList(expr).take(10) shouldBe List.fill(10)(Point(0, 0))
@@ -54,7 +54,7 @@ class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterprete
       "withFirst" in {
         val expr = withFirst[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          Lambda[Double, Iterable[Double]]("x", constant(Var("x")))
+          Lambda[Double, Iterable[Double]]("x", Expr.Constant(Var("x")))
         )
         toList(expr).take(2) shouldBe List(1, 1)
       }
@@ -62,7 +62,7 @@ class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterprete
       "withFirst2" in {
         val expr = withFirst2[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),
-          lambda2[Double, Double, Iterable[Double]]("x", "y", constant(Var("y")))
+          lambda2[Double, Double, Iterable[Double]]("x", "y", Expr.Constant(Var("y")))
         )
         toList(expr).take(2) shouldBe List(2, 2)
       }
@@ -70,7 +70,7 @@ class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterprete
       "withFirst3" in {
         val expr = withFirst3[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Cons(Dbl(3), Empty()))),
-          lambda3[Double, Double, Double, Iterable[Double]]("x", "y", "z", constant(Var("z")))
+          lambda3[Double, Double, Double, Iterable[Double]]("x", "y", "z", Expr.Constant(Var("z")))
         )
         toList(expr).take(2) shouldBe List(3, 3)
       }

@@ -91,7 +91,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
       "constant" - {
         "of numbers" in {
-          unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Constant), AST.Number("1"))) shouldBe constant(Dbl(1))
+          unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Constant), AST.Number("1"))) shouldBe Expr.Constant(Dbl(1))
         }
       }
 

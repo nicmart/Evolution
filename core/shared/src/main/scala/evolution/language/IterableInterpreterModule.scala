@@ -87,8 +87,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case App(f, a) => interpret2(f, a)(_(_))
 
         // Detect constant evolutions
-        case Fix(Lambda(_, Cons(t, Var(_)))) =>
-          ConstantEvolution(interpret(t))
+        case Expr.Constant(t) =>
+          IterableInterpreterModule.Constant(Iterable.constant(interpret(t)))
 
         case Fix(Lambda(name, lambdaBody)) =>
           val interpretedBody = interpret(lambdaBody)
@@ -159,9 +159,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)
 
-        case Noise() => Constant(Iterable.noiseIterable)
+        case Noise() => IterableInterpreterModule.Constant(Iterable.noiseIterable)
 
-        case OctaveNoise() => Constant(Iterable.octaveNoiseIterable)
+        case OctaveNoise() => IterableInterpreterModule.Constant(Iterable.octaveNoiseIterable)
       }
     }
 
