@@ -5,7 +5,6 @@ import evolution.app.react.component.App
 import evolution.app.react.pages._
 import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
 import japgolly.scalajs.react.extra.router.{ BaseUrl, Redirect, RouterConfig, RouterConfigDsl }
 import japgolly.scalajs.react.vdom.html_<^._

@@ -7,7 +7,7 @@ import evolution.materialization.Iterable
 // TODO This is testing the desugaring through the interpreter.
 class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterpreterModule {
   import Desugarer._
-  import Expr._
+  import Expr._ 
   import Interpreter._
 
   "Desugarer module" - {

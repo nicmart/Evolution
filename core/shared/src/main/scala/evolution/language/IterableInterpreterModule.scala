@@ -88,7 +88,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         // Detect constant evolutions
         case Expr.Constant(t) =>
-          IterableInterpreterModule.Constant(Iterable.constant(interpret(t)))
+          interpret1(t)(Iterable.constant)
 
         case Fix(Lambda(name, lambdaBody)) =>
           val interpretedBody = interpret(lambdaBody)
