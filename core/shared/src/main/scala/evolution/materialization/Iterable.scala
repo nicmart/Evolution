@@ -73,13 +73,13 @@ object Iterable {
       }
     })
 
-    def range(start: Double, end: Double, step: Double): Iterable[Double] = countAllocation(
-      new Iterable[Double] {
-        def run: Iterator[Double] = countRun(
-          (start to end by step).toIterator
-        )
-      }
-    )
+  def range(start: Double, end: Double, step: Double): Iterable[Double] = countAllocation(
+    new Iterable[Double] {
+      def run: Iterator[Double] = countRun(
+        (start to end by step).toIterator
+      )
+    }
+  )
 
   def uniform(from: Double, to: Double): Iterable[Double] = countAllocation(new Iterable[Double] {
     def run: Iterator[Double] = countRun(Iterator.continually(from + Random.nextDouble() * (to - from)))
@@ -109,6 +109,16 @@ object Iterable {
         val it2 = fb.run
         def hasNext = it1.hasNext && it2.hasNext
         def next = f(it1.next())(it2.next())
+      })
+    })
+
+  def zipWithUncurried[A, B, C](f: (A, B) => C)(fa: Iterable[A], fb: Iterable[B]): Iterable[C] =
+    countAllocation(new Iterable[C] {
+      def run: Iterator[C] = countRun(new AbstractIterator[C] {
+        val it1 = fa.run
+        val it2 = fb.run
+        def hasNext = it1.hasNext && it2.hasNext
+        def next = f(it1.next(), it2.next())
       })
     })
 
@@ -175,8 +185,7 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        point =>
-          perlinNoise.noise(point.x, point.y)
+        point => perlinNoise.noise(point.x, point.y)
       }
     )
 
@@ -185,8 +194,7 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        octaves => presistence => point =>
-          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+        octaves => presistence => point => perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
       }
     )
 }

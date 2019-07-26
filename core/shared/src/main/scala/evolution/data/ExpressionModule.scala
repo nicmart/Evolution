@@ -23,6 +23,7 @@ trait ExpressionModule[F[_]] {
     final case class Integer(n: Int) extends Expr[Int](Nil)
     final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point](List(x, y))
     final case class Polar(r: Expr[Double], alpha: Expr[Double]) extends Expr[Point](List(r, alpha))
+    final case class LiftedPolar(r: Expr[F[Double]], alpha: Expr[F[Double]]) extends Expr[F[Point]](List(r, alpha))
     final case class X(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Add[T](a: Expr[T], b: Expr[T])(implicit val semigroup: Semigroup[T]) extends Expr[T](List(a, b))
