@@ -164,6 +164,29 @@ object Iterable {
     }
   )
 
+  // TODO DRY, see integrate
+  def solve1[A](speed: Iterable[A => A], start: A, vs: VectorSpace[A]): Iterable[A] = countAllocation(
+    new Iterable[A] {
+      def run: Iterator[A] = countRun(new AbstractIterator[A] {
+        private val speedIterator = speed.run
+        private var _hasNext = true
+        private var _next = start
+        def hasNext: Boolean = _hasNext
+        def next(): A = {
+          val current = _next
+          if (speedIterator.hasNext) {
+            _hasNext = true
+            _next = vs.add(current, speedIterator.next()(current))
+          } else {
+            _hasNext = false
+          }
+
+          current
+        }
+      })
+    }
+  )
+
   def variadicZipWith(iterables: Seq[Iterable[Any]], f: Seq[Any] => Any): Iterable[Any] = countAllocation(
     new Iterable[Any] {
       def run: Iterator[Any] = countRun(new AbstractIterator[Any] {

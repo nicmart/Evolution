@@ -35,12 +35,9 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         lambda2[Double, Double, Point](
           "radius",
           "angle",
-          Polar(Var("radius"), Var("angle"))
+          Expr.Polar(Var("radius"), Var("angle"))
         )
       )
-
-    def solve1[X: VectorSpace](eq: Expr[F[X => X]], x0: Expr[X]): Expr[F[X]] =
-      app2(solve1Lambda[X], eq, x0)
 
     def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
@@ -153,32 +150,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         )
       )
     }
-
-    private def solve1Lambda[X: VectorSpace]: Expr[F[X => X] => X => F[X]] =
-      Fix[F[X => X] => X => F[X]](
-        Lambda(
-          "self",
-          lambda2[F[X => X], X, F[X]](
-            "v",
-            "x0",
-            Cons(
-              Var("x0"),
-              MapCons(
-                Var[F[X => X]]("v"),
-                lambda2[X => X, F[X => X], F[X]](
-                  "vHead",
-                  "vTail",
-                  app2[F[X => X], X, F[X]](
-                    Var("self"),
-                    Var("vTail"),
-                    Add(Var("x0"), App[X, X](Var("vHead"), Var("x0")))
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
 
     private def solve2Lambda[X: VectorSpace]: Expr[F[X => X => X] => X => X => F[X]] =
       Fix[F[X => X => X] => X => X => F[X]](

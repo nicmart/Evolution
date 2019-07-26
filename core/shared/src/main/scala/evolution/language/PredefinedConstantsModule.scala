@@ -388,7 +388,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type
           .vectorSpace[M](y.tpe)
-          .map(vs => solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr)(vs))
+          .map(vs => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, vs))
     }
 
     case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {

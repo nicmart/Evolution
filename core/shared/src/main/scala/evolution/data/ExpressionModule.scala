@@ -76,6 +76,8 @@ trait ExpressionModule[F[_]] {
     final case class Flatten[A, B](ffa: Expr[F[F[A]]]) extends Expr[F[B]](List(ffa))
     final case class Integrate[A](start: Expr[A], speed: Expr[F[A]], vs: VectorSpace[A])
         extends Expr[F[A]](List(start, speed))
+    final case class Solve1[A](speed: Expr[F[A => A]], start: Expr[A], vs: VectorSpace[A])
+        extends Expr[F[A]](List(speed, start))
 
     // Distributions
     final case class Constant[T](t: Expr[T]) extends Expr[F[T]](List(t))

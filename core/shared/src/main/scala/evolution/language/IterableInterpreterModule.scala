@@ -157,6 +157,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Integrate(startExpr, speedExpr, vectorSpace) =>
           interpret2(startExpr, speedExpr)((start, speed) => Iterable.integrate(start, speed, vectorSpace))
 
+        case Solve1(speedExpr, startExpr, vectorSpace) =>
+          interpret2(speedExpr, startExpr)((speed, start) => Iterable.solve1(speed, start, vectorSpace))
+
         // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)
