@@ -28,9 +28,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
       ZipWith(x, y, lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy"))))
 
-    def polar(radius: Expr[Double], angle: Expr[Double]): Expr[Point] =
-      Multiply(radius, Pnt(Cos(angle), Sin(angle)))
-
     def liftedPolar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
       ZipWith(
         radius,
@@ -38,7 +35,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         lambda2[Double, Double, Point](
           "radius",
           "angle",
-          polar(Var("radius"), Var("angle"))
+          Polar(Var("radius"), Var("angle"))
         )
       )
 

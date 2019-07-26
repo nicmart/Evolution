@@ -209,7 +209,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = polar(x.asExpr, y.asExpr)
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Polar(x.asExpr, y.asExpr)
     }
 
     case object LiftedPolar extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {

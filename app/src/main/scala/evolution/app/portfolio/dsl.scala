@@ -48,17 +48,18 @@ object dsl extends DrawingDefinition[Point] {
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
   }
- 
+
   case class State(message: Option[String])
 
   class Backend(bs: BackendScope[StateSnapshot[Config], State]) {
     def render(snapshot: StateSnapshot[Config], state: State, @silent children: PropsChildren): VdomElement = {
-      val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) { case (Some(serialized), _) =>
-        if (serialized == snapshot.value.serialisedExpr) Callback.empty
-        else {
-          val (config, state) = Config.from(serialized)
-          snapshot.setState(config) >> bs.setState(state)
-        }
+      val stringSnapshot = StateSnapshot[String](snapshot.value.serialisedExpr) {
+        case (Some(serialized), _) =>
+          if (serialized == snapshot.value.serialisedExpr) Callback.empty
+          else {
+            val (config, state) = Config.from(serialized)
+            snapshot.setState(config) >> bs.setState(state)
+          }
       }
 
       val component: ConfigComponent[String] = instances.textConfig
@@ -99,10 +100,8 @@ object dsl extends DrawingDefinition[Point] {
       Let[Double, EvoRepr[Point]](
         "right",
         Dbl(ctx.right),
-        Let[Double, EvoRepr[Point]](
-          "bottom",
-          Dbl(ctx.bottom),
-          Let[Double, EvoRepr[Point]]("left", Dbl(ctx.left), expr)))
+        Let[Double, EvoRepr[Point]]("bottom", Dbl(ctx.bottom), Let[Double, EvoRepr[Point]]("left", Dbl(ctx.left), expr))
+      )
     )
   }
 

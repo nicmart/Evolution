@@ -22,6 +22,7 @@ trait ExpressionModule[F[_]] {
     final case class ToDbl(n: Expr[Int]) extends Expr[Double](List(n))
     final case class Integer(n: Int) extends Expr[Int](Nil)
     final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point](List(x, y))
+    final case class Polar(r: Expr[Double], alpha: Expr[Double]) extends Expr[Point](List(r, alpha))
     final case class X(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Add[T](a: Expr[T], b: Expr[T])(implicit val semigroup: Semigroup[T]) extends Expr[T](List(a, b))
@@ -77,7 +78,8 @@ trait ExpressionModule[F[_]] {
 
     // Distributions
     final case class Constant[T](t: Expr[T]) extends Expr[F[T]](List(t))
-    final case class Range(from: Expr[Double], to: Expr[Double], step: Expr[Double]) extends Expr[F[Double]](List(from, to, step))
+    final case class Range(from: Expr[Double], to: Expr[Double], step: Expr[Double])
+        extends Expr[F[Double]](List(from, to, step))
     final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[F[Double]](List(from, to))
     final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double])
         extends Expr[F[Double]](List(from, to, step))
