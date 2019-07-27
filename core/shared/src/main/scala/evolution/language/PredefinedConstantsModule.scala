@@ -479,11 +479,12 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         E: FunctorRaise[M, String]
       ): M[Expr[_]] =
         Type.vectorSpace[M](y.tpe).map { vs =>
-          solve2[y.tpe.Out](
+          Expr.Solve2[y.tpe.Out](
             x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
             y.value.asExpr[y.tpe.Out],
-            z.value.asExpr[y.tpe.Out]
-          )(vs)
+            z.value.asExpr[y.tpe.Out],
+            vs
+          )
         }
     }
 

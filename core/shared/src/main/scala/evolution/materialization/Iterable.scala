@@ -187,6 +187,31 @@ object Iterable {
     }
   )
 
+  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, vs: VectorSpace[A]): Iterable[A] = countAllocation(
+    new Iterable[A] {
+      def run: Iterator[A] = countRun(new AbstractIterator[A] {
+        private val accIterator = acc.run
+        private var _hasNext = true
+        private var _nextA = a0
+        private var _nextV = v0
+        def hasNext: Boolean = _hasNext
+        def next(): A = {
+          val currentA = _nextA
+          val currentV = _nextV
+          if (accIterator.hasNext) {
+            _hasNext = true
+            _nextV = vs.add(currentV, accIterator.next()(currentA)(currentV))
+            _nextA = vs.add(currentA, _nextV)
+          } else {
+            _hasNext = false
+          }
+
+          currentA
+        }
+      })
+    }
+  )
+
   def variadicZipWith(iterables: Seq[Iterable[Any]], f: Seq[Any] => Any): Iterable[Any] = countAllocation(
     new Iterable[Any] {
       def run: Iterator[Any] = countRun(new AbstractIterator[Any] {
@@ -208,7 +233,8 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        point => perlinNoise.noise(point.x, point.y)
+        point =>
+          perlinNoise.noise(point.x, point.y)
       }
     )
 
@@ -217,7 +243,8 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        octaves => presistence => point => perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+        octaves => presistence => point =>
+          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
       }
     )
 }

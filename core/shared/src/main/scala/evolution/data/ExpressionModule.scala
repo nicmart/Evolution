@@ -83,6 +83,8 @@ trait ExpressionModule[F[_]] {
         extends Expr[F[A]](List(start, speed))
     final case class Solve1[A](speed: Expr[F[A => A]], start: Expr[A], vs: VectorSpace[A])
         extends Expr[F[A]](List(speed, start))
+    final case class Solve2[A](acc: Expr[F[A => A => A]], a0: Expr[A], v0: Expr[A], vs: VectorSpace[A])
+        extends Expr[F[A]](List(acc, a0, v0))
 
     // Distributions
     final case class Constant[T](t: Expr[T]) extends Expr[F[T]](List(t))

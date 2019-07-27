@@ -15,9 +15,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       Map(t, Lambda("t", Inverse(Var("t"))))
 
-    def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
-      app3(solve2Lambda[X], eq, x0, v0)
-
     def mapWithDerivative[X: VectorSpace, Y]: Expr[(X => X => Y) => F[X] => F[Y]] =
       Lambda[X => X => Y, F[X] => F[Y]](
         "f",
@@ -103,37 +100,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         )
       )
     }
-
-    private def solve2Lambda[X: VectorSpace]: Expr[F[X => X => X] => X => X => F[X]] =
-      Fix[F[X => X => X] => X => X => F[X]](
-        Lambda(
-          "self",
-          lambda3[F[X => X => X], X, X, F[X]](
-            "a",
-            "x0",
-            "v0",
-            Cons(
-              Var("x0"),
-              MapCons(
-                Var[F[X => X => X]]("a"),
-                lambda2[X => X => X, F[X => X => X], F[X]](
-                  "aHead",
-                  "aTail",
-                  app3[F[X => X => X], X, X, F[X]](
-                    Var("self"),
-                    Var("aTail"),
-                    Add(Var[X]("x0"), Var("v0")),
-                    Add(
-                      Var("v0"),
-                      app2[X, X, X](Var("aHead"), Var("x0"), Var("v0"))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
 
     private def takeWhileLambda[T](p: Expr[T => Boolean]): Expr[F[T] => F[T]] = {
       val (self, fa, head, tail) = p.freshVarName4("self", "fa", "head", "tail")
