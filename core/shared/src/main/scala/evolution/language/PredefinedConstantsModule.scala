@@ -15,7 +15,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   import TypeClasses._
 
   abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
- 
+
   abstract sealed class Constant0(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
@@ -205,7 +205,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object LiftedPoint extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
       override def entryName: String = "@point"
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        liftedPoint(x.asExprF, y.asExprF).asExpr[F[_]]
+        Expr.LiftedPnt(x.asExprF, y.asExprF).asExpr[F[_]]
     }
 
     case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {

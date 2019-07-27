@@ -15,9 +15,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       Map(t, Lambda("t", Inverse(Var("t"))))
 
-    def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
-      ZipWith(x, y, lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy"))))
-
     def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
 

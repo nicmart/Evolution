@@ -20,6 +20,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case ToDbl(n)          => interpret(n).map(_.toDouble)
         case Integer(n)        => Out.pure(n)
         case Pnt(x, y)         => interpret2(x, y)(Point.apply)
+        case LiftedPnt(x, y)   => interpret2(x, y)(Iterable.zipWithUncurried(Point.apply))
         case Polar(x, y)       => interpret2(x, y)(Point.polar)
         case LiftedPolar(x, y) => interpret2(x, y)(Iterable.zipWithUncurried(Point.polar))
         case X(p)              => interpret1(p)(_.x)

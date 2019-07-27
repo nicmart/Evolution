@@ -22,6 +22,7 @@ trait ExpressionModule[F[_]] {
     final case class ToDbl(n: Expr[Int]) extends Expr[Double](List(n))
     final case class Integer(n: Int) extends Expr[Int](Nil)
     final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point](List(x, y))
+    final case class LiftedPnt(x: Expr[F[Double]], y: Expr[F[Double]]) extends Expr[F[Point]](List(x, y))
     final case class Polar(r: Expr[Double], alpha: Expr[Double]) extends Expr[Point](List(r, alpha))
     final case class LiftedPolar(r: Expr[F[Double]], alpha: Expr[F[Double]]) extends Expr[F[Point]](List(r, alpha))
     final case class X(p: Expr[Point]) extends Expr[Double](List(p))
