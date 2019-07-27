@@ -1,6 +1,5 @@
 package evolution.language
-import cats.{ Group, Semigroup }
-import cats.instances.int.catsKernelStdOrderForInt
+import cats.Group
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
@@ -13,31 +12,11 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
     def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
       Add(a, Inverse(b))
 
-    def zipWithInTermsOfMapCons[A, B, C](a: Expr[F[A]], b: Expr[F[B]], f: Expr[A => B => C]): Expr[F[C]] =
-      app2(zipWithLambda(f), a, b)
-
-    def liftedAdd[T: Semigroup](a: Expr[F[T]], b: Expr[F[T]]): Expr[F[T]] =
-      ZipWith(a, b, lambda2[T, T, T]("a", "b", Add[T](Var("a"), Var("b"))))
-
-    def liftedMult[T: VectorSpace](k: Expr[F[Double]], t: Expr[F[T]]): Expr[F[T]] =
-      ZipWith(k, t, lambda2[Double, T, T]("k", "t", Multiply[T](Var("k"), Var("t"))))
-
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       Map(t, Lambda("t", Inverse(Var("t"))))
 
     def liftedPoint(x: Expr[F[Double]], y: Expr[F[Double]]): Expr[F[Point]] =
       ZipWith(x, y, lambda2[Double, Double, Point]("fx", "fy", Pnt(Var("fx"), Var("fy"))))
-
-    def liftedPolar(radius: Expr[F[Double]], angle: Expr[F[Double]]): Expr[F[Point]] =
-      ZipWith(
-        radius,
-        angle,
-        lambda2[Double, Double, Point](
-          "radius",
-          "angle",
-          Expr.Polar(Var("radius"), Var("angle"))
-        )
-      )
 
     def solve2[X: VectorSpace](eq: Expr[F[X => X => X]], x0: Expr[X], v0: Expr[X]): Expr[F[X]] =
       app3(solve2Lambda[X], eq, x0, v0)
@@ -76,9 +55,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
 
     def derive2[X: VectorSpace]: Expr[F[X] => F[X]] =
       Lambda("fx", App(derive[X], App(derive[X], Var[F[X]]("fx"))))
-
-    def map[A, B](fa: Expr[F[A]], f: Expr[A => B]): Expr[F[B]] =
-      App(mapLambda(f), fa)
 
     def takeUntil[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] = {
       val t = p.freshVarName("t")
@@ -131,26 +107,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
       )
     }
 
-    private def mapLambda[A, B](f: Expr[A => B]): Expr[F[A] => F[B]] = {
-      val (self, fa, head, tail) = f.freshVarName4("self", "fa", "head", "tail")
-      Fix[F[A] => F[B]](
-        Lambda(
-          self,
-          Lambda[F[A], F[B]](
-            fa,
-            MapCons[A, B](
-              Var[F[A]](fa),
-              lambda2(
-                head,
-                tail,
-                Cons(App(f, Var[A](head)), App(Var[F[A] => F[B]](self), Var[F[A]](tail)))
-              )
-            )
-          )
-        )
-      )
-    }
-
     private def solve2Lambda[X: VectorSpace]: Expr[F[X => X => X] => X => X => F[X]] =
       Fix[F[X => X => X] => X => X => F[X]](
         Lambda(
@@ -173,43 +129,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                     Add(
                       Var("v0"),
                       app2[X, X, X](Var("aHead"), Var("x0"), Var("v0"))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-
-    def take[T](n: Expr[Int], ft: Expr[F[T]]): Expr[F[T]] =
-      app2(takeLambda, n, ft)
-
-    private def takeLambda[T]: Expr[Int => F[T] => F[T]] =
-      Fix[Int => F[T] => F[T]](
-        Lambda(
-          "self",
-          Lambda(
-            "n",
-            Lambda(
-              "ft",
-              IfThen(
-                Equals[Int](Integer(0), Var[Int]("n")),
-                Empty[T](),
-                MapCons[T, T](
-                  Var[F[T]]("ft"),
-                  Lambda(
-                    "head",
-                    Lambda(
-                      "tail",
-                      Cons(
-                        Var[T]("head"),
-                        app2(
-                          Var[Int => F[T] => F[T]]("self"),
-                          Add(Var[Int]("n"), Inverse(Integer(1))),
-                          Var[F[T]]("tail")
-                        )
-                      )
                     )
                   )
                 )
@@ -252,37 +171,5 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
 
     private def app3[A, B, C, D](f: Expr[A => B => C => D], a: Expr[A], b: Expr[B], c: Expr[C]): Expr[D] =
       App(App(App(f, a), b), c)
-
-    private def zipWithLambda[A, B, C](f: Expr[A => B => C]): Expr[F[A] => F[B] => F[C]] = {
-      val (self, fa, fb) = f.freshVarName3("self", "fa", "fb")
-      val (aHead, bHead, aTail, bTail) = f.freshVarName4("aHead", "bHead", "aTail", "bTail")
-      Fix[F[A] => F[B] => F[C]](
-        Lambda[F[A] => F[B] => F[C], F[A] => F[B] => F[C]](
-          self,
-          lambda2[F[A], F[B], F[C]](
-            fa,
-            fb,
-            MapCons[A, C](
-              Var[F[A]](fa),
-              lambda2(
-                aHead,
-                aTail,
-                MapCons[B, C](
-                  Var[F[B]](fb),
-                  lambda2(
-                    bHead,
-                    bTail,
-                    Cons(
-                      app2(f, Var[A](aHead), Var[B](bHead)),
-                      app2(Var[F[A] => F[B] => F[C]](self), Var[F[A]](aTail), Var[F[B]](bTail))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    }
   }
 }

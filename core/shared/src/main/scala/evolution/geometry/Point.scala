@@ -68,7 +68,7 @@ object Point {
 
   implicit val pointVectorSpace: VectorSpace[Point] = new VectorSpace[Point] {
     override def group: Group[Point] = pointGroup
-    override def mult(k: Double, t: Point): Point = t * k
+    override def multiply(k: Double, t: Point): Point = t * k
   }
 
   implicit val pointEq: Eq[Point] = Eq.instance((p1, p2) => p1 == p2)

@@ -15,7 +15,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   import TypeClasses._
 
   abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
-
+ 
   abstract sealed class Constant0(qualifiedType: Qualified[Type])
       extends Constant(qualifiedType)
       with EnumEntry
@@ -234,7 +234,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         for {
           tpe <- Type.unwrapF[M](y.tpe)
           vs <- Type.vectorSpace[M](tpe)
-        } yield liftedMult(x.value.asExprF, y.value.asExprF)(vs).asExpr[F[_]]
+        } yield Expr.LiftedMultiply(x.value.asExprF, y.value.asExprF)(vs).asExpr[F[_]]
     }
 
     case object Add
@@ -254,7 +254,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         for {
           tpe <- Type.unwrapF[M](x.tpe)
           sg <- Type.group[M](tpe)
-        } yield liftedAdd(x.value.asExprF, y.value.asExprF)(sg).asExpr[F[_]]
+        } yield Expr.LiftedAdd(x.value.asExprF, y.value.asExprF)(sg).asExpr[F[_]]
     }
 
     case object Minus
