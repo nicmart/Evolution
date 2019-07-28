@@ -2,7 +2,7 @@ package evolution.language
 import cats.Id
 import cats.implicits._
 import cats.mtl.implicits._
-import cats.kernel.{ Eq, Order }
+import cats.kernel.{ Eq, Group, Order, Semigroup }
 import org.scalacheck.Gen
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
@@ -62,7 +62,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
             AST.Number(a.toString, Qualified(Type.Dbl)),
             AST.Number(b.toString, Qualified(Type.Dbl))
           )
-        unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b)))
+        unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b), Group[Double]), Semigroup[Double])
       }
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>
@@ -106,16 +106,16 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
 
   def equalityOperators[T: Eq]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.PrimitiveConst(Constant2.Eq) -> Equals.apply[T] _,
-      AST.PrimitiveConst(Constant2.Neq) -> Neq.apply[T] _
+      AST.PrimitiveConst(Constant2.Eq) -> (Equals.apply[T](_, _, Eq[T])),
+      AST.PrimitiveConst(Constant2.Neq) -> (Neq.apply[T](_, _, Eq[T]))
     )
 
   def relationOperators[T: Order]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.PrimitiveConst(Constant2.GreaterThan) -> GreaterThan.apply[T] _,
-      AST.PrimitiveConst(Constant2.GreaterThanOrEqual) -> GreaterThanOrEqual.apply[T] _,
-      AST.PrimitiveConst(Constant2.LessThan) -> LessThan.apply[T] _,
-      AST.PrimitiveConst(Constant2.LessThanOrEqual) -> LessThanOrEqual.apply[T] _
+      AST.PrimitiveConst(Constant2.GreaterThan) -> (GreaterThan[T](_, _, Order[T])),
+      AST.PrimitiveConst(Constant2.GreaterThanOrEqual) -> (GreaterThanOrEqual[T](_, _, Order[T])),
+      AST.PrimitiveConst(Constant2.LessThan) -> (LessThan[T](_, _, Order[T])),
+      AST.PrimitiveConst(Constant2.LessThanOrEqual) -> (LessThanOrEqual[T](_, _, Order[T]))
     )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =

@@ -72,17 +72,17 @@ class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks 
     implicit eq: Eq[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
-      Equals.apply[T] _ -> eq.eqv _,
-      Neq.apply[T] _ -> eq.neqv _
+      (Equals[T](_, _, Eq[T])) -> eq.eqv _,
+      (Neq[T](_, _, Eq[T])) -> eq.neqv _
     )
 
   def genRelationOperatorExpectations[T](
     implicit ord: Order[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
-      GreaterThan.apply[T] _ -> ord.gt _,
-      GreaterThanOrEqual.apply[T] _ -> ord.gteqv _,
-      LessThan.apply[T] _ -> ord.lt _,
-      LessThanOrEqual.apply[T] _ -> ord.lteqv _
+      (GreaterThan[T](_, _, Order[T])) -> ord.gt _,
+      (GreaterThanOrEqual[T](_, _, Order[T])) -> ord.gteqv _,
+      (LessThan[T](_, _, Order[T])) -> ord.lt _,
+      (LessThanOrEqual[T](_, _, Order[T])) -> ord.lteqv _
     )
 }

@@ -49,8 +49,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             else if (t >= 1) 1.0
             else t * t * (3.0 - 2.0 * t)
           }
-        case eq @ Equals(a, b) => interpret2(a, b)(eq.eq.eqv)
-        case neq @ Neq(a, b)   => interpret2(a, b)(neq.eq.neqv)
+        case Equals(a, b, eq) => interpret2(a, b)(eq.eqv)
+        case Neq(a, b, eq)    => interpret2(a, b)(eq.neqv)
         case IfThen(condition, a, b) =>
           interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
             if (compiledCondition) compiledA else compiledB
@@ -67,10 +67,10 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Not(a) =>
           interpret(a).map(!_)
 
-        case expr @ GreaterThan(a, b)        => interpret2(a, b)(expr.ord.gt)
-        case expr @ GreaterThanOrEqual(a, b) => interpret2(a, b)(expr.ord.gteqv)
-        case expr @ LessThan(a, b)           => interpret2(a, b)(expr.ord.lt)
-        case expr @ LessThanOrEqual(a, b)    => interpret2(a, b)(expr.ord.lteqv)
+        case GreaterThan(a, b, ord)        => interpret2(a, b)(ord.gt)
+        case GreaterThanOrEqual(a, b, ord) => interpret2(a, b)(ord.gteqv)
+        case LessThan(a, b, ord)           => interpret2(a, b)(ord.lt)
+        case LessThanOrEqual(a, b, ord)    => interpret2(a, b)(ord.lteqv)
 
         case InRect(topLeft, bottomRight, p) =>
           interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>

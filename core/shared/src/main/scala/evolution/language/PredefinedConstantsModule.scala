@@ -108,12 +108,12 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
           // Overload - for evolutions
           case Type.Evo(tpe) =>
             Type.group[M](tpe).map { group =>
-              Expr.Map(x.value.asExprF, Expr.Lambda("t", Expr.Inverse(Expr.Var("t"))(group)))
+              Expr.Map(x.value.asExprF, Expr.Lambda("t", Expr.Inverse(Expr.Var("t"), group)))
             }
 
           case tpe =>
             Type.group[M](tpe).map { g =>
-              Expr.Inverse(x.value.asExpr)(g)
+              Expr.Inverse(x.value.asExpr, g)
             }
         }
     }
@@ -207,7 +207,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.vectorSpace[M](y.tpe).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr)(vs))
+        Type.vectorSpace[M](y.tpe).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr, vs))
     }
 
     case object LiftedMultiply extends Constant2(Qualified(Evo(Dbl) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -218,7 +218,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         for {
           tpe <- Type.unwrapF[M](y.tpe)
           vs <- Type.vectorSpace[M](tpe)
-        } yield Expr.LiftedMultiply(x.value.asExprF, y.value.asExprF)(vs).asExpr[F[_]]
+        } yield Expr.LiftedMultiply(x.value.asExprF, y.value.asExprF, vs).asExpr[F[_]]
     }
 
     case object Add
@@ -227,7 +227,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](y.tpe).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr)(vs))
+        Type.group[M](y.tpe).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr, vs))
     }
 
     case object LiftedAdd extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -238,7 +238,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         for {
           tpe <- Type.unwrapF[M](x.tpe)
           sg <- Type.group[M](tpe)
-        } yield Expr.LiftedAdd(x.value.asExprF, y.value.asExprF)(sg).asExpr[F[_]]
+        } yield Expr.LiftedAdd(x.value.asExprF, y.value.asExprF, sg).asExpr[F[_]]
     }
 
     case object Minus
@@ -247,7 +247,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr)(group))(group))
+        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr, group), group))
     }
 
     case object Div extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {
@@ -275,7 +275,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.eqTypeClass[M](y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr)(eq))
+        Type.eqTypeClass[M](y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
 
     }
 
@@ -284,7 +284,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.eqTypeClass[M](y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr)(eq))
+        Type.eqTypeClass[M](y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
     }
 
     case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
@@ -292,7 +292,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.order[M](y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr)(order))
+        Type.order[M](y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
     }
 
     case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
@@ -300,7 +300,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.order[M](y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
+        Type.order[M](y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
     }
 
     case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
@@ -308,7 +308,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.order[M](y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr)(order))
+        Type.order[M](y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
     }
 
     case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
@@ -316,7 +316,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.order[M](y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr)(order))
+        Type.order[M](y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
     }
 
     case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {

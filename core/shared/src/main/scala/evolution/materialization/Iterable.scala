@@ -109,8 +109,8 @@ object Iterable {
   def zipWith[A, B, C](fa: Iterable[A], fb: Iterable[B], f: A => B => C): Iterable[C] =
     countAllocation(new Iterable[C] {
       def run: Iterator[C] = countRun(new AbstractIterator[C] {
-        val it1 = fa.run
-        val it2 = fb.run
+        private val it1 = fa.run
+        private val it2 = fb.run
         def hasNext = it1.hasNext && it2.hasNext
         def next = f(it1.next())(it2.next())
       })
@@ -143,7 +143,7 @@ object Iterable {
   })
 
   def flatten[A, B](fa: Iterable[Iterable[A]]): Iterable[A] = countAllocation(new Iterable[A] {
-    def run: Iterator[A] = countRun(fa.run.map(_.run).flatten)
+    def run: Iterator[A] = countRun(fa.run.flatMap(_.run))
   })
 
   def parallel[A](ffa: Iterable[Iterable[A]]): Iterable[A] = countAllocation(new Iterable[A] {
