@@ -1,5 +1,4 @@
 package evolution.language
-import cats.Group
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
 import evolution.typeclass.VectorSpace
@@ -8,9 +7,6 @@ import evolution.typeclass.VectorSpace._
 trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
   import Expr._
   object Desugarer {
-
-    def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
-      Map(t, Lambda("t", Inverse(Var("t"))))
 
     def mapWithDerivative[X: VectorSpace, Y]: Expr[(X => X => Y) => F[X] => F[Y]] =
       Lambda[X => X => Y, F[X] => F[Y]](

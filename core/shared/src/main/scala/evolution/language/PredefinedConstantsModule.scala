@@ -137,7 +137,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
           // Overload - for evolutions
           case Type.Evo(tpe) =>
             Type.group[M](tpe).map { group =>
-              inverseEvo(x.value.asExprF)(group)
+              Expr.Map(x.value.asExprF, Expr.Lambda("t", Expr.Inverse(Expr.Var("t"))(group)))
             }
 
           case tpe =>
