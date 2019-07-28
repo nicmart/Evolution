@@ -170,15 +170,15 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case UniformFrom(n, ft) =>
           interpret2(n, ft)(Iterable.uniformFrom)
 
-        case Integrate(startExpr, speedExpr, group) =>
-          interpret2(startExpr, speedExpr)((start, speed) => Iterable.integrate(start, speed, group))
+        case Integrate(startExpr, speedExpr, semigroup) =>
+          interpret2(startExpr, speedExpr)((start, speed) => Iterable.integrate(start, speed, semigroup))
 
-        case Solve1(speedExpr, startExpr, group) =>
-          interpret2(speedExpr, startExpr)((speed, start) => Iterable.solve1(speed, start, group))
+        case Solve1(speedExpr, startExpr, semigroup) =>
+          interpret2(speedExpr, startExpr)((speed, start) => Iterable.solve1(speed, start, semigroup))
 
-        case Solve2(accExpr, startExpr, speedExpr, group) =>
+        case Solve2(accExpr, startExpr, speedExpr, semigroup) =>
           interpret3(accExpr, startExpr, speedExpr)(
-            (acc, start, speed) => Iterable.solve2(acc, start, speed, group)
+            (acc, start, speed) => Iterable.solve2(acc, start, speed, semigroup)
           )
 
         case Derive(t, vectorSpace) => interpret1(t)(Iterable.derive(_, vectorSpace))
