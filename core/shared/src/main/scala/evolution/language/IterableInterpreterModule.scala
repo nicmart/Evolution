@@ -13,7 +13,6 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
   object Interpreter {
 
     def interpret[T](expr: Expr[T]): Out[T] = {
-      _runs = _runs + 1
       expr match {
         case Dbl(d)                 => Out.pure(d)
         case Floor(d)               => interpret(d).map(_.toInt)
@@ -201,29 +200,10 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
     private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Out[D] =
       Out.map3(interpret(a), interpret(b), interpret(c))(f)
   }
-
-  // private def extractVariadicZipWith(zipWith: ZipWith[Any, Any, Any]): Option[(Seq[Iterable[Any]], Seq[Any] => Any)] = {
-  //   def isApplyLambda[T](expr: Expr[T]): Boolean = expr match {
-  //     case Lambda(f, Lambda(x, App(Var(fVar), Var(xVar)))) if f == fVar && x == xVar => true
-  //     case _                                                                         => false
-  //   }
-  //   ???
-  // }
-
-  private var _runs = 0
-  def resetCounts(): Unit = {
-    _runs = 0
-    IterableInterpreterModule.outAllocations = 0
-  }
-  def interpreterRuns: Int = _runs
-  def outAllocations: Int = IterableInterpreterModule.outAllocations
 }
 
 object IterableInterpreterModule {
-  private var outAllocations: Int = 0
-
   sealed trait Out[+T] { self =>
-    outAllocations += 1
     def apply(ctx: Ctx): T
     final def map[S](f: T => S): Out[S] = Out.map(this, f)
   }
