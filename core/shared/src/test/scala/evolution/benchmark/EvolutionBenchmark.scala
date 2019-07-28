@@ -14,59 +14,41 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     val benchmarks = List(
       Benchmark(
         Type.Dbl,
-        "@(1)",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        "@(1)"
       ),
       Benchmark(
         Type.Dbl,
-        "map(@(1), x -> x)",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxExprAllocations(0),
-        Goal.MaxRuns(0)
+        "map(@(1), x -> x)"
       ),
       Benchmark(
         Type.Dbl,
         "y = 1 in map(map(@(1), x -> x), x -> y)",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxExprAllocations(0),
-        Goal.MaxRuns(0)
+        Goal.MaxExprAllocations(0)
       ),
       Benchmark(
         Type.Dbl,
-        "f = x -> x in @(f(1))",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        "f = x -> x in @(f(1))"
       ),
       Benchmark(
         Type.Dbl,
-        "uniform(0, 1)",
-        Goal.MaxRuns(0)
+        "uniform(0, 1)"
       ),
       Benchmark(
         Type.Dbl,
-        "(x -> y -> while(@(y), z -> z < 100))(1, 1)",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        "(x -> y -> while(@(y), z -> z < 100))(1, 1)"
       ),
       Benchmark(
         Type.Dbl,
-        "(x -> y -> z -> range(x, y, z))(1, 1, 1)",
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        "(x -> y -> z -> range(x, y, z))(1, 1, 1)"
       ),
       Benchmark(
         Type.Point,
-        foo,
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        foo
       ),
       Benchmark(
         Type.Point,
         veryLongExpression,
-        Goal.MaxExprAllocations(0),
-        Goal.MaxReprAllocations(0),
-        Goal.MaxRuns(0)
+        Goal.MaxExprAllocations(0)
       )
     )
 
@@ -81,8 +63,6 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
     def run: Unit = {
       unsafeRun(tpe, expression, 1000)
       val result = BenchmarkResult(
-        Iterable.allocationCount,
-        Iterable.runsCount,
         interpreterRuns,
         outAllocations,
         exprAllocationsCount
@@ -97,30 +77,18 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
   sealed trait Goal
   object Goal {
-    case class MaxReprAllocations(value: Int) extends Goal {
-      override def toString: String = s"Repr allocations should be not more than $value"
-    }
-    case class MaxRuns(value: Int) extends Goal {
-      override def toString: String = s"Iterable runs should be not more than $value"
-    }
     case class MaxExprAllocations(value: Int) extends Goal {
       override def toString: String = s"Expr allocations should be not more than $value"
     }
   }
 
   case class BenchmarkResult(
-    reprAllocations: Int,
-    runsCount: Int,
     interpreterRuns: Int,
     outAllocations: Int,
     exprAllocations: Int
   )
 
   def assertGoal(result: BenchmarkResult)(goal: Goal) = goal match {
-    case Goal.MaxReprAllocations(goal) =>
-      assert(result.reprAllocations <= goal)
-    case Goal.MaxRuns(goal) =>
-      assert(result.runsCount <= goal)
     case Goal.MaxExprAllocations(goal) =>
       assert(result.exprAllocations <= goal)
   }
@@ -139,7 +107,6 @@ class EvolutionBenchmark extends FreeSpec with Matchers {
 
     resetCounts()
     resetExprAllocationsCount()
-    Iterable.resetCounts()
 
     iterator.drop(n)
   }
