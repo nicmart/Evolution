@@ -37,17 +37,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Expr.Empty().pure[M].widen
     }
 
-    case object MapWithDerivative
-        extends Constant0(Qualified((Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2")))) {
-      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          fType <- Type.domain[M](tpe.t)
-          inner <- Type.domain[M](fType)
-          vs <- Type.vectorSpace[M](inner)
-        } yield mapWithDerivative(vs).asExpr[F[_] => F[_]]
-
-    }
-
     case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
       override def compile[M[_]](
         tpe: TypeClasses.Qualified[Type]
@@ -388,6 +377,18 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Map(x.asExprF, y.asExpr[Any => Any])
+    }
+
+    case object MapWithDerivative
+        extends Constant2(Qualified((Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2")))) {
+
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        y: Typed[Expr[_]]
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        Type.group[M](x.tpe).map { group =>
+          Expr.MapWithDerivative(x.value.asExprF, y.value.asExpr[Any => Any => Any], group)
+        }
     }
 
     case object FlatMap

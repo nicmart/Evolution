@@ -1,4 +1,6 @@
 package evolution.materialization
+import cats.kernel.Group
+
 import scala.collection.AbstractIterator
 import scala.util.Random
 import evolution.geometry.Point
@@ -177,6 +179,27 @@ object Iterable {
               val nextDerivative = vs.group.remove(nextA, _current)
               _current = nextA
               nextDerivative
+            }
+          }
+        } else Iterator.empty
+      }
+    }
+  )
+
+  // TODO DRY with derivative?
+  def mapWithDerivative[A, B](as: Iterable[A], f: A => A => B, group: Group[A]): Iterable[B] = countAllocation(
+    new Iterable[B] {
+      override def run: Iterator[B] = countRun {
+        val derivingIterator: Iterator[A] = as.run
+        if (derivingIterator.hasNext) {
+          new AbstractIterator[B] {
+            var _current: A = derivingIterator.next()
+            override def hasNext: Boolean = derivingIterator.hasNext
+            override def next(): B = {
+              val nextA = derivingIterator.next()
+              val nextB = f(_current)(group.remove(nextA, _current))
+              _current = nextA
+              nextB
             }
           }
         } else Iterator.empty

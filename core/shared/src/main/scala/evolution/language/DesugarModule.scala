@@ -1,41 +1,11 @@
 package evolution.language
 import evolution.data.ExpressionModule
 import evolution.geometry.Point
-import evolution.typeclass.VectorSpace
 import evolution.typeclass.VectorSpace._
 
 trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
   import Expr._
   object Desugarer {
-
-    def mapWithDerivative[X: VectorSpace, Y]: Expr[(X => X => Y) => F[X] => F[Y]] =
-      Lambda[X => X => Y, F[X] => F[Y]](
-        "f",
-        Fix[F[X] => F[Y]](
-          lambda2(
-            "self",
-            "fx",
-            MapCons[X, Y](
-              Var("fx"),
-              lambda2(
-                "head1",
-                "tail1",
-                MapCons[X, Y](
-                  Var("tail1"),
-                  lambda2(
-                    "head2",
-                    "tail2",
-                    Cons[Y](
-                      app2[X, X, Y](Var("f"), Var("head1"), Add(Var("head2"), Inverse[X](Var("head1")))),
-                      App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2")))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
 
     def norm(point: Expr[Point]): Expr[Double] =
       Exp(Add(Exp(X(point), Dbl(2)), Exp(Y(point), Dbl(2))), Dbl(0.5))
