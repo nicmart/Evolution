@@ -1,17 +1,9 @@
 package evolution.language
 import evolution.data.ExpressionModule
-import evolution.geometry.Point
-import evolution.typeclass.VectorSpace._
 
 trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
   import Expr._
   object Desugarer {
-
-    def norm(point: Expr[Point]): Expr[Double] =
-      Exp(Add(Exp(X(point), Dbl(2)), Exp(Y(point), Dbl(2))), Dbl(0.5))
-
-    def versor(point: Expr[Point]): Expr[Point] =
-      Multiply(Div(Dbl(1), norm(point)), point)
 
     def withFirst[T1, T2](expr: Expr[F[T1]], f: Expr[T1 => F[T2]]): Expr[F[T2]] = {
       val (head, tail) = f.freshVarName2("head", "tail")

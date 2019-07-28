@@ -31,14 +31,6 @@ class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterprete
         toList(expr).take(10) shouldBe List.fill(10)(Point(0, 0))
       }
 
-      "versor" in {
-        toValue(versor(Pnt(Dbl(0), Dbl(2)))) shouldBe Point(0, 1)
-      }
-
-      "norm" in {
-        toValue(norm(Pnt(Dbl(3), Dbl(4)))) shouldBe 5
-      }
-
       "withFirst" in {
         val expr = withFirst[Double, Double](
           Cons(Dbl(1), Cons(Dbl(2), Empty())),

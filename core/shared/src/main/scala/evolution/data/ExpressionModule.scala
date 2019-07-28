@@ -27,6 +27,8 @@ trait ExpressionModule[F[_]] {
     final case class LiftedPolar(r: Expr[F[Double]], alpha: Expr[F[Double]]) extends Expr[F[Point]](List(r, alpha))
     final case class X(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
+    final case class Norm(p: Expr[Point]) extends Expr[Double](List(p))
+    final case class Versor(p: Expr[Point]) extends Expr[Point](List(p))
     final case class Add[T](a: Expr[T], b: Expr[T])(implicit val semigroup: Semigroup[T]) extends Expr[T](List(a, b))
     final case class LiftedAdd[T](a: Expr[F[T]], b: Expr[F[T]])(implicit val semigroup: Semigroup[T])
         extends Expr[F[T]](List(a, b))
@@ -36,6 +38,7 @@ trait ExpressionModule[F[_]] {
     final case class Sign(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Inverse[T](t: Expr[T])(implicit val group: Group[T]) extends Expr[T](List(t))
+    // TODO group is enough
     final case class Derive[T](t: Expr[F[T]], vectorSpace: VectorSpace[T]) extends Expr[F[T]](List(t))
     final case class Multiply[T](k: Expr[Double], t: Expr[T])(implicit val vectorSpace: VectorSpace[T])
         extends Expr[T](List(k, t))

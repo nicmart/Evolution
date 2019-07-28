@@ -95,11 +95,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Norm extends Constant1Plain(Qualified(Type.Point =>: Type.Dbl)) {
-      override def compilePlain(x: Expr[_]): Expr[_] = norm(x.asExpr)
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Norm(x.asExpr)
     }
 
     case object Versor extends Constant1Plain(Qualified(Type.Point =>: Type.Point)) {
-      override def compilePlain(x: Expr[_]): Expr[_] = versor(x.asExpr)
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Versor(x.asExpr)
     }
 
     case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {

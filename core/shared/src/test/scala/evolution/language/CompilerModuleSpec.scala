@@ -6,7 +6,7 @@ import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
-  import Expr._, Desugarer._, TypeClasses._
+  import Expr._, TypeClasses._
 
   "The compiler" - {
     "should successfully compile" - {
@@ -70,13 +70,6 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
         val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
         val expected = TakeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
         unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.While), evolution, predicate)) shouldBe expected
-      }
-
-      "untils" in forAll(genBool, genNumber) { (b, n) =>
-        val predicate = AST.Lambda("x", b)
-        val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
-        val expected = takeUntil[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.Until), evolution, predicate)) shouldBe expected
       }
 
       "equality operators" in forAll(equalityOperators[Double], genTypedNumber, genTypedNumber) {

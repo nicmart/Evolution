@@ -25,6 +25,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case LiftedPolar(x, y) => interpret2(x, y)(Iterable.zipWithUncurried(Point.polar))
         case X(p)              => interpret1(p)(_.x)
         case Y(p)              => interpret1(p)(_.y)
+        case Norm(p)           => interpret1(p)(_.norm)
+        case Versor(p)         => interpret1(p)(_.versor)
         case add: Add[_]       => interpret2(add.a, add.b)(add.semigroup.combine)
         case add: LiftedAdd[_] => interpret2(add.a, add.b)(Iterable.zipWithUncurried(add.semigroup.combine))
         case Div(a, b)         => interpret2(a, b)(_ / _)
@@ -146,6 +148,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case Map(fa, f) => interpret2(fa, f)(Iterable.map)
 
+        case MapWithDerivative(fa, f, group) => interpret2(fa, f)(Iterable.mapWithDerivative(_, _, group))
+
         case Range(from, to, step) => interpret3(from, to, step)(Iterable.range)
 
         case Uniform(from, to) =>
@@ -163,7 +167,13 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Solve1(speedExpr, startExpr, vectorSpace) =>
           interpret2(speedExpr, startExpr)((speed, start) => Iterable.solve1(speed, start, vectorSpace))
 
-        // See https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform#Implementation
+        case Solve2(accExpr, startExpr, speedExpr, vectorSpace) =>
+          interpret3(accExpr, startExpr, speedExpr)(
+            (acc, start, speed) => Iterable.solve2(acc, start, speed, vectorSpace)
+          )
+
+        case Derive(t, vectorSpace) => interpret1(t)(Iterable.derive(_, vectorSpace))
+
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)
 
