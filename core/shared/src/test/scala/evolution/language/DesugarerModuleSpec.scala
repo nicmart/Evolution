@@ -7,14 +7,11 @@ import evolution.materialization.Iterable
 // TODO This is testing the desugaring through the interpreter.
 class DesugarerModuleSpec extends LanguageSpec[Iterable] with IterableInterpreterModule {
   import Desugarer._
-  import Expr._ 
+  import Expr._
   import Interpreter._
 
   "Desugarer module" - {
     "should desugar" - {
-      "minus" in {
-        toValue(minus(Dbl(3), Dbl(2))) shouldBe 1.0
-      }
 
       "while" in {
         val expr = TakeWhile(

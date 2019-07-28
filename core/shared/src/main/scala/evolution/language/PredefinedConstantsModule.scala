@@ -263,7 +263,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => minus(x.value.asExpr, y.value.asExpr)(group))
+        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr)(group))(group))
     }
 
     case object Div extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {

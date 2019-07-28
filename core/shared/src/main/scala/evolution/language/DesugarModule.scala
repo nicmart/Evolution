@@ -9,9 +9,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
   import Expr._
   object Desugarer {
 
-    def minus[T: Group](a: Expr[T], b: Expr[T]): Expr[T] =
-      Add(a, Inverse(b))
-
     def inverseEvo[T: Group](t: Expr[F[T]]): Expr[F[T]] =
       Map(t, Lambda("t", Inverse(Var("t"))))
 
@@ -33,7 +30,7 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
                     "head2",
                     "tail2",
                     Cons[Y](
-                      app2[X, X, Y](Var("f"), Var("head1"), minus[X](Var("head2"), Var("head1"))),
+                      app2[X, X, Y](Var("f"), Var("head1"), Add(Var("head2"), Inverse[X](Var("head1")))),
                       App[F[X], F[Y]](Var("self"), Cons(Var("head2"), Var("tail2")))
                     )
                   )
