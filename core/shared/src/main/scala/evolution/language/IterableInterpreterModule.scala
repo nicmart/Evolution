@@ -6,7 +6,7 @@ import evolution.materialization.Iterable
 
 // TODO this is an implementation
 trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
-  type Out[T] = IterableInterpreterModule.Out[T]
+  type Out[T] = IterableInterpreterModule.Contextual[T]
   import Expr._
   import IterableInterpreterModule._
 
@@ -14,10 +14,10 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
     def interpret[T](expr: Expr[T]): Out[T] = {
       expr match {
-        case Dbl(d)                 => Out.pure(d)
+        case Dbl(d)                 => Contextual.Pure(d)
         case Floor(d)               => interpret(d).map(_.toInt)
         case ToDbl(n)               => interpret(n).map(_.toDouble)
-        case Integer(n)             => Out.pure(n)
+        case Integer(n)             => Contextual.Pure(n)
         case Pnt(x, y)              => interpret2(x, y)(Point.apply)
         case LiftedPnt(x, y)        => interpret2(x, y)(Iterable.zipWithUncurried(Point.apply))
         case Polar(x, y)            => interpret2(x, y)(Point.polar)
@@ -55,7 +55,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             if (compiledCondition) compiledA else compiledB
           }
 
-        case Bool(b) => Out.pure(b)
+        case Bool(b) => Contextual.Pure(b)
 
         case And(a, b) =>
           interpret2(a, b)(_ && _)
@@ -77,7 +77,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
           }
 
         case Var(name) =>
-          new Contextual[T] {
+          new Contextual.WithContext[T] {
             override def apply(ctx: Ctx): T = get[Any](ctx, name).asInstanceOf[T]
           }
 
@@ -86,7 +86,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case lambda: Lambda[s, t] =>
           val interpretedBody = interpret(lambda.expr)
-          new Contextual[T] {
+          new Contextual.WithContext[T] {
             override def apply(ctx: Ctx): T = (a: s) => interpretedBody(addStrict(lambda.variable, a, ctx))
           }
 
@@ -98,7 +98,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case Fix(Lambda(name, lambdaBody)) =>
           val interpretedBody = interpret(lambdaBody)
-          new Contextual[T] {
+          new Contextual.WithContext[T] {
             override def apply(ctx: Ctx): T = {
               lazy val self: T = interpretedBody(addLazy(name, () => self, ctx))
               self
@@ -108,14 +108,14 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Fix(_) => ???
 
         case Empty() =>
-          Out.pure(Iterable.empty)
+          Contextual.Pure(Iterable.empty)
 
         // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
         // recursive definitions
         case Cons(head, tail) =>
           val interpretedHead = interpret(head)
           val interpretedTail = interpret(tail)
-          new Contextual[T] {
+          new Contextual.WithContext[T] {
             override def apply(ctx: Ctx): T = {
               Iterable.cons(interpretedHead(ctx), interpretedTail(ctx))
             }
@@ -185,9 +185,9 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)
 
-        case Noise() => IterableInterpreterModule.Constant(Iterable.noiseIterable)
+        case Noise() => Contextual.Pure(Iterable.noiseIterable)
 
-        case OctaveNoise() => IterableInterpreterModule.Constant(Iterable.octaveNoiseIterable)
+        case OctaveNoise() => Contextual.Pure(Iterable.octaveNoiseIterable)
       }
     }
 
@@ -195,55 +195,47 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
       interpret(a).map(f)
 
     private def interpret2[A, B, C](a: Expr[A], b: Expr[B])(f: (A, B) => C): Out[C] =
-      Out.map2(interpret(a), interpret(b))(f)
+      Contextual.map2(interpret(a), interpret(b))(f)
 
     private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Out[D] =
-      Out.map3(interpret(a), interpret(b), interpret(c))(f)
+      Contextual.map3(interpret(a), interpret(b), interpret(c))(f)
   }
 }
 
 object IterableInterpreterModule {
-  sealed trait Out[+T] { self =>
+  sealed trait Contextual[+T] { self =>
     def apply(ctx: Ctx): T
-    final def map[S](f: T => S): Out[S] = Out.map(this, f)
+    final def map[S](f: T => S): Contextual[S] = Contextual.map(this, f)
   }
-
-  case class Constant[T](t: T) extends Out[T] {
-    override def apply(ctx: Ctx): T = t
-  }
-
-  case class ConstantEvolution[T](t: Out[T]) extends Out[Iterable[T]] {
-    override def apply(ctx: Ctx): Iterable[T] = {
-      val tc = t(ctx)
-      Iterable.constant(tc)
-    }
-  }
-
-  sealed abstract class Contextual[T] extends Out[T]
 
   object Contextual {
-    def instance[T](f: Ctx => T): Out[T] = new Contextual[T] {
-      override def apply(ctx: Ctx): T = f(ctx)
-    }
-  }
-
-  object Out {
-    def pure[T](t: T): Out[T] = Constant(t)
-    def map[A, B](a: Out[A], f: A => B): Out[B] = a match {
-      case Constant(t) => Constant(f(t))
-      case contextual  => new Contextual[B] { override def apply(ctx: Ctx): B = f(contextual(ctx)) }
+    case class Pure[T](t: T) extends Contextual[T] {
+      override def apply(ctx: Ctx): T = t
     }
 
-    def map2[A, B, C](a: Out[A], b: Out[B])(f: (A, B) => C): Out[C] =
+    sealed abstract class WithContext[T] extends Contextual[T]
+
+    object WithContext {
+      def instance[T](f: Ctx => T): Contextual[T] = new WithContext[T] {
+        override def apply(ctx: Ctx): T = f(ctx)
+      }
+    }
+
+    def map[A, B](a: Contextual[A], f: A => B): Contextual[B] = a match {
+      case Pure(t)    => Pure(f(t))
+      case contextual => new WithContext[B] { override def apply(ctx: Ctx): B = f(contextual(ctx)) }
+    }
+
+    def map2[A, B, C](a: Contextual[A], b: Contextual[B])(f: (A, B) => C): Contextual[C] =
       (a, b) match {
-        case (Constant(ac), Constant(bc)) => Constant(f(ac, bc))
-        case _                            => new Contextual[C] { override def apply(ctx: Ctx): C = f(a(ctx), b(ctx)) }
+        case (Pure(ac), Pure(bc)) => Pure(f(ac, bc))
+        case _                    => new WithContext[C] { override def apply(ctx: Ctx): C = f(a(ctx), b(ctx)) }
       }
 
-    def map3[A, B, C, D](a: Out[A], b: Out[B], c: Out[C])(f: (A, B, C) => D): Out[D] =
+    def map3[A, B, C, D](a: Contextual[A], b: Contextual[B], c: Contextual[C])(f: (A, B, C) => D): Contextual[D] =
       (a, b, c) match {
-        case (Constant(ac), Constant(bc), Constant(cc)) => Constant(f(ac, bc, cc))
-        case _                                          => new Contextual[D] { override def apply(ctx: Ctx): D = f(a(ctx), b(ctx), c(ctx)) }
+        case (Pure(ac), Pure(bc), Pure(cc)) => Pure(f(ac, bc, cc))
+        case _                              => new WithContext[D] { override def apply(ctx: Ctx): D = f(a(ctx), b(ctx), c(ctx)) }
       }
   }
 }
