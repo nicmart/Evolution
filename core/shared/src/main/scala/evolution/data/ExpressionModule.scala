@@ -91,6 +91,9 @@ trait ExpressionModule[F[_]] {
         extends Expr[F[A]](List(speed, start))
     final case class Solve2[A](acc: Expr[F[A => A => A]], a0: Expr[A], v0: Expr[A], vs: VectorSpace[A])
         extends Expr[F[A]](List(acc, a0, v0))
+    final case class WithFirst[A, B](as: Expr[F[A]], f: Expr[A => B]) extends Expr[F[B]](List(as, f))
+    final case class WithFirst2[A, B](as: Expr[F[A]], f: Expr[A => A => B]) extends Expr[F[B]](List(as, f))
+    final case class WithFirst3[A, B](as: Expr[F[A]], f: Expr[A => A => A => B]) extends Expr[F[B]](List(as, f))
 
     // Distributions
     final case class Constant[T](t: Expr[T]) extends Expr[F[T]](List(t))

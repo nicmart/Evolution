@@ -255,15 +255,43 @@ object Iterable {
     }
   )
 
-  def variadicZipWith(iterables: Seq[Iterable[Any]], f: Seq[Any] => Any): Iterable[Any] = countAllocation(
-    new Iterable[Any] {
-      def run: Iterator[Any] = countRun(new AbstractIterator[Any] {
-        val iterators = iterables.map(_.run)
-        def hasNext = iterators.forall(_.hasNext)
-        def next = f(iterators.map(_.next()))
-      })
-    }
-  )
+  def withFirst1[A, B](ts: Iterable[A], f: A => B): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
+      private val it = ts.run.take(1)
+      override def hasNext: Boolean = it.hasNext
+      override def next(): B = f(it.next())
+    })
+  })
+
+  def withFirst2[A, B](ts: Iterable[A], f: A => A => B): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
+      private val it = ts.run.take(2)
+      var elems: List[A] = _
+      override def hasNext: Boolean = {
+        elems = it.toList
+        elems.size == 2
+      }
+      override def next(): B = elems match {
+        case a1 :: a2 :: Nil => f(a1)(a2)
+        case _               => throw new NoSuchElementException("Called withFirst2::next() before hasNext")
+      }
+    })
+  })
+
+  def withFirst3[A, B](ts: Iterable[A], f: A => A => A => B): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
+      private val it = ts.run.take(3)
+      var elems: List[A] = _
+      override def hasNext: Boolean = {
+        elems = it.toList
+        elems.size == 3
+      }
+      override def next(): B = elems match {
+        case a1 :: a2 :: a3 :: Nil => f(a1)(a2)(a3)
+        case _                     => throw new NoSuchElementException("Called withFirst3::next() before hasNext")
+      }
+    })
+  })
 
   def shuffle[T](ts: List[T]): Iterable[List[T]] = countAllocation(new Iterable[List[T]] {
     def run: Iterator[List[T]] = countRun(Iterator.continually(Random.shuffle(ts)))

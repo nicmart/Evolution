@@ -142,6 +142,15 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case TakeWhile(fa, p) =>
           interpret2(fa, p)(Iterable.takeWhile)
 
+        case WithFirst(as, f) =>
+          interpret2(as, f)(Iterable.withFirst1)
+
+        case WithFirst2(as, f) =>
+          interpret2(as, f)(Iterable.withFirst2)
+
+        case WithFirst3(as, f) =>
+          interpret2(as, f)(Iterable.withFirst3)
+
         case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Iterable.flatMap)
 
         case Flatten(ffa) => interpret1(ffa)(Iterable.flatten)

@@ -7,7 +7,6 @@ trait LanguageSpec[F[_]]
     extends FreeSpec
     with Matchers
     with GeneratorDrivenPropertyChecks
-    with DesugarModule[F]
     with CompilerModule[F]
     with ExpressionModule[F]
     with PredefinedConstantsModule[F]

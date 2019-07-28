@@ -6,7 +6,6 @@ import evolution.data.ExpressionModule
 class FullModule[F[_]]
     extends ParserModule[F]
     with CompilerModule[F]
-    with DesugarModule[F]
     with ExpressionModule[F]
     with TyperModule[F]
     with ASTModule[F]
