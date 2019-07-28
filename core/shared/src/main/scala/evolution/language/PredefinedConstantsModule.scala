@@ -48,24 +48,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     }
 
-    case object Derive extends Constant0(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          domain <- Type.domain[M](tpe.t)
-          inner <- Type.unwrapF[M](domain)
-          vs <- Type.vectorSpace[M](inner)
-        } yield derive(vs).asExpr[F[_] => F[_]]
-    }
-
-    case object Derive2 extends Constant0(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          domain <- Type.domain[M](tpe.t)
-          inner <- Type.unwrapF[M](domain)
-          vs <- Type.vectorSpace[M](inner)
-        } yield derive2(vs).asExpr[F[_] => F[_]]
-    }
-
     case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
       override def compile[M[_]](
         tpe: TypeClasses.Qualified[Type]
@@ -170,6 +152,15 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
     case object Flatten extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[F[Any]])
+    }
+
+    case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+
+      override def compile[M[_]](x: Typed[Expr[_]])(
+        implicit M: Monad[M],
+        E: FunctorRaise[M, String]
+      ): M[Expr[_]] =
+        Type.vectorSpace[M](x.tpe).map(vs => Expr.Derive(x.value.asExprF, vs))
     }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -414,7 +405,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Until extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = takeUntil(x.asExprF, y.asExpr[Any => Boolean])
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = {
+        val t = y.freshVarName("t")
+        Expr.TakeWhile(x.asExprF, Expr.Lambda(t, Expr.Not(Expr.App(y.asExpr[Any => Boolean], Expr.Var(t)))))
+      }
     }
 
     case object Uniform extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Evo(Dbl))) {

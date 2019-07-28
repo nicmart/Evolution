@@ -37,17 +37,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
         )
       )
 
-    def derive[X: VectorSpace]: Expr[F[X] => F[X]] =
-      App(mapWithDerivative[X, X], lambda2[X, X, X]("x", "v", Var("v")))
-
-    def derive2[X: VectorSpace]: Expr[F[X] => F[X]] =
-      Lambda("fx", App(derive[X], App(derive[X], Var[F[X]]("fx"))))
-
-    def takeUntil[T](fa: Expr[F[T]], p: Expr[T => Boolean]): Expr[F[T]] = {
-      val t = p.freshVarName("t")
-      App(takeWhileLambda(Lambda(t, Not(App(p, Var[T](t))))), fa)
-    }
-
     def norm(point: Expr[Point]): Expr[Double] =
       Exp(Add(Exp(X(point), Dbl(2)), Exp(Y(point), Dbl(2))), Dbl(0.5))
 
@@ -87,28 +76,6 @@ trait DesugarModule[F[_]] { self: ExpressionModule[F] =>
               MapCons(
                 Var[F[T1]](tail2),
                 lambda2[T1, F[T1], F[T2]](head3, tail3, app3(f, Var(head1), Var(head2), Var(head3)))
-              )
-            )
-          )
-        )
-      )
-    }
-
-    private def takeWhileLambda[T](p: Expr[T => Boolean]): Expr[F[T] => F[T]] = {
-      val (self, fa, head, tail) = p.freshVarName4("self", "fa", "head", "tail")
-      Fix(
-        lambda2(
-          self,
-          fa,
-          MapCons(
-            Var[F[T]](fa),
-            lambda2[T, F[T], F[T]](
-              head,
-              tail,
-              IfThen(
-                App(p, Var[T](head)),
-                Cons(Var(head), App(Var[F[T] => F[T]](self), Var[F[T]](tail))),
-                Empty()
               )
             )
           )

@@ -36,6 +36,7 @@ trait ExpressionModule[F[_]] {
     final case class Sign(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Inverse[T](t: Expr[T])(implicit val group: Group[T]) extends Expr[T](List(t))
+    final case class Derive[T](t: Expr[F[T]], vectorSpace: VectorSpace[T]) extends Expr[F[T]](List(t))
     final case class Multiply[T](k: Expr[Double], t: Expr[T])(implicit val vectorSpace: VectorSpace[T])
         extends Expr[T](List(k, t))
     final case class LiftedMultiply[T](k: Expr[F[Double]], t: Expr[F[T]])(implicit val vectorSpace: VectorSpace[T])

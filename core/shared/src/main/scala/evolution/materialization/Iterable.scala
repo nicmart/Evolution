@@ -5,7 +5,7 @@ import evolution.geometry.Point
 import evolution.rng.PerlinNoise
 import evolution.typeclass.VectorSpace
 
-trait Iterable[+T] {
+sealed trait Iterable[+T] {
   def run: Iterator[T]
 }
 
@@ -164,6 +164,26 @@ object Iterable {
     }
   )
 
+  def derive[A](as: Iterable[A], vs: VectorSpace[A]): Iterable[A] = countAllocation(
+    new Iterable[A] {
+      override def run: Iterator[A] = countRun {
+        val derivingIterator: Iterator[A] = as.run
+        if (derivingIterator.hasNext) {
+          new AbstractIterator[A] {
+            var _current: A = derivingIterator.next()
+            override def hasNext: Boolean = derivingIterator.hasNext
+            override def next(): A = {
+              val nextA = derivingIterator.next()
+              val nextDerivative = vs.group.remove(nextA, _current)
+              _current = nextA
+              nextDerivative
+            }
+          }
+        } else Iterator.empty
+      }
+    }
+  )
+
   // TODO DRY, see integrate
   def solve1[A](speed: Iterable[A => A], start: A, vs: VectorSpace[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
@@ -233,8 +253,7 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        point =>
-          perlinNoise.noise(point.x, point.y)
+        point => perlinNoise.noise(point.x, point.y)
       }
     )
 
@@ -243,8 +262,7 @@ object Iterable {
       shuffle(range),
       (permutation: List[Int]) => {
         val perlinNoise = new PerlinNoise(permutation.toArray)
-        octaves => presistence => point =>
-          perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
+        octaves => presistence => point => perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
       }
     )
 }
