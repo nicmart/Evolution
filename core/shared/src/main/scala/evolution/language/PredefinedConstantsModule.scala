@@ -8,6 +8,7 @@ import evolution.data.ExpressionModule
 import evolution.geometry.Point
 
 import scala.collection.immutable
+import scala.language.higherKinds
 
 trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
   import Type._
@@ -362,7 +363,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.vectorSpace[M](x.tpe).map(vs => Expr.Integrate(x.value.asExpr, y.value.asExprF, vs))
+        Type.group[M](x.tpe).map(group => Expr.Integrate(x.value.asExpr, y.value.asExprF, group))
     }
 
     case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
@@ -371,8 +372,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type
-          .vectorSpace[M](y.tpe)
-          .map(vs => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, vs))
+          .group[M](y.tpe)
+          .map(group => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, group))
     }
 
     case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -477,12 +478,12 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         implicit M: Monad[M],
         E: FunctorRaise[M, String]
       ): M[Expr[_]] =
-        Type.vectorSpace[M](y.tpe).map { vs =>
+        Type.group[M](y.tpe).map { group =>
           Expr.Solve2[y.tpe.Out](
             x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
             y.value.asExpr[y.tpe.Out],
             z.value.asExpr[y.tpe.Out],
-            vs
+            group
           )
         }
     }

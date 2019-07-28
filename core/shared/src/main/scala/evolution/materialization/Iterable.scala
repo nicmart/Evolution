@@ -178,7 +178,7 @@ object Iterable {
     )
   })
 
-  def integrate[A](start: A, speed: Iterable[A], vs: VectorSpace[A]): Iterable[A] = countAllocation(
+  def integrate[A](start: A, speed: Iterable[A], group: Group[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
       def run: Iterator[A] = countRun(new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -189,7 +189,7 @@ object Iterable {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = vs.add(current, speedIterator.next())
+            _next = group.combine(current, speedIterator.next())
           } else {
             _hasNext = false
           }
@@ -242,7 +242,7 @@ object Iterable {
   )
 
   // TODO DRY, see integrate
-  def solve1[A](speed: Iterable[A => A], start: A, vs: VectorSpace[A]): Iterable[A] = countAllocation(
+  def solve1[A](speed: Iterable[A => A], start: A, group: Group[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
       def run: Iterator[A] = countRun(new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -253,7 +253,7 @@ object Iterable {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = vs.add(current, speedIterator.next()(current))
+            _next = group.combine(current, speedIterator.next()(current))
           } else {
             _hasNext = false
           }
@@ -264,7 +264,7 @@ object Iterable {
     }
   )
 
-  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, vs: VectorSpace[A]): Iterable[A] = countAllocation(
+  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, group: Group[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
       def run: Iterator[A] = countRun(new AbstractIterator[A] {
         private val accIterator = acc.run
@@ -277,8 +277,8 @@ object Iterable {
           val currentV = _nextV
           if (accIterator.hasNext) {
             _hasNext = true
-            _nextV = vs.add(currentV, accIterator.next()(currentA)(currentV))
-            _nextA = vs.add(currentA, _nextV)
+            _nextV = group.combine(currentV, accIterator.next()(currentA)(currentV))
+            _nextA = group.combine(currentA, _nextV)
           } else {
             _hasNext = false
           }
