@@ -153,7 +153,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         implicit M: Monad[M],
         E: FunctorRaise[M, String]
       ): M[Expr[_]] =
-        Type.vectorSpace[M](x.tpe).map(vs => Expr.Derive(x.value.asExprF, vs))
+        Type.group[M](x.tpe).map(group => Expr.Derive(x.value.asExprF, group))
     }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)

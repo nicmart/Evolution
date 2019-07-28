@@ -181,7 +181,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             (acc, start, speed) => Iterable.solve2(acc, start, speed, semigroup)
           )
 
-        case Derive(t, vectorSpace) => interpret1(t)(Iterable.derive(_, vectorSpace))
+        case Derive(t, group) => interpret1(t)(Iterable.derive(_, group))
 
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)

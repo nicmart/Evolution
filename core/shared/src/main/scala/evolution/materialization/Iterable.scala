@@ -200,7 +200,7 @@ object Iterable {
     }
   )
 
-  def derive[A](as: Iterable[A], vs: VectorSpace[A]): Iterable[A] = countAllocation(
+  def derive[A](as: Iterable[A], group: Group[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
       override def run: Iterator[A] = countRun {
         val derivingIterator: Iterator[A] = as.run
@@ -210,7 +210,7 @@ object Iterable {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): A = {
               val nextA = derivingIterator.next()
-              val nextDerivative = vs.group.remove(nextA, _current)
+              val nextDerivative = group.remove(nextA, _current)
               _current = nextA
               nextDerivative
             }
