@@ -142,6 +142,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[F[Any]])
     }
 
+    case object Parallel extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Parallel(x.asExprF[F[Any]])
+    }
+
     case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
 
       override def compile[M[_]](x: Typed[Expr[_]])(

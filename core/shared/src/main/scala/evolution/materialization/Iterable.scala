@@ -7,6 +7,8 @@ import evolution.geometry.Point
 import evolution.rng.PerlinNoise
 import evolution.typeclass.VectorSpace
 
+import scala.collection.mutable.ArrayBuffer
+
 sealed trait Iterable[+T] {
   def run: Iterator[T]
 }
@@ -144,6 +146,38 @@ object Iterable {
     def run: Iterator[A] = countRun(fa.run.map(_.run).flatten)
   })
 
+  def parallel[A](ffa: Iterable[Iterable[A]]): Iterable[A] = countAllocation(new Iterable[A] {
+    override def run: Iterator[A] = countRun(
+      new AbstractIterator[A] {
+        private val iteratorOfIterables = ffa.run
+        private val iterators: ArrayBuffer[Iterator[A]] = ArrayBuffer.empty
+        private var currentIndex = 0
+        private var outerIterationEnded = false
+        override def hasNext: Boolean = {
+          if (outerIterationEnded) iterators(currentIndex).hasNext
+          else {
+            if (iteratorOfIterables.hasNext) {
+              iterators.append(iteratorOfIterables.next().run)
+              iterators.last.hasNext
+            } else {
+              outerIterationEnded = true
+              iterators.head.hasNext
+            }
+          }
+        }
+        override def next(): A = {
+          if (outerIterationEnded) {
+            val a = iterators(currentIndex).next()
+            currentIndex = (currentIndex + 1) % iterators.size
+            a
+          } else {
+            iterators.last.next()
+          }
+        }
+      }
+    )
+  })
+
   def integrate[A](start: A, speed: Iterable[A], vs: VectorSpace[A]): Iterable[A] = countAllocation(
     new Iterable[A] {
       def run: Iterator[A] = countRun(new AbstractIterator[A] {
@@ -255,42 +289,31 @@ object Iterable {
     }
   )
 
-  def withFirst1[A, B](ts: Iterable[A], f: A => B): Iterable[B] = countAllocation(new Iterable[B] {
-    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
-      private val it = ts.run.take(1)
-      override def hasNext: Boolean = it.hasNext
-      override def next(): B = f(it.next())
-    })
+  def withFirst1[A, B](ts: Iterable[A], f: A => Iterable[B]): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(
+      ts.run.take(1).toList match {
+        case a1 :: Nil => f(a1).run
+        case _         => Iterator.empty
+      }
+    )
   })
 
-  def withFirst2[A, B](ts: Iterable[A], f: A => A => B): Iterable[B] = countAllocation(new Iterable[B] {
-    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
-      private val it = ts.run.take(2)
-      var elems: List[A] = _
-      override def hasNext: Boolean = {
-        elems = it.toList
-        elems.size == 2
+  def withFirst2[A, B](ts: Iterable[A], f: A => A => Iterable[B]): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(
+      ts.run.take(2).toList match {
+        case a1 :: a2 :: Nil => f(a1)(a2).run
+        case _               => Iterator.empty
       }
-      override def next(): B = elems match {
-        case a1 :: a2 :: Nil => f(a1)(a2)
-        case _               => throw new NoSuchElementException("Called withFirst2::next() before hasNext")
-      }
-    })
+    )
   })
 
-  def withFirst3[A, B](ts: Iterable[A], f: A => A => A => B): Iterable[B] = countAllocation(new Iterable[B] {
-    override def run: Iterator[B] = countRun(new AbstractIterator[B] {
-      private val it = ts.run.take(3)
-      var elems: List[A] = _
-      override def hasNext: Boolean = {
-        elems = it.toList
-        elems.size == 3
+  def withFirst3[A, B](ts: Iterable[A], f: A => A => A => Iterable[B]): Iterable[B] = countAllocation(new Iterable[B] {
+    override def run: Iterator[B] = countRun(
+      ts.run.take(3).toList match {
+        case a1 :: a2 :: a3 :: Nil => f(a1)(a2)(a3).run
+        case _                     => Iterator.empty
       }
-      override def next(): B = elems match {
-        case a1 :: a2 :: a3 :: Nil => f(a1)(a2)(a3)
-        case _                     => throw new NoSuchElementException("Called withFirst3::next() before hasNext")
-      }
-    })
+    )
   })
 
   def shuffle[T](ts: List[T]): Iterable[List[T]] = countAllocation(new Iterable[List[T]] {

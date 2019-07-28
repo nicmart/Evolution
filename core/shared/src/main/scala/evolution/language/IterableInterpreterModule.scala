@@ -131,8 +131,6 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case MapCons(eva, f) =>
           interpret2(eva, f)(Iterable.mapCons)
 
-        //case ZipWith(a, b, Lambda(f, Lambda(x, App(Var(fVar), Var(xVar))))) if f == fVar && x == xVar => ???
-
         case ZipWith(fa, fb, f) =>
           interpret3(fa, fb, f)(Iterable.zipWith)
 
@@ -154,6 +152,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Iterable.flatMap)
 
         case Flatten(ffa) => interpret1(ffa)(Iterable.flatten)
+
+        case Parallel(ffa) => interpret1(ffa)(Iterable.parallel)
 
         case Map(fa, f) => interpret2(fa, f)(Iterable.map)
 
