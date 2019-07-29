@@ -202,12 +202,15 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Expr.LiftedPolar(x.asExprF, y.asExprF)
     }
 
-    case object Multiply extends Constant2(Qualified(Dbl =>: Var("T") =>: Var("T"))) {
+    case object Multiply
+        extends Constant2(
+          Qualified(List(Predicate("LeftModule", List(Var("K"), Var("T")))), Var("K") =>: Var("T") =>: Var("T"))
+        ) {
       override def compile[M[_]](
         x: Typed[Expr[_]],
         y: Typed[Expr[_]]
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.vectorSpace[M](y.tpe).map(vs => Expr.Multiply(x.value.asExpr, y.value.asExpr, vs))
+        Type.leftModule[M](x.tpe, y.tpe).map(lm => Expr.Multiply(x.value.asExpr, y.value.asExpr, lm))
     }
 
     case object LiftedMultiply extends Constant2(Qualified(Evo(Dbl) =>: Evo(Var("T")) =>: Evo(Var("T")))) {

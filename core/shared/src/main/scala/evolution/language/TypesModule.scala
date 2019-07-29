@@ -2,7 +2,7 @@ package evolution.language
 import cats.{ Applicative, Eq, Group }
 import evolution.geometry
 import evolution.geometry.Point
-import evolution.typeclass.VectorSpace
+import evolution.typeclass.{ LeftModule, VectorSpace }
 import cats.implicits._
 import cats.kernel.Order
 import cats.mtl.FunctorRaise
@@ -53,6 +53,20 @@ trait TypesModule[F[_]] {
         case _            => E.raise(s"Unable to find a vector space for type $t")
       }
     }.asInstanceOf[M[VectorSpace[t.Out]]]
+
+    def leftModule[M[_]](
+      t1: Type,
+      t2: Type
+    )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[LeftModule[t1.Out, t2.Out]] = {
+      (t1, t2) match {
+        case (Type.Dbl, Type.Dbl)         => LeftModule[Double, Double].pure[M]
+        case (Type.Dbl, Type.Point)       => LeftModule[Double, Point].pure[M]
+        case (Type.Integer, Type.Integer) => LeftModule[Int, Int].pure[M]
+        case (Type.Integer, Type.Dbl)     => LeftModule[Int, Double].pure[M]
+        case (Type.Integer, Type.Point)   => LeftModule[Int, Point].pure[M]
+        case _                            => E.raise(s"Unable to find a LeftModule instance for types $t1, $t2")
+      }
+    }.asInstanceOf[M[LeftModule[t1.Out, t2.Out]]]
 
     def eqTypeClass[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Eq[t.Out]] = {
       t match {
@@ -127,6 +141,7 @@ trait TypesModule[F[_]] {
         Instance(Nil, Predicate("Ord", List(Type.Integer))),
         Instance(Nil, Predicate("Ord", List(Type.Dbl))),
         Instance(List(Predicate("Ord", List(Type.Dbl))), Predicate("Ord", List(Type.Point)))
-      ))
+      )
+    )
   }
 }

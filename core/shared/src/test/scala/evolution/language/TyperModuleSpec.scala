@@ -151,7 +151,9 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           )
 
           val unification = unify[TypeInferenceResult](constraints)
-          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isRight shouldBe true
+          predicatesSubstitution(unification.unsafeEvaluate.substitutedPredicates)
+            .evaluateEither()
+            .isRight shouldBe true
         }
       }
     }
@@ -166,7 +168,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             )
           )
           val unification = unify[TypeInferenceResult](constraints)
-          checkPredicates(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isLeft shouldBe true
+          predicatesSubstitution(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isLeft shouldBe true
         }
       }
     }
