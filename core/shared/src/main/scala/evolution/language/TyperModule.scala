@@ -183,11 +183,16 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
     def predicatesSubstitution[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {
       import TypeInferenceInstances._
-      val substitution: Substitution = substForMultiplePredicates(predicates)
+      // num literals are qualified with a Type.Var(x) -> Predicate(Num, List(Type.Var(x))
+      // we don't want to resolve them too early with the first instance subst.
+      // At the moment I don't know what to do with ambiguous subst.
+      // Functional Dependencies?
+      val predicatesWithNonVars = predicates.filter(p => p.types.exists(tpe => typeVars(tpe).isEmpty))
+      val substitution: Substitution = substForMultiplePredicates(predicatesWithNonVars)
       val substitutedPredicates = substitution.substitute(predicates)
-      val predicatesWithNonVars: List[Predicate] =
+      val substitutedPredicatesWithNonVars: List[Predicate] =
         substitutedPredicates.filter(p => p.types.exists(tpe => typeVars(tpe).isEmpty))
-      val invalidPredicates = predicatesWithNonVars.filter(p => !instances.contains(p))
+      val invalidPredicates = substitutedPredicatesWithNonVars.filter(p => !instances.contains(p))
       if (invalidPredicates.isEmpty) substitution.pure[M]
       else s"Not found instances for predicates $invalidPredicates".raise[M, Substitution]
     }
@@ -220,10 +225,10 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           substitutionForPredicateTypes(tail1, tail2).map(_.compose(Substitution(x -> t2)))
         case (t1 :: tail1, Type.Var(x) :: tail2) =>
           substitutionForPredicateTypes(tail1, tail2).map(_.compose(Substitution(x -> t1)))
-        case (t1 :: tail1, t2 :: tail2) if (t1 != t2) => None
-        case (t1 :: tail1, t2 :: tail2)               => substitutionForPredicateTypes(tail1, tail2)
-        case (Nil, Nil)                               => Some(Substitution.empty)
-        case _                                        => None
+        case (t1 :: _, t2 :: _) if t1 != t2 => None
+        case (_ :: tail1, _ :: tail2)       => substitutionForPredicateTypes(tail1, tail2)
+        case (Nil, Nil)                     => Some(Substitution.empty)
+        case _                              => None
       }
 
     private def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =
@@ -383,6 +388,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       val empty = new TypeVars(0)
     }
 
+    /**
+     * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
+     */
     val instances: List[Predicate] = List(
       Predicate("Num", List(Type.Dbl)),
       Predicate("Num", List(Type.Integer)),
@@ -393,7 +401,8 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       Predicate("LeftModule", List(Type.Dbl, Type.Point)),
       Predicate("LeftModule", List(Type.Integer, Type.Integer)),
       Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
-      Predicate("LeftModule", List(Type.Integer, Type.Point))
+      Predicate("LeftModule", List(Type.Integer, Type.Point)),
+      Predicate("LeftModule", List(Type.Dbl, Type.Evo(Type.Point)))
     )
   }
 }

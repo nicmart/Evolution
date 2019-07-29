@@ -1,6 +1,7 @@
 package evolution.typeclass
 
 import evolution.geometry.Point
+import evolution.materialization.Iterable
 
 trait LeftModule[K, T] {
   def multiply(k: K, t: T): T
@@ -14,4 +15,5 @@ object LeftModule {
   implicit val intInt: LeftModule[Int, Int] = (k, t) => k * t
   implicit val intDbl: LeftModule[Int, Double] = (k, t) => k * t
   implicit val intPoint: LeftModule[Int, Point] = (k, t) => t * k
+  implicit val dblEvoPoint: LeftModule[Double, Iterable[Point]] = (k, t) => Iterable.map[Point, Point](t, _ * k)
 }

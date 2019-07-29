@@ -6,6 +6,7 @@ import evolution.typeclass.{ LeftModule, VectorSpace }
 import cats.implicits._
 import cats.kernel.Order
 import cats.mtl.FunctorRaise
+import evolution.materialization.Iterable
 
 trait TypesModule[F[_]] {
 
@@ -59,8 +60,10 @@ trait TypesModule[F[_]] {
       t2: Type
     )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[LeftModule[t1.Out, t2.Out]] = {
       (t1, t2) match {
-        case (Type.Dbl, Type.Dbl)         => LeftModule[Double, Double].pure[M]
-        case (Type.Dbl, Type.Point)       => LeftModule[Double, Point].pure[M]
+        case (Type.Dbl, Type.Dbl)   => LeftModule[Double, Double].pure[M]
+        case (Type.Dbl, Type.Point) => LeftModule[Double, Point].pure[M]
+        case (Type.Dbl, Type.Evo(Type.Point)) =>
+          LeftModule[Double, Iterable[Point]].pure[M] // Ouch, here we have to use the concrete F!
         case (Type.Integer, Type.Integer) => LeftModule[Int, Int].pure[M]
         case (Type.Integer, Type.Dbl)     => LeftModule[Int, Double].pure[M]
         case (Type.Integer, Type.Point)   => LeftModule[Int, Point].pure[M]
