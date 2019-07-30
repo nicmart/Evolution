@@ -93,16 +93,6 @@ trait TypesModule[F[_]] {
       case Type.Evo(inner) => inner.pure[M]
       case _               => E.raise(s"Type $t is not an Evolution type")
     }
-
-    def domain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
-      case Type.Arrow(from, _) => from.pure[M]
-      case _                   => E.raise(s"Type $t is not an Arrow type")
-    }
-
-    def codomain[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
-      case Type.Arrow(_, to) => to.pure[M]
-      case _                 => E.raise(s"Type $t is not an Arrow type")
-    }
   }
 
   def lift(tpe: Type): Type = tpe match {
@@ -132,19 +122,6 @@ trait TypesModule[F[_]] {
     object Qualified {
       def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
     }
-    type Instance = Qualified[Predicate]
-    object Instance {
-      def apply(predicates: List[Predicate], predicate: Predicate): Instance = Qualified(predicates, predicate)
-    }
-    case class ClassDef(instances: List[Instance])
-
-    // example: Int is Ord, Dbl is Ord, Dbl Ord => Point Ord
-    ClassDef(
-      List(
-        Instance(Nil, Predicate("Ord", List(Type.Integer))),
-        Instance(Nil, Predicate("Ord", List(Type.Dbl))),
-        Instance(List(Predicate("Ord", List(Type.Dbl))), Predicate("Ord", List(Type.Point)))
-      )
-    )
+    case class Default(id: String, tpe: Type)
   }
 }
