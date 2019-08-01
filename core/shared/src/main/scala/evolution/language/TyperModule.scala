@@ -180,11 +180,40 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           }
       }
 
-    class PredicatesUnifier[M[_]](implicit M: TypeInference[M]) {
+    class PredicatesUnifier[M[_]] {
       import TypeInferenceInstances._
-      def unify(defaults: List[Default], instances: List[Predicate], predicates: List[Predicate]): M[Substitution] =
-        if (instances.isEmpty && predicates.nonEmpty) s"There are no instances satisfying all the predicates".raise[M, Substitution]
-        else Substitution.empty.pure[M]
+      def unify(defaults: List[Default], instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
+        val predicateToMatches: Map[Predicate, List[Substitution]] =
+          predicates.map { predicate => predicate ->
+            instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
+          }.toMap
+        if (predicateToMatches.values.toList.forall (_.nonEmpty)) Some(Substitution.empty)
+        else None
+      }
+
+      private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
+        (instance, predicate) match {
+          case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId => matchTypes(iTypes, pTypes)
+          case _ => None
+        }
+
+      private def matchTypes(instTypes: List[Type], predTypes: List[Type]): Option[Substitution] =
+        (instTypes, predTypes) match {
+          case (iHead :: iTail, pHead :: pTail) => for {
+            tailSubst <- matchTypes(iTail, pTail)
+            headSubst <- matchType(iHead, pHead)
+            subst <- headSubst.merge[Either[String, ?]](tailSubst).toOption
+          } yield subst
+
+          case (Nil, Nil) => Some(Substitution.empty)
+          case _ => None
+        }
+
+      private def matchType(instType: Type, predType: Type): Option[Substitution] = (instType, predType) match {
+        case (t1, Type.Var(name)) => Some(Substitution(name -> t1))
+        case (t1, t2) if t1 == t2 => Some(Substitution.empty)
+        case _ => None
+      }
     }
 
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation

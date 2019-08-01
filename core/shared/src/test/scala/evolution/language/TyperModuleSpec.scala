@@ -176,22 +176,38 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
-      val subst = predicatesUnifier.unify(defaults, instances, Nil).unsafeEvaluate
+      val subst = predicatesUnifier.unify(defaults, instances, Nil)
 
-      subst shouldBe Substitution.empty
+      subst shouldBe Some(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
-      val subst = predicatesUnifier.unify(defaults, instances, instances.take(1)).unsafeEvaluate
+      val subst = predicatesUnifier.unify(defaults, instances, instances.take(1))
 
-      subst shouldBe Substitution.empty
+      subst shouldBe Some(Substitution.empty)
     }
 
     "should fail if there are no instances and there is at least one predicate" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
-      val result = predicatesUnifier.unify(defaults, Nil, predicates).evaluateEither()
+      val result = predicatesUnifier.unify(defaults, Nil, predicates)
 
-      result should matchPattern { case Left(_) => }
+      result shouldBe None
+    }
+
+    "should fail if the only instance does not match the typeclass of the only predicate" in {
+      val instances = List(Predicate("Num", List(Type.Integer)))
+      val predicates = List(Predicate("Whatever", List(Type.Integer)))
+      val result = predicatesUnifier.unify(defaults, instances, predicates)
+
+      result shouldBe None
+    }
+
+    "should fail if the only instance does not match the types of the only predicate" in {
+      val instances = List(Predicate("Num", List(Type.Integer)))
+      val predicates = List(Predicate("Num", List(Type.Dbl)))
+      val result = predicatesUnifier.unify(defaults, instances, predicates)
+
+      result shouldBe None
     }
 
     "should use default instances" in {
@@ -200,7 +216,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         Predicate("Num", List(Type.Var("X")))
       )
 
-      val subst = predicatesUnifier.unify(defaults, instances, predicates).unsafeEvaluate
+      val subst = predicatesUnifier.unify(defaults, instances, predicates).get
 
       subst.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
     }
