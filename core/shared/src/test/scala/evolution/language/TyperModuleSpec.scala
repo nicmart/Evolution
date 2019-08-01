@@ -173,4 +173,48 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       }
     }
   }
+
+  "predicates unification" - {
+    "should succeed with an empty substitution if there are no predicates" in {
+      val subst = predicatesUnifier.unify(defaults, instances, Nil).unsafeEvaluate
+
+      subst shouldBe Substitution.empty
+    }
+
+    "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
+      val subst = predicatesUnifier.unify(defaults, instances, instances.take(1)).unsafeEvaluate
+
+      subst shouldBe Substitution.empty
+    }
+
+    "should fail if there are no instances and there is at least one predicate" in {
+      val predicates = List(Predicate("Num", List(Type.Var("X"))))
+      val result = predicatesUnifier.unify(defaults, Nil, predicates).evaluateEither()
+
+      result should matchPattern { case Left(_) => }
+    }
+
+    "should use default instances" in {
+      pending
+      val predicates = List(
+        Predicate("Num", List(Type.Var("X")))
+      )
+
+      val subst = predicatesUnifier.unify(defaults, instances, predicates).unsafeEvaluate
+
+      subst.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
+    }
+  }
+
+  lazy val predicatesUnifier = new PredicatesUnifier[TypeInferenceResult]()
+  lazy val instances = List(
+    Predicate("Num", List(Type.Integer)),
+    Predicate("Num", List(Type.Dbl)),
+    Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
+    Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
+    Predicate("LeftModule", List(Type.Integer, Type.Integer))
+  )
+  lazy val defaults = List(
+    Default("Num", Type.Dbl)
+  )
 }

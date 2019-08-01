@@ -180,6 +180,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           }
       }
 
+    class PredicatesUnifier[M[_]](implicit M: TypeInference[M]) {
+      import TypeInferenceInstances._
+      def unify(defaults: List[Default], instances: List[Predicate], predicates: List[Predicate]): M[Substitution] =
+        if (instances.isEmpty && predicates.nonEmpty) s"There are no instances satisfying all the predicates".raise[M, Substitution]
+        else Substitution.empty.pure[M]
+    }
+
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
     def predicatesSubstitution[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {
       import TypeInferenceInstances._
