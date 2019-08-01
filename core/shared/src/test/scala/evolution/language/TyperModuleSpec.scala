@@ -210,6 +210,14 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       result shouldBe None
     }
 
+    "should fail if the the matching instance leads to incompativle assignments" in {
+      val instances = List(Predicate("Bi", List(Type.Integer, Type.Dbl)))
+      val predicates = List(Predicate("Bi", List(Type.Var("x"), Type.Var("x"))))
+      val result = predicatesUnifier.unify(defaults, instances, predicates)
+
+      result shouldBe None
+    }
+
     "should use default instances" in {
       pending
       val predicates = List(
