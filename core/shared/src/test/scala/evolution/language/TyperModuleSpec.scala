@@ -195,6 +195,24 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       subst shouldBe Some(Substitution("X" -> Type.Dbl))
     }
 
+    "should do more complex unifications" in {
+      val predicates = List(
+        Predicate("Num", List(Type.Var("X"))),
+        Predicate("Num", List(Type.Var("Y"))),
+        Predicate("Both", List(Type.Var("X"), Type.Var("Y")))
+      )
+
+      val instances = List(
+        Predicate("Num", List(Type.Integer)),
+        Predicate("Both", List(Type.Dbl, Type.Integer)),
+        Predicate("Both", List(Type.Integer, Type.Integer)),
+      )
+      val subst = predicatesUnifier.unify(defaults, instances, predicates).get
+
+      subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
+      subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
+    }
+
     "should fail if there are no instances and there is at least one predicate" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
       val result = predicatesUnifier.unify(defaults, Nil, predicates)
