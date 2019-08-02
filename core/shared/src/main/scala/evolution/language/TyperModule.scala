@@ -188,12 +188,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
             instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
           }.toMap
 
-          val reducedPredicateToSubstitutions = predicateToSubstitutions.filterNot {
-            case (_, substitutions) => hasEmptySubstitution(substitutions)
-          }
+        val reducedPredicateToSubstitutions = predicateToSubstitutions.filterNot {
+          case (_, substitutions) => hasEmptySubstitution(substitutions)
+        }
 
-        if (reducedPredicateToSubstitutions.values.toList.forall (_.nonEmpty)) Some(Substitution.empty)
-        else None
+        product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
       }
 
       private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
@@ -222,6 +221,22 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
         case (t1, t2) if t1 == t2 => Some(Substitution.empty)
         case _ => None
       }
+
+      private def product[T](lists: List[List[T]]): List[List[T]] =
+        lists match {
+          case firstList :: otherLists => 
+            for {
+              otherTs <- product(otherLists)
+              t <- firstList
+            } yield t :: otherTs
+          case Nil => List(Nil)
+        }
+
+      private def mergeSubstitutions(substitutions: List[Substitution]): Option[Substitution] =
+        substitutions match {
+          case substHead :: substTail => mergeSubstitutions(substTail).flatMap(_.merge[Either[String, ?]](substHead).toOption)
+          case Nil => Some(Substitution.empty)
+        }
     }
 
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation

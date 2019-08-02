@@ -187,6 +187,14 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       subst shouldBe Some(Substitution.empty)
     }
 
+    "should succeed with a simple substitution if there is a single predicate with vars and a matching instance" in {
+      val predicates = List(Predicate("Num", List(Type.Var("X"))))
+      val instances = List(Predicate("Num", List(Type.Dbl)))
+      val subst = predicatesUnifier.unify(defaults, instances, predicates)
+
+      subst shouldBe Some(Substitution("X" -> Type.Dbl))
+    }
+
     "should fail if there are no instances and there is at least one predicate" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
       val result = predicatesUnifier.unify(defaults, Nil, predicates)

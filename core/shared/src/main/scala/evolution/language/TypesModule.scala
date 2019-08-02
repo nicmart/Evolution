@@ -63,7 +63,7 @@ trait TypesModule[F[_]] {
         case (Type.Dbl, Type.Dbl)   => LeftModule[Double, Double].pure[M]
         case (Type.Dbl, Type.Point) => LeftModule[Double, Point].pure[M]
         case (Type.Dbl, Type.Evo(Type.Point)) =>
-          LeftModule[Double, Iterable[Point]].pure[M] // Ouch, here we have to use the concrete F!
+          LeftModule[Double, Iterable[Point]].pure[M] // TODO Ouch, here we have to use the concrete F!
         case (Type.Integer, Type.Integer) => LeftModule[Int, Int].pure[M]
         case (Type.Integer, Type.Dbl)     => LeftModule[Int, Double].pure[M]
         case (Type.Integer, Type.Point)   => LeftModule[Int, Point].pure[M]
@@ -106,7 +106,7 @@ trait TypesModule[F[_]] {
     def put(name: String, tpe: Type): Context = new Context(bindings.updated(name, tpe))
     def nextVar: String = "X" + bindings.size
     def nextTypeVar: Type = Type.Var(nextVar)
-  }
+  } 
 
   object Context {
     val empty: Context = new Context(Map.empty)
