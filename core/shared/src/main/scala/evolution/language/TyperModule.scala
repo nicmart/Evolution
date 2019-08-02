@@ -183,13 +183,21 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     class PredicatesUnifier[M[_]] {
       import TypeInferenceInstances._
       def unify(defaults: List[Default], instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
-        val predicateToMatches: Map[Predicate, List[Substitution]] =
-          predicates.map { predicate => predicate ->
+        val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
+          predicates.distinct.map { predicate => predicate ->
             instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
           }.toMap
-        if (predicateToMatches.values.toList.forall (_.nonEmpty)) Some(Substitution.empty)
+
+          val reducedPredicateToSubstitutions = predicateToSubstitutions.filterNot {
+            case (_, substitutions) => hasEmptySubstitution(substitutions)
+          }
+
+        if (reducedPredicateToSubstitutions.values.toList.forall (_.nonEmpty)) Some(Substitution.empty)
         else None
       }
+
+      private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
+        substitutions.contains(Substitution.empty)
 
       private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
         (instance, predicate) match {
