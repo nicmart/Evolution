@@ -192,7 +192,23 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           case (_, substitutions) => hasEmptySubstitution(substitutions)
         }
 
-        product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
+        val maybeSubst = product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
+
+        maybeSubst.flatMap { subst =>
+          val substitutedPredicates = predicates.map(subst.substitute[Predicate]) 
+          val unresolvedPredicates = substitutedPredicates.filter(_.types.exists(isVar))
+
+          val defaultSubstitutions = unresolvedPredicates.map(resolvePredicateWithDefaults(defaults, _)).sequence
+
+          val defaultSubstitution = defaultSubstitutions.flatMap(mergeSubstitutions)
+
+          defaultSubstitution.flatMap(defSubst => subst.merge[Either[String, ?]](defSubst).toOption)
+        }
+      }
+
+      private def isVar(tpe: Type): Boolean = tpe match {
+        case Type.Var(_) => true
+        case _ => false
       }
 
       private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
@@ -236,6 +252,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
         substitutions match {
           case substHead :: substTail => mergeSubstitutions(substTail).flatMap(_.merge[Either[String, ?]](substHead).toOption)
           case Nil => Some(Substitution.empty)
+        }
+
+      private def resolvePredicateWithDefaults(defaults: List[Default], predicate: Predicate): Option[Substitution] = 
+        (defaults, predicate) match {
+          case (head :: _, Predicate(id, List(Type.Var(name)))) if head.id == id =>  Some(Substitution(name -> head.tpe))
+          case (_ :: tail, _) => resolvePredicateWithDefaults(tail, predicate)
+          case _ => None
         }
     }
 
