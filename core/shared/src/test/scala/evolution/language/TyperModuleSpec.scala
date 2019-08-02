@@ -197,14 +197,14 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
     "should do more complex unifications" in {
       val predicates = List(
-        Predicate("Num", List(Type.Var("X"))),
         Predicate("Num", List(Type.Var("Y"))),
         Predicate("Both", List(Type.Var("X"), Type.Var("Y")))
       )
 
       val instances = List(
+        Predicate("Num", List(Type.Point)),
         Predicate("Num", List(Type.Integer)),
-        Predicate("Both", List(Type.Dbl, Type.Integer)),
+        Predicate("Both", List(Type.Dbl, Type.Dbl)),
         Predicate("Both", List(Type.Integer, Type.Integer)),
       )
       val subst = predicatesUnifier.unify(defaults, instances, predicates).get
