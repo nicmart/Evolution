@@ -27,7 +27,6 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Norm(p)                => interpret1(p)(_.norm)
         case Versor(p)              => interpret1(p)(_.versor)
         case e @ Add(_, _, _)       => interpret2(e.a, e.b)(e.add.combine)
-        case e @ LiftedAdd(_, _, _) => interpret2(e.a, e.b)(Iterable.zipWithUncurried(e.semigroup.combine))
         case Div(a, b)              => interpret2(a, b)(_ / _)
         case Exp(a, b)              => interpret2(a, b)(Math.pow)
         case Abs(a)                 => interpret(a).map(Math.abs)
@@ -38,7 +37,6 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
           }
         case e @ Inverse(_, _)        => interpret1(e.t)(e.group.inverse)
         case e @ Multiply(_, _, _)    => interpret2(e.a, e.b)(e.mult.combine)
-        case LiftedMultiply(k, t, vs) => interpret2(k, t)(Iterable.zipWithUncurried(vs.multiply))
         case Sin(d)                   => interpret1(d)(Math.sin)
         case Cos(d)                   => interpret1(d)(Math.cos)
         case SmoothStep(f, t, p) =>

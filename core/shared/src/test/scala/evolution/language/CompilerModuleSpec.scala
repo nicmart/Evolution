@@ -2,9 +2,8 @@ package evolution.language
 import cats.Id
 import cats.implicits._
 import cats.mtl.implicits._
-import cats.kernel.{ Eq, Group, Order, Semigroup }
+import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
-import evolution.typeclass.Semigroupoid
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
   import Expr._, TypeClasses._

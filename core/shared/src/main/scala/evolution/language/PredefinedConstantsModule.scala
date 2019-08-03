@@ -216,17 +216,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Type.multSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
     }
 
-    case object LiftedMultiply extends Constant2(Qualified(Evo(Dbl) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](
-        x: Typed[Expr[_]],
-        y: Typed[Expr[_]],
-        out: Type
-      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          tpe <- Type.unwrapF[M](y.tpe)
-          vs <- Type.vectorSpace[M](tpe)
-        } yield Expr.LiftedMultiply(x.value.asExprF, y.value.asExprF, vs).asExpr[F[_]]
-    }
 
     case object Add
         extends Constant2(Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))) {
@@ -236,18 +225,6 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type.addSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
-    }
-
-    case object LiftedAdd extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-      override def compile[M[_]](
-        x: Typed[Expr[_]],
-        y: Typed[Expr[_]],
-        out: Type
-      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        for {
-          tpe <- Type.unwrapF[M](x.tpe)
-          sg <- Type.group[M](tpe)
-        } yield Expr.LiftedAdd(x.value.asExprF, y.value.asExprF, sg).asExpr[F[_]]
     }
 
     case object Minus

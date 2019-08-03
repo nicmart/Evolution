@@ -2,9 +2,7 @@ package evolution.data
 
 import evolution.data.EvaluationContext._
 import evolution.data.EvaluationModule._
-import cats.implicits._
 import Expr._
-import cats.kernel.Semigroup
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.typeclass.Semigroupoid
 
@@ -52,7 +50,10 @@ class EvaluationSpec extends FreeSpec with Matchers {
             "f",
             Lambda(
               "s",
-              Cons(Var("s"), App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Semigroupoid.Additive.dblDblDbl)))
+              Cons(
+                Var("s"),
+                App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Semigroupoid.Additive.dblDblDbl))
+              )
             )
           )
         ),

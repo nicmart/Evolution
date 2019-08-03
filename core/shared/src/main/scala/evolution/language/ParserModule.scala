@@ -59,12 +59,10 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
         ),
         PrecedenceGroup(
           "+" -> AST.Identifier(Constant2.Add.entryName),
-          "@+" -> AST.Identifier(Constant2.LiftedAdd.entryName),
           "-" -> AST.Identifier(Constant2.Minus.entryName)
         ),
         PrecedenceGroup(
           "*" -> AST.Identifier(Constant2.Multiply.entryName),
-          "@*" -> AST.Identifier(Constant2.LiftedMultiply.entryName),
           "/" -> AST.Identifier(Constant2.Div.entryName),
           "%" -> AST.Identifier(Constant2.Mod.entryName)
         ),
