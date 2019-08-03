@@ -9,6 +9,7 @@ import evolution.geometry.Point
 
 import scala.collection.immutable
 import scala.language.higherKinds
+import evolution.typeclass.Semigroupoid
 
 trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
   import Type._
@@ -228,13 +229,13 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Add
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
+        extends Constant2(Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))) {
       override def compile[M[_]](
         x: Typed[Expr[_]],
         y: Typed[Expr[_]],
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](y.tpe).map(vs => Expr.Add(x.value.asExpr, y.value.asExpr, vs))
+        Type.addSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
     }
 
     case object LiftedAdd extends Constant2(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -256,7 +257,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         y: Typed[Expr[_]],
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr, group), group))
+        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr, group), Semigroupoid.fromGroup(group)))
     }
 
     case object Div extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {

@@ -2,7 +2,7 @@ package evolution.data
 import cats.Group
 import cats.kernel.{ Eq, Order, Semigroup }
 import evolution.geometry.Point
-import evolution.typeclass.{ LeftModule, VectorSpace }
+import evolution.typeclass.VectorSpace
 import evolution.typeclass.Semigroupoid
 
 trait ExpressionModule[F[_]] {
@@ -28,7 +28,7 @@ trait ExpressionModule[F[_]] {
     final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Norm(p: Expr[Point]) extends Expr[Double](List(p))
     final case class Versor(p: Expr[Point]) extends Expr[Point](List(p))
-    final case class Add[T](a: Expr[T], b: Expr[T], semigroup: Semigroup[T]) extends Expr[T](List(a, b))
+    final case class Add[A, B, C](a: Expr[A], b: Expr[B], add: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
     final case class LiftedAdd[T](a: Expr[F[T]], b: Expr[F[T]], semigroup: Semigroup[T]) extends Expr[F[T]](List(a, b))
     final case class Div(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Exp(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))

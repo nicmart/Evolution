@@ -218,6 +218,13 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
 
       private def matchType(instType: Type, predType: Type): Option[Substitution] = (instType, predType) match {
         case (t1, Type.Var(name)) => Some(Substitution(name -> t1))
+        case (Type.Evo(t1), Type.Evo(t2)) => matchType(t1, t2)
+        case (Type.Lst(t1), Type.Lst(t2)) => matchType(t1, t2)
+        case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) => for {
+            s1 <- matchType(t11, t21)
+            s2 <- matchType(t12, t22)
+            s <- s1.mergeOpt(s2)
+          } yield s
         case (t1, t2) if t1 == t2 => Some(Substitution.empty)
         case _ => None
       }
@@ -251,7 +258,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       import TypeInferenceInstances._
       PredicatesUnifier.unify(instances, predicates) match {
         case Some(subst) => subst.pure[M]
-        case None => s"Not able to resolve".raise[M, Substitution]
+        case None => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
       }
     }
 
@@ -328,6 +335,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
       def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
       def compose(s2: Substitution): Substitution = Substitution(substitute(s2).assignments ++ assignments)
+      def mergeOpt(s2: Substitution): Option[Substitution] = merge[Either[String, ?]](s2).toOption
       def merge[M[_]](s2: Substitution)(implicit M: FunctorRaise[M, String], A: Applicative[M]): M[Substitution] = {
         val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
         val agree = commonVars.forall { variable =>
@@ -421,12 +429,6 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       Predicate("Semigroup", List(Type.Integer)),
       Predicate("Semigroup", List(Type.Dbl)),
       Predicate("Semigroup", List(Type.Point)),
-      // Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
-      // Predicate("LeftModule", List(Type.Dbl, Type.Point)),
-      // Predicate("LeftModule", List(Type.Integer, Type.Integer)),
-      // Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
-      // Predicate("LeftModule", List(Type.Integer, Type.Point)),
-      // Predicate("LeftModule", List(Type.Dbl, Type.Evo(Type.Point)))
       Predicate("Mult", List(Type.Dbl, Type.Dbl, Type.Dbl)),
       Predicate("Mult", List(Type.Dbl, Type.Point, Type.Point)),
       Predicate("Mult", List(Type.Point, Type.Dbl, Type.Point)),
@@ -437,7 +439,15 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       Predicate("Mult", List(Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))),
       Predicate("Mult", List(Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))),
       Predicate("Mult", List(Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point))),
-      Predicate("Mult", List(Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)))
+      Predicate("Mult", List(Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point))),
+      Predicate("Add", List(Type.Dbl, Type.Dbl, Type.Dbl)),
+      Predicate("Add", List(Type.Integer, Type.Integer, Type.Integer)),
+      Predicate("Add", List(Type.Integer, Type.Dbl, Type.Dbl)),
+      Predicate("Add", List(Type.Dbl, Type.Integer, Type.Dbl)),
+      Predicate("Add", List(Type.Point, Type.Point, Type.Point)),
+      Predicate("Add", List(Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))),
+      Predicate("Add", List(Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)))
+      
     )
   }
 }

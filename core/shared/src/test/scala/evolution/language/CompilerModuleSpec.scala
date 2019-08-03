@@ -4,6 +4,7 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.kernel.{ Eq, Group, Order, Semigroup }
 import org.scalacheck.Gen
+import evolution.typeclass.Semigroupoid
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
   import Expr._, TypeClasses._
@@ -62,7 +63,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
             AST.Number(a.toString, Qualified(Type.Dbl)),
             AST.Number(b.toString, Qualified(Type.Dbl))
           )
-        unsafeCompile(ast) shouldBe Add(Dbl(a), Inverse(Dbl(b), Group[Double]), Semigroup[Double])
+        unsafeCompile(ast) should matchPattern { case Add(Dbl(x), Inverse(Dbl(y), _), _) if x == a && y == b => }
       }
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>

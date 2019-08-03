@@ -2,6 +2,7 @@ package evolution.typeclass
 
 import evolution.geometry.Point
 import evolution.materialization.Iterable
+import cats.kernel.Group
 
 trait Semigroupoid[A, B, C] { self =>
   def combine(a: A, b: B): C
@@ -12,6 +13,8 @@ trait Semigroupoid[A, B, C] { self =>
 
 object Semigroupoid {
   def apply[A, B, C](implicit sg: Semigroupoid[A, B, C]): Semigroupoid[A, B, C] = sg
+
+  def fromGroup[T](group: Group[T]): Semigroupoid[T, T, T] = (a, b) => group.combine(a, b)
 
   object Multiplicative {
     val dblDblDbl: Semigroupoid[Double, Double, Double] = (a, b) => a * b
@@ -33,6 +36,7 @@ object Semigroupoid {
     val intIntInt: Semigroupoid[Int, Int, Int] = (a, b) => a + b
     val intDblDbl: Semigroupoid[Int, Double, Double] = (a, b) => a + b
     val dblIntDbl: Semigroupoid[Double, Int, Double] = (a, b) => a + b
+    val pointPointPoint: Semigroupoid[Point, Point, Point] = (a, b) => a + b
     val evoDblEvoDblEvoDbl: Semigroupoid[Iterable[Double], Iterable[Double], Iterable[Double]] =
       (a, b) => Iterable.zipWithUncurried[Double, Double, Double]((x, y) => x + y)(a, b)
     val evoPointEvoPointEvoPoint: Semigroupoid[Iterable[Point], Iterable[Point], Iterable[Point]] =

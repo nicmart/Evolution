@@ -89,6 +89,18 @@ trait TypesModule[F[_]] {
         case _                            => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
       }}.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 
+      def addSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] =
+      {(t1, t2, t3) match {
+        case (Type.Dbl, Type.Dbl, Type.Dbl) => Additive.dblDblDbl.pure[M]
+        case (Type.Integer, Type.Integer, Type.Integer) => Additive.intIntInt.pure[M]
+        case (Type.Integer, Type.Dbl, Type.Dbl) => Additive.intDblDbl.pure[M]
+        case (Type.Dbl, Type.Integer, Type.Dbl) => Additive.dblIntDbl.pure[M]
+        case (Type.Point, Type.Point, Type.Point) => Additive.pointPointPoint.pure[M]
+        case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) => Additive.evoPointEvoPointEvoPoint.pure[M]
+        case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.pure[M]
+        case _                            => E.raise(s"Unable to find an Add instance for types $t1, $t2, $t3")
+      }}.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+
     def eqTypeClass[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Eq[t.Out]] = {
       t match {
         case Type.Integer => Eq[Int].pure[M]

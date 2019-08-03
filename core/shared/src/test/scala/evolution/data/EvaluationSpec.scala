@@ -6,6 +6,7 @@ import cats.implicits._
 import Expr._
 import cats.kernel.Semigroup
 import org.scalatest.{ FreeSpec, Matchers }
+import evolution.typeclass.Semigroupoid
 
 class EvaluationSpec extends FreeSpec with Matchers {
   type F[T] = EvoRepr[T]
@@ -51,7 +52,7 @@ class EvaluationSpec extends FreeSpec with Matchers {
             "f",
             Lambda(
               "s",
-              Cons(Var("s"), App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Semigroup[Double])))
+              Cons(Var("s"), App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Semigroupoid.Additive.dblDblDbl)))
             )
           )
         ),

@@ -196,6 +196,14 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       subst shouldBe Some(Substitution("X" -> Type.Dbl))
     }
 
+    "should succeed with higher-horder types in predicates" in {
+      val predicates = List(Predicate("Num", List(Type.Evo(Type.Var("X")))))
+      val instances = List(Predicate("Num", List(Type.Evo(Type.Dbl))))
+      val subst = PredicatesUnifier.unify(instances, predicates)
+
+      subst shouldBe Some(Substitution("X" -> Type.Dbl))
+    }
+
     "should do more complex unifications" in {
       val predicates = List(
         Predicate("Num", List(Type.Var("Y"))),
