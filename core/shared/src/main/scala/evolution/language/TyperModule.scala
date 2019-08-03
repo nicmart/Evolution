@@ -421,12 +421,23 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       Predicate("Semigroup", List(Type.Integer)),
       Predicate("Semigroup", List(Type.Dbl)),
       Predicate("Semigroup", List(Type.Point)),
-      Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
-      Predicate("LeftModule", List(Type.Dbl, Type.Point)),
-      Predicate("LeftModule", List(Type.Integer, Type.Integer)),
-      Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
-      Predicate("LeftModule", List(Type.Integer, Type.Point)),
-      Predicate("LeftModule", List(Type.Dbl, Type.Evo(Type.Point)))
+      // Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
+      // Predicate("LeftModule", List(Type.Dbl, Type.Point)),
+      // Predicate("LeftModule", List(Type.Integer, Type.Integer)),
+      // Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
+      // Predicate("LeftModule", List(Type.Integer, Type.Point)),
+      // Predicate("LeftModule", List(Type.Dbl, Type.Evo(Type.Point)))
+      Predicate("Mult", List(Type.Dbl, Type.Dbl, Type.Dbl)),
+      Predicate("Mult", List(Type.Dbl, Type.Point, Type.Point)),
+      Predicate("Mult", List(Type.Point, Type.Dbl, Type.Point)),
+      Predicate("Mult", List(Type.Integer, Type.Integer, Type.Integer)),
+      Predicate("Mult", List(Type.Integer, Type.Dbl, Type.Dbl)),
+      Predicate("Mult", List(Type.Dbl, Type.Integer, Type.Dbl)),
+      Predicate("Mult", List(Type.Integer, Type.Point, Type.Point)),
+      Predicate("Mult", List(Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))),
+      Predicate("Mult", List(Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))),
+      Predicate("Mult", List(Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point))),
+      Predicate("Mult", List(Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)))
     )
   }
 }

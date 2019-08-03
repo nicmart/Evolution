@@ -3,6 +3,7 @@ import cats.Group
 import cats.kernel.{ Eq, Order, Semigroup }
 import evolution.geometry.Point
 import evolution.typeclass.{ LeftModule, VectorSpace }
+import evolution.typeclass.Semigroupoid
 
 trait ExpressionModule[F[_]] {
 
@@ -36,7 +37,7 @@ trait ExpressionModule[F[_]] {
     final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
     final case class Inverse[T](t: Expr[T], group: Group[T]) extends Expr[T](List(t))
     final case class Derive[T](t: Expr[F[T]], group: Group[T]) extends Expr[F[T]](List(t))
-    final case class Multiply[K, T](k: Expr[K], t: Expr[T], leftModule: LeftModule[K, T]) extends Expr[T](List(k, t))
+    final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
     final case class LiftedMultiply[T](k: Expr[F[Double]], t: Expr[F[T]], vectorSpace: VectorSpace[T])
         extends Expr[F[T]](List(k, t))
     final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))

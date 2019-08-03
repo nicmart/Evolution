@@ -60,24 +60,24 @@ trait CompilerModule[F[_]] {
           s"Constant $id is not supported as first class value".raise[K, Expr[Any]]
 
         // Arity 1 identifiers
-        case App(Identifier(Constant1(c), _, true), x, _) =>
-          compile[M](x).flatMap(compiledX => c.compile[K](Typed(x.tpe.t, compiledX)))
+        case App(Identifier(Constant1(c), _, true), x, typeOut) =>
+          compile[M](x).flatMap(compiledX => c.compile[K](Typed(x.tpe.t, compiledX), typeOut.t))
 
         // Arity 2 identifiers
-        case App(App(Identifier(Constant2(c), _, true), x, _), y, _) =>
+        case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
-            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY))
+            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), typeOut.t)
           } yield result
 
         // Arity 3 identifiers
-        case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, _) =>
+        case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, typeOut) =>
           for {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             compiledZ <- compile[M](z)
-            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ))
+            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ), typeOut.t)
           } yield result
 
         case App(f, x, _) =>

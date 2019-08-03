@@ -37,7 +37,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
         case e @ Inverse(_, _)        => interpret1(e.t)(e.group.inverse)
-        case e @ Multiply(_, _, _)    => interpret2(e.k, e.t)(e.leftModule.multiply)
+        case e @ Multiply(_, _, _)    => interpret2(e.a, e.b)(e.mult.combine)
         case LiftedMultiply(k, t, vs) => interpret2(k, t)(Iterable.zipWithUncurried(vs.multiply))
         case Sin(d)                   => interpret1(d)(Math.sin)
         case Cos(d)                   => interpret1(d)(Math.cos)

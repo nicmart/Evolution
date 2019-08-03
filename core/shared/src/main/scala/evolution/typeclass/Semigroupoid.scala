@@ -22,6 +22,8 @@ object Semigroupoid {
     val dblIntDbl: Semigroupoid[Double, Int, Double] = (a, b) => a * b
     val intPointPoint: Semigroupoid[Int, Point, Point] = (a, b) => b * a
     val pointIntPoint: Semigroupoid[Point, Int, Point] = (a, b) => a * b
+    val dblEvoDblEvoDbl: Semigroupoid[Double, Iterable[Double], Iterable[Double]] = (a, b) => Iterable.map[Double, Double](b, _ * a)
+    val evoDblDblEvoDbl: Semigroupoid[Iterable[Double], Double, Iterable[Double]] = (a, b) => Iterable.map[Double, Double](a, _ * b)
     val dblEvoPointEvoPoint: Semigroupoid[Double, Iterable[Point], Iterable[Point]] = (a, b) => Iterable.map[Point, Point](b, _ * a)
     val evoPointDblEvoPoint: Semigroupoid[Iterable[Point], Double, Iterable[Point]] = (a, b) => Iterable.map[Point, Point](a, _ * b)
   }

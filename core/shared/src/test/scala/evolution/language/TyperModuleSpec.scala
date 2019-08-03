@@ -116,14 +116,15 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           AST.App(
             AST.Const(Constant1.Constant),
             AST.App(
-              AST.Lambda("x", AST.AppN(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x"))),
+              AST.Lambda("x", AST.AppN(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x", Qualified(Type.Point)))),
               AST.AppN(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
             )
           )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
-        val typedExpr = substitution.substitute(expr)
+        val unification = unify[TypeInferenceResult](constraints).unsafeEvaluate
+        val subst = predicatesSubstitution(unification.predicates).unsafeEvaluate.compose(unification.substitution)
+        val typedExpr = subst.substitute(expr)
         typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
       }
 
