@@ -2,7 +2,6 @@ package evolution.geometry
 
 import cats.Eq
 import cats.kernel.Group
-import evolution.typeclass.VectorSpace
 
 final case class Point(x: Double, y: Double) {
   def +(other: Point) = Point(x + other.x, y + other.y)
@@ -66,11 +65,6 @@ object Point {
     override def empty: Point = zero
     override def combine(x: Point, y: Point): Point = x + y
     override def inverse(point: Point): Point = -point
-  }
-
-  implicit val pointVectorSpace: VectorSpace[Point] = new VectorSpace[Point] {
-    override def group: Group[Point] = pointGroup
-    override def multiply(k: Double, t: Point): Point = t * k
   }
 
   implicit val pointEq: Eq[Point] = Eq.instance((p1, p2) => p1 == p2)

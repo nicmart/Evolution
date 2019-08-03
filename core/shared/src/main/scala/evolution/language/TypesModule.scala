@@ -2,7 +2,6 @@ package evolution.language
 import cats.{ Applicative, Eq, Group }
 import evolution.geometry
 import evolution.geometry.Point
-import evolution.typeclass.VectorSpace
 import cats.implicits._
 import cats.kernel.Order
 import cats.mtl.FunctorRaise
@@ -51,15 +50,6 @@ trait TypesModule[F[_]] {
       t: Type
     )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t.Out, t.Out, t.Out]] =
       addSemigrupoid[M](t, t, t)
-
-    def vectorSpace[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[VectorSpace[t.Out]] = {
-      t match {
-        case Type.Integer => VectorSpace[Int].pure[M]
-        case Type.Dbl     => VectorSpace[Double].pure[M]
-        case Type.Point   => VectorSpace[Point].pure[M]
-        case _            => E.raise(s"Unable to find a vector space for type $t")
-      }
-    }.asInstanceOf[M[VectorSpace[t.Out]]]
 
     def multSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(
       implicit A: Applicative[M],
@@ -120,11 +110,6 @@ trait TypesModule[F[_]] {
       case Type.Evo(inner) => inner.pure[M]
       case _               => E.raise(s"Type $t is not an Evolution type")
     }
-  }
-
-  def lift(tpe: Type): Type = tpe match {
-    case Type.Arrow(from, to) => lift(from) =>: lift(to)
-    case _                    => Type.Evo(tpe)
   }
 
   final class Context(bindings: Map[String, Type]) {
