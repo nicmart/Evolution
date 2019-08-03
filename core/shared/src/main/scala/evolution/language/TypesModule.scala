@@ -2,11 +2,10 @@ package evolution.language
 import cats.{ Applicative, Eq, Group }
 import evolution.geometry
 import evolution.geometry.Point
-import evolution.typeclass.{ LeftModule, VectorSpace }
+import evolution.typeclass.VectorSpace
 import cats.implicits._
 import cats.kernel.Order
 import cats.mtl.FunctorRaise
-import evolution.materialization.Iterable
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Semigroupoid._
 
@@ -57,49 +56,42 @@ trait TypesModule[F[_]] {
       }
     }.asInstanceOf[M[VectorSpace[t.Out]]]
 
-    def leftModule[M[_]](
-      t1: Type,
-      t2: Type
-    )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[LeftModule[t1.Out, t2.Out]] = {
-      (t1, t2) match {
-        case (Type.Dbl, Type.Dbl)   => LeftModule[Double, Double].pure[M]
-        case (Type.Dbl, Type.Point) => LeftModule[Double, Point].pure[M]
-        case (Type.Dbl, Type.Evo(Type.Point)) =>
-          LeftModule[Double, Iterable[Point]].pure[M] // TODO Ouch, here we have to use the concrete F!
-        case (Type.Integer, Type.Integer) => LeftModule[Int, Int].pure[M]
-        case (Type.Integer, Type.Dbl)     => LeftModule[Int, Double].pure[M]
-        case (Type.Integer, Type.Point)   => LeftModule[Int, Point].pure[M]
-        case _                            => E.raise(s"Unable to find a LeftModule instance for types $t1, $t2")
-      }
-    }.asInstanceOf[M[LeftModule[t1.Out, t2.Out]]]
-
-    def multSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] =
-      {(t1, t2, t3) match {
-        case (Type.Dbl, Type.Dbl, Type.Dbl) => Multiplicative.dblDblDbl.pure[M]
-        case (Type.Dbl, Type.Point, Type.Point) => Multiplicative.dblPointPoint.pure[M]
-        case (Type.Point, Type.Dbl, Type.Point) => Multiplicative.pointDblPoint.pure[M]
-        case (Type.Integer, Type.Integer, Type.Integer) => Multiplicative.intIntInt.pure[M]
-        case (Type.Integer, Type.Dbl, Type.Dbl) => Multiplicative.intDblDbl.pure[M]
-        case (Type.Dbl, Type.Integer, Type.Dbl) => Multiplicative.dblIntDbl.pure[M]
-        case (Type.Integer, Type.Point, Type.Point) => Multiplicative.intPointPoint.pure[M]
-        case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Multiplicative.dblEvoDblEvoDbl.pure[M]
-        case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl)) => Multiplicative.evoDblDblEvoDbl.pure[M]
+    def multSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(
+      implicit A: Applicative[M],
+      E: FunctorRaise[M, String]
+    ): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+      (t1, t2, t3) match {
+        case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.dblDblDbl.pure[M]
+        case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.dblPointPoint.pure[M]
+        case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.pointDblPoint.pure[M]
+        case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.intIntInt.pure[M]
+        case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.intDblDbl.pure[M]
+        case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.dblIntDbl.pure[M]
+        case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.intPointPoint.pure[M]
+        case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.dblEvoDblEvoDbl.pure[M]
+        case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.evoDblDblEvoDbl.pure[M]
         case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.dblEvoPointEvoPoint.pure[M]
         case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.evoPointDblEvoPoint.pure[M]
-        case _                            => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
-      }}.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+        case _                                                      => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
+      }
+    }.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 
-      def addSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] =
-      {(t1, t2, t3) match {
-        case (Type.Dbl, Type.Dbl, Type.Dbl) => Additive.dblDblDbl.pure[M]
+    def addSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(
+      implicit A: Applicative[M],
+      E: FunctorRaise[M, String]
+    ): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+      (t1, t2, t3) match {
+        case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.dblDblDbl.pure[M]
         case (Type.Integer, Type.Integer, Type.Integer) => Additive.intIntInt.pure[M]
-        case (Type.Integer, Type.Dbl, Type.Dbl) => Additive.intDblDbl.pure[M]
-        case (Type.Dbl, Type.Integer, Type.Dbl) => Additive.dblIntDbl.pure[M]
-        case (Type.Point, Type.Point, Type.Point) => Additive.pointPointPoint.pure[M]
-        case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) => Additive.evoPointEvoPointEvoPoint.pure[M]
+        case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.intDblDbl.pure[M]
+        case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.dblIntDbl.pure[M]
+        case (Type.Point, Type.Point, Type.Point)       => Additive.pointPointPoint.pure[M]
+        case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
+          Additive.evoPointEvoPointEvoPoint.pure[M]
         case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.pure[M]
-        case _                            => E.raise(s"Unable to find an Add instance for types $t1, $t2, $t3")
-      }}.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+        case _                                                            => E.raise(s"Unable to find an Add instance for types $t1, $t2, $t3")
+      }
+    }.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 
     def eqTypeClass[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Eq[t.Out]] = {
       t match {
@@ -136,7 +128,7 @@ trait TypesModule[F[_]] {
     def put(name: String, tpe: Type): Context = new Context(bindings.updated(name, tpe))
     def nextVar: String = "X" + bindings.size
     def nextTypeVar: Type = Type.Var(nextVar)
-  } 
+  }
 
   object Context {
     val empty: Context = new Context(Map.empty)
