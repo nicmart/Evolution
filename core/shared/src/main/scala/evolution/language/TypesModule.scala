@@ -56,19 +56,23 @@ trait TypesModule[F[_]] {
       implicit A: Applicative[M],
       E: FunctorRaise[M, String]
     ): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+      import Multiplicative._
       (t1, t2, t3) match {
-        case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.dblDblDbl.pure[M]
-        case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.dblPointPoint.pure[M]
-        case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.pointDblPoint.pure[M]
-        case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.intIntInt.pure[M]
-        case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.intDblDbl.pure[M]
-        case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.dblIntDbl.pure[M]
-        case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.intPointPoint.pure[M]
-        case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.dblEvoDblEvoDbl.pure[M]
-        case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.evoDblDblEvoDbl.pure[M]
-        case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.dblEvoPointEvoPoint.pure[M]
-        case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.evoPointDblEvoPoint.pure[M]
-        case _                                                      => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
+        case (Type.Dbl, Type.Dbl, Type.Dbl)                                   => dblDblDbl.pure[M]
+        case (Type.Dbl, Type.Point, Type.Point)                               => dblPointPoint.pure[M]
+        case (Type.Point, Type.Dbl, Type.Point)                               => pointDblPoint.pure[M]
+        case (Type.Integer, Type.Integer, Type.Integer)                       => intIntInt.pure[M]
+        case (Type.Integer, Type.Dbl, Type.Dbl)                               => intDblDbl.pure[M]
+        case (Type.Dbl, Type.Integer, Type.Dbl)                               => dblIntDbl.pure[M]
+        case (Type.Integer, Type.Point, Type.Point)                           => intPointPoint.pure[M]
+        case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))               => dblEvoDblEvoDbl.pure[M]
+        case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))               => evoDblDblEvoDbl.pure[M]
+        case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point))           => dblEvoPointEvoPoint.pure[M]
+        case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point))           => evoPointDblEvoPoint.pure[M]
+        case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => evoDblEvoDblEvoDbl.pure[M]
+        case (Type.Evo(Type.Point), Type.Evo(Type.Dbl), Type.Evo(Type.Point)) => evoPointEvoDblEvoPoint.pure[M]
+        case (Type.Evo(Type.Dbl), Type.Evo(Type.Point), Type.Evo(Type.Point)) => evoDblEvoPointEvoPoint.pure[M]
+        case _                                                                => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
       }
     }.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 

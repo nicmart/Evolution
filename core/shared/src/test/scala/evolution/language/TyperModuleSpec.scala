@@ -247,10 +247,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = PredicatesUnifier.unify(instances, predicates).get
-      
-      // random order destroys preformance!
-      // val subst = PredicatesUnifier.unify(Random.shuffle(instances), Random.shuffle(predicates)).get
+      val subst = PredicatesUnifier.unify(instances, Random.shuffle(predicates)).get
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
     }
