@@ -2,6 +2,7 @@ package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
 import cats.{ Id, Monad }
+import scala.util.Random
 
 class TyperModuleSpec extends LanguageSpec[Id] {
   import TypeClasses._
@@ -247,6 +248,9 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       )
 
       val subst = PredicatesUnifier.unify(instances, predicates).get
+      
+      // random order destroys preformance!
+      // val subst = PredicatesUnifier.unify(Random.shuffle(instances), Random.shuffle(predicates)).get
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
     }
