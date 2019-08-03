@@ -1,6 +1,6 @@
 package evolution.data
 import cats.Group
-import cats.kernel.{ Eq, Order, Semigroup }
+import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.typeclass.Semigroupoid
 
@@ -75,11 +75,11 @@ trait ExpressionModule[F[_]] {
     final case class FlatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]) extends Expr[F[B]](List(fa, f))
     final case class Flatten[A, B](ffa: Expr[F[F[A]]]) extends Expr[F[B]](List(ffa))
     final case class Parallel[A](ffa: Expr[F[F[A]]]) extends Expr[F[A]](List(ffa))
-    final case class Integrate[A](start: Expr[A], speed: Expr[F[A]], semigroup: Semigroup[A])
+    final case class Integrate[A](start: Expr[A], speed: Expr[F[A]], semigroup: Semigroupoid[A, A, A])
         extends Expr[F[A]](List(start, speed))
-    final case class Solve1[A](speed: Expr[F[A => A]], start: Expr[A], semigroup: Semigroup[A])
+    final case class Solve1[A](speed: Expr[F[A => A]], start: Expr[A], semigroup: Semigroupoid[A, A, A])
         extends Expr[F[A]](List(speed, start))
-    final case class Solve2[A](acc: Expr[F[A => A => A]], a0: Expr[A], v0: Expr[A], semigroup: Semigroup[A])
+    final case class Solve2[A](acc: Expr[F[A => A => A]], a0: Expr[A], v0: Expr[A], semigroup: Semigroupoid[A, A, A])
         extends Expr[F[A]](List(acc, a0, v0))
     final case class WithFirst[A, B](as: Expr[F[A]], f: Expr[A => F[B]]) extends Expr[F[B]](List(as, f))
     final case class WithFirst2[A, B](as: Expr[F[A]], f: Expr[A => A => F[B]]) extends Expr[F[B]](List(as, f))

@@ -426,9 +426,6 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     val instances: List[Predicate] = List(
       Predicate("Num", List(Type.Dbl)),
       Predicate("Num", List(Type.Integer)),
-      Predicate("Semigroup", List(Type.Integer)),
-      Predicate("Semigroup", List(Type.Dbl)),
-      Predicate("Semigroup", List(Type.Point)),
       Predicate("Mult", List(Type.Dbl, Type.Dbl, Type.Dbl)),
       Predicate("Mult", List(Type.Dbl, Type.Point, Type.Point)),
       Predicate("Mult", List(Type.Point, Type.Dbl, Type.Point)),

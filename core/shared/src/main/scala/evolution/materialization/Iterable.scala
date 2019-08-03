@@ -1,11 +1,12 @@
 package evolution.materialization
-import cats.kernel.{ Group, Semigroup }
+import cats.kernel.Group
 import evolution.geometry.Point
 import evolution.rng.PerlinNoise
 
 import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import evolution.typeclass.Semigroupoid
 
 sealed trait Iterable[+T] {
   def run: Iterator[T]
@@ -154,7 +155,7 @@ object Iterable {
 
   }
 
-  def integrate[A](start: A, speed: Iterable[A], semigroup: Semigroup[A]): Iterable[A] =
+  def integrate[A](start: A, speed: Iterable[A], semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
     new Iterable[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -165,7 +166,7 @@ object Iterable {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = semigroup.combine(current, speedIterator.next())
+            _next = semigroupoid.combine(current, speedIterator.next())
           } else {
             _hasNext = false
           }
@@ -215,7 +216,7 @@ object Iterable {
     }
 
   // TODO DRY, see integrate
-  def solve1[A](speed: Iterable[A => A], start: A, semigroup: Semigroup[A]): Iterable[A] =
+  def solve1[A](speed: Iterable[A => A], start: A, semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
     new Iterable[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -226,7 +227,7 @@ object Iterable {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = semigroup.combine(current, speedIterator.next()(current))
+            _next = semigroupoid.combine(current, speedIterator.next()(current))
           } else {
             _hasNext = false
           }
@@ -236,7 +237,7 @@ object Iterable {
       }
     }
 
-  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, semigroup: Semigroup[A]): Iterable[A] =
+  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
     new Iterable[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val accIterator = acc.run
@@ -249,8 +250,8 @@ object Iterable {
           val currentV = _nextV
           if (accIterator.hasNext) {
             _hasNext = true
-            _nextV = semigroup.combine(currentV, accIterator.next()(currentA)(currentV))
-            _nextA = semigroup.combine(currentA, _nextV)
+            _nextV = semigroupoid.combine(currentV, accIterator.next()(currentA)(currentV))
+            _nextA = semigroupoid.combine(currentA, _nextV)
           } else {
             _hasNext = false
           }

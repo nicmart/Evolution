@@ -60,6 +60,7 @@ object dsl extends DrawingDefinition[Point] {
             val (config, state) = Config.from(serialized)
             snapshot.setState(config) >> bs.setState(state)
           }
+        case (None, cb) => cb
       }
 
       val component: ConfigComponent[String] = instances.textConfig

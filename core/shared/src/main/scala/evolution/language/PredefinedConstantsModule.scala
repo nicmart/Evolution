@@ -357,7 +357,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         y: Typed[Expr[_]],
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => Expr.Integrate(x.value.asExpr, y.value.asExprF, group))
+        Type.semigroup[M](x.tpe).map(sg => Expr.Integrate(x.value.asExpr, y.value.asExprF, sg))
     }
 
     case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
@@ -367,8 +367,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
         Type
-          .group[M](y.tpe)
-          .map(group => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, group))
+          .semigroup[M](y.tpe)
+          .map(sg => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, sg))
     }
 
     case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -474,12 +474,12 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         implicit M: Monad[M],
         E: FunctorRaise[M, String]
       ): M[Expr[_]] =
-        Type.group[M](y.tpe).map { group =>
+        Type.semigroup[M](y.tpe).map { sg =>
           Expr.Solve2[y.tpe.Out](
             x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
             y.value.asExpr[y.tpe.Out],
             z.value.asExpr[y.tpe.Out],
-            group
+            sg
           )
         }
     }

@@ -47,6 +47,11 @@ trait TypesModule[F[_]] {
       }
     }.asInstanceOf[M[Group[t.Out]]]
 
+    def semigroup[M[_]](
+      t: Type
+    )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t.Out, t.Out, t.Out]] =
+      addSemigrupoid[M](t, t, t)
+
     def vectorSpace[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[VectorSpace[t.Out]] = {
       t match {
         case Type.Integer => VectorSpace[Int].pure[M]
