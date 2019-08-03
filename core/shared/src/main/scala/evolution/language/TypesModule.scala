@@ -7,6 +7,7 @@ import cats.kernel.Order
 import cats.mtl.FunctorRaise
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Semigroupoid._
+import evolution.typeclass.Invertible
 
 trait TypesModule[F[_]] {
 
@@ -97,6 +98,22 @@ trait TypesModule[F[_]] {
         case _            => E.raise(s"Unable to find an eq typeclass for type $t")
       }
     }.asInstanceOf[M[Eq[t.Out]]]
+
+    def invertible[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Invertible[t.Out]] = {
+      t match {
+        case Type.Integer         => Invertible.Additive.intInvertible.pure[M]
+        case Type.Dbl             => Invertible.Additive.dblInvertible.pure[M]
+        case Type.Point           => Invertible.Additive.pointInvertible.pure[M]
+        case Type.Evo(Type.Dbl)   => Invertible.Additive.dblEvoInvertible.pure[M]
+        case Type.Evo(Type.Point) => Invertible.Additive.pointEvoInvertible.pure[M]
+        case _                    => E.raise(s"Unable to find an invertible typeclass for type $t")
+      }
+    }.asInstanceOf[M[Invertible[t.Out]]]
+
+    def invertibleSemigroup[M[_]](
+      t: Type
+    )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[(Semigroup[t.Out], Invertible[t.Out])] =
+      A.tuple2(semigroup[M](t), invertible[M](t))
 
     def order[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Order[t.Out]] = {
       t match {

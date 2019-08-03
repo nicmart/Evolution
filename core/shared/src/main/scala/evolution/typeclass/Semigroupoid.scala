@@ -12,6 +12,7 @@ trait Semigroupoid[A, B, C] { self =>
 }
 
 object Semigroupoid {
+  type Semigroup[T] = Semigroupoid[T, T, T]
   def apply[A, B, C](implicit sg: Semigroupoid[A, B, C]): Semigroupoid[A, B, C] = sg
 
   def fromGroup[T](group: Group[T]): Semigroupoid[T, T, T] = (a, b) => group.combine(a, b)

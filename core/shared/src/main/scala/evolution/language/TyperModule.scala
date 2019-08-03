@@ -184,8 +184,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       import TypeInferenceInstances._
       def unify(instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
         val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
-          predicates.distinct.map { predicate => predicate ->
-            instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
+          predicates.distinct.map { predicate =>
+            predicate ->
+              instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
           }.toMap
 
         val reducedPredicateToSubstitutions = predicateToSubstitutions.filterNot {
@@ -201,37 +202,39 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
         (instance, predicate) match {
           case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId => matchTypes(iTypes, pTypes)
-          case _ => None
+          case _                                                              => None
         }
 
       private def matchTypes(instTypes: List[Type], predTypes: List[Type]): Option[Substitution] =
         (instTypes, predTypes) match {
-          case (iHead :: iTail, pHead :: pTail) => for {
-            tailSubst <- matchTypes(iTail, pTail)
-            headSubst <- matchType(iHead, pHead)
-            subst <- headSubst.merge[Either[String, ?]](tailSubst).toOption
-          } yield subst
+          case (iHead :: iTail, pHead :: pTail) =>
+            for {
+              tailSubst <- matchTypes(iTail, pTail)
+              headSubst <- matchType(iHead, pHead)
+              subst <- headSubst.merge[Either[String, ?]](tailSubst).toOption
+            } yield subst
 
           case (Nil, Nil) => Some(Substitution.empty)
-          case _ => None
+          case _          => None
         }
 
       private def matchType(instType: Type, predType: Type): Option[Substitution] = (instType, predType) match {
-        case (t1, Type.Var(name)) => Some(Substitution(name -> t1))
+        case (t1, Type.Var(name))         => Some(Substitution(name -> t1))
         case (Type.Evo(t1), Type.Evo(t2)) => matchType(t1, t2)
         case (Type.Lst(t1), Type.Lst(t2)) => matchType(t1, t2)
-        case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) => for {
+        case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) =>
+          for {
             s1 <- matchType(t11, t21)
             s2 <- matchType(t12, t22)
             s <- s1.mergeOpt(s2)
           } yield s
         case (t1, t2) if t1 == t2 => Some(Substitution.empty)
-        case _ => None
+        case _                    => None
       }
 
       private def product[T](lists: List[List[T]]): List[List[T]] =
         lists match {
-          case firstList :: otherLists => 
+          case firstList :: otherLists =>
             for {
               otherTs <- product(otherLists)
               t <- firstList
@@ -241,15 +244,16 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
 
       private def mergeSubstitutions(substitutions: List[Substitution]): Option[Substitution] =
         substitutions match {
-          case substHead :: substTail => mergeSubstitutions(substTail).flatMap(_.merge[Either[String, ?]](substHead).toOption)
+          case substHead :: substTail =>
+            mergeSubstitutions(substTail).flatMap(_.merge[Either[String, ?]](substHead).toOption)
           case Nil => Some(Substitution.empty)
         }
 
-      private def resolvePredicateWithDefaults(defaults: List[Default], predicate: Predicate): Option[Substitution] = 
+      private def resolvePredicateWithDefaults(defaults: List[Default], predicate: Predicate): Option[Substitution] =
         (defaults, predicate) match {
-          case (head :: _, Predicate(id, List(Type.Var(name)))) if head.id == id =>  Some(Substitution(name -> head.tpe))
-          case (_ :: tail, _) => resolvePredicateWithDefaults(tail, predicate)
-          case _ => None
+          case (head :: _, Predicate(id, List(Type.Var(name)))) if head.id == id => Some(Substitution(name -> head.tpe))
+          case (_ :: tail, _)                                                    => resolvePredicateWithDefaults(tail, predicate)
+          case _                                                                 => None
         }
     }
 
@@ -258,7 +262,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       import TypeInferenceInstances._
       PredicatesUnifier.unify(instances, predicates) match {
         case Some(subst) => subst.pure[M]
-        case None => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
+        case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
       }
     }
 
@@ -443,8 +447,12 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       Predicate("Add", List(Type.Dbl, Type.Integer, Type.Dbl)),
       Predicate("Add", List(Type.Point, Type.Point, Type.Point)),
       Predicate("Add", List(Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))),
-      Predicate("Add", List(Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)))
-      
+      Predicate("Add", List(Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point))),
+      Predicate("Invertible", List(Type.Integer)),
+      Predicate("Invertible", List(Type.Dbl)),
+      Predicate("Invertible", List(Type.Point)),
+      Predicate("Invertible", List(Type.Evo(Type.Dbl))),
+      Predicate("Invertible", List(Type.Evo(Type.Point)))
     )
   }
 }

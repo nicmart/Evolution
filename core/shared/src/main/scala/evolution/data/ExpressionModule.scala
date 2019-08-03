@@ -1,8 +1,8 @@
 package evolution.data
-import cats.Group
 import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.typeclass.Semigroupoid
+import evolution.typeclass.Invertible
 
 trait ExpressionModule[F[_]] {
 
@@ -33,8 +33,10 @@ trait ExpressionModule[F[_]] {
     final case class Abs(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Sign(a: Expr[Double]) extends Expr[Double](List(a))
     final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
-    final case class Inverse[T](t: Expr[T], group: Group[T]) extends Expr[T](List(t))
-    final case class Derive[T](t: Expr[F[T]], group: Group[T]) extends Expr[F[T]](List(t))
+    final case class Inverse[T](t: Expr[T], inv: Invertible[T]) extends Expr[T](List(t))
+    final case class Minus[T](a: Expr[T], b: Expr[T], sg: Semigroupoid.Semigroup[T], inv: Invertible[T]) extends Expr[T](List(a, b))
+    final case class Derive[T](t: Expr[F[T]], sg: Semigroupoid.Semigroup[T], inv: Invertible[T])
+        extends Expr[F[T]](List(t))
     final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
     final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
     final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
@@ -70,8 +72,12 @@ trait ExpressionModule[F[_]] {
     final case class Take[A](n: Expr[Int], fa: Expr[F[A]]) extends Expr[F[A]](List(n, fa))
     final case class TakeWhile[A](fa: Expr[F[A]], predicate: Expr[A => Boolean]) extends Expr[F[A]](List(fa, predicate))
     final case class Map[A, B](fa: Expr[F[A]], f: Expr[A => B]) extends Expr[F[B]](List(fa, f))
-    final case class MapWithDerivative[A, B](fa: Expr[F[A]], f: Expr[A => A => B], group: Group[A])
-        extends Expr[F[B]](List(fa, f))
+    final case class MapWithDerivative[A, B](
+      fa: Expr[F[A]],
+      f: Expr[A => A => B],
+      sg: Semigroupoid.Semigroup[A],
+      inv: Invertible[A]
+    ) extends Expr[F[B]](List(fa, f))
     final case class FlatMap[A, B](fa: Expr[F[A]], f: Expr[A => F[B]]) extends Expr[F[B]](List(fa, f))
     final case class Flatten[A, B](ffa: Expr[F[F[A]]]) extends Expr[F[B]](List(ffa))
     final case class Parallel[A](ffa: Expr[F[F[A]]]) extends Expr[F[A]](List(ffa))

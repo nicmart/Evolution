@@ -55,14 +55,16 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
         unsafeCompile(AST.Bool(b)) shouldBe Bool(b)
       }
 
-      "binary minus" in forAll { (a: Double, b: Double) =>
+      "binary minus" in forAll { (a: Int, b: Int) =>
         val ast =
           AST.AppN(
             AST.PrimitiveConst(Constant2.Minus),
-            AST.Number(a.toString, Qualified(Type.Dbl)),
-            AST.Number(b.toString, Qualified(Type.Dbl))
+            AST.Number(a.toString, Qualified(Type.Integer)),
+            AST.Number(b.toString, Qualified(Type.Integer))
           )
-        unsafeCompile(ast) should matchPattern { case Add(Dbl(x), Inverse(Dbl(y), _), _) if x == a && y == b => }
+        unsafeCompile(ast) should matchPattern {
+          case Expr.Minus(Expr.Integer(x), Expr.Integer(y), _, _) if x == a && y == b =>
+        }
       }
 
       "whiles" in forAll(genBool, genNumber) { (b, n) =>

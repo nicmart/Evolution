@@ -14,31 +14,32 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
     def interpret[T](expr: Expr[T]): Out[T] = {
       expr match {
-        case Dbl(d)                 => Contextual.Pure(d)
-        case Floor(d)               => interpret(d).map(_.toInt)
-        case ToDbl(n)               => interpret(n).map(_.toDouble)
-        case Integer(n)             => Contextual.Pure(n)
-        case Pnt(x, y)              => interpret2(x, y)(Point.apply)
-        case LiftedPnt(x, y)        => interpret2(x, y)(Iterable.zipWithUncurried(Point.apply))
-        case Polar(x, y)            => interpret2(x, y)(Point.polar)
-        case LiftedPolar(x, y)      => interpret2(x, y)(Iterable.zipWithUncurried(Point.polar))
-        case X(p)                   => interpret1(p)(_.x)
-        case Y(p)                   => interpret1(p)(_.y)
-        case Norm(p)                => interpret1(p)(_.norm)
-        case Versor(p)              => interpret1(p)(_.versor)
-        case e @ Add(_, _, _)       => interpret2(e.a, e.b)(e.add.combine)
-        case Div(a, b)              => interpret2(a, b)(_ / _)
-        case Exp(a, b)              => interpret2(a, b)(Math.pow)
-        case Abs(a)                 => interpret(a).map(Math.abs)
-        case Sign(a)                => interpret(a).map(Math.signum)
+        case Dbl(d)            => Contextual.Pure(d)
+        case Floor(d)          => interpret(d).map(_.toInt)
+        case ToDbl(n)          => interpret(n).map(_.toDouble)
+        case Integer(n)        => Contextual.Pure(n)
+        case Pnt(x, y)         => interpret2(x, y)(Point.apply)
+        case LiftedPnt(x, y)   => interpret2(x, y)(Iterable.zipWithUncurried(Point.apply))
+        case Polar(x, y)       => interpret2(x, y)(Point.polar)
+        case LiftedPolar(x, y) => interpret2(x, y)(Iterable.zipWithUncurried(Point.polar))
+        case X(p)              => interpret1(p)(_.x)
+        case Y(p)              => interpret1(p)(_.y)
+        case Norm(p)           => interpret1(p)(_.norm)
+        case Versor(p)         => interpret1(p)(_.versor)
+        case e @ Add(_, _, _)  => interpret2(e.a, e.b)(e.add.combine)
+        case Div(a, b)         => interpret2(a, b)(_ / _)
+        case Exp(a, b)         => interpret2(a, b)(Math.pow)
+        case Abs(a)            => interpret(a).map(Math.abs)
+        case Sign(a)           => interpret(a).map(Math.signum)
         case Mod(a, b) =>
           interpret2(a, b) { (ca, cb) =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
-        case e @ Inverse(_, _)        => interpret1(e.t)(e.group.inverse)
-        case e @ Multiply(_, _, _)    => interpret2(e.a, e.b)(e.mult.combine)
-        case Sin(d)                   => interpret1(d)(Math.sin)
-        case Cos(d)                   => interpret1(d)(Math.cos)
+        case e @ Inverse(_, _)     => interpret1(e.t)(e.inv.inverse)
+        case e @ Minus(_, _, _, _)  => interpret2(e.a, e.b)((a, b) => e.sg.combine(a, e.inv.inverse(b)))
+        case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
+        case Sin(d)                => interpret1(d)(Math.sin)
+        case Cos(d)                => interpret1(d)(Math.cos)
         case SmoothStep(f, t, p) =>
           interpret3(f, t, p) { (from, to, position) =>
             val t = (position - from) / (to - from)
@@ -154,7 +155,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case Map(fa, f) => interpret2(fa, f)(Iterable.map)
 
-        case MapWithDerivative(fa, f, group) => interpret2(fa, f)(Iterable.mapWithDerivative(_, _, group))
+        case MapWithDerivative(fa, f, sg, inv) => interpret2(fa, f)(Iterable.mapWithDerivative(_, _, sg, inv))
 
         case Range(from, to, step) => interpret3(from, to, step)(Iterable.range)
 
@@ -178,7 +179,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             (acc, start, speed) => Iterable.solve2(acc, start, speed, semigroup)
           )
 
-        case Derive(t, group) => interpret1(t)(Iterable.derive(_, group))
+        case Derive(t, sg, inv) => interpret1(t)(Iterable.derive(_, sg, inv))
 
         case Normal(μ, σ) =>
           interpret2(μ, σ)(Iterable.normal)

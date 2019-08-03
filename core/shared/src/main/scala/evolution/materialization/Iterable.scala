@@ -1,5 +1,4 @@
 package evolution.materialization
-import cats.kernel.Group
 import evolution.geometry.Point
 import evolution.rng.PerlinNoise
 
@@ -7,6 +6,7 @@ import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import evolution.typeclass.Semigroupoid
+import evolution.typeclass.Invertible
 
 sealed trait Iterable[+T] {
   def run: Iterator[T]
@@ -176,7 +176,7 @@ object Iterable {
       }
     }
 
-  def derive[A](as: Iterable[A], group: Group[A]): Iterable[A] =
+  def derive[A](as: Iterable[A], sg: Semigroupoid.Semigroup[A], inv: Invertible[A]): Iterable[A] =
     new Iterable[A] {
       override def run: Iterator[A] = {
         val derivingIterator: Iterator[A] = as.run
@@ -186,7 +186,7 @@ object Iterable {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): A = {
               val nextA = derivingIterator.next()
-              val nextDerivative = group.remove(nextA, _current)
+              val nextDerivative = sg.combine(nextA, inv.inverse(_current))
               _current = nextA
               nextDerivative
             }
@@ -196,7 +196,12 @@ object Iterable {
     }
 
   // TODO DRY with derivative?
-  def mapWithDerivative[A, B](as: Iterable[A], f: A => A => B, group: Group[A]): Iterable[B] =
+  def mapWithDerivative[A, B](
+    as: Iterable[A],
+    f: A => A => B,
+    sg: Semigroupoid.Semigroup[A],
+    inv: Invertible[A]
+  ): Iterable[B] =
     new Iterable[B] {
       override def run: Iterator[B] = {
         val derivingIterator: Iterator[A] = as.run
@@ -206,7 +211,7 @@ object Iterable {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): B = {
               val nextA = derivingIterator.next()
-              val nextB = f(_current)(group.remove(nextA, _current))
+              val nextB = f(_current)(sg.combine(nextA, inv.inverse(_current)))
               _current = nextA
               nextB
             }

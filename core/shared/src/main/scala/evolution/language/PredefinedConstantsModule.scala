@@ -9,7 +9,6 @@ import evolution.geometry.Point
 
 import scala.collection.immutable
 import scala.language.higherKinds
-import evolution.typeclass.Semigroupoid
 
 trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
   import Type._
@@ -64,7 +63,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
   abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Constant1(qualifiedType) {
     def compilePlain(x: Expr[_]): Expr[_]
-    override def compile[M[_]](x: Typed[Expr[_]], out: Type)(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+    override def compile[M[_]](
+      x: Typed[Expr[_]],
+      out: Type
+    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
       compilePlain(x.value).pure[M].widen
   }
 
@@ -104,19 +106,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
-      override def compile[M[_]](x: Typed[Expr[_]], out: Type)(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        x.tpe match {
-          // Overload - for evolutions
-          case Type.Evo(tpe) =>
-            Type.group[M](tpe).map { group =>
-              Expr.Map(x.value.asExprF, Expr.Lambda("t", Expr.Inverse(Expr.Var("t"), group)))
-            }
-
-          case tpe =>
-            Type.group[M](tpe).map { g =>
-              Expr.Inverse(x.value.asExpr, g)
-            }
-        }
+      override def compile[M[_]](
+        x: Typed[Expr[_]],
+        out: Type
+      )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+        Type.invertible[M](x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
     }
 
     case object Sin extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
@@ -154,7 +148,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         implicit M: Monad[M],
         E: FunctorRaise[M, String]
       ): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => Expr.Derive(x.value.asExprF, group))
+        Type.invertibleSemigroup[M](x.tpe).map { case (sg, inv) => Expr.Derive(x.value.asExprF, sg, inv) }
     }
 
     def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -216,9 +210,10 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Type.multSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
     }
 
-
     case object Add
-        extends Constant2(Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))) {
+        extends Constant2(
+          Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
+        ) {
       override def compile[M[_]](
         x: Typed[Expr[_]],
         y: Typed[Expr[_]],
@@ -227,14 +222,15 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         Type.addSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
     }
 
-    case object Minus
-        extends Constant2(Qualified(List(Predicate("Semigroup", List(Var("T")))), Var("T") =>: Var("T") =>: Var("T"))) {
+    case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
       override def compile[M[_]](
         x: Typed[Expr[_]],
         y: Typed[Expr[_]],
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map(group => Expr.Add(x.value.asExpr, Expr.Inverse(y.value.asExpr, group), Semigroupoid.fromGroup(group)))
+        Type.invertibleSemigroup[M](x.tpe).map {
+          case (sg, inv) => Expr.Minus(x.value.asExpr, y.value.asExpr, sg, inv)
+        }
     }
 
     case object Div extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Dbl)) {
@@ -380,15 +376,21 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object MapWithDerivative
-        extends Constant2(Qualified((Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2")))) {
+        extends Constant2(
+          Qualified(
+            isInvertSemigroup("T1"),
+            (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2"))
+          )
+        ) {
 
       override def compile[M[_]](
         x: Typed[Expr[_]],
         y: Typed[Expr[_]],
         out: Type
       )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-        Type.group[M](x.tpe).map { group =>
-          Expr.MapWithDerivative(x.value.asExprF, y.value.asExpr[Any => Any => Any], group)
+        Type.invertibleSemigroup[M](x.tpe).map {
+          case (sg, inv) =>
+            Expr.MapWithDerivative(x.value.asExprF, y.value.asExpr[Any => Any => Any], sg, inv)
         }
     }
 
@@ -513,4 +515,8 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
   def fromEither[M[_], T](e: Either[String, T])(implicit M: Applicative[M], E: FunctorRaise[M, String]): M[T] =
     e.fold(E.raise, M.pure)
 
+  def isInvertSemigroup(varName: String) = List(
+    Predicate("Add", List(Var(varName), Var(varName), Var(varName))),
+    Predicate("Invertible", List(Var(varName)))
+  )
 }
