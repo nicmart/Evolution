@@ -10,7 +10,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
   // TODO this is to avoid ambiguities. Can we do better than that?
   implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
 
-  "The typer" - {
+  "The typer" - { 
     "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
@@ -176,13 +176,13 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
-      val subst = predicatesUnifier.unify(defaults, instances, Nil)
+      val subst = PredicatesUnifier.unify(instances, Nil)
 
       subst shouldBe Some(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
-      val subst = predicatesUnifier.unify(defaults, instances, instances.take(1))
+      val subst = PredicatesUnifier.unify(instances, instances.take(1))
 
       subst shouldBe Some(Substitution.empty)
     }
@@ -190,7 +190,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
     "should succeed with a simple substitution if there is a single predicate with vars and a matching instance" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
       val instances = List(Predicate("Num", List(Type.Dbl)))
-      val subst = predicatesUnifier.unify(defaults, instances, predicates)
+      val subst = PredicatesUnifier.unify(instances, predicates)
 
       subst shouldBe Some(Substitution("X" -> Type.Dbl))
     }
@@ -207,7 +207,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         Predicate("Both", List(Type.Dbl, Type.Dbl)),
         Predicate("Both", List(Type.Integer, Type.Integer)),
       )
-      val subst = predicatesUnifier.unify(defaults, instances, predicates).get
+      val subst = PredicatesUnifier.unify(instances, predicates).get
 
       subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
       subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
@@ -215,7 +215,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
     "should fail if there are no instances and there is at least one predicate" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
-      val result = predicatesUnifier.unify(defaults, Nil, predicates)
+      val result = PredicatesUnifier.unify(Nil, predicates)
 
       result shouldBe None
     }
@@ -223,7 +223,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
     "should fail if the only instance does not match the typeclass of the only predicate" in {
       val instances = List(Predicate("Num", List(Type.Integer)))
       val predicates = List(Predicate("Whatever", List(Type.Integer)))
-      val result = predicatesUnifier.unify(defaults, instances, predicates)
+      val result = PredicatesUnifier.unify(instances, predicates)
 
       result shouldBe None
     }
@@ -231,7 +231,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
     "should fail if the only instance does not match the types of the only predicate" in {
       val instances = List(Predicate("Num", List(Type.Integer)))
       val predicates = List(Predicate("Num", List(Type.Dbl)))
-      val result = predicatesUnifier.unify(defaults, instances, predicates)
+      val result = PredicatesUnifier.unify(instances, predicates)
 
       result shouldBe None
     }
@@ -239,32 +239,17 @@ class TyperModuleSpec extends LanguageSpec[Id] {
     "should fail if the the matching instance leads to incompativle assignments" in {
       val instances = List(Predicate("Bi", List(Type.Integer, Type.Dbl)))
       val predicates = List(Predicate("Bi", List(Type.Var("x"), Type.Var("x"))))
-      val result = predicatesUnifier.unify(defaults, instances, predicates)
+      val result = PredicatesUnifier.unify(instances, predicates)
 
       result shouldBe None
     }
-
-    "should use default instances" in {
-      pending
-      val predicates = List(
-        Predicate("Num", List(Type.Var("X")))
-      )
-
-      val subst = predicatesUnifier.unify(defaults, instances, predicates).get
-
-      subst.substitute[Type](Type.Var("X")) shouldBe Type.Dbl
-    }
   }
 
-  lazy val predicatesUnifier = new PredicatesUnifier[TypeInferenceResult]()
   lazy val instances = List(
     Predicate("Num", List(Type.Integer)),
     Predicate("Num", List(Type.Dbl)),
     Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
     Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
     Predicate("LeftModule", List(Type.Integer, Type.Integer))
-  )
-  lazy val defaults = List(
-    Default("Num", Type.Dbl)
   )
 }

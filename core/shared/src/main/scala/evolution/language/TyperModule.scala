@@ -180,9 +180,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           }
       }
 
-    class PredicatesUnifier[M[_]] {
+    object PredicatesUnifier {
       import TypeInferenceInstances._
-      def unify(defaults: List[Default], instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
+      def unify(instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
         val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
           predicates.distinct.map { predicate => predicate ->
             instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
@@ -192,23 +192,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           case (_, substitutions) => hasEmptySubstitution(substitutions)
         }
 
-        val maybeSubst = product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
-
-        maybeSubst.flatMap { subst =>
-          val substitutedPredicates = predicates.map(subst.substitute[Predicate]) 
-          val unresolvedPredicates = substitutedPredicates.filter(_.types.exists(isVar))
-
-          val defaultSubstitutions = unresolvedPredicates.map(resolvePredicateWithDefaults(defaults, _)).sequence
-
-          val defaultSubstitution = defaultSubstitutions.flatMap(mergeSubstitutions)
-
-          defaultSubstitution.flatMap(defSubst => subst.merge[Either[String, ?]](defSubst).toOption)
-        }
-      }
-
-      private def isVar(tpe: Type): Boolean = tpe match {
-        case Type.Var(_) => true
-        case _ => false
+        product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
       }
 
       private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
@@ -265,53 +249,11 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
     def predicatesSubstitution[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {
       import TypeInferenceInstances._
-      // num literals are qualified with a Type.Var(x) -> Predicate(Num, List(Type.Var(x))
-      // we don't want to resolve them too early with the first instance subst.
-      // At the moment I don't know what to do with ambiguous subst.
-      // Functional Dependencies?
-      val predicatesWithNonVars = predicates.filter(p => p.types.exists(tpe => typeVars(tpe).isEmpty))
-      val substitution: Substitution = substForMultiplePredicates(predicatesWithNonVars)
-      val substitutedPredicates = substitution.substitute(predicates)
-      val substitutedPredicatesWithNonVars: List[Predicate] =
-        substitutedPredicates.filter(p => p.types.exists(tpe => typeVars(tpe).isEmpty))
-      val invalidPredicates = substitutedPredicatesWithNonVars.filter(p => !instances.contains(p))
-      if (invalidPredicates.isEmpty) substitution.pure[M]
-      else s"Not found instances for predicates $invalidPredicates".raise[M, Substitution]
-    }
-
-    private def substForMultiplePredicates(predicates: List[Predicate]): Substitution =
-      predicates match {
-        case Nil          => Substitution.empty
-        case head :: tail => substForMultiplePredicates(tail).compose(substForInstances(head, instances))
-      }
-
-    private def substForInstances(predicate: Predicate, instances: List[Predicate]): Substitution = {
-      val relevantInstances: List[Predicate] = instances.filter(_.id == predicate.id)
-      relevantInstances match {
-        case head :: tail => substitutionForPredicate(predicate, head).compose(substForInstances(predicate, tail))
-        case Nil          => Substitution.empty
+      PredicatesUnifier.unify(instances, predicates) match {
+        case Some(subst) => subst.pure[M]
+        case None => s"Not able to resolve".raise[M, Substitution]
       }
     }
-
-    private def substitutionForPredicate(predicate1: Predicate, predicate2: Predicate): Substitution =
-      (predicate1, predicate2) match {
-        case (Predicate(name1, _), Predicate(name2, _)) if name1 != name2               => Substitution.empty
-        case (Predicate(_, types1), Predicate(_, types2)) if types1.size != types2.size => Substitution.empty
-        case (Predicate(_, types1), Predicate(_, types2)) =>
-          substitutionForPredicateTypes(types1, types2).getOrElse(Substitution.empty)
-      }
-
-    private def substitutionForPredicateTypes(types1: List[Type], types2: List[Type]): Option[Substitution] =
-      (types1, types2) match {
-        case (Type.Var(x) :: tail1, t2 :: tail2) =>
-          substitutionForPredicateTypes(tail1, tail2).map(_.compose(Substitution(x -> t2)))
-        case (t1 :: tail1, Type.Var(x) :: tail2) =>
-          substitutionForPredicateTypes(tail1, tail2).map(_.compose(Substitution(x -> t1)))
-        case (t1 :: _, t2 :: _) if t1 != t2 => None
-        case (_ :: tail1, _ :: tail2)       => substitutionForPredicateTypes(tail1, tail2)
-        case (Nil, Nil)                     => Some(Substitution.empty)
-        case _                              => None
-      }
 
     private def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =
       tpe match {
