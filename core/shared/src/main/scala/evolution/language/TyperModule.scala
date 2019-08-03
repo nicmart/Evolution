@@ -193,7 +193,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
           case (_, substitutions) => hasEmptySubstitution(substitutions)
         }
 
-        product(reducedPredicateToSubstitutions.values.toList).flatMap(mergeSubstitutions).headOption
+        val combinations = product(reducedPredicateToSubstitutions.values.toList)
+
+        combinations.flatMap(mergeSubstitutions).headOption
       }
 
       private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
@@ -232,14 +234,14 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
         case _                    => None
       }
 
-      private def product[T](lists: List[List[T]]): List[List[T]] =
+      private def product[T](lists: List[List[T]]): Stream[List[T]] =
         lists match {
           case firstList :: otherLists =>
             for {
               otherTs <- product(otherLists)
               t <- firstList
             } yield t :: otherTs
-          case Nil => List(Nil)
+          case Nil => Stream(Nil)
         }
 
       private def mergeSubstitutions(substitutions: List[Substitution]): Option[Substitution] =

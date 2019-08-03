@@ -10,7 +10,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
   // TODO this is to avoid ambiguities. Can we do better than that?
   implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
 
-  "The typer" - { 
+  "The typer" - {
     "should generate constraints for" - {
       "numbers" in {
         forAll(genNumber) { numberExpr =>
@@ -116,7 +116,10 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           AST.App(
             AST.Const(Constant1.Constant),
             AST.App(
-              AST.Lambda("x", AST.AppN(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x", Qualified(Type.Point)))),
+              AST.Lambda(
+                "x",
+                AST.AppN(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x", Qualified(Type.Point)))
+              ),
               AST.AppN(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
             )
           )
@@ -214,12 +217,38 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         Predicate("Num", List(Type.Point)),
         Predicate("Num", List(Type.Integer)),
         Predicate("Both", List(Type.Dbl, Type.Dbl)),
-        Predicate("Both", List(Type.Integer, Type.Integer)),
+        Predicate("Both", List(Type.Integer, Type.Integer))
       )
       val subst = PredicatesUnifier.unify(instances, predicates).get
 
       subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
       subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
+    }
+
+    // This is mostly to test perfomance of predicates unification
+    "should uniffy predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
+      val predicates = List(
+        Predicate("Num", List(Type.Dbl)),
+        Predicate("Mult", List(Type.Var("T1"), Type.Var("T7"), Type.Dbl)),
+        Predicate("Num", List(Type.Var("T1"))),
+        Predicate("Mult", List(Type.Var("T2"), Type.Var("T6"), Type.Var("T7"))),
+        Predicate("Num", List(Type.Var("T2"))),
+        Predicate("Mult", List(Type.Var("T8"), Type.Var("T5"), Type.Var("T6"))),
+        Predicate("Num", List(Type.Var("T8"))),
+        Predicate("Mult", List(Type.Var("T3"), Type.Var("T4"), Type.Var("T5"))),
+        Predicate("Num", List(Type.Var("T3"))),
+        Predicate("Mult", List(Type.Var("T9"), Type.Var("T10"), Type.Var("T4"))),
+        Predicate("Num", List(Type.Var("T9"))),
+        Predicate("Mult", List(Type.Var("T11"), Type.Var("T12"), Type.Var("T0"))),
+        Predicate("Num", List(Type.Var("T11"))),
+        Predicate("Mult", List(Type.Var("T13"), Type.Var("T14"), Type.Var("T12"))),
+        Predicate("Num", List(Type.Var("T13"))),
+        Predicate("Num", List(Type.Var("T14")))
+      )
+
+      val subst = PredicatesUnifier.unify(instances, predicates).get
+
+      subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
     }
 
     "should fail if there are no instances and there is at least one predicate" in {
@@ -253,12 +282,4 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       result shouldBe None
     }
   }
-
-  lazy val instances = List(
-    Predicate("Num", List(Type.Integer)),
-    Predicate("Num", List(Type.Dbl)),
-    Predicate("LeftModule", List(Type.Integer, Type.Dbl)),
-    Predicate("LeftModule", List(Type.Dbl, Type.Dbl)),
-    Predicate("LeftModule", List(Type.Integer, Type.Integer))
-  )
 }
