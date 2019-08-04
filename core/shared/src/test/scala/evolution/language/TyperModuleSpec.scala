@@ -37,7 +37,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         }
 
         "constant evolution of a point" in {
-          val point = AST.AppN(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("1"))
+          val point = AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(1), AST.DoubleLiteral(1))
           val evolution =
             assignVars(AST.App(AST.Const(Constant1.Constant), point)).unsafeEvaluate
           val constraints = findConstraints(evolution).unsafeEvaluate
@@ -66,7 +66,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
       "app(x -> x, 2)" in {
         val identity = AST.Lambda("x", AST.Identifier("x"))
-        val untyped = AST.App(identity, AST.Number("2", Qualified(Type.Dbl)))
+        val untyped = AST.App(identity, AST.DoubleLiteral(2, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Dbl
@@ -80,7 +80,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             "head",
             AST.Lambda(
               "tail",
-              AST.AppN(AST.Const(Constant2.Cons), AST.Number("1", Qualified(Type.Dbl)), AST.Identifier("tail"))
+              AST.AppN(AST.Const(Constant2.Cons), AST.DoubleLiteral(1, Qualified(Type.Dbl)), AST.Identifier("tail"))
             )
           )
         )
@@ -90,7 +90,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
       }
 
       "@(1)" in {
-        val untyped = AST.App(AST.Const(Constant1.Constant), AST.Number("1", Qualified(Type.Dbl)))
+        val untyped = AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(1, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
@@ -104,8 +104,8 @@ class TyperModuleSpec extends LanguageSpec[Id] {
         val untyped =
           AST.AppN(
             AST.Const(Constant2.LiftedPoint),
-            AST.App(AST.Const(Constant1.Constant), AST.Number("1")),
-            AST.App(AST.Const(Constant1.Constant), AST.Number("2"))
+            AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(1)),
+            AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(2))
           )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
@@ -119,9 +119,13 @@ class TyperModuleSpec extends LanguageSpec[Id] {
             AST.App(
               AST.Lambda(
                 "x",
-                AST.AppN(AST.Const(Constant2.Multiply), AST.Number("2"), AST.Identifier("x", Qualified(Type.Point)))
+                AST.AppN(
+                  AST.Const(Constant2.Multiply),
+                  AST.DoubleLiteral(2),
+                  AST.Identifier("x", Qualified(Type.Point))
+                )
               ),
-              AST.AppN(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
+              AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(1), AST.DoubleLiteral(2))
             )
           )
 
@@ -137,7 +141,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
           AST.AppN(
             AST.Const(Constant2.Solve1),
             AST.App(AST.Const(Constant1.Constant), AST.Lambda("x", AST.Identifier("x"))),
-            AST.AppN(AST.Const(Constant2.Point), AST.Number("1"), AST.Number("2"))
+            AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(1), AST.DoubleLiteral(2))
           )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate

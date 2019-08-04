@@ -10,7 +10,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
     "should parse" - {
       "doubles literals" in {
         forAll { d: Double =>
-          unsafeParse(d.toString) shouldBe AST.Number(d.toString)
+          unsafeParse(d.toString) shouldBe AST.DoubleLiteral(d)
         }
       }
 
@@ -30,7 +30,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
       "inverses" in {
         unsafeParse("-point(0, 0)") shouldBe AST.App(
           AST.Const(Constant1.Inverse),
-          AST.AppN(AST.Const(Constant2.Point), AST.Number("0"), AST.Number("0"))
+          AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(0), AST.DoubleLiteral(0))
         )
       }
 
@@ -46,7 +46,7 @@ class ParserModuleSpec extends LanguageSpec[Id] {
             unsafeParse(s"$id = $expr in 1 + 2") shouldBe AST.Let(
               id.toLowerCase,
               unsafeParse(expr),
-              AST.AppN(AST.Const(Constant2.Add), AST.Number("1"), AST.Number("2"))
+              AST.AppN(AST.Const(Constant2.Add), AST.DoubleLiteral(1), AST.DoubleLiteral(2))
             )
           }
         }
@@ -155,24 +155,24 @@ class ParserModuleSpec extends LanguageSpec[Id] {
         "2^3 + 1" in {
           unsafeParse("2^3 + 1") shouldBe AST.AppN(
             AST.Const(Constant2.Add),
-            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
-            AST.Number("1")
+            AST.AppN(AST.Const(Constant2.Exp), AST.DoubleLiteral(2), AST.DoubleLiteral(3)),
+            AST.DoubleLiteral(1)
           )
         }
 
         "2^3 * 2" in {
           unsafeParse("2^3 * 2") shouldBe AST.AppN(
             AST.Const(Constant2.Multiply),
-            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3")),
-            AST.Number("2")
+            AST.AppN(AST.Const(Constant2.Exp), AST.DoubleLiteral(2), AST.DoubleLiteral(3)),
+            AST.DoubleLiteral(2)
           )
         }
 
         "2 * 2^3" in {
           unsafeParse("2 * 2^3") shouldBe AST.AppN(
             AST.Const(Constant2.Multiply),
-            AST.Number("2"),
-            AST.AppN(AST.Const(Constant2.Exp), AST.Number("2"), AST.Number("3"))
+            AST.DoubleLiteral(2),
+            AST.AppN(AST.Const(Constant2.Exp), AST.DoubleLiteral(2), AST.DoubleLiteral(3))
           )
         }
       }

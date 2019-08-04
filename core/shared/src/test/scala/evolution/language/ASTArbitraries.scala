@@ -31,11 +31,12 @@ trait ASTArbitraries[F[_]] {
     body <- genLeafExpr
   } yield s"$id -> $body"
 
-  def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.Number(d.toString)))
-  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number(d.toString)))
-  def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.Number((0.1 + d).toString)))
+  def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.DoubleLiteral(d)))
+  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral(d)))
+  def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral((0.1 + d))))
 
-  def genTypedNumber: Gen[AST.Number] = arbitrary[Double].map(d => AST.Number(d.toString, Qualified(Type.Dbl)))
+  def genTypedNumber: Gen[AST.DoubleLiteral] =
+    arbitrary[Double].map(d => AST.DoubleLiteral(d, Qualified(Type.Dbl)))
   def genTypedVar: Gen[AST.Identifier] = for {
     id <- genIdentifier
     tpe <- genType

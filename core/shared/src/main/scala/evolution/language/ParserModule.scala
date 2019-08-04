@@ -86,8 +86,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
 
     private lazy val list: Parser[AST] = P("[" ~/ args ~/ "]").map(AST.ConsN)
 
-    private lazy val number: Parser[AST.Number] =
-      numbers.doubleLiteral.map(AST.Number(_))
+    private lazy val number: Parser[AST.DoubleLiteral] =
+      numbers.doubleLiteral.map(AST.DoubleLiteral(_))
 
     private lazy val boolean: Parser[AST.Bool] =
       (P("true").map(_ => true) | P("false").map(_ => false)).map(AST.Bool(_))
@@ -124,8 +124,8 @@ trait ParserModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] 
       lazy val intLiteral: Parser[Int] =
         digit.!.map(_.toInt)
 
-      lazy val doubleLiteral: Parser[String] =
-        P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!
+      lazy val doubleLiteral: Parser[Double] =
+        P("-".? ~~ (floatDigits | digit.repX(1)) ~~ exp.?).!.map(_.toDouble)
 
       lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
     }

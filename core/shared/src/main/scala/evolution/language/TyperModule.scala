@@ -124,9 +124,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       val nodeConstraints: M[Constraints] = expr match {
         case Identifier(_, qt, _) => Constraints.empty.withPredicates(qt.predicates).pure[M]
         // TODO predicates
-        case Number(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
-        case Bool(_, tpe)   => Constraints(tpe.t -> Type.Bool).pure[M]
-        case App(f, x, tpe) => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[M]
+        case DoubleLiteral(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
+        case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).pure[M]
+        case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[M]
         case Lambda(_, _, _) =>
           Constraints.empty.pure[M]
         case Let(_, _, _, _) =>

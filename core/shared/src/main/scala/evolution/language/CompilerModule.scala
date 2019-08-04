@@ -43,10 +43,10 @@ trait CompilerModule[F[_]] {
             Expr.Let(varName, compiledValue, compiledIn)
           }
 
-        case Number(n, Qualified(_, Type.Integer)) =>
+        case DoubleLiteral(n, Qualified(_, Type.Integer)) =>
           Expr.Integer(n.toInt).pure[K]
 
-        case Number(n, _) => // Default to Double for numeric literals
+        case DoubleLiteral(n, _) => // Default to Double for numeric literals
           Expr.Dbl(n.toDouble).pure[K]
 
         case Bool(b, _) =>
@@ -77,7 +77,8 @@ trait CompilerModule[F[_]] {
             compiledX <- compile[M](x)
             compiledY <- compile[M](y)
             compiledZ <- compile[M](z)
-            result <- c.compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ), typeOut.t)
+            result <- c
+              .compile[K](Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ), typeOut.t)
           } yield result
 
         case App(f, x, _) =>
