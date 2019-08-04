@@ -13,10 +13,18 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
   "The typer" - {
     "should generate constraints for" - {
-      "numbers" in {
-        forAll(genNumber) { numberExpr =>
+      "int literals" in {
+        forAll(genIntNumber) { numberExpr =>
           assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints.empty
             .withPredicate(Predicate("Num", List(Type.Var("X"))))
+        }
+      }
+
+      "double literals" in {
+        forAll(genDoubleNotIntNumber) { numberExpr =>
+          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints(
+            Type.Var("X") -> Type.Dbl
+          )
         }
       }
 

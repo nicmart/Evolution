@@ -32,8 +32,8 @@ trait ASTArbitraries[F[_]] {
   } yield s"$id -> $body"
 
   def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.DoubleLiteral(d)))
-  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral(d)))
-  def genNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral((0.1 + d))))
+  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(n => AST.IntLiteral(n)))
+  def genDoubleNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral((0.1 + d))))
 
   def genTypedNumber: Gen[AST.DoubleLiteral] =
     arbitrary[Double].map(d => AST.DoubleLiteral(d, Qualified(Type.Dbl)))

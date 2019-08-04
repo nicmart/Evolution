@@ -43,8 +43,11 @@ trait CompilerModule[F[_]] {
             Expr.Let(varName, compiledValue, compiledIn)
           }
 
-        case DoubleLiteral(n, Qualified(_, Type.Integer)) =>
-          Expr.Integer(n.toInt).pure[K]
+        case IntLiteral(n, Qualified(_, Type.Integer)) =>
+          Expr.Integer(n).pure[K]
+
+        case IntLiteral(n, Qualified(_, Type.Dbl)) =>
+          Expr.Dbl(n.toDouble).pure[K]
 
         case DoubleLiteral(n, _) => // Default to Double for numeric literals
           Expr.Dbl(n.toDouble).pure[K]

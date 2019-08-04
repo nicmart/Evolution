@@ -122,9 +122,9 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
     def findConstraints[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[Constraints] = {
       import TypeInference._
       val nodeConstraints: M[Constraints] = expr match {
-        case Identifier(_, qt, _) => Constraints.empty.withPredicates(qt.predicates).pure[M]
-        // TODO predicates
-        case DoubleLiteral(_, tpe) => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
+        case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).pure[M]
+        case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).pure[M]
+        case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
         case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).pure[M]
         case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[M]
         case Lambda(_, _, _) =>
@@ -134,6 +134,7 @@ trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with Predefined
       }
 
       val childrenConstraints = expr.children.traverse(findConstraints[M])
+
       (nodeConstraints, childrenConstraints).mapN { (n, c) =>
         n.merge(c)
       }

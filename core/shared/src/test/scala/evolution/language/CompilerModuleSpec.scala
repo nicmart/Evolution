@@ -59,8 +59,8 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
         val ast =
           AST.AppN(
             AST.PrimitiveConst(Constant2.Minus),
-            AST.DoubleLiteral(a, Qualified(Type.Integer)),
-            AST.DoubleLiteral(b, Qualified(Type.Integer))
+            AST.IntLiteral(a, Qualified(Type.Integer)),
+            AST.IntLiteral(b, Qualified(Type.Integer))
           )
         unsafeCompile(ast) should matchPattern {
           case Expr.Minus(Expr.Integer(x), Expr.Integer(y), _, _) if x == a && y == b =>

@@ -13,6 +13,7 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
       case AST.Lambda(varName, expr, _)         => AST.Lambda(varName, expr, tpe)
       case AST.Let(varName, expr, in, _)        => AST.Let(varName, expr, in, tpe)
       case AST.DoubleLiteral(n, _)              => AST.DoubleLiteral(n, tpe)
+      case AST.IntLiteral(n, _)                 => AST.IntLiteral(n, tpe)
       case AST.Bool(b, _)                       => AST.Bool(b, tpe)
     }
 
@@ -44,8 +45,9 @@ trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =
     final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var("")))
         extends AST
     final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+    final case class IntLiteral(n: Int, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
     final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
- 
+
     def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
     def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)
 
