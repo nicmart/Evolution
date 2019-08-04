@@ -126,7 +126,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
-      override def entryName: String = "@"
+      override def entryName: String = "const"
       override def compilePlain(x: Expr[_]): Expr[_] = Expr.Constant(x.asExpr)
     }
 
