@@ -5,10 +5,6 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.ConfigComponent
 
-trait Drawer[T] {
-  def drawPoint(x: Double, y: Double): T
-}
-
 // TODO do we still need this as a trait?
 trait DrawingDefinition[T] {
   type Config
@@ -19,6 +15,4 @@ trait DrawingDefinition[T] {
   def configCodec: JsonCodec[Config]
 }
 
-object DrawingDefinition {
-  type Aux[T, C] = DrawingDefinition[T] { type Config = C }
-}
+
