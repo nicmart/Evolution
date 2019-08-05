@@ -10,7 +10,7 @@ trait DrawingDefinition[T] {
   type Config
   def name: String
   def initialConfig: Config
-  def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[T]
+  def materialize(ctx: DrawingContext, state: DrawingState[Config]): Iterator[T]
   def configComponent: ConfigComponent[Config]
   def configCodec: JsonCodec[Config]
 }

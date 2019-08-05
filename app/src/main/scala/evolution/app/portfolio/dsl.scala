@@ -88,7 +88,7 @@ object dsl extends DrawingDefinition[Point] {
       .renderBackendWithChildren[Backend]
       .build
 
-  override def stream(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = state.config.expr.map {
+  override def materialize(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = state.config.expr.map {
     expr =>
       data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
   }.getOrElse(Iterator.empty)
