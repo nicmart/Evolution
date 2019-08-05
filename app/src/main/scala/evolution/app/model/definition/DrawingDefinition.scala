@@ -9,6 +9,7 @@ trait Drawer[T] {
   def drawPoint(x: Double, y: Double): T
 }
 
+// TODO do we still need this as a trait?
 trait DrawingDefinition[T] {
   type Config
   def name: String

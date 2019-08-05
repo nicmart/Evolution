@@ -19,7 +19,7 @@ final case class DrawingState[+C](
 object DrawingState {
 
   def jsonCodec[T](definition: DrawingDefinition[T]): JsonCodec[DrawingState[definition.Config]] =
-    new JsonCodec[DrawingState[definition.Config]] {
+    new JsonCodec[DrawingState[definition.Config]] { 
 
       @silent
       implicit private val encoder: Encoder[definition.Config] =

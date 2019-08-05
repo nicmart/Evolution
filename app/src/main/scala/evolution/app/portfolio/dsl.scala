@@ -31,7 +31,7 @@ object dsl extends DrawingDefinition[Point] {
     "top" -> TypeBinding.Variable("top", Qualified(Type.Dbl)),
     "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
   )
-
+ 
   import module.{ Type, TypeInferenceOps, TypeInferenceResult, typeInference }
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because

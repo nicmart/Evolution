@@ -2,7 +2,6 @@ package evolution.app.conf
 
 import evolution.app.canvas.drawer._
 import evolution.app.codec._
-import evolution.app.data.PointedSeq
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.definition.DrawingDefinition
@@ -23,12 +22,9 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  lazy val innerDrawingList: PointedSeq[DrawingDefinition[Point]] =
-    PointedSeq(dsl :: Nil, dsl)
-
   lazy val drawingDefinition: DrawingDefinition[Point] =
-    new DrawingListDefinition(innerDrawingList)
-
+    dsl
+ 
   type DrawingConfig = drawingDefinition.Config
 
   lazy val drawingStateCodec: JsonCodec[DrawingState[DrawingConfig]] =
