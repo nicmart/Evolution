@@ -2,15 +2,17 @@ package evolution.language
 import cats.data.{ ReaderT, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
+import evolution.language.Typer.TypeInference
+import evolution.language.Typer.TypeContext
 
-trait InstancesModule[F[_]] {
-  import Typer._
+object Instances {
+
   type TypeInferenceResult[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], TypeContext, T]
-  implicit val typeInference: TypeInference[TypeInferenceResult] = instance[TypeInferenceResult]
+  implicit val typeInference: TypeInference[TypeInferenceResult] = Typer.instance[TypeInferenceResult]
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
     def evaluateEither(additionalVarTypeBindings: TypeContext = Map.empty): Either[String, T] =
-      t.run(constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty)
+      t.run(Typer.constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty)
 
     def unsafeEvaluate: T =
       evaluateEither().fold(
@@ -19,6 +21,6 @@ trait InstancesModule[F[_]] {
       )
 
     def unsafeEvaluateWith(ctx: TypeContext): T =
-      t.run(constantQualifiedTypes ++ ctx).runA(TypeInference.empty).right.get
+      t.run(Typer.constantQualifiedTypes ++ ctx).runA(TypeInference.empty).right.get
   }
 }

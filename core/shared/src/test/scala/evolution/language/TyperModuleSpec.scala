@@ -3,10 +3,11 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.{ Id, Monad }
 import scala.util.Random
+import TypeClasses._
+import Typer._
+import Instances._
 
 class TyperModuleSpec extends LanguageSpec[Id] {
-  import TypeClasses._
-  import Typer._
 
   // TODO this is to avoid ambiguities. Can we do better than that?
   implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
