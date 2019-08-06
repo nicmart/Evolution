@@ -1,4 +1,5 @@
 package evolution.language
+import evolution.compiler.ast.AST
 import evolution.language.ParserConfig.White._
 import evolution.language.ParserConfig.whitespaces
 import fastparse.noApi._

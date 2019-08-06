@@ -1,7 +1,9 @@
 package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
+import evolution.compiler.ast.AST
 import evolution.data.Expr
+import Typer.TypeInferenceInstances._
 
 object FullModule {
 
@@ -10,8 +12,6 @@ object FullModule {
     expectedType: Type,
     ctx: VarContext
   )(implicit M: Typer.TypeInference[M]): M[Expr[expectedType.Out]] = {
-
-    import Typer.TypeInferenceInstances._
 
     println("Start Compilation")
 

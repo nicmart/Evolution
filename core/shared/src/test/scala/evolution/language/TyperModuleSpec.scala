@@ -6,6 +6,7 @@ import scala.util.Random
 import TypeClasses._
 import Typer._
 import Instances._
+import evolution.compiler.ast.AST
 
 class TyperModuleSpec extends LanguageSpec {
 

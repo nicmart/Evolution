@@ -5,6 +5,7 @@ import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
 import evolution.data.Expr
 import evolution.data.Expr._
+import evolution.compiler.ast.AST
 
 class CompilerModuleSpec extends LanguageSpec {
   import TypeClasses._

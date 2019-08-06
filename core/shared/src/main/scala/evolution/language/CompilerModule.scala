@@ -6,9 +6,9 @@ import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import cats.{ Functor, Monad }
 import evolution.data.Expr
-
-import AST._
 import TypeClasses._
+import evolution.compiler.ast.AST
+import evolution.compiler.ast.AST._
 import evolution.materialization.Evolution
 
 object Compiler {

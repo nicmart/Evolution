@@ -1,4 +1,5 @@
 package evolution.language
+import evolution.compiler.ast.AST
 
 class ASTModuleSpec extends LanguageSpec {
   "An AST" - {

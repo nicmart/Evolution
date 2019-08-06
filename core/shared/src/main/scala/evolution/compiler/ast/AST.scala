@@ -1,12 +1,13 @@
-package evolution.language
+package evolution.compiler.ast
 
-import TypeClasses._
+import evolution.language.TypeClasses.Qualified
+import evolution.language._
 
 sealed trait AST {
   val tpe: Qualified[Type]
   final type Out = tpe.t.Out
 
-  def withType(tpe: Qualified[Type]): AST = this match {
+  final def withType(tpe: Qualified[Type]): AST = this match {
     case AST.Identifier(name, _, isPrimitive) => AST.Identifier(name, tpe, isPrimitive)
     case AST.App(f, x, _)                     => AST.App(f, x, tpe)
     case AST.Lambda(varName, expr, _)         => AST.Lambda(varName, expr, tpe)
@@ -16,9 +17,9 @@ sealed trait AST {
     case AST.Bool(b, _)                       => AST.Bool(b, tpe)
   }
 
-  def withType(tpe: Type): AST = withType(Qualified(tpe))
+  final def withType(tpe: Type): AST = withType(Qualified(tpe))
 
-  def children: List[AST] = this match {
+  final def children: List[AST] = this match {
     case AST.Lambda(_, expr, _)  => List(expr)
     case AST.Let(_, expr, in, _) => List(expr, in)
     case AST.App(f, x, _)        => List(f, x)
