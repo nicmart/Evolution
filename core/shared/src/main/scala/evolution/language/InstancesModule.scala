@@ -3,7 +3,7 @@ import cats.data.{ ReaderT, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
 
-trait InstancesModule[F[_]] { self: TyperModule[F] =>
+trait InstancesModule[F[_]] {
   import Typer._
   type TypeInferenceResult[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], TypeContext, T]
   implicit val typeInference: TypeInference[TypeInferenceResult] = instance[TypeInferenceResult]
