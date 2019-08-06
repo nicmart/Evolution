@@ -1,5 +1,4 @@
 package evolution.language
-import cats.Id
 import cats.implicits._
 import cats.mtl.implicits._
 import cats.kernel.{ Eq, Order }
@@ -7,7 +6,7 @@ import org.scalacheck.Gen
 import evolution.data.Expr
 import evolution.data.Expr._
 
-class CompilerModuleSpec extends LanguageSpec[Id] {
+class CompilerModuleSpec extends LanguageSpec {
   import TypeClasses._
 
   "The compiler" - {

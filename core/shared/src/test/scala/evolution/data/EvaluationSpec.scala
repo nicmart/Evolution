@@ -5,9 +5,10 @@ import evolution.data.EvaluationModule._
 import Expr._
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.typeclass.Semigroupoid
+import evolution.materialization.Evolution
 
 class EvaluationSpec extends FreeSpec with Matchers {
-  type F[T] = EvoRepr[T]
+  type F[T] = Evolution[T]
   "a var0 expression" - {
     "evaluates to the first item in the stack" in {
       val expr = Var[Double]("x")

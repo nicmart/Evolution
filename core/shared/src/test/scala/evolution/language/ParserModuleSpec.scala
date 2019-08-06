@@ -1,9 +1,8 @@
 package evolution.language
-import cats.Id
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 
-class ParserModuleSpec extends LanguageSpec[Id] {
+class ParserModuleSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {

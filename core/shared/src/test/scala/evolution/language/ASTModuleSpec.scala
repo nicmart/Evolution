@@ -1,7 +1,6 @@
 package evolution.language
-import cats.Id
 
-class ASTModuleSpec extends LanguageSpec[Id] {
+class ASTModuleSpec extends LanguageSpec {
   "An AST" - {
     "should recursively transform all the nodes" in {
       def changeNumbers(ast: AST): AST = ast match {

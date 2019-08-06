@@ -21,8 +21,8 @@ import evolution.language.Typer
 import evolution.language.Typer.TypeBinding
 import evolution.language.Type
 import evolution.language.VarContext
-import data.EvaluationModule._
 import evolution.language.Instances._
+import evolution.materialization.Evolution
 
 // This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
@@ -30,7 +30,6 @@ object dsl extends DrawingDefinition[Point] {
   val name = "drawing dsl"
 
   private val predefinedVars = List("left", "bottom", "right", "top")
-  private val module = new FullModule[EvoRepr]
   private val initialVarContext = new VarContext(predefinedVars)
   private val predefinedVarsTypeBindings: Typer.TypeContext = Map(
     "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
@@ -41,14 +40,14 @@ object dsl extends DrawingDefinition[Point] {
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
   // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
-  case class Config(serialisedExpr: String, expr: Option[Expr[EvoRepr[Point]]])
+  case class Config(serialisedExpr: String, expr: Option[Expr[Evolution[Point]]])
 
   object Config {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
-        module
+        FullModule
           .parse[Expr, TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
-          .map(_.asInstanceOf[Expr[EvoRepr[Point]]])
+          .map(_.asInstanceOf[Expr[Evolution[Point]]])
           .evaluateEither(predefinedVarsTypeBindings)
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
@@ -98,15 +97,19 @@ object dsl extends DrawingDefinition[Point] {
       data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
   }.getOrElse(Iterator.empty)
 
-  private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[EvoRepr[Point]]): Expr[EvoRepr[Point]] = {
+  private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[Evolution[Point]]): Expr[Evolution[Point]] = {
     import Expr._
-    Let[Double, EvoRepr[Point]](
+    Let[Double, Evolution[Point]](
       "top",
       Dbl(ctx.top),
-      Let[Double, EvoRepr[Point]](
+      Let[Double, Evolution[Point]](
         "right",
         Dbl(ctx.right),
-        Let[Double, EvoRepr[Point]]("bottom", Dbl(ctx.bottom), Let[Double, EvoRepr[Point]]("left", Dbl(ctx.left), expr))
+        Let[Double, Evolution[Point]](
+          "bottom",
+          Dbl(ctx.bottom),
+          Let[Double, Evolution[Point]]("left", Dbl(ctx.left), expr)
+        )
       )
     )
   }

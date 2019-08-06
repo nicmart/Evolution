@@ -2,7 +2,7 @@ package evolution.language
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-trait ASTArbitraries[F[_]] {
+trait ASTArbitraries {
   import TypeClasses._
   def genFunctionArgs: Gen[List[String]] =
     for {

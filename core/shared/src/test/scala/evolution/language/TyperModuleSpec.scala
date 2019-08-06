@@ -1,13 +1,13 @@
 package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
-import cats.{ Id, Monad }
+import cats.Monad
 import scala.util.Random
 import TypeClasses._
 import Typer._
 import Instances._
 
-class TyperModuleSpec extends LanguageSpec[Id] {
+class TyperModuleSpec extends LanguageSpec {
 
   // TODO this is to avoid ambiguities. Can we do better than that?
   implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
