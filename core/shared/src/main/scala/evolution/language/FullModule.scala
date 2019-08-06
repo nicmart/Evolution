@@ -1,14 +1,15 @@
 package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
+import evolution.data.Expr
 
 object FullModule {
 
-  def parse[R[_], M[_]](
+  def parse[M[_]](
     serialisedExpr: String,
     expectedType: Type,
     ctx: VarContext
-  )(implicit M: Typer.TypeInference[M]): M[R[expectedType.Out]] = {
+  )(implicit M: Typer.TypeInference[M]): M[Expr[expectedType.Out]] = {
 
     import Typer.TypeInferenceInstances._
 
@@ -42,7 +43,7 @@ object FullModule {
       result <- Compiler.compile[M](typedExpr).run(ctx)
       _ = println(s"Compiled to $result")
       _ = println("Done: compilation")
-    } yield result.asInstanceOf[R[expectedType.Out]]
+    } yield result.asInstanceOf[Expr[expectedType.Out]]
   }
 
 }
