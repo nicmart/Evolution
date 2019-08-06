@@ -46,7 +46,7 @@ object dsl extends DrawingDefinition[Point] {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
         FullModule
-          .parse[Expr, TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
+          .parse[TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
           .map(_.asInstanceOf[Expr[Evolution[Point]]])
           .evaluateEither(predefinedVarsTypeBindings)
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
