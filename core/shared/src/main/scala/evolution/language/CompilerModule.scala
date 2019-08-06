@@ -8,7 +8,7 @@ import cats.{ Functor, Monad }
 import evolution.data.Expr
 
 trait CompilerModule[F[_]] {
-  self: ASTModule[F] with PredefinedConstantsModule[F] =>
+  self: ASTModule[F] =>
 
   import AST._
   import TypeClasses._

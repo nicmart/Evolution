@@ -7,7 +7,6 @@ trait LanguageSpec[F[_]]
     with Matchers
     with GeneratorDrivenPropertyChecks
     with CompilerModule[F]
-    with PredefinedConstantsModule[F]
     with TyperModule[F]
     with ParserModule[F]
     with ASTArbitraries[F]
