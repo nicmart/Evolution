@@ -3,7 +3,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
 trait ASTArbitraries[F[_]] {
-  self: ASTModule[F] with ParserModule[F] =>
+  self: ParserModule[F] =>
   import TypeClasses._
   def genFunctionArgs: Gen[List[String]] =
     for {

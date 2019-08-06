@@ -6,7 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ Future, Promise }
 import scala.io.StdIn
 
 object WebServer {
@@ -23,13 +23,13 @@ object WebServer {
       pathSingleSlash {
         getFromResource("public/index-dev.html")
       } ~
-      pathPrefix(Remaining) { file =>
-        // optionally compresses the response with Gzip or Deflate
-        // if the client accepts compressed responses
-        encodeResponse {
-          getFromResource("public/" + file)
+        pathPrefix(Remaining) { file =>
+          // optionally compresses the response with Gzip or Deflate
+          // if the client accepts compressed responses
+          encodeResponse {
+            getFromResource("public/" + file)
+          }
         }
-      }
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", port)
 

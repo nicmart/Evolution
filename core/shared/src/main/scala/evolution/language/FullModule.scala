@@ -2,7 +2,7 @@ package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
 
-class FullModule[F[_]] extends ParserModule[F] with CompilerModule[F] with TyperModule[F] with ASTModule[F] {
+class FullModule[F[_]] extends ParserModule[F] with CompilerModule[F] with TyperModule[F] {
 
   def parse[R[_], M[_]](
     serialisedExpr: String,

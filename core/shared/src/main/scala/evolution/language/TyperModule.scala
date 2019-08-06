@@ -4,10 +4,10 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import cats.{ Applicative, Monad }
+import AST._
+import TypeClasses._
 
-trait TyperModule[F[_]] { self: ASTModule[F] =>
-  import AST._
-  import TypeClasses._
+trait TyperModule[F[_]] {
 
   object Typer {
 

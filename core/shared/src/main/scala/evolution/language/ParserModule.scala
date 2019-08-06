@@ -3,7 +3,7 @@ import evolution.language.ParserConfig.White._
 import evolution.language.ParserConfig.whitespaces
 import fastparse.noApi._
 
-trait ParserModule[F[_]] { self: ASTModule[F] =>
+trait ParserModule[F[_]] {
 
   object Parser {
     def parse(astString: String): Either[ParserFailure, AST] =
