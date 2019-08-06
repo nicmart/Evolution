@@ -1,4 +1,5 @@
-package evolution.language
+package evolution.compiler.phases.parsing
+
 import fastparse.WhitespaceApi
 
 object ParserConfig {

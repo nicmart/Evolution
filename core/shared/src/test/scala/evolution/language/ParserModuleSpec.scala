@@ -2,6 +2,7 @@ package evolution.language
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 import evolution.compiler.ast.AST
+import evolution.compiler.phases.parsing.Parser
 
 class ParserModuleSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

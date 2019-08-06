@@ -1,7 +1,10 @@
-package evolution.language
+package evolution.compiler.phases.parsing
+
 import evolution.compiler.ast.AST
-import evolution.language.ParserConfig.White._
-import evolution.language.ParserConfig.whitespaces
+import evolution.compiler.phases.parsing
+import evolution.compiler.phases.parsing.ParserConfig.White._
+import evolution.compiler.phases.parsing.ParserConfig.whitespaces
+import evolution.language.{ Constant1, Constant2 }
 import fastparse.noApi._
 
 object Parser {
@@ -37,7 +40,7 @@ object Parser {
   }
 
   // Operator groups, order by ascending Precedence
-  private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
+  private lazy val precedenceGroups: PrecedenceGroups = parsing.PrecedenceGroups(
     appOrFactor,
     List(
       PrecedenceGroup(
@@ -128,56 +131,4 @@ object Parser {
 
     lazy val exp: Parser[Unit] = P(CharIn("Ee") ~~ CharIn("+\\-").? ~~ digit.repX(1))
   }
-}
-
-private[language] case class PrecedenceGroup(operators: (String, AST)*) {
-  def parser(next: Parser[AST]): Parser[AST] = P(next ~/ (opsParser ~/ next).rep).map {
-    case (head, tail) => evalAssocBinaryOp(head, tail.toList)
-  }
-
-  private def opsParser: Parser[AST] = operators.foldLeft[Parser[AST]](Fail) {
-    case (accParser, (opString, ast)) =>
-      accParser | P(opString).map(_ => ast)
-  }
-
-  private def evalAssocBinaryOp(head: AST, tail: List[(AST, AST)]): AST =
-    tail match {
-      case Nil                        => head
-      case (op, tailHead) :: tailTail => AST.App(AST.App(op, head), evalAssocBinaryOp(tailHead, tailTail))
-    }
-}
-
-private[language] case class PrecedenceGroups(last: Parser[AST], groups: List[PrecedenceGroup]) {
-  def parser: Parser[AST] = groups.foldRight(last) { (group, accParser) =>
-    group.parser(accParser)
-  }
-
-  def allOperators: List[(String, AST)] = groups.flatMap(group => group.operators)
-}
-
-// TODO Too OOP 😂
-class ParserFailure(index: Int, val extra: Parsed.Failure.Extra[Char, String]) extends Throwable {
-  val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
-  private val lineAndColumn = findLineAndColumn(inputLines, index)
-  val lineNumber: Int = Math.min(lineAndColumn._1, inputLines.length - 1)
-  val line: String = inputLines(lineNumber)
-  val columnNumber: Int = lineAndColumn._2
-
-  private val columnIndicator: String = (" " * (line.length + 1)).updated(columnNumber, '^')
-
-  def message: String =
-    s"""Parsing failed at line ${lineNumber + 1}, column ${columnNumber + 1}:
-       |$line
-       |$columnIndicator""".stripMargin
-
-  override def getMessage: String = message
-
-  private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
-    lines match {
-      case head :: _ if index <= head.length => (0, index)
-      case head :: tail =>
-        val (l, c) = findLineAndColumn(tail, index - head.length - 1)
-        (l + 1, c)
-      case _ => (0, 0)
-    }
 }

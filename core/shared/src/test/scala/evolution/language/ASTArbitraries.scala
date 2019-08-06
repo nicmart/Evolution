@@ -4,6 +4,8 @@ import org.scalacheck.Gen
 import evolution.compiler.ast.AST
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
+import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.parsing.ParserConfig
 
 trait ASTArbitraries {
   def genFunctionArgs: Gen[List[String]] =

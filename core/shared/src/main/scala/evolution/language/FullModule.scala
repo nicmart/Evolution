@@ -4,6 +4,7 @@ import cats.mtl.implicits._
 import evolution.compiler.ast.AST
 import evolution.data.Expr
 import Typer.TypeInferenceInstances._
+import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.types.Type
 
 object FullModule {
