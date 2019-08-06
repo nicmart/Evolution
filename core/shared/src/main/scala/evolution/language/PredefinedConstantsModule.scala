@@ -10,7 +10,7 @@ import evolution.materialization.Evolution
 import scala.collection.immutable
 import scala.language.higherKinds
 
-trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
+trait PredefinedConstantsModule[F[_]] { self =>
   import Type._
   import TypeClasses._
 

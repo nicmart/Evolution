@@ -16,6 +16,8 @@ import japgolly.scalajs.react.{ Callback, PropsChildren }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
+import evolution.language.TypeClasses._
+import evolution.language.Type
 
 // This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
@@ -25,7 +27,7 @@ object dsl extends DrawingDefinition[Point] {
 
   private val predefinedVars = List("left", "bottom", "right", "top")
   private val module = new FullModule[EvoRepr] with InstancesModule[EvoRepr]
-  import module.Typer.TypeBinding, module.TypeClasses.Qualified, module.Type
+  import module.Typer.TypeBinding
   private val initialVarContext = new module.VarContext(predefinedVars)
   private val predefinedVarsTypeBindings: module.Typer.TypeContext = Map(
     "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
@@ -34,7 +36,7 @@ object dsl extends DrawingDefinition[Point] {
     "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
   )
 
-  import module.{ Type, TypeInferenceOps, TypeInferenceResult, typeInference }
+  import module.{ TypeInferenceOps, TypeInferenceResult, typeInference }
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
   // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.

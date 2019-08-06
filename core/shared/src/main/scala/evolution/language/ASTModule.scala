@@ -1,6 +1,6 @@
 package evolution.language
 
-trait ASTModule[F[_]] { self: TypesModule[F] with PredefinedConstantsModule[F] =>
+trait ASTModule[F[_]] { self: PredefinedConstantsModule[F] =>
   import TypeClasses._
 
   sealed trait AST {

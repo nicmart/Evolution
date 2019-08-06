@@ -5,7 +5,7 @@ import cats.mtl.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import cats.{ Applicative, Monad }
 
-trait TyperModule[F[_]] { self: ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
+trait TyperModule[F[_]] { self: ASTModule[F] with PredefinedConstantsModule[F] =>
   import AST._
   import TypeClasses._
 

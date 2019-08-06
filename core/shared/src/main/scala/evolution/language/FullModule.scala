@@ -7,8 +7,7 @@ class FullModule[F[_]]
     with CompilerModule[F]
     with TyperModule[F]
     with ASTModule[F]
-    with PredefinedConstantsModule[F]
-    with TypesModule[F] {
+    with PredefinedConstantsModule[F] {
 
   def parse[R[_], M[_]](
     serialisedExpr: String,
