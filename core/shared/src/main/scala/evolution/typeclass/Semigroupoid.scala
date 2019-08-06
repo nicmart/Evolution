@@ -1,7 +1,7 @@
 package evolution.typeclass
 
 import evolution.geometry.Point
-import evolution.materialization.Iterable
+import evolution.materialization.Evolution
 import cats.kernel.Group
 
 trait Semigroupoid[A, B, C] { self =>
@@ -27,21 +27,21 @@ object Semigroupoid {
     val intPointPoint: Semigroupoid[Int, Point, Point] = (a, b) => b * a
     val pointIntPoint: Semigroupoid[Point, Int, Point] = (a, b) => a * b
 
-    val dblEvoDblEvoDbl: Semigroupoid[Double, Iterable[Double], Iterable[Double]] = (a, b) =>
-      Iterable.map[Double, Double](b, _ * a)
-    val evoDblDblEvoDbl: Semigroupoid[Iterable[Double], Double, Iterable[Double]] = (a, b) =>
-      Iterable.map[Double, Double](a, _ * b)
-    val dblEvoPointEvoPoint: Semigroupoid[Double, Iterable[Point], Iterable[Point]] = (a, b) =>
-      Iterable.map[Point, Point](b, _ * a)
-    val evoPointDblEvoPoint: Semigroupoid[Iterable[Point], Double, Iterable[Point]] = (a, b) =>
-      Iterable.map[Point, Point](a, _ * b)
+    val dblEvoDblEvoDbl: Semigroupoid[Double, Evolution[Double], Evolution[Double]] = (a, b) =>
+      Evolution.map[Double, Double](b, _ * a)
+    val evoDblDblEvoDbl: Semigroupoid[Evolution[Double], Double, Evolution[Double]] = (a, b) =>
+      Evolution.map[Double, Double](a, _ * b)
+    val dblEvoPointEvoPoint: Semigroupoid[Double, Evolution[Point], Evolution[Point]] = (a, b) =>
+      Evolution.map[Point, Point](b, _ * a)
+    val evoPointDblEvoPoint: Semigroupoid[Evolution[Point], Double, Evolution[Point]] = (a, b) =>
+      Evolution.map[Point, Point](a, _ * b)
 
-    val evoDblEvoDblEvoDbl: Semigroupoid[Iterable[Double], Iterable[Double], Iterable[Double]] =
-      (fa, fb) => Iterable.zipWithUncurried[Double, Double, Double]((a, b) => a * b)(fa, fb)
-    val evoPointEvoDblEvoPoint: Semigroupoid[Iterable[Point], Iterable[Double], Iterable[Point]] =
-      (fa, fb) => Iterable.zipWithUncurried[Point, Double, Point]((a, b) => a * b)(fa, fb)
-    val evoDblEvoPointEvoPoint: Semigroupoid[Iterable[Double], Iterable[Point], Iterable[Point]] =
-      (fa, fb) => Iterable.zipWithUncurried[Double, Point, Point]((a, b) => b * a)(fa, fb)
+    val evoDblEvoDblEvoDbl: Semigroupoid[Evolution[Double], Evolution[Double], Evolution[Double]] =
+      (fa, fb) => Evolution.zipWithUncurried[Double, Double, Double]((a, b) => a * b)(fa, fb)
+    val evoPointEvoDblEvoPoint: Semigroupoid[Evolution[Point], Evolution[Double], Evolution[Point]] =
+      (fa, fb) => Evolution.zipWithUncurried[Point, Double, Point]((a, b) => a * b)(fa, fb)
+    val evoDblEvoPointEvoPoint: Semigroupoid[Evolution[Double], Evolution[Point], Evolution[Point]] =
+      (fa, fb) => Evolution.zipWithUncurried[Double, Point, Point]((a, b) => b * a)(fa, fb)
   }
 
   object Additive {
@@ -50,9 +50,9 @@ object Semigroupoid {
     val intDblDbl: Semigroupoid[Int, Double, Double] = (a, b) => a + b
     val dblIntDbl: Semigroupoid[Double, Int, Double] = (a, b) => a + b
     val pointPointPoint: Semigroupoid[Point, Point, Point] = (a, b) => a + b
-    val evoDblEvoDblEvoDbl: Semigroupoid[Iterable[Double], Iterable[Double], Iterable[Double]] =
-      (a, b) => Iterable.zipWithUncurried[Double, Double, Double]((x, y) => x + y)(a, b)
-    val evoPointEvoPointEvoPoint: Semigroupoid[Iterable[Point], Iterable[Point], Iterable[Point]] =
-      (a, b) => Iterable.zipWithUncurried[Point, Point, Point]((x, y) => x + y)(a, b)
+    val evoDblEvoDblEvoDbl: Semigroupoid[Evolution[Double], Evolution[Double], Evolution[Double]] =
+      (a, b) => Evolution.zipWithUncurried[Double, Double, Double]((x, y) => x + y)(a, b)
+    val evoPointEvoPointEvoPoint: Semigroupoid[Evolution[Point], Evolution[Point], Evolution[Point]] =
+      (a, b) => Evolution.zipWithUncurried[Point, Point, Point]((x, y) => x + y)(a, b)
   }
 }

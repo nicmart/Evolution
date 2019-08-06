@@ -197,7 +197,7 @@ class TyperModuleSpec extends LanguageSpec[Id] {
 
       subst shouldBe Some(Substitution.empty)
     }
- 
+
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
       val subst = PredicatesUnifier.unify(instances, instances.take(1))
 

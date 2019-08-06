@@ -8,6 +8,7 @@ import cats.mtl.FunctorRaise
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Semigroupoid._
 import evolution.typeclass.Invertible
+import evolution.materialization.Evolution
 
 trait TypesModule[F[_]] {
 
@@ -33,7 +34,7 @@ trait TypesModule[F[_]] {
     final case object Dbl extends Type { type Out = Double }
     final case object Point extends Type { type Out = geometry.Point }
     final case object Bool extends Type { type Out = Boolean }
-    final case class Evo(inner: Type) extends Type { type Out = F[inner.type] }
+    final case class Evo(inner: Type) extends Type { type Out = Evolution[inner.type] }
     final case class Lst(inner: Type) extends Type { type Out = List[inner.type] }
     final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
 

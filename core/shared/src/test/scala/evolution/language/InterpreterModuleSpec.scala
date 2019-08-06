@@ -3,9 +3,9 @@ import cats.Eq
 import cats.implicits._
 import cats.kernel.Order
 import evolution.data.EvaluationContext._
-import evolution.data.ExpressionModule
 import evolution.geometry.Point
-import evolution.materialization.Iterable
+import evolution.data.Expr
+import evolution.data.Expr._
 import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
@@ -13,9 +13,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 
 class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
   // TODO Rubbish, rubbish, rubbish!!!
-  val interpreter = new IterableInterpreterModule with ExpressionModule[Iterable] {}
-  import interpreter.Expr
-  import interpreter.Expr._
+  val interpreter = new InterpreterModule {}
   import interpreter.Interpreter._
 
   "The interpreter" - {

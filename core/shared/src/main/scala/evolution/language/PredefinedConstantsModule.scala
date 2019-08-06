@@ -4,13 +4,13 @@ import cats.mtl.FunctorRaise
 import cats.{ Applicative, Monad }
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
-import evolution.data.ExpressionModule
+import evolution.data.Expr
 import evolution.geometry.Point
-
+import evolution.materialization.Evolution
 import scala.collection.immutable
 import scala.language.higherKinds
 
-trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModule[F] =>
+trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] =>
   import Type._
   import TypeClasses._
 
@@ -135,11 +135,11 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     }
 
     case object Flatten extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
-      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[F[Any]])
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[Evolution[Any]])
     }
 
     case object Parallel extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
-      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Parallel(x.asExprF[F[Any]])
+      override def compilePlain(x: Expr[_]): Expr[_] = Expr.Parallel(x.asExprF[Evolution[Any]])
     }
 
     case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -185,7 +185,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object LiftedPoint extends Constant2Plain(Qualified(Evo(Dbl) =>: Evo(Dbl) =>: Evo(Type.Point))) {
       override def entryName: String = "@point"
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        Expr.LiftedPnt(x.asExprF, y.asExprF).asExpr[F[_]]
+        Expr.LiftedPnt(x.asExprF, y.asExprF).asExpr[Evolution[_]]
     }
 
     case object Polar extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
@@ -322,13 +322,14 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
         ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapCons(
         x.asExprF,
-        y.asExpr[Any => F[Any] => F[Any]]
+        y.asExpr[Any => Evolution[Any] => Evolution[Any]]
       )
     }
 
     case object WithFirst
         extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
-      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.WithFirst(x.asExprF, y.asExpr[Any => F[Any]])
+      override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+        Expr.WithFirst(x.asExprF, y.asExpr[Any => Evolution[Any]])
     }
 
     case object WithFirst2
@@ -336,7 +337,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
           Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
         ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        Expr.WithFirst2(x.asExprF, y.asExpr[Any => Any => F[Any]])
+        Expr.WithFirst2(x.asExprF, y.asExpr[Any => Any => Evolution[Any]])
     }
 
     case object WithFirst3
@@ -344,7 +345,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
           Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
         ) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        Expr.WithFirst3(x.asExprF, y.asExpr[Any => Any => Any => F[Any]])
+        Expr.WithFirst3(x.asExprF, y.asExpr[Any => Any => Any => Evolution[Any]])
     }
 
     case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -397,7 +398,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
     case object FlatMap
         extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
       override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-        Expr.FlatMap(x.asExprF, y.asExpr[Any => F[Any]])
+        Expr.FlatMap(x.asExprF, y.asExpr[Any => Evolution[Any]])
     }
 
     case object Take extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -509,7 +510,7 @@ trait PredefinedConstantsModule[F[_]] { self: TypesModule[F] with ExpressionModu
 
   implicit class CastingOps(value: Expr[_]) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
-    def asExprF[T]: Expr[F[T]] = value.asInstanceOf[Expr[F[T]]]
+    def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]
   }
 
   def fromEither[M[_], T](e: Either[String, T])(implicit M: Applicative[M], E: FunctorRaise[M, String]): M[T] =

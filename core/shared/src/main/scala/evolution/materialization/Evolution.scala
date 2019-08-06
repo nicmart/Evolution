@@ -8,33 +8,33 @@ import scala.util.Random
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 
-sealed trait Iterable[+T] {
+sealed trait Evolution[+T] {
   def run: Iterator[T]
 }
 
-object Iterable {
+object Evolution {
 
-  val empty: Iterable[Nothing] = new Iterable[Nothing] {
+  val empty: Evolution[Nothing] = new Evolution[Nothing] {
     val run: Iterator[Nothing] = Iterator.empty
   }
 
-  def constant[T](t: T): Iterable[T] = new Iterable[T] {
+  def constant[T](t: T): Evolution[T] = new Evolution[T] {
     val run: Iterator[T] = new AbstractIterator[T] {
       def hasNext = true
       def next = t
     }
   }
 
-  def cons[T](head: T, tail: => Iterable[T]): Iterable[T] = new Iterable[T] {
+  def cons[T](head: T, tail: => Evolution[T]): Evolution[T] = new Evolution[T] {
     def run: Iterator[T] = Iterator.single(head) ++ tail.run
   }
 
-  def concat[T](it1: Iterable[T], it2: Iterable[T]): Iterable[T] =
-    new Iterable[T] {
+  def concat[T](it1: Evolution[T], it2: Evolution[T]): Evolution[T] =
+    new Evolution[T] {
       def run: Iterator[T] = it1.run ++ it2.run
     }
 
-  def mapEmpty[T](it1: Iterable[T], it2: Iterable[T]): Iterable[T] = new Iterable[T] {
+  def mapEmpty[T](it1: Evolution[T], it2: Evolution[T]): Evolution[T] = new Evolution[T] {
     def run: Iterator[T] = {
       val iterator1 = it1.run
       val iterator1HasNext = iterator1.hasNext
@@ -43,48 +43,48 @@ object Iterable {
     }
   }
 
-  def mapCons[A, B](it1: Iterable[A], f: A => Iterable[A] => Iterable[B]): Iterable[B] =
-    new Iterable[B] {
+  def mapCons[A, B](it1: Evolution[A], f: A => Evolution[A] => Evolution[B]): Evolution[B] =
+    new Evolution[B] {
       def run: Iterator[B] = {
         val iterator1 = it1.run
         val iterator1HasNext = iterator1.hasNext
         if (iterator1HasNext) {
           val head = iterator1.next()
-          val tail = new Iterable[A] { val run = iterator1 }
+          val tail = new Evolution[A] { val run = iterator1 }
           f(head)(tail).run
         } else empty.run
       }
     }
 
-  def range(start: Double, end: Double, step: Double): Iterable[Double] =
-    new Iterable[Double] {
+  def range(start: Double, end: Double, step: Double): Evolution[Double] =
+    new Evolution[Double] {
       def run: Iterator[Double] =
         (start to end by step).toIterator
     }
 
-  def uniform(from: Double, to: Double): Iterable[Double] = new Iterable[Double] {
+  def uniform(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(from + Random.nextDouble() * (to - from))
   }
 
-  def uniformFrom[T](n: Int, ts: Iterable[T]): Iterable[T] = new Iterable[T] {
+  def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] = new Evolution[T] {
     def run: Iterator[T] = {
       val materializedTs = ts.run.take(n).toList
       Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
     }
   }
 
-  def uniformDiscrete(from: Double, to: Double, step: Double): Iterable[Double] =
-    new Iterable[Double] {
+  def uniformDiscrete(from: Double, to: Double, step: Double): Evolution[Double] =
+    new Evolution[Double] {
       private val size = ((to - from) / step).toInt + 1
       def run: Iterator[Double] = Iterator.continually(from + Random.nextInt(size) * step)
     }
 
-  def normal(mu: Double, gamma: Double): Iterable[Double] = new Iterable[Double] {
+  def normal(mu: Double, gamma: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(Random.nextGaussian() * gamma + mu)
   }
 
-  def zipWith[A, B, C](fa: Iterable[A], fb: Iterable[B], f: A => B => C): Iterable[C] =
-    new Iterable[C] {
+  def zipWith[A, B, C](fa: Evolution[A], fb: Evolution[B], f: A => B => C): Evolution[C] =
+    new Evolution[C] {
       def run: Iterator[C] = new AbstractIterator[C] {
         private val it1 = fa.run
         private val it2 = fb.run
@@ -93,8 +93,8 @@ object Iterable {
       }
     }
 
-  def zipWithUncurried[A, B, C](f: (A, B) => C)(fa: Iterable[A], fb: Iterable[B]): Iterable[C] =
-    new Iterable[C] {
+  def zipWithUncurried[A, B, C](f: (A, B) => C)(fa: Evolution[A], fb: Evolution[B]): Evolution[C] =
+    new Evolution[C] {
       def run: Iterator[C] = new AbstractIterator[C] {
         val it1 = fa.run
         val it2 = fb.run
@@ -103,38 +103,38 @@ object Iterable {
       }
     }
 
-  def take[A](n: Int, fa: Iterable[A]): Iterable[A] = new Iterable[A] {
+  def take[A](n: Int, fa: Evolution[A]): Evolution[A] = new Evolution[A] {
     def run: Iterator[A] = fa.run.take(n)
   }
 
-  def takeWhile[A](fa: Iterable[A], predicate: A => Boolean): Iterable[A] = new Iterable[A] {
+  def takeWhile[A](fa: Evolution[A], predicate: A => Boolean): Evolution[A] = new Evolution[A] {
     def run: Iterator[A] = fa.run.takeWhile(predicate)
   }
 
-  def map[A, B](fa: Iterable[A], f: A => B): Iterable[B] = new Iterable[B] {
+  def map[A, B](fa: Evolution[A], f: A => B): Evolution[B] = new Evolution[B] {
     def run: Iterator[B] = fa.run.map(f)
   }
 
-  def flatMap[A, B](fa: Iterable[A], f: A => Iterable[B]): Iterable[B] = new Iterable[B] {
+  def flatMap[A, B](fa: Evolution[A], f: A => Evolution[B]): Evolution[B] = new Evolution[B] {
     def run: Iterator[B] = fa.run.flatMap(a => f(a).run)
   }
 
-  def flatten[A, B](fa: Iterable[Iterable[A]]): Iterable[A] = new Iterable[A] {
+  def flatten[A, B](fa: Evolution[Evolution[A]]): Evolution[A] = new Evolution[A] {
     def run: Iterator[A] = fa.run.flatMap(_.run)
   }
 
-  def parallel[A](ffa: Iterable[Iterable[A]]): Iterable[A] = new Iterable[A] {
+  def parallel[A](ffa: Evolution[Evolution[A]]): Evolution[A] = new Evolution[A] {
     override def run: Iterator[A] =
       new AbstractIterator[A] {
-        private val iteratorOfIterables = ffa.run
+        private val iteratorOfEvolutions = ffa.run
         private val iterators: ArrayBuffer[Iterator[A]] = ArrayBuffer.empty
         private var currentIndex = 0
         private var outerIterationEnded = false
         override def hasNext: Boolean = {
           if (outerIterationEnded) iterators(currentIndex).hasNext
           else {
-            if (iteratorOfIterables.hasNext) {
-              iterators.append(iteratorOfIterables.next().run)
+            if (iteratorOfEvolutions.hasNext) {
+              iterators.append(iteratorOfEvolutions.next().run)
               iterators.last.hasNext
             } else {
               outerIterationEnded = true
@@ -155,8 +155,8 @@ object Iterable {
 
   }
 
-  def integrate[A](start: A, speed: Iterable[A], semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
-    new Iterable[A] {
+  def integrate[A](start: A, speed: Evolution[A], semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+    new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
         private var _hasNext = true
@@ -176,8 +176,8 @@ object Iterable {
       }
     }
 
-  def derive[A](as: Iterable[A], sg: Semigroupoid.Semigroup[A], inv: Invertible[A]): Iterable[A] =
-    new Iterable[A] {
+  def derive[A](as: Evolution[A], sg: Semigroupoid.Semigroup[A], inv: Invertible[A]): Evolution[A] =
+    new Evolution[A] {
       override def run: Iterator[A] = {
         val derivingIterator: Iterator[A] = as.run
         if (derivingIterator.hasNext) {
@@ -197,12 +197,12 @@ object Iterable {
 
   // TODO DRY with derivative?
   def mapWithDerivative[A, B](
-    as: Iterable[A],
+    as: Evolution[A],
     f: A => A => B,
     sg: Semigroupoid.Semigroup[A],
     inv: Invertible[A]
-  ): Iterable[B] =
-    new Iterable[B] {
+  ): Evolution[B] =
+    new Evolution[B] {
       override def run: Iterator[B] = {
         val derivingIterator: Iterator[A] = as.run
         if (derivingIterator.hasNext) {
@@ -221,8 +221,8 @@ object Iterable {
     }
 
   // TODO DRY, see integrate
-  def solve1[A](speed: Iterable[A => A], start: A, semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
-    new Iterable[A] {
+  def solve1[A](speed: Evolution[A => A], start: A, semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+    new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
         private var _hasNext = true
@@ -242,8 +242,8 @@ object Iterable {
       }
     }
 
-  def solve2[A](acc: Iterable[A => A => A], a0: A, v0: A, semigroupoid: Semigroupoid[A, A, A]): Iterable[A] =
-    new Iterable[A] {
+  def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+    new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val accIterator = acc.run
         private var _hasNext = true
@@ -266,7 +266,7 @@ object Iterable {
       }
     }
 
-  def withFirst1[A, B](ts: Iterable[A], f: A => Iterable[B]): Iterable[B] = new Iterable[B] {
+  def withFirst1[A, B](ts: Evolution[A], f: A => Evolution[B]): Evolution[B] = new Evolution[B] {
     override def run: Iterator[B] =
       ts.run.take(1).toList match {
         case a1 :: Nil => f(a1).run
@@ -274,7 +274,7 @@ object Iterable {
       }
   }
 
-  def withFirst2[A, B](ts: Iterable[A], f: A => A => Iterable[B]): Iterable[B] = new Iterable[B] {
+  def withFirst2[A, B](ts: Evolution[A], f: A => A => Evolution[B]): Evolution[B] = new Evolution[B] {
     override def run: Iterator[B] =
       ts.run.take(2).toList match {
         case a1 :: a2 :: Nil => f(a1)(a2).run
@@ -282,7 +282,7 @@ object Iterable {
       }
   }
 
-  def withFirst3[A, B](ts: Iterable[A], f: A => A => A => Iterable[B]): Iterable[B] = new Iterable[B] {
+  def withFirst3[A, B](ts: Evolution[A], f: A => A => A => Evolution[B]): Evolution[B] = new Evolution[B] {
     override def run: Iterator[B] =
       ts.run.take(3).toList match {
         case a1 :: a2 :: a3 :: Nil => f(a1)(a2)(a3).run
@@ -290,13 +290,13 @@ object Iterable {
       }
   }
 
-  def shuffle[T](ts: List[T]): Iterable[List[T]] = new Iterable[List[T]] {
+  def shuffle[T](ts: List[T]): Evolution[List[T]] = new Evolution[List[T]] {
     def run: Iterator[List[T]] = Iterator.continually(Random.shuffle(ts))
   }
 
   private val range: List[Int] = (0 to 255).toList
 
-  val noiseIterable: Iterable[Point => Double] =
+  val noiseEvolution: Evolution[Point => Double] =
     map(
       shuffle(range),
       (permutation: List[Int]) => {
@@ -305,7 +305,7 @@ object Iterable {
       }
     )
 
-  val octaveNoiseIterable: Iterable[Int => Double => Point => Double] =
+  val octaveNoiseEvolution: Evolution[Int => Double => Point => Double] =
     map(
       shuffle(range),
       (permutation: List[Int]) => {

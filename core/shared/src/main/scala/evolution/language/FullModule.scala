@@ -1,12 +1,10 @@
 package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
-import evolution.data.ExpressionModule
 
 class FullModule[F[_]]
     extends ParserModule[F]
     with CompilerModule[F]
-    with ExpressionModule[F]
     with TyperModule[F]
     with ASTModule[F]
     with PredefinedConstantsModule[F]

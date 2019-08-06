@@ -5,10 +5,10 @@ import cats.implicits._
 import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import cats.{ Functor, Monad }
-import evolution.data.ExpressionModule
+import evolution.data.Expr
 
 trait CompilerModule[F[_]] {
-  self: ExpressionModule[F] with ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
+  self: ASTModule[F] with TypesModule[F] with PredefinedConstantsModule[F] =>
 
   import AST._
   import TypeClasses._

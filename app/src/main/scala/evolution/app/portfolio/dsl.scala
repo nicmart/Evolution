@@ -9,6 +9,7 @@ import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
 import evolution.data
+import evolution.data.Expr
 import evolution.geometry.Point
 import evolution.language.{ FullModule, InstancesModule }
 import japgolly.scalajs.react.{ Callback, PropsChildren }
@@ -16,6 +17,7 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 
+// This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
   import data.EvaluationModule._
 
@@ -31,7 +33,7 @@ object dsl extends DrawingDefinition[Point] {
     "top" -> TypeBinding.Variable("top", Qualified(Type.Dbl)),
     "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
   )
- 
+
   import module.{ Type, TypeInferenceOps, TypeInferenceResult, typeInference }
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because

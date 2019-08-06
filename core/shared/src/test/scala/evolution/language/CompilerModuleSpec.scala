@@ -4,9 +4,11 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
+import evolution.data.Expr
+import evolution.data.Expr._
 
 class CompilerModuleSpec extends LanguageSpec[Id] {
-  import Expr._, TypeClasses._
+  import TypeClasses._
 
   "The compiler" - {
     "should successfully compile" - {
@@ -102,7 +104,7 @@ class CompilerModuleSpec extends LanguageSpec[Id] {
               AST.Identifier("z")
             ),
             new VarContext(List("x", "y", "z"))
-          ) shouldBe ZipWith(Var[Any]("x"), Var[Any]("y"), Var[Any => Any => Any]("z"))
+          ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
         }
       }
     }

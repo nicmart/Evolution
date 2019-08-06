@@ -1,7 +1,7 @@
 package evolution.typeclass
 
 import evolution.geometry.Point
-import evolution.materialization.Iterable
+import evolution.materialization.Evolution
 
 trait Invertible[A] {
   def inverse(a: A): A
@@ -21,12 +21,12 @@ object Invertible {
       def inverse(a: Point): Point = -a
     }
 
-    val dblEvoInvertible: Invertible[Iterable[Double]] = new Invertible[Iterable[Double]] {
-      def inverse(a: Iterable[Double]): Iterable[Double] = Iterable.map[Double, Double](a, -_)
+    val dblEvoInvertible: Invertible[Evolution[Double]] = new Invertible[Evolution[Double]] {
+      def inverse(a: Evolution[Double]): Evolution[Double] = Evolution.map[Double, Double](a, -_)
     }
 
-    val pointEvoInvertible: Invertible[Iterable[Point]] = new Invertible[Iterable[Point]] {
-      def inverse(a: Iterable[Point]): Iterable[Point] = Iterable.map[Point, Point](a, -_)
+    val pointEvoInvertible: Invertible[Evolution[Point]] = new Invertible[Evolution[Point]] {
+      def inverse(a: Evolution[Point]): Evolution[Point] = Evolution.map[Point, Point](a, -_)
     }
   }
 }

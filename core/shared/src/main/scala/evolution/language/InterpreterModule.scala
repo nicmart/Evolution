@@ -1,27 +1,31 @@
 package evolution.language
+
+import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
-import evolution.data.{ Ctx, ExpressionModule }
+import evolution.data.Ctx
+import evolution.data.Expr
 import evolution.geometry.Point
-import evolution.materialization.Iterable
 
 // TODO this is an implementation
-trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
-  type Out[T] = IterableInterpreterModule.Contextual[T]
+trait InterpreterModule {
+  type Out[+T] = InterpreterModule.Contextual[T]
   import Expr._
-  import IterableInterpreterModule._
-
+  import InterpreterModule._
   object Interpreter {
 
     def interpret[T](expr: Expr[T]): Out[T] = {
       expr match {
-        case Dbl(d)            => Contextual.Pure(d)
-        case Floor(d)          => interpret(d).map(_.toInt)
-        case ToDbl(n)          => interpret(n).map(_.toDouble)
-        case Integer(n)        => Contextual.Pure(n)
-        case Pnt(x, y)         => interpret2(x, y)(Point.apply)
-        case LiftedPnt(x, y)   => interpret2(x, y)(Iterable.zipWithUncurried(Point.apply))
+        case Dbl(d)     => Contextual.Pure(d)
+        case Floor(d)   => interpret(d).map(_.toInt)
+        case ToDbl(n)   => interpret(n).map(_.toDouble)
+        case Integer(n) => Contextual.Pure(n)
+        case Pnt(x, y)  => interpret2(x, y)(Point.apply)
+        case LiftedPnt(x, y) =>
+          interpret2[Evolution[Double], Evolution[Double], Evolution[Point]](x, y)(
+            Evolution.zipWithUncurried(Point.apply)
+          )
         case Polar(x, y)       => interpret2(x, y)(Point.polar)
-        case LiftedPolar(x, y) => interpret2(x, y)(Iterable.zipWithUncurried(Point.polar))
+        case LiftedPolar(x, y) => interpret2(x, y)(Evolution.zipWithUncurried(Point.polar))
         case X(p)              => interpret1(p)(_.x)
         case Y(p)              => interpret1(p)(_.y)
         case Norm(p)           => interpret1(p)(_.norm)
@@ -36,7 +40,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
             if (ca >= 0) ca % cb else (ca % cb) + cb
           }
         case e @ Inverse(_, _)     => interpret1(e.t)(e.inv.inverse)
-        case e @ Minus(_, _, _, _)  => interpret2(e.a, e.b)((a, b) => e.sg.combine(a, e.inv.inverse(b)))
+        case e @ Minus(_, _, _, _) => interpret2(e.a, e.b)((a, b) => e.sg.combine(a, e.inv.inverse(b)))
         case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
         case Sin(d)                => interpret1(d)(Math.sin)
         case Cos(d)                => interpret1(d)(Math.cos)
@@ -91,9 +95,8 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
 
         case App(f, a) => interpret2(f, a)(_(_))
 
-        // Detect constant evolutions
         case Expr.Constant(t) =>
-          interpret1(t)(Iterable.constant)
+          interpret1(t)(Evolution.constant)
 
         case Fix(Lambda(name, lambdaBody)) =>
           val interpretedBody = interpret(lambdaBody)
@@ -107,7 +110,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
         case Fix(_) => ???
 
         case Empty() =>
-          Contextual.Pure(Iterable.empty)
+          Contextual.Pure(Evolution.empty)
 
         // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
         // recursive definitions
@@ -116,77 +119,77 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
           val interpretedTail = interpret(tail)
           new Contextual.WithContext[T] {
             override def apply(ctx: Ctx): T = {
-              Iterable.cons(interpretedHead(ctx), interpretedTail(ctx))
+              Evolution.cons(interpretedHead(ctx), interpretedTail(ctx))
             }
           }
 
         case Concat(ev1, ev2) =>
-          interpret2(ev1, ev2)(Iterable.concat)
+          interpret2(ev1, ev2)(Evolution.concat)
 
         case MapEmpty(ev1, ev2) =>
-          interpret2(ev1, ev2)(Iterable.mapEmpty)
+          interpret2(ev1, ev2)(Evolution.mapEmpty)
 
         case MapCons(eva, f) =>
-          interpret2(eva, f)(Iterable.mapCons)
+          interpret2(eva, f)(Evolution.mapCons)
 
         case ZipWith(fa, fb, f) =>
-          interpret3(fa, fb, f)(Iterable.zipWith)
+          interpret3(fa, fb, f)(Evolution.zipWith)
 
         case Take(nExpr, faExpr) =>
-          interpret2(nExpr, faExpr)(Iterable.take)
+          interpret2(nExpr, faExpr)(Evolution.take)
 
         case TakeWhile(fa, p) =>
-          interpret2(fa, p)(Iterable.takeWhile)
+          interpret2(fa, p)(Evolution.takeWhile)
 
         case WithFirst(as, f) =>
-          interpret2(as, f)(Iterable.withFirst1)
+          interpret2(as, f)(Evolution.withFirst1)
 
         case WithFirst2(as, f) =>
-          interpret2(as, f)(Iterable.withFirst2)
+          interpret2(as, f)(Evolution.withFirst2)
 
         case WithFirst3(as, f) =>
-          interpret2(as, f)(Iterable.withFirst3)
+          interpret2(as, f)(Evolution.withFirst3)
 
-        case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Iterable.flatMap)
+        case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Evolution.flatMap)
 
-        case Flatten(ffa) => interpret1(ffa)(Iterable.flatten)
+        case Flatten(ffa) => interpret1(ffa)(Evolution.flatten)
 
-        case Parallel(ffa) => interpret1(ffa)(Iterable.parallel)
+        case Parallel(ffa) => interpret1(ffa)(Evolution.parallel)
 
-        case Map(fa, f) => interpret2(fa, f)(Iterable.map)
+        case Map(fa, f) => interpret2(fa, f)(Evolution.map)
 
-        case MapWithDerivative(fa, f, sg, inv) => interpret2(fa, f)(Iterable.mapWithDerivative(_, _, sg, inv))
+        case MapWithDerivative(fa, f, sg, inv) => interpret2(fa, f)(Evolution.mapWithDerivative(_, _, sg, inv))
 
-        case Range(from, to, step) => interpret3(from, to, step)(Iterable.range)
+        case Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
 
         case Uniform(from, to) =>
-          interpret2(from, to)(Iterable.uniform)
+          interpret2(from, to)(Evolution.uniform)
 
         case UniformDiscrete(from, to, step) =>
-          interpret3(from, to, step)(Iterable.uniformDiscrete)
+          interpret3(from, to, step)(Evolution.uniformDiscrete)
 
         case UniformFrom(n, ft) =>
-          interpret2(n, ft)(Iterable.uniformFrom)
+          interpret2(n, ft)(Evolution.uniformFrom)
 
         case Integrate(startExpr, speedExpr, semigroup) =>
-          interpret2(startExpr, speedExpr)((start, speed) => Iterable.integrate(start, speed, semigroup))
+          interpret2(startExpr, speedExpr)((start, speed) => Evolution.integrate(start, speed, semigroup))
 
         case Solve1(speedExpr, startExpr, semigroup) =>
-          interpret2(speedExpr, startExpr)((speed, start) => Iterable.solve1(speed, start, semigroup))
+          interpret2(speedExpr, startExpr)((speed, start) => Evolution.solve1(speed, start, semigroup))
 
         case Solve2(accExpr, startExpr, speedExpr, semigroup) =>
           interpret3(accExpr, startExpr, speedExpr)(
-            (acc, start, speed) => Iterable.solve2(acc, start, speed, semigroup)
+            (acc, start, speed) => Evolution.solve2(acc, start, speed, semigroup)
           )
 
-        case Derive(t, sg, inv) => interpret1(t)(Iterable.derive(_, sg, inv))
+        case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, sg, inv))
 
         case Normal(μ, σ) =>
-          interpret2(μ, σ)(Iterable.normal)
+          interpret2(μ, σ)(Evolution.normal)
 
-        case Noise() => Contextual.Pure(Iterable.noiseIterable)
+        case Noise() => Contextual.Pure(Evolution.noiseEvolution)
 
-        case OctaveNoise() => Contextual.Pure(Iterable.octaveNoiseIterable)
+        case OctaveNoise() => Contextual.Pure(Evolution.octaveNoiseEvolution)
       }
     }
 
@@ -201,7 +204,7 @@ trait IterableInterpreterModule { self: ExpressionModule[Iterable] =>
   }
 }
 
-object IterableInterpreterModule {
+object InterpreterModule {
   sealed trait Contextual[+T] { self =>
     def apply(ctx: Ctx): T
     final def map[S](f: T => S): Contextual[S] = Contextual.map(this, f)

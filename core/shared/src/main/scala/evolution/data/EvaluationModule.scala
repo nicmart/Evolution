@@ -1,11 +1,11 @@
 package evolution.data
+import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
-import evolution.language.IterableInterpreterModule
-import evolution.materialization.Iterable
+import evolution.language.InterpreterModule
 
 import scala.util.Random
 
-trait EvaluationModule[F[_]] extends ExpressionModule[F] {
+trait EvaluationModule[F[_]] {
   type Result[T]
   type EvoRepr[T] = F[T]
 
@@ -24,16 +24,13 @@ trait EvaluationModule[F[_]] extends ExpressionModule[F] {
 
 }
 
-private[data] object IterableEvaluationModuleImpl
-    extends EvaluationModule[Iterable]
-    with IterableInterpreterModule
-    with ExpressionModule[Iterable] {
+private[data] object EvaluationModuleImpl extends EvaluationModule[Evolution] with InterpreterModule {
   override type Result[T] = Out[T]
 
   override def interpret[T](expr: Expr[T]): Out[T] =
     Interpreter.interpret(expr)
   override def newSeed: Long = Random.nextLong()
-  override def materializeWith[T](seed: Long, fa: Result[Iterable[T]], ctx: Ctx): Iterator[T] = {
+  override def materializeWith[T](seed: Long, fa: Result[Evolution[T]], ctx: Ctx): Iterator[T] = {
     Random.setSeed(seed)
     fa(ctx).run
   }
