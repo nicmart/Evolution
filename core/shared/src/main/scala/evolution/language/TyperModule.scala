@@ -4,9 +4,10 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import cats.{ Applicative, Monad }
-import TypeClasses._
+import evolution.compiler.types.TypeClasses._
 import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
+import evolution.compiler.types.Type
 
 object Typer {
 

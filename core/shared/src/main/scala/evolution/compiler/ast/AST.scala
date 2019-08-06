@@ -1,6 +1,7 @@
 package evolution.compiler.ast
 
-import evolution.language.TypeClasses.Qualified
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses.Qualified
 import evolution.language._
 
 sealed trait AST {

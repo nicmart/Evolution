@@ -2,9 +2,10 @@ package evolution.language
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import evolution.compiler.ast.AST
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.Type
 
 trait ASTArbitraries {
-  import TypeClasses._
   def genFunctionArgs: Gen[List[String]] =
     for {
       n <- Gen.choose(1, 6)

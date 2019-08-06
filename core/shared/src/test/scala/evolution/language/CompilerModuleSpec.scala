@@ -6,9 +6,10 @@ import org.scalacheck.Gen
 import evolution.data.Expr
 import evolution.data.Expr._
 import evolution.compiler.ast.AST
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.Type
 
 class CompilerModuleSpec extends LanguageSpec {
-  import TypeClasses._
 
   "The compiler" - {
     "should successfully compile" - {

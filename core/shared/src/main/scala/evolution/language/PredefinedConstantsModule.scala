@@ -7,12 +7,13 @@ import enumeratum.{ Enum, EnumEntry }
 import evolution.data.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
+
 import scala.collection.immutable
 import scala.language.higherKinds
-
-import Type._
-import TypeClasses._
+import evolution.compiler.types.TypeClasses._
 import Constant._
+import evolution.compiler.types.{ Type, TypeClasses, Typed }
+import Type._
 
 abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
 

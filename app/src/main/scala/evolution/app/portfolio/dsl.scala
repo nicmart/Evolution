@@ -8,18 +8,18 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
+import evolution.compiler.types.Type
 import evolution.data
 import evolution.data.Expr
 import evolution.geometry.Point
-import evolution.language.{ FullModule }
+import evolution.language.FullModule
 import japgolly.scalajs.react.{ Callback, PropsChildren }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
-import evolution.language.TypeClasses._
+import evolution.compiler.types.TypeClasses._
 import evolution.language.Typer
 import evolution.language.Typer.TypeBinding
-import evolution.language.Type
 import evolution.language.VarContext
 import evolution.language.Instances._
 import evolution.materialization.Evolution

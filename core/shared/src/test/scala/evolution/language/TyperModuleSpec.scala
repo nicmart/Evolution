@@ -3,7 +3,8 @@ import cats.implicits._
 import cats.mtl.implicits._
 import cats.Monad
 import scala.util.Random
-import TypeClasses._
+import evolution.compiler.types._
+import evolution.compiler.types.TypeClasses._
 import Typer._
 import Instances._
 import evolution.compiler.ast.AST
