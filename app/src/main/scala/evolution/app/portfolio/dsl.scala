@@ -18,6 +18,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import evolution.language.TypeClasses._
 import evolution.language.Type
+import evolution.language.VarContext
 
 // This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
@@ -28,7 +29,7 @@ object dsl extends DrawingDefinition[Point] {
   private val predefinedVars = List("left", "bottom", "right", "top")
   private val module = new FullModule[EvoRepr] with InstancesModule[EvoRepr]
   import module.Typer.TypeBinding
-  private val initialVarContext = new module.VarContext(predefinedVars)
+  private val initialVarContext = new VarContext(predefinedVars)
   private val predefinedVarsTypeBindings: module.Typer.TypeContext = Map(
     "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
     "right" -> TypeBinding.Variable("right", Qualified(Type.Dbl)),

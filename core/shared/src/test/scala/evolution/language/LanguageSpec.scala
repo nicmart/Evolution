@@ -6,7 +6,6 @@ trait LanguageSpec[F[_]]
     extends FreeSpec
     with Matchers
     with GeneratorDrivenPropertyChecks
-    with CompilerModule[F]
     with TyperModule[F]
     with ParserModule[F]
     with ASTArbitraries[F]
