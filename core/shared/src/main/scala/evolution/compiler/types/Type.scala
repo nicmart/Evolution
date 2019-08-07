@@ -25,6 +25,11 @@ sealed trait Type {
     case Type.Var(name) => Set(Type.Var(name))
     case _              => children.flatMap(_.typeVars).toSet
   }
+
+  final def typeVarUsages(varName: String): List[Type] =
+    typeVars.collect {
+      case tpe @ Type.Var(name) if varName == name => tpe
+    }.toList
 }
 
 object Type {

@@ -106,11 +106,11 @@ object Typer {
       case head :: tail =>
         head match {
           case Constraint.Eq(a, b) if a == b => unify[M](Constraints(tail))
-          case Constraint.Eq(Type.Var(x), t) if typeVarUsagesIn(x, t).isEmpty =>
+          case Constraint.Eq(Type.Var(x), t) if t.typeVarUsages(x).isEmpty =>
             val substituteVar = Substitution(x -> t)
             val constraints2 = substituteVar.substitute(Constraints(tail))
             unify[M](constraints2).map(_.compose(substituteVar))
-          case Constraint.Eq(t, Type.Var(x)) if typeVarUsagesIn(x, t).isEmpty =>
+          case Constraint.Eq(t, Type.Var(x)) if t.typeVarUsages(x).isEmpty =>
             val substituteVar = Substitution(x -> t)
             val constraints2 = substituteVar.substitute(Constraints(tail))
             unify[M](constraints2).map(_.compose(substituteVar))
@@ -209,15 +209,6 @@ object Typer {
       case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
     }
   }
-
-  private def typeVarUsagesIn(varName: String, tpe: Type): List[Type] =
-    tpe match {
-      case Type.Var(name) if name == varName => List(tpe)
-      case Type.Evo(inner)                   => typeVarUsagesIn(varName, inner)
-      case Type.Lst(inner)                   => typeVarUsagesIn(varName, inner)
-      case Type.Arrow(from, to)              => typeVarUsagesIn(varName, from) ++ typeVarUsagesIn(varName, to)
-      case _                                 => Nil
-    }
 
   sealed trait Constraint
   object Constraint {
