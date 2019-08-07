@@ -9,18 +9,9 @@ import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.typing.TypingConfig
+import evolution.compiler.phases.typing.Unification
 
 object Typer {
-
-  case class Unification(substitution: Substitution, predicates: List[Predicate]) {
-    def compose(s2: Substitution): Unification = copy(substitution = substitution.compose(s2))
-    def withPredicate(predicate: Predicate): Unification = copy(predicates = predicate :: predicates)
-    def substitutedPredicates: List[Predicate] = substitution.substitute(predicates)
-  }
-
-  object Unification {
-    val empty = Unification(Substitution.empty, Nil)
-  }
 
   def unify[M[_]](constraints: Constraints)(implicit R: FunctorRaise[M, String], A: Applicative[M]): M[Unification] =
     constraints.constraints match {
