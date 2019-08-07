@@ -7,7 +7,7 @@ import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
 import TypeInference._
 
-object FreshTypeVarAssigner {
+object AssignFreshTypeVars {
 
   /**
    * TODO: can we express this with transformChildren or similar?
@@ -15,14 +15,14 @@ object FreshTypeVarAssigner {
    * Traverse the AST and assign type variables to each expression.
    * No constraint is added at this stage
    */
-  def assignVars[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[AST] = {
+  def assign[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[AST] = {
 
     expr match {
       case _ if expr.tpe.t != Type.Var("") =>
         expr.pure[M]
 
       case AST.App(f, in, _) =>
-        (assignVars(f), assignVars(in), newTypeVar).mapN { (transformedF, transformedIn, t) =>
+        (assign(f), assign(in), newTypeVar).mapN { (transformedF, transformedIn, t) =>
           App(transformedF, transformedIn, t)
         }
 
@@ -31,14 +31,14 @@ object FreshTypeVarAssigner {
         newTypeVar.flatMap(
           qt =>
             withVarType(varName, qt) {
-              assignVars(lambdaBody).map(b => Lambda(varName, b, Qualified(qt.t =>: b.tpe.t)))
+              assign(lambdaBody).map(b => Lambda(varName, b, Qualified(qt.t =>: b.tpe.t)))
             }
         )
 
       case Let(varName, value, body, _) =>
-        assignVars(value).flatMap { valueWithVars =>
+        assign(value).flatMap { valueWithVars =>
           withVarType(varName, valueWithVars.tpe) {
-            assignVars(body).map(bodyWithVars => Let(varName, valueWithVars, bodyWithVars, bodyWithVars.tpe))
+            assign(body).map(bodyWithVars => Let(varName, valueWithVars, bodyWithVars, bodyWithVars.tpe))
           }
         }
 
