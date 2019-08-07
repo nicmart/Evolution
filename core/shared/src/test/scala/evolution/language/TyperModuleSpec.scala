@@ -10,6 +10,7 @@ import Instances._
 import evolution.compiler.ast.AST
 import evolution.compiler.phases.typing.Constraints
 import evolution.compiler.phases.typing.Constraint
+import evolution.compiler.phases.typing.Substitution
 
 class TyperModuleSpec extends LanguageSpec {
 
@@ -196,7 +197,7 @@ class TyperModuleSpec extends LanguageSpec {
         }
       }
     }
-  } 
+  }
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {

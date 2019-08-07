@@ -6,7 +6,7 @@ import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
-import evolution.compiler.phases.typing.{ Constraint, Constraints, TypeInference }
+import evolution.compiler.phases.typing.{ Assignment, Constraint, Constraints, Substitution, TypeInference }
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
 import evolution.compiler.types.{ Type, TypeBinding }
 import evolution.compiler.types.TypeClasses._
@@ -210,35 +210,11 @@ object Typer {
     }
   }
 
-  final case class Assignment(variable: String, tpe: Type)
-
-  final case class Substitution(assignments: List[Assignment]) {
-    def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
-    def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
-    def compose(s2: Substitution): Substitution = Substitution(substitute(s2).assignments ++ assignments)
-    def mergeOpt(s2: Substitution): Option[Substitution] = merge[Either[String, ?]](s2).toOption
-    def merge[M[_]](s2: Substitution)(implicit M: FunctorRaise[M, String], A: Applicative[M]): M[Substitution] = {
-      val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
-      val agree = commonVars.forall { variable =>
-        substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
-      }
-      if (agree) Substitution(assignments ++ s2.assignments).pure[M]
-      else M.raise("Merge has failed")
-    }
-  }
-
-  object Substitution {
-    def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
-      case (s, t) => Assignment(s, t)
-    })
-    val empty: Substitution = Substitution(Nil)
-  }
-
-  private trait CanBeSubstituted[T] {
+  trait CanBeSubstituted[T] {
     def substitute(s: Substitution, t: T): T
   }
 
-  private object CanBeSubstituted {
+  object CanBeSubstituted {
     implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
       def substitute(s: Substitution, t: Type): Type = t match {
         case Type.Var(name)       => s.lookup(name).getOrElse(t)
