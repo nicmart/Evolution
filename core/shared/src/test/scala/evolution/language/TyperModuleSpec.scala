@@ -12,7 +12,8 @@ import evolution.compiler.phases.typing.Constraints
 import evolution.compiler.phases.typing.Constraint
 import evolution.compiler.phases.typing.Substitution
 import evolution.compiler.phases.typing.TypingConfig
-import evolution.compiler.phases.typing.FreshTypeVarAssigner
+import evolution.compiler.phases.typing.FindConstraints
+import evolution.compiler.phases.typing.AssignFreshTypeVars
 
 class TyperModuleSpec extends LanguageSpec {
 
@@ -44,8 +45,8 @@ class TyperModuleSpec extends LanguageSpec {
 
       "pre-defined constants" - {
         "point function" in {
-          val point = FreshTypeVarAssigner.assignVars(AST.Const(Constant2.Point)).unsafeEvaluate
-          val constraints = findConstraints(point).unsafeEvaluate
+          val point = AssignFreshTypeVars.assign(AST.Const(Constant2.Point)).unsafeEvaluate
+          val constraints = FindConstraints.find(point).unsafeEvaluate
           val unifier = unify[TypeInferenceResult](constraints)
           unifier.map(_.substitution.substitute(point.tpe)).evaluateEither() shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
@@ -55,8 +56,8 @@ class TyperModuleSpec extends LanguageSpec {
         "constant evolution of a point" in {
           val point = AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(1), AST.DoubleLiteral(1))
           val evolution =
-            FreshTypeVarAssigner.assignVars(AST.App(AST.Const(Constant1.Constant), point)).unsafeEvaluate
-          val constraints = findConstraints(evolution).unsafeEvaluate
+            AssignFreshTypeVars.assign(AST.App(AST.Const(Constant1.Constant), point)).unsafeEvaluate
+          val constraints = FindConstraints.find(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify[TypeInferenceResult](allConstraints)
           unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither() shouldBe Right(
@@ -309,8 +310,8 @@ class TyperModuleSpec extends LanguageSpec {
   def assignVarsAndFindConstraints(expr: AST): TypeInferenceResult[(AST, Constraints)] = {
 
     for {
-      exprWithVars <- FreshTypeVarAssigner.assignVars(expr)
-      constraints <- findConstraints(exprWithVars)
+      exprWithVars <- AssignFreshTypeVars.assign(expr)
+      constraints <- FindConstraints.find(exprWithVars)
     } yield (exprWithVars, constraints)
   }
 }

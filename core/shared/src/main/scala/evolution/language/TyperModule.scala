@@ -4,8 +4,6 @@ import cats.Applicative
 import cats.implicits._
 import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
-import evolution.compiler.ast.AST
-import evolution.compiler.ast.AST._
 import evolution.compiler.phases.typing.{ Constraint, Constraints, Substitution, TypeInference }
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
 import evolution.compiler.types.Type
@@ -13,27 +11,6 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.typing.TypingConfig
 
 object Typer {
-
-  def findConstraints[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[Constraints] = {
-    import TypeInference._
-    val nodeConstraints: M[Constraints] = expr match {
-      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).pure[M]
-      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).pure[M]
-      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
-      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).pure[M]
-      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[M]
-      case Lambda(_, _, _) =>
-        Constraints.empty.pure[M]
-      case Let(_, _, _, _) =>
-        Constraints.empty.pure[M]
-    }
-
-    val childrenConstraints = expr.children.traverse(findConstraints[M])
-
-    (nodeConstraints, childrenConstraints).mapN { (n, c) =>
-      n.merge(c)
-    }
-  }
 
   case class Unification(substitution: Substitution, predicates: List[Predicate]) {
     def compose(s2: Substitution): Unification = copy(substitution = substitution.compose(s2))
