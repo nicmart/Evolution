@@ -8,7 +8,7 @@ import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
 import evolution.compiler.phases.typing.TypeInference
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
-import evolution.compiler.types.Type
+import evolution.compiler.types.{ Type, TypeBinding }
 import evolution.compiler.types.TypeClasses._
 
 object Typer {
@@ -21,7 +21,7 @@ object Typer {
         case None      => TI.E.raise(s"Unable to find type binding for variable $name")
         case Some(tis) => tis.get[M]
       }
-    } 
+    }
   }
 
   /**
@@ -153,7 +153,7 @@ object Typer {
     }
 
     private def freeVarsInPredicate(predicate: Predicate): Int =
-      predicate.types.map(tpe => typeVars(tpe).size).sum
+      predicate.types.map(tpe => tpe.typeVars.size).sum
 
     private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
       substitutions.contains(Substitution.empty)
@@ -226,32 +226,6 @@ object Typer {
       case Type.Arrow(from, to)              => typeVarUsagesIn(varName, from) ++ typeVarUsagesIn(varName, to)
       case _                                 => Nil
     }
-
-  private def typeVars(tpe: Type): Set[Type.Var] = tpe match {
-    case Type.Var(name) => Set(Type.Var(name))
-    case _              => tpe.children.flatMap(typeVars).toSet
-  }
-
-  sealed abstract class TypeBinding(val name: String, val qt: Qualified[Type]) {
-    import TypeInference._
-    def get[M[_]](implicit TI: TypeInference[M]): M[Identifier] = {
-      this match {
-        case TypeBinding.Variable(_, _) => Identifier(name, qt).pure[M]
-        case TypeBinding.Predefined(_, _) =>
-          val varsInScheme = typeVars(qt.t).toList
-          for {
-            assignments <- varsInScheme.traverse(
-              schemeVar => newTypeVar.map(typeVar => Assignment(schemeVar.name, typeVar.t))
-            )
-            substitution = Substitution(assignments)
-          } yield Identifier(name, substitution.substitute(qt), primitive = true)
-      }
-    }
-  }
-  object TypeBinding {
-    case class Variable(override val name: String, override val qt: Qualified[Type]) extends TypeBinding(name, qt)
-    case class Predefined(override val name: String, override val qt: Qualified[Type]) extends TypeBinding(name, qt)
-  }
 
   sealed trait Constraint
   object Constraint {

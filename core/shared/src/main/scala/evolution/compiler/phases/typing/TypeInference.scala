@@ -4,9 +4,9 @@ import cats.Monad
 import cats.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import evolution.compiler.ast.AST.Identifier
-import evolution.compiler.types.Type
+import evolution.compiler.types.{ Type, TypeBinding }
 import evolution.compiler.types.TypeClasses.Qualified
-import evolution.language.Typer.{ TypeBinding, TypeContext, TypeVars }
+import evolution.language.Typer.{ BindingContextOps, TypeContext, TypeVars }
 
 trait TypeInference[M[_]] {
   def E: FunctorRaise[M, String]

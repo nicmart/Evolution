@@ -19,7 +19,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import evolution.compiler.types.TypeClasses._
 import evolution.language.Typer
-import evolution.language.Typer.TypeBinding
+import evolution.compiler.types.TypeBinding
 import evolution.language.VarContext
 import evolution.language.Instances._
 import evolution.materialization.Evolution

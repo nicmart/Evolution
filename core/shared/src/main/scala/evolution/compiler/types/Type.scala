@@ -1,7 +1,7 @@
 package evolution.compiler.types
 
 import cats.implicits._
-import cats.{ Applicative, Group, Eq, Order }
+import cats.{ Applicative, Eq, Group, Order }
 import cats.mtl.FunctorRaise
 import evolution.geometry.Point
 import evolution.materialization.Evolution
@@ -11,14 +11,20 @@ import evolution.typeclass.Invertible
 
 sealed trait Type {
   type Out
-  def children: List[Type] = this match {
+
+  final def children: List[Type] = this match {
     case Type.Evo(inner)      => List(inner)
     case Type.Lst(inner)      => List(inner)
     case Type.Arrow(from, to) => List(from, to)
     case _                    => Nil
   }
 
-  def =>:(from: Type): Type = Type.Arrow(from, this)
+  final def =>:(from: Type): Type = Type.Arrow(from, this)
+
+  final def typeVars: Set[Type.Var] = this match {
+    case Type.Var(name) => Set(Type.Var(name))
+    case _              => children.flatMap(_.typeVars).toSet
+  }
 }
 
 object Type {
