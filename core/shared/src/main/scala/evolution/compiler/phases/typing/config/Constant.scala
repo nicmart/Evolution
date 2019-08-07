@@ -16,6 +16,12 @@ import evolution.materialization.Evolution
 import scala.collection.immutable
 import scala.language.higherKinds
 
+/**
+ * The modeling here is a bit loose.
+ * Constants are domain concepts and not only "config" concepts.
+ * The list of concrete instances is a "config".
+ * But it is not easy to split the two now (mainly because we are using enumeratum, and that requires the traits to be sealed)
+ */
 abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
 
 abstract sealed class Constant0(qualifiedType: Qualified[Type])
