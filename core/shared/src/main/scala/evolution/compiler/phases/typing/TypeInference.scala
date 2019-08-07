@@ -6,7 +6,6 @@ import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import evolution.compiler.ast.AST.Identifier
 import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
 import evolution.compiler.types.TypeClasses.Qualified
-import evolution.language.Typer.TypeVars
 
 trait TypeInference[M[_]] {
   def E: FunctorRaise[M, String]
@@ -16,8 +15,8 @@ trait TypeInference[M[_]] {
 }
 
 object TypeInference {
-  case class State(vars: TypeVars)
-  val empty = State(TypeVars.empty)
+  case class State(vars: TypeVarGenerator)
+  val empty = State(TypeVarGenerator.empty)
 
   def apply[M[_]](implicit ti: TypeInference[M]): TypeInference[M] = ti
 

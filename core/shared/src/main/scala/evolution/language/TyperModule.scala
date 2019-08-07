@@ -122,13 +122,4 @@ object Typer {
       case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
     }
   }
-
-  class TypeVars(total: Int) {
-    def current: Type.Var = Type.Var(s"T$total")
-    def next: TypeVars = new TypeVars(total + 1)
-  }
-
-  object TypeVars {
-    val empty = new TypeVars(0)
-  }
 }
