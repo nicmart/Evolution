@@ -36,7 +36,7 @@ object FullModule {
       unification <- UnifyTypes.unify[M](constraintsWithExpectedType)
       _ = println("Done: unification")
       start = System.currentTimeMillis()
-      predicateSubst <- Typer.predicatesSubstitution(unification.substitutedPredicates)
+      predicateSubst <- UnifyPredicates.unifyM[M](unification.substitutedPredicates)
       stop = System.currentTimeMillis()
       _ = println(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)
