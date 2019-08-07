@@ -8,6 +8,8 @@ import evolution.compiler.types.TypeClasses._
 import Typer._
 import Instances._
 import evolution.compiler.ast.AST
+import evolution.compiler.phases.typing.Constraints
+import evolution.compiler.phases.typing.Constraint
 
 class TyperModuleSpec extends LanguageSpec {
 
@@ -194,7 +196,7 @@ class TyperModuleSpec extends LanguageSpec {
         }
       }
     }
-  }
+  } 
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {

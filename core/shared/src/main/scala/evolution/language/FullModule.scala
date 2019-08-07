@@ -4,7 +4,7 @@ import cats.mtl.implicits._
 import evolution.compiler.ast.AST
 import evolution.data.Expr
 import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.typing.TypeInference
+import evolution.compiler.phases.typing.{ Constraints, TypeInference }
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances._
 import evolution.compiler.types.Type
 
@@ -32,7 +32,7 @@ object FullModule {
       exprAndConstraints <- Typer.assignVarsAndFindConstraints(expr)
       (exprWithTypeVars, constraints) = exprAndConstraints
       _ = println("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Typer.Constraints(expectedType -> exprWithTypeVars.tpe.t))
+      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))
       unification <- Typer.unify[M](constraintsWithExpectedType)
       _ = println("Done: unification")
       start = System.currentTimeMillis()

@@ -6,7 +6,7 @@ import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
-import evolution.compiler.phases.typing.TypeInference
+import evolution.compiler.phases.typing.{ Constraint, Constraints, TypeInference }
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
 import evolution.compiler.types.{ Type, TypeBinding }
 import evolution.compiler.types.TypeClasses._
@@ -208,38 +208,6 @@ object Typer {
       case Some(subst) => subst.pure[M]
       case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
     }
-  }
-
-  sealed trait Constraint
-  object Constraint {
-    case class Eq(a: Type, b: Type) extends Constraint {
-      override def toString = s"$a = $b"
-    }
-
-    case class Pred(predicate: Predicate) extends Constraint {
-      override def toString = s"${predicate.id} ${predicate.types.mkString(" ")}"
-    }
-  }
-
-  case class Constraints(constraints: List[Constraint]) {
-    def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
-    def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
-      constraints.merge(current)
-    }
-    def withPredicate(predicate: Predicate): Constraints =
-      Constraints(Constraint.Pred(predicate) :: constraints)
-
-    def withPredicates(predicates: List[Predicate]): Constraints =
-      Constraints(predicates.map(Constraint.Pred) ++ constraints)
-
-    override def toString: String = constraints.mkString("\n")
-  }
-
-  object Constraints {
-    val empty: Constraints = Constraints(Nil)
-    def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
-      case (a, b) => Constraint.Eq(a, b)
-    })
   }
 
   final case class Assignment(variable: String, tpe: Type)
