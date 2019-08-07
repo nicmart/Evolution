@@ -33,7 +33,7 @@ object FullModule {
       constraints <- FindConstraints.find(exprWithTypeVars)
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))
-      unification <- Typer.unify[M](constraintsWithExpectedType)
+      unification <- UnifyTypes.unify[M](constraintsWithExpectedType)
       _ = println("Done: unification")
       start = System.currentTimeMillis()
       predicateSubst <- Typer.predicatesSubstitution(unification.substitutedPredicates)

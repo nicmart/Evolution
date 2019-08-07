@@ -14,6 +14,7 @@ import evolution.compiler.phases.typing.Substitution
 import evolution.compiler.phases.typing.TypingConfig
 import evolution.compiler.phases.typing.FindConstraints
 import evolution.compiler.phases.typing.AssignFreshTypeVars
+import evolution.compiler.phases.typing.UnifyTypes.unify
 
 class TyperModuleSpec extends LanguageSpec {
 
