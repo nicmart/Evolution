@@ -3,8 +3,9 @@ import cats.implicits._
 import cats.mtl.implicits._
 import evolution.compiler.ast.AST
 import evolution.data.Expr
-import Typer.TypeInferenceInstances._
 import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.typing.TypeInference
+import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances._
 import evolution.compiler.types.Type
 
 object FullModule {
@@ -13,7 +14,7 @@ object FullModule {
     serialisedExpr: String,
     expectedType: Type,
     ctx: VarContext
-  )(implicit M: Typer.TypeInference[M]): M[Expr[expectedType.Out]] = {
+  )(implicit M: TypeInference[M]): M[Expr[expectedType.Out]] = {
 
     println("Start Compilation")
 
