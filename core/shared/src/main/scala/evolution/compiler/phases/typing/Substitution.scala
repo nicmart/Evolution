@@ -5,7 +5,6 @@ import cats.implicits._
 import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
 import evolution.compiler.types.Type
-import evolution.language.Typer.CanBeSubstituted
 
 final case class Substitution(assignments: List[Assignment]) {
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
