@@ -4,7 +4,9 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import cats.mtl.implicits._
-import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances._
+import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compiler.phases.typing.model.TypeInference.TypeInferenceInstances._
+import evolution.compiler.phases.typing.model.{ Substitution, TypeInference }
 
 object UnifyPredicates {
   def unifyM[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {

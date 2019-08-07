@@ -5,6 +5,7 @@ import evolution.compiler.ast.AST.{ App, Bool, DoubleLiteral, Identifier, IntLit
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
+import evolution.compiler.phases.typing.model.{ Constraints, TypeInference }
 import TypeInference._
 
 object FindConstraints {

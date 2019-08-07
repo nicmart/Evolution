@@ -1,7 +1,7 @@
 package evolution.compiler.types
 
 import evolution.compiler.ast.AST.Identifier
-import evolution.compiler.phases.typing.TypeInference
+import evolution.compiler.phases.typing.model.TypeInference
 
 final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
   def getIdentifier[M[_]](name: String)(implicit TI: TypeInference[M]): M[Identifier] = {

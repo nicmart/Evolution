@@ -1,9 +1,10 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typing.model
 
 import cats.Applicative
 import cats.implicits._
 import cats.mtl.FunctorRaise
 import cats.mtl.implicits._
+import evolution.compiler.phases.typing.model
 import evolution.compiler.types.Type
 
 final case class Substitution(assignments: List[Assignment]) {
@@ -23,7 +24,7 @@ final case class Substitution(assignments: List[Assignment]) {
 
 object Substitution {
   def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
-    case (s, t) => Assignment(s, t)
+    case (s, t) => model.Assignment(s, t)
   })
   val empty: Substitution = Substitution(Nil)
 }

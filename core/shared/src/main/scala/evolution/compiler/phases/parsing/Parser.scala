@@ -4,7 +4,7 @@ import evolution.compiler.ast.AST
 import evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing.ParserConfig.White._
 import evolution.compiler.phases.parsing.ParserConfig.whitespaces
-import evolution.language.{ Constant1, Constant2 }
+import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import fastparse.noApi._
 
 object Parser {

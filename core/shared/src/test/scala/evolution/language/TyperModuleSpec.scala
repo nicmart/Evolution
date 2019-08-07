@@ -2,19 +2,20 @@ package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
 import cats.Monad
+
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
 import Instances._
 import evolution.compiler.ast.AST
-import evolution.compiler.phases.typing.Constraints
-import evolution.compiler.phases.typing.Constraint
-import evolution.compiler.phases.typing.Substitution
-import evolution.compiler.phases.typing.TypingConfig
 import evolution.compiler.phases.typing.FindConstraints
 import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.UnifyPredicates
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
+import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.phases.typing.model.Constraint
+import evolution.compiler.phases.typing.model.Substitution
 
 class TyperModuleSpec extends LanguageSpec {
 

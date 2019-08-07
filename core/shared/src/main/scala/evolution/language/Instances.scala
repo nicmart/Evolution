@@ -2,8 +2,8 @@ package evolution.language
 import cats.data.{ ReaderT, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
-import evolution.compiler.phases.typing.TypeInference
-import evolution.compiler.phases.typing.TypingConfig
+import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compiler.phases.typing.model.TypeInference
 import evolution.compiler.types.TypeBindings
 
 object Instances {

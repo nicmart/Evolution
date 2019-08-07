@@ -9,6 +9,7 @@ import evolution.data.Expr
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.Typed
 import evolution.compiler.types.Type
 import evolution.materialization.Evolution
@@ -41,7 +42,7 @@ object Compiler {
       case Let(varName, value, in, _) =>
         (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
           Expr.Let(varName, compiledValue, compiledIn)
-        } 
+        }
 
       case IntLiteral(n, Qualified(_, Type.Integer)) =>
         Expr.Integer(n).pure[K]

@@ -6,6 +6,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.parsing.ParserConfig
+import evolution.compiler.phases.typing.config.Constant
 
 trait ASTArbitraries {
   def genFunctionArgs: Gen[List[String]] =

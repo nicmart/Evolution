@@ -5,6 +5,7 @@ import cats.mtl.FunctorRaise
 import evolution.compiler.types.Type
 import cats.implicits._
 import cats.mtl.implicits._
+import evolution.compiler.phases.typing.model.{ Constraint, Constraints, Substitution, Unification }
 
 object UnifyTypes {
   def unify[M[_]](constraints: Constraints)(implicit R: FunctorRaise[M, String], A: Applicative[M]): M[Unification] =

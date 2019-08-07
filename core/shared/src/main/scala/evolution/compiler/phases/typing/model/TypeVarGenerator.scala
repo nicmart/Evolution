@@ -1,4 +1,4 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typing.model
 
 import evolution.compiler.types.Type
 

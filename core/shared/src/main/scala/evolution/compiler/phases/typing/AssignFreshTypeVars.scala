@@ -5,7 +5,8 @@ import evolution.compiler.ast.AST.{ App, Identifier, Lambda, Let }
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
-import TypeInference._
+import evolution.compiler.phases.typing.model.TypeInference
+import evolution.compiler.phases.typing.model.TypeInference._
 
 object AssignFreshTypeVars {
 

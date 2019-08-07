@@ -1,19 +1,20 @@
-package evolution.language
+package evolution.compiler.phases.typing.config
+
 import cats.implicits._
 import cats.mtl.FunctorRaise
 import cats.{ Applicative, Monad }
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
+import evolution.compiler.phases.typing.config.Constant._
+import evolution.compiler.types.Type._
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.{ Type, TypeClasses, Typed }
 import evolution.data.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 
 import scala.collection.immutable
 import scala.language.higherKinds
-import evolution.compiler.types.TypeClasses._
-import Constant._
-import evolution.compiler.types.{ Type, TypeClasses, Typed }
-import Type._
 
 abstract sealed class Constant(val qualifiedType: Qualified[Type]) extends EnumEntry with Lowercase
 

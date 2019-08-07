@@ -1,8 +1,8 @@
 package evolution.compiler.ast
 
+import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2, Constant3 }
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
-import evolution.language._
 
 sealed trait AST {
   val tpe: Qualified[Type]

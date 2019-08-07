@@ -1,5 +1,6 @@
 package evolution.language
 import evolution.compiler.ast.AST
+import evolution.compiler.phases.typing.config.Constant2
 
 class ASTModuleSpec extends LanguageSpec {
   "An AST" - {

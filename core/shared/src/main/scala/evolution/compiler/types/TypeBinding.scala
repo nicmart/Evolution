@@ -2,7 +2,7 @@ package evolution.compiler.types
 
 import cats.implicits._
 import evolution.compiler.ast.AST.Identifier
-import evolution.compiler.phases.typing.{ Assignment, Substitution, TypeInference }
+import evolution.compiler.phases.typing.model.{ Assignment, Substitution, TypeInference }
 import evolution.compiler.types.TypeClasses.Qualified
 
 sealed abstract class TypeBinding(val name: String, val qt: Qualified[Type]) {

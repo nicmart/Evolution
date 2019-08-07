@@ -1,11 +1,11 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typing.model
 
 import cats.Monad
 import cats.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
 import evolution.compiler.ast.AST.Identifier
-import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
 import evolution.compiler.types.TypeClasses.Qualified
+import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
 
 trait TypeInference[M[_]] {
   def E: FunctorRaise[M, String]

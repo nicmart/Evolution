@@ -5,7 +5,8 @@ import evolution.compiler.ast.AST
 import evolution.data.Expr
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.typing._
-import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances._
+import evolution.compiler.phases.typing.model.{ Constraints, TypeInference }
+import TypeInference.TypeInferenceInstances._
 import evolution.compiler.types.Type
 
 object FullModule {
