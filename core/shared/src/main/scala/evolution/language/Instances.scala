@@ -3,6 +3,7 @@ import cats.data.{ ReaderT, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
 import evolution.compiler.phases.typing.TypeInference
+import evolution.compiler.phases.typing.TypingConfig
 import evolution.compiler.types.TypeBindings
 
 object Instances {
@@ -12,7 +13,7 @@ object Instances {
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
     def evaluateEither(additionalVarTypeBindings: TypeBindings = TypeBindings.empty): Either[String, T] =
-      t.run(Typer.constantQualifiedTypes merge additionalVarTypeBindings).runA(TypeInference.empty)
+      t.run(TypingConfig.constantQualifiedTypes merge additionalVarTypeBindings).runA(TypeInference.empty)
 
     def unsafeEvaluate: T =
       evaluateEither().fold(
@@ -21,6 +22,6 @@ object Instances {
       )
 
     def unsafeEvaluateWith(ctx: TypeBindings): T =
-      t.run(Typer.constantQualifiedTypes merge ctx).runA(TypeInference.empty).right.get
+      t.run(TypingConfig.constantQualifiedTypes merge ctx).runA(TypeInference.empty).right.get
   }
 }

@@ -11,6 +11,7 @@ import evolution.compiler.ast.AST
 import evolution.compiler.phases.typing.Constraints
 import evolution.compiler.phases.typing.Constraint
 import evolution.compiler.phases.typing.Substitution
+import evolution.compiler.phases.typing.TypingConfig
 
 class TyperModuleSpec extends LanguageSpec {
 
@@ -201,13 +202,13 @@ class TyperModuleSpec extends LanguageSpec {
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
-      val subst = PredicatesUnifier.unify(instances, Nil)
+      val subst = PredicatesUnifier.unify(TypingConfig.instances, Nil)
 
       subst shouldBe Some(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
-      val subst = PredicatesUnifier.unify(instances, instances.take(1))
+      val subst = PredicatesUnifier.unify(TypingConfig.instances, TypingConfig.instances.take(1))
 
       subst shouldBe Some(Substitution.empty)
     }
@@ -267,7 +268,7 @@ class TyperModuleSpec extends LanguageSpec {
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = PredicatesUnifier.unify(instances, Random.shuffle(predicates)).get
+      val subst = PredicatesUnifier.unify(TypingConfig.instances, Random.shuffle(predicates)).get
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
     }

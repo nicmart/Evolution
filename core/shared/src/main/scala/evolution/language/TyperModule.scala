@@ -8,9 +8,9 @@ import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
 import evolution.compiler.phases.typing.{ Constraint, Constraints, Substitution, TypeInference }
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
-import evolution.compiler.types.{ Type, TypeBinding }
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types.TypeBindings
+import evolution.compiler.phases.typing.TypingConfig
 
 object Typer {
 
@@ -54,12 +54,6 @@ object Typer {
         newTypeVar.map(expr.withType)
     }
   }
-  val constantQualifiedTypes: TypeBindings =
-    new TypeBindings(
-      Constant.values
-        .map(constant => constant.entryName -> TypeBinding.Predefined(constant.entryName, constant.qualifiedType))
-        .toMap
-    )
 
   def findConstraints[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[Constraints] = {
     import TypeInference._
@@ -204,7 +198,7 @@ object Typer {
   // TODO: Very, Very naive typeclass checking, that works for now because we just have typeclasses without derivation
   def predicatesSubstitution[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {
     import TypeInferenceInstances._
-    PredicatesUnifier.unify(instances, predicates) match {
+    PredicatesUnifier.unify(TypingConfig.instances, predicates) match {
       case Some(subst) => subst.pure[M]
       case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
     }
@@ -218,39 +212,4 @@ object Typer {
   object TypeVars {
     val empty = new TypeVars(0)
   }
-
-  /**
-   * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
-   */
-  import Type._
-  val instances: List[Predicate] = List(
-    Predicate("Num", List(Dbl)),
-    Predicate("Num", List(Integer)),
-    Predicate("Mult", List(Dbl, Dbl, Dbl)),
-    Predicate("Mult", List(Dbl, Point, Point)),
-    Predicate("Mult", List(Point, Dbl, Point)),
-    Predicate("Mult", List(Integer, Integer, Integer)),
-    Predicate("Mult", List(Integer, Dbl, Dbl)),
-    Predicate("Mult", List(Dbl, Integer, Dbl)),
-    Predicate("Mult", List(Integer, Point, Point)),
-    Predicate("Mult", List(Dbl, Evo(Dbl), Evo(Dbl))),
-    Predicate("Mult", List(Evo(Dbl), Dbl, Evo(Dbl))),
-    Predicate("Mult", List(Dbl, Evo(Point), Evo(Point))),
-    Predicate("Mult", List(Evo(Point), Dbl, Evo(Point))),
-    Predicate("Mult", List(Evo(Dbl), Evo(Dbl), Evo(Dbl))),
-    Predicate("Mult", List(Evo(Point), Evo(Dbl), Evo(Point))),
-    Predicate("Mult", List(Evo(Dbl), Evo(Point), Evo(Point))),
-    Predicate("Add", List(Dbl, Dbl, Dbl)),
-    Predicate("Add", List(Integer, Integer, Integer)),
-    Predicate("Add", List(Integer, Dbl, Dbl)),
-    Predicate("Add", List(Dbl, Integer, Dbl)),
-    Predicate("Add", List(Point, Point, Point)),
-    Predicate("Add", List(Evo(Dbl), Evo(Dbl), Evo(Dbl))),
-    Predicate("Add", List(Evo(Point), Evo(Point), Evo(Point))),
-    Predicate("Invertible", List(Integer)),
-    Predicate("Invertible", List(Dbl)),
-    Predicate("Invertible", List(Point)),
-    Predicate("Invertible", List(Evo(Dbl))),
-    Predicate("Invertible", List(Evo(Point)))
-  )
 }

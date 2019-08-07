@@ -41,7 +41,7 @@ object Compiler {
       case Let(varName, value, in, _) =>
         (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
           Expr.Let(varName, compiledValue, compiledIn)
-        }
+        } 
 
       case IntLiteral(n, Qualified(_, Type.Integer)) =>
         Expr.Integer(n).pure[K]
