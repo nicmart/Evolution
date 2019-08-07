@@ -3,16 +3,16 @@ import cats.data.{ ReaderT, StateT }
 import cats.implicits._
 import cats.mtl.implicits._
 import evolution.compiler.phases.typing.TypeInference
-import evolution.language.Typer.TypeContext
+import evolution.compiler.types.TypeBindings
 
 object Instances {
 
-  type TypeInferenceResult[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], TypeContext, T]
+  type TypeInferenceResult[T] = ReaderT[StateT[Either[String, ?], TypeInference.State, ?], TypeBindings, T]
   implicit val typeInference: TypeInference[TypeInferenceResult] = TypeInference.instance[TypeInferenceResult]
 
   implicit class TypeInferenceOps[T](t: TypeInferenceResult[T]) {
-    def evaluateEither(additionalVarTypeBindings: TypeContext = Map.empty): Either[String, T] =
-      t.run(Typer.constantQualifiedTypes ++ additionalVarTypeBindings).runA(TypeInference.empty)
+    def evaluateEither(additionalVarTypeBindings: TypeBindings = TypeBindings.empty): Either[String, T] =
+      t.run(Typer.constantQualifiedTypes merge additionalVarTypeBindings).runA(TypeInference.empty)
 
     def unsafeEvaluate: T =
       evaluateEither().fold(
@@ -20,7 +20,7 @@ object Instances {
         identity
       )
 
-    def unsafeEvaluateWith(ctx: TypeContext): T =
-      t.run(Typer.constantQualifiedTypes ++ ctx).runA(TypeInference.empty).right.get
+    def unsafeEvaluateWith(ctx: TypeBindings): T =
+      t.run(Typer.constantQualifiedTypes merge ctx).runA(TypeInference.empty).right.get
   }
 }

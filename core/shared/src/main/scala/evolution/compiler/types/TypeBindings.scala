@@ -1,10 +1,21 @@
 package evolution.compiler.types
 
-final class TypeBindings(bindings: Map[String, Type]) {
-  def has(name: String): Boolean = bindings.isDefinedAt(name)
-  def get(name: String): Option[Type] = bindings.get(name)
-  def put(name: String, tpe: Type): TypeBindings = new TypeBindings(bindings.updated(name, tpe))
-  def nextTypeVar: Type = Type.Var("X" + bindings.size)
+import evolution.compiler.ast.AST.Identifier
+import evolution.compiler.phases.typing.TypeInference
+
+final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
+  def getIdentifier[M[_]](name: String)(implicit TI: TypeInference[M]): M[Identifier] = {
+    bindings.get(name) match {
+      case None      => TI.E.raise(s"Unable to find type binding for variable $name")
+      case Some(tis) => tis.get[M]
+    }
+  }
+
+  def merge(other: TypeBindings): TypeBindings =
+    new TypeBindings(bindings ++ other.bindings)
+
+  def withBinding(name: String, binding: TypeBinding): TypeBindings =
+    new TypeBindings(bindings.updated(name, binding))
 }
 
 object TypeBindings {

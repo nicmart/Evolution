@@ -18,11 +18,11 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import evolution.compiler.types.TypeClasses._
-import evolution.language.Typer
 import evolution.compiler.types.TypeBinding
 import evolution.language.VarContext
 import evolution.language.Instances._
 import evolution.materialization.Evolution
+import evolution.compiler.types.TypeBindings
 
 // This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
@@ -31,11 +31,13 @@ object dsl extends DrawingDefinition[Point] {
 
   private val predefinedVars = List("left", "bottom", "right", "top")
   private val initialVarContext = new VarContext(predefinedVars)
-  private val predefinedVarsTypeBindings: Typer.TypeContext = Map(
-    "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
-    "right" -> TypeBinding.Variable("right", Qualified(Type.Dbl)),
-    "top" -> TypeBinding.Variable("top", Qualified(Type.Dbl)),
-    "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
+  private val predefinedVarsTypeBindings = new TypeBindings(
+    Map(
+      "left" -> TypeBinding.Variable("left", Qualified(Type.Dbl)),
+      "right" -> TypeBinding.Variable("right", Qualified(Type.Dbl)),
+      "top" -> TypeBinding.Variable("top", Qualified(Type.Dbl)),
+      "bottom" -> TypeBinding.Variable("bottom", Qualified(Type.Dbl))
+    )
   )
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because

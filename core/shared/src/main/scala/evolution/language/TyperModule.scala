@@ -10,19 +10,9 @@ import evolution.compiler.phases.typing.TypeInference
 import evolution.compiler.phases.typing.TypeInference.TypeInferenceInstances
 import evolution.compiler.types.{ Type, TypeBinding }
 import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.TypeBindings
 
 object Typer {
-
-  type TypeContext = Map[String, TypeBinding]
-
-  implicit class BindingContextOps[M[_]](ctx: TypeContext) {
-    def getBinding(name: String)(implicit TI: TypeInference[M]): M[Identifier] = {
-      ctx.get(name) match {
-        case None      => TI.E.raise(s"Unable to find type binding for variable $name")
-        case Some(tis) => tis.get[M]
-      }
-    }
-  }
 
   /**
    * TODO: can we express this with transformChildren or similar?
@@ -64,10 +54,12 @@ object Typer {
         newTypeVar.map(expr.withType)
     }
   }
-  val constantQualifiedTypes: TypeContext =
-    Constant.values
-      .map(constant => constant.entryName -> TypeBinding.Predefined(constant.entryName, constant.qualifiedType))
-      .toMap
+  val constantQualifiedTypes: TypeBindings =
+    new TypeBindings(
+      Constant.values
+        .map(constant => constant.entryName -> TypeBinding.Predefined(constant.entryName, constant.qualifiedType))
+        .toMap
+    )
 
   def findConstraints[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[Constraints] = {
     import TypeInference._
