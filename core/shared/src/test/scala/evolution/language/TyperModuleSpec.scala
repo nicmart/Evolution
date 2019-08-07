@@ -66,9 +66,11 @@ class TyperModuleSpec extends LanguageSpec {
         val untyped = AST.AppN(AST.Const(Constant2.Point), AST.Identifier("a"), AST.Identifier("b"))
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped).unsafeEvaluateWith(
-            Map(
-              "a" -> TypeBinding.Variable("a", Qualified(Type.Dbl)),
-              "b" -> TypeBinding.Variable("b", Qualified(Type.Dbl))
+            new TypeBindings(
+              Map(
+                "a" -> TypeBinding.Variable("a", Qualified(Type.Dbl)),
+                "b" -> TypeBinding.Variable("b", Qualified(Type.Dbl))
+              )
             )
           )
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
