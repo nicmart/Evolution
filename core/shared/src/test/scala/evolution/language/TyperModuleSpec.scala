@@ -6,7 +6,7 @@ import cats.Monad
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
-import Instances._
+import evolution.compiler.phases.typing.config.Instances._
 import evolution.compiler.ast.AST
 import evolution.compiler.phases.typing.FindConstraints
 import evolution.compiler.phases.typing.AssignFreshTypeVars

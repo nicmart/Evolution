@@ -20,7 +20,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.TypeBinding
 import evolution.language.VarContext
-import evolution.language.Instances._
+import evolution.compiler.phases.typing.config.Instances._
 import evolution.materialization.Evolution
 import evolution.compiler.types.TypeBindings
 
