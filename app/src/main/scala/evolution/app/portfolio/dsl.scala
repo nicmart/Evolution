@@ -13,7 +13,7 @@ import evolution.compiler.types.Type
 import evolution.data
 import evolution.data.Expr
 import evolution.geometry.Point
-import evolution.language.FullModule
+import evolution.compiler.phases.All
 import japgolly.scalajs.react.{ Callback, PropsChildren }
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
@@ -47,8 +47,8 @@ object dsl extends DrawingDefinition[Point] {
   object Config {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
-        FullModule
-          .parse[TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
+        All
+          .compile[TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
           .map(_.asInstanceOf[Expr[Evolution[Point]]])
           .evaluateEither(predefinedVarsTypeBindings)
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))

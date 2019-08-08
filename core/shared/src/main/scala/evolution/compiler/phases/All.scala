@@ -1,4 +1,5 @@
-package evolution.language
+package evolution.compiler.phases
+
 import cats.implicits._
 import cats.mtl.implicits._
 import evolution.compiler.ast.AST
@@ -11,9 +12,9 @@ import TypeInference.TypeInferenceInstances._
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 
-object FullModule {
+object All {
 
-  def parse[M[_]](
+  def compile[M[_]](
     serialisedExpr: String,
     expectedType: Type,
     ctx: VarContext
