@@ -10,54 +10,52 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
+import evolution.compiler.phases.materializing.Materialize.materialize
 
-class InterpreterModuleSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
-  // TODO Rubbish, rubbish, rubbish!!!
-  val interpreter = new InterpreterModule {}
-  import interpreter.Interpreter._
+class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
-  "The interpreter" - {
-    "should interpret Pnt" in {
-      interpret(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
+  "The materializer" - {
+    "should materialize Pnt" in {
+      materialize(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
     }
 
-    "should interpret booleans literals" in forAll(genBooleanLiteral) { literal =>
-      interpret(literal)(emptyCtx) shouldBe literal.b
+    "should materialize booleans literals" in forAll(genBooleanLiteral) { literal =>
+      materialize(literal)(emptyCtx) shouldBe literal.b
     }
 
-    "should interpret ands" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
-      interpret(And(a, b))(emptyCtx) shouldBe a.b && b.b
+    "should materialize ands" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
+      materialize(And(a, b))(emptyCtx) shouldBe a.b && b.b
     }
 
-    "should interpret ors" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
-      interpret(Or(a, b))(emptyCtx) shouldBe a.b || b.b
+    "should materialize ors" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
+      materialize(Or(a, b))(emptyCtx) shouldBe a.b || b.b
     }
 
-    "should interpret nots" in forAll(genBooleanLiteral) { a =>
-      interpret(Not(a))(emptyCtx) shouldBe !a.b
+    "should materialize nots" in forAll(genBooleanLiteral) { a =>
+      materialize(Not(a))(emptyCtx) shouldBe !a.b
     }
 
-    "should interpret inRect statements" in {
-      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
-      interpret(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
+    "should materialize inRect statements" in {
+      materialize(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
+      materialize(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
     }
 
-    "should interpret relational operators" in forAll(
+    "should materialize relational operators" in forAll(
       genRelationOperatorExpectations[Double],
       arbitrary[Dbl],
       arbitrary[Dbl]
     ) {
       case ((op, expected), a, b) =>
-        interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
+        materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
     }
 
-    "should interpret equality operators" in forAll(
+    "should materialize equality operators" in forAll(
       genEqualityOperatorExpectations[Double],
       arbitrary[Dbl],
       arbitrary[Dbl]
     ) {
       case ((op, expected), a, b) =>
-        interpret(op(a, b))(emptyCtx) shouldBe expected(interpret(a)(emptyCtx), interpret(b)(emptyCtx))
+        materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
     }
 
   }

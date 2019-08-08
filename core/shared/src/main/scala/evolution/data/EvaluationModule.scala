@@ -1,7 +1,8 @@
 package evolution.data
+import evolution.compiler.phases.materializing.Materialize
+import evolution.compiler.phases.materializing.model.Contextual
 import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
-import evolution.language.InterpreterModule
 
 import scala.util.Random
 
@@ -23,11 +24,11 @@ trait EvaluationModule {
 
 }
 
-private[data] object EvaluationModuleImpl extends EvaluationModule with InterpreterModule {
-  override type Result[T] = Out[T]
+private[data] object EvaluationModuleImpl extends EvaluationModule {
+  override type Result[T] = Contextual[T]
 
-  override def interpret[T](expr: Expr[T]): Out[T] =
-    Interpreter.interpret(expr)
+  override def interpret[T](expr: Expr[T]): Result[T] =
+    Materialize.materialize(expr)
   override def newSeed: Long = Random.nextLong()
   override def materializeWith[T](seed: Long, fa: Result[Evolution[T]], ctx: Ctx): Iterator[T] = {
     Random.setSeed(seed)
