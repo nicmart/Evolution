@@ -5,8 +5,10 @@ import evolution.compiler.ast.AST
 import evolution.data.Expr
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.typing._
+import evolution.compiler.phases.compiling._
 import evolution.compiler.phases.typing.model.{ Constraints, TypeInference }
 import TypeInference.TypeInferenceInstances._
+import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 
 object FullModule {
@@ -44,7 +46,7 @@ object FullModule {
       typedExpr = subst.substitute(exprWithTypeVars)
       _ = println("Done: substitution")
       _ = println(s"Typed expression: $typedExpr")
-      result <- Compiler.compile[M](typedExpr).run(ctx)
+      result <- Compile.compile[M](typedExpr).run(ctx)
       _ = println(s"Compiled to $result")
       _ = println("Done: compilation")
     } yield result.asInstanceOf[Expr[expectedType.Out]]

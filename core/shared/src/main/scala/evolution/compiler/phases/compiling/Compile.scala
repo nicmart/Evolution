@@ -1,4 +1,4 @@
-package evolution.language
+package evolution.compiler.phases.compiling
 
 import cats.data.Kleisli
 import cats.implicits._
@@ -9,16 +9,17 @@ import evolution.data.Expr
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.ast.AST
 import evolution.compiler.ast.AST._
+import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.Typed
 import evolution.compiler.types.Type
 import evolution.materialization.Evolution
 
-object Compiler {
+object Compile {
 
   type Result[M[_], T] = Kleisli[M, VarContext, T]
 
-  def compile[M[_]](expr: AST)(implicit E: FunctorRaise[M, String], M: Monad[M]): Result[M, Expr[expr.Out]] = {
+  def compile[M[_]](ast: AST)(implicit E: FunctorRaise[M, String], M: Monad[M]): Result[M, Expr[ast.Out]] = {
     type K[T] = Result[M, T]
 
     implicit val KE: FunctorRaise[K, String] = new FunctorRaise[K, String] {
@@ -29,11 +30,11 @@ object Compiler {
     def withVar[A](name: String)(ka: K[A]): K[A] = Kleisli.local[M, A, VarContext](_.push(name))(ka)
     def varContext: K[VarContext] = Kleisli((ctx: VarContext) => ctx.pure[M])
 
-    expr match {
+    ast match {
       case Identifier(name, _, false) =>
-        varContext.flatMap[Expr[expr.tpe.t.Out]] { ctx =>
-          if (ctx.has(name)) (Expr.Var[expr.Out](name): Expr[expr.Out]).pure[K]
-          else KE.raise(s"Variable $name is not defined for identifier $expr")
+        varContext.flatMap[Expr[ast.tpe.t.Out]] { ctx =>
+          if (ctx.has(name)) (Expr.Var[ast.Out](name): Expr[ast.Out]).pure[K]
+          else KE.raise(s"Variable $name is not defined for identifier $ast")
         }
 
       case Lambda(varName, body, _) =>
@@ -91,22 +92,12 @@ object Compiler {
         }
 
       case _ =>
-        KE.raise(s"Invalid AST for expression $expr")
+        KE.raise(s"Invalid AST for expression $ast")
     }
-  }.asInstanceOf[Result[M, Expr[expr.Out]]]
+  }.asInstanceOf[Result[M, Expr[ast.Out]]]
 
   implicit class CastingOps(value: Any) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
     def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]
   }
-}
-
-class VarContext(vars: List[String]) {
-  def has(variable: String): Boolean = vars.contains(variable)
-  def indexOf(variable: String): Int = vars.indexOf(variable)
-  def push(variable: String): VarContext = new VarContext(variable :: vars)
-}
-
-object VarContext {
-  val empty: VarContext = new VarContext(List.empty)
 }

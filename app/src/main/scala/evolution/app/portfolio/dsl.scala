@@ -8,6 +8,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
 import evolution.app.react.component.config.{ ConfigComponent, instances }
+import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 import evolution.data
 import evolution.data.Expr
@@ -19,7 +20,6 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.TypeBinding
-import evolution.language.VarContext
 import evolution.compiler.phases.typing.config.Instances._
 import evolution.materialization.Evolution
 import evolution.compiler.types.TypeBindings

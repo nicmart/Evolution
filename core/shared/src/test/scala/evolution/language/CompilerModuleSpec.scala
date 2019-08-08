@@ -6,6 +6,8 @@ import org.scalacheck.Gen
 import evolution.data.Expr
 import evolution.data.Expr._
 import evolution.compiler.ast.AST
+import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.compiling.Compile
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
@@ -127,5 +129,5 @@ class CompilerModuleSpec extends LanguageSpec {
     )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
-    Compiler.compile[Either[String, ?]](expr).run(ctx).fold(s => throw new Exception(s), _.asInstanceOf[Expr[T]])
+    Compile.compile[Either[String, ?]](expr).run(ctx).fold(s => throw new Exception(s), _.asInstanceOf[Expr[T]])
 }
