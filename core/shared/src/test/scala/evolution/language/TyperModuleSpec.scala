@@ -20,7 +20,7 @@ import evolution.compiler.phases.typing.model.Substitution
 class TyperModuleSpec extends LanguageSpec {
 
   // TODO this is to avoid ambiguities. Can we do better than that?
-  implicit val applicative: Monad[TypeInferenceResult] = typeInference.S.monad
+  implicit val applicative: Monad[TypeInferenceResult] = typeInference.S
 
   "The typer" - {
     "should generate constraints for" - {
