@@ -1,8 +1,6 @@
 package evolution.language
 import cats.implicits._
 import cats.mtl.implicits._
-import cats.Monad
-
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
@@ -18,9 +16,6 @@ import evolution.compiler.phases.typing.model.Constraint
 import evolution.compiler.phases.typing.model.Substitution
 
 class TyperModuleSpec extends LanguageSpec {
-
-  // TODO this is to avoid ambiguities. Can we do better than that?
-  implicit val applicative: Monad[TypeInferenceResult] = typeInference.S
 
   "The typer" - {
     "should generate constraints for" - {
@@ -51,7 +46,7 @@ class TyperModuleSpec extends LanguageSpec {
             AssignFreshTypeVars.assign(AST.Const(Constant2.Point), TypingConfig.constantQualifiedTypes)
           val constraints = FindConstraints.find(point).unsafeEvaluate
           val unifier = unify[TypeInferenceResult](constraints)
-          unifier.map(_.substitution.substitute(point.tpe)).evaluateEither shouldBe Right(
+          unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
           )
         }
@@ -66,7 +61,7 @@ class TyperModuleSpec extends LanguageSpec {
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify[TypeInferenceResult](allConstraints)
-          unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither shouldBe Right(
+          unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(
             Qualified(Type.Evo(Type.Point))
           )
         }
@@ -186,7 +181,7 @@ class TyperModuleSpec extends LanguageSpec {
           )
 
           val unification = unify[TypeInferenceResult](constraints)
-          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isRight shouldBe true
+          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isRight shouldBe true
         }
       }
     }
@@ -201,7 +196,7 @@ class TyperModuleSpec extends LanguageSpec {
             )
           )
           val unification = unify[TypeInferenceResult](constraints)
-          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isLeft shouldBe true
+          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isLeft shouldBe true
         }
       }
     }

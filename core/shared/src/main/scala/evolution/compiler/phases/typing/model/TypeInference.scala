@@ -1,14 +1,11 @@
 package evolution.compiler.phases.typing.model
 
 import cats.Monad
-import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise }
-import evolution.compiler.types.TypeBindings
+import cats.mtl.FunctorRaise
 
 trait TypeInference[M[_]] {
   def E: FunctorRaise[M, String]
   def S: Monad[M]
-  def A: ApplicativeAsk[M, TypeBindings]
-  def L: ApplicativeLocal[M, TypeBindings]
 }
 
 object TypeInference {
@@ -17,24 +14,14 @@ object TypeInference {
 
   implicit def monad[M[_]](implicit ti: TypeInference[M]): Monad[M] = ti.S
 
-  def instance[M[_]](
-    implicit
-    me: FunctorRaise[M, String],
-    m: Monad[M],
-    aa: ApplicativeAsk[M, TypeBindings],
-    al: ApplicativeLocal[M, TypeBindings]
-  ): TypeInference[M] =
+  def instance[M[_]](implicit me: FunctorRaise[M, String], m: Monad[M]): TypeInference[M] =
     new TypeInference[M] {
       override def E: FunctorRaise[M, String] = me
       override def S: Monad[M] = m
-      override def A: ApplicativeAsk[M, TypeBindings] = aa
-      override def L: ApplicativeLocal[M, TypeBindings] = al
     }
 
   object TypeInferenceInstances {
     implicit def monadInstance[M[_]](implicit M: TypeInference[M]): Monad[M] = M.S
     implicit def functorRaise[M[_]](implicit M: TypeInference[M]): FunctorRaise[M, String] = M.E
-    implicit def applicativeAsk[M[_]](implicit M: TypeInference[M]): ApplicativeAsk[M, TypeBindings] = M.A
-    implicit def applicativeLocal[M[_]](implicit M: TypeInference[M]): ApplicativeLocal[M, TypeBindings] = M.L
   }
 }
