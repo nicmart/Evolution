@@ -2,6 +2,7 @@ package evolution.compiler.types
 
 import evolution.compiler.ast.AST.Identifier
 import evolution.compiler.phases.typing.model.TypeInference
+import evolution.compiler.types.TypeClasses.Qualified
 
 final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
   def getIdentifier[M[_]](name: String)(implicit TI: TypeInference[M]): M[Identifier] = {
@@ -16,6 +17,9 @@ final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
 
   def withBinding(name: String, binding: TypeBinding): TypeBindings =
     new TypeBindings(bindings.updated(name, binding))
+
+  def withVarBinding(name: String, tpe: Qualified[Type]): TypeBindings =
+    withBinding(name, TypeBinding.Variable(name, tpe))
 }
 
 object TypeBindings {

@@ -23,6 +23,7 @@ import evolution.compiler.types.TypeBinding
 import evolution.compiler.phases.typing.config.Instances._
 import evolution.materialization.Evolution
 import evolution.compiler.types.TypeBindings
+import evolution.compiler.phases.typing.config.TypingConfig
 
 // This is a big epic mess
 object dsl extends DrawingDefinition[Point] {
@@ -48,9 +49,16 @@ object dsl extends DrawingDefinition[Point] {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
         All
-          .compile[TypeInferenceResult](serialisedExpr, Type.Evo(Type.Point), initialVarContext)
+          .compile[TypeInferenceResult](
+            serialisedExpr,
+            Type.Evo(Type.Point),
+            // TODO here we shouldn't know about constants
+            TypingConfig.constantQualifiedTypes.merge(predefinedVarsTypeBindings),
+            initialVarContext
+          )
           .map(_.asInstanceOf[Expr[Evolution[Point]]])
-          .evaluateEither(predefinedVarsTypeBindings)
+          .evaluateEither
+
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }
   }

@@ -11,12 +11,14 @@ import evolution.compiler.phases.typing.model.{ Constraints, TypeInference }
 import TypeInference.TypeInferenceInstances._
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
+import evolution.compiler.types.TypeBindings
 
 object All {
 
   def compile[M[_]](
     serialisedExpr: String,
     expectedType: Type,
+    typeBindings: TypeBindings,
     ctx: VarContext
   )(implicit M: TypeInference[M]): M[Expr[expectedType.Out]] = {
 
@@ -33,7 +35,7 @@ object All {
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      exprWithTypeVars <- AssignFreshTypeVars.assign(expr)
+      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings)
       constraints <- FindConstraints.find(exprWithTypeVars)
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))

@@ -47,10 +47,11 @@ class TyperModuleSpec extends LanguageSpec {
 
       "pre-defined constants" - {
         "point function" in {
-          val point = AssignFreshTypeVars.assign(AST.Const(Constant2.Point)).unsafeEvaluate
+          val point =
+            AssignFreshTypeVars.assign(AST.Const(Constant2.Point), TypingConfig.constantQualifiedTypes).unsafeEvaluate
           val constraints = FindConstraints.find(point).unsafeEvaluate
           val unifier = unify[TypeInferenceResult](constraints)
-          unifier.map(_.substitution.substitute(point.tpe)).evaluateEither() shouldBe Right(
+          unifier.map(_.substitution.substitute(point.tpe)).evaluateEither shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
           )
         }
@@ -58,11 +59,13 @@ class TyperModuleSpec extends LanguageSpec {
         "constant evolution of a point" in {
           val point = AST.AppN(AST.Const(Constant2.Point), AST.DoubleLiteral(1), AST.DoubleLiteral(1))
           val evolution =
-            AssignFreshTypeVars.assign(AST.App(AST.Const(Constant1.Constant), point)).unsafeEvaluate
+            AssignFreshTypeVars
+              .assign(AST.App(AST.Const(Constant1.Constant), point), TypingConfig.constantQualifiedTypes)
+              .unsafeEvaluate
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
           val unifier = unify[TypeInferenceResult](allConstraints)
-          unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither() shouldBe Right(
+          unifier.map(_.substitution.substitute(evolution.tpe)).evaluateEither shouldBe Right(
             Qualified(Type.Evo(Type.Point))
           )
         }
@@ -72,15 +75,14 @@ class TyperModuleSpec extends LanguageSpec {
     "should unify" - {
       "point expressions" in {
         val untyped = AST.AppN(AST.Const(Constant2.Point), AST.Identifier("a"), AST.Identifier("b"))
-        val (expr, constraints) =
-          assignVarsAndFindConstraints(untyped).unsafeEvaluateWith(
-            new TypeBindings(
-              Map(
-                "a" -> TypeBinding.Variable("a", Qualified(Type.Dbl)),
-                "b" -> TypeBinding.Variable("b", Qualified(Type.Dbl))
-              )
-            )
+        val extraBindings = new TypeBindings(
+          Map(
+            "a" -> TypeBinding.Variable("a", Qualified(Type.Dbl)),
+            "b" -> TypeBinding.Variable("b", Qualified(Type.Dbl))
           )
+        )
+        val (expr, constraints) =
+          assignVarsAndFindConstraints(untyped, extraBindings).unsafeEvaluate
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Point
       }
@@ -89,6 +91,8 @@ class TyperModuleSpec extends LanguageSpec {
         val identity = AST.Lambda("x", AST.Identifier("x"))
         val untyped = AST.App(identity, AST.DoubleLiteral(2, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
+        println(expr)
+        println(constraints)
         val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Dbl
       }
@@ -181,10 +185,7 @@ class TyperModuleSpec extends LanguageSpec {
           )
 
           val unification = unify[TypeInferenceResult](constraints)
-          UnifyPredicates
-            .unifyM(unification.unsafeEvaluate.substitutedPredicates)
-            .evaluateEither()
-            .isRight shouldBe true
+          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isRight shouldBe true
         }
       }
     }
@@ -199,7 +200,7 @@ class TyperModuleSpec extends LanguageSpec {
             )
           )
           val unification = unify[TypeInferenceResult](constraints)
-          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).evaluateEither().isLeft shouldBe true
+          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).evaluateEither.isLeft shouldBe true
         }
       }
     }
@@ -310,10 +311,13 @@ class TyperModuleSpec extends LanguageSpec {
     }
   }
 
-  def assignVarsAndFindConstraints(expr: AST): TypeInferenceResult[(AST, Constraints)] = {
+  def assignVarsAndFindConstraints(
+    expr: AST,
+    extraTypeBindings: TypeBindings = TypeBindings.empty
+  ): TypeInferenceResult[(AST, Constraints)] = {
 
     for {
-      exprWithVars <- AssignFreshTypeVars.assign(expr)
+      exprWithVars <- AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraTypeBindings))
       constraints <- FindConstraints.find(exprWithVars)
     } yield (exprWithVars, constraints)
   }
