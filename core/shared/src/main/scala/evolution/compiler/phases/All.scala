@@ -35,7 +35,7 @@ object All {
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings)
+      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings).pure[M]
       constraints <- FindConstraints.find(exprWithTypeVars)
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))

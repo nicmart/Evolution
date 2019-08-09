@@ -12,6 +12,8 @@ final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
     }
   }
 
+  def getBinding(name: String): Option[TypeBinding] = bindings.get(name)
+
   def merge(other: TypeBindings): TypeBindings =
     new TypeBindings(bindings ++ other.bindings)
 

@@ -44,7 +44,7 @@ object AST {
   final case class Lambda(varName: Identifier, expr: AST, tpe: Qualified[Type]) extends AST
   final case class App(f: AST, args: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
   final case class Let(varName: Identifier, expr: AST, in: AST, tpe: Qualified[Type]) extends AST
-  final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Dbl)) extends AST
   final case class IntLiteral(n: Int, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
   final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
 
@@ -99,4 +99,30 @@ object AST {
 
   def transformRecursively(tree: AST, f: AST => AST): AST =
     f(transformChildren(tree, transformRecursively(_, f)))
+
+  def prettyPrint(ast: AST): String = {
+    def pp(level: Int)(ast: AST): String = {
+      val indent = " " * (level * 4)
+      ast match {
+        case Lambda(varName, expr, tpe) =>
+          ppFunc(level, "Lambda", List(varName, expr), tpe.t)
+        case id: Identifier => s"${indent}${id.name}: ${id.tpe.predicates} => ${id.tpe.t}"
+        case Let(varName, expr, in, tpe) =>
+          ppFunc(level, "Let", List(varName, expr, in), tpe.t)
+        case IntLiteral(n, tpe) =>
+          s"${indent}$n: ${tpe.t}"
+        case Bool(b, tpe)          => s"${indent}$b: ${tpe.t}"
+        case DoubleLiteral(n, tpe) => s"${indent}$n: ${tpe.t}"
+        case App(f, args, tpe)     => ppFunc(level, "App", List(f, args), tpe.t)
+      }
+    }
+
+    def ppFunc(level: Int, name: String, children: List[AST], tpe: Type): String = {
+      val indent = " " * (level * 4)
+      children.map(pp(level + 1)).mkString(s"${indent}$name(\n", ",\n", s"\n${indent}): $tpe")
+    }
+
+    pp(0)(ast)
+  }
+
 }

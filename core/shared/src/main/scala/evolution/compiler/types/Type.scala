@@ -44,7 +44,10 @@ object Type {
   final case object Bool extends Type { type Out = Boolean }
   final case class Evo(inner: Type) extends Type { type Out = Evolution[inner.type] }
   final case class Lst(inner: Type) extends Type { type Out = List[inner.type] }
-  final case class Arrow(from: Type, to: Type) extends Type { type Out = from.type => to.type }
+  final case class Arrow(from: Type, to: Type) extends Type {
+    type Out = from.type => to.type
+    override def toString: String = s"$from -> $to"
+  }
 
   // TODO can we do better thant this?
   def group[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Group[t.Out]] = {
