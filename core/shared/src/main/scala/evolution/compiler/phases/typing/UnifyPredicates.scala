@@ -5,14 +5,13 @@ import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import cats.mtl.implicits._
 import evolution.compiler.phases.typing.config.TypingConfig
-import evolution.compiler.phases.typing.model.TypeInference.TypeInferenceInstances._
-import evolution.compiler.phases.typing.model.{ Substitution, TypeInference }
+import evolution.compiler.phases.typing.model.Substitution
 
 object UnifyPredicates {
-  def unifyM[M[_]](predicates: List[Predicate])(implicit M: TypeInference[M]): M[Substitution] = {
+  def unifyM(predicates: List[Predicate]): Either[String, Substitution] = {
     unify(TypingConfig.instances, predicates) match {
-      case Some(subst) => subst.pure[M]
-      case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".raise[M, Substitution]
+      case Some(subst) => subst.asRight[String]
+      case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".asLeft[Substitution]
     }
   }
 

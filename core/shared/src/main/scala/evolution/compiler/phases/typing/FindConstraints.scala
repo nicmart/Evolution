@@ -5,24 +5,23 @@ import evolution.compiler.ast.AST.{ App, Bool, DoubleLiteral, Identifier, IntLit
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
-import evolution.compiler.phases.typing.model.{ Constraints, TypeInference }
-import TypeInference._
+import evolution.compiler.phases.typing.model.Constraints
 
 object FindConstraints {
-  def find[M[_]](expr: AST)(implicit TI: TypeInference[M]): M[Constraints] = {
-    val nodeConstraints: M[Constraints] = expr match {
-      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).pure[M]
-      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).pure[M]
-      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).pure[M]
-      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).pure[M]
-      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).pure[M]
+  def find(expr: AST): Either[String, Constraints] = {
+    val nodeConstraints = expr match {
+      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).asRight[String]
+      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).asRight[String]
+      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).asRight[String]
+      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).asRight[String]
+      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).asRight[String]
       case Lambda(_, _, _) =>
-        Constraints.empty.pure[M]
+        Constraints.empty.asRight[String]
       case Let(_, _, _, _) =>
-        Constraints.empty.pure[M]
+        Constraints.empty.asRight[String]
     }
 
-    val childrenConstraints = expr.children.traverse(find[M])
+    val childrenConstraints = expr.children.traverse(find)
 
     (nodeConstraints, childrenConstraints).mapN { (n, c) =>
       n.merge(c)

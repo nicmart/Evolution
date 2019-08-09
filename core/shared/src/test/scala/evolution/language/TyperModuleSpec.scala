@@ -1,10 +1,7 @@
 package evolution.language
-import cats.implicits._
-import cats.mtl.implicits._
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.typing.config.Instances._
 import evolution.compiler.ast.AST
 import evolution.compiler.phases.typing.FindConstraints
 import evolution.compiler.phases.typing.AssignFreshTypeVars
@@ -45,7 +42,7 @@ class TyperModuleSpec extends LanguageSpec {
           val point =
             AssignFreshTypeVars.assign(AST.Const(Constant2.Point), TypingConfig.constantQualifiedTypes)
           val constraints = FindConstraints.find(point).unsafeEvaluate
-          val unifier = unify[TypeInferenceResult](constraints)
+          val unifier = unify(constraints)
           unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
           )
@@ -60,7 +57,7 @@ class TyperModuleSpec extends LanguageSpec {
             )
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
           val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
-          val unifier = unify[TypeInferenceResult](allConstraints)
+          val unifier = unify(allConstraints)
           unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(
             Qualified(Type.Evo(Type.Point))
           )
@@ -79,7 +76,7 @@ class TyperModuleSpec extends LanguageSpec {
         )
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped, extraBindings).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Point
       }
 
@@ -87,7 +84,7 @@ class TyperModuleSpec extends LanguageSpec {
         val identity = AST.Lambda("x", AST.Identifier("x"))
         val untyped = AST.App(identity, AST.DoubleLiteral(2, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Dbl
       }
 
@@ -104,14 +101,14 @@ class TyperModuleSpec extends LanguageSpec {
           )
         )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
       }
 
       "@(1)" in {
         val untyped = AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(1, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
         finalExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
 
@@ -127,7 +124,7 @@ class TyperModuleSpec extends LanguageSpec {
             AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(2))
           )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Point)
       }
 
@@ -149,7 +146,7 @@ class TyperModuleSpec extends LanguageSpec {
           )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val unification = unify[TypeInferenceResult](constraints).unsafeEvaluate
+        val unification = unify(constraints).unsafeEvaluate
         val subst =
           UnifyPredicates.unifyM(unification.substitutedPredicates).unsafeEvaluate.compose(unification.substitution)
         val typedExpr = subst.substitute(expr)
@@ -166,7 +163,7 @@ class TyperModuleSpec extends LanguageSpec {
           )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify[TypeInferenceResult](constraints).unsafeEvaluate.substitution
+        val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
         typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
       }
@@ -180,7 +177,7 @@ class TyperModuleSpec extends LanguageSpec {
             )
           )
 
-          val unification = unify[TypeInferenceResult](constraints)
+          val unification = unify(constraints)
           UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isRight shouldBe true
         }
       }
@@ -195,7 +192,7 @@ class TyperModuleSpec extends LanguageSpec {
               Constraint.Pred(Predicate("Num", List(Type.Var("X"))))
             )
           )
-          val unification = unify[TypeInferenceResult](constraints)
+          val unification = unify(constraints)
           UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isLeft shouldBe true
         }
       }
@@ -310,7 +307,7 @@ class TyperModuleSpec extends LanguageSpec {
   def assignVarsAndFindConstraints(
     expr: AST,
     extraTypeBindings: TypeBindings = TypeBindings.empty
-  ): TypeInferenceResult[(AST, Constraints)] = {
+  ): Either[String, (AST, Constraints)] = {
 
     val exprWithVars = AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraTypeBindings))
 

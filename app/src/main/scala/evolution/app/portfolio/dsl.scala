@@ -1,6 +1,5 @@
 package evolution.app.portfolio
 
-import cats.implicits._
 import com.github.ghik.silencer.silent
 import evolution.app.codec.JsonCodec
 import evolution.app.codec.config.DrawingJsonCodec
@@ -20,7 +19,6 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.TypeBinding
-import evolution.compiler.phases.typing.config.Instances._
 import evolution.materialization.Evolution
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
@@ -49,7 +47,7 @@ object dsl extends DrawingDefinition[Point] {
     def from(serialisedExpr: String): (Config, State) = {
       val eitherExprOrError =
         All
-          .compile[TypeInferenceResult](
+          .compile(
             serialisedExpr,
             Type.Evo(Type.Point),
             // TODO here we shouldn't know about constants
@@ -57,7 +55,6 @@ object dsl extends DrawingDefinition[Point] {
             initialVarContext
           )
           .map(_.asInstanceOf[Expr[Evolution[Point]]])
-          .evaluateEither
 
       (Config(serialisedExpr, eitherExprOrError.toOption), State(eitherExprOrError.swap.toOption))
     }

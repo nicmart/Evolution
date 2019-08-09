@@ -1,6 +1,5 @@
 package evolution.language
 import cats.implicits._
-import cats.mtl.implicits._
 import cats.kernel.{ Eq, Order }
 import org.scalacheck.Gen
 import evolution.data.Expr
@@ -129,5 +128,5 @@ class CompilerModuleSpec extends LanguageSpec {
     )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
-    Compile.compile[Either[String, ?]](expr).run(ctx).fold(s => throw new Exception(s), _.asInstanceOf[Expr[T]])
+    Compile.compile(expr).run(ctx).fold(s => throw new Exception(s), _.asInstanceOf[Expr[T]])
 }
