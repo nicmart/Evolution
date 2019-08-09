@@ -41,12 +41,22 @@ object AST {
       new Identifier(name.toLowerCase, tpe, primitive) {}
   }
 
-  final case class Lambda(varName: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Lambda(varName: Identifier, expr: AST, tpe: Qualified[Type]) extends AST
   final case class App(f: AST, args: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-  final case class Let(varName: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Let(varName: Identifier, expr: AST, in: AST, tpe: Qualified[Type]) extends AST
   final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
   final case class IntLiteral(n: Int, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
   final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+
+  object Lambda {
+    def apply(varNameS: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))): Lambda =
+      Lambda(Identifier(varNameS), expr, tpe)
+  }
+
+  object Let {
+    def apply(varNameS: String, expr: AST, in: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))): Let =
+      Let(Identifier(varNameS), expr, in, tpe)
+  }
 
   def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
   def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)

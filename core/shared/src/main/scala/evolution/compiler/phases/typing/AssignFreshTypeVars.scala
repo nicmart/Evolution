@@ -31,14 +31,14 @@ object AssignFreshTypeVars {
       case Lambda(varName, lambdaBody, _) =>
         newTypeVar.flatMap(
           qt =>
-            withVarType(varName, qt) {
+            withVarType(varName.name, qt) {
               assign(lambdaBody).map(b => Lambda(varName, b, Qualified(qt.t =>: b.tpe.t)))
             }
         )
 
       case Let(varName, value, body, _) =>
         assign(value).flatMap { valueWithVars =>
-          withVarType(varName, valueWithVars.tpe) {
+          withVarType(varName.name, valueWithVars.tpe) {
             assign(body).map(bodyWithVars => Let(varName, valueWithVars, bodyWithVars, bodyWithVars.tpe))
           }
         }

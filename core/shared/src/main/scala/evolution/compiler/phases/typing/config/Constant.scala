@@ -33,7 +33,7 @@ abstract sealed class Constant0(qualifiedType: Qualified[Type])
 }
 
 object Constant0 extends Enum[Constant0] {
-  val values: immutable.IndexedSeq[Constant0] = findValues
+  lazy val values: immutable.IndexedSeq[Constant0] = findValues
 
   case object PI extends Constant0(Qualified(Dbl)) {
     def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
@@ -184,7 +184,7 @@ abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Con
 }
 
 object Constant2 extends Enum[Constant2] {
-  val values: immutable.IndexedSeq[Constant2] = findValues
+  lazy val values: immutable.IndexedSeq[Constant2] = findValues
 
   case object Point extends Constant2Plain(Qualified(Dbl =>: Dbl =>: Type.Point)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
@@ -458,7 +458,7 @@ abstract sealed class Constant3Plain(qualifiedType: Qualified[Type]) extends Con
 }
 
 object Constant3 extends Enum[Constant3] {
-  val values: immutable.IndexedSeq[Constant3] = findValues
+  lazy val values: immutable.IndexedSeq[Constant3] = findValues
 
   case object SmoothStep extends Constant3Plain(Qualified(Dbl =>: Dbl =>: Dbl =>: Dbl)) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
@@ -513,7 +513,7 @@ object Constant3 extends Enum[Constant3] {
 }
 
 object Constant {
-  val values: Seq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
+  lazy val values: Seq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
 
   def fromEither[M[_], T](e: Either[String, T])(implicit M: Applicative[M], E: FunctorRaise[M, String]): M[T] =
     e.fold(E.raise, M.pure)

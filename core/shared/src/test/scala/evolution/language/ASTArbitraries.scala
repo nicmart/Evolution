@@ -23,7 +23,7 @@ trait ASTArbitraries {
     Gen.oneOf[(String, AST)](Parser.binaryOperators)
 
   def genVarUsage: Gen[String] =
-    genIdentifier.map(v => s"$v").filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))
+    genIdentifier.filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))
 
   def genIdentifier: Gen[String] = for {
     head <- Gen.alphaChar

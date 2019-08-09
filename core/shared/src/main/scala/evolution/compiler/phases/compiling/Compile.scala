@@ -38,11 +38,11 @@ object Compile {
         }
 
       case Lambda(varName, body, _) =>
-        withVar(varName)(compile[M](body)).map(Expr.Lambda(varName, _))
+        withVar(varName.name)(compile[M](body)).map(Expr.Lambda(varName.name, _))
 
       case Let(varName, value, in, _) =>
-        (compile[M](value), withVar(varName)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
-          Expr.Let(varName, compiledValue, compiledIn)
+        (compile[M](value), withVar(varName.name)(compile[M](in))).mapN { (compiledValue, compiledIn) =>
+          Expr.Let(varName.name, compiledValue, compiledIn)
         }
 
       case IntLiteral(n, Qualified(_, Type.Integer)) =>
