@@ -1,11 +1,8 @@
 package evolution.compiler.phases.typing.model
 
 import cats.Monad
-import cats.implicits._
 import cats.mtl.{ ApplicativeAsk, ApplicativeLocal, FunctorRaise, MonadState }
-import evolution.compiler.ast.AST.Identifier
-import evolution.compiler.types.TypeClasses.Qualified
-import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
+import evolution.compiler.types.TypeBindings
 
 trait TypeInference[M[_]] {
   def E: FunctorRaise[M, String]
@@ -21,20 +18,6 @@ object TypeInference {
   def apply[M[_]](implicit ti: TypeInference[M]): TypeInference[M] = ti
 
   implicit def monad[M[_]](implicit ti: TypeInference[M]): Monad[M] = ti.S.monad
-
-  def newTypeVar[M[_]](implicit TI: TypeInference[M]): M[Qualified[Type]] = for {
-    state <- TI.S.get
-    qt = Qualified[Type](state.vars.current)
-    _ <- TI.S.set(state.copy(vars = state.vars.next))
-  } yield qt
-
-  def getType[M[_]](name: String)(implicit TI: TypeInference[M]): M[Identifier] =
-    TI.A.ask.flatMap(_.getIdentifier(name))
-
-  def withVarType[M[_], T](name: String, qt: Qualified[Type])(t: M[T])(implicit TI: TypeInference[M]): M[T] =
-    for {
-      t <- TI.L.local(_.withBinding(name, TypeBinding.Variable(name, qt)))(t)
-    } yield t
 
   def instance[M[_]](
     implicit
