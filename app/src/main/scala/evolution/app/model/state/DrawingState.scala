@@ -8,31 +8,32 @@ import io.circe.syntax._
 import com.github.ghik.silencer.silent
 
 import scala.util.Random
+import evolution.app.portfolio.dsl
 
-final case class DrawingState[+C](
+final case class DrawingState(
   seed: Long,
-  config: C
+  config: dsl.Config
 ) {
-  def withNewSeed: DrawingState[C] = copy(seed = Random.nextLong())
+  def withNewSeed: DrawingState = copy(seed = Random.nextLong())
 }
 
 object DrawingState {
 
-  def jsonCodec[T](definition: DrawingDefinition[T]): JsonCodec[DrawingState[definition.Config]] =
-    new JsonCodec[DrawingState[definition.Config]] {
+  def jsonCodec(definition: DrawingDefinition): JsonCodec[DrawingState] =
+    new JsonCodec[DrawingState] {
 
       @silent
-      implicit private val encoder: Encoder[definition.Config] =
+      implicit private val encoder: Encoder[dsl.Config] =
         JsonCodec.toCirceEncoder(definition.configCodec)
 
       @silent
-      implicit private val decoder: Decoder[definition.Config] =
+      implicit private val decoder: Decoder[dsl.Config] =
         JsonCodec.toCirceDecoder(definition.configCodec)
 
-      override def encode(state: DrawingState[definition.Config]): Json =
+      override def encode(state: DrawingState): Json =
         state.asJson
 
-      override def decode(json: Json): Option[DrawingState[definition.Config]] =
-        json.as[DrawingState[definition.Config]].toOption
+      override def decode(json: Json): Option[DrawingState] =
+        json.as[DrawingState].toOption
     }
 }

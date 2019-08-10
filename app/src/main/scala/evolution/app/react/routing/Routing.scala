@@ -9,16 +9,16 @@ import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
 import japgolly.scalajs.react.extra.router.{ BaseUrl, Redirect, RouterConfig, RouterConfigDsl }
 import japgolly.scalajs.react.vdom.html_<^._
 
-class Routing[C](
+class Routing(
   urlDelimiter: String,
-  appComponent: App.ReactComponent[C],
-  defaultPage: MyPages[C],
-  drawingStateCodec: Codec[LoadDrawingPage[C], String]
+  appComponent: App.ReactComponent,
+  defaultPage: MyPages,
+  drawingStateCodec: Codec[LoadDrawingPage, String]
 ) {
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
 
-  val config: RouterConfig[MyPages[C]] = RouterConfigDsl[MyPages[C]].buildConfig { dsl =>
+  val config: RouterConfig[MyPages] = RouterConfigDsl[MyPages].buildConfig { dsl =>
     import dsl._
 
     (emptyRule
@@ -28,7 +28,7 @@ class Routing[C](
         | NotFoundPageRoute(dsl).rule).prefixPath(s"$urlDelimiter/")).notFound(redirectToPage(NotFound)(Redirect.Push))
   }
 
-  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
+  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages]) {
     import dsl._
 
     val rule: dsl.Rule =
@@ -41,25 +41,27 @@ class Routing[C](
       redirectToPage(defaultPage)(Redirect.Replace)
   }
 
-  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
+  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages]) {
     import dsl._
 
     val rule: dsl.Rule =
       route ~> renderPage
 
     private def route =
-      dynamicRouteCT[LoadDrawingPage[C]](routeFromCodec(string(".*"), drawingStateCodec))
+      dynamicRouteCT[LoadDrawingPage](routeFromCodec(string(".*"), drawingStateCodec))
 
-    private def renderPage: LoadDrawingPage[C] => dsl.Renderer =
+    private def renderPage: LoadDrawingPage => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         appComponent(
-          SnapshotUnderware.simpleSnapshot[PageState[C]](loadDrawingPage.state)(pageState =>
-            Callback(println("PageStateSnapshot Callback called")) >> router.set(LoadDrawingPage(pageState)))
+          SnapshotUnderware.simpleSnapshot[PageState](loadDrawingPage.state)(
+            pageState =>
+              Callback(println("PageStateSnapshot Callback called")) >> router.set(LoadDrawingPage(pageState))
+          )
         )
       }
   }
 
-  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages[C]]) {
+  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages]) {
     import dsl._
 
     val rule: dsl.Rule =

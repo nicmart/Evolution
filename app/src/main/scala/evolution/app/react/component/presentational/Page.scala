@@ -19,36 +19,38 @@ import org.scalajs.dom.raw.{ Blob, URL }
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
+import evolution.app.portfolio.dsl
 
 object Page {
-  type ReactComponent[C] = Component[Props[C], Unit, Backend[C], CtorType.Props]
+  type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
 
   def canvasInitializer: dom.html.Canvas => Unit =
     Conf.canvasInitializer
 
-  case class Props[C](
+  case class Props(
     running: StateSnapshot[Boolean],
     layout: StateSnapshot[LayoutState],
     rendererState: StateSnapshot[RendererState],
     points: Eval[Iterator[Point]],
-    drawingState: StateSnapshot[DrawingState[C]],
+    drawingState: StateSnapshot[DrawingState],
     pointRate: Int,
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
     def canvasKey: String = (rendererState.value, drawingState.value, layout.value).hashCode().toString
-    def config: StateSnapshot[C] = drawingState.zoomState(_.config)(config => state => state.copy(config = config))
+    def config: StateSnapshot[dsl.Config] =
+      drawingState.zoomState(_.config)(config => state => state.copy(config = config))
     def sidebarWidth: StateSnapshot[Double] =
       layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
     def sidebarStatus: StateSnapshot[Boolean] =
       layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
   }
 
-  class Backend[C](
-    drawingConfig: ConfigComponent[C],
+  class Backend(
+    drawingConfig: ConfigComponent[dsl.Config],
     canvasComponent: Canvas.ReactComponent
   ) {
-    def render(props: Props[C]): VdomElement = {
+    def render(props: Props): VdomElement = {
       <.div(
         Navbar.component(
           <.div(
@@ -136,13 +138,13 @@ object Page {
     }
   }
 
-  def component[C](
-    drawingConfig: ConfigComponent[C],
+  def component(
+    drawingConfig: ConfigComponent[dsl.Config],
     canvasComponent: Canvas.ReactComponent
-  ): Page.ReactComponent[C] =
+  ): Page.ReactComponent =
     ScalaComponent
-      .builder[Props[C]]("Page")
-      .backend[Backend[C]](_ => new Backend[C](drawingConfig, canvasComponent))
+      .builder[Props]("Page")
+      .backend[Backend](_ => new Backend(drawingConfig, canvasComponent))
       .render(scope => scope.backend.render(scope.props))
       .build
 }

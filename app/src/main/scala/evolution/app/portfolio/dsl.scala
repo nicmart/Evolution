@@ -24,7 +24,7 @@ import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
 
 // This is a big epic mess
-object dsl extends DrawingDefinition[Point] {
+object dsl extends DrawingDefinition {
 
   val name = "drawing dsl"
 
@@ -99,9 +99,8 @@ object dsl extends DrawingDefinition[Point] {
       .renderBackendWithChildren[Backend]
       .build
 
-  override def materialize(ctx: DrawingContext, state: DrawingState[Config]): Iterator[Point] = state.config.expr.map {
-    expr =>
-      data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
+  override def materialize(ctx: DrawingContext, state: DrawingState): Iterator[Point] = state.config.expr.map { expr =>
+    data.EvaluationModule.materializeExpr(state.seed, bindPredefinedVars(ctx, expr))
   }.getOrElse(Iterator.empty)
 
   private def bindPredefinedVars(ctx: DrawingContext, expr: Expr[Evolution[Point]]): Expr[Evolution[Point]] = {
