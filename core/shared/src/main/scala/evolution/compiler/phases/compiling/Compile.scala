@@ -2,7 +2,6 @@ package evolution.compiler.phases.compiling
 
 import cats.data.Kleisli
 import cats.implicits._
-import cats.mtl.implicits._
 import evolution.data.Expr
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.ast.AST
@@ -25,7 +24,7 @@ object Compile {
       case Identifier(name, _, false) =>
         varContext.flatMap { ctx =>
           if (ctx.has(name)) Expr.Var(name).pure[Result].widen
-          else s"Variable $name is not defined for identifier $ast".raise[Result, Expr[Any]]
+          else s"Variable $name is not defined for identifier $ast".raiseError[Result, Expr[Any]]
         }
 
       case Lambda(varName, body, _) =>
@@ -54,7 +53,7 @@ object Compile {
 
       // Arity 0 identifiers
       case Identifier(id, _, _) =>
-        s"Constant $id is not supported as first class value".raise[Result, Expr[Any]]
+        s"Constant $id is not supported as first class value".raiseError[Result, Expr[Any]]
 
       // Arity 1 identifiers
       case App(Identifier(Constant1(c), _, true), x, typeOut) =>
@@ -85,7 +84,7 @@ object Compile {
         }
 
       case _ =>
-        s"Invalid AST for expression $ast".raise[Result, Expr[Any]]
+        s"Invalid AST for expression $ast".raiseError[Result, Expr[Any]]
     }
 
   private def withVar[A](name: String)(ka: Result[A]): Result[A] =
