@@ -148,7 +148,10 @@ class TyperModuleSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val unification = unify(constraints).unsafeEvaluate
         val subst =
-          UnifyPredicates.unifyM(unification.substitutedPredicates).unsafeEvaluate.compose(unification.substitution)
+          UnifyPredicates
+            .unify(TypingConfig.instances, unification.substitutedPredicates)
+            .unsafeEvaluate
+            .compose(unification.substitution)
         val typedExpr = subst.substitute(expr)
 
         typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
@@ -178,7 +181,9 @@ class TyperModuleSpec extends LanguageSpec {
           )
 
           val unification = unify(constraints)
-          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isRight shouldBe true
+          UnifyPredicates
+            .unify(TypingConfig.instances, unification.unsafeEvaluate.substitutedPredicates)
+            .isRight shouldBe true
         }
       }
     }
@@ -193,7 +198,9 @@ class TyperModuleSpec extends LanguageSpec {
             )
           )
           val unification = unify(constraints)
-          UnifyPredicates.unifyM(unification.unsafeEvaluate.substitutedPredicates).isLeft shouldBe true
+          UnifyPredicates
+            .unify(TypingConfig.instances, unification.unsafeEvaluate.substitutedPredicates)
+            .isLeft shouldBe true
         }
       }
     }
@@ -203,13 +210,13 @@ class TyperModuleSpec extends LanguageSpec {
     "should succeed with an empty substitution if there are no predicates" in {
       val subst = UnifyPredicates.unify(TypingConfig.instances, Nil)
 
-      subst shouldBe Some(Substitution.empty)
+      subst shouldBe Right(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
       val subst = UnifyPredicates.unify(TypingConfig.instances, TypingConfig.instances.take(1))
 
-      subst shouldBe Some(Substitution.empty)
+      subst shouldBe Right(Substitution.empty)
     }
 
     "should succeed with a simple substitution if there is a single predicate with vars and a matching instance" in {
@@ -217,7 +224,7 @@ class TyperModuleSpec extends LanguageSpec {
       val instances = List(Predicate("Num", List(Type.Dbl)))
       val subst = UnifyPredicates.unify(instances, predicates)
 
-      subst shouldBe Some(Substitution("X" -> Type.Dbl))
+      subst shouldBe Right(Substitution("X" -> Type.Dbl))
     }
 
     "should succeed with higher-horder types in predicates" in {
@@ -225,7 +232,7 @@ class TyperModuleSpec extends LanguageSpec {
       val instances = List(Predicate("Num", List(Type.Evo(Type.Dbl))))
       val subst = UnifyPredicates.unify(instances, predicates)
 
-      subst shouldBe Some(Substitution("X" -> Type.Dbl))
+      subst shouldBe Right(Substitution("X" -> Type.Dbl))
     }
 
     "should do more complex unifications" in {
@@ -240,7 +247,7 @@ class TyperModuleSpec extends LanguageSpec {
         Predicate("Both", List(Type.Dbl, Type.Dbl)),
         Predicate("Both", List(Type.Integer, Type.Integer))
       )
-      val subst = UnifyPredicates.unify(instances, predicates).get
+      val subst = UnifyPredicates.unify(instances, predicates).unsafeEvaluate
 
       subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
       subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
@@ -267,7 +274,7 @@ class TyperModuleSpec extends LanguageSpec {
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = UnifyPredicates.unify(TypingConfig.instances, Random.shuffle(predicates)).get
+      val subst = UnifyPredicates.unify(TypingConfig.instances, Random.shuffle(predicates)).unsafeEvaluate
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
     }
@@ -276,7 +283,7 @@ class TyperModuleSpec extends LanguageSpec {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
       val result = UnifyPredicates.unify(Nil, predicates)
 
-      result shouldBe None
+      result.isLeft shouldBe true
     }
 
     "should fail if the only instance does not match the typeclass of the only predicate" in {
@@ -284,7 +291,7 @@ class TyperModuleSpec extends LanguageSpec {
       val predicates = List(Predicate("Whatever", List(Type.Integer)))
       val result = UnifyPredicates.unify(instances, predicates)
 
-      result shouldBe None
+      result.isLeft shouldBe true
     }
 
     "should fail if the only instance does not match the types of the only predicate" in {
@@ -292,7 +299,7 @@ class TyperModuleSpec extends LanguageSpec {
       val predicates = List(Predicate("Num", List(Type.Dbl)))
       val result = UnifyPredicates.unify(instances, predicates)
 
-      result shouldBe None
+      result.isLeft shouldBe true
     }
 
     "should fail if the the matching instance leads to incompativle assignments" in {
@@ -300,7 +307,7 @@ class TyperModuleSpec extends LanguageSpec {
       val predicates = List(Predicate("Bi", List(Type.Var("x"), Type.Var("x"))))
       val result = UnifyPredicates.unify(instances, predicates)
 
-      result shouldBe None
+      result.isLeft shouldBe true
     }
   }
 

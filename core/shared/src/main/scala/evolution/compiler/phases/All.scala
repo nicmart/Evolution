@@ -10,6 +10,7 @@ import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeBindings
+import evolution.compiler.phases.typing.config.TypingConfig
 
 object All {
 
@@ -40,7 +41,7 @@ object All {
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = println("Done: unification")
       start = System.currentTimeMillis()
-      predicateSubst <- UnifyPredicates.unifyM(unification.substitutedPredicates)
+      predicateSubst <- UnifyPredicates.unify(TypingConfig.instances, unification.substitutedPredicates)
       stop = System.currentTimeMillis()
       _ = println(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)

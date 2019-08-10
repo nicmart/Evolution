@@ -3,19 +3,11 @@ package evolution.compiler.phases.typing
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
-import cats.mtl.implicits._
-import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.compiler.phases.typing.model.Substitution
 
 object UnifyPredicates {
-  def unifyM(predicates: List[Predicate]): Either[String, Substitution] = {
-    unify(TypingConfig.instances, predicates) match {
-      case Some(subst) => subst.asRight[String]
-      case None        => s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}".asLeft[Substitution]
-    }
-  }
 
-  def unify(instances: List[Predicate], predicates: List[Predicate]): Option[Substitution] = {
+  def unify(instances: List[Predicate], predicates: List[Predicate]): Either[String, Substitution] = {
     val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
       predicates.distinct.map { predicate =>
         predicate ->
@@ -32,7 +24,10 @@ object UnifyPredicates {
 
     val combinations = product(orderedSubstitutions)
 
-    combinations.flatMap(mergeSubstitutions).headOption
+    combinations
+      .flatMap(mergeSubstitutions)
+      .headOption
+      .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
   }
 
   private def freeVarsInPredicate(predicate: Predicate): Int =
@@ -53,7 +48,7 @@ object UnifyPredicates {
         for {
           tailSubst <- matchTypes(iTail, pTail)
           headSubst <- matchType(iHead, pHead)
-          subst <- headSubst.merge[Either[String, ?]](tailSubst).toOption
+          subst <- headSubst.merge(tailSubst).toOption
         } yield subst
 
       case (Nil, Nil) => Some(Substitution.empty)
@@ -87,7 +82,7 @@ object UnifyPredicates {
   private def mergeSubstitutions(substitutions: List[Substitution]): Option[Substitution] =
     substitutions match {
       case substHead :: substTail =>
-        mergeSubstitutions(substTail).flatMap(_.merge[Either[String, ?]](substHead).toOption)
+        mergeSubstitutions(substTail).flatMap(_.merge(substHead).toOption)
       case Nil => Some(Substitution.empty)
     }
 }
