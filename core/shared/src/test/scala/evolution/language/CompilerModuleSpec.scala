@@ -128,5 +128,5 @@ class CompilerModuleSpec extends LanguageSpec {
     )
 
   private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
-    Compile.compile(expr).run(ctx).unsafeEvaluate.asInstanceOf[Expr[T]]
+    Compile.compile(expr, ctx).unsafeEvaluate.asInstanceOf[Expr[T]]
 }

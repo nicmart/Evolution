@@ -14,10 +14,11 @@ import evolution.materialization.Evolution
 
 object Compile {
 
-  // VarContext => Either[String, T]
-  type Result[T] = Kleisli[Either[String, ?], VarContext, T]
+  def compile(ast: AST, varContext: VarContext): Either[String, Expr[ast.Out]] =
+    compileSafe(ast).run(varContext).asInstanceOf[Either[String, Expr[ast.Out]]]
 
-  def compile(ast: AST): Result[Expr[ast.Out]] = compileSafe(ast).asInstanceOf[Result[Expr[ast.Out]]]
+  // VarContext => Either[String, T]
+  private type Result[T] = Kleisli[Either[String, ?], VarContext, T]
 
   private def compileSafe(ast: AST): Result[Expr[Any]] =
     ast match {

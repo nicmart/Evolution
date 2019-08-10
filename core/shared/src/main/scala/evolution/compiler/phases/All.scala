@@ -49,7 +49,7 @@ object All {
       _ = println("Done: substitution")
       _ = println(s"Typed expression:")
       _ = println(AST.prettyPrint(typedExpr))
-      result <- Compile.compile(typedExpr).run(ctx)
+      result <- Compile.compile(typedExpr, ctx)
       _ = println(s"Compiled to $result")
       _ = println("Done: compilation")
     } yield result.asInstanceOf[Expr[expectedType.Out]]
