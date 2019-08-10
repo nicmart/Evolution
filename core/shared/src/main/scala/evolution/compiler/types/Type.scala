@@ -1,8 +1,7 @@
 package evolution.compiler.types
 
 import cats.implicits._
-import cats.{ Applicative, Eq, Group, Order }
-import cats.mtl.FunctorRaise
+import cats.{ Eq, Group, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import evolution.typeclass.Semigroupoid
@@ -50,98 +49,91 @@ object Type {
   }
 
   // TODO can we do better thant this?
-  def group[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Group[t.Out]] = {
+  def group(t: Type): Either[String, Group[t.Out]] = {
     t match {
-      case Type.Integer => Group[Int].pure[M]
-      case Type.Dbl     => Group[Double].pure[M]
-      case Type.Point   => Group[Point].pure[M]
-      case _            => E.raise(s"Unable to find a group for type $t")
+      case Type.Integer => Group[Int].asRight
+      case Type.Dbl     => Group[Double].asRight
+      case Type.Point   => Group[Point].asRight
+      case _            => s"Unable to find a group for type $t".asLeft
     }
-  }.asInstanceOf[M[Group[t.Out]]]
+  }.asInstanceOf[Either[String, Group[t.Out]]]
 
-  def semigroup[M[_]](
+  def semigroup(
     t: Type
-  )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Semigroupoid[t.Out, t.Out, t.Out]] =
-    addSemigrupoid[M](t, t, t)
+  ): Either[String, Semigroupoid[t.Out, t.Out, t.Out]] =
+    addSemigrupoid(t, t, t)
 
-  def multSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(
-    implicit A: Applicative[M],
-    E: FunctorRaise[M, String]
-  ): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+  def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)                               => Multiplicative.dblDblDbl.pure[M]
-      case (Type.Dbl, Type.Point, Type.Point)                           => Multiplicative.dblPointPoint.pure[M]
-      case (Type.Point, Type.Dbl, Type.Point)                           => Multiplicative.pointDblPoint.pure[M]
-      case (Type.Integer, Type.Integer, Type.Integer)                   => Multiplicative.intIntInt.pure[M]
-      case (Type.Integer, Type.Dbl, Type.Dbl)                           => Multiplicative.intDblDbl.pure[M]
-      case (Type.Dbl, Type.Integer, Type.Dbl)                           => Multiplicative.dblIntDbl.pure[M]
-      case (Type.Integer, Type.Point, Type.Point)                       => Multiplicative.intPointPoint.pure[M]
-      case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))           => Multiplicative.dblEvoDblEvoDbl.pure[M]
-      case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))           => Multiplicative.evoDblDblEvoDbl.pure[M]
-      case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point))       => Multiplicative.dblEvoPointEvoPoint.pure[M]
-      case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point))       => Multiplicative.evoPointDblEvoPoint.pure[M]
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Multiplicative.evoDblEvoDblEvoDbl.pure[M]
+      case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.dblDblDbl.asRight
+      case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.dblPointPoint.asRight
+      case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.pointDblPoint.asRight
+      case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.intIntInt.asRight
+      case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.intDblDbl.asRight
+      case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.dblIntDbl.asRight
+      case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.intPointPoint.asRight
+      case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.dblEvoDblEvoDbl.asRight
+      case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.evoDblDblEvoDbl.asRight
+      case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.dblEvoPointEvoPoint.asRight
+      case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.evoPointDblEvoPoint.asRight
+      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) =>
+        Multiplicative.evoDblEvoDblEvoDbl.asRight
       case (Type.Evo(Type.Point), Type.Evo(Type.Dbl), Type.Evo(Type.Point)) =>
-        Multiplicative.evoPointEvoDblEvoPoint.pure[M]
+        Multiplicative.evoPointEvoDblEvoPoint.asRight
       case (Type.Evo(Type.Dbl), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Multiplicative.evoDblEvoPointEvoPoint.pure[M]
-      case _ => E.raise(s"Unable to find a Mult instance for types $t1, $t2, $t3")
+        Multiplicative.evoDblEvoPointEvoPoint.asRight
+      case _ => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
     }
-  }.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+  }.asInstanceOf[Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 
-  def addSemigrupoid[M[_]](t1: Type, t2: Type, t3: Type)(
-    implicit A: Applicative[M],
-    E: FunctorRaise[M, String]
-  ): M[Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+  def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.dblDblDbl.pure[M]
-      case (Type.Integer, Type.Integer, Type.Integer) => Additive.intIntInt.pure[M]
-      case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.intDblDbl.pure[M]
-      case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.dblIntDbl.pure[M]
-      case (Type.Point, Type.Point, Type.Point)       => Additive.pointPointPoint.pure[M]
+      case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.dblDblDbl.asRight
+      case (Type.Integer, Type.Integer, Type.Integer) => Additive.intIntInt.asRight
+      case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.intDblDbl.asRight
+      case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.dblIntDbl.asRight
+      case (Type.Point, Type.Point, Type.Point)       => Additive.pointPointPoint.asRight
       case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Additive.evoPointEvoPointEvoPoint.pure[M]
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.pure[M]
-      case _                                                            => E.raise(s"Unable to find an Add instance for types $t1, $t2, $t3")
+        Additive.evoPointEvoPointEvoPoint.asRight
+      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.asRight
+      case _                                                            => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
     }
-  }.asInstanceOf[M[Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+  }.asInstanceOf[Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]]]
 
-  def eqTypeClass[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Eq[t.Out]] = {
+  def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
     t match {
-      case Type.Integer => Eq[Int].pure[M]
-      case Type.Dbl     => Eq[Double].pure[M]
-      case Type.Point   => Eq[Point].pure[M]
-      case Type.Bool    => Eq[Boolean].pure[M]
-      case _            => E.raise(s"Unable to find an eq typeclass for type $t")
+      case Type.Integer => Eq[Int].asRight
+      case Type.Dbl     => Eq[Double].asRight
+      case Type.Point   => Eq[Point].asRight
+      case Type.Bool    => Eq[Boolean].asRight
+      case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.asInstanceOf[M[Eq[t.Out]]]
+  }.asInstanceOf[Either[String, Eq[t.Out]]]
 
-  def invertible[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Invertible[t.Out]] = {
+  def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
-      case Type.Integer         => Invertible.Additive.intInvertible.pure[M]
-      case Type.Dbl             => Invertible.Additive.dblInvertible.pure[M]
-      case Type.Point           => Invertible.Additive.pointInvertible.pure[M]
-      case Type.Evo(Type.Dbl)   => Invertible.Additive.dblEvoInvertible.pure[M]
-      case Type.Evo(Type.Point) => Invertible.Additive.pointEvoInvertible.pure[M]
-      case _                    => E.raise(s"Unable to find an invertible typeclass for type $t")
+      case Type.Integer         => Invertible.Additive.intInvertible.asRight
+      case Type.Dbl             => Invertible.Additive.dblInvertible.asRight
+      case Type.Point           => Invertible.Additive.pointInvertible.asRight
+      case Type.Evo(Type.Dbl)   => Invertible.Additive.dblEvoInvertible.asRight
+      case Type.Evo(Type.Point) => Invertible.Additive.pointEvoInvertible.asRight
+      case _                    => s"Unable to find an invertible typeclass for type $t".asLeft
     }
-  }.asInstanceOf[M[Invertible[t.Out]]]
+  }.asInstanceOf[Either[String, Invertible[t.Out]]]
 
-  def invertibleSemigroup[M[_]](
-    t: Type
-  )(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[(Semigroup[t.Out], Invertible[t.Out])] =
-    A.tuple2(semigroup[M](t), invertible[M](t))
+  def invertibleSemigroup(t: Type): Either[String, (Semigroup[t.Out], Invertible[t.Out])] =
+    (semigroup(t), invertible(t)).tupled
 
-  def order[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Order[t.Out]] = {
+  def order(t: Type): Either[String, Order[t.Out]] = {
     t match {
-      case Type.Integer => Order[Int].pure[M]
-      case Type.Dbl     => Order[Double].pure[M]
-      case _            => E.raise(s"Unable to find an eq typeclass for type $t")
+      case Type.Integer => Order[Int].asRight
+      case Type.Dbl     => Order[Double].asRight
+      case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.asInstanceOf[M[Order[t.Out]]]
+  }.asInstanceOf[Either[String, Order[t.Out]]]
 
-  def unwrapF[M[_]](t: Type)(implicit A: Applicative[M], E: FunctorRaise[M, String]): M[Type] = t match {
-    case Type.Evo(inner) => inner.pure[M]
-    case _               => E.raise(s"Type $t is not an Evolution type")
+  def unwrapF(t: Type): Either[String, Type] = t match {
+    case Type.Evo(inner) => inner.asRight
+    case _               => s"Type $t is not an Evolution type".asLeft
   }
 }

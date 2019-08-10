@@ -27,14 +27,14 @@ object All {
       Parser
         .parse(serialisedExpr)
         .fold(
-          _.message.asLeft[AST],
-          _.asRight[String]
+          _.message.asLeft,
+          _.asRight
         )
 
     for {
       expr <- parsed
       _ = println("Done: Parsing of AST")
-      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings).asRight[String]
+      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings).asRight
       constraints <- FindConstraints.find(exprWithTypeVars)
       _ = println("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))

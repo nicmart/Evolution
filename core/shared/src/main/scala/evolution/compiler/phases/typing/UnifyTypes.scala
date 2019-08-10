@@ -7,7 +7,7 @@ import evolution.compiler.phases.typing.model.{ Constraint, Constraints, Substit
 object UnifyTypes {
   def unify(constraints: Constraints): Either[String, Unification] =
     constraints.constraints match {
-      case Nil => Unification.empty.asRight[String]
+      case Nil => Unification.empty.asRight
       case head :: tail =>
         head match {
           case Constraint.Eq(a, b) if a == b => unify(Constraints(tail))
@@ -24,7 +24,7 @@ object UnifyTypes {
           case Constraint.Eq(Type.Arrow(a1, b1), Type.Arrow(a2, b2)) =>
             unify(Constraints(a1 -> a2, b1 -> b2).merge(Constraints(tail)))
           case Constraint.Pred(p) => unify(Constraints(tail)).map(_.withPredicate(p))
-          case _                  => s"$head constraint can't be unified".asLeft[Unification]
+          case _                  => s"$head constraint can't be unified".asLeft
         }
     }
 

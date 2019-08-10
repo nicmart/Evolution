@@ -10,20 +10,18 @@ import evolution.compiler.phases.typing.model.Constraints
 object FindConstraints {
   def find(expr: AST): Either[String, Constraints] = {
     val nodeConstraints = expr match {
-      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).asRight[String]
-      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).asRight[String]
-      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).asRight[String]
-      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).asRight[String]
-      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).asRight[String]
-      case Lambda(_, _, _) =>
-        Constraints.empty.asRight[String]
-      case Let(_, _, _, _) =>
-        Constraints.empty.asRight[String]
+      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates)
+      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl)
+      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t)))
+      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool)
+      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t))
+      case Lambda(_, _, _)       => Constraints.empty
+      case Let(_, _, _, _)       => Constraints.empty
     }
 
     val childrenConstraints = expr.children.traverse(find)
 
-    (nodeConstraints, childrenConstraints).mapN { (n, c) =>
+    (nodeConstraints.asRight, childrenConstraints).mapN { (n, c) =>
       n.merge(c)
     }
   }

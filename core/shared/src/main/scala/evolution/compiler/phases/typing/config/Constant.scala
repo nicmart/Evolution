@@ -1,8 +1,6 @@
 package evolution.compiler.phases.typing.config
 
 import cats.implicits._
-import cats.mtl.FunctorRaise
-import cats.{ Applicative, Monad }
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
 import evolution.compiler.phases.typing.config.Constant._
@@ -14,7 +12,6 @@ import evolution.geometry.Point
 import evolution.materialization.Evolution
 
 import scala.collection.immutable
-import scala.language.higherKinds
 
 /**
  * The modeling here is a bit loose.
@@ -29,34 +26,30 @@ abstract sealed class Constant0(qualifiedType: Qualified[Type])
     with EnumEntry
     with Lowercase {
 
-  def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]]
+  def compile(tpe: Qualified[Type]): Either[String, Expr[_]]
 }
 
 object Constant0 extends Enum[Constant0] {
   lazy val values: immutable.IndexedSeq[Constant0] = findValues
 
   case object PI extends Constant0(Qualified(Dbl)) {
-    def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Expr.Dbl(Math.PI).pure[M].widen
+    def compile(tpe: Qualified[Type]): Either[String, Expr[_]] =
+      Expr.Dbl(Math.PI).asRight
   }
 
   case object Empty extends Constant0(Qualified(Var("T"))) {
-    def compile[M[_]](tpe: Qualified[Type])(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Expr.Empty().pure[M].widen
+    def compile(tpe: Qualified[Type]): Either[String, Expr[_]] =
+      Expr.Empty().asRight
   }
 
   case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Dbl))) {
-    override def compile[M[_]](
-      tpe: TypeClasses.Qualified[Type]
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Expr.Noise().asExpr.pure[M].widen
+    override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
+      Expr.Noise().asExpr.asRight
   }
 
   case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: Dbl =>: Type.Point =>: Dbl))) {
-    override def compile[M[_]](
-      tpe: TypeClasses.Qualified[Type]
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Expr.OctaveNoise().asExpr.pure[M].widen
+    override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
+      Expr.OctaveNoise().asExpr.asRight
   }
 
   def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
@@ -66,16 +59,13 @@ abstract sealed class Constant1(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile[M[_]](x: Typed[Expr[_]], outType: Type)(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]]
+  def compile(x: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Constant1(qualifiedType) {
   def compilePlain(x: Expr[_]): Expr[_]
-  override def compile[M[_]](
-    x: Typed[Expr[_]],
-    out: Type
-  )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-    compilePlain(x.value).pure[M].widen
+  override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    compilePlain(x.value).asRight
 }
 
 object Constant1 extends Enum[Constant1] {
@@ -114,11 +104,8 @@ object Constant1 extends Enum[Constant1] {
   }
 
   case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.invertible[M](x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
+    override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.invertible(x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
   }
 
   case object Sin extends Constant1Plain(Qualified(Dbl =>: Dbl)) {
@@ -152,11 +139,8 @@ object Constant1 extends Enum[Constant1] {
 
   case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
 
-    override def compile[M[_]](x: Typed[Expr[_]], out: Type)(
-      implicit M: Monad[M],
-      E: FunctorRaise[M, String]
-    ): M[Expr[_]] =
-      Type.invertibleSemigroup[M](x.tpe).map { case (sg, inv) => Expr.Derive(x.value.asExprF, sg, inv) }
+    override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.invertibleSemigroup(x.tpe).map { case (sg, inv) => Expr.Derive(x.value.asExprF, sg, inv) }
   }
 
   def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -166,19 +150,16 @@ abstract sealed class Constant2(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], outType: Type)(
-    implicit M: Monad[M],
-    E: FunctorRaise[M, String]
-  ): M[Expr[_]]
+  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Constant2(qualifiedType) {
-  override def compile[M[_]](
+  override def compile(
     x: Typed[Expr[_]],
     y: Typed[Expr[_]],
     out: Type
-  )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-    compilePlain(x.value, y.value).pure[M].widen
+  ): Either[String, Expr[_]] =
+    compilePlain(x.value, y.value).asRight
 
   def compilePlain(x: Expr[_], y: Expr[_]): Expr[_]
 }
@@ -210,33 +191,21 @@ object Constant2 extends Enum[Constant2] {
       extends Constant2(
         Qualified(List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.multSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.multSemigrupoid(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Add
       extends Constant2(
         Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.addSemigrupoid[M](x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.addSemigrupoid(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.invertibleSemigroup[M](x.tpe).map {
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.invertibleSemigroup(x.tpe).map {
         case (sg, inv) => Expr.Minus(x.value.asExpr, y.value.asExpr, sg, inv)
       }
   }
@@ -262,58 +231,34 @@ object Constant2 extends Enum[Constant2] {
   }
 
   case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.eqTypeClass[M](y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.eqTypeClass(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
 
   }
 
   case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.eqTypeClass[M](y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.eqTypeClass(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
   }
 
   case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.order[M](y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.order(y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.order[M](y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.order(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.order[M](y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.order(y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.order[M](y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.order(y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -357,22 +302,14 @@ object Constant2 extends Enum[Constant2] {
   }
 
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.semigroup[M](x.tpe).map(sg => Expr.Integrate(x.value.asExpr, y.value.asExprF, sg))
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.semigroup(x.tpe).map(sg => Expr.Integrate(x.value.asExpr, y.value.asExprF, sg))
   }
 
   case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       Type
-        .semigroup[M](y.tpe)
+        .semigroup(y.tpe)
         .map(sg => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, sg))
   }
 
@@ -392,12 +329,8 @@ object Constant2 extends Enum[Constant2] {
         )
       ) {
 
-    override def compile[M[_]](
-      x: Typed[Expr[_]],
-      y: Typed[Expr[_]],
-      out: Type
-    )(implicit M: Monad[M], E: FunctorRaise[M, String]): M[Expr[_]] =
-      Type.invertibleSemigroup[M](x.tpe).map {
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.invertibleSemigroup(x.tpe).map {
         case (sg, inv) =>
           Expr.MapWithDerivative(x.value.asExprF, y.value.asExpr[Any => Any => Any], sg, inv)
       }
@@ -443,18 +376,13 @@ abstract sealed class Constant3(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], outType: Type)(
-    implicit M: Monad[M],
-    E: FunctorRaise[M, String]
-  ): M[Expr[_]]
+  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant3Plain(qualifiedType: Qualified[Type]) extends Constant3(qualifiedType) {
   def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_]
-  def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type)(
-    implicit M: Monad[M],
-    E: FunctorRaise[M, String]
-  ): M[Expr[_]] = compilePlain(x.value, y.value, z.value).pure[M].widen
+  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    compilePlain(x.value, y.value, z.value).asRight
 }
 
 object Constant3 extends Enum[Constant3] {
@@ -481,11 +409,8 @@ object Constant3 extends Enum[Constant3] {
       extends Constant3(
         Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
       ) {
-    override def compile[M[_]](x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type)(
-      implicit M: Monad[M],
-      E: FunctorRaise[M, String]
-    ): M[Expr[_]] =
-      Type.semigroup[M](y.tpe).map { sg =>
+    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      Type.semigroup(y.tpe).map { sg =>
         Expr.Solve2[y.tpe.Out](
           x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
           y.value.asExpr[y.tpe.Out],
@@ -514,9 +439,6 @@ object Constant3 extends Enum[Constant3] {
 
 object Constant {
   lazy val values: Seq[Constant] = Constant0.values ++ Constant1.values ++ Constant2.values ++ Constant3.values
-
-  def fromEither[M[_], T](e: Either[String, T])(implicit M: Applicative[M], E: FunctorRaise[M, String]): M[T] =
-    e.fold(E.raise, M.pure)
 
   def isInvertSemigroup(varName: String) = List(
     Predicate("Add", List(Var(varName), Var(varName), Var(varName))),
