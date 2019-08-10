@@ -19,20 +19,9 @@ object All {
     expectedType: Type,
     typeBindings: TypeBindings,
     ctx: VarContext
-  ): Either[String, Expr[expectedType.Out]] = {
-
-    println("Start Compilation")
-
-    val parsed: Either[String, AST] =
-      Parser
-        .parse(serialisedExpr)
-        .fold(
-          _.message.asLeft,
-          _.asRight
-        )
-
+  ): Either[String, Expr[expectedType.Out]] =
     for {
-      expr <- parsed
+      expr <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = println("Done: Parsing of AST")
       exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings).asRight
       constraints <- FindConstraints.find(exprWithTypeVars)
@@ -53,6 +42,4 @@ object All {
       _ = println(s"Compiled to $result")
       _ = println("Done: compilation")
     } yield result.asInstanceOf[Expr[expectedType.Out]]
-  }
-
 }
