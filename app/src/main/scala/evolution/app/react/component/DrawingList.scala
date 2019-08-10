@@ -9,6 +9,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
+// TODO this is not used
 object DrawingList {
 
   type Props[T] = StateSnapshot[PointedSeq[DrawingDefinition[T]]]

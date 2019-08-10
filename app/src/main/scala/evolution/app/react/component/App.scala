@@ -17,15 +17,15 @@ import japgolly.scalajs.react.extra.StateSnapshot
 
 object App {
 
-  type ReactComponent[C] = Component[StateSnapshot[PageState[C]], State[C], Backend[C], CtorType.Props]
+  type ReactComponent[C] = Component[StateSnapshot[PageState[C]], State, Backend[C], CtorType.Props]
 
-  case class State[C](
+  case class State(
     pointRateCounter: RateCounter,
     running: Boolean,
     layout: LayoutState
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
-    def withWindowSize(size: Point): State[C] = copy(layout = layout.copy(windowSize = size))
+    def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
   }
 
   case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean) {
@@ -37,14 +37,17 @@ object App {
   class Backend[C](
     points: (DrawingContext, DrawingState[C]) => Iterator[Point],
     pageComponent: Page.ReactComponent[C]
-  )(bs: BackendScope[StateSnapshot[PageState[C]], State[C]]) {
-    def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State[C]): VdomElement = {
-      val stateSnapshot =   SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
-      val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(drawingState =>
-        pageState => pageState.copy(drawingState = drawingState))
-      val layoutSnapshot = SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
-      val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(renderingState =>
-        pageState => pageState.copy(rendererState = renderingState))
+  )(bs: BackendScope[StateSnapshot[PageState[C]], State]) {
+    def render(pageStateSnapshot: StateSnapshot[PageState[C]], state: State): VdomElement = {
+      val stateSnapshot = SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
+      val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
+        drawingState => pageState => pageState.copy(drawingState = drawingState)
+      )
+      val layoutSnapshot =
+        SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
+      val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(
+        renderingState => pageState => pageState.copy(rendererState = renderingState)
+      )
 
       pageComponent(
         Page.Props[C](
@@ -54,7 +57,9 @@ object App {
           points = Eval.later(
             points(
               state.drawingContext * pageStateSnapshot.value.rendererState.resolutionFactor,
-              pageStateSnapshot.value.drawingState)),
+              pageStateSnapshot.value.drawingState
+            )
+          ),
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
@@ -63,7 +68,7 @@ object App {
       ).vdomElement
     }
 
-    private[App] def key(p: PageState[C], s: State[C]): Int =
+    private[App] def key(p: PageState[C], s: State): Int =
       (s.pointRateCounter.rate, p, s.running, s.layout).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
@@ -96,7 +101,7 @@ object App {
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState[C]]]("App")
-      .initialStateCallback(initialLayout.map(layout => State[C](rateCounter, running = true, layout)))
+      .initialStateCallback(initialLayout.map(layout => State(rateCounter, running = true, layout)))
       .backend[Backend[C]](scope => new Backend[C](points, pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
@@ -107,12 +112,16 @@ object App {
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
       // TODO can we remove this?
-      .componentDidUpdate(s =>
-        if (s.prevState.layout != s.currentState.layout) s.backend.updateLayout
-        else Callback.empty)
-      .componentDidMount(s =>
-        Callback {
-          dom.window.addEventListener("resize", (_: Any) => s.backend.updateLayout.runNow())
-      })
+      .componentDidUpdate(
+        s =>
+          if (s.prevState.layout != s.currentState.layout) s.backend.updateLayout
+          else Callback.empty
+      )
+      .componentDidMount(
+        s =>
+          Callback {
+            dom.window.addEventListener("resize", (_: Any) => s.backend.updateLayout.runNow())
+          }
+      )
       .build
 }

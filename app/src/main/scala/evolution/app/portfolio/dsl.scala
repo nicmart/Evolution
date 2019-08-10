@@ -40,7 +40,7 @@ object dsl extends DrawingDefinition[Point] {
   )
 
   // TODO I would really like to move expr into the state, but that cannot be done at the moment because
-  // stream method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
+  // materialize method needs to render the stream just using the Config. So the Expr HAS to go inside the config.
   case class Config(serialisedExpr: String, expr: Option[Expr[Evolution[Point]]])
 
   object Config {

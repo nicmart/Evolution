@@ -56,7 +56,8 @@ object Page {
             <.a(
               ^.href := "https://github.com/nicmart/Evolution",
               <.i(^.className := "fab fa-github fa-lg")
-            )),
+            )
+          ),
           <.div(
             ^.className := "navbar-item is-hidden-touch",
             <.div(
@@ -87,7 +88,8 @@ object Page {
           <.div(^.className := "navbar-item is-hidden-touch points-rate", <.span(s"${props.pointRate} p/s")),
           <.div(
             ^.className := "navbar-item",
-            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")),
+            <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")
+          ),
           <.div(
             ^.className := "navbar-end",
             <.div(
@@ -112,7 +114,8 @@ object Page {
                 props.points,
                 props.onFrameDraw,
                 props.running.value
-              ))
+              )
+            )
           ),
           Sidebar.component(Sidebar.Props(props.sidebarStatus.value, props.sidebarWidth))(drawingConfig(props.config)())
         )
