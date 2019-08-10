@@ -6,7 +6,7 @@ import evolution.app.codec.config.DrawingJsonCodec
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.definition.DrawingDefinition
 import evolution.app.model.state.DrawingState
-import evolution.app.react.component.config.{ ConfigComponent, instances }
+import evolution.app.react.component.config.ConfigComponent
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 import evolution.data
@@ -22,6 +22,7 @@ import evolution.compiler.types.TypeBinding
 import evolution.materialization.Evolution
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.app.react.component.presentational.Editor
 
 // This is a big epic mess
 object dsl extends DrawingDefinition {
@@ -74,20 +75,7 @@ object dsl extends DrawingDefinition {
         case (None, cb) => cb
       }
 
-      val component: ConfigComponent[String] = instances.textConfig
-
-      <.div(
-        ^.className := "dsl-config",
-        component.apply(stringSnapshot)(),
-        <.div(
-          ^.classSet(
-            "dsl-feedback" -> true,
-            "dsl-error" -> state.message.isDefined
-          ),
-          <.span(state.message.getOrElse("").toString)
-        )
-      )
-
+      Editor.component(Editor.Props(stringSnapshot, state.message))
     }
   }
 
