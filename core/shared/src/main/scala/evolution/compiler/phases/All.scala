@@ -11,6 +11,12 @@ import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
+import scala.collection.immutable.Nil
+import evolution.materialization.Evolution
+import evolution.geometry.Point
+import evolution.compiler.phases.materializing.Materialize
+import evolution.data.Ctx
+import evolution.data.emptyCtx
 
 object All {
 
@@ -18,15 +24,16 @@ object All {
     serialisedExpr: String,
     expectedType: Type,
     typeBindings: TypeBindings,
-    ctx: VarContext
-  ): Either[String, Expr[expectedType.Out]] =
+    varBindings: List[(String, AST)]
+  ): Either[String, Evolution[Point]] =
     for {
-      expr <- Parser.parse(serialisedExpr).leftMap(_.message)
+      ast <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = println("Done: Parsing of AST")
-      exprWithTypeVars <- AssignFreshTypeVars.assign(expr, typeBindings).asRight
-      constraints <- FindConstraints.find(exprWithTypeVars)
+      astWithVars = addVars(ast, varBindings)
+      astWithTypeVars <- AssignFreshTypeVars.assign(astWithVars, typeBindings).asRight
+      constraints <- FindConstraints.find(astWithTypeVars)
       _ = println("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> exprWithTypeVars.tpe.t))
+      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> astWithTypeVars.tpe.t))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = println("Done: unification")
       start = System.currentTimeMillis()
@@ -34,12 +41,21 @@ object All {
       stop = System.currentTimeMillis()
       _ = println(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)
-      typedExpr = subst.substitute(exprWithTypeVars)
+      typedAst = subst.substitute(astWithTypeVars)
       _ = println("Done: substitution")
       _ = println(s"Typed expression:")
-      _ = println(AST.prettyPrint(typedExpr))
-      result <- Compile.compile(typedExpr, ctx)
-      _ = println(s"Compiled to $result")
+      _ = println(AST.prettyPrint(typedAst))
+      expression <- Compile.compile(typedAst, varContext(varBindings))
+      _ = println(s"Compiled to $expression")
       _ = println("Done: compilation")
-    } yield result.asInstanceOf[Expr[expectedType.Out]]
+      evolution = Materialize.materialize(expression).apply(emptyCtx)
+    } yield evolution.asInstanceOf[Evolution[Point]]
+
+  private def varContext(varBindings: List[(String, AST)]): VarContext =
+    new VarContext(varBindings.map(_._1))
+
+  private def addVars(ast: AST, varBindings: List[(String, AST)]): AST = varBindings match {
+    case (name, value) :: tl => AST.Let(name, value, addVars(ast, tl))
+    case Nil                 => ast
+  }
 }

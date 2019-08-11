@@ -6,13 +6,11 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
 import evolution.app.model.state._
-import evolution.app.portfolio._
 import evolution.app.react.component.presentational.Page
 import evolution.app.react.component.{ App, Canvas }
 import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState }
 import evolution.app.react.routing.Routing
 import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
-import evolution.geometry.Point
 import japgolly.scalajs.react.extra.router.Router
 
 import scala.util.Random
@@ -21,10 +19,8 @@ object Conf {
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 
-  type DrawingConfig = dsl.Config
-
   lazy val drawingStateCodec: JsonCodec[DrawingState] =
-    DrawingState.jsonCodec(dsl)
+    DrawingState.jsonCodec
 
   lazy val pageStateCodec: JsonCodec[PageState] =
     PageState.jsonCodec(drawingStateCodec)
@@ -47,7 +43,7 @@ object Conf {
   lazy val initialPage: MyPages =
     LoadDrawingPage(
       PageState(
-        DrawingState(Random.nextLong(), dsl.initialConfig),
+        DrawingState(Random.nextLong(), "integrate(point(0, 0), @point(uniform(-2, 2), uniform(-2, 2)))"),
         RendererState(
           iterations = 1000,
           strokeSize = 1,
@@ -61,11 +57,6 @@ object Conf {
   lazy val initialRateCounter: RateCounter =
     RateCounter.empty(1000)
 
-  lazy val drawingConfComponent = dsl.configComponent
-
-  lazy val points: (DrawingContext, DrawingState) => Iterator[Point] =
-    dsl.materialize
-
   lazy val rendererStateToPointDrawer: (state.RendererState, DrawingContext) => PointDrawer =
     RendererStateToPointDrawer.apply
 
@@ -76,10 +67,10 @@ object Conf {
     Canvas.component(rendererStateToFrameDrawer)
 
   lazy val pageComponent: Page.ReactComponent =
-    Page.component(drawingConfComponent, canvasComponent)
+    Page.component(canvasComponent)
 
   lazy val appComponent: App.ReactComponent =
-    App.component(points, initialRateCounter, pageComponent)
+    App.component(initialRateCounter, pageComponent)
 
   lazy val routingConfig: Routing =
     new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageStringCodec)

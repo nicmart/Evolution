@@ -1,6 +1,5 @@
 package evolution.app.react.component
 
-import cats.Eval
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.counter.RateCounter
@@ -10,7 +9,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import org.scalajs.dom
 import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
 import evolution.geometry.Point
-import evolution.app.model.state.{ DrawingState, RendererState }
+import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
@@ -22,7 +21,8 @@ object App {
   case class State(
     pointRateCounter: RateCounter,
     running: Boolean,
-    layout: LayoutState
+    layout: LayoutState,
+    points: Iterator[Point]
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
@@ -34,12 +34,10 @@ object App {
       DrawingContext(CanvasSize(canvasWidth.toInt, windowSize.y.toInt))
   }
 
-  class Backend(
-    points: (DrawingContext, DrawingState) => Iterator[Point],
-    pageComponent: Page.ReactComponent
-  )(bs: BackendScope[StateSnapshot[PageState], State]) {
+  class Backend(pageComponent: Page.ReactComponent)(bs: BackendScope[StateSnapshot[PageState], State]) {
     def render(pageStateSnapshot: StateSnapshot[PageState], state: State): VdomElement = {
       val stateSnapshot = SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
+      val pointsSnapshot = stateSnapshot.zoomState(_.points)(points => state => state.copy(points = points))
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
         drawingState => pageState => pageState.copy(drawingState = drawingState)
       )
@@ -54,12 +52,7 @@ object App {
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           layout = layoutSnapshot,
           rendererState = renderingStateSnapshot,
-          points = Eval.later(
-            points(
-              state.drawingContext * pageStateSnapshot.value.rendererState.resolutionFactor,
-              pageStateSnapshot.value.drawingState
-            )
-          ),
+          points = pointsSnapshot,
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
@@ -95,14 +88,13 @@ object App {
   }
 
   def component(
-    points: (DrawingContext, DrawingState) => Iterator[Point],
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState]]("App")
-      .initialStateCallback(initialLayout.map(layout => State(rateCounter, running = true, layout)))
-      .backend[Backend](scope => new Backend(points, pageComponent)(scope))
+      .initialStateCallback(initialLayout.map(layout => State(rateCounter, running = true, layout, Iterator.empty)))
+      .backend[Backend](scope => new Backend(pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
         CallbackTo.pure {

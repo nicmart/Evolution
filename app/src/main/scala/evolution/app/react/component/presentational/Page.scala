@@ -6,7 +6,7 @@ import evolution.app.conf.Conf
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.react.component.App.LayoutState
 import evolution.app.react.component.Canvas
-import evolution.app.react.component.config.ConfigComponent
+import evolution.app.react.component.Code
 import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
 import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component
@@ -19,7 +19,6 @@ import org.scalajs.dom.raw.{ Blob, URL }
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
-import evolution.app.portfolio.dsl
 
 object Page {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
@@ -31,25 +30,22 @@ object Page {
     running: StateSnapshot[Boolean],
     layout: StateSnapshot[LayoutState],
     rendererState: StateSnapshot[RendererState],
-    points: Eval[Iterator[Point]],
+    points: StateSnapshot[Iterator[Point]],
     drawingState: StateSnapshot[DrawingState],
     pointRate: Int,
     onRefresh: Callback,
     onFrameDraw: Callback
   ) {
     def canvasKey: String = (rendererState.value, drawingState.value, layout.value).hashCode().toString
-    def config: StateSnapshot[dsl.Config] =
-      drawingState.zoomState(_.config)(config => state => state.copy(config = config))
+    def code: StateSnapshot[String] =
+      drawingState.zoomState(_.code)(code => state => state.copy(code = code))
     def sidebarWidth: StateSnapshot[Double] =
       layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
     def sidebarStatus: StateSnapshot[Boolean] =
       layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
   }
 
-  class Backend(
-    drawingConfig: ConfigComponent[dsl.Config],
-    canvasComponent: Canvas.ReactComponent
-  ) {
+  class Backend(canvasComponent: Canvas.ReactComponent) {
     def render(props: Props): VdomElement = {
       <.div(
         Navbar.component(
@@ -113,13 +109,22 @@ object Page {
                 props.layout.value.drawingContext,
                 canvasInitializer,
                 props.rendererState.value,
-                props.points,
+                Eval.later(props.points.value),
                 props.onFrameDraw,
                 props.running.value
               )
             )
           ),
-          Sidebar.component(Sidebar.Props(props.sidebarStatus.value, props.sidebarWidth))(drawingConfig(props.config)())
+          Sidebar.component(Sidebar.Props(props.sidebarStatus.value, props.sidebarWidth))(
+            Code.component(
+              Code.Props(
+                props.code,
+                props.layout.value.drawingContext,
+                props.drawingState.value.seed,
+                props.points.setState
+              )
+            )
+          )
         )
       )
     }
@@ -138,13 +143,10 @@ object Page {
     }
   }
 
-  def component(
-    drawingConfig: ConfigComponent[dsl.Config],
-    canvasComponent: Canvas.ReactComponent
-  ): Page.ReactComponent =
+  def component(canvasComponent: Canvas.ReactComponent): Page.ReactComponent =
     ScalaComponent
       .builder[Props]("Page")
-      .backend[Backend](_ => new Backend(drawingConfig, canvasComponent))
+      .backend[Backend](_ => new Backend(canvasComponent))
       .render(scope => scope.backend.render(scope.props))
       .build
 }
