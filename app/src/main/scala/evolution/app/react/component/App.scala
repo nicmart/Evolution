@@ -53,7 +53,7 @@ object App {
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           layout = layoutSnapshot,
           rendererState = renderingStateSnapshot,
-          compilationResult = state.compilationResult.map(_.result).getOrElse(Left("")),
+          compilationResult = state.compilationResult.map(_.result).getOrElse(Left("Not compiled yet")),
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
@@ -94,7 +94,11 @@ object App {
   private def compile(props: PageState, state: State): CompilationResult =
     CompilationResult(
       evolutionKey(props, state),
-      CodeCompiler.compile(props.drawingState.code, props.drawingState.seed, state.layout.drawingContext)
+      CodeCompiler.compile(
+        props.drawingState.code,
+        props.drawingState.seed,
+        state.layout.drawingContext * props.rendererState.resolutionFactor
+      )
     )
 
   def component(

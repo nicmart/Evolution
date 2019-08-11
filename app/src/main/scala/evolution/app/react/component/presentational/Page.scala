@@ -1,12 +1,10 @@
 package evolution.app.react.component.presentational
 
-import cats.Eval
 import com.github.ghik.silencer.silent
 import evolution.app.conf.Conf
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.react.component.App.LayoutState
 import evolution.app.react.component.Canvas
-import evolution.app.react.component.Code
 import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
 import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component

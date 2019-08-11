@@ -2,7 +2,6 @@ package evolution.data
 import evolution.compiler.phases.materializing.Materialize
 import evolution.compiler.phases.materializing.model.Contextual
 import evolution.materialization.Evolution
-import evolution.data.EvaluationContext._
 
 import scala.util.Random
 

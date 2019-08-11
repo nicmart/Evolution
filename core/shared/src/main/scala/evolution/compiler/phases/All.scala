@@ -2,7 +2,6 @@ package evolution.compiler.phases
 
 import cats.implicits._
 import evolution.compiler.ast.AST
-import evolution.data.Expr
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.typing._
 import evolution.compiler.phases.compiling._
@@ -15,7 +14,6 @@ import scala.collection.immutable.Nil
 import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
-import evolution.data.Ctx
 import evolution.data.emptyCtx
 
 object All {
