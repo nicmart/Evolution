@@ -30,7 +30,7 @@ object Page {
     running: StateSnapshot[Boolean],
     layout: StateSnapshot[LayoutState],
     rendererState: StateSnapshot[RendererState],
-    points: StateSnapshot[Iterator[Point]],
+    compilationResult: Either[String, Iterator[Point]],
     drawingState: StateSnapshot[DrawingState],
     pointRate: Int,
     onRefresh: Callback,
@@ -109,19 +109,17 @@ object Page {
                 props.layout.value.drawingContext,
                 canvasInitializer,
                 props.rendererState.value,
-                Eval.later(props.points.value),
+                props.compilationResult.toOption,
                 props.onFrameDraw,
                 props.running.value
               )
             )
           ),
           Sidebar.component(Sidebar.Props(props.sidebarStatus.value, props.sidebarWidth))(
-            Code.component(
-              Code.Props(
+            Editor.component(
+              Editor.Props(
                 props.code,
-                props.layout.value.drawingContext,
-                props.drawingState.value.seed,
-                props.points.setState
+                props.compilationResult.swap.toOption
               )
             )
           )

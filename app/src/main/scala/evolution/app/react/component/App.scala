@@ -13,6 +13,7 @@ import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
+import evolution.app.model.CodeCompiler
 
 object App {
 
@@ -22,11 +23,13 @@ object App {
     pointRateCounter: RateCounter,
     running: Boolean,
     layout: LayoutState,
-    points: Iterator[Point]
+    compilationResult: Option[CompilationResult]
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
   }
+
+  case class CompilationResult(key: Int, result: Either[String, Iterator[Point]])
 
   case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean) {
     private val canvasWidth: Double = if (sidebarExpanded) windowSize.x - sidebarWidth else windowSize.x
@@ -37,7 +40,6 @@ object App {
   class Backend(pageComponent: Page.ReactComponent)(bs: BackendScope[StateSnapshot[PageState], State]) {
     def render(pageStateSnapshot: StateSnapshot[PageState], state: State): VdomElement = {
       val stateSnapshot = SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
-      val pointsSnapshot = stateSnapshot.zoomState(_.points)(points => state => state.copy(points = points))
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
         drawingState => pageState => pageState.copy(drawingState = drawingState)
       )
@@ -46,13 +48,12 @@ object App {
       val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(
         renderingState => pageState => pageState.copy(rendererState = renderingState)
       )
-
       pageComponent(
         Page.Props(
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
           layout = layoutSnapshot,
           rendererState = renderingStateSnapshot,
-          points = pointsSnapshot,
+          compilationResult = state.compilationResult.map(_.result).getOrElse(Left("")),
           drawingState = drawingStateSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
@@ -87,13 +88,24 @@ object App {
     LayoutState(size.x / 3, size, true)
   }
 
+  private def evolutionKey(props: PageState, state: State) =
+    (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext).hashCode()
+
+  private def compile(props: PageState, state: State): CompilationResult =
+    CompilationResult(
+      evolutionKey(props, state),
+      CodeCompiler.compile(props.drawingState.code, props.drawingState.seed, state.layout.drawingContext)
+    )
+
   def component(
     rateCounter: RateCounter,
     pageComponent: Page.ReactComponent
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState]]("App")
-      .initialStateCallback(initialLayout.map(layout => State(rateCounter, running = true, layout, Iterator.empty)))
+      .initialStateCallback(
+        initialLayout.map(layout => State(rateCounter, running = true, layout, None))
+      )
       .backend[Backend](scope => new Backend(pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
@@ -101,6 +113,14 @@ object App {
           s.backend.key(s.currentProps.value, s.currentState) != s.backend.key(s.nextProps.value, s.nextState)
         }
       }
+      // TODO we try to compile only when is necessary. I did not find a cleaner way to do this
+      .getDerivedStateFromProps(
+        (props, state) =>
+          if (state.compilationResult.exists(cr => cr.key == evolutionKey(props.value, state)))
+            None
+          else
+            Some(state.copy(compilationResult = Some(compile(props.value, state))))
+      )
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
       // TODO can we remove this?

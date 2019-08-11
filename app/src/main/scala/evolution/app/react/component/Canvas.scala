@@ -21,7 +21,7 @@ object Canvas {
     context: DrawingContext,
     canvasInitializer: dom.html.Canvas => Unit,
     rendererState: RendererState,
-    points: Eval[Iterator[Point]],
+    points: Option[Iterator[Point]],
     onFrameDidDraw: Callback,
     running: Boolean
   )
@@ -61,8 +61,10 @@ object Canvas {
 
     def onMount(node: dom.Element, props: Props): Callback = Callback {
       props.canvasInitializer(canvas(node))
-      points = props.points.value
-      start(node, props)
+      props.points.foreach { ps =>
+        points = ps
+        start(node, props)
+      }
     }
 
     def start(node: dom.Element, props: Props): Unit = {
@@ -96,10 +98,12 @@ object Canvas {
       .componentDidMount { s =>
         s.backend.onMount(s.getDOMNode.asElement, s.props)
       }
-      .componentWillUnmount(s =>
-        Callback {
-          s.backend.scheduleStop()
-      })
+      .componentWillUnmount(
+        s =>
+          Callback {
+            s.backend.scheduleStop()
+          }
+      )
       .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode.asElement, s.nextProps))
       .build
 }
