@@ -4,7 +4,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.ScalaComponent
-import evolution.app.react.component.config.{ ConfigComponent, instances }
+import evolution.app.react.component.config.{ ConfigComponent }
 
 object Editor {
   case class Props(code: StateSnapshot[String], error: Option[String])
@@ -12,7 +12,7 @@ object Editor {
   class Backend {
     def render(props: Props): VdomElement = {
 
-      val component: ConfigComponent[String] = instances.textConfig
+      val component: ConfigComponent[String] = ConfigComponent.textConfig
 
       <.div(
         ^.className := "dsl-config",
