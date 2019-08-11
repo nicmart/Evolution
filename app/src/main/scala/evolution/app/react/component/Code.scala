@@ -16,7 +16,9 @@ object Code {
     ctx: DrawingContext,
     seed: Long,
     newIterator: Iterator[Point] => Callback
-  )
+  ) {
+    def key: Int = (code.value, ctx, seed).hashCode()
+  }
 
   case class State(error: Option[String])
 
@@ -26,18 +28,19 @@ object Code {
     }
   }
 
-  private def processProps(props: Props, setState: State => Callback): Callback = {
-    CodeCompiler
-      .compile(
-        props.code.value,
-        props.seed,
-        props.ctx
-      )
-      .fold(
-        error => setState(State(Some(error))),
-        iterator => props.newIterator(iterator) >> setState(State(None))
-      )
-  }
+  private def processProps(props: Props, previousProps: Option[Props], setState: State => Callback): Callback =
+    if (previousProps.exists(_.key != props.key)) {
+      CodeCompiler
+        .compile(
+          props.code.value,
+          props.seed,
+          props.ctx
+        )
+        .fold(
+          error => setState(State(Some(error))),
+          iterator => props.newIterator(iterator) >> setState(State(None))
+        )
+    } else Callback.empty
 
   val component =
     ScalaComponent
@@ -45,7 +48,7 @@ object Code {
       .initialState(State(None))
       .backend[Backend](_ => new Backend)
       .render(scope => scope.backend.render(scope.props, scope.state))
-      .componentDidMount(s => processProps(s.props, s.setState))
-      .componentWillReceiveProps(s => processProps(s.nextProps, s.setState))
+      .componentDidMount(s => processProps(s.props, None, s.setState))
+      .componentWillReceiveProps(s => processProps(s.nextProps, Some(s.currentProps), s.setState))
       .build
 }

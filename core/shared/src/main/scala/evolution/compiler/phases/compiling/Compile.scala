@@ -60,7 +60,6 @@ object Compile {
       case App(Identifier(Constant1(c), _, true), x, typeOut) =>
         compileSafe(x).flatMap(compiledX => c.compile(Typed(x.tpe.t, compiledX), typeOut.t).liftTo[Result])
 
-      // Arity 2 identifiers
       case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
         for {
           compiledX <- compileSafe(x)
