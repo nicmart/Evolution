@@ -28,7 +28,8 @@ object RenderingSettings {
             <.span("Rendering Settings"),
             <.span(
               ^.className := "icon is-small",
-              <.i(^.className := "fa fa-angle-down", VdomAttr("aria-hidden") := "true"))
+              <.i(^.className := "fa fa-angle-down", VdomAttr("aria-hidden") := "true")
+            )
           )
         ),
         <.div(
@@ -56,7 +57,8 @@ object RenderingSettings {
                 <.input(
                   ^.`type` := "checkbox",
                   ^.checked := !props.value.trail.active,
-                  ^.onChange ==> ((b: Boolean) => isTrailActive(props).setState(b)).compose[ReactEventFromInput](e => !e.target.checked)
+                  ^.onChange ==> ((b: Boolean) => isTrailActive(props).setState(b))
+                    .compose[ReactEventFromInput](e => !e.target.checked)
                 ),
                 "Persist drawing on canvas"
               )
@@ -91,11 +93,13 @@ object RenderingSettings {
       s.zoomState(_.offCanvasSettings)(settings => state => state.copy(offCanvasSettings = settings))
 
     private def offCanvasStrategyItems(
-      s: StateSnapshot[RendererState]): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
+      s: StateSnapshot[RendererState]
+    ): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
       def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
         PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))
       offCanvasSettings(s).xmapState(strategyToPointedSeq)(_.selected.value)
     }
+
     private val offCanvasStrategies: Seq[Item[OffCanvasStrategy]] =
       List(
         Item("Infinite", InfiniteCanvas.toString, InfiniteCanvas),

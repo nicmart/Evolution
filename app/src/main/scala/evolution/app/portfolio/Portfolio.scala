@@ -17,7 +17,7 @@ object Portfolio {
       Some("brownian"),
       DrawingState(0L, """
       |r = uniform(-2, 2) in
-      |@point(r, r)
+      |integrate(point(0, 0), @point(r, r))
       """.stripMargin),
       defaultRendererState
     )

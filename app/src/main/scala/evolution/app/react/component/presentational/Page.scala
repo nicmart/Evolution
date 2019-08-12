@@ -17,6 +17,11 @@ import org.scalajs.dom.raw.{ Blob, URL }
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
+import evolution.app.model.Drawing
+import evolution.app.portfolio.Portfolio
+import evolution.app.react.component.presentational.Select.Item
+import evolution.app.data.PointedSeq
+import evolution.app.react.underware.SnapshotUnderware
 
 object Page {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
@@ -43,7 +48,21 @@ object Page {
       layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
   }
 
+  val portfolioComponent = Select.component[Drawing]
+  val portfolioItems = Portfolio.drawings.map(
+    drawing => Item(drawing.title.getOrElse(""), drawing.title.getOrElse("undefined"), drawing)
+  )
+  val selectedDrawing = portfolioItems.head
+
   class Backend(canvasComponent: Canvas.ReactComponent) {
+
+    def portfolioSnapshot(props: Props): StateSnapshot[PointedSeq[Item[Drawing]]] =
+      SnapshotUnderware.simpleSnapshot(PointedSeq(portfolioItems, selectedDrawing)) { seq =>
+        val drawing = seq.selected.value
+        props.rendererState.setState(drawing.rendererState) >>
+          props.drawingState.setState(drawing.drawngState)
+      }
+
     def render(props: Props): VdomElement = {
       <.div(
         Navbar.component(
@@ -85,6 +104,10 @@ object Page {
           <.div(
             ^.className := "navbar-item",
             <.span(^.className := "is-size-7", s"${props.drawingState.value.seed.toHexString}")
+          ),
+          <.div(
+            ^.className := "navbar-item",
+            portfolioComponent(portfolioSnapshot(props))
           ),
           <.div(
             ^.className := "navbar-end",
