@@ -40,17 +40,19 @@ object Conf {
 
   lazy val urlDelimiter = "#"
 
+  lazy val defaultRendererState = RendererState(
+    iterations = 1000,
+    strokeSize = 1,
+    resolutionFactor = 2,
+    trail = TrailSettings(active = false, opacity = 0.12),
+    offCanvasSettings = TorusCanvas
+  )
+
   lazy val initialPage: MyPages =
     LoadDrawingPage(
       PageState(
         DrawingState(Random.nextLong(), "integrate(point(0, 0), @point(uniform(-2, 2), uniform(-2, 2)))"),
-        RendererState(
-          iterations = 1000,
-          strokeSize = 1,
-          resolutionFactor = 2,
-          trail = TrailSettings(active = false, opacity = 0.12),
-          offCanvasSettings = TorusCanvas
-        )
+        defaultRendererState
       )
     )
 
