@@ -102,6 +102,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
       "org.typelevel" %%% "cats-core" % "1.6.1",
+      "org.typelevel" %%% "cats-effect" % "1.3.1",
       "com.chuusai" %%% "shapeless" % "2.3.3",
       "org.scalacheck" %%% "scalacheck" % "1.13.5",
       "com.lihaoyi" %%% "fastparse" % "1.0.0",

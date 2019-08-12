@@ -1,7 +1,7 @@
 package evolution.app.model
-import scala.concurrent.Future
+import cats.effect.IO
 
 trait DrawingRepository {
-  def save(id: String, drawing: Drawing): Future[Unit]
-  def load(id: String): Future[Option[Drawing]]
+  def save(id: String, drawing: Drawing): IO[Unit]
+  def load(id: String): IO[Option[Drawing]]
 }

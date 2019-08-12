@@ -3,7 +3,8 @@ import evolution.app.model.Drawing
 import evolution.app.model.state.DrawingState
 import evolution.app.conf.Conf.defaultRendererState
 import evolution.app.model.DrawingRepository
-import scala.concurrent.Future
+import cats.implicits._
+import cats.effect.IO
 
 object Portfolio {
   val drawings = List(
@@ -22,6 +23,6 @@ object Portfolio {
     )
   )
 
-  def load(repository: DrawingRepository): Future[Unit] =
-    ???
+  def loadIntoRepository(repository: DrawingRepository): IO[Unit] =
+    drawings.zipWithIndex.traverse { case (d, i) => repository.save(i.toString, d) }.void
 }
