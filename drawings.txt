@@ -1,64 +1,17 @@
 
-"cartesian(integrate(0, constant(10)), solve1(constant(x -> multiply(0.04, x)), 1))"
 
-"cartesian(integrate(0, constant(0.1)), solve1(map(uniform(-2, 2), r -> x -> add(multiply(2, r), multiply(0.001, inverse(x)))), 1))"
-
-"cartesian(integrate(-500, constant(3)), solve1(constant(x -> multiply(5, sin(multiply(0.01, x)))), 1))"
-
-"flatMap(uniform(-1000, 1000), r -> take(3000, cartesian(integrate(-1000, constant(1)), solve1(constant(x -> multiply(0.5, sin(multiply(0.01, x)))), r))))"
-
-"flatMap(
-  uniform(-1, 1),
-  r -> take(
-    3000,
-    @point(
-      integrate(-1000, const(1)),
-      solve1(
-        const(x -> multiply(1, sin(multiply(0.01, x)))),
-        r
-      )
-    )
-  )
-)
-
-"
-
-"
-
-flatMap(
-  integrate(bottom, const(10)),
-  r -> take(
-    3000,
-    @point(
-      integrate(left, const(1)),
-      solve1(
-        const(x -> sin(multiply(0.01, x))),
-        r
-      )
-    )
-  )
-)
-
-"
-
-"let(l, 0.2, let(f, 0.01, solve2(map(point(uniform(-l, l), uniform(-l, l)), r -> x -> v -> add(r, multiply(-f, v))), point(0, 0), point(0, 0))))"
-
-"flatMap(constant(take(200, solve2(map(point(uniform(-0.2, 0.2), uniform(-0.2, 0.2)), r -> x -> v -> add(r, multiply(-0.001, v))), point(0, 0), point(0, 0)))), x -> x)"
-
-"flatMap(constant(take(200, solve2(map(point(uniform(-0.8, 0.1), uniform(-0.8, 0.5)), r -> x -> v -> add(r, multiply(-0.01, v))), point(0, 0), point(0, 0)))), x -> x)"
-
-"flatMap(uniform(left, right), x -> take(30, flatMap(uniform(bottom, top), y -> point(integrate(x, constant(1)), solve1(constant(z -> multiply(0.00001, multiply(z, add(1, -z)))), y)))))"
+"flatMap(uniform(left, right), x -> take(30, flatMap(uniform(bottom, top), y -> point(integrate(x, const(1)), solve1(const(z -> multiply(0.00001, multiply(z, 1 + -z))), y)))))"
 
 "l = 10 in
 hSpeed = 2 in
 w = 0.01 in
 amplitude = 10 in
 
-rndPoint =cartesian(uniform(left, right), uniform(bottom, top)) in
+rndPoint =@point(uniform(left, right), uniform(bottom, top)) in
 
-trajectory = p -> cartesian(
-  integrate(x(p), constant(hSpeed)),
-  solve1(constant(z -> amplitude * sin(w * z)), y(p))
+trajectory = p -> @point(
+  integrate(x(p), const(hSpeed)),
+  solve1(const(z -> amplitude * sin(w * z)), y(p))
 ) in 
 
 flatMap(
@@ -69,7 +22,7 @@ flatMap(
   ) 
 )"
 
-"flatMap(uniform(left, right), x -> take(10, flatMap(uniform(bottom, top), y -> point(integrate(x, constant(1)), solve1(constant(z -> multiply(3, add(sin(multiply(0.003, z)), add(sin(multiply(0.05, z)), sin(multiply(0.006, z)))))), y)))))"
+"flatMap(uniform(left, right), x -> take(10, flatMap(uniform(bottom, top), y -> point(integrate(x, const(1)), solve1(const(z -> multiply(3, add(sin(0.003 * z), add(sin(0.05 * z), sin(0.006 * z))))), y)))))"
 
 "flatMap(
   uniform(left, right),
@@ -78,7 +31,7 @@ flatMap(
     flatMap(
       uniform(bottom, top),
       y -> map(
-        cartesian(
+        @point(
           solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0),
           solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 *  z + -0.003 * v), 0, 0)
         ),
@@ -88,20 +41,20 @@ flatMap(
   )
 )"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(0, z), multiply(-0.1, v)))), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(-0.001, z), multiply(-0.003, v)))), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(-0.001, z), multiply(-0.003, v)))), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(-0.001, z), multiply(-0.003, v)))), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(-0.001, z), multiply(-0.03, v)))), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> add(multiply(0.1, r), add(multiply(-0.0001, z), multiply(-0.0003, v)))), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.03 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.0001 * z + -0.0003 * v), 0, 0)), p -> add(p, point(x, y))))))"
 
-"let(radius, 2, let(friction, 0.06, solve2(map(cartesian(uniform(-radius, radius), uniform(-radius, radius)), r -> x -> v -> r + multiply(-friction, v)), point(0, 0), point(0, 0))))"
+"let(radius, 2, let(friction, 0.06, solve2(map(@point(uniform(-radius, radius), uniform(-radius, radius)), r -> x -> v -> r + -friction * v), point(0, 0), point(0, 0))))"
 
-"let(radius, 0.00001, let(viscosity, multiply(radius, 0.01), let(k, multiply(radius, 3), let(rnd, cartesian(uniform(-radius, radius), uniform(-radius, radius)), let(v, solve2(map(rnd, r -> x -> v -> r + multiply(-viscosity, v) + multiply(-k, x)), point(0, 0), point(0, 0)), integrate(point(0, 0), v))))))"
+"let(radius, 0.00001, let(viscosity, radius * 0.01, let(k, radius * 3, let(rnd, @point(uniform(-radius, radius), uniform(-radius, radius)), let(v, solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)), integrate(point(0, 0), v))))))"
 
 "let(radius, 0.001,
 let(viscosity, radius * 9.995,
 let(k, radius * 10,
-let(rnd, cartesian(uniform(-radius, radius), uniform(-radius, radius)),
+let(rnd, @point(uniform(-radius, radius), uniform(-radius, radius)),
 let(v, solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)),
 
 integrate(point(0, 0), v)
@@ -109,8 +62,8 @@ integrate(point(0, 0), v)
 
 )))))"
 
-"let(circle, r -> w -> polar(constant(r), integrate(0, constant(w))),
-let(rndPoint, cartesian(uniform(left, right), uniform(bottom, top)),
+"let(circle, r -> w -> polar(const(r), integrate(0, const(w))),
+let(rndPoint, @point(uniform(left, right), uniform(bottom, top)),
 let(radiuses, uniform(1, 30),
 
 flatMap(
@@ -122,11 +75,11 @@ flatMap(
 
 "let(k, .0003,
 let(h, .003,
-let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
 solve1(
-  constant(p -> point(h * y(p), -k * x(x))),
+  const(p -> point(h * y(p), -k * x(x))),
   p
 ),
 
@@ -135,7 +88,7 @@ flatMap(rnd, p -> take(100, trajectory(p)))
 ))))"
 
 "r = 3 in
-v = cartesian(uniform(-r, r), uniform(-r, r)) in
+v = @point(uniform(-r, r), uniform(-r, r)) in
 
 symm = e -> flatMap(e, p ->
   cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty))))
@@ -150,11 +103,11 @@ let(a, -1.4 * scaleInv ,
 let(b, 1.6 * scaleInv,
 let(c, 1.1,
 let(d, 0.7 ,
-let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
 solve1(
-  constant(p -> -p + scale * point(
+  const(p -> -p + scale * point(
     sin(a * y(p)) + c * cos(a * x(p)),
     sin(b * x(p)) + d * cos(b * y(p))
   )),
@@ -169,11 +122,11 @@ trajectory(point(0, 0))
 let(scaleInv, .002,
 let(a, -1.4 * scaleInv ,
 let(b, 1.6 * scaleInv,
-let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
     
 solve1(
-  constant(p -> scale * point(
+  const(p -> scale * point(
     y(p),
     a * x(p) * (1 +-x(p))
   )),
@@ -190,11 +143,11 @@ let(a, -1.4 * scaleInv ,
 let(b, 1.6 * scaleInv,
 let(c, 1.1,
 let(d, 0.7 ,
-let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
 solve1(
-  constant(p -> -p + scale * point(
+  const(p -> -p + scale * point(
     sin(a * y(p)) + c * cos(a * x(p)),
     sin(b * x(p)) + d * cos(b * y(p)) + .5227
   )),
@@ -205,12 +158,12 @@ trajectory(point(0, 0))
 
 ))))))))"
 
-"let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+"let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(k, 1000000,
 let(trajectory, p -> 
     
 solve1(
-  constant(p -> point(
+  const(p -> point(
     x(p)^2 + -y(p)^2,
     8 * x(p) * y(p)
   )),
@@ -221,7 +174,7 @@ flatMap(rnd, p -> take(100, map(trajectory(p), q -> k * q )))
 
 )))  "
 
-"let(rnd, r -> n -> take(n, cartesian(uniform(-r, r), uniform(-r, r))),
+"let(rnd, r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))),
 
 integrate(point(0, 0), flatMap(uniformChoice(rnd(2, 1000), rnd(10, 100)), x -> x)) 
  
@@ -244,7 +197,7 @@ solve1(
 let(p2, point(left, bottom),
 let(p3, point(right, bottom),
 
-let(rnd, cartesian(uniform(left, right), uniform(bottom, top)),
+let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(vertexes, mapCons(rnd, p1 -> t1 -> mapCons(t1, p2 -> t2 -> mapCons(t2, p3 -> t3 -> uniformChoice(p1, p2, p3)))),
 
 solve1(
@@ -254,13 +207,13 @@ solve1(
 
 ))))) "
 
-"let(rnd, r -> n -> take(n, cartesian(uniform(-r, r), uniform(-r, r))),
-let(c, r -> n -> take(n, flatMap(cartesian(uniform(-r, r), uniform(-r, r)), p -> constant(p))),
+"let(rnd, r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))),
+let(c, r -> n -> take(n, flatMap(@point(uniform(-r, r), uniform(-r, r)), p -> const(p))),
 
 integrate(
   point(0, 0),
   flatMap(
-    flatMap(constant(cons(rnd(3, 500), cons(c(3, 30), empty))), x -> x),
+    flatMap(const(cons(rnd(3, 500), cons(c(3, 30), empty))), x -> x),
     x -> x
   )
 ) 
@@ -271,7 +224,7 @@ integrate(
 let(p2, point(right, top),
 let(p3, point(right, bottom),
 let(p4, point(left, bottom),
-let(rnd, take(1, cartesian(uniform(-10, 10), uniform(-10, 10))),
+let(rnd, take(1, @point(uniform(-10, 10), uniform(-10, 10))),
 let(vertexes, uniformChoice(p4, p1, p3),
 
 solve1(
@@ -332,8 +285,8 @@ solve1(
 l = 100 in
 gridSize = 100 in
 
-rndPoint = cartesian(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-brownian = p -> take(l,integrate(p, cartesian(uniform(-r, r), uniform(-r, r)))) in
+rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
+brownian = p -> take(l,integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, brownian)"
 
@@ -347,8 +300,8 @@ symm = e -> flatMap(e, p ->
 
 translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
 
-rndPoint = cartesian(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-brownian = p -> take(l, integrate(p, cartesian(uniform(-r, r), uniform(-r, r)))) in
+rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
+brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))"
 
@@ -362,15 +315,15 @@ symm = e -> flatMap(e, p ->
 
 translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
 
-rndPoint = cartesian(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-brownian = p -> take(l, integrate(p, cartesian(uniform(-r, r), uniform(-r, r)))) in
+rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
+brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))"
 
 "gridSize = 200 in
 r = 6 in
-xs = take(20, integrate(left, constant(gridSize))) in
-ys = take(10, integrate(bottom, constant(gridSize))) in
+xs = take(20, integrate(left, const(gridSize))) in
+ys = take(10, integrate(bottom, const(gridSize))) in
 
 points = flatMap(xs, x -> map(ys, y -> point(x, y))) in
 
@@ -378,7 +331,7 @@ symm = e -> flatMap(e, p ->
   cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
 )) in
 
-brownian = symm(integrate(point(0, 0), cartesian(uniform(-r, r), uniform(-r, r)))) in
+brownian = symm(integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(brownian, p -> map(points, q -> p + q))
 "
@@ -406,7 +359,7 @@ flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))    "
     flatMap(
       uniform(bottom, top),
       y -> map(
-        cartesian(
+        @point(
           solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0),
           solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 *  z + -0.003 * v), 0, 0)
         ),
@@ -445,7 +398,7 @@ w4 = .008 in
 r5 = 100 in
 w5 = .008 in
 
-circle = r -> w -> polar(constant(r), integrate(0, constant(w))) in
+circle = r -> w -> polar(const(r), integrate(0, const(w))) in
 
 
 
@@ -465,17 +418,17 @@ symm = e -> flatMap(e, p ->
 
 translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
 
-rndPoint = cartesian(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-//evo = p -> take(l, integrate(p, cartesian(uniform(-r, r), uniform(-r, r)))) in
+rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
+//evo = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 r = 20 in
 v = .3 in
 w = v / r in
 
 arcLength =floor(.5 * PI / w) in
-arc = angle -> take(arcLength, polar(constant(r * w), integrate(angle, constant(w)))) in  
+arc = angle -> take(arcLength, polar(const(r * w), integrate(angle, const(w)))) in  
 segmentLength = floor(r / v) in  
-segment = p -> take(segmentLength, constant(v * p)) in 
+segment = p -> take(segmentLength, const(v * p)) in 
 vs = uniformChoice(
   arc(0), arc(PI / 2), arc(PI), arc(3 * PI / 2),
   segment(point(1, 0)), segment(point(0, 1)), segment(point(-1, 0)), segment(point(0, -1))
@@ -488,16 +441,16 @@ flatMap(rndPoint, p -> translatedSymm(p, evo(p)))"
 
 "a = -.000001 in
 k = 0.01 in
-rnd = cartesian(uniform(left, right), uniform(bottom, top)) in
+rnd = @point(uniform(left, right), uniform(bottom, top)) in
 
-//eq = constant(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
+//eq = const(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
 
 sqNorm = p -> x(p)^2 + y(p)^2 in
 
 trajectory = p -> 
 
 solve1(
-  constant(q -> k * point(
+  const(q -> k * point(
      -y(q) + a * x(q) * sqNorm(q),
      x(q) + a * y(q) * sqNorm(q)
   )),
@@ -509,16 +462,16 @@ flatMap(rnd, p -> take(100, trajectory(p)))"
 
 "a = -.000001 in
 k = 0.01 in
-rnd = cartesian(uniform(left, right), uniform(bottom, top)) in
+rnd = @point(uniform(left, right), uniform(bottom, top)) in
 
-//eq = constant(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
+//eq = const(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
 
 sqNorm = p -> x(p)^2 + y(p)^2 in
 
 trajectory = p -> 
 
 solve1(
-  constant(q -> k * point(
+  const(q -> k * point(
      -y(q) + a * x(q) * sqNorm(q),
      x(q) + a * y(q) * sqNorm(q)
   )),
@@ -537,7 +490,7 @@ sqNorm = p -> x(p)^2 + y(p)^2 in
 trajectory = p -> 
 
 solve1(
-  constant(q -> k * (point(-y(q), x(q)) + a * sqNorm(q) * q) ),
+  const(q -> k * (point(-y(q), x(q)) + a * sqNorm(q) * q) ),
   p
 ) in
 
@@ -551,7 +504,7 @@ b = -2 in
 c = 0 in
 zoom = 1 in
 
-rnd = cartesian(uniform(left, right), uniform(bottom, top)) in
+rnd = @point(uniform(left, right), uniform(bottom, top)) in
 //sqNorm = p -> x(p)^2 + y(p)^2 in
 
 //vectorField = p -> k * p in
@@ -560,7 +513,7 @@ vectorField = z -> p -> k * point(y(p), a * x(p) + b * y(p) + c ) in
 trajectory = p -> 
 
 map(solve1(
-  constant(vectorField(zoom)),
+  const(vectorField(zoom)),
   (1 / zoom) * p
 ), p -> zoom * p) in
  
@@ -576,7 +529,7 @@ vectorField = p -> r * (-mid +point(y(p) % g, (-x(p)) % g)) in
 points = <point>(uniform(left, right), uniform(bottom, top)) in
 
 line = p -> solve1(
-  constant(vectorField),
+  const(vectorField),
   p
 ) in
 
@@ -639,7 +592,7 @@ vectorField = p -> r * (singleVectorField(pointMod(p))) in
 points = <point>(uniform(left, right), uniform(bottom, top)) in
 
 line = p -> solve1(
-  constant(vectorField),
+  const(vectorField),
   p
 ) in
 
@@ -671,7 +624,7 @@ vectorField = p -> r * (singleVectorField(pointSign(pointMod(p)))) in
 points = <point>(uniform(left, right), uniform(bottom, top)) in
 
 line = p -> solve1(
-  constant(vectorField),
+  const(vectorField),
   p
 ) in
 
