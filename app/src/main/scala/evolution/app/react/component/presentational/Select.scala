@@ -7,6 +7,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{ CtorType, ReactEventFromInput }
+import japgolly.scalajs.react.Callback
 
 object Select {
 
@@ -23,11 +24,13 @@ object Select {
       <.select(
         options.toTagMod,
         ^.className := "select",
-        ^.onChange ==> ((ts: PointedSeq[Item[T]]) => props.setState(ts)).compose[ReactEventFromInput](e =>
-          props.value.selectByPredicate(_.key == e.target.value)),
+        ^.onChange ==> onChange(props),
         ^.value := props.value.selected.key
       )
     }
+
+    private def onChange[T](props: Props[T])(e: ReactEventFromInput): Callback =
+      props.setState(props.value.selectByPredicate(_.key == e.target.value))
   }
 
   /**

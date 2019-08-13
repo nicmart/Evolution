@@ -5,6 +5,7 @@ import evolution.app.codec.JsonCodec
 import evolution.app.model.state.{ DrawingState, RendererState }
 import io.circe.generic.auto._
 import io.circe.{ Decoder, Encoder }
+import evolution.app.model.Drawing
 
 sealed trait MyPages
 
@@ -24,4 +25,6 @@ object PageState {
     @silent implicit val encoder: Encoder[DrawingState] = toCirceEncoder(drawingStateCodec)
     JsonCodec[PageState]
   }
+
+  def fromDrawing(drawing: Drawing): PageState = PageState(drawing.drawingState, drawing.rendererState)
 }

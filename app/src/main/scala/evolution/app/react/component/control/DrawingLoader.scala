@@ -12,7 +12,7 @@ import evolution.app.data.PointedSeq
 object DrawingLoader {
   case class Props(selected: StateSnapshot[Option[Drawing]]) {
     val itemsSnapshot: StateSnapshot[PointedSeq[Item[Drawing]]] =
-      selected.xmapState(pointedSeq)(item => Some(item.selected.value))
+      selected.zoomState(pointedSeq)(seq => _ => Some(seq.selected.value))
   }
 
   private val portfolioComponent = Select.component[Drawing]
@@ -24,7 +24,7 @@ object DrawingLoader {
 
   private def pointedSeq(drawing: Option[Drawing]): PointedSeq[Item[Drawing]] =
     drawing.fold(initialSeq)(
-      drawing => initialSeq.selectByPredicate(_.value.drawngState.code == drawing.drawngState.code)
+      drawing => initialSeq.selectByPredicate(_.value.drawingState.code == drawing.drawingState.code)
     )
 
   val component = react.ScalaComponent

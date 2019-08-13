@@ -4,6 +4,6 @@ import evolution.app.model.state.RendererState
 
 case class Drawing(
   title: Option[String],
-  drawngState: DrawingState,
+  drawingState: DrawingState,
   rendererState: RendererState
 )

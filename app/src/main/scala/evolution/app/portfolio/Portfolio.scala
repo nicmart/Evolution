@@ -9,8 +9,13 @@ import cats.effect.IO
 object Portfolio {
   val drawings = List(
     Drawing(
-      Some("costant"),
+      Some("constant"),
       DrawingState(0L, "const(point(0, 0))"),
+      defaultRendererState
+    ),
+    Drawing(
+      Some("constant2"),
+      DrawingState(0L, "const(point(100, 100))"),
       defaultRendererState
     ),
     Drawing(

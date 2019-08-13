@@ -45,13 +45,19 @@ object App {
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
         drawingState => pageState => pageState.copy(drawingState = drawingState)
       )
-      val selectedDrawingSnapshot =
-        SnapshotUnderware.simpleSnapshot(state.selectedDrawing)(s => bs.setState(state.copy(selectedDrawing = s)))
       val layoutSnapshot =
         SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
       val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(
         renderingState => pageState => pageState.copy(rendererState = renderingState)
       )
+      val selectedDrawingSnapshot =
+        SnapshotUnderware.simpleSnapshot(state.selectedDrawing) { s =>
+          bs.setState(
+            state.copy(selectedDrawing = s),
+            pageStateSnapshot.setStateOption(s.map(PageState.fromDrawing))
+          )
+        }
+
       pageComponent(
         Page.Props(
           running = stateSnapshot.zoomState(_.running)(isPlaying => state => state.copy(running = isPlaying)),
@@ -68,7 +74,7 @@ object App {
     }
 
     private[App] def key(p: PageState, s: State): Int =
-      (s.pointRateCounter.rate, p, s.running, s.layout).hashCode()
+      (s.pointRateCounter.rate, p, s.running, s.layout, s.selectedDrawing).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
