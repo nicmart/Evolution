@@ -18,10 +18,7 @@ import org.scalajs.dom.raw.{ Blob, URL }
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 import evolution.app.model.Drawing
-import evolution.app.portfolio.Portfolio
-import evolution.app.react.component.presentational.Select.Item
-import evolution.app.data.PointedSeq
-import evolution.app.react.underware.SnapshotUnderware
+import evolution.app.react.component.control.DrawingLoader
 
 object Page {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
@@ -35,6 +32,7 @@ object Page {
     rendererState: StateSnapshot[RendererState],
     compilationResult: Either[String, Iterator[Point]],
     drawingState: StateSnapshot[DrawingState],
+    selectedDrawing: StateSnapshot[Option[Drawing]],
     pointRate: Int,
     onRefresh: Callback,
     onFrameDraw: Callback
@@ -48,20 +46,7 @@ object Page {
       layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
   }
 
-  val portfolioComponent = Select.component[Drawing]
-  val portfolioItems = Portfolio.drawings.map(
-    drawing => Item(drawing.title.getOrElse(""), drawing.title.getOrElse("undefined"), drawing)
-  )
-  val selectedDrawing = portfolioItems.head
-
   class Backend(canvasComponent: Canvas.ReactComponent) {
-
-    def portfolioSnapshot(props: Props): StateSnapshot[PointedSeq[Item[Drawing]]] =
-      SnapshotUnderware.simpleSnapshot(PointedSeq(portfolioItems, selectedDrawing)) { seq =>
-        val drawing = seq.selected.value
-        props.rendererState.setState(drawing.rendererState) >>
-          props.drawingState.setState(drawing.drawngState)
-      }
 
     def render(props: Props): VdomElement = {
       <.div(
@@ -107,7 +92,7 @@ object Page {
           ),
           <.div(
             ^.className := "navbar-item",
-            portfolioComponent(portfolioSnapshot(props))
+            DrawingLoader.component(DrawingLoader.Props(props.selectedDrawing))
           ),
           <.div(
             ^.className := "navbar-end",

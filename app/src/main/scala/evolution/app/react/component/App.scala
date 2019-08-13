@@ -14,6 +14,7 @@ import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
 import evolution.app.model.CodeCompiler
+import evolution.app.model.Drawing
 
 object App {
 
@@ -23,7 +24,8 @@ object App {
     pointRateCounter: RateCounter,
     running: Boolean,
     layout: LayoutState,
-    compilationResult: Option[CompilationResult]
+    compilationResult: Option[CompilationResult],
+    selectedDrawing: Option[Drawing]
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
@@ -43,6 +45,8 @@ object App {
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
         drawingState => pageState => pageState.copy(drawingState = drawingState)
       )
+      val selectedDrawingSnapshot =
+        SnapshotUnderware.simpleSnapshot(state.selectedDrawing)(s => bs.setState(state.copy(selectedDrawing = s)))
       val layoutSnapshot =
         SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
       val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(
@@ -55,6 +59,7 @@ object App {
           rendererState = renderingStateSnapshot,
           compilationResult = state.compilationResult.map(_.result).getOrElse(Left("Not compiled yet")),
           drawingState = drawingStateSnapshot,
+          selectedDrawing = selectedDrawingSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
           onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
           onFrameDraw = onRateCountUpdate(pageStateSnapshot.value.rendererState)
@@ -108,7 +113,7 @@ object App {
     ScalaComponent
       .builder[StateSnapshot[PageState]]("App")
       .initialStateCallback(
-        initialLayout.map(layout => State(rateCounter, running = true, layout, None))
+        initialLayout.map(layout => State(rateCounter, running = true, layout, None, None))
       )
       .backend[Backend](scope => new Backend(pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
