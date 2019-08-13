@@ -9,17 +9,35 @@ import cats.effect.IO
 object Portfolio {
   val drawings = List(
     Drawing(
-      Some("constant"),
+      Some("Constant Point"),
       DrawingState(0L, "const(point(0, 0))"),
       defaultRendererState
     ),
     Drawing(
-      Some("constant2"),
-      DrawingState(0L, "const(point(100, 100))"),
+      Some("Normal Jumps"),
+      DrawingState(
+        0L,
+        """start = point(left, 0) in
+        |jump = 150 in
+        |r = 5 in
+        |total = floor((right - left) / jump) in
+        |
+        |flatten(
+        |  const(
+        |    take(
+        |      total,
+        |      integrate(
+        |        start,
+        |        const(point(jump, 0)) + @point(normal(0, r), normal(0, r))
+        |      )
+        |    )
+        |  )
+        |)""".stripMargin
+      ),
       defaultRendererState
     ),
     Drawing(
-      Some("brownian"),
+      Some("Simple Brownian"),
       DrawingState(0L, """
       |r = uniform(-2, 2) in
       |integrate(point(0, 0), @point(r, r))
