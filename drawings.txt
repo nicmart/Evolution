@@ -8,7 +8,8 @@ symm = e -> flatMap(e, p ->
 symm(integrate(point(0, 0), v))
   "
 
-"scale = 500 in
+// Clifford
+scale = 500 in
 
 scaleInv = .002 in
 
@@ -20,8 +21,8 @@ c = 1.1 in
 
 d = 0.7  in
 
-let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-let(trajectory, p -> 
+rnd = @point(uniform(left, right), uniform(bottom, top)) in
+trajectory = p -> 
 
 solve1(
   const(p -> -p + scale * point(
@@ -29,36 +30,13 @@ solve1(
     sin(b * x(p)) + d * cos(b * y(p))
   )),
   p 
-),  
+) in
    
 trajectory(point(0, 0))
 
-))"
+// Another Clifford
 
-"scale = .01 in
-
-scaleInv = .002 in
-
-a = -1.4 * scaleInv  in
-
-b = 1.6 * scaleInv in
-
-let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-let(trajectory, p -> 
-    
-solve1(
-  const(p -> scale * point(
-    y(p),
-    a * x(p) * (1 +-x(p))
-  )),
-  p 
-),  
-   
-flatMap(rnd, p -> take(100, trajectory(p)))
-
-))"
-
-"scale = 500 in
+scale = 500 in
 
 scaleInv = .002 in
 
@@ -70,8 +48,8 @@ c = 1.1 in
 
 d = 0.7  in
 
-let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-let(trajectory, p -> 
+rnd = @point(uniform(left, right), uniform(bottom, top)) in
+trajectory = p -> 
 
 solve1(
   const(p -> -p + scale * point(
@@ -79,92 +57,32 @@ solve1(
     sin(b * x(p)) + d * cos(b * y(p)) + .5227
   )),
   p 
-),  
+) in
    
 trajectory(point(0, 0))
 
-))"
+// Double-speed brownian (use torus canvas please)
 
-"let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-k = 1000000 in
+rnd = r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))) in
+v1 = rnd(2, 1000) in
+v2 = rnd(10, 100) in
 
-let(trajectory, p -> 
-    
-solve1(
-  const(p -> point(
-    x(p)^2 + -y(p)^2,
-    8 * x(p) * y(p)
-  )),
-  (1 / k) * p 
-),   
-   
-flatMap(rnd, p -> take(100, map(trajectory(p), q -> k * q )))
+integrate(point(0, 0), flatten(uniformFrom(2, [v1, v2]))) 
 
-)))  "
+// Serpinsky triangle
 
-"let(rnd, r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))),
+p1 = point(0, top) in
+p2 = point(left, bottom) in
+p3 = point(right, bottom) in
 
-integrate(point(0, 0), flatMap(uniformChoice(rnd(2, 1000), rnd(10, 100)), x -> x)) 
- 
-"
-
-"let(p1, point(0, top),
-let(p2, point(left, bottom),
-let(p3, point(right, bottom),
-
-let(vertexes, uniformChoice(p1, p2, p3),
+vertexes = uniformFrom(3, [p1, p2, p3]) in
 
 solve1(
   map(vertexes, v -> p -> -p + 0.5 * (v + p)),
   point(0, 0)
 )
 
-))))"
-
-"let(p1, point(0, top),
-let(p2, point(left, bottom),
-let(p3, point(right, bottom),
-
-let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-let(vertexes, mapCons(rnd, p1 -> t1 -> mapCons(t1, p2 -> t2 -> mapCons(t2, p3 -> t3 -> uniformChoice(p1, p2, p3)))),
-
-solve1(
-  map(vertexes, v -> p -> -p + 0.5 * (v + p)),
-  point(0, 0)
-)
-
-))))) "
-
-"let(rnd, r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))),
-let(c, r -> n -> take(n, flatMap(@point(uniform(-r, r), uniform(-r, r)), p -> const(p))),
-
-integrate(
-  point(0, 0),
-  flatMap(
-    flatMap(const(cons(rnd(3, 500), cons(c(3, 30), empty))), x -> x),
-    x -> x
-  )
-) 
- 
-))   "
-
-"let(p1, point(left, top),
-let(p2, point(right, top),
-let(p3, point(right, bottom),
-let(p4, point(left, bottom),
-let(rnd, take(1, @point(uniform(-10, 10), uniform(-10, 10))),
-let(vertexes, uniformChoice(p4, p1, p3),
-
-solve1(
-  flatMap(
-    vertexes,
-    v -> map(rnd,  r -> p -> -p + r +.5 * (v + p))
-  ),
-  p1
-)
- 
-))))))"
-
+// fix is broken
 "sliding = fix(self ->
     ts -> f -> mapCons(ts,
       t1 -> tail1 -> mapCons(tail1,
@@ -182,6 +100,7 @@ xs = uniformChoice(point(0, 0), point(100, 200), point(-100, -100)) in
 
 noConsec(xs)"
 
+// fix is broken
 "let(
   sliding,
   fix(self ->
@@ -210,6 +129,8 @@ solve1(
  
 ))))))))"
 
+
+// Grid of brownians
 "r = 2 in
 l = 100 in
 gridSize = 100 in
@@ -219,6 +140,8 @@ brownian = p -> take(l,integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, brownian)"
 
+
+// Grid of symmetric brownians
 "r = 3 in
 l = 100 in
 gridSize = 100 in
@@ -234,22 +157,8 @@ brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))"
 
-"r = 3 in
-l = 40 in
-gridSize = 50 in
-
-symm = e -> flatMap(e, p -> 
-  cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
-)) in
-
-translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
-
-rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
-
-flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))"
-
-"gridSize = 200 in
+// Brownian carpet
+gridSize = 200 in
 r = 6 in
 xs = take(20, integrate(left, const(gridSize))) in
 ys = take(10, integrate(bottom, const(gridSize))) in
@@ -257,52 +166,19 @@ ys = take(10, integrate(bottom, const(gridSize))) in
 points = flatMap(xs, x -> map(ys, y -> point(x, y))) in
 
 symm = e -> flatMap(e, p -> 
-  cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
-)) in
+  [p, -p, point(-x(p), y(p)), point(x(p), -y(p))]
+) in
 
 brownian = symm(integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(brownian, p -> map(points, q -> p + q))
-"
 
-"r = 3 in
+// Grid of squared brownians
 gridSize = 100 in
 
 symm = e -> flatMap(e, p -> 
-  cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
-)) in
-
-
-
-translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
-
-rndPoint = <point>(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-brownian = p -> take(floor(50 *(1 + sin(.05 * x(p)))), integrate(p, <point>(uniform(-r, r), uniform(-r, r)))) in
-
-flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))    "
-
-"flatMap(
-  uniform(left, right),
-  x -> take(
-    10000,
-    flatMap(
-      uniform(bottom, top),
-      y -> map(
-        @point(
-          solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0),
-          solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 *  z + -0.003 * v), 0, 0)
-        ),
-        p -> p + point(x, y)
-      )
-    )
-  )
-)"
-
-"gridSize = 100 in
-
-symm = e -> flatMap(e, p -> 
-  cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
-)) in
+  [p, -p, point(-x(p), y(p)), point(x(p), -y(p))]
+) in
 
 translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
 
@@ -314,9 +190,11 @@ ps = uniformFrom(4, [point(1, 0), point(0, 1), point(-1, 0), point(0, -1)]) in
 vs = flatMap(ps, p -> take(step, const(p))) in
 evo = p ->  take(l, integrate(p, vs)) in 
      
-flatMap(rndPoint, p -> translatedSymm(p, evo(p)))     "
+flatMap(rndPoint, p -> translatedSymm(p, evo(p)))
 
-"r1 = 300 in
+// Concentric circles
+
+r1 = 300 in
 w1 = .001 in
 r2 = 100 in
 w2 = .002 in
@@ -335,10 +213,12 @@ circle(r1, w1) +
 circle(r2, w2) +
 circle(r3, w3) +
 circle(r4, w4) +
-circle(r5, w5)"
+circle(r5, w5)
 
 
-"l = 200 in
+// Grid of squared and rounded brownians
+
+l = 200 in
 gridSize = 200 in
 
 symm = e -> flatMap(e, p -> 
@@ -348,186 +228,64 @@ symm = e -> flatMap(e, p ->
 translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
 
 rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-//evo = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 r = 20 in
 v = .3 in
 w = v / r in
 
 arcLength =floor(.5 * PI / w) in
-arc = angle -> take(arcLength, polar(const(r * w), integrate(angle, const(w)))) in  
+arc = angle -> take(arcLength, @polar(const(r * w), integrate(angle, const(w)))) in  
 segmentLength = floor(r / v) in  
 segment = p -> take(segmentLength, const(v * p)) in 
-vs = uniformChoice(
+vs = uniformFrom(8, [
   arc(0), arc(PI / 2), arc(PI), arc(3 * PI / 2),
   segment(point(1, 0)), segment(point(0, 1)), segment(point(-1, 0)), segment(point(0, -1))
-) in 
+]) in 
 
 evo = p -> take(floor(1 + l / v), integrate(p, flatMap(vs, x -> x))) in
 
 
-flatMap(rndPoint, p -> translatedSymm(p, evo(p)))"
+flatMap(rndPoint, p -> translatedSymm(p, evo(p)))
 
-"a = -.000001 in
+// Vortex
+
+a = -.000001 in
 k = 0.01 in
 rnd = @point(uniform(left, right), uniform(bottom, top)) in
-
-//eq = const(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
-
-sqNorm = p -> x(p)^2 + y(p)^2 in
 
 trajectory = p -> 
 
 solve1(
   const(q -> k * point(
-     -y(q) + a * x(q) * sqNorm(q),
-     x(q) + a * y(q) * sqNorm(q)
+     -y(q) + a * x(q) * norm(q)^2,
+     x(q) + a * y(q) * norm(q)^2
   )),
   p
 ) in
 
 
-flatMap(rnd, p -> take(100, trajectory(p)))"
+flatMap(rnd, p -> take(100, trajectory(p)))
 
-"a = -.000001 in
-k = 0.01 in
-rnd = @point(uniform(left, right), uniform(bottom, top)) in
-
-//eq = const(p -> point(k *y(p), - h * x(p)^3 + h * x(p))) in
-
-sqNorm = p -> x(p)^2 + y(p)^2 in
-
-trajectory = p -> 
-
-solve1(
-  const(q -> k * point(
-     -y(q) + a * x(q) * sqNorm(q),
-     x(q) + a * y(q) * sqNorm(q)
-  )),
-  p
-) in
-
-
-flatMap(rnd, p -> take(100, trajectory(p)))"
-
-"a = -.000001 in
-k = 0.01 in
-
-rnd = polar(uniform(0, top), uniform(0, 2 * PI)) in
-sqNorm = p -> x(p)^2 + y(p)^2 in
-
-trajectory = p -> 
-
-solve1(
-  const(q -> k * (point(-y(q), x(q)) + a * sqNorm(q) * q) ),
-  p
-) in
-
-
-flatMap(rnd, p -> take(1000, trajectory(p)))"
-
-"k = 0.01 in
-l = 100 in
-a = -1 in
-b = -2 in
-c = 0 in
-zoom = 1 in
-
-rnd = @point(uniform(left, right), uniform(bottom, top)) in
-//sqNorm = p -> x(p)^2 + y(p)^2 in
-
-//vectorField = p -> k * p in
-vectorField = z -> p -> k * point(y(p), a * x(p) + b * y(p) + c ) in
-
-trajectory = p -> 
-
-map(solve1(
-  const(vectorField(zoom)),
-  (1 / zoom) * p
-), p -> zoom * p) in
- 
-
-flatMap(rnd, p -> take(l, trajectory(p))) "
-
-"r = .03 in
+// Grid of concentric circles
+r = .03 in
 s = 100 in
 g = 100 in
 
 mid = point(g/2, g/2) in
 vectorField = p -> r * (-mid +point(y(p) % g, (-x(p)) % g)) in
-points = <point>(uniform(left, right), uniform(bottom, top)) in
+points = @point(uniform(left, right), uniform(bottom, top)) in
 
 line = p -> solve1(
   const(vectorField),
   p
 ) in
 
-flatMap(points, p -> take(s, line(p)))"
-
-"
-a = 48271 in b = 0 in m = 2^31 +-1 in
-k = 2 / m in
-
-gridSize = 100 in
-
-rnd = prev -> (a * prev + b) % m in
-normalise = prev -> 2 * rnd(prev) / m + -1 in 
-
-speed = p -> point(
-  normalise(rnd(x(p) + gridSize * y(p))),
-  normalise(rnd(y(p)+  gridSize * x(p)))
-) in
-
-randomPoint = <point>(uniform(left, right), uniform(bottom, top)) in
-
-
-gridPoint = p -> point(
-  toDbl(floor(x(p) / gridSize)),
-  toDbl(floor(y(p) / gridSize))
-) + point(gridSize, gridSize) in
-
-line = p -> take(20, integrate(p, <speed(gridPoint(p))>)) in
-
-flatMap(randomPoint, line)
-
-
+flatMap(points, p -> take(s, line(p)))
 
  
-"
+Grid of rombuses
 
-"r = .03 in
-s = 30 in
-g = 200 in
-
-a = 0 in b = 1 in c = -1 in d = 0 in
-
-mid = point(g/2, g/2) in
-
-
-singleVectorField = p -> point(
-  a * x(p) + b * y(p),
-  c * x(p) + d * y(p)
-) in
-
-pointSign = p -> point(sign(x(p)), sign(y(p))) in
-
-pointMod = p -> -mid + point(
-  x(p) % g,
-  y(p) % g
-) in
-
-vectorField = p -> r * (singleVectorField(pointMod(p))) in
-
-points = <point>(uniform(left, right), uniform(bottom, top)) in
-
-line = p -> solve1(
-  const(vectorField),
-  p
-) in
-
-flatMap(points, p -> take(s, line(p)))"
-
-"r = .01 in
+r = .01 in
 s = 60 in
 g = 150 in
 
@@ -550,127 +308,39 @@ pointMod = p -> -mid + point(
 
 vectorField = p -> r * (singleVectorField(pointSign(pointMod(p)))) in
 
-points = <point>(uniform(left, right), uniform(bottom, top)) in
+points = @point(uniform(left, right), uniform(bottom, top)) in
 
 line = p -> solve1(
   const(vectorField),
   p
 ) in
 
-flatMap(points, p -> take(s, line(p)))"
+flatMap(points, p -> take(s, line(p)))
 
-"n = 8 in
+// Rotational-symmetric brownian
+n = 8 in
 r = 3 in
 
 a = 1 in b = 1 in c = 1 in d = 1 in
 
-ps = integrate(point(0, 0), <point>(uniform(-r, r), uniform(-r, r))) in
+ps = integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r))) in
 
-angles = n -> take(n, integrate(0, <2 * PI / toDbl(n)>)) in
-
-rotate = angle -> p -> point(
-  x(p) * cos(angle) +-y(p) * sin(angle),
-  x(p) * sin(angle) + y(p) * cos(angle)
-) in
-
-
-symm = n -> p -> map(angles(n), a -> rotate(a, p)) in
-
-//flatMap(ps, p -> [p, -p, rotate(PI/2, p), rotate(-PI/2, p)])
-
-flatMap(ps, p -> map(angles(n), a -> rotate(a, p)))"
-
-"
-a = -.1 in b = -1 in c = 1 in
-rbrownian = 1 in
-rf = 100 in
-e = 1000 in
-
-dist = map(uniform(0, 1), x -> rf *(2 * x^e + -1)) in
-
-n = <point>(dist, dist) in
-
-oscillator = solve2(
-  map(n, rn -> x -> v -> a * x + b * v + rn),
-  point(0, 0),
-  point(0, 0)
-) in
-
-
-brownian = integrate(point(0, 0), <point>(
-  uniform(-rbrownian, rbrownian),
-  uniform(-rbrownian, rbrownian)
-)) in
-
-brownian <+> oscillator
-
-"
-
-"
-a = -.1 in b = -1 in c = 1 in
-rbrownian = 2 in
-rf = 100 in
-mu = 1 in
-sigma = 1 in
-k = 3 in
-
-angles = n -> take(n, integrate(0, <2 * PI / toDbl(n)>)) in
+angles = n -> take(n, integrate(0, const(2 * PI / toDbl(n)))) in
 
 rotate = angle -> p -> point(
   x(p) * cos(angle) +-y(p) * sin(angle),
   x(p) * sin(angle) + y(p) * cos(angle)
 ) in
 
-dist = normal(mu, sigma) in
+nAngles = angles(n) in
 
-n = <k> <*> <point>(dist, dist) in
-
-oscillator = solve2(
-  map(n, rn -> x -> v -> a * x + b * v + rn),
-  point(0, 0),
-  point(0, 0)
-) in
-
-
-brownian = integrate(point(0, 0), <point>(
-  uniform(-rbrownian, rbrownian),
-  uniform(-rbrownian, rbrownian)
-)) in
-
-evo = brownian <+> oscillator in
-
-flatMap(evo, p -> map(angles(7), a -> rotate(a, p)))
-
-
-"
-
-"gridSize = 100 in
-l = 10 in
-
-nX = (right +- left) / gridSize in
-nY = (top +- bottom) / gridSize in
-tot = floor(nX * nY) in
-
-gridPointsX = take(floor(nX), integrate(left, <gridSize>)) in
-gridPointsY = take(floor(nY), integrate(bottom, <gridSize>)) in
-
-gridPoints = flatMap(gridPointsX, x -> map(gridPointsY, y -> point(x, y))) in
+flatMap(ps, p -> map(angles(n), a -> rotate(a, p)))
 
 
 
-rndPointInCell = <point>(uniform(0, gridSize), uniform(0, gridSize)) in
+// Spiral and then 2nd order brownian
 
-angles = uniform(0, 2 * PI) in
-
-trajectoriesFunc = zipWith(gridPoints, angles, g -> a -> p -> integrate(g + p, <polar(3, a)>)) in
-
-trajectories = zipWith(rndPointInCell, uniformFrom(tot, trajectoriesFunc), p -> f -> f(p)) in
-
-
-flatMap(trajectories, x -> take(l, x))
-"
-
-"r = .02 in
+r = .02 in
 w = .01 in
 
 r2 = .02 in
@@ -689,7 +359,9 @@ solve1(
   speed,
   point(0, 0)
 )
-"
+
+
+// Broken
 
 "r = 2 in
 w = .01 in
@@ -712,6 +384,7 @@ solve2(
 )
 "
 
+// Broken
 "r = 2 in
 w = 0.01 in
 
@@ -737,6 +410,7 @@ solve2(
 )
 "
 
+// Broken (mapWithDerivative)
 "r = .1 in
 w = 0.01 in
 
@@ -753,40 +427,9 @@ flatten(mapWithDerivative(
   spiral
 ))"
 
-"k = 2 in
-step = 1 in
-radius = 5 in
-angularSpeedFactor = 1 in
-straightStepLength = 20 in
-maxStraightSteps = 32 in
 
-
-angle = 3 * PI / 2 in
-
-
-rotate = v -> alpha -> point(x(v) * cos(alpha) - y(v) * sin(alpha), x(v) * sin(alpha) + y(v) * cos(alpha)) in
-
-rotation = v -> map(
-  take(1 + floor(angle * radius / angularSpeedFactor), integrate(0, const(angularSpeedFactor / radius))),
-  a -> angularSpeedFactor * rotate(v, -a)
-) in
-
-s = n -> v -> concat(take(floor(n), const(v)), rotation(v)) in
-
-versors = flatten(const([point(step, 0), point(0, step), point(-step, 0), point(0, -step)])) in
-
-lengths = uniformFrom(maxStraightSteps, map(integrate(3, const(1)), k -> straightStepLength * k + 2 * radius)) in 
-
-speed = flatten(zipWith(lengths, versors, s)) in
-
-
-
-integrate(point(0, 0), speed)
-
+// Broken (mapWithDerivative)
 "
-
-"
-
 k = 10 in
 step = 1 in
 radius = 20 in
@@ -823,7 +466,8 @@ flatten(mapWithDerivative(
 
 "
 
-"k = 2 in
+// Straight lines with spiral angles
+k = 2 in
 step = 1 in
 radius = 5 in
 spiralDistances = .2 in
@@ -856,7 +500,7 @@ speed = flatten(zipWith(lengths, versors, s)) in
 
 integrate(point(0, 0), speed)
 
-"
+// BROKEN: mapWithDerivative
 
 "viscosity = .001 in
 k = 0 in
@@ -885,12 +529,14 @@ flatten(mapWithDerivative(
   line
 ))"
 
-"rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
+// Perlin noise 1
+Z
+rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
 f = 60 in
 v = 2 in
 
-mapCons(noise, n -> notUsed ->
-  mapCons(uniform(1, 256), r -> notUsed ->
+withFirst(noise, n ->
+  withFirst(uniform(1, 256), r ->
     line = p -> solve1(
       const(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
       p
@@ -901,4 +547,3 @@ mapCons(noise, n -> notUsed ->
     )
   )
 ) 
-"
