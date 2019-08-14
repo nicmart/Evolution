@@ -22,18 +22,34 @@ object UnifyPredicates {
       case (pred, _) => freeVarsInPredicate(pred)
     }.map(_._2)
 
-    println("Going to unify predicates:")
-    println(reducedPredicateToSubstitutions.mkString("\n"))
-    println("Ordered substitutions:")
-    println(orderedSubstitutions.mkString("\n"))
+    val optimisedSubstitutions = reduceSubstitutions(orderedSubstitutions)
 
-    val combinations = product(orderedSubstitutions)
+    println("Going to unify predicates:")
+    println(reducedPredicateToSubstitutions.mapValues(_.mkString("\n")).mkString("\n"))
+    println("Optimised substitutions:")
+    println(optimisedSubstitutions.mkString("\n"))
+
+    val combinations = product(optimisedSubstitutions)
 
     combinations
       .flatMap(mergeSubstitutions)
       .headOption
       .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
   }
+
+  private def reduceSubstitutions(substitutions: List[List[Substitution]]): List[List[Substitution]] =
+    substitutions match {
+      case head :: tail => head :: reduceSubstitutions(tail.map(removeImpossibleSubstitutions(head)))
+      case Nil          => Nil
+    }
+
+  // Remove substitutions from candidates that are not compatible with any of the required substitutions
+  private def removeImpossibleSubstitutions(required: List[Substitution])(
+    candidates: List[Substitution]
+  ): List[Substitution] = candidates.filter(atLeastOneCompatible(required))
+
+  private def atLeastOneCompatible(atLeastOneOf: List[Substitution])(candidate: Substitution): Boolean =
+    atLeastOneOf.exists(s => s.merge(candidate).isRight)
 
   private def freeVarsInPredicate(predicate: Predicate): Int =
     predicate.types.map(tpe => tpe.typeVars.size).sum
