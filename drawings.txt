@@ -1,18 +1,17 @@
 
-"let(radius, 2, let(friction, 0.06, solve2(map(@point(uniform(-radius, radius), uniform(-radius, radius)), r -> x -> v -> r + -friction * v), point(0, 0), point(0, 0))))"
+"radius = 0.001 in
 
-"let(radius, 0.00001, let(viscosity, radius * 0.01, let(k, radius * 3, let(rnd, @point(uniform(-radius, radius), uniform(-radius, radius)), let(v, solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)), integrate(point(0, 0), v))))))"
+viscosity = radius * 9.995 in
 
-"let(radius, 0.001,
-let(viscosity, radius * 9.995,
-let(k, radius * 10,
+k = radius * 10 in
+
 let(rnd, @point(uniform(-radius, radius), uniform(-radius, radius)),
 let(v, solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)),
 
 integrate(point(0, 0), v)
 
 
-)))))"
+))"
 
 "let(circle, r -> w -> polar(const(r), integrate(0, const(w))),
 let(rndPoint, @point(uniform(left, right), uniform(bottom, top)),
@@ -25,8 +24,10 @@ flatMap(
 
 )))"
 
-"let(k, .0003,
-let(h, .003,
+"k = .0003 in
+
+h = .003 in
+
 let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
@@ -37,7 +38,7 @@ solve1(
 
 flatMap(rnd, p -> take(100, trajectory(p)))
 
-))))"
+))"
 
 "r = 3 in
 v = @point(uniform(-r, r), uniform(-r, r)) in
@@ -49,12 +50,18 @@ symm = e -> flatMap(e, p ->
 symm(integrate(point(0, 0), v))
   "
 
-"let(scale, 500,
-let(scaleInv, .002,
-let(a, -1.4 * scaleInv ,
-let(b, 1.6 * scaleInv,
-let(c, 1.1,
-let(d, 0.7 ,
+"scale = 500 in
+
+scaleInv = .002 in
+
+a = -1.4 * scaleInv  in
+
+b = 1.6 * scaleInv in
+
+c = 1.1 in
+
+d = 0.7  in
+
 let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
@@ -68,12 +75,16 @@ solve1(
    
 trajectory(point(0, 0))
 
-))))))))"
+))"
 
-"let(scale, .01,
-let(scaleInv, .002,
-let(a, -1.4 * scaleInv ,
-let(b, 1.6 * scaleInv,
+"scale = .01 in
+
+scaleInv = .002 in
+
+a = -1.4 * scaleInv  in
+
+b = 1.6 * scaleInv in
+
 let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
     
@@ -87,14 +98,20 @@ solve1(
    
 flatMap(rnd, p -> take(100, trajectory(p)))
 
-))))))"
+))"
 
-"let(scale, 500,
-let(scaleInv, .002,
-let(a, -1.4 * scaleInv ,
-let(b, 1.6 * scaleInv,
-let(c, 1.1,
-let(d, 0.7 ,
+"scale = 500 in
+
+scaleInv = .002 in
+
+a = -1.4 * scaleInv  in
+
+b = 1.6 * scaleInv in
+
+c = 1.1 in
+
+d = 0.7  in
+
 let(rnd, @point(uniform(left, right), uniform(bottom, top)),
 let(trajectory, p -> 
 
@@ -108,10 +125,11 @@ solve1(
    
 trajectory(point(0, 0))
 
-))))))))"
+))"
 
 "let(rnd, @point(uniform(left, right), uniform(bottom, top)),
-let(k, 1000000,
+k = 1000000 in
+
 let(trajectory, p -> 
     
 solve1(
@@ -130,7 +148,7 @@ flatMap(rnd, p -> take(100, map(trajectory(p), q -> k * q )))
 
 integrate(point(0, 0), flatMap(uniformChoice(rnd(2, 1000), rnd(10, 100)), x -> x)) 
  
-)"
+"
 
 "let(p1, point(0, top),
 let(p2, point(left, bottom),
@@ -224,14 +242,15 @@ let(p3, point(right, top),
 let(p4, point(right, bottom),
 
 let(vertexes, noConsec(uniformChoice(p1, p2, p3, p4)),
-let(k, .06, 
+k = .06 in
+ 
 let(f, v -> p -> -p + k * v + (-k + 1) * p,
 solve1(
   map(vertexes, v -> p -> -p + f(v, p)),
   point(0, 0)
 )
  
-)))))))))"
+))))))))"
 
 "r = 2 in
 l = 100 in

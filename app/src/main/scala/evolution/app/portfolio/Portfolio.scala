@@ -115,7 +115,7 @@ object Portfolio {
       defaultRendererWithInfiniteCanvas
     ),
     Drawing(
-      Some("Doodle"),
+      Some("Doodles"),
       DrawingState(
         0L,
         """
@@ -142,6 +142,23 @@ object Portfolio {
         |  )
         |)
         |
+        |""".stripMargin
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Circular doodle"),
+      DrawingState(
+        0L,
+        """
+        |radius = 0.001 in
+        |viscosity = radius * 0.0001 in
+        |k = radius * 3 in
+        |step = 2 in
+        |rnd = @point(uniform(-radius, radius), uniform(-radius, radius)) in
+        |v = solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)) in
+        |
+        |integrate(point(0, 0), step * v)
         |""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
