@@ -500,7 +500,7 @@ speed = flatten(zipWith(lengths, versors, s)) in
 
 integrate(point(0, 0), speed)
 
-// BROKEN: mapWithDerivative
+// BROKEN: Tenie! (mapWithDerivative)
 
 "viscosity = .001 in
 k = 0 in
@@ -530,7 +530,6 @@ flatten(mapWithDerivative(
 ))"
 
 // Perlin noise 1
-Z
 rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
 f = 60 in
 v = 2 in
@@ -546,4 +545,1325 @@ withFirst(noise, n ->
       p -> take(300, line(p))
     )
   )
-) 
+)
+
+// Horizontal perlin noise lines
+---------
+a = 300 in
+f = 300 in
+v = 1 in
+length = 3000 in
+d = 30 in
+yVar = 3 in
+
+mapCons(octaveNoise, on -> notUsed ->
+  n = x -> y -> on(8, .4, point(x, y)) in
+
+  flatMap(
+    range(bottom-100, top+100, d),
+    startY -> take(length, map(
+      integrate(left, const(v)),
+      x -> point(x, startY + a * n(x/f, startY / (f * yVar)))
+    ))
+  )
+)
+
+// Perlin Mountains
+---------
+a = 300 in
+f = 300 in
+v = 1 in
+length = 3000 in
+d = 5 in
+yVar = 1 in
+
+mapCons(octaveNoise, on -> notUsed ->
+  n = on(8, .4) in
+
+  flatMap(
+    range(bottom - 100, top + 100, d),
+    startY -> take(length, map(
+      integrate(left, const(v)),
+      x -> point(x, startY + a * n(point(x/f, startY / (f * yVar))))
+    ))
+  )
+)
+
+Abstract lines (perin noise )
+---------
+f = 600 in
+v = 2 in
+size = 100 in
+r = 5 in
+
+rndPoint = integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r))) in
+coord = d -> toDbl(floor(d / size)) * size in
+mod = p -> point(coord(x(p)), coord(y(p))) in
+
+mapCons(noise, n -> notUsed ->
+  vectorField = q -> polar(v, 6 * (2^.5) * PI * n(x(mod(q))/f, y(mod(q))/f)) in
+
+    line = p -> solve1(
+      @(vectorField),
+      p
+    ) in
+    flatMap(
+      rndPoint,
+      p -> take(50, line(p))
+    )
+
+)
+
+// Symmetric abstract lines
+---------
+f = 600 in
+v = 2 in
+size = 30 in
+r = 10 in
+
+rndPoint = integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r))) in
+coord = d -> toDbl(floor(d / size)) * size in
+mod = p -> point(coord(x(p)), coord(y(p))) in
+
+symm = e -> flatMap(e, p -> [p, -p, point(-x(p), y(p)), point(x(p), -y(p))]) in
+
+symm(
+mapCons(noise, n -> notUsed ->
+  vectorField = q -> polar(v, 6 * (2^.5) * PI * n(point(x(mod(q))/f, y(mod(q))/f))) in
+
+    line = p -> solve1(
+      const(vectorField),
+      p
+    ) in
+    flatMap(
+      rndPoint,
+      p -> take(30, line(p))
+    )
+))
+
+// Nested brownians
+---------
+rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
+f = 300 in
+f2 = .1 in
+v = 2 in
+a = 1/1000 in
+b = 1/1000 in
+c = 5 in
+k = 50 in
+
+
+withFirst3(noise, n1 -> n2 -> n3 ->
+  line = p ->
+  q = point(n1(f2 * p), n2(f2 * p)) in
+
+  solve1(
+    @(q -> polar(v, k * (2^.5) * PI * n3((1/f)*q))),
+      p
+    ) in
+  flatMap(
+    rndPoint,
+    p -> take(300, line(p))
+  )
+)
+
+
+// Circle + noise
+---------
+
+octaves = 4 in
+persistence = 5 in
+v = .0002 in
+
+mapCons(octaveNoise, on -> notUsed ->
+    n = on(octaves, persistence) in
+
+    map(
+      integrate(0, const(v)),
+      w -> polar(300 + 100 *n(polar(1, w)), w)
+    )
+
+)
+
+// Derive is broken
+---------
+octaves = 4 in
+persistence = .001 in
+f = 50 in
+k = 40 in
+w = .02 in
+r = .2 in
+
+e = mapCons(octaveNoise, on -> notUsed ->
+    n = on(octaves, persistence) in
+    zipWith(
+      integrate(0, const(r)),
+      integrate(0, const(w)),
+      r -> w -> polar(r + k * n((1 / f) * polar(r, w)), w)
+    )
+
+) in
+
+integrate(point(0, 0), map(derive(e), v -> v))
+
+Explosive normal turbolence
+---------
+p = 0.01 in
+turbolenceStrength = 10 in
+turbolenceLength = 3000 in
+nonTurbolenceLength = 100 in
+randomWalkStep = 2 in
+turbolenceX = normal(1, turbolenceStrength) in
+turbolence = @point(turbolenceX, turbolenceX) in
+
+flatMap(
+  uniform(0, 1),
+  d -> if (
+    d < p,
+    take(turbolenceLength, turbolence),
+    take(nonTurbolenceLength, @(point(0, 0)))
+  )
+)
+
+
+
+Pulsating normal turbolence
+---------
+
+a = 200 in
+
+p = 0.01 in
+turbolenceStrength = 50 in
+turbolenceLength = 10000 in
+nonTurbolenceLength = 100 in
+randomWalkStep = 2 in
+
+time = integrate(0, const(1)) in
+f = x -> smoothstep(0, turbolenceLength/2, x) in
+phi = x -> 1 - f(abs(x - turbolenceLength/2)) in
+scalingFactor = map(time, phi) in
+turbolenceX = scalingFactor * normal(1, turbolenceStrength) in
+turbolence = @point(turbolenceX, turbolenceX) in
+
+flatten(const(take(floor(turbolenceLength), turbolence)))
+
+
+
+
+
+
+Random walk with pulsatingTurbolence
+---------
+a = 200 in
+
+p = 0.01 in
+turbolenceStrength = 10 in
+turbolenceLength = 30000 in
+nonTurbolenceLength = 100 in
+randomWalkStep = 3 in
+
+
+
+time = integrate(0, const(1)) in
+f = x -> smoothstep(0, turbolenceLength/2, x) in
+phi = x -> 1 - f(abs(x - turbolenceLength/2)) in
+scalingFactor = map(time, phi) in
+turbolenceX = scalingFactor * normal(1, turbolenceStrength) in
+turbolence = @point(turbolenceX, turbolenceX) in
+
+randomWalk = integrate(
+  point(0, 0),
+  @point(
+    uniform(-randomWalkStep, randomWalkStep),
+    uniform(-randomWalkStep, randomWalkStep)
+  )
+) in
+
+pulsatingTurbolence = flatMap(
+  uniform(0, 1),
+  d -> if (
+    d < p,
+    take(floor(turbolenceLength), turbolence),
+    take(nonTurbolenceLength, const(point(0, 0)))
+  )
+) in
+
+randomWalk + pulsatingTurbolence
+
+
+Random walk with pulsating step size
+---------
+p = 0.03 in
+turbolenceStrength = 10 in
+turbolenceLength = 10000 in
+nonTurbolenceLength = 100 in
+randomWalkStep = 2 in
+upwardBias = 0.3 in
+
+
+
+time = integrate(0, const(1)) in
+f = x -> smoothstep(0, turbolenceLength/2, x) in
+phi = x -> 1 - f(abs(x - turbolenceLength/2)) in
+scalingFactor = map(time, phi) in
+turbolenceX = scalingFactor * normal(1, turbolenceStrength) in
+
+pulsatingTurbolence = flatMap(
+  uniform(0, 1),
+  d -> if (
+    d < p,
+    take(floor(turbolenceLength), turbolenceX),
+    take(nonTurbolenceLength, const(1))
+  )
+) in
+
+e = integrate(
+  point(0, bottom),
+  pulsatingTurbolence * @point(
+    uniform(-randomWalkStep, randomWalkStep),
+    uniform(-randomWalkStep, randomWalkStep + upwardBias)
+  )
+) in
+
+
+parallel(take(50, const(e)))
+
+
+// This takes 39 seconds in predicates unification!
+
+Minimised (essential the point at the end):
+a = 1 in
+
+x = a * a * a * a * a * a * point(0, 0) in 
+
+const(point(0, 0))
+
+---------
+k = 2 in
+step = 1 in
+radius = 5 in
+spiralDistances = .2 in
+numberOfRotations = 20 in
+angularSpeedFactor = .2 in
+straightStepLength = 50 in
+maxStraightSteps = 32 in
+turbolenceStrength = 30 in
+octaves = 4 in
+persistence = .3 in
+
+f = 100 in
+
+
+angle = 3 * PI / 2 in
+rotationIterations = numberOfRotations * (1 + floor(angle * radius / angularSpeedFactor)) in
+
+
+rotate = v -> alpha -> spiralDistances * alpha *  point(x(v) * cos(alpha) - y(v) * sin(alpha), x(v) * sin(alpha) + y(v) * cos(alpha)) in
+
+rotation = v -> map(
+  take(rotationIterations, integrate(0, const(angularSpeedFactor / radius))),
+  a -> angularSpeedFactor * rotate(v, -a)
+) in
+
+s = n -> v -> concat(take(floor(n), const(v)), rotation(v)) in
+
+versors = flatten(@([point(step, 0), point(0, step), point(-step, 0), point(0, -step)])) in
+
+lengths = uniformFrom(maxStraightSteps, map(integrate(3, const(1)), k -> straightStepLength * k + 2 * radius)) in
+
+speed = flatten(zipWith(lengths, versors, s)) in
+
+
+mapCons(map(octaveNoise, n -> n(octaves, persistence)), n1 -> noise2 ->
+  mapWithDerivative(
+    p -> v -> p + turbolenceStrength * (n1((1/f) * p)/norm(v)) * point(y(v), -x(v)),
+    integrate(point(0, 0), speed)
+  )
+)
+
+
+
+
+---------
+toEdge = p -> if (x(p) < y(p), point(0, y(p)), point(x(p), 0)) in
+
+points = @point(uniform(left, right), uniform(top, bottom)) in
+
+
+gridSize = 200 in
+
+inCell = f -> p ->
+  pgrid = point(x(p) - x(p) % gridSize, y(p) - y(p) % gridSize) in
+  pfract = p - pgrid in
+  f(pfract) + pgrid
+in
+
+map(
+  points,
+  inCell(toEdge)
+)
+---------
+gridSize = 50 in
+
+toEdge = p -> [point(0, y(p)), point(x(p), 0)] in
+
+points = @point(uniform(left, right), uniform(top, bottom)) in
+
+
+inCell = f -> p ->
+  pInCell = point(x(p) % gridSize, y(p) % gridSize) in
+  pCell = p - pInCell in
+  map(f(pInCell), p-> p + pCell)
+in
+
+flatmap(
+  points,
+  inCell(toEdge)
+)
+---------
+gridSize = 100 in
+noiseStrength = 30 in
+freq = 100 in
+octaves = 10 in
+persistence = .2 in
+anglerange = 9 in
+
+toEdge = p -> [point(0, y(p)), point(x(p), 0)] in
+
+points = @point(uniform(left, right), uniform(top, bottom)) in
+
+
+inCell = f -> p ->
+  pInCell = point(x(p) % gridSize, y(p) % gridSize) in
+  pCell = p - pInCell in
+  map(f(pInCell), p-> p + pCell)
+in
+
+
+flatMap(octaveNoise, on ->
+  n = on(octaves, persistence) in
+  map(flatmap(
+    points,
+    inCell(toEdge)
+  ), p -> p + polar(noisestrength * n((1/10) * p), anglerange * pi * n((1/freq) * p)))
+)
+---------
+gridSize = 100 in
+noiseStrength = 100 in
+freq = 100 in
+freq2 = 50 in
+octaves = 10 in
+persistence = .2 in
+anglerange = 900 in
+
+toEdge = p -> [point(0, y(p)), point(x(p), 0)] in
+
+points = @point(uniform(left, right), uniform(top, bottom)) in
+
+
+inCell = f -> p ->
+  pInCell = point(x(p) % gridSize, y(p) % gridSize) in
+  pCell = p - pInCell in
+  map(f(pInCell), p-> p + pCell)
+in
+
+
+flatMap(octaveNoise, on ->
+  n = on(octaves, persistence) in
+  map(flatmap(
+    points,
+    inCell(toEdge)
+  ), p -> p + polar(noisestrength * n((1/freq2) * p), anglerange * pi * n((1/freq) * p)))
+)
+---------
+radius = 0.00001 in
+viscosity = 0.01 * radius in
+k = radius * 3 in
+rnd = @point(uniform(-radius, radius), uniform(-radius, radius)) in
+
+v = solve2(
+  map(rnd, r -> x -> v -> r + -viscosity * v + -k * x),
+  point(0, 0),
+  point(0, 0)
+) in
+
+integrate(point(0, 0), v)
+---------
+r = 3 in
+l = 100 in
+gridSize = 100 in
+
+symm = e -> flatMap(e, p ->
+  cons(p, cons(-p, cons(point(-x(p), y(p)), cons(point(x(p), -y(p)), empty)))
+)) in
+
+translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
+
+rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
+brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
+
+flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))
+---------
+rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
+f = 60 in
+v = 2 in
+
+withFirst(noise, n ->
+  withFirst(uniform(1, 256), r ->
+    line = p -> solve1(
+      @(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
+      p
+    ) in
+    flatMap(
+      rndPoint,
+      p -> take(300, line(p))
+    )
+  )
+)
+
+---------
+a = 300 in
+f = 100 in
+v = .1 in
+
+mapCons(octaveNoise, on -> notUsed ->
+  n = x -> y -> on(1, .2, point(x, y)) in
+  map(
+    integrate(left, const(v)),
+    x -> point(x, a * n(x/f, x/f))
+  )
+)
+
+---------
+a = 300 in
+f = 300 in
+v = 1 in
+length = 3000 in
+d = 30 in
+yVar = 3 in
+
+mapCons(octaveNoise, on -> notUsed ->
+  n = x -> y -> on(8, .4, point(x, y)) in
+
+  flatMap(
+    range(bottom-100, top+100, d),
+    startY -> take(length, map(
+      integrate(left, const(v)),
+      x -> point(x, startY + a * n(x/f, startY / (f * yVar)))
+    ))
+  )
+
+  //map(
+  //  integrate(left, const(v)),
+  //  x -> point(x, a * n(x/f, x/f))
+  //)
+)
+
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = r -> w ->
+  @polar(const(r), integrate(0, const(w)))
+in
+
+w1s = uniformDiscrete(3, 7, 1) in
+w2s = uniformDiscrete(-5, -2, 1) in
+rs = uniformDiscrete(10, 30, 1) in
+
+mainCircles = k -> map(w1s, w -> circle(10, k * w)) in
+secondaryCircles = k ->zipWith(
+  w2s,
+  rs,
+  w -> r -> circle(r, k * w)
+) in
+
+circles = k ->
+  zipWith(
+    mainCircles(k),
+    secondaryCircles(k),
+    c1 -> c2 -> c1 @+ c2
+  )
+in
+
+
+
+//onPoints(grid(100), circles)
+
+k = .03 in
+length = 20 in
+
+onPoints(grid(80), circles(k), floor(length / k))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = r -> w ->
+  @polar(const(r), integrate(0, const(w)))
+in
+
+w1s = uniformDiscrete(3, 100, 21) in
+w2s = uniformDiscrete(-100, 100, 3) in
+w3s = uniformDiscrete(-100, 100, 5) in
+rs = uniformDiscrete(10, 30, 1) in
+r3s = uniformDiscrete(1, 50, 1) in
+
+mainCircles = k -> map(w1s, w -> circle(10, k * w)) in
+
+secondaryCircles = k ->zipWith(
+  w2s,
+  rs,
+  w -> r -> circle(r, k * w)
+) in
+
+thirdCircles = k -> zipWith(
+  w3s,
+  r3s,
+  w -> r -> circle(r, k * w)
+) in
+
+circles = k ->
+  zipWith(
+    zipWith(
+      mainCircles(k),
+      secondaryCircles(k),
+      c1 -> c2 -> c1 @+ c2
+    ),
+    thirdCircles(k),
+    c12 -> c3 -> c12 @+ c3
+)
+in
+
+
+
+//onPoints(grid(100), circles)
+
+k = .01 in
+length = 20 in
+
+onPoints(grid(150), circles(k), floor(length / k))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = r -> w ->
+  @polar(const(r), integrate(0, const(w)))
+in
+
+w1s = uniformDiscrete(3, 100, 2) in
+w2s = uniformDiscrete(-10, 10, 1) in
+w3s = uniformDiscrete(-10, 10, 1) in
+rs = uniformDiscrete(10, 30, 1) in
+r3s = uniformDiscrete(1, 50, 1) in
+
+mainCircles = k -> map(w1s, w -> circle(10, k * w)) in
+
+secondaryCircles = k ->zipWith(
+  w2s,
+  rs,
+  w -> r -> circle(r, k * w)
+) in
+
+thirdCircles = k -> zipWith(
+  w3s,
+  r3s,
+  w -> r -> circle(r, k * w)
+) in
+
+circles = k ->
+  zipWith(
+    zipWith(
+      mainCircles(k),
+      secondaryCircles(k),
+      c1 -> c2 -> c1 @+ c2
+    ),
+    thirdCircles(k),
+    c12 -> c3 -> c12 @+ c3
+)
+in
+
+
+
+//onPoints(grid(100), circles)
+
+k = .01 in
+length = 20 in
+
+onPoints(grid(150), circles(k), floor(length / k))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = alpha -> r -> w ->
+  @polar(const(r), integrate(alpha, const(w)))
+in
+
+w1s = uniformDiscrete(-3, 3, 1) in
+w2s = uniformDiscrete(-30, 30, 1) in
+w3s = uniformDiscrete(-30, 30, 1) in
+w4s = uniformDiscrete(-30, 30, 1) in
+w5s = uniformDiscrete(-3, 3, 1) in
+
+r1s = uniformDiscrete(10, 50, 1) in
+r2s = uniformDiscrete(10, 25, 1) in
+r3s = uniformDiscrete(5, 10, 1) in
+r4s = uniformDiscrete(2, 5, 1) in
+r5s = uniformDiscrete(1, 2, 1) in
+
+
+circles = k ->
+
+  zipWith(
+    uniform(0, 2 * pi),
+    w1s,
+    w2s,
+    w3s,
+    w4s,
+    w5s,
+    r1s,
+    r2s,
+    r3s,
+    r4s,
+    r5s,
+    alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> r1 -> r2 -> r3 -> r4 -> r5 ->
+      circle(alpha, r1, k * w1) @+
+      circle(alpha, r2, k * w2) @+
+      circle(alpha, r3, k * w3) @+
+      circle(alpha, r4, k * w4) @+
+      circle(alpha, r4, k * w5)
+  )
+
+in
+
+
+k = .01 in
+length = 20 in
+
+onPoints(grid(150), circles(k), floor(length / k))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = alpha -> r -> w ->
+  @polar(const(r), integrate(alpha, const(w)))
+in
+
+w1s = uniformDiscrete(-3, 3, 1) in
+w2s = uniformDiscrete(-30, 30, 2) in
+w3s = uniformDiscrete(-30, 200, 10) in
+w4s = uniformDiscrete(-200, 30, 21) in
+w5s = uniformDiscrete(-30, 30, 5) in
+
+r1s = uniformDiscrete(10, 50, 1) in
+r2s = uniformDiscrete(10, 25, 1) in
+r3s = uniformDiscrete(5, 10, 1) in
+r4s = uniformDiscrete(2, 5, 1) in
+r5s = uniformDiscrete(1, 2, 1) in
+
+
+circles = k ->
+
+  zipWith(
+    uniform(0, 2 * pi),
+    w1s,
+    w2s,
+    w3s,
+    w4s,
+    w5s,
+    r1s,
+    r2s,
+    r3s,
+    r4s,
+    r5s,
+    alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> r1 -> r2 -> r3 -> r4 -> r5 ->
+      circle(alpha, r1, k * w1) @+
+      circle(alpha, r2, k * w2) @+
+      circle(alpha, r3, k * w3) @+
+      circle(alpha, r4, k * w4) @+
+      circle(alpha, r4, k * w5)
+  )
+
+in
+
+
+k = .01 in
+length = 20 in
+
+onPoints(grid(150), circles(k), floor(length / k))
+---------
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = alpha -> r -> w ->
+  @polar(const(r), integrate(alpha, const(w)))
+in
+
+w1s = uniformDiscrete(-3, 3, 1) in
+w2s = uniformDiscrete(-30, 30, 2) in
+w3s = uniformDiscrete(-30, 200, 10) in
+w4s = uniformDiscrete(-200, 30, 21) in
+w5s = uniformDiscrete(-30, 30, 5) in
+w6s = uniformDiscrete(-5, 5, 1) in
+
+r1s = uniformDiscrete(1, 50, .1) in
+r2s = uniformDiscrete(1, 10, .1) in
+r3s = uniformDiscrete(1, 30, .1) in
+r4s = uniformDiscrete(1, 30, .1) in
+r5s = uniformDiscrete(1, 10, .1) in
+r6s = uniformDiscrete(4, 50, 1) in
+
+r = 50 in
+
+circles = k ->
+
+  zipWith(
+    uniform(0, 2 * pi),
+    w1s,
+    w2s,
+    w3s,
+    w4s,
+    w5s,
+    w6s,
+    r1s,
+    r2s,
+    r3s,
+    r4s,
+    r5s,
+    r6s,
+    alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> w6 -> r1 -> r2 -> r3 -> r4 -> r5 -> r6 ->
+      sum = r1 + r2 + r3 + r4 + r5 + r6 in
+
+      circle(alpha, r1 * r / sum, k * w1) @+
+      circle(alpha, r2 * r / sum, k * w2) @+
+      circle(alpha, r3 * r / sum, k * w3) @+
+      circle(alpha, r4 * r / sum, k * w4) @+
+      circle(alpha, r5 * r / sum, k * w5) @+
+      circle(alpha, r6 * r / sum, k * w6)
+  )
+
+in
+
+
+k = .01 in
+length = 20 in
+
+onPoints(grid(150), circles(k), floor(length / k))
+---------
+a = 300 in
+xFreq = 500 in
+octaves = 16 in
+persistence = .5 in
+v = 2 in
+length = floor((right - left) / v) in
+d = 2 in
+minY = bottom - 100 in
+
+mapCons(octaveNoise, on -> notUsed ->
+  n = on(octaves, persistence) in
+
+  flatMap(
+    range(minY, 1000, d),
+    startY ->
+      kx = .001 * (startY - minY) in
+      ky = 1 / (1 + 0.001 * (startY - minY+50)) in
+      take(length, map(
+        integrate(left, const(v)),
+        x -> point( x, ky * (startY + a * n(point(kx * x/xFreq, startY / xFreq))))
+      ))
+  )
+)
+
+---------
+a = 300 in
+xFreq = 300 in
+octaves = 3 in
+persistence = .6 in
+v = 2 in
+length = floor((right - left) / v) in
+d = 2 in
+minY = bottom - 100 in
+s = 300 in // distance of the screen
+offsetZ = 600 in // height of the camera
+noiseStrength = 100 in // noise amplitude
+maxDepth = 1000 in
+depthStep = 5 in
+
+fz = map(octaveNoise, on ->
+  x -> y -> -offsetZ + noiseStrength * on(octaves, persistence, point(x/xFreq, y/xFreq))
+) in
+
+
+withFirst(fz, f ->
+  flatMap(
+    range(0, maxDepth, depthStep),
+    y ->
+      take(2 * length, map(
+        integrate(-toDbl(length) * d, const(v)),
+        x -> point(s * x / y, s * f(x, y) / y)
+      ))
+  )
+)
+
+---------
+a = 300 in
+xFreq = 300 in
+octaves = 8 in
+persistence = .2 in
+v = 2 in
+length = floor((right - left) / v) in
+s = 300 in // distance of the screen
+cameraZ = 1000 in // height of the camera
+offsetZ = cameraZ / 2 in
+noiseStrength = 100 in // noise amplitude
+maxDepth = 1000 in
+depthStep = 5 in
+startY = s/2 in
+
+fz = map(octaveNoise, on ->
+  x -> y -> -cameraZ + noiseStrength * on(octaves, persistence, point(x/xFreq, y/100))
+) in
+
+
+withFirst(fz, f ->
+  flatMap(
+    range(startY, maxDepth, depthStep),
+    y ->
+      xlength = (y/startY) * 2 * toDbl(length) / v in
+      take(
+        floor(xlength),
+        map(
+          integrate(-xlength, const(v)),
+          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
+        )
+      )
+  )
+)
+
+---------
+a = 300 in
+xFreq = 300 in
+octaves = 8 in
+persistence = .2 in
+v = 2 in
+length = floor((right - left) / v) in
+s = 300 in // distance of the screen
+cameraZ = 1000 in // height of the camera
+offsetZ = cameraZ / 2 in
+noiseStrength = 100 in // noise amplitude
+maxDepth = 1000 in
+depthStep = 3 in
+startY = s/2 in
+
+fz = withFirst2(octaveNoise, on1 -> on2 ->
+  @(x -> y ->
+    -cameraZ + noiseStrength
+     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
+  )
+) in
+
+
+withFirst(fz, f ->
+  flatMap(
+    range(startY, maxDepth, depthStep),
+    y ->
+      xlength = (y/startY) * 2 * toDbl(length) / v in
+      take(
+        floor(xlength),
+        map(
+          integrate(-xlength, const(v)),
+          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
+        )
+      )
+  )
+)
+
+---------
+a = 300 in
+xFreq = 100 in
+octaves = 8 in
+persistence = .2 in
+v = 2 in
+length = floor((right - left) / v) in
+s = 300 in // distance of the screen
+cameraZ = 1000 in // height of the camera
+offsetZ = cameraZ / 2 in
+noiseStrength = 100 in // noise amplitude
+maxDepth = 1000 in
+depthStep = 3 in
+startY = s/2 in
+
+fz = withFirst2(octaveNoise, on1 -> on2 ->
+  @(x -> y ->
+    -cameraZ +
+    noiseStrength * on1(octaves, persistence, point(x/xFreq, y/xFreq)) +
+    700 * on2(1, .5, point(x/1000, y/500))
+  )
+) in
+
+
+withFirst(fz, f ->
+  flatMap(
+    range(startY, maxDepth, depthStep),
+    y ->
+      xlength = (y/startY) * 2 * toDbl(length) / v in
+      take(
+        floor(xlength),
+        map(
+          integrate(-xlength, const(v)),
+          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
+        )
+      )
+  )
+)
+
+---------
+g = 100 in
+k = .01 in
+field = x -> v -> -(g/norm(x)^2) * versor(x) in
+
+
+
+
+parallel(take(1000,
+
+zipWith(
+  @point(uniform(left, right), uniform(bottom, top)),
+  uniform(0, 2 * pi),
+  uniform(0, 1),
+  p -> alpha -> r ->
+    solve2(
+      const(field),
+      p,
+      polar(r * k * norm(p), alpha)
+    )
+)
+
+))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+onPoints = points -> drawings -> length ->
+  flatten(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = r -> w ->
+  @polar(const(r), integrate(0, const(w)))
+in
+
+w1s = uniformDiscrete(.1, .2, .01) in
+w2s = uniformDiscrete(.1, 2, .1) in
+
+circles =
+  zipWith(w1s, w2s, w1 -> w2 ->
+    circle(20, w1) @+ circle(20, w2)
+  )
+in
+
+
+
+//onPoints(grid(100), circles)
+
+onPoints(grid(100), circles, 400)
+---------
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  parallel(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = alpha -> r -> w ->
+  @polar(const(r), integrate(alpha, const(w)))
+in
+
+w1s = uniformDiscrete(-300, 300, 1) in
+w2s = uniformDiscrete(-3, 3, 1) in
+w3s = uniformDiscrete(30, 50, 10) in
+w4s = uniformDiscrete(-20, 1, 21) in
+w5s = uniformDiscrete(-10, 10, 5) in
+
+r1s = uniformDiscrete(1, 10, .1) in
+r2s = uniformDiscrete(1, 10, .1) in
+r3s = uniformDiscrete(1, 10, .1) in
+r4s = uniformDiscrete(1, 10, .1) in
+r5s = uniformDiscrete(1, 10, .1) in
+
+r = 25 in
+
+circles = k ->
+
+  zipWith(
+    uniform(0, 2 * pi),
+    w1s,
+    w2s,
+    w2s,
+    w2s,
+    w2s,
+    r1s,
+    r2s,
+    r2s,
+    r2s,
+    r2s,
+    alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> r1 -> r2 -> r3 -> r4 -> r5 ->
+      sum = r1 + r2 + r3 + r4 + r5 in
+
+      circle(alpha, r1 * r / sum, k * w1) +
+      circle(alpha, r2 * r / sum, k * w2) +
+      circle(alpha, r3 * r / sum, k * w3) +
+      circle(alpha, r4 * r / sum, k * w4) +
+      circle(alpha, r5 * r / sum, k * w5)
+  )
+
+in
+
+
+k = .03 in
+length = 10 in
+
+onPoints(grid(40), circles(k), floor(length / k))
+---------
+grid = gridSize -> @point(
+  uniformDiscrete(left, right, gridSize),
+  uniformDiscrete(bottom, top, gridSize)
+) in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+onPoints = points -> drawings -> length ->
+  parallel(zipWith(
+    points,
+    drawings,
+    p -> drawing -> take(length, map(drawing, q -> q + p))
+  ))
+in
+
+circle = alpha -> r -> w ->
+  @polar(const(r), integrate(alpha, const(w)))
+in
+
+w1s = @(1) in
+
+r1s = uniformDiscrete(6, 20, 1) in
+r2s = uniformDiscrete(1, 6, 1) in
+factors = uniformFrom(3, [-1, -2, -3]) in
+
+
+circles = k ->
+
+  zipWith(
+    uniform(0, 2 * pi),
+    w1s,
+    r1s,
+    r2s,
+    factors,
+    alpha -> w1 -> r1 -> r2 -> factor ->
+      circle(alpha, r1, k * w1) +
+      circle(alpha, r2, k * (factor * r1 / r2) * w1)
+  )
+
+in
+
+
+k = .05 in
+length = 20 in
+
+onPoints(grid(50), circles(k), floor(length / k))
+---------
+speed = 1 in
+length = 30 in
+gridSize = 40 in
+noiseStrength = 3 in
+freq = 0.003 in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+vectorFields = map(
+  noise,
+  n -> p -> polar(speed, noiseStrength * n(freq * p))
+) in
+
+segment = v -> p ->
+  take(
+    length,
+    integrate(-.5 * length * v + p, const(v))
+  )
+in
+
+
+withFirst(
+  vectorFields,
+  vectorField ->
+    flatMap(
+      grid(gridSize),
+      p -> segment(vectorField(p), p)
+    )
+)
+---------
+speed = 1 in
+length = 30 in
+gridSize = 40 in
+noiseStrength = 5 in
+freq = 1 in
+freq2 = .003 in
+
+grid = gridSize -> flatMap(
+  range(bottom, top, gridSize),
+  y -> map(
+    range(left, right, gridSize),
+    x -> point(x, y)
+  )
+) in
+
+vectorFields = withFirst3(
+  noise,
+  n1 -> n2 -> n3 ->
+    const(p -> polar(speed, noiseStrength * n1(freq * point(n2(freq2 * p), n3(freq2 * p)))))
+) in
+
+segment = v -> p ->
+  take(
+    length,
+    integrate(-.5 * length * v + p, const(v))
+  )
+in
+
+
+withFirst(
+  vectorFields,
+  vectorField ->
+    flatMap(
+      grid(gridSize),
+      p -> segment(vectorField(p), p)
+    )
+)

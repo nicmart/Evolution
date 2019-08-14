@@ -22,6 +22,11 @@ object UnifyPredicates {
       case (pred, _) => freeVarsInPredicate(pred)
     }.map(_._2)
 
+    println("Going to unify predicates:")
+    println(reducedPredicateToSubstitutions.mkString("\n"))
+    println("Ordered substitutions:")
+    println(orderedSubstitutions.mkString("\n"))
+
     val combinations = product(orderedSubstitutions)
 
     combinations
