@@ -162,6 +162,24 @@ object Portfolio {
         |""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Bubbles"),
+      DrawingState(
+        0L,
+        """
+        |total = 1500 in
+        |
+        |circle = r -> w -> @polar(const(r), integrate(0, const(w))) in
+        |rndPoint = take(total, @point(uniform(left, right), uniform(bottom, top))) in
+        |radiuses = uniform(1, 30) in
+        |
+        |flatMap(
+        |  rndPoint,
+        |  p -> take(100, flatMap(radiuses, r -> map(circle(r, .1), p2 -> p + p2)))
+        |)""".stripMargin
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
