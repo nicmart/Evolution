@@ -1,30 +1,4 @@
 
-
-"flatMap(
-  uniform(left, right),
-  x -> take(
-    10000,
-    flatMap(
-      uniform(bottom, top),
-      y -> map(
-        @point(
-          solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0),
-          solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 *  z + -0.003 * v), 0, 0)
-        ),
-        p -> p + point(x, y)
-      )
-    )
-  )
-)"
-
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
-
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
-
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.03 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.0001 * z + -0.0003 * v), 0, 0)), p -> add(p, point(x, y))))))"
-
-// End Sghiribizzi
-
 "let(radius, 2, let(friction, 0.06, solve2(map(@point(uniform(-radius, radius), uniform(-radius, radius)), r -> x -> v -> r + -friction * v), point(0, 0), point(0, 0))))"
 
 "let(radius, 0.00001, let(viscosity, radius * 0.01, let(k, radius * 3, let(rnd, @point(uniform(-radius, radius), uniform(-radius, radius)), let(v, solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)), integrate(point(0, 0), v))))))"

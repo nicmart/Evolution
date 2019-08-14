@@ -113,6 +113,38 @@ object Portfolio {
         |""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Doodle"),
+      DrawingState(
+        0L,
+        """
+        |rx = 0.1 in
+        |ax = 0 in
+        |bx = -0.1 in
+        |ry = 0.1 in
+        |ay = -0.001 in
+        |by = -0.001 in
+        |length = 10000 in
+        |
+        |equation = r -> a -> b -> map(uniform(-1, 1), rnd -> z -> v -> r * rnd + a * z + b * v) in
+        |
+        |randomPoints = @point(uniform(left, right), uniform(bottom, top)) in
+        |
+        |flatMap(
+        |  randomPoints,
+        |  p -> take(
+        |    length,
+        |    const(p) + @point(
+        |      solve2(equation(rx, ax, bx), 0, 0),
+        |      solve2(equation(ry, ay, by), 0, 0)
+        |    )
+        |  )
+        |)
+        |
+        |""".stripMargin
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
