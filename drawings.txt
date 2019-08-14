@@ -1,29 +1,5 @@
 
 
-"flatMap(uniform(left, right), x -> take(30, flatMap(uniform(bottom, top), y -> point(integrate(x, const(1)), solve1(const(z -> multiply(0.00001, multiply(z, 1 + -z))), y)))))"
-
-"l = 10 in
-hSpeed = 2 in
-w = 0.01 in
-amplitude = 10 in
-
-rndPoint =@point(uniform(left, right), uniform(bottom, top)) in
-
-trajectory = p -> @point(
-  integrate(x(p), const(hSpeed)),
-  solve1(const(z -> amplitude * sin(w * z)), y(p))
-) in 
-
-flatMap(
-  rndPoint,
-  p -> take(
-    l,
-    trajectory(p)
-  ) 
-)"
-
-"flatMap(uniform(left, right), x -> take(10, flatMap(uniform(bottom, top), y -> point(integrate(x, const(1)), solve1(const(z -> multiply(3, add(sin(0.003 * z), add(sin(0.05 * z), sin(0.006 * z))))), y)))))"
-
 "flatMap(
   uniform(left, right),
   x -> take(
@@ -41,11 +17,13 @@ flatMap(
   )
 )"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + 0 * z + -0.1 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.003 * v), 0, 0)), p -> add(p, point(x, y))))))"
 
-"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.03 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.0001 * z + -0.0003 * v), 0, 0)), p -> add(p, point(x, y))))))"
+"flatMap(uniform(left, right), x -> take(10000, flatMap(uniform(bottom, top), y -> map(@point(solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.001 * z + -0.03 * v), 0, 0), solve2(map(uniform(-1, 1), r -> z -> v -> 0.1 * r + -0.0001 * z + -0.0003 * v), 0, 0)), p -> add(p, point(x, y))))))"
+
+// End Sghiribizzi
 
 "let(radius, 2, let(friction, 0.06, solve2(map(@point(uniform(-radius, radius), uniform(-radius, radius)), r -> x -> v -> r + -friction * v), point(0, 0), point(0, 0))))"
 

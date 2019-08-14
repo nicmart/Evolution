@@ -52,18 +52,24 @@ object Portfolio {
       DrawingState(
         0L,
         """
+        |l = 10 in
+        |hSpeed = 2 in
+        |w = 0.01 in
+        |amplitude = 10 in
+        |
+        |rndPoint =@point(uniform(left, right), uniform(bottom, top)) in
+        |
+        |trajectory = p -> @point(
+        |  integrate(x(p), const(hSpeed)),
+        |  solve1(const(z -> amplitude * sin(w * z)), y(p))
+        |) in 
+        |
         |flatMap(
-        |  integrate(bottom, const(10)),
-        |  r -> take(
-        |    3000,
-        |    @point(
-        |      integrate(left, const(1)),
-        |      solve1(
-        |        const(x -> sin(0.01 * x)),
-        |        r
-        |      )
-        |    )
-        |  )
+        |  rndPoint,
+        |  p -> take(
+        |    l,
+        |    trajectory(p)
+        |  ) 
         |)
         |""".stripMargin
       ),
