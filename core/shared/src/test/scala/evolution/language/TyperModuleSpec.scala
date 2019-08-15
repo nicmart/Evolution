@@ -277,17 +277,15 @@ class TyperModuleSpec extends LanguageSpec {
       val subst = UnifyPredicates.unify(TypingConfig.instances, Random.shuffle(predicates)).unsafeEvaluate
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Dbl
-    }
+    } 
 
     "should unify predicates of a = 1 in x = a * a * a * a  *  point(0, 0) in x" in {
+      def predicate(n: Int) = Predicate("Mult", List(Type.Var("T0"), Type.Var(s"T$n"), Type.Var(s"T${n + 1}")))
+
       val predicates = List(
         Predicate("Num", List(Type.Var("T0"))),
-        Predicate("Mult", List(Type.Var("T0"), Type.Var("T23"), Type.Var("T24"))),
-        Predicate("Mult", List(Type.Var("T0"), Type.Var("T22"), Type.Var("T23"))),
-        Predicate("Mult", List(Type.Var("T0"), Type.Var("T21"), Type.Var("T22"))),
-        Predicate("Mult", List(Type.Var("T0"), Type.Point, Type.Var("T21"))),
-        Predicate("Num", List(Type.Dbl))
-      )
+        Predicate("Mult", List(Type.Var("T0"), Type.Point, Type.Var("T1")))
+      ) ++ (1 to 3).map(predicate)
 
       val subst = UnifyPredicates.unify(TypingConfig.instances, predicates).unsafeEvaluate
 

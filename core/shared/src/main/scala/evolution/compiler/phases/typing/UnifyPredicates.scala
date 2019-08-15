@@ -4,50 +4,65 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typing.model.Substitution
-import pprint.PPrinter.Color.pprintln
+import pprint.PPrinter.Color
+import evolution.compiler.phases.typing.model.Assignment
+import pprint.Tree
 
 object UnifyPredicates {
+  lazy val pprinter = Color.copy(additionalHandlers = {
+    case Assignment(from, to) => Tree.Infix(Color.treeify(from), "->", Color.treeify(to))
+  })
+  import pprinter.pprintln
 
   def unify(instances: List[Predicate], predicates: List[Predicate]): Either[String, Substitution] = {
     println("Unique Predicates:")
     pprintln(predicates.distinct)
 
     val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
-      predicates.distinct.map { predicate =>
-        predicate ->
-          instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
-      }.toMap
+      logTime("Compute Substitutions") {
+        predicates.distinct.map { predicate =>
+          predicate ->
+            instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
+        }.toMap
+      }
 
-    val reducedPredicateToSubstitutions = predicateToSubstitutions.filterNot {
-      case (_, substitutions) => hasEmptySubstitution(substitutions)
+    val reducedPredicateToSubstitutions = logTime("Remove Empty Subst") {
+      predicateToSubstitutions.filterNot {
+        case (_, substitutions) => hasEmptySubstitution(substitutions)
+      }
     }
 
-    val orderedSubstitutions = reducedPredicateToSubstitutions.toList.sortBy {
-      case (pred, _) => freeVarsInPredicate(pred)
+    val orderedSubstitutions = logTime("Order substs") {
+      reducedPredicateToSubstitutions.toList.sortBy {
+        case (pred, _) => freeVarsInPredicate(pred)
+      }
     }
 
-    val optimisedSubstitutions = reduceSubstitutions(orderedSubstitutions)
+    val optimisedSubstitutions = logTime("Reduce Substitutions")(reduceSubstitutions(orderedSubstitutions))
 
-    println("Going to unify predicates:")
-    pprintln(reducedPredicateToSubstitutions, height = Int.MaxValue)
-    println("Optimised substitutions:")
-    pprintln(optimisedSubstitutions, height = Int.MaxValue)
+    logTime("Log predicates") {
+      println("Ordered substitutions:")
+      pprintln(orderedSubstitutions, height = Int.MaxValue)
+      println("Optimised substitutions:")
+      pprintln(optimisedSubstitutions, height = Int.MaxValue)
+    }
 
-    val combinations = product(optimisedSubstitutions.map(_._2))
+    val combinations = logTime("build product") { product(optimisedSubstitutions.map(_._2)) }
 
-    combinations
-      .flatMap(mergeSubstitutions)
-      .headOption
-      .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
+    logTime("Time to unify") {
+      combinations
+        .flatMap(mergeSubstitutions)
+        .headOption
+        .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
+    }
   }
 
   private def reduceSubstitutions(
     substitutions: List[(Predicate, List[Substitution])]
   ): List[(Predicate, List[Substitution])] =
-    substitutions match {
-      case (p1, ss1) :: tail =>
-        (p1, ss1) :: reduceSubstitutions(tail.map { case (p, ss) => p -> removeImpossibleSubstitutions(ss1)(ss) })
-      case Nil => Nil
+    substitutions.foldLeft(substitutions) {
+      case (optimisedSoFar, (p, ss)) =>
+        optimisedSoFar.map { case (p2, ss2) => p2 -> removeImpossibleSubstitutions(ss)(ss2) }
     }
 
   // Remove substitutions from candidates that are not compatible with any of the required substitutions
@@ -113,4 +128,12 @@ object UnifyPredicates {
         mergeSubstitutions(substTail).flatMap(_.merge(substHead).toOption)
       case Nil => Some(Substitution.empty)
     }
+
+  private def logTime[T](message: String)(t: => T): T = {
+    val start = System.currentTimeMillis()
+    val result = t
+    val stop = System.currentTimeMillis()
+    println(s"Time to $message: ${stop - start}ms")
+    result
+  }
 }
