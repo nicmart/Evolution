@@ -4,10 +4,14 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typing.model.Substitution
+import pprint.PPrinter.Color.pprintln
 
 object UnifyPredicates {
 
   def unify(instances: List[Predicate], predicates: List[Predicate]): Either[String, Substitution] = {
+    println("Unique Predicates:")
+    pprintln(predicates.distinct)
+
     val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
       predicates.distinct.map { predicate =>
         predicate ->
@@ -20,16 +24,16 @@ object UnifyPredicates {
 
     val orderedSubstitutions = reducedPredicateToSubstitutions.toList.sortBy {
       case (pred, _) => freeVarsInPredicate(pred)
-    }.map(_._2)
+    }
 
     val optimisedSubstitutions = reduceSubstitutions(orderedSubstitutions)
 
     println("Going to unify predicates:")
-    println(reducedPredicateToSubstitutions.mapValues(_.mkString("\n")).mkString("\n"))
+    pprintln(reducedPredicateToSubstitutions, height = Int.MaxValue)
     println("Optimised substitutions:")
-    println(optimisedSubstitutions.mkString("\n"))
+    pprintln(optimisedSubstitutions, height = Int.MaxValue)
 
-    val combinations = product(optimisedSubstitutions)
+    val combinations = product(optimisedSubstitutions.map(_._2))
 
     combinations
       .flatMap(mergeSubstitutions)
@@ -37,10 +41,13 @@ object UnifyPredicates {
       .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
   }
 
-  private def reduceSubstitutions(substitutions: List[List[Substitution]]): List[List[Substitution]] =
+  private def reduceSubstitutions(
+    substitutions: List[(Predicate, List[Substitution])]
+  ): List[(Predicate, List[Substitution])] =
     substitutions match {
-      case head :: tail => head :: reduceSubstitutions(tail.map(removeImpossibleSubstitutions(head)))
-      case Nil          => Nil
+      case (p1, ss1) :: tail =>
+        (p1, ss1) :: reduceSubstitutions(tail.map { case (p, ss) => p -> removeImpossibleSubstitutions(ss1)(ss) })
+      case Nil => Nil
     }
 
   // Remove substitutions from candidates that are not compatible with any of the required substitutions
