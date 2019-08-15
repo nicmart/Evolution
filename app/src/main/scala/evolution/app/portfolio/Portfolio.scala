@@ -5,7 +5,6 @@ import evolution.app.conf.Conf.defaultRendererState
 import evolution.app.model.DrawingRepository
 import cats.implicits._
 import cats.effect.IO
-import evolution.app.model.state.OffCanvasStrategy
 import evolution.app.model.state.InfiniteCanvas
 
 object Portfolio {

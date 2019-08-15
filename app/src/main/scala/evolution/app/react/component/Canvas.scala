@@ -1,6 +1,5 @@
 package evolution.app.react.component
 
-import cats.Eval
 import evolution.app.canvas.drawer.FrameDrawer
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
