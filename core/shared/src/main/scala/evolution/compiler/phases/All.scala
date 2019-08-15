@@ -18,6 +18,7 @@ import evolution.data.emptyCtx
 
 object All {
 
+  // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(
     serialisedExpr: String,
     expectedType: Type,
@@ -51,6 +52,7 @@ object All {
       _ = println(s"Compiled to $expression")
       _ = println("Done: compilation")
       evolution = Materialize.materialize(expression).apply(emptyCtx)
+      _ = println(s"Materialized to $evolution")
     } yield evolution.asInstanceOf[Evolution[Point]]
 
   private def varContext(varBindings: List[(String, AST)]): VarContext =

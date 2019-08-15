@@ -137,10 +137,14 @@ object Constant1 extends Enum[Constant1] {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Parallel(x.asExprF[Evolution[Any]])
   }
 
-  case object Derive extends Constant1(Qualified(Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object Derive extends Constant1(Qualified(isInvertSemigroup("T"), Evo(Var("T")) =>: Evo(Var("T")))) {
 
     override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.invertibleSemigroup(x.tpe).map { case (sg, inv) => Expr.Derive(x.value.asExprF, sg, inv) }
+      for {
+        innerType <- Type.unwrapF(x.tpe)
+        sgAndInv <- Type.invertibleSemigroup(innerType)
+        (sg, inv) = sgAndInv
+      } yield Expr.Derive(x.value.asExprF, sg, inv).asExprF
   }
 
   def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)

@@ -685,7 +685,7 @@ mapCons(octaveNoise, on -> notUsed ->
 
 )
 
-// Derive is broken
+// Spiral with noise
 ---------
 octaves = 4 in
 persistence = .001 in
@@ -882,26 +882,7 @@ mapCons(map(octaveNoise, n -> n(octaves, persistence)), n1 -> noise2 ->
 )
 
 
-
-
----------
-toEdge = p -> if (x(p) < y(p), point(0, y(p)), point(x(p), 0)) in
-
-points = @point(uniform(left, right), uniform(top, bottom)) in
-
-
-gridSize = 200 in
-
-inCell = f -> p ->
-  pgrid = point(x(p) - x(p) % gridSize, y(p) - y(p) % gridSize) in
-  pfract = p - pgrid in
-  f(pfract) + pgrid
-in
-
-map(
-  points,
-  inCell(toEdge)
-)
+Grid
 ---------
 gridSize = 50 in
 
@@ -920,33 +901,8 @@ flatmap(
   points,
   inCell(toEdge)
 )
----------
-gridSize = 100 in
-noiseStrength = 30 in
-freq = 100 in
-octaves = 10 in
-persistence = .2 in
-anglerange = 9 in
-
-toEdge = p -> [point(0, y(p)), point(x(p), 0)] in
-
-points = @point(uniform(left, right), uniform(top, bottom)) in
-
-
-inCell = f -> p ->
-  pInCell = point(x(p) % gridSize, y(p) % gridSize) in
-  pCell = p - pInCell in
-  map(f(pInCell), p-> p + pCell)
-in
-
-
-flatMap(octaveNoise, on ->
-  n = on(octaves, persistence) in
-  map(flatmap(
-    points,
-    inCell(toEdge)
-  ), p -> p + polar(noisestrength * n((1/10) * p), anglerange * pi * n((1/freq) * p)))
-)
+]
+Perturbed grid
 ---------
 gridSize = 100 in
 noiseStrength = 100 in
@@ -975,19 +931,8 @@ flatMap(octaveNoise, on ->
     inCell(toEdge)
   ), p -> p + polar(noisestrength * n((1/freq2) * p), anglerange * pi * n((1/freq) * p)))
 )
----------
-radius = 0.00001 in
-viscosity = 0.01 * radius in
-k = radius * 3 in
-rnd = @point(uniform(-radius, radius), uniform(-radius, radius)) in
 
-v = solve2(
-  map(rnd, r -> x -> v -> r + -viscosity * v + -k * x),
-  point(0, 0),
-  point(0, 0)
-) in
-
-integrate(point(0, 0), v)
+Carpet of symmetric brownians
 ---------
 r = 3 in
 l = 100 in
@@ -1003,6 +948,8 @@ rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom
 brownian = p -> take(l, integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(rndPoint, p -> translatedSymm(p, brownian(p)))
+
+Perin Noise
 ---------
 rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
 f = 60 in
@@ -1021,19 +968,7 @@ withFirst(noise, n ->
   )
 )
 
----------
-a = 300 in
-f = 100 in
-v = .1 in
-
-mapCons(octaveNoise, on -> notUsed ->
-  n = x -> y -> on(1, .2, point(x, y)) in
-  map(
-    integrate(left, const(v)),
-    x -> point(x, a * n(x/f, x/f))
-  )
-)
-
+Perlin Noise Horizontal lines
 ---------
 a = 300 in
 f = 300 in
@@ -1100,7 +1035,7 @@ circles = k ->
   zipWith(
     mainCircles(k),
     secondaryCircles(k),
-    c1 -> c2 -> c1 @+ c2
+    c1 -> c2 -> c1 + c2
   )
 in
 
@@ -1112,6 +1047,8 @@ k = .03 in
 length = 20 in
 
 onPoints(grid(80), circles(k), floor(length / k))
+
+Concentric Circles 1
 ---------
 grid = gridSize -> @point(
   uniformDiscrete(left, right, gridSize),
@@ -1163,10 +1100,10 @@ circles = k ->
     zipWith(
       mainCircles(k),
       secondaryCircles(k),
-      c1 -> c2 -> c1 @+ c2
+      c1 -> c2 -> c1 + c2
     ),
     thirdCircles(k),
-    c12 -> c3 -> c12 @+ c3
+    c12 -> c3 -> c12 + c3
 )
 in
 
@@ -1229,10 +1166,10 @@ circles = k ->
     zipWith(
       mainCircles(k),
       secondaryCircles(k),
-      c1 -> c2 -> c1 @+ c2
+      c1 -> c2 -> c1 + c2
     ),
     thirdCircles(k),
-    c12 -> c3 -> c12 @+ c3
+    c12 -> c3 -> c12 + c3
 )
 in
 
@@ -1298,10 +1235,10 @@ circles = k ->
     r4s,
     r5s,
     alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> r1 -> r2 -> r3 -> r4 -> r5 ->
-      circle(alpha, r1, k * w1) @+
-      circle(alpha, r2, k * w2) @+
-      circle(alpha, r3, k * w3) @+
-      circle(alpha, r4, k * w4) @+
+      circle(alpha, r1, k * w1) +
+      circle(alpha, r2, k * w2) +
+      circle(alpha, r3, k * w3) +
+      circle(alpha, r4, k * w4) +
       circle(alpha, r4, k * w5)
   )
 
@@ -1366,10 +1303,10 @@ circles = k ->
     r4s,
     r5s,
     alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> r1 -> r2 -> r3 -> r4 -> r5 ->
-      circle(alpha, r1, k * w1) @+
-      circle(alpha, r2, k * w2) @+
-      circle(alpha, r3, k * w3) @+
-      circle(alpha, r4, k * w4) @+
+      circle(alpha, r1, k * w1) +
+      circle(alpha, r2, k * w2) +
+      circle(alpha, r3, k * w3) +
+      circle(alpha, r4, k * w4) +
       circle(alpha, r4, k * w5)
   )
 
@@ -1436,11 +1373,11 @@ circles = k ->
     alpha -> w1 -> w2 -> w3 -> w4 -> w5 -> w6 -> r1 -> r2 -> r3 -> r4 -> r5 -> r6 ->
       sum = r1 + r2 + r3 + r4 + r5 + r6 in
 
-      circle(alpha, r1 * r / sum, k * w1) @+
-      circle(alpha, r2 * r / sum, k * w2) @+
-      circle(alpha, r3 * r / sum, k * w3) @+
-      circle(alpha, r4 * r / sum, k * w4) @+
-      circle(alpha, r5 * r / sum, k * w5) @+
+      circle(alpha, r1 * r / sum, k * w1) +
+      circle(alpha, r2 * r / sum, k * w2) +
+      circle(alpha, r3 * r / sum, k * w3) +
+      circle(alpha, r4 * r / sum, k * w4) +
+      circle(alpha, r5 * r / sum, k * w5) +
       circle(alpha, r6 * r / sum, k * w6)
   )
 
@@ -1665,7 +1602,7 @@ w2s = uniformDiscrete(.1, 2, .1) in
 
 circles =
   zipWith(w1s, w2s, w1 -> w2 ->
-    circle(20, w1) @+ circle(20, w2)
+    circle(20, w1) + circle(20, w2)
   )
 in
 

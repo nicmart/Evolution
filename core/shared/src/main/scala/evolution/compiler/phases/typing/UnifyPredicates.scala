@@ -61,7 +61,7 @@ object UnifyPredicates {
     substitutions: List[(Predicate, List[Substitution])]
   ): List[(Predicate, List[Substitution])] =
     substitutions.foldLeft(substitutions) {
-      case (optimisedSoFar, (p, ss)) =>
+      case (optimisedSoFar, (_, ss)) =>
         optimisedSoFar.map { case (p2, ss2) => p2 -> removeImpossibleSubstitutions(ss)(ss2) }
     }
 
