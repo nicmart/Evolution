@@ -6,7 +6,7 @@ import evolution.compiler.types.Type
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.ast.AST
-import scala.util.Random
+import evolution.materialization.Evolution
 
 object CodeCompiler {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
@@ -18,7 +18,7 @@ object CodeCompiler {
         varBindings(ctx)
       )
       .map { evolution =>
-        Random.setSeed(seed)
+        Evolution.setSeed(seed)
         evolution.run
       }
 

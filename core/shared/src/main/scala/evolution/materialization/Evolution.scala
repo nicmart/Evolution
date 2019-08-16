@@ -4,15 +4,19 @@ import evolution.rng.PerlinNoise
 
 import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
-import scala.util.Random
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
+import scala.util.Random
 
 sealed trait Evolution[+T] {
   def run: Iterator[T]
 }
 
 object Evolution {
+ 
+  private object Random extends Random
+
+  def setSeed(long: Long): Unit = Random.setSeed(long)
 
   val empty: Evolution[Nothing] = new Evolution[Nothing] {
     val run: Iterator[Nothing] = Iterator.empty

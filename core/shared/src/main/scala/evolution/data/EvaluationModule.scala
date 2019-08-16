@@ -5,6 +5,7 @@ import evolution.materialization.Evolution
 
 import scala.util.Random
 
+// TODO not used anymore
 trait EvaluationModule {
   type Result[T]
 
@@ -30,7 +31,7 @@ private[data] object EvaluationModuleImpl extends EvaluationModule {
     Materialize.materialize(expr)
   override def newSeed: Long = Random.nextLong()
   override def materializeWith[T](seed: Long, fa: Result[Evolution[T]], ctx: Ctx): Iterator[T] = {
-    Random.setSeed(seed)
+    Evolution.setSeed(seed)
     fa(ctx).run
   }
   override def materializeConstant[T](t: Result[T]): T = materializeConstantWith(t, emptyCtx)
