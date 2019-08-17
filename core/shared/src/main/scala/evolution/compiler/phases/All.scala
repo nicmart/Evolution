@@ -15,6 +15,7 @@ import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
 import evolution.data.emptyCtx
+import evolution.logging.NoOpLogger
 
 object All {
 
@@ -40,7 +41,7 @@ object All {
       _ = println(s"Partially typed AST:")
       _ = println(AST.prettyPrint(unification.substitution.substitute(astWithTypeVars)))
       start = System.currentTimeMillis()
-      predicateSubst <- UnifyPredicates.unify(TypingConfig.instances, unification.substitutedPredicates)
+      predicateSubst <- new UnifyPredicates(NoOpLogger).unify(TypingConfig.instances, unification.substitutedPredicates)
       stop = System.currentTimeMillis()
       _ = println(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)

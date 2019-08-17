@@ -4,14 +4,10 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typing.model.Substitution
-import pprint.PPrinter.Color
 import evolution.compiler.phases.typing.model.Assignment
-import pprint.Tree
+import evolution.logging.Logger
 
-object UnifyPredicates {
-
-  val logger = NoOpLogger
-  //val logger = ColorPPrinterLogger
+class UnifyPredicates(logger: Logger) {
 
   import logger.log
 
@@ -36,71 +32,6 @@ object UnifyPredicates {
       }
     }
   }
-
-  def unifyOld(instances: List[Predicate], predicates: List[Predicate]): Either[String, Substitution] = {
-    log("Unique Predicates:")
-    log(predicates.distinct)
-
-    val predicateToSubstitutions: Map[Predicate, List[Substitution]] =
-      logTime("Compute Substitutions") {
-        predicates.distinct.map { predicate =>
-          predicate ->
-            instances.flatMap(instance => matchPredicateWithInstance(instance, predicate))
-        }.toMap
-      }
-
-    val reducedPredicateToSubstitutions = logTime("Remove Empty Subst") {
-      predicateToSubstitutions.filterNot {
-        case (_, substitutions) => hasEmptySubstitution(substitutions)
-      }
-    }
-
-    val orderedSubstitutions = logTime("Order substs") {
-      reducedPredicateToSubstitutions.toList.sortBy {
-        case (pred, _) => freeVarsInPredicate(pred)
-      }
-    }
-
-    val optimisedSubstitutions = logTime("Reduce Substitutions")(reduceSubstitutions(orderedSubstitutions))
-
-    logTime("Log predicates") {
-      log("Ordered substitutions:")
-      log(orderedSubstitutions)
-      log("Optimised substitutions:")
-      log(optimisedSubstitutions)
-    }
-
-    val combinations = logTime("build product") { product(optimisedSubstitutions.map(_._2)) }
-
-    logTime("Time to unify") {
-      combinations
-        .flatMap(mergeSubstitutions)
-        .headOption
-        .toRight(s"Not able to unify predicates:\n${predicates.distinct.mkString("\n")}")
-    }
-  }
-
-  private def reduceSubstitutions(
-    substitutions: List[(Predicate, List[Substitution])]
-  ): List[(Predicate, List[Substitution])] =
-    substitutions.foldLeft(substitutions) {
-      case (optimisedSoFar, (_, ss)) =>
-        optimisedSoFar.map { case (p2, ss2) => p2 -> removeImpossibleSubstitutions(ss)(ss2) }
-    }
-
-  // Remove substitutions from candidates that are not compatible with any of the required substitutions
-  private def removeImpossibleSubstitutions(required: List[Substitution])(
-    candidates: List[Substitution]
-  ): List[Substitution] = candidates.filter(atLeastOneCompatible(required))
-
-  private def atLeastOneCompatible(atLeastOneOf: List[Substitution])(candidate: Substitution): Boolean =
-    atLeastOneOf.exists(s => s.merge(candidate).isRight)
-
-  private def freeVarsInPredicate(predicate: Predicate): Int =
-    predicate.types.map(tpe => tpe.typeVars.size).sum
-
-  private def hasEmptySubstitution(substitutions: List[Substitution]): Boolean =
-    substitutions.contains(Substitution.empty)
 
   private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
     (instance, predicate) match {
@@ -212,13 +143,8 @@ object UnifyPredicates {
 
     def cycle: Either[String, PredicatesSolver] = nextN(total)
 
-    //@tailrec
     def solve: Either[String, Substitution] = {
       val reducedN = cycle
-      log("----------New Cycle--------------")
-      log(this)
-      //log(reducedN)
-
       reducedN match {
         case Left(value)                             => Left(value)
         case Right(nextSolver) if nextSolver == this => this.substitution
@@ -226,20 +152,4 @@ object UnifyPredicates {
       }
     }
   }
-}
-
-trait Logger {
-  def log(any: Any): Unit
-}
-
-object ColorPPrinterLogger extends Logger {
-  val pprinter = Color.copy(additionalHandlers = {
-    case Assignment(from, to) => Tree.Infix(Color.treeify(from), "->", Color.treeify(to))
-  })
-
-  def log(any: Any): Unit = pprinter.pprintln(any, height = Int.MaxValue)
-}
-
-object NoOpLogger extends Logger {
-  def log(any: Any): Unit = ()
 }
