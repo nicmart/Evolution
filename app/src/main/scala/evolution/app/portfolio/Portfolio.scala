@@ -6,6 +6,7 @@ import evolution.app.model.DrawingRepository
 import cats.implicits._
 import cats.effect.IO
 import evolution.app.model.state.InfiniteCanvas
+import evolution.app.model.state.TrailSettings
 
 object Portfolio {
   val drawings = List(
@@ -180,6 +181,154 @@ object Portfolio {
         |)""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Tenie"),
+      DrawingState(
+        0L,
+        """
+        |viscosity = .001 in
+        |k = 0 in
+        |randomForceStrength = .1 in
+        |orthogonalLineLength = 50 in
+        |orthogonalFactor = .3 in
+        |
+        |randomForces = @point(
+        |  uniform(-randomForceStrength, randomForceStrength),
+        |  uniform(-randomForceStrength, randomForceStrength)
+        |) in
+        |
+        |acceleration = r -> x -> v -> r -viscosity * v + k * x in
+        |
+        |line = solve2(
+        |  map(randomForces, acceleration),
+        |  point(0, 0),
+        |  point(0, 0)
+        |) in
+        |
+        |flatten(mapWithDerivative(
+        |  p -> v ->
+        |    rotated = orthogonalFactor * point(y(v), -x(v)) in
+        |    start = p - (toDbl(orthogonalLineLength)/2) * rotated in
+        |    integrate(start, take(orthogonalLineLength, const(rotated))),
+        |  line
+        |))""".stripMargin
+      ),
+      defaultRendererState
+    ),
+    Drawing(
+      Some("Mountains"),
+      DrawingState(
+        0L,
+        """
+        |a = 300 in
+        |xFreq = 300 in
+        |octaves = 8 in
+        |persistence = .2 in
+        |v = 2 in
+        |length = floor((right - left) / v) in
+        |s = 300 in // distance of the screen
+        |cameraZ = 1000 in // height of the camera
+        |offsetZ = cameraZ / 2 in
+        |noiseStrength = 100 in // noise amplitude
+        |maxDepth = 1000 in
+        |depthStep = 3 in
+        |startY = s/2 in
+        |
+        |fz = withFirst2(octaveNoise, on1 -> on2 ->
+        |  @(x -> y ->
+        |    -cameraZ + noiseStrength
+        |     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
+        |  )
+        |) in
+        |
+        |
+        |withFirst(fz, f ->
+        |  flatMap(
+        |    range(startY, maxDepth, depthStep),
+        |    y ->
+        |      xlength = (y/startY) * 2 * toDbl(length) / v in
+        |      take(
+        |        floor(xlength),
+        |        map(
+        |          integrate(-xlength, const(v)),
+        |          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
+        |        )
+        |      )
+        |  )
+        |)""".stripMargin
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Noise Vector field on grid"),
+      DrawingState(
+        0L,
+        """
+        |speed = 2 in
+        |length = 15 in
+        |gridSize = 40 in
+        |noiseStrength = 3 in
+        |freq = 0.003 in
+        |
+        |grid = gridSize -> flatMap(
+        |  range(bottom, top, gridSize),
+        |  y -> map(
+        |    range(left, right, gridSize),
+        |    x -> point(x, y)
+        |  )
+        |) in
+        |
+        |vectorFields = map(
+        |  noise,
+        |  n -> p -> polar(speed, noiseStrength * n(freq * p))
+        |) in
+        |
+        |segment = v -> p ->
+        |  take(
+        |    length,
+        |    integrate(-.5 * length * v + p, const(v))
+        |  )
+        |in
+        |
+        |
+        |withFirst( 
+        |  vectorFields,
+        |  vectorField ->
+        |    parallel(map(
+        |      grid(gridSize),
+        |      p -> segment(vectorField(p), p)
+        |    ))
+        |)""".stripMargin
+      ),
+      defaultRendererState.copy(strokeSize = 5)
+    ),
+    Drawing(
+      Some("Orbiting particles"),
+      DrawingState(
+        0L,
+        """
+        |g = 100 in
+        |k = .01 in
+        |field = x -> v -> -(g/norm(x)^2) * versor(x) in
+        |
+        |parallel(take(1000,
+        |
+        |  zipWith(
+        |    @point(uniform(left, right), uniform(bottom, top)),
+        |    uniform(0, 2 * pi),
+        |    uniform(0, 1),
+        |    p -> alpha -> r ->
+        |      solve2(
+        |        const(field),
+        |        p,
+        |        polar(r * k * norm(p), alpha)
+        |      )
+        |  )
+        |
+        |))""".stripMargin
+      ),
+      defaultRendererWithInfiniteCanvas.copy(strokeSize = 5, iterations = 5000, trail = TrailSettings(true, 0.12))
     )
   )
 

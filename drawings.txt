@@ -410,25 +410,7 @@ solve2(
 )
 "
 
-// Broken (mapWithDerivative)
-"r = .1 in
-w = 0.01 in
-
-r2 = .02 in
-c = 5 in
-
-
-spiral = @polar(integrate(0, const(r)), integrate(0, const(w))) in
-
-rotate = p -> point(y(p), -x(p)) in
-
-flatten(mapWithDerivative(
-  x -> v -> take(100, integrate(x, const(0.1 * rotate(v)))),
-  spiral
-))"
-
-
-// Broken (mapWithDerivative)
+// Parallel lines with circular angles
 "
 k = 10 in
 step = 1 in
@@ -499,35 +481,6 @@ speed = flatten(zipWith(lengths, versors, s)) in
 
 
 integrate(point(0, 0), speed)
-
-// BROKEN: Tenie! (mapWithDerivative)
-
-"viscosity = .001 in
-k = 0 in
-randomForceStrength = .1 in
-orthogonalLineLength = 50 in
-orthogonalFactor = .3 in
-
-randomForces = @point(
-  uniform(-randomForceStrength, randomForceStrength),
-  uniform(-randomForceStrength, randomForceStrength)
-) in
-
-acceleration = r -> x -> v -> r -viscosity * v + k * x in
-
-line = solve2(
-  map(randomForces, acceleration),
-  point(0, 0),
-  point(0, 0)
-) in
-
-flatten(mapWithDerivative(
-  p -> v ->
-    rotated = orthogonalFactor * point(y(v), -x(v)) in
-    start = p - (toDbl(orthogonalLineLength)/2) * rotated in
-    integrate(start, take(orthogonalLineLength, const(rotated))),
-  line
-))"
 
 // Perlin noise 1
 rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
@@ -838,6 +791,7 @@ x = a * a * a * a * a * a * point(0, 0) in
 
 const(point(0, 0))
 
+// Disturbed straight lines with spiral angles
 ---------
 k = 2 in
 step = 1 in
@@ -867,7 +821,7 @@ rotation = v -> map(
 
 s = n -> v -> concat(take(floor(n), const(v)), rotation(v)) in
 
-versors = flatten(@([point(step, 0), point(0, step), point(-step, 0), point(0, -step)])) in
+versors = flatten(const([point(step, 0), point(0, step), point(-step, 0), point(0, -step)])) in
 
 lengths = uniformFrom(maxStraightSteps, map(integrate(3, const(1)), k -> straightStepLength * k + 2 * radius)) in
 
@@ -1481,44 +1435,6 @@ withFirst(fz, f ->
 
 ---------
 a = 300 in
-xFreq = 300 in
-octaves = 8 in
-persistence = .2 in
-v = 2 in
-length = floor((right - left) / v) in
-s = 300 in // distance of the screen
-cameraZ = 1000 in // height of the camera
-offsetZ = cameraZ / 2 in
-noiseStrength = 100 in // noise amplitude
-maxDepth = 1000 in
-depthStep = 3 in
-startY = s/2 in
-
-fz = withFirst2(octaveNoise, on1 -> on2 ->
-  @(x -> y ->
-    -cameraZ + noiseStrength
-     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
-  )
-) in
-
-
-withFirst(fz, f ->
-  flatMap(
-    range(startY, maxDepth, depthStep),
-    y ->
-      xlength = (y/startY) * 2 * toDbl(length) / v in
-      take(
-        floor(xlength),
-        map(
-          integrate(-xlength, const(v)),
-          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-        )
-      )
-  )
-)
-
----------
-a = 300 in
 xFreq = 100 in
 octaves = 8 in
 persistence = .2 in
@@ -1556,6 +1472,7 @@ withFirst(fz, f ->
   )
 )
 
+// Particles orbiting
 ---------
 g = 100 in
 k = .01 in
@@ -1731,76 +1648,4 @@ length = 20 in
 
 onPoints(grid(50), circles(k), floor(length / k))
 ---------
-speed = 1 in
-length = 30 in
-gridSize = 40 in
-noiseStrength = 3 in
-freq = 0.003 in
 
-grid = gridSize -> flatMap(
-  range(bottom, top, gridSize),
-  y -> map(
-    range(left, right, gridSize),
-    x -> point(x, y)
-  )
-) in
-
-vectorFields = map(
-  noise,
-  n -> p -> polar(speed, noiseStrength * n(freq * p))
-) in
-
-segment = v -> p ->
-  take(
-    length,
-    integrate(-.5 * length * v + p, const(v))
-  )
-in
-
-
-withFirst(
-  vectorFields,
-  vectorField ->
-    flatMap(
-      grid(gridSize),
-      p -> segment(vectorField(p), p)
-    )
-)
----------
-speed = 1 in
-length = 30 in
-gridSize = 40 in
-noiseStrength = 5 in
-freq = 1 in
-freq2 = .003 in
-
-grid = gridSize -> flatMap(
-  range(bottom, top, gridSize),
-  y -> map(
-    range(left, right, gridSize),
-    x -> point(x, y)
-  )
-) in
-
-vectorFields = withFirst3(
-  noise,
-  n1 -> n2 -> n3 ->
-    const(p -> polar(speed, noiseStrength * n1(freq * point(n2(freq2 * p), n3(freq2 * p)))))
-) in
-
-segment = v -> p ->
-  take(
-    length,
-    integrate(-.5 * length * v + p, const(v))
-  )
-in
-
-
-withFirst(
-  vectorFields,
-  vectorField ->
-    flatMap(
-      grid(gridSize),
-      p -> segment(vectorField(p), p)
-    )
-)
