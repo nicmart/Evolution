@@ -236,7 +236,7 @@ object Portfolio {
         |startY = s/2 in
         |
         |fz = withFirst2(octaveNoise, on1 -> on2 ->
-        |  @(x -> y ->
+        |  const(x -> y ->
         |    -cameraZ + noiseStrength
         |     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
         |  )
