@@ -333,11 +333,12 @@ object Constant2 extends Enum[Constant2] {
         )
       ) {
 
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.invertibleSemigroup(x.tpe).map {
-        case (sg, inv) =>
-          Expr.MapWithDerivative(x.value.asExprF, y.value.asExpr[Any => Any => Any], sg, inv)
-      }
+    override def compile(f: Typed[Expr[_]], x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+      for {
+        innerType <- Type.unwrapF(x.tpe)
+        sgAndInv <- Type.invertibleSemigroup(innerType)
+        (sg, inv) = sgAndInv
+      } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], sg, inv).asExpr
   }
 
   case object FlatMap
