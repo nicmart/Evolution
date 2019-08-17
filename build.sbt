@@ -79,8 +79,8 @@ lazy val commonSettings = List(
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
   libraryDependencies ++= Seq(
-    compilerPlugin("com.github.ghik" %%% "silencer-plugin" % "1.4.1"),
-    "com.github.ghik" %%% "silencer-lib" % "1.4.1" % Provided
+    compilerPlugin("com.github.ghik" %%% "silencer-plugin" % "1.4.2"),
+    "com.github.ghik" %%% "silencer-lib" % "1.4.2" % Provided
   )
 )
 
