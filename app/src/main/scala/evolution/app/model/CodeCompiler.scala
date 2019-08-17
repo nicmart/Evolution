@@ -1,16 +1,17 @@
 package evolution.app.model
 
 import evolution.geometry.Point
-import evolution.compiler.phases.All
+import evolution.compiler.phases.AllPhases
 import evolution.compiler.types.Type
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.ast.AST
 import evolution.materialization.Evolution
+import evolution.logging.NoOpLogger
 
 object CodeCompiler {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
-    All
+    new AllPhases(NoOpLogger)
       .compile(
         code,
         Type.Evo(Type.Point),

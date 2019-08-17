@@ -16,8 +16,10 @@ import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
 import evolution.data.emptyCtx
 import evolution.logging.NoOpLogger
+import evolution.logging.Logger
 
-object All {
+class AllPhases(logger: Logger) {
+  import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(
@@ -28,32 +30,32 @@ object All {
   ): Either[String, Evolution[Point]] =
     for {
       ast <- Parser.parse(serialisedExpr).leftMap(_.message)
-      _ = println("Done: Parsing of AST")
+      _ = log("Done: Parsing of AST")
       astWithVars = addVars(ast, varBindings)
       astWithTypeVars <- AssignFreshTypeVars.assign(astWithVars, typeBindings).asRight
-      _ = println(s"Un-typed expression:")
-      _ = println(AST.prettyPrint(astWithTypeVars))
+      _ = log(s"Un-typed expression:")
+      _ = log(AST.prettyPrint(astWithTypeVars))
       constraints <- FindConstraints.find(astWithTypeVars)
-      _ = println("Done: Constraints generation")
+      _ = log("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> astWithTypeVars.tpe.t))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
-      _ = println("Done: unification")
-      _ = println(s"Partially typed AST:")
-      _ = println(AST.prettyPrint(unification.substitution.substitute(astWithTypeVars)))
+      _ = log("Done: unification")
+      _ = log(s"Partially typed AST:")
+      _ = log(AST.prettyPrint(unification.substitution.substitute(astWithTypeVars)))
       start = System.currentTimeMillis()
-      predicateSubst <- new UnifyPredicates(NoOpLogger).unify(TypingConfig.instances, unification.substitutedPredicates)
+      predicateSubst <- new UnifyPredicates(logger).unify(TypingConfig.instances, unification.substitutedPredicates)
       stop = System.currentTimeMillis()
-      _ = println(s"Predicate unification time: ${(stop - start)}")
+      _ = log(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)
       typedAst = subst.substitute(astWithTypeVars)
-      _ = println("Done: substitution")
-      _ = println(s"Typed expression:")
-      _ = println(AST.prettyPrint(typedAst))
+      _ = log("Done: substitution")
+      _ = log(s"Typed expression:")
+      _ = log(AST.prettyPrint(typedAst))
       expression <- Compile.compile(typedAst, varContext(varBindings))
-      _ = println(s"Compiled to $expression")
-      _ = println("Done: compilation")
+      _ = log(s"Compiled to $expression")
+      _ = log("Done: compilation")
       evolution = Materialize.materialize(expression).apply(emptyCtx)
-      _ = println(s"Materialized to $evolution")
+      _ = log(s"Materialized to $evolution")
     } yield evolution.asInstanceOf[Evolution[Point]]
 
   private def varContext(varBindings: List[(String, AST)]): VarContext =
