@@ -7,11 +7,10 @@ import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.ast.AST
 import evolution.materialization.Evolution
-import evolution.logging.NoOpLogger
 
-object CodeCompiler {
+class CodeCompiler(allPhases: AllPhases) {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
-    new AllPhases(NoOpLogger)
+    allPhases
       .compile(
         code,
         Type.Evo(Type.Point),

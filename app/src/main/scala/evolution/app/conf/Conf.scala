@@ -14,8 +14,16 @@ import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
 import japgolly.scalajs.react.extra.router.Router
 
 import scala.util.Random
+import evolution.logging.Logger
+import evolution.logging.NoOpLogger
+import evolution.app.model.CodeCompiler
+import evolution.compiler.phases.AllPhases
 
 object Conf {
+  lazy val logger: Logger = NoOpLogger
+
+  lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(logger))
+
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black")
 

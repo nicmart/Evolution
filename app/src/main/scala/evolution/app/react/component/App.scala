@@ -13,8 +13,8 @@ import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
-import evolution.app.model.CodeCompiler
 import evolution.app.model.Drawing
+import evolution.app.conf.Conf
 
 object App {
 
@@ -105,7 +105,7 @@ object App {
   private def compile(props: PageState, state: State): CompilationResult =
     CompilationResult(
       evolutionKey(props, state),
-      CodeCompiler.compile(
+      Conf.codeCompiler.compile(
         props.drawingState.code,
         props.drawingState.seed,
         state.layout.drawingContext * props.rendererState.resolutionFactor

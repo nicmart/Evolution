@@ -15,7 +15,6 @@ import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
 import evolution.data.emptyCtx
-import evolution.logging.NoOpLogger
 import evolution.logging.Logger
 
 class AllPhases(logger: Logger) {
