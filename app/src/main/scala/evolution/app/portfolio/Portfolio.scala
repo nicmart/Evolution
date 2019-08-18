@@ -235,27 +235,26 @@ object Portfolio {
         |depthStep = 3 in
         |startY = s/2 in
         |
-        |fz = withFirst2(octaveNoise, on1 -> on2 ->
-        |  const(x -> y ->
+        |on1 <- octaveNoise in
+        |on2 <- octaveNoise in
+        |
+        |f = x -> y ->
         |    -cameraZ + noiseStrength
         |     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
-        |  )
-        |) in
+        |in
         |
         |
-        |withFirst(fz, f ->
-        |  flatMap(
-        |    range(startY, maxDepth, depthStep),
-        |    y ->
-        |      xlength = (y/startY) * 2 * toDbl(length) / v in
-        |      take(
-        |        floor(xlength),
-        |        map(
-        |          integrate(-xlength, const(v)),
-        |          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-        |        )
+        |flatMap(
+        |  range(startY, maxDepth, depthStep),
+        |  y ->
+        |    xlength = (y/startY) * 2 * toDbl(length) / v in
+        |    take(
+        |      floor(xlength),
+        |      map(
+        |        integrate(-xlength, const(v)),
+        |        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
         |      )
-        |  )
+        |    )
         |)""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
@@ -279,10 +278,9 @@ object Portfolio {
         |  )
         |) in
         |
-        |vectorFields = map(
-        |  noise,
-        |  n -> p -> polar(speed, noiseStrength * n(freq * p))
-        |) in
+        |n <- noise in
+        |
+        |vectorField = p -> polar(speed, noiseStrength * n(freq * p)) in
         |
         |segment = v -> p ->
         |  take(
@@ -292,14 +290,10 @@ object Portfolio {
         |in
         |
         |
-        |withFirst( 
-        |  vectorFields,
-        |  vectorField ->
-        |    parallel(map(
-        |      grid(gridSize),
-        |      p -> segment(vectorField(p), p)
-        |    ))
-        |)""".stripMargin
+        |parallel(map(
+        |  grid(gridSize),
+        |  p -> segment(vectorField(p), p)
+        |))""".stripMargin
       ),
       defaultRendererState.copy(strokeSize = 5)
     ),

@@ -52,7 +52,7 @@ object Materialize {
       case Equals(a, b, eq) => interpret2(a, b)(eq.eqv)
       case Neq(a, b, eq)    => interpret2(a, b)(eq.neqv)
       case IfThen(condition, a, b) =>
-        interpret3(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
+        interpret3Lazy(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB
         }
 
@@ -193,4 +193,9 @@ object Materialize {
 
   private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Contextual[D] =
     Contextual.map3(materialize(a), materialize(b), materialize(c))(f)
+
+  private def interpret3Lazy[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(
+    f: (=> A, => B, => C) => D
+  ): Contextual[D] =
+    Contextual.map3Lazy(materialize(a), materialize(b), materialize(c))(f)
 }

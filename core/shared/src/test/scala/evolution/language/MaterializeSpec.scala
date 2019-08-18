@@ -11,6 +11,8 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.compiler.phases.materializing.Materialize.materialize
+import evolution.typeclass.Semigroupoid
+import evolution.typeclass.Invertible
 
 class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
@@ -58,6 +60,53 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
         materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
     }
 
+    "should lazily materialize if then else expressions" in {
+      val expression = IfThen(Bool(true), Integer(1), Var("IShouldNotBeEvaluated"))
+      materialize(expression)(emptyCtx) shouldBe 1
+    }
+
+    "should materialize trivial fix expressions" in {
+      val expression =
+        Fix[Int => Int](
+          Lambda(
+            "self",
+            Lambda(
+              "n",
+              Var("n")
+            )
+          )
+        )
+
+      val factorial = materialize(expression)(emptyCtx).asInstanceOf[Int => Int]
+      factorial(3) shouldBe 3
+    }
+
+    "should materialize fix expressions" in {
+      val expression =
+        Fix[Int => Int](
+          Lambda(
+            "self",
+            Lambda(
+              "n",
+              IfThen(
+                LessThanOrEqual(Var("n"), Integer(0), Order[Int]),
+                Integer(1),
+                Multiply(
+                  Var("n"),
+                  App(
+                    Var("self"),
+                    Minus(Var("n"), Integer(1), Semigroupoid.Additive.intIntInt, Invertible.Additive.intInvertible)
+                  ),
+                  Semigroupoid.Multiplicative.intIntInt
+                )
+              )
+            )
+          )
+        )
+
+      val factorial = materialize(expression)(emptyCtx).asInstanceOf[Int => Int]
+      factorial(3) shouldBe 6
+    }
   }
 
   val genBooleanLiteral: Gen[Bool] = Gen.oneOf(false, true).map(Bool)
