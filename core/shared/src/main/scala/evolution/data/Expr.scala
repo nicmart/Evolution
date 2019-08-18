@@ -100,10 +100,6 @@ object Expr {
   ) extends Expr[Evolution[A]](List(acc, a0, v0))
   final case class WithFirst[A, B](as: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(as, f))
-  final case class WithFirst2[A, B](as: Expr[Evolution[A]], f: Expr[A => A => Evolution[B]])
-      extends Expr[Evolution[B]](List(as, f))
-  final case class WithFirst3[A, B](as: Expr[Evolution[A]], f: Expr[A => A => A => Evolution[B]])
-      extends Expr[Evolution[B]](List(as, f))
 
   // Distributions
   final case class Constant[T](t: Expr[T]) extends Expr[Evolution[T]](List(t))

@@ -61,9 +61,13 @@ object Evolution {
     }
 
   def range(start: Double, end: Double, step: Double): Evolution[Double] =
-    new Evolution[Double] {
-      def run: Iterator[Double] =
-        (start to end by step).toIterator
+    step match {
+      case 0 => constant(start)
+      case _ =>
+        new Evolution[Double] {
+          def run: Iterator[Double] =
+            (start to end by step).toIterator
+        }
     }
 
   def uniform(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
@@ -73,7 +77,7 @@ object Evolution {
   def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] =
     new Evolution[T] {
       def run: Iterator[T] = {
-        val materializedTs = ts.run.take(n).toList
+        val materializedTs = ts.run.take(n).toVector
         if (materializedTs.nonEmpty) Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
         else Iterator.empty
       }
@@ -282,22 +286,6 @@ object Evolution {
       ts.run.take(1).toList match {
         case a1 :: Nil => f(a1).run
         case _         => Iterator.empty
-      }
-  }
-
-  def withFirst2[A, B](ts: Evolution[A], f: A => A => Evolution[B]): Evolution[B] = new Evolution[B] {
-    override def run: Iterator[B] =
-      ts.run.take(2).toList match {
-        case a1 :: a2 :: Nil => f(a1)(a2).run
-        case _               => Iterator.empty
-      }
-  }
-
-  def withFirst3[A, B](ts: Evolution[A], f: A => A => A => Evolution[B]): Evolution[B] = new Evolution[B] {
-    override def run: Iterator[B] =
-      ts.run.take(3).toList match {
-        case a1 :: a2 :: a3 :: Nil => f(a1)(a2)(a3).run
-        case _                     => Iterator.empty
       }
   }
 

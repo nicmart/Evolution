@@ -63,5 +63,24 @@ class EvolutionSpec extends LanguageSpec {
         }
       }
     }
+
+    "range" - {
+      "should be empty when positive step and start > stop" in {
+        range(100, 0, 1).run.take(10).toList should be(empty)
+      }
+
+      "should be empty when negative step and start < stop" in {
+        range(0, 100, -1).run.take(10).toList should be(empty)
+      }
+
+      "should be const(start) when step = 0" in {
+        range(2, 100, 0).run.take(100).toList should be(List.fill(100)(2))
+      }
+
+      "should gives all results from from to start" in {
+        val result = range(1, 100, 3).run.take(100).toList
+        result shouldBe (1 to 100 by 3).toList
+      }
+    }
   }
 }

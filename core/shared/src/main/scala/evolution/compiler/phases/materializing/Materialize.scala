@@ -142,12 +142,6 @@ object Materialize {
       case WithFirst(as, f) =>
         interpret2(as, f)(Evolution.withFirst1)
 
-      case WithFirst2(as, f) =>
-        interpret2(as, f)(Evolution.withFirst2)
-
-      case WithFirst3(as, f) =>
-        interpret2(as, f)(Evolution.withFirst3)
-
       case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Evolution.flatMap)
 
       case Flatten(ffa) => interpret1(ffa)(Evolution.flatten)
