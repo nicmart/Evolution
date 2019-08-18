@@ -80,9 +80,14 @@ object Evolution {
     }
 
   def uniformDiscrete(from: Double, to: Double, step: Double): Evolution[Double] =
-    new Evolution[Double] {
-      private val size = ((to - from) / step).toInt + 1
-      def run: Iterator[Double] = Iterator.continually(from + Random.nextInt(size) * step)
+    Math.signum(step * (to - from)) match {
+      case 0  => constant(from)
+      case -1 => empty
+      case 1 =>
+        new Evolution[Double] {
+          private val size = (Math.abs((to - from) / step)).toInt + 1
+          def run: Iterator[Double] = Iterator.continually(from + Random.nextInt(size) * step)
+        }
     }
 
   def normal(mu: Double, gamma: Double): Evolution[Double] = new Evolution[Double] {

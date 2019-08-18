@@ -5,6 +5,7 @@ import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import Evolution._
 import evolution.geometry.Point
+import org.scalatest.Inspectors
 
 class EvolutionSpec extends LanguageSpec {
   "Evolutions" - {
@@ -36,6 +37,30 @@ class EvolutionSpec extends LanguageSpec {
 
       "returns an empty evolution if sampling evolution is empty" in {
         uniformFrom(1, Evolution.empty).run.toList should be(empty)
+      }
+    }
+
+    "uniformDiscrete" - {
+      "should be empty when positive step and start > stop" in {
+        uniformDiscrete(100, 0, 1).run.take(10).toList should be(empty)
+      }
+
+      "should be empty when negative step and start < stop" in {
+        uniformDiscrete(0, 100, -1).run.take(10).toList should be(empty)
+      }
+
+      "should be const(start) when step = 0" in {
+        uniformDiscrete(2, 100, 0).run.take(100).toList should be(List.fill(100)(2))
+      }
+
+      "should gives results between start and from and where result-from is a multiple of step" in {
+        val result = uniformDiscrete(1, 100, 3).run.take(10).toList
+        result should have size (10)
+        all(result) shouldBe >=(1.0)
+        all(result) shouldBe <=(100.0)
+        Inspectors.forAll(result) { n =>
+          (n - 1) % 3 shouldBe 0
+        }
       }
     }
   }
