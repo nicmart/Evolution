@@ -205,7 +205,7 @@ w4 = .008 in
 r5 = 100 in
 w5 = .008 in
 
-circle = r -> w -> polar(const(r), integrate(0, const(w))) in
+circle = r -> w -> @polar(const(r), integrate(0, const(w))) in
 
 
 
@@ -487,17 +487,18 @@ rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
 f = 60 in
 v = 2 in
 
-withFirst(noise, n ->
-  withFirst(uniform(1, 256), r ->
-    line = p -> solve1(
-      const(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
-      p
-    ) in
-    flatMap(
-      rndPoint,
-      p -> take(300, line(p))
-    )
-  )
+n <- noise in
+r <- uniform(1, 256) in
+
+
+line = p -> solve1(
+  const(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
+  p
+) in
+
+flatMap(
+  rndPoint,
+  p -> take(300, line(p))
 )
 
 // Horizontal perlin noise lines
@@ -605,20 +606,23 @@ b = 1/1000 in
 c = 5 in
 k = 50 in
 
+n1 <- noise in 
+n2 <- noise in 
+n3 <- noise in 
 
-withFirst3(noise, n1 -> n2 -> n3 ->
-  line = p ->
-  q = point(n1(f2 * p), n2(f2 * p)) in
 
-  solve1(
-    @(q -> polar(v, k * (2^.5) * PI * n3((1/f)*q))),
-      p
-    ) in
-  flatMap(
-    rndPoint,
-    p -> take(300, line(p))
-  )
+line = p ->
+q = point(n1(f2 * p), n2(f2 * p)) in
+
+solve1(
+  const(q -> polar(v, k * (2^.5) * PI * n3((1/f)*q))),
+    p
+  ) in
+flatMap(
+  rndPoint,
+  p -> take(300, line(p))
 )
+
 
 
 // Circle + noise
@@ -909,18 +913,18 @@ rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
 f = 60 in
 v = 2 in
 
-withFirst(noise, n ->
-  withFirst(uniform(1, 256), r ->
-    line = p -> solve1(
-      @(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
-      p
-    ) in
-    flatMap(
-      rndPoint,
-      p -> take(300, line(p))
-    )
-  )
+n <- noise in
+r <- uniform(1, 256) in
+
+line = p -> solve1(
+  const(q -> polar(v, 6 * (2^.5) * PI * n((1 / f) * q))),
+  p
+) in
+flatMap(
+  rndPoint,
+  p -> take(300, line(p))
 )
+
 
 Perlin Noise Horizontal lines
 ---------
@@ -931,21 +935,16 @@ length = 3000 in
 d = 30 in
 yVar = 3 in
 
-mapCons(octaveNoise, on -> notUsed ->
-  n = x -> y -> on(8, .4, point(x, y)) in
+on <- octaveNoise in
 
-  flatMap(
-    range(bottom-100, top+100, d),
-    startY -> take(length, map(
-      integrate(left, const(v)),
-      x -> point(x, startY + a * n(x/f, startY / (f * yVar)))
-    ))
-  )
+n = x -> y -> on(8, .4, point(x, y)) in
 
-  //map(
-  //  integrate(left, const(v)),
-  //  x -> point(x, a * n(x/f, x/f))
-  //)
+flatMap(
+  range(bottom-100, top+100, d),
+  startY -> take(length, map(
+    integrate(left, const(v)),
+    x -> point(x, startY + a * n(x/f, startY / (f * yVar)))
+  ))
 )
 
 ---------
@@ -1367,37 +1366,7 @@ mapCons(octaveNoise, on -> notUsed ->
   )
 )
 
----------
-a = 300 in
-xFreq = 300 in
-octaves = 3 in
-persistence = .6 in
-v = 2 in
-length = floor((right - left) / v) in
-d = 2 in
-minY = bottom - 100 in
-s = 300 in // distance of the screen
-offsetZ = 600 in // height of the camera
-noiseStrength = 100 in // noise amplitude
-maxDepth = 1000 in
-depthStep = 5 in
-
-fz = map(octaveNoise, on ->
-  x -> y -> -offsetZ + noiseStrength * on(octaves, persistence, point(x/xFreq, y/xFreq))
-) in
-
-
-withFirst(fz, f ->
-  flatMap(
-    range(0, maxDepth, depthStep),
-    y ->
-      take(2 * length, map(
-        integrate(-toDbl(length) * d, const(v)),
-        x -> point(s * x / y, s * f(x, y) / y)
-      ))
-  )
-)
-
+Mountains, perspective
 ---------
 a = 300 in
 xFreq = 300 in
@@ -1413,26 +1382,24 @@ maxDepth = 1000 in
 depthStep = 5 in
 startY = s/2 in
 
-fz = map(octaveNoise, on ->
-  x -> y -> -cameraZ + noiseStrength * on(octaves, persistence, point(x/xFreq, y/100))
-) in
+on <- octaveNoise in
 
+f = x -> y -> -cameraZ + noiseStrength * on(octaves, persistence, point(x/xFreq, y/100)) in
 
-withFirst(fz, f ->
-  flatMap(
-    range(startY, maxDepth, depthStep),
-    y ->
-      xlength = (y/startY) * 2 * toDbl(length) / v in
-      take(
-        floor(xlength),
-        map(
-          integrate(-xlength, const(v)),
-          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-        )
+flatMap(
+  range(startY, maxDepth, depthStep),
+  y ->
+    xlength = (y/startY) * 2 * toDbl(length) / v in
+    take(
+      floor(xlength),
+      map(
+        integrate(-xlength, const(v)),
+        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
       )
-  )
+    )
 )
 
+Mountains perspective 2
 ---------
 a = 300 in
 xFreq = 100 in
@@ -1448,29 +1415,28 @@ maxDepth = 1000 in
 depthStep = 3 in
 startY = s/2 in
 
-fz = withFirst2(octaveNoise, on1 -> on2 ->
-  @(x -> y ->
-    -cameraZ +
-    noiseStrength * on1(octaves, persistence, point(x/xFreq, y/xFreq)) +
-    700 * on2(1, .5, point(x/1000, y/500))
-  )
+on1 <- octaveNoise in
+on2 <- octaveNoise in
+
+f = x -> y ->
+  -cameraZ +
+  noiseStrength * on1(octaves, persistence, point(x/xFreq, y/xFreq)) +
+  700 * on2(1, .5, point(x/1000, y/500)
 ) in
 
-
-withFirst(fz, f ->
-  flatMap(
-    range(startY, maxDepth, depthStep),
-    y ->
-      xlength = (y/startY) * 2 * toDbl(length) / v in
-      take(
-        floor(xlength),
-        map(
-          integrate(-xlength, const(v)),
-          x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-        )
+flatMap(
+  range(startY, maxDepth, depthStep),
+  y ->
+    xlength = (y/startY) * 2 * toDbl(length) / v in
+    take(
+      floor(xlength),
+      map(
+        integrate(-xlength, const(v)),
+        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
       )
-  )
+    )
 )
+
 
 // Particles orbiting
 ---------

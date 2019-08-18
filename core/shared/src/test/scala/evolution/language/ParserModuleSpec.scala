@@ -69,6 +69,13 @@ class ParserModuleSpec extends LanguageSpec {
         }
       }
 
+      "sampling" - {
+        "a <- b in a" in {
+          unsafeParse("a <- b in c") shouldBe
+            AST.AppN(AST.Const(Constant2.WithFirst), AST.Identifier("b"), AST.Lambda("a", AST.Identifier("c")))
+        }
+      }
+
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldBe AST.AppN(

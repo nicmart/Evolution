@@ -289,22 +289,6 @@ object Constant2 extends Enum[Constant2] {
       Expr.WithFirst(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
-  case object WithFirst2
-      extends Constant2Plain(
-        Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
-      ) {
-    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-      Expr.WithFirst2(x.asExprF, y.asExpr[Any => Any => Evolution[Any]])
-  }
-
-  case object WithFirst3
-      extends Constant2Plain(
-        Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
-      ) {
-    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
-      Expr.WithFirst3(x.asExprF, y.asExpr[Any => Any => Any => Evolution[Any]])
-  }
-
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       Type.semigroup(x.tpe).map(sg => Expr.Integrate(x.value.asExpr, y.value.asExprF, sg))

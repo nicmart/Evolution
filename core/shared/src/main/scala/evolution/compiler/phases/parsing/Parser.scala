@@ -33,8 +33,14 @@ object Parser {
           AST.Let(_, value, body)
       }
 
+    def sampleTail: Parser[String => AST] =
+      P(whitespaces ~ "<-" ~/ expression ~/ "in" ~/ expression).map {
+        case (sampling, body) =>
+          variable => AST.AppN(AST.Const(Constant2.WithFirst), sampling, AST.Lambda(variable, body))
+      }
+
     // Note: a previous solution based on flatMap caused undesired back-tracking
-    P(identifier ~ (lambdaTail | letTail)).map {
+    P(identifier ~ (lambdaTail | letTail | sampleTail)).map {
       case (id, f) => f(id)
     }
   }
