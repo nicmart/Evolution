@@ -27,5 +27,16 @@ class EvolutionSpec extends LanguageSpec {
         derivative.run.toList shouldBe List.fill(4)(1.0)
       }
     }
+
+    "uniformFrom" - {
+      "returns an empty evolution if n <= 0" in {
+        uniformFrom(0, Evolution.empty).run.toList should be(empty)
+        uniformFrom(1, Evolution.empty).run.toList should be(empty)
+      }
+
+      "returns an empty evolution if sampling evolution is empty" in {
+        uniformFrom(1, Evolution.empty).run.toList should be(empty)
+      }
+    }
   }
 }

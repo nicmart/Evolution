@@ -13,7 +13,7 @@ sealed trait Evolution[+T] {
 }
 
 object Evolution {
- 
+
   private object Random extends Random
 
   def setSeed(long: Long): Unit = Random.setSeed(long)
@@ -70,12 +70,14 @@ object Evolution {
     def run: Iterator[Double] = Iterator.continually(from + Random.nextDouble() * (to - from))
   }
 
-  def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] = new Evolution[T] {
-    def run: Iterator[T] = {
-      val materializedTs = ts.run.take(n).toList
-      Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
+  def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] =
+    new Evolution[T] {
+      def run: Iterator[T] = {
+        val materializedTs = ts.run.take(n).toList
+        if (materializedTs.nonEmpty) Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
+        else Iterator.empty
+      }
     }
-  }
 
   def uniformDiscrete(from: Double, to: Double, step: Double): Evolution[Double] =
     new Evolution[Double] {
