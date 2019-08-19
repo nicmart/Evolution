@@ -2,7 +2,7 @@ package evolution.language
 import evolution.compiler.ast.AST
 import evolution.compiler.phases.typing.config.Constant2
 
-class ASTModuleSpec extends LanguageSpec {
+class ASTSpec extends LanguageSpec {
   "An AST" - {
     "should recursively transform all the nodes" in {
       def changeNumbers(ast: AST): AST = ast match {
