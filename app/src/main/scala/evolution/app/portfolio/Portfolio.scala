@@ -306,21 +306,23 @@ object Portfolio {
         |k = .01 in
         |field = x -> v -> -(g/norm(x)^2) * versor(x) in
         |
-        |parallel(take(1000,
+        |parallel(
+        |  take(
+        |    1000,
         |
-        |  zipWith(
-        |    @point(uniform(left, right), uniform(bottom, top)),
-        |    uniform(0, 2 * pi),
-        |    uniform(0, 1),
-        |    p -> alpha -> r ->
-        |      solve2(
-        |        const(field),
-        |        p,
-        |        polar(r * k * norm(p), alpha)
-        |      )
+        |    zip(
+        |      p <- @point(uniform(left, right), uniform(bottom, top)),
+        |      alpha <- uniform(0, 2 * pi),
+        |      r <- uniform(0, 1)
+        |    ) in
+        |     
+        |    solve2(
+        |      const(field),
+        |      p,
+        |      polar(r * k * norm(p), alpha)
+        |    )
         |  )
-        |
-        |))""".stripMargin
+        |)""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas.copy(strokeSize = 5, iterations = 5000, trail = TrailSettings(true, 0.12))
     )

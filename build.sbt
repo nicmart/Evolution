@@ -5,6 +5,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 Test / fork := true
 
 bloopExportJarClassifiers in Global := Some(Set("sources"))
+logBuffered in Test := false
 
 lazy val options = Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.

@@ -6,6 +6,8 @@ import evolution.compiler.phases.parsing.ParserConfig.White._
 import evolution.compiler.phases.parsing.ParserConfig.whitespaces
 import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import fastparse.noApi._
+import evolution.compiler.phases.typing.config.Constant3
+import evolution.compiler.ast.AST.Lambda
 
 object Parser {
   def parse(astString: String): Either[ParserFailure, AST] =
@@ -87,7 +89,7 @@ object Parser {
     )
 
   private lazy val appOrFactor: Parser[AST] =
-    P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
+    specialSyntax | P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
       case (f, None)            => f
       case (f, Some(arguments)) => AST.AppN(f, arguments: _*)
     }
@@ -113,13 +115,36 @@ object Parser {
   private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
 
   private lazy val nonEmptyArgs: Parser[List[AST]] =
-    P(expression ~/ ("," ~/ nonEmptyArgs).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+    nonEmptyCsv(expression)
+
+  private def nonEmptyCsv[T](p: Parser[T]): Parser[List[T]] =
+    P(p ~/ ("," ~/ nonEmptyCsv(p)).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
 
   private lazy val identifier: Parser[String] =
     ((alpha | CharIn(Seq('@'))) ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
 
   private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
+
+  private lazy val specialSyntax: Parser[AST] = zip
+
+  private lazy val zip: Parser[AST] =
+    P("zip" ~/ "(" ~/ nonEmptyCsv(zipBinding) ~/ ")" ~/ "in" ~/ expression).map {
+      case (bindings, body) =>
+        val vars = bindings.map(_._1)
+        val values: List[AST] = bindings.map(_._2)
+        val args = values :+ buildLambda(vars, body)
+        AST.AppN(AST.Const(Constant3.ZipWith), args: _*)
+    }
+
+  private def buildLambda(vars: List[String], body: AST): AST =
+    vars match {
+      case Nil          => body
+      case head :: tail => Lambda(head, buildLambda(tail, body))
+    }
+
+  private lazy val zipBinding: Parser[(String, AST)] =
+    P(identifier ~/ "<-" ~/ expression)
 
   private object numbers {
 

@@ -267,6 +267,7 @@ class ParserModuleSpec extends LanguageSpec {
       }
 
       "variadic zipWith(a, b, c, f)" in {
+        pending
         forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
           val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
           val expected = AST.AppN(
@@ -276,6 +277,32 @@ class ParserModuleSpec extends LanguageSpec {
               unsafeParse(a),
               unsafeParse(b),
               unsafeParse(f)
+            ),
+            unsafeParse(c),
+            AST.Lambda(
+              "f",
+              AST.Lambda(
+                "x",
+                AST.App(AST.Identifier("f"), AST.Identifier("x"))
+              )
+            )
+          )
+
+          parsed shouldBe expected
+        }
+      }
+
+      "zip(a <- as, b <- bs, c <- cs) in d" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, d) =>
+          val parsed = unsafeParse(s"zip(a <- $a, b <- $b, c <- $c) in $d")
+          val lambda = AST.Lambda("a", AST.Lambda("b", AST.Lambda("c", unsafeParse(d))))
+          val expected = AST.AppN(
+            AST.Const(Constant3.ZipWith),
+            AST.AppN(
+              AST.Const(Constant3.ZipWith),
+              unsafeParse(a),
+              unsafeParse(b),
+              lambda
             ),
             unsafeParse(c),
             AST.Lambda(
