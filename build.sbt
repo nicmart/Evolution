@@ -135,7 +135,9 @@ lazy val jsApp = project
     ),
     npmDependencies in Compile ++= Seq(
       "react" -> "16.7.0",
-      "react-dom" -> "16.7.0"
+      "react-dom" -> "16.7.0",
+      "codemirror" -> "5.48.4",
+      "react-codemirror2" -> "6.0.0"
     ),
     scalaJSUseMainModuleInitializer := true,
     scalaJSStage in Global := FastOptStage
