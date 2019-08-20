@@ -36,7 +36,7 @@ object Parser {
     def sampleTail: Parser[String => AST] =
       P(whitespaces ~ "<-" ~/ expression ~/ "in" ~/ expression).map {
         case (sampling, body) =>
-          variable => AST.AppN(AST.Const(Constant2.WithFirst), sampling, AST.Lambda(variable, body))
+          variable => AST.SpecialSyntax.withFirst(variable -> sampling, body)
       }
 
     // Note: a previous solution based on flatMap caused undesired back-tracking

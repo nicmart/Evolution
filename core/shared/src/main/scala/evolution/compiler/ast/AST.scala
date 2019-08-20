@@ -80,6 +80,9 @@ object AST {
       case Nil       => body
     }
 
+    def withFirst(binding: (String, AST), body: AST): AST =
+      AST.AppN(AST.Const(Constant2.WithFirst), binding._2, buildLambda(List(binding._1), body))
+
     private def buildLambda(vars: List[String], body: AST): AST =
       vars match {
         case Nil          => body
