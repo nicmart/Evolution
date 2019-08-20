@@ -6,8 +6,6 @@ import evolution.compiler.phases.parsing.ParserConfig.White._
 import evolution.compiler.phases.parsing.ParserConfig.whitespaces
 import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import fastparse.noApi._
-import evolution.compiler.phases.typing.config.Constant3
-import evolution.compiler.ast.AST.Lambda
 
 object Parser {
   def parse(astString: String): Either[ParserFailure, AST] =
@@ -130,17 +128,7 @@ object Parser {
 
   private lazy val zip: Parser[AST] =
     P("zip" ~/ "(" ~/ nonEmptyCsv(zipBinding) ~/ ")" ~/ "in" ~/ expression).map {
-      case (bindings, body) =>
-        val vars = bindings.map(_._1)
-        val values: List[AST] = bindings.map(_._2)
-        val args = values :+ buildLambda(vars, body)
-        AST.AppN(AST.Const(Constant3.ZipWith), args: _*)
-    }
-
-  private def buildLambda(vars: List[String], body: AST): AST =
-    vars match {
-      case Nil          => body
-      case head :: tail => Lambda(head, buildLambda(tail, body))
+      case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
     }
 
   private lazy val zipBinding: Parser[(String, AST)] =

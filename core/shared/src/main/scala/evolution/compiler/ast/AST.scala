@@ -3,6 +3,7 @@ package evolution.compiler.ast
 import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2, Constant3 }
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
+import scala.collection.immutable.Nil
 
 sealed trait AST {
   val tpe: Qualified[Type]
@@ -61,16 +62,9 @@ object AST {
   def Const(constant: Constant): AST = AST.Identifier(constant.entryName)
   def PrimitiveConst(constant: Constant): AST = AST.Identifier(constant.entryName, primitive = true)
 
-  def AppN(f: AST, args: AST*): AST =
-    args.toList match {
-      case arg1 :: arg2 :: arg3 :: rest if f == AST.Const(Constant3.ZipWith) =>
-        variadicZipWith(args.last, arg1, arg2, (arg3 :: rest).dropRight(1))
-      case _ => nestedApp(f, args: _*)
-    }
-
-  private def nestedApp(f: AST, args: AST*): AST = args.toList match {
+  def AppN(f: AST, args: AST*): AST = args.toList match {
     case Nil                => f
-    case argHead :: argTail => nestedApp(AST.App(f, argHead), argTail: _*)
+    case argHead :: argTail => AppN(AST.App(f, argHead), argTail: _*)
   }
 
   def ConsN(asts: List[AST]): AST = asts match {
@@ -78,17 +72,33 @@ object AST {
     case head :: tail => AST.AppN(AST.Identifier(Constant2.Cons.entryName), head, ConsN(tail))
   }
 
-  private def variadicZipWith(f: AST, arg1: AST, arg2: AST, rest: List[AST]): AST =
-    rest match {
-      case Nil => nestedApp(AST.Const(Constant3.ZipWith), arg1, arg2, f)
-      case nonEmptyRest =>
-        nestedApp(
-          AST.Const(Constant3.ZipWith),
-          variadicZipWith(f, arg1, arg2, nonEmptyRest.dropRight(1)),
-          nonEmptyRest.last,
-          AST.Lambda("f", AST.Lambda("x", AST.App(AST.Identifier("f"), AST.Identifier("x"))))
-        )
+  object SpecialSyntax {
+    def zip(bindings: List[(String, AST)], body: AST): AST = bindings match {
+      case h1 :: h2 :: tl =>
+        variadicZipWith(buildLambda(bindings.map(_._1), body), h1._2, h2._2, tl.map(_._2))
+      case h1 :: Nil => AST.AppN(AST.Const(Constant2.Map), h1._2, buildLambda(List(h1._1), body))
+      case Nil       => body
     }
+
+    private def buildLambda(vars: List[String], body: AST): AST =
+      vars match {
+        case Nil          => body
+        case head :: tail => Lambda(head, buildLambda(tail, body))
+      }
+
+    private def variadicZipWith(f: AST, arg1: AST, arg2: AST, rest: List[AST]): AST =
+      rest match {
+        case Nil => AppN(AST.Const(Constant3.ZipWith), arg1, arg2, f)
+        case nonEmptyRest =>
+          AppN(
+            AST.Const(Constant3.ZipWith),
+            variadicZipWith(f, arg1, arg2, nonEmptyRest.dropRight(1)),
+            nonEmptyRest.last,
+            AST.Lambda("f", AST.Lambda("x", AST.App(AST.Identifier("f"), AST.Identifier("x"))))
+          )
+      }
+  }
+
   // Note: f is not (and can't) be applied to variables
   def transformChildren(tree: AST, f: AST => AST): AST = tree match {
     case Lambda(varName, expr, tpe)  => Lambda(varName, f(expr), tpe)
