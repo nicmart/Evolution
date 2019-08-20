@@ -19,9 +19,10 @@ object Parser {
     P(whitespaces ~ expression ~ End)
 
   private lazy val expression: Parser[AST] =
-    P(lambdaOrLet | precedenceGroups.parser)
+    P(notOperand | precedenceGroups.operand)
 
-  private lazy val lambdaOrLet: Parser[AST] = {
+  // expressions that can't be an operand of a binary operator
+  private lazy val notOperand: Parser[AST] = {
     def lambdaTail: Parser[String => AST] = P(whitespaces ~ "->" ~/ expression).map { expr =>
       AST.Lambda(_, expr)
     }
@@ -47,7 +48,7 @@ object Parser {
 
   // Operator groups, order by ascending Precedence
   private lazy val precedenceGroups: PrecedenceGroups = parsing.PrecedenceGroups(
-    appOrFactor,
+    atomicOperand,
     List(
       PrecedenceGroup(
         "||" -> AST.Identifier(Constant2.Or.entryName)
@@ -86,7 +87,7 @@ object Parser {
         variable | list
     )
 
-  private lazy val appOrFactor: Parser[AST] =
+  private lazy val atomicOperand: Parser[AST] =
     specialSyntax | P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
       case (f, None)            => f
       case (f, Some(arguments)) => AST.AppN(f, arguments: _*)
@@ -108,7 +109,7 @@ object Parser {
       P("!").map(_ => AST.Identifier(Constant1.Not.entryName))
 
   private lazy val unaryPrefixOp: Parser[AST] =
-    P(unaryOps ~/ appOrFactor).map { case (op, e) => AST.App(op, e) }
+    P(unaryOps ~/ atomicOperand).map { case (op, e) => AST.App(op, e) }
 
   private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
 
