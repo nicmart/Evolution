@@ -318,6 +318,30 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
+      "product(a <- as, b <- bs) in d" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          val parsed = unsafeParse(s"product(a <- $a, b <- $b) in $c")
+          val expected =
+            AST.AppN(
+              AST.Const(Constant2.FlatMap),
+              unsafeParse(a),
+              AST.Lambda(
+                "a",
+                AST.AppN(
+                  AST.Const(Constant2.Map),
+                  unsafeParse(b),
+                  AST.Lambda(
+                    "b",
+                    unsafeParse(c)
+                  )
+                )
+              )
+            )
+
+          parsed shouldBe expected
+        }
+      }
+
       "boolean literals" in {
         unsafeParse("true") shouldBe AST.Bool(true)
         unsafeParse("false") shouldBe AST.Bool(false)

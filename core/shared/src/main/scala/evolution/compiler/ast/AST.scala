@@ -83,6 +83,13 @@ object AST {
     def withFirst(binding: (String, AST), body: AST): AST =
       AST.AppN(AST.Const(Constant2.WithFirst), binding._2, buildLambda(List(binding._1), body))
 
+    def product(bindings: List[(String, AST)], body: AST): AST = bindings match {
+      case Nil       => body
+      case h1 :: Nil => AST.AppN(AST.Const(Constant2.Map), h1._2, buildLambda(List(h1._1), body))
+      case h1 :: tail =>
+        AST.AppN(AST.Const(Constant2.FlatMap), h1._2, buildLambda(List(h1._1), product(tail, body)))
+    }
+
     private def buildLambda(vars: List[String], body: AST): AST =
       vars match {
         case Nil          => body

@@ -124,14 +124,19 @@ object Parser {
   private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-  private lazy val specialSyntax: Parser[AST] = zip
+  private lazy val specialSyntax: Parser[AST] = zip | product
 
   private lazy val zip: Parser[AST] =
-    P("zip" ~/ "(" ~/ nonEmptyCsv(zipBinding) ~/ ")" ~/ "in" ~/ expression).map {
+    P("zip" ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
       case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
     }
 
-  private lazy val zipBinding: Parser[(String, AST)] =
+  private lazy val product: Parser[AST] =
+    P("product" ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
+      case (bindings, body) => AST.SpecialSyntax.product(bindings, body)
+    }
+
+  private lazy val comprehensionBinding: Parser[(String, AST)] =
     P(identifier ~/ "<-" ~/ expression)
 
   private object numbers {
