@@ -127,6 +127,16 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
+      "comparisons" - {
+        "a < b" in {
+          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+            val parsed = unsafeParse(s"$a < $b")
+            val expected = AST.AppN(AST.Const(Constant2.LessThan), unsafeParse(a), unsafeParse(b))
+            parsed shouldBe expected
+          }
+        }
+      }
+
       "a -> b + c = a -> (b + c)" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldBe AST.Lambda(
