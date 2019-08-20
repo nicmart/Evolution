@@ -5,6 +5,8 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.ScalaComponent
 import evolution.app.react.component.config.{ ConfigComponent }
+import cats.effect.internals.Callback
+import japgolly.scalajs.react.Callback
 
 object Editor {
   case class Props(code: StateSnapshot[String], error: Option[String])
@@ -16,7 +18,8 @@ object Editor {
 
       <.div(
         ^.className := "dsl-config",
-        component.apply(props.code)(),
+        CodeMirror.component(CodeMirror.props(props.code.value, (_, _, code) => props.code.setState(code)))(),
+        //component.apply(props.code)(),
         <.div(
           ^.classSet(
             "dsl-feedback" -> true,

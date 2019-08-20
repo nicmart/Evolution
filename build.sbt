@@ -152,7 +152,12 @@ lazy val server = (project in file("server"))
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     packagePrefix in Assets := "public/",
-    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value
+    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value,
+    npmAssets ++= NpmAssets
+      .ofProject(jsApp) { nodeModules =>
+        (nodeModules / "codemirror").allPaths // sbt 1.0.0+
+      }
+      .value
   )
   .enablePlugins(SbtWeb, WebScalaJSBundlerPlugin)
 
