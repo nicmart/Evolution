@@ -1,11 +1,8 @@
 package evolution.app.react.component.presentational
 
 import scalajs.js
-import scala.scalajs.js.annotation.JSName
 import japgolly.scalajs.react._
-import scala.scalajs.js.annotation.JSGlobal
 import scala.scalajs.js.annotation.JSImport
-import evolution.compiler.ast.AST.Bool
 
 object CodeMirror {
 
@@ -15,7 +12,7 @@ object CodeMirror {
 
   CLike
 
-  @JSImport("react-codemirror2", "UnControlled")
+  @JSImport("react-codemirror2", "Controlled")
   @js.native
   object RawComponent extends js.Object
 
@@ -31,33 +28,41 @@ object CodeMirror {
     var mode: String
     var tabSize: Int
     var lineNumbers: Boolean
+    var lineWrapping: Boolean
   }
 
   object Options {
-    def apply(theme: String, mode: String, tabSize: Int, lineNumbers: Boolean): Options = {
+    def apply(theme: String, mode: String, tabSize: Int, lineNumbers: Boolean, lineWrapping: Boolean): Options = {
       val options = (new js.Object).asInstanceOf[Options]
       options.theme = theme
       options.mode = mode
       options.tabSize = tabSize
       options.lineNumbers = lineNumbers
+      options.lineWrapping = lineWrapping
       options
     }
   }
 
   type OnChange = js.Function3[Editor, Data, String, Unit]
-
+  type OnBeforeChange = js.Function3[Editor, Data, String, Unit]
   @js.native
   trait Props extends js.Object {
     var value: String = js.native
     var onChange: OnChange = js.native
+    var onBeforeChange: OnBeforeChange = js.native
     var options: Options = js.native
   }
 
-  def props(value: String, onChange: (Editor, Data, String) => Callback): Props = {
+  def props(
+    value: String,
+    onChange: (Editor, Data, String) => Callback,
+    onBeforeChange: (Editor, Data, String) => Callback
+  ): Props = {
     val p = (new js.Object).asInstanceOf[Props]
     p.value = value
     p.onChange = (editor: Editor, data: Data, value: String) => onChange(editor, data, value).runNow()
-    p.options = Options(theme = "evolution", mode = "clike", tabSize = 2, lineNumbers = false)
+    p.onBeforeChange = (editor: Editor, data: Data, value: String) => onBeforeChange(editor, data, value).runNow()
+    p.options = Options(theme = "evolution", mode = "clike", tabSize = 2, lineNumbers = false, lineWrapping = false)
     p
   }
 
