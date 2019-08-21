@@ -221,6 +221,7 @@ object Portfolio {
       DrawingState(
         0L,
         """
+        |
         |a = 300 in
         |xFreq = 300 in
         |octaves = 8 in
@@ -238,16 +239,21 @@ object Portfolio {
         |on1 <- octaveNoise in
         |on2 <- octaveNoise in
         |
-        |f = x -> y ->
-        |    -cameraZ + noiseStrength
-        |     * on1(octaves, persistence, point(x/xFreq, 10* on2(16, .4, point(x/400, y/200))))
+        |f = x -> y -> -cameraZ + noiseStrength * on1(
+        |       octaves,
+        |       persistence,
+        |       point(
+        |         x/xFreq,
+        |         10* on2(16, .4, point(x/400, y/200))
+        |       )
+        |     )
         |in
         |
         |
         |flatMap(
         |  range(startY, maxDepth, depthStep),
         |  y ->
-        |    xlength = (y/startY) * 2 * toDbl(length) / v in
+        |    xlength = length * (y/startY) * 2 / v in
         |    take(
         |      floor(xlength),
         |      map(
@@ -255,7 +261,7 @@ object Portfolio {
         |        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
         |      )
         |    )
-        |)""".stripMargin
+        |))""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
     ),
