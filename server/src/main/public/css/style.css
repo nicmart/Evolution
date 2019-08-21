@@ -44,8 +44,7 @@ html {
   height: 100%;
 }
 
-nav.navbar,
-.sidebar {
+nav.navbar {
   text-shadow: 0px 0px 1rem rgba(0, 0, 0, 1);
 }
 
