@@ -31,6 +31,8 @@ object CodeMirror {
     var lineWrapping: Boolean
   }
 
+  // See https://github.com/scalacenter/scastie/blob/35f4f65647/client/src/main/scala/com.olegych.scastie.client/components/editor/EditorOptions.scala
+  // for options used by Scastie
   object Options {
     def apply(theme: String, mode: String, tabSize: Int, lineNumbers: Boolean, lineWrapping: Boolean): Options = {
       val options = (new js.Object).asInstanceOf[Options]
@@ -62,7 +64,8 @@ object CodeMirror {
     p.value = value
     p.onChange = (editor: Editor, data: Data, value: String) => onChange(editor, data, value).runNow()
     p.onBeforeChange = (editor: Editor, data: Data, value: String) => onBeforeChange(editor, data, value).runNow()
-    p.options = Options(theme = "evolution", mode = "clike", tabSize = 2, lineNumbers = false, lineWrapping = false)
+    p.options =
+      Options(theme = "evolution", mode = "text/x-scala", tabSize = 2, lineNumbers = false, lineWrapping = false)
     p
   }
 
