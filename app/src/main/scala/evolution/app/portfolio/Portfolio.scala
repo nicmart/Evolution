@@ -261,7 +261,7 @@ object Portfolio {
         |        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
         |      )
         |    )
-        |))""".stripMargin
+        |)""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
     ),
