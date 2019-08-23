@@ -156,8 +156,18 @@ object Portfolio {
         |k = .6 in
         |step = 2 in
         |
-        |rnd = @point(uniform(-radius, radius), uniform(-radius, radius)) in
-        |v = solve2(map(rnd, r -> x -> v -> r + -viscosity * v + -k * x), point(0, 0), point(0, 0)) in
+        |rnd = @point(
+        |  uniform(-radius, radius),
+        |  uniform(-radius, radius)
+        |) in
+        |
+        |acceleration(r, x, v) = r + -viscosity * v + -k * x in
+        |
+        |v = solve2(
+        |  map(rnd, acceleration),
+        |  point(0, 0),
+        |  point(0, 0)
+        |) in
         |
         |integrate(point(0, 0), step * v)
         |""".stripMargin
