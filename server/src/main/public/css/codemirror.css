@@ -1,6 +1,6 @@
 .react-codemirror2 {
-    height: 100%;
-    flex: 2;
+    display: flex;
+    flex: 1;
     padding: 0;
 }
 
