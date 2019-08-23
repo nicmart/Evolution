@@ -45,9 +45,9 @@ case object TorusCanvas extends OffCanvasStrategy
 case object RealProjectivePlane extends OffCanvasStrategy
 
 object RendererStateToFrameDrawer {
-  def apply(f: (RendererState, DrawingContext) => PointDrawer)(
-    state: RendererState,
-    drawingContext: DrawingContext): FrameDrawer = {
+  def apply(
+    f: (RendererState, DrawingContext) => PointDrawer
+  )(state: RendererState, drawingContext: DrawingContext): FrameDrawer = {
     state.trail.decorate(
       BaseFrameDrawer(
         drawingContext,

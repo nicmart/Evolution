@@ -25,10 +25,12 @@ object App {
     running: Boolean,
     layout: LayoutState,
     compilationResult: Option[CompilationResult],
-    selectedDrawing: Option[Drawing]
+    selectedDrawing: Option[Drawing],
+    id: Int
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
+    def next: State = copy(id = id + 1)
   }
 
   case class CompilationResult(key: Int, result: Either[String, Iterator[Point]])
@@ -67,14 +69,16 @@ object App {
           drawingState = drawingStateSnapshot,
           selectedDrawing = selectedDrawingSnapshot,
           pointRate = state.pointRateCounter.rate.toInt,
-          onRefresh = drawingStateSnapshot.modState(_.withNewSeed),
-          onFrameDraw = onRateCountUpdate(pageStateSnapshot.value.rendererState)
+          onShuffle = drawingStateSnapshot.modState(_.withNewSeed),
+          onReload = bs.modState(_.next),
+          onFrameDraw = onRateCountUpdate(pageStateSnapshot.value.rendererState),
+          id = state.id
         )
       ).vdomElement
     }
 
     private[App] def key(p: PageState, s: State): Int =
-      (s.pointRateCounter.rate, p, s.running, s.layout, s.selectedDrawing).hashCode()
+      (s.pointRateCounter.rate, p, s.running, s.layout, s.selectedDrawing, evolutionKey(p, s)).hashCode()
 
     private def onRateCountUpdate(rendererState: RendererState): Callback =
       bs.modState { state =>
@@ -100,7 +104,8 @@ object App {
   }
 
   private def evolutionKey(props: PageState, state: State) =
-    (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, props.rendererState).hashCode()
+    (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
+      .hashCode()
 
   private def compile(props: PageState, state: State): CompilationResult =
     CompilationResult(
@@ -128,7 +133,7 @@ object App {
     ScalaComponent
       .builder[StateSnapshot[PageState]]("App")
       .initialStateCallback(
-        initialLayout.map(layout => State(rateCounter, running = true, layout, None, None))
+        initialLayout.map(layout => State(rateCounter, running = true, layout, None, None, 1))
       )
       .backend[Backend](scope => new Backend(pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))

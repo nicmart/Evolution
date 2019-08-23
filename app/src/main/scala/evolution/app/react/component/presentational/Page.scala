@@ -34,10 +34,12 @@ object Page {
     drawingState: StateSnapshot[DrawingState],
     selectedDrawing: StateSnapshot[Option[Drawing]],
     pointRate: Int,
-    onRefresh: Callback,
-    onFrameDraw: Callback
+    onShuffle: Callback,
+    onReload: Callback,
+    onFrameDraw: Callback,
+    id: Int
   ) {
-    def canvasKey: String = (rendererState.value, drawingState.value, layout.value).hashCode().toString
+    def canvasKey: String = (rendererState.value, drawingState.value, layout.value, id).hashCode().toString
     def code: StateSnapshot[String] =
       drawingState.zoomState(_.code)(code => state => state.copy(code = code))
     def sidebarWidth: StateSnapshot[Double] =
@@ -63,10 +65,16 @@ object Page {
             <.div(
               ^.className := "buttons has-addons is-centered",
               PlayToggle.component(props.running),
-              Button.component(props.onRefresh) {
+              Button.component(props.onShuffle) {
                 <.span(
                   ^.className := "icon",
                   <.i(^.className := "fas fa-random")
+                )
+              },
+              Button.component(props.onReload) {
+                <.span(
+                  ^.className := "icon",
+                  <.i(^.className := "fas fa-redo-alt")
                 )
               },
               <.a(
