@@ -37,6 +37,20 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
+      "associate left to right for ops with the same precedence" - {
+        val expectations = List(
+          "a - b + c" -> "(a - b) + c",
+          "a + b - c" -> "(a + b) - c",
+          "a - b - c - d" -> "((a - b) - c) - d"
+        )
+        expectations.foreach {
+          case (left, right) =>
+            s"$left = $right" in {
+              unsafeParse(left) shouldBe unsafeParse(right)
+            }
+        }
+      }
+
       "inverses" in {
         unsafeParse("-point(0, 0)") shouldBe AST.App(
           AST.Const(Constant1.Inverse),
