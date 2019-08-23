@@ -14,14 +14,13 @@ trait CanvasInitializer extends (dom.html.Canvas => Unit) {
   }
 }
 
-case class ColorCanvasInitializer(color: String) extends CanvasInitializer {
+case class ColorCanvasInitializer(backgroundColor: String, color: String) extends CanvasInitializer {
   override def apply(canvas: dom.html.Canvas): Unit = {
-    val ctx = canvas.getContext("2d")
-      .asInstanceOf[dom.CanvasRenderingContext2D]
-    ctx.fillStyle = color
+    val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+    ctx.fillStyle = backgroundColor
     ctx.fillRect(0, 0, canvas.width.toDouble, canvas.height.toDouble)
-    ctx.fillStyle = "white"
-    ctx.strokeStyle = "white"
+    ctx.fillStyle = color
+    ctx.strokeStyle = color
     ctx.lineCap = "square"
     ctx.lineJoin = "miter"
     ctx.miterLimit = 20

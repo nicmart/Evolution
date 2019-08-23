@@ -25,7 +25,7 @@ object Conf {
   lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(logger))
 
   lazy val canvasInitializer: CanvasInitializer =
-    ColorCanvasInitializer("black")
+    ColorCanvasInitializer("black", "white")
 
   lazy val drawingStateCodec: JsonCodec[DrawingState] =
     DrawingState.jsonCodec
