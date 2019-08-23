@@ -108,8 +108,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.scalacheck" %%% "scalacheck" % "1.13.5",
       "com.lihaoyi" %%% "fastparse" % "1.0.0",
       "com.lihaoyi" %%% "pprint" % "0.5.5",
-      "com.beachape" %%% "enumeratum" % "1.5.13",
-      "com.propensive" %%% "contextual" % "1.1.0"
+      "com.beachape" %%% "enumeratum" % "1.5.13"
     )
   )
   .jvmSettings(
