@@ -10,6 +10,7 @@
     font-size: 0.8em;
     height: 100%;
     padding: 0 1em;
+    width: 100%;
 }
 
 .cm-s-evolution.CodeMirror pre.CodeMirror-line, .cm-s-evolution.CodeMirror pre.CodeMirror-line-like {

@@ -100,7 +100,7 @@ object App {
   }
 
   private def evolutionKey(props: PageState, state: State) =
-    (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext).hashCode()
+    (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, props.rendererState).hashCode()
 
   private def compile(props: PageState, state: State): CompilationResult =
     CompilationResult(
@@ -111,6 +111,15 @@ object App {
         state.layout.drawingContext * props.rendererState.resolutionFactor
       )
     )
+
+  private def recompile(props: StateSnapshot[PageState], state: State): Option[State] =
+    if (needsCompilation(props, state))
+      Some(state.copy(compilationResult = Some(compile(props.value, state))))
+    else
+      None
+
+  private def needsCompilation(props: StateSnapshot[PageState], state: State): Boolean =
+    !state.compilationResult.exists(cr => cr.key == evolutionKey(props.value, state))
 
   def component(
     rateCounter: RateCounter,
@@ -128,14 +137,8 @@ object App {
           s.backend.key(s.currentProps.value, s.currentState) != s.backend.key(s.nextProps.value, s.nextState)
         }
       }
-      // TODO we try to compile only when is necessary. I did not find a cleaner way to do this
-      .getDerivedStateFromProps(
-        (props, state) =>
-          if (state.compilationResult.exists(cr => cr.key == evolutionKey(props.value, state)))
-            None
-          else
-            Some(state.copy(compilationResult = Some(compile(props.value, state))))
-      )
+      // TODO we try to compile only when it is necessary. I did not find a cleaner way to do this
+      .getDerivedStateFromProps(recompile _)
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
       // TODO can we remove this?
