@@ -221,7 +221,6 @@ object Portfolio {
       DrawingState(
         0L,
         """
-        |
         |a = 300 in
         |xFreq = 300 in
         |octaves = 8 in
@@ -239,7 +238,7 @@ object Portfolio {
         |on1 <- octaveNoise in
         |on2 <- octaveNoise in
         |
-        |f = x -> y -> -cameraZ + noiseStrength * on1(
+        |f(x, y) = -cameraZ + noiseStrength * on1(
         |       octaves,
         |       persistence,
         |       point(
@@ -261,7 +260,8 @@ object Portfolio {
         |        x -> point(s * x / y, offsetZ + s * f(x, y) / y)
         |      )
         |    )
-        |)""".stripMargin
+        |)
+        |""".stripMargin
       ),
       defaultRendererWithInfiniteCanvas
     ),

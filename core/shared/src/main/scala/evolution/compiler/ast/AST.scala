@@ -90,6 +90,9 @@ object AST {
         AST.AppN(AST.Const(Constant2.FlatMap), h1._2, buildLambda(List(h1._1), product(tail, body)))
     }
 
+    def functionBinding(name: String, args: List[String], value: AST, body: AST): AST =
+      AST.Let(name, buildLambda(args, value), body)
+
     private def buildLambda(vars: List[String], body: AST): AST =
       vars match {
         case Nil          => body

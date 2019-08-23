@@ -67,6 +67,18 @@ class ParserSpec extends LanguageSpec {
               AST.Let(a.toLowerCase, unsafeParse(aVal), AST.Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)))
           }
         }
+
+        "f(x) = y in body" in {
+          forAll(genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, body) =>
+            unsafeParse(s"$f($x) = $y in $body") shouldBe unsafeParse(s"$f = $x -> $y in $body")
+          }
+        }
+
+        "f(x, y) = z in body" in {
+          forAll(genIdentifier, genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, z, body) =>
+            unsafeParse(s"$f($x, $y) = $z in $body") shouldBe unsafeParse(s"$f = $x -> $y -> $z in $body")
+          }
+        }
       }
 
       "sampling" - {

@@ -40,8 +40,14 @@ object Parser {
           variable => AST.SpecialSyntax.withFirst(variable -> sampling, body)
       }
 
+    // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
+    def argsTail: Parser[String => AST] =
+      P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
+        case (args, value, body) => name => AST.SpecialSyntax.functionBinding(name, args, value, body)
+      }
+
     // Note: a previous solution based on flatMap caused undesired back-tracking
-    P(identifier ~ (lambdaTail | letTail | sampleTail)).map {
+    P(identifier ~ (lambdaTail | letTail | sampleTail | argsTail)).map {
       case (id, f) => f(id)
     }
   }
