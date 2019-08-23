@@ -9,7 +9,7 @@ matrix:
     - scala: 2.13.0
 
 script:
-  - sbt coreJVM/test server/webStage
+  - sbt coreJVM/test jsApp/test server/webStage
 
 deploy:
   provider: pages
