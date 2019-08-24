@@ -2,6 +2,7 @@
     display: flex;
     flex: 1;
     padding: 0;
+    overflow-y: scroll;
 }
 
 .cm-s-evolution.CodeMirror {

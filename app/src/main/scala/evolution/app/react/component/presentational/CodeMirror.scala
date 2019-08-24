@@ -92,7 +92,7 @@ object CodeMirror {
       mode = "text/x-scala",
       tabSize = 2,
       lineNumbers = false,
-      lineWrapping = false,
+      lineWrapping = true,
       matchBrackets = true,
       keyMap = "sublime"
     )
