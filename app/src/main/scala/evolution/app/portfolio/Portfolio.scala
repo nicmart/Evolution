@@ -365,7 +365,7 @@ object Portfolio {
           p2 = point(left, bottom) in
           p3 = point(right, bottom) in
           
-          vertexes = uniformFrom(3, [p1, p2, p3]) in
+          vertexes = uniformChoice(p1, p2, p3) in
           
           solve1(
             map(vertexes, v -> p -> -p + 0.5 * (v + p)),

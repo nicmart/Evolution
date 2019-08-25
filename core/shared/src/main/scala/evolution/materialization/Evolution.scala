@@ -22,6 +22,10 @@ object Evolution {
     val run: Iterator[Nothing] = Iterator.empty
   }
 
+  def fromIterable[T](ts: Iterable[T]): Evolution[T] = new Evolution[T] {
+    def run: Iterator[T] = ts.iterator
+  }
+
   def constant[T](t: T): Evolution[T] = new Evolution[T] {
     val run: Iterator[T] = new AbstractIterator[T] {
       def hasNext = true
@@ -73,6 +77,9 @@ object Evolution {
   def uniform(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(from + Random.nextDouble() * (to - from))
   }
+
+  def uniformChoice[T](choices: List[T]): Evolution[T] =
+    uniformFrom(choices.size, fromIterable(choices))
 
   def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] =
     new Evolution[T] {

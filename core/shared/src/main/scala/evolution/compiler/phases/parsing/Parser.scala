@@ -131,20 +131,26 @@ object Parser {
   private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-  private lazy val specialSyntax: Parser[AST] = zip | product
+  private lazy val specialSyntax: Parser[AST] = SpecialSyntax.zip | SpecialSyntax.product | SpecialSyntax.uniformChoice
 
-  private lazy val zip: Parser[AST] =
-    P("zip" ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-      case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
-    }
+  private object SpecialSyntax {
+    lazy val zip: Parser[AST] =
+      P(StringInIgnoreCase("zip") ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
+        case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
+      }
 
-  private lazy val product: Parser[AST] =
-    P("product" ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-      case (bindings, body) => AST.SpecialSyntax.product(bindings, body)
-    }
+    lazy val product: Parser[AST] =
+      P(StringInIgnoreCase("product") ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
+        case (bindings, body) => AST.SpecialSyntax.product(bindings, body)
+      }
 
-  private lazy val comprehensionBinding: Parser[(String, AST)] =
-    P(identifier ~/ "<-" ~/ expression)
+    lazy val uniformChoice: Parser[AST] =
+      P(StringInIgnoreCase(Constant1.UniformChoice.entryName) ~/ "(" ~/ nonEmptyArgs ~/ ")")
+        .map(AST.SpecialSyntax.uniformChoice)
+
+    private lazy val comprehensionBinding: Parser[(String, AST)] =
+      P(identifier ~/ "<-" ~/ expression)
+  }
 
   private object numbers {
 

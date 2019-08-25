@@ -13,6 +13,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 import evolution.compiler.phases.materializing.Materialize.materialize
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
+import evolution.materialization.Evolution
 
 class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
@@ -58,6 +59,15 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
     ) {
       case ((op, expected), a, b) =>
         materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
+    }
+
+    "should materialize uniformChoices" in forAll(arbitrary[List[Dbl]]) { dbls =>
+      val materialized = materialize(Expr.UniformChoice(Expr.Lst(dbls)))(emptyCtx).asInstanceOf[Evolution[Double]]
+      val materializedDoubles = materialized.run.take(10).toList
+      val expectedDoubles = dbls.map(_.d).toSet
+      materializedDoubles foreach { d =>
+        expectedDoubles should contain(d)
+      }
     }
 
     "should lazily materialize if then else expressions" in {

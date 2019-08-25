@@ -42,6 +42,7 @@ object Materialize {
       case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
+      case Lst(ts)               => Contextual.lst(ts.map(materialize))
       case SmoothStep(f, t, p) =>
         interpret3(f, t, p) { (from, to, position) =>
           val t = (position - from) / (to - from)
@@ -116,9 +117,7 @@ object Materialize {
         val interpretedHead = materialize(head)
         val interpretedTail = materialize(tail)
         WithContext.instance[T] { ctx =>
-          {
-            Evolution.cons(interpretedHead(ctx), interpretedTail(ctx))
-          }
+          Evolution.cons(interpretedHead(ctx), interpretedTail(ctx))
         }
 
       case Concat(ev1, ev2) =>
@@ -156,6 +155,9 @@ object Materialize {
 
       case Uniform(from, to) =>
         interpret2(from, to)(Evolution.uniform)
+
+      case UniformChoice(choices) =>
+        interpret1(choices)(Evolution.uniformChoice)
 
       case UniformDiscrete(from, to, step) =>
         interpret3(from, to, step)(Evolution.uniformDiscrete)

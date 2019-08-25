@@ -42,6 +42,7 @@ object Expr {
   final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
   final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
   final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
+  final case class Lst[T](ts: List[Expr[T]]) extends Expr[List[T]](ts)
   final case class SmoothStep(from: Expr[Double], to: Expr[Double], position: Expr[Double])
       extends Expr[Double](List(from, to, position))
 
@@ -106,6 +107,7 @@ object Expr {
   final case class Range(from: Expr[Double], to: Expr[Double], step: Expr[Double])
       extends Expr[Evolution[Double]](List(from, to, step))
   final case class Uniform(from: Expr[Double], to: Expr[Double]) extends Expr[Evolution[Double]](List(from, to))
+  final case class UniformChoice[T](choices: Expr[List[T]]) extends Expr[Evolution[T]](List(choices))
   final case class UniformDiscrete(from: Expr[Double], to: Expr[Double], step: Expr[Double])
       extends Expr[Evolution[Double]](List(from, to, step))
   final case class UniformFrom[T](n: Expr[Int], ft: Expr[Evolution[T]]) extends Expr[Evolution[T]](List(n, ft))

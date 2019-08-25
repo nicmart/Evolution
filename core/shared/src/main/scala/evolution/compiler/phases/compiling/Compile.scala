@@ -56,6 +56,9 @@ object Compile {
       case Identifier(id, _, _) =>
         s"Constant $id is not supported as first class value".raiseError[Result, Expr[Any]]
 
+      case Lst(ts, _) =>
+        ts.traverse(compileSafe).map(Expr.Lst(_))
+
       // Arity 1 identifiers
       case App(Identifier(Constant1(c), _, true), x, typeOut) =>
         compileSafe(x).flatMap(compiledX => c.compile(Typed(x.tpe.t, compiledX), typeOut.t).liftTo[Result])
@@ -83,6 +86,7 @@ object Compile {
           Expr.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
         }
 
+      // TODO this prevents exhaustivity checking
       case _ =>
         s"Invalid AST for expression $ast".raiseError[Result, Expr[Any]]
     }

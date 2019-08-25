@@ -110,6 +110,15 @@ class CompilerSpec extends LanguageSpec {
           ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
         }
       }
+
+      "uniformChoice" in {
+        val compiled = unsafeCompile(
+          AST
+            .AppN(AST.PrimitiveConst(Constant1.UniformChoice), AST.Lst(List(AST.Identifier("x"), AST.Identifier("y")))),
+          new VarContext(List("x", "y"))
+        )
+        compiled shouldBe UniformChoice(Lst(List(Var("x"), Var("y"))))
+      }
     }
   }
 

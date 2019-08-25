@@ -7,10 +7,12 @@ import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.ast.AST.DoubleLiteral
+import evolution.compiler.ast.AST.IntLiteral
 
 class UnifyTypesSpec extends LanguageSpec {
 
-  "The typer" - {
+  "UnifyTypes" - {
     "should generate constraints for" - {
       "int literals" in {
         forAll(genIntNumber) { numberExpr =>
@@ -101,7 +103,7 @@ class UnifyTypesSpec extends LanguageSpec {
         substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
       }
 
-      "@(1)" in {
+      "const(1)" in {
         val untyped = AST.App(AST.Const(Constant1.Constant), AST.DoubleLiteral(1, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
@@ -136,6 +138,19 @@ class UnifyTypesSpec extends LanguageSpec {
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
         typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
+      }
+
+      "uniformChoice(1.0, 1)" in {
+        val untyped =
+          AST.AppN(
+            AST.Const(Constant1.UniformChoice),
+            AST.Lst(List(DoubleLiteral(1.0), IntLiteral(1)))
+          )
+
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
+        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val typedExpr = substitution.substitute(expr)
+        typedExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
       }
     }
   }

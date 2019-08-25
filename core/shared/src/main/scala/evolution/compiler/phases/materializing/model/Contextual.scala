@@ -5,6 +5,10 @@ import evolution.data.Ctx
 sealed trait Contextual[+T] { self =>
   def apply(ctx: Ctx): T
   final def map[S](f: T => S): Contextual[S] = Contextual.map(this, f)
+  final def isPure: Boolean = this match {
+    case Contextual.Pure(_) => true
+    case _                  => false
+  }
 }
 
 object Contextual {
@@ -19,6 +23,14 @@ object Contextual {
       override def apply(ctx: Ctx): T = f(ctx)
     }
   }
+
+  def lst[T](ts: List[Contextual[T]]): Contextual[List[T]] =
+    if (ts.forall(_.isPure)) {
+      Pure(ts.collect { case Pure(t) => t })
+    } else
+      new WithContext[List[T]] {
+        def apply(ctx: evolution.data.Ctx): List[T] = ts.map(_.apply(ctx))
+      }
 
   def map[A, B](a: Contextual[A], f: A => B): Contextual[B] = a match {
     case Pure(t)    => Pure(f(t))

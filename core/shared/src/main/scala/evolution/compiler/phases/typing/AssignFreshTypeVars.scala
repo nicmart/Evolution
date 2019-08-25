@@ -11,6 +11,7 @@ import evolution.compiler.phases.typing.model.TypeVarGenerator
 import evolution.compiler.types.TypeBinding
 import evolution.compiler.phases.typing.model.Assignment
 import evolution.compiler.phases.typing.model.Substitution
+import evolution.compiler.ast.AST.Lst
 
 object AssignFreshTypeVars {
 
@@ -24,6 +25,7 @@ object AssignFreshTypeVars {
    */
   private def assignS(expr: AST): S[AST] =
     expr match {
+      // TODO this prevents exhaustive checking
       case _ if expr.tpe.t != Type.Var("") => expr.pure[S]
       case AST.App(f, in, _) =>
         (assignS(f), assignS(in), newTypeVar).mapN { (transformedF, transformedIn, t) =>
@@ -52,6 +54,10 @@ object AssignFreshTypeVars {
               identifier(binding).widen
           }
         }
+
+      case Lst(ts, _) =>
+        (ts.traverse(assignS), newTypeVar)
+          .mapN((assignedTs, newType) => Lst(assignedTs, Qualified(Type.Lst(newType.t))))
 
       case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
         newTypeVar.map(expr.withType)

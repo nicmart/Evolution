@@ -158,8 +158,11 @@ lazy val server = (project in file("server"))
       }
       .value
   )
+  
   .enablePlugins(SbtWeb, WebScalaJSBundlerPlugin)
 
 // Needed, so sbt finds the projects
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
+
+addCommandAlias("testAll", "; coreJVM/test; jsApp/test")

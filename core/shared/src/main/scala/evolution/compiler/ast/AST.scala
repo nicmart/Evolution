@@ -4,6 +4,7 @@ import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2,
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
 import scala.collection.immutable.Nil
+import evolution.compiler.phases.typing.config.Constant1
 
 sealed trait AST {
   val tpe: Qualified[Type]
@@ -17,6 +18,7 @@ sealed trait AST {
     case AST.DoubleLiteral(n, _)              => AST.DoubleLiteral(n, tpe)
     case AST.IntLiteral(n, _)                 => AST.IntLiteral(n, tpe)
     case AST.Bool(b, _)                       => AST.Bool(b, tpe)
+    case AST.Lst(ts, _)                       => AST.Lst(ts, tpe)
   }
 
   final def withType(tpe: Type): AST = withType(Qualified(tpe))
@@ -48,6 +50,7 @@ object AST {
   final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Dbl)) extends AST
   final case class IntLiteral(n: Int, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
   final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Lst(ts: List[AST], tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
 
   object Lambda {
     def apply(varNameS: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))): Lambda =
@@ -93,6 +96,9 @@ object AST {
     def functionBinding(name: String, args: List[String], value: AST, body: AST): AST =
       AST.Let(name, buildLambda(args, value), body)
 
+    def uniformChoice(args: List[AST]): AST =
+      AST.App(AST.Const(Constant1.UniformChoice), AST.Lst(args))
+
     private def buildLambda(vars: List[String], body: AST): AST =
       vars match {
         case Nil          => body
@@ -117,6 +123,7 @@ object AST {
     case Lambda(varName, expr, tpe)  => Lambda(varName, f(expr), tpe)
     case Let(varName, expr, in, tpe) => Let(varName, f(expr), f(in), tpe)
     case App(g, x, tpe)              => App(f(g), f(x), tpe)
+    case Lst(ts, tpe)                => Lst(ts.map(f), tpe)
     case _                           => tree
   }
 
@@ -137,6 +144,7 @@ object AST {
         case Bool(b, tpe)          => s"${indent}$b: ${tpe.t}"
         case DoubleLiteral(n, tpe) => s"${indent}$n: ${tpe.t}"
         case App(f, args, tpe)     => ppFunc(level, "App", List(f, args), tpe.t)
+        case Lst(ts, tpe)          => ppFunc(level, "Lst", ts, tpe.t)
       }
     }
 

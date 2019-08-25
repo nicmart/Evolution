@@ -132,8 +132,14 @@ object Type {
     }
   }.asInstanceOf[Either[String, Order[t.Out]]]
 
-  def unwrapF(t: Type): Either[String, Type] = t match {
+  // TODO Bleah, I would like the AST to be hosting the inner type
+  def unwrapEvo(t: Type): Either[String, Type] = t match {
     case Type.Evo(inner) => inner.asRight
     case _               => s"Type $t is not an Evolution type".asLeft
+  }
+
+  def unwrapLst(t: Type): Either[String, Type] = t match {
+    case Type.Lst(inner) => inner.asRight
+    case _               => s"Type $t is not a Lst type".asLeft
   }
 }

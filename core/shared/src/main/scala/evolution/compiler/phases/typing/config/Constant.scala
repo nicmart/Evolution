@@ -141,10 +141,14 @@ object Constant1 extends Enum[Constant1] {
 
     override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
-        innerType <- Type.unwrapF(x.tpe)
+        innerType <- Type.unwrapEvo(x.tpe)
         sgAndInv <- Type.invertibleSemigroup(innerType)
         (sg, inv) = sgAndInv
       } yield Expr.Derive(x.value.asExprF, sg, inv).asExprF
+  }
+
+  case object UniformChoice extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
+    def compilePlain(x: Expr[_]): Expr[_] = Expr.UniformChoice(x.asExpr[List[Any]])
   }
 
   def unapply(s: String): Option[Constant1] = withNameInsensitiveOption(s)
@@ -319,7 +323,7 @@ object Constant2 extends Enum[Constant2] {
 
     override def compile(f: Typed[Expr[_]], x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
-        innerType <- Type.unwrapF(x.tpe)
+        innerType <- Type.unwrapEvo(x.tpe)
         sgAndInv <- Type.invertibleSemigroup(innerType)
         (sg, inv) = sgAndInv
       } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], sg, inv).asExpr
