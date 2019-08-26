@@ -7,8 +7,6 @@ import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
-import evolution.compiler.ast.AST.DoubleLiteral
-import evolution.compiler.ast.AST.IntLiteral
 
 class UnifyTypesSpec extends LanguageSpec {
 
@@ -140,17 +138,17 @@ class UnifyTypesSpec extends LanguageSpec {
         typedExpr.qualifiedType.value shouldBe Type.Evo(Type.Point)
       }
 
-      "uniformChoice(1.0, 1)" in {
+      "uniformChoice(point(1, 2))" in {
         val untyped =
-          AST.AppN(
+          AST.App(
             AST.Const(Constant1.UniformChoice),
-            AST.Lst(List(DoubleLiteral(1.0), IntLiteral(1)))
+            AST.Lst(List(AST.AppN(AST.Const(Constant2.Point), AST.IntLiteral(1), AST.IntLiteral(2))))
           )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
-        typedExpr.qualifiedType.value shouldBe Type.Evo(Type.Dbl)
+        typedExpr.qualifiedType.value shouldBe Type.Evo(Type.Point)
       }
     }
   }

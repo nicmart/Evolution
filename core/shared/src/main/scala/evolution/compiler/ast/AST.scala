@@ -31,7 +31,11 @@ sealed trait AST {
     case AST.Lambda(_, expr, _)  => List(expr)
     case AST.Let(_, expr, in, _) => List(expr, in)
     case AST.App(f, x, _)        => List(f, x)
-    case _                       => Nil
+    case AST.Lst(children, _)    => children
+    case AST.DoubleLiteral(_, _) => Nil
+    case AST.IntLiteral(_, _)    => Nil
+    case AST.Bool(_, _)          => Nil
+    case AST.Identifier(_, _, _) => Nil
   }
 }
 
@@ -241,7 +245,7 @@ object TreeF {
   def cata[A](f: TreeF[A] => A)(tree: Tree): A =
     f(tree.value.map(cata(f)))
 
-  //f: TreeF[TypedTree] => TypedTree 
+  //f: TreeF[TypedTree] => TypedTree
 
   def ana[A](f: A => TreeF[A])(a: A): Tree =
     Tree(f(a).map(ana(f)))
