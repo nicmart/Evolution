@@ -26,7 +26,7 @@ object AssignFreshTypeVars {
   private def assignS(expr: AST): S[AST] =
     expr match {
       // TODO this prevents exhaustive checking
-      case _ if expr.tpe.t != Type.Var("") => expr.pure[S]
+      case _ if expr.qualifiedType.value != Type.Var("") => expr.pure[S]
       case AST.App(f, in, _) =>
         (assignS(f), assignS(in), newTypeVar).mapN { (transformedF, transformedIn, t) =>
           App(transformedF, transformedIn, t)
@@ -37,13 +37,24 @@ object AssignFreshTypeVars {
         for {
           varType <- newTypeVar
           bodyWithType <- localBinding(varName.name, varType)(assignS(body))
-        } yield Lambda(Identifier(varName.name, varType), bodyWithType, Qualified(varType.t =>: bodyWithType.tpe.t))
+        } yield
+          Lambda(
+            Identifier(varName.name, varType),
+            bodyWithType,
+            Qualified(varType.value =>: bodyWithType.qualifiedType.value)
+          )
 
       case Let(varName, value, body, _) =>
         for {
           valueWithType <- assignS(value)
-          bodyWithType <- localBinding(varName.name, valueWithType.tpe)(assignS(body))
-        } yield Let(Identifier(varName.name, valueWithType.tpe), valueWithType, bodyWithType, bodyWithType.tpe)
+          bodyWithType <- localBinding(varName.name, valueWithType.qualifiedType)(assignS(body))
+        } yield
+          Let(
+            Identifier(varName.name, valueWithType.qualifiedType),
+            valueWithType,
+            bodyWithType,
+            bodyWithType.qualifiedType
+          )
 
       case Identifier(name, _, _) =>
         State.get.flatMap { s =>
@@ -57,7 +68,7 @@ object AssignFreshTypeVars {
 
       case Lst(ts, _) =>
         (ts.traverse(assignS), newTypeVar)
-          .mapN((assignedTs, newType) => Lst(assignedTs, Qualified(Type.Lst(newType.t))))
+          .mapN((assignedTs, newType) => Lst(assignedTs, Qualified(Type.Lst(newType.value))))
 
       case _ => // No-children expressions. Unsafe, that's why I would like to use transformChildren method
         newTypeVar.map(expr.withType)
@@ -89,15 +100,15 @@ object AssignFreshTypeVars {
   // Resolve type-bindings for predefined constants schemes
   private def identifier(binding: TypeBinding): S[Identifier] = {
     binding match {
-      case TypeBinding.Fixed(_, _) => Identifier(binding.name, binding.qt).pure[S]
+      case TypeBinding.Fixed(_, _) => Identifier(binding.name, binding.qualifiedType).pure[S]
       case TypeBinding.Scheme(_, _) =>
-        val varsInScheme = binding.qt.t.typeVars.toList
+        val varsInScheme = binding.qualifiedType.value.typeVars.toList
         for {
           assignSments <- varsInScheme.traverse(
-            schemeVar => newTypeVar.map(typeVar => Assignment(schemeVar.name, typeVar.t))
+            schemeVar => newTypeVar.map(typeVar => Assignment(schemeVar.name, typeVar.value))
           )
           substitution = Substitution(assignSments)
-        } yield Identifier(binding.name, substitution.substitute(binding.qt), primitive = true)
+        } yield Identifier(binding.name, substitution.substitute(binding.qualifiedType), primitive = true)
     }
   }
 }

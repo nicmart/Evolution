@@ -40,12 +40,12 @@ object CanBeSubstituted {
   implicit def qualified[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[Qualified[T]] =
     new CanBeSubstituted[Qualified[T]] {
       def substitute(s: Substitution, qt: Qualified[T]): Qualified[T] =
-        Qualified(s.substitute(qt.predicates), s.substitute(qt.t))
+        Qualified(s.substitute(qt.predicates), s.substitute(qt.value))
     }
 
   implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
     def substitute(s: Substitution, ast: AST): AST =
-      AST.transformRecursively(ast, tree => tree.withType(s.substitute(tree.tpe)))
+      AST.transformRecursively(ast, tree => tree.withType(s.substitute(tree.qualifiedType)))
   }
 
   implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {

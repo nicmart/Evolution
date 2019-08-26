@@ -11,16 +11,18 @@ object FindConstraints {
   def find(expr: AST): Either[String, Constraints] = {
     // TODO as you can see here predicates are extracted just for identifiers
     val nodeConstraints: Either[String, Constraints] = expr match {
-      case Identifier(_, qt, _)  => Constraints.empty.withPredicates(qt.predicates).asRight
-      case DoubleLiteral(_, tpe) => Constraints(tpe.t -> Type.Dbl).asRight
-      case IntLiteral(_, tpe)    => Constraints.empty.withPredicate(Predicate("Num", List(tpe.t))).asRight
-      case Bool(_, tpe)          => Constraints(tpe.t -> Type.Bool).asRight
-      case App(f, x, tpe)        => Constraints(f.tpe.t -> (x.tpe.t =>: tpe.t)).asRight
-      case Lambda(_, _, _)       => Constraints.empty.asRight
-      case Let(_, _, _, _)       => Constraints.empty.asRight
-      case Lst(ts, tpe) =>
-        Type.unwrapLst(tpe.t).map { inner =>
-          Constraints(ts.map(t => inner -> t.tpe.t): _*)
+      case Identifier(_, qt, _)            => Constraints.empty.withPredicates(qt.predicates).asRight
+      case DoubleLiteral(_, qualifiedType) => Constraints(qualifiedType.value -> Type.Dbl).asRight
+      case IntLiteral(_, qualifiedType) =>
+        Constraints.empty.withPredicate(Predicate("Num", List(qualifiedType.value))).asRight
+      case Bool(_, qualifiedType) => Constraints(qualifiedType.value -> Type.Bool).asRight
+      case App(f, x, qualifiedType) =>
+        Constraints(f.qualifiedType.value -> (x.qualifiedType.value =>: qualifiedType.value)).asRight
+      case Lambda(_, _, _) => Constraints.empty.asRight
+      case Let(_, _, _, _) => Constraints.empty.asRight
+      case Lst(ts, qualifiedType) =>
+        Type.unwrapLst(qualifiedType.value).map { inner =>
+          Constraints(ts.map(t => inner -> t.qualifiedType.value): _*)
         }
     }
 

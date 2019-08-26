@@ -36,7 +36,7 @@ class AllPhases(logger: Logger) {
       _ = log(AST.prettyPrint(astWithTypeVars))
       constraints <- FindConstraints.find(astWithTypeVars)
       _ = log("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> astWithTypeVars.tpe.t))
+      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> astWithTypeVars.qualifiedType.value))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = log("Done: unification")
       _ = log(s"Partially typed AST:")

@@ -49,8 +49,8 @@ object Compile {
       case Bool(b, _) =>
         Expr.Bool(b).pure[Result].widen
 
-      case Identifier(Constant0(c), tpe, true) =>
-        c.compile(tpe).liftTo[Result]
+      case Identifier(Constant0(c), qualifiedType, true) =>
+        c.compile(qualifiedType).liftTo[Result]
 
       // Arity 0 identifiers
       case Identifier(id, _, _) =>
@@ -61,13 +61,15 @@ object Compile {
 
       // Arity 1 identifiers
       case App(Identifier(Constant1(c), _, true), x, typeOut) =>
-        compileSafe(x).flatMap(compiledX => c.compile(Typed(x.tpe.t, compiledX), typeOut.t).liftTo[Result])
+        compileSafe(x).flatMap(compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result])
 
       case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
         for {
           compiledX <- compileSafe(x)
           compiledY <- compileSafe(y)
-          result <- c.compile(Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), typeOut.t).liftTo[Result]
+          result <- c
+            .compile(Typed(x.qualifiedType.value, compiledX), Typed(y.qualifiedType.value, compiledY), typeOut.value)
+            .liftTo[Result]
         } yield result
 
       // Arity 3 identifiers
@@ -77,7 +79,12 @@ object Compile {
           compiledY <- compileSafe(y)
           compiledZ <- compileSafe(z)
           result <- c
-            .compile(Typed(x.tpe.t, compiledX), Typed(y.tpe.t, compiledY), Typed(z.tpe.t, compiledZ), typeOut.t)
+            .compile(
+              Typed(x.qualifiedType.value, compiledX),
+              Typed(y.qualifiedType.value, compiledY),
+              Typed(z.qualifiedType.value, compiledZ),
+              typeOut.value
+            )
             .liftTo[Result]
         } yield result
 

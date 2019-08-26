@@ -7,18 +7,18 @@ import scala.collection.immutable.Nil
 import evolution.compiler.phases.typing.config.Constant1
 
 sealed trait AST {
-  val tpe: Qualified[Type]
-  final type Out = tpe.t.Out
+  val qualifiedType: Qualified[Type]
+  final type Out = qualifiedType.value.Out
 
-  final def withType(tpe: Qualified[Type]): AST = this match {
-    case AST.Identifier(name, _, isPrimitive) => AST.Identifier(name, tpe, isPrimitive)
-    case AST.App(f, x, _)                     => AST.App(f, x, tpe)
-    case AST.Lambda(varName, expr, _)         => AST.Lambda(varName, expr, tpe)
-    case AST.Let(varName, expr, in, _)        => AST.Let(varName, expr, in, tpe)
-    case AST.DoubleLiteral(n, _)              => AST.DoubleLiteral(n, tpe)
-    case AST.IntLiteral(n, _)                 => AST.IntLiteral(n, tpe)
-    case AST.Bool(b, _)                       => AST.Bool(b, tpe)
-    case AST.Lst(ts, _)                       => AST.Lst(ts, tpe)
+  final def withType(qualifiedType: Qualified[Type]): AST = this match {
+    case AST.Identifier(name, _, isPrimitive) => AST.Identifier(name, qualifiedType, isPrimitive)
+    case AST.App(f, x, _)                     => AST.App(f, x, qualifiedType)
+    case AST.Lambda(varName, expr, _)         => AST.Lambda(varName, expr, qualifiedType)
+    case AST.Let(varName, expr, in, _)        => AST.Let(varName, expr, in, qualifiedType)
+    case AST.DoubleLiteral(n, _)              => AST.DoubleLiteral(n, qualifiedType)
+    case AST.IntLiteral(n, _)                 => AST.IntLiteral(n, qualifiedType)
+    case AST.Bool(b, _)                       => AST.Bool(b, qualifiedType)
+    case AST.Lst(ts, _)                       => AST.Lst(ts, qualifiedType)
   }
 
   final def withType(tpe: Type): AST = withType(Qualified(tpe))
@@ -35,22 +35,26 @@ object AST {
 
   sealed abstract case class Identifier(
     name: String,
-    tpe: Qualified[Type] = Qualified(Type.Var("")),
+    qualifiedType: Qualified[Type] = Qualified(Type.Var("")),
     primitive: Boolean = false
   ) extends AST
 
   object Identifier {
-    def apply(name: String, tpe: Qualified[Type] = Qualified(Type.Var("")), primitive: Boolean = false): Identifier =
-      new Identifier(name.toLowerCase, tpe, primitive) {}
+    def apply(
+      name: String,
+      qualifiedType: Qualified[Type] = Qualified(Type.Var("")),
+      primitive: Boolean = false
+    ): Identifier =
+      new Identifier(name.toLowerCase, qualifiedType, primitive) {}
   }
 
-  final case class Lambda(varName: Identifier, expr: AST, tpe: Qualified[Type]) extends AST
-  final case class App(f: AST, args: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-  final case class Let(varName: Identifier, expr: AST, in: AST, tpe: Qualified[Type]) extends AST
-  final case class DoubleLiteral(n: Double, tpe: Qualified[Type] = Qualified(Type.Dbl)) extends AST
-  final case class IntLiteral(n: Int, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-  final case class Bool(b: Boolean, tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
-  final case class Lst(ts: List[AST], tpe: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Lambda(varName: Identifier, expr: AST, qualifiedType: Qualified[Type]) extends AST
+  final case class App(f: AST, args: AST, qualifiedType: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Let(varName: Identifier, expr: AST, in: AST, qualifiedType: Qualified[Type]) extends AST
+  final case class DoubleLiteral(n: Double, qualifiedType: Qualified[Type] = Qualified(Type.Dbl)) extends AST
+  final case class IntLiteral(n: Int, qualifiedType: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Bool(b: Boolean, qualifiedType: Qualified[Type] = Qualified(Type.Var(""))) extends AST
+  final case class Lst(ts: List[AST], qualifiedType: Qualified[Type] = Qualified(Type.Var(""))) extends AST
 
   object Lambda {
     def apply(varNameS: String, expr: AST, tpe: Qualified[Type] = Qualified(Type.Var(""))): Lambda =
@@ -134,17 +138,17 @@ object AST {
     def pp(level: Int)(ast: AST): String = {
       val indent = " " * (level * 4)
       ast match {
-        case Lambda(varName, expr, tpe) =>
-          ppFunc(level, "Lambda", List(varName, expr), tpe.t)
-        case id: Identifier => s"${indent}${id.name}: ${id.tpe.predicates} => ${id.tpe.t}"
-        case Let(varName, expr, in, tpe) =>
-          ppFunc(level, "Let", List(varName, expr, in), tpe.t)
-        case IntLiteral(n, tpe) =>
-          s"${indent}$n: ${tpe.t}"
-        case Bool(b, tpe)          => s"${indent}$b: ${tpe.t}"
-        case DoubleLiteral(n, tpe) => s"${indent}$n: ${tpe.t}"
-        case App(f, args, tpe)     => ppFunc(level, "App", List(f, args), tpe.t)
-        case Lst(ts, tpe)          => ppFunc(level, "Lst", ts, tpe.t)
+        case Lambda(varName, expr, qualifiedType) =>
+          ppFunc(level, "Lambda", List(varName, expr), qualifiedType.value)
+        case id: Identifier => s"${indent}${id.name}: ${id.qualifiedType.predicates} => ${id.qualifiedType.value}"
+        case Let(varName, expr, in, qualifiedType) =>
+          ppFunc(level, "Let", List(varName, expr, in), qualifiedType.value)
+        case IntLiteral(n, qualifiedType) =>
+          s"${indent}$n: ${qualifiedType.value}"
+        case Bool(b, qualifiedType)          => s"${indent}$b: ${qualifiedType.value}"
+        case DoubleLiteral(n, qualifiedType) => s"${indent}$n: ${qualifiedType.value}"
+        case App(f, args, qualifiedType)     => ppFunc(level, "App", List(f, args), qualifiedType.value)
+        case Lst(ts, qualifiedType)          => ppFunc(level, "Lst", ts, qualifiedType.value)
       }
     }
 

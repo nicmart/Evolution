@@ -41,7 +41,7 @@ class UnifyTypesSpec extends LanguageSpec {
             AssignFreshTypeVars.assign(AST.Const(Constant2.Point), TypingConfig.constantQualifiedTypes)
           val constraints = FindConstraints.find(point).unsafeEvaluate
           val unifier = unify(constraints)
-          unifier.map(_.substitution.substitute(point.tpe)) shouldBe Right(
+          unifier.map(_.substitution.substitute(point.qualifiedType)) shouldBe Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
           )
         }
@@ -54,9 +54,9 @@ class UnifyTypesSpec extends LanguageSpec {
               TypingConfig.constantQualifiedTypes
             )
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
-          val allConstraints = constraints.merge(Constraints(evolution.tpe.t -> Type.Evo(Type.Point)))
+          val allConstraints = constraints.merge(Constraints(evolution.qualifiedType.value -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
-          unifier.map(_.substitution.substitute(evolution.tpe)) shouldBe Right(
+          unifier.map(_.substitution.substitute(evolution.qualifiedType)) shouldBe Right(
             Qualified(Type.Evo(Type.Point))
           )
         }
@@ -75,7 +75,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped, extraBindings).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).tpe.t shouldBe Type.Point
+        substitution.substitute(expr).qualifiedType.value shouldBe Type.Point
       }
 
       "app(x -> x, 2)" in {
@@ -83,7 +83,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped = AST.App(identity, AST.DoubleLiteral(2, Qualified(Type.Dbl)))
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).tpe.t shouldBe Type.Dbl
+        substitution.substitute(expr).qualifiedType.value shouldBe Type.Dbl
       }
 
       "mapCons(empty, head -> tail -> cons(1, tail))" in {
@@ -100,7 +100,7 @@ class UnifyTypesSpec extends LanguageSpec {
         )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Dbl)
+        substitution.substitute(expr).qualifiedType.value shouldBe Type.Evo(Type.Dbl)
       }
 
       "const(1)" in {
@@ -108,7 +108,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
-        finalExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
+        finalExpr.qualifiedType.value shouldBe Type.Evo(Type.Dbl)
 
         val AST.App(AST.Identifier(_, _, isPrimitive), _, _) = finalExpr
         isPrimitive shouldBe true
@@ -123,7 +123,7 @@ class UnifyTypesSpec extends LanguageSpec {
           )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).tpe.t shouldBe Type.Evo(Type.Point)
+        substitution.substitute(expr).qualifiedType.value shouldBe Type.Evo(Type.Point)
       }
 
       "solve1(const(x -> x), point(0, 0))" in {
@@ -137,7 +137,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
-        typedExpr.tpe.t shouldBe Type.Evo(Type.Point)
+        typedExpr.qualifiedType.value shouldBe Type.Evo(Type.Point)
       }
 
       "uniformChoice(1.0, 1)" in {
@@ -150,7 +150,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
-        typedExpr.tpe.t shouldBe Type.Evo(Type.Dbl)
+        typedExpr.qualifiedType.value shouldBe Type.Evo(Type.Dbl)
       }
     }
   }

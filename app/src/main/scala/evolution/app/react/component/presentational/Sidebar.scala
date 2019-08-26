@@ -43,8 +43,9 @@ object Sidebar {
       for {
         state <- bs.state
         props <- bs.props
-        _ <- state.draggingState.fold(Callback.empty)(start =>
-          props.width.setState(start.oldWidth + start.startX - e.clientX))
+        _ <- state.draggingState.fold(Callback.empty)(
+          start => props.width.setState(start.oldWidth + start.startX - e.clientX)
+        )
       } yield ()
 
     private def onMouseDown(currentWidth: Double)(e: ReactMouseEvent): Callback =
