@@ -68,8 +68,8 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped = AST.AppN(AST.Const(Constant2.Point), AST.Identifier("a"), AST.Identifier("b"))
         val extraBindings = new TypeBindings(
           Map(
-            "a" -> TypeBinding.Variable("a", Qualified(Type.Dbl)),
-            "b" -> TypeBinding.Variable("b", Qualified(Type.Dbl))
+            "a" -> TypeBinding.Fixed("a", Qualified(Type.Dbl)),
+            "b" -> TypeBinding.Fixed("b", Qualified(Type.Dbl))
           )
         )
         val (expr, constraints) =

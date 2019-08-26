@@ -86,10 +86,11 @@ object AssignFreshTypeVars {
   private def resetBindings(bindings: TypeBindings): S[Unit] =
     State.modify[AssignmentState](s => s.copy(bindings = bindings))
 
+  // Resolve type-bindings for predefined constants schemes
   private def identifier(binding: TypeBinding): S[Identifier] = {
     binding match {
-      case TypeBinding.Variable(_, _) => Identifier(binding.name, binding.qt).pure[S]
-      case TypeBinding.Predefined(_, _) =>
+      case TypeBinding.Fixed(_, _) => Identifier(binding.name, binding.qt).pure[S]
+      case TypeBinding.Scheme(_, _) =>
         val varsInScheme = binding.qt.t.typeVars.toList
         for {
           assignSments <- varsInScheme.traverse(

@@ -7,7 +7,7 @@ object TypingConfig {
   val constantQualifiedTypes: TypeBindings =
     new TypeBindings(
       Constant.values
-        .map(constant => constant.entryName -> TypeBinding.Predefined(constant.entryName, constant.qualifiedType))
+        .map(constant => constant.entryName -> TypeBinding.Scheme(constant.entryName, constant.qualifiedType))
         .toMap
     )
 
