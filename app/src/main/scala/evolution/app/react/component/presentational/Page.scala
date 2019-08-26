@@ -143,9 +143,9 @@ object Page {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
     val downloadImage: Callback = Callback {
-      val canvas = dom.document.getElementById(Canvas.canvasId).asInstanceOf[Canvas]
+      val canvas = dom.document.getElementById(Canvas.canvasId).asInstanceOf[Html.Canvas]
       canvas.toBlob(blob => {
-        val a = dom.document.createElement("a").asInstanceOf[Anchor]
+        val a = dom.document.createElement("a").asInstanceOf[Html.Anchor]
         a.download = "evolution.png"
         a.href = URL.createObjectURL(blob)
         dom.document.body.appendChild(a)
@@ -163,16 +163,18 @@ object Page {
       .build
 }
 
-@js.native
-@JSGlobal
-@silent
-class Canvas extends dom.html.Canvas {
-  def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
-}
+object Html {
+  @js.native
+  @JSGlobal("Canvas")
+  @silent
+  class Canvas extends dom.html.Canvas {
+    def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
+  }
 
-@js.native
-@JSGlobal
-@silent
-class Anchor extends dom.html.Anchor {
-  var download: String = js.native
+  @js.native
+  @JSGlobal("Anchor")
+  @silent
+  class Anchor extends dom.html.Anchor {
+    var download: String = js.native
+  }
 }
