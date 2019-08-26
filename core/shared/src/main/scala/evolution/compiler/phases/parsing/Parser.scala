@@ -135,17 +135,17 @@ object Parser {
 
   private object SpecialSyntax {
     lazy val zip: Parser[AST] =
-      P(StringInIgnoreCase("zip") ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
+      P(StringInIgnoreCase("zip") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
         case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
       }
 
     lazy val product: Parser[AST] =
-      P(StringInIgnoreCase("product") ~/ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
+      P(StringInIgnoreCase("product") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
         case (bindings, body) => AST.SpecialSyntax.product(bindings, body)
       }
 
     lazy val uniformChoice: Parser[AST] =
-      P(StringInIgnoreCase(Constant1.UniformChoice.entryName) ~/ "(" ~/ nonEmptyArgs ~/ ")")
+      P(StringInIgnoreCase(Constant1.UniformChoice.entryName) ~ "(" ~/ nonEmptyArgs ~/ ")")
         .map(AST.SpecialSyntax.uniformChoice)
 
     private lazy val comprehensionBinding: Parser[(String, AST)] =

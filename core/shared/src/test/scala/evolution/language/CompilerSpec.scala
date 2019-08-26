@@ -113,11 +113,13 @@ class CompilerSpec extends LanguageSpec {
 
       "uniformChoice" in {
         val compiled = unsafeCompile(
-          AST
-            .AppN(AST.PrimitiveConst(Constant1.UniformChoice), AST.Lst(List(AST.Identifier("x"), AST.Identifier("y")))),
-          new VarContext(List("x", "y"))
+          AST.AppN(
+            AST.PrimitiveConst(Constant1.UniformChoice),
+            AST.Lst(List(AST.Identifier("x"), AST.Identifier("y"), AST.Identifier("z")))
+          ),
+          new VarContext(List("x", "y", "z"))
         )
-        compiled shouldBe UniformChoice(Lst(List(Var("x"), Var("y"))))
+        compiled shouldBe UniformChoice(Lst(List(Var("x"), Var("y"), Var("z"))))
       }
     }
   }
