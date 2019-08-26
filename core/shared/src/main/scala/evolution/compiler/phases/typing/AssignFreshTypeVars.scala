@@ -12,6 +12,119 @@ import evolution.compiler.types.TypeBinding
 import evolution.compiler.phases.typing.model.Assignment
 import evolution.compiler.phases.typing.model.Substitution
 import evolution.compiler.ast.AST.Lst
+import evolution.compiler.ast.TreeF.Tree
+import evolution.compiler.ast.TreeF
+import evolution.compiler.ast.TreeF._
+
+object AssignFreshTypeVarsTree {
+
+  def assign(expr: Tree, bindings: TypeBindings): CoTree[Qualified[Type]] =
+    cata(doTheJob)(expr).runA(AssignmentState(TypeVarGenerator.empty, bindings)).value
+
+  private type S[T] = State[AssignmentState, T]
+
+  private def doTheJob(tree: TreeF[S[CoTree[Qualified[Type]]]]): S[CoTree[Qualified[Type]]] =
+    tree match {
+      case TreeF.Identifier(name, _) =>
+        getBinding(name).flatMap {
+          case None =>
+            newTypeVar.map(qt => CoTree(qt, TreeF.Identifier(name, false)))
+          case Some(binding) =>
+            identifier(binding).widen
+        }
+
+      case TreeF.Lambda(varName, expr) =>
+        for {
+          varType <- newTypeVar
+          bodyWithType <- localBinding(varName, varType)(expr)
+        } yield
+          CoTree(
+            Qualified(varType.value =>: bodyWithType.value.value),
+            TreeF.Lambda(
+              varName,
+              bodyWithType
+            )
+          )
+
+      case TreeF.App(sf, sarg) =>
+        (sf, sarg, newTypeVar).mapN { (f, arg, qt) =>
+          CoTree(qt, TreeF.App(f, arg))
+        }
+
+      case TreeF.Bool(b) =>
+        newTypeVar.map(qt => CoTree(qt, TreeF.Bool(b)))
+
+      case TreeF.Let(varName, value, body) =>
+        for {
+          valueWithType <- value
+          bodyWithType <- localBinding(varName, valueWithType.value)(body)
+        } yield
+          CoTree(
+            bodyWithType.value,
+            TreeF.Let(
+              varName,
+              valueWithType,
+              bodyWithType
+            )
+          )
+
+      case TreeF.IntLiteral(n) =>
+        newTypeVar.map(qt => CoTree(qt, TreeF.IntLiteral(n)))
+
+      case TreeF.Lst(sts) =>
+        (sts.sequence, newTypeVar).mapN { (ts, qt) =>
+          CoTree(
+            qt,
+            TreeF.Lst(ts)
+          )
+        }
+
+      case TreeF.DoubleLiteral(n) =>
+        newTypeVar.map(qt => CoTree(qt, TreeF.DoubleLiteral(n)))
+    }
+
+  private case class AssignmentState(vars: TypeVarGenerator, bindings: TypeBindings) {
+    def next: AssignmentState = copy(vars = vars.next)
+    def withBinding(name: String, tpe: Qualified[Type]): AssignmentState = copy(
+      bindings = bindings.withVarBinding(name, tpe)
+    )
+  }
+
+  private def newTypeVar: S[Qualified[Type]] = State(s => (s.next, Qualified(s.vars.current)))
+
+  private def localBinding[T](name: String, tpe: Qualified[Type])(st: S[T]): S[T] =
+    for {
+      initialState <- State.get
+      _ <- withBinding(name, tpe)
+      t <- st
+      _ <- resetBindings(initialState.bindings)
+    } yield t
+
+  private def withBinding(name: String, tpe: Qualified[Type]): S[Unit] =
+    State.modify[AssignmentState](_.withBinding(name, tpe))
+
+  private def getBinding(name: String): S[Option[TypeBinding]] =
+    State.get.map(s => s.bindings.getBinding(name))
+
+  private def resetBindings(bindings: TypeBindings): S[Unit] =
+    State.modify[AssignmentState](s => s.copy(bindings = bindings))
+
+  // Resolve type-bindings for predefined constants schemes
+  private def identifier(binding: TypeBinding): S[CoTree[Qualified[Type]]] = {
+    binding match {
+      case TypeBinding.Fixed(_, _) =>
+        CoTree(binding.qualifiedType, TreeF.Identifier(binding.name)).pure[S]
+      case TypeBinding.Scheme(_, _) =>
+        val varsInScheme = binding.qualifiedType.value.typeVars.toList
+        for {
+          assignSments <- varsInScheme.traverse(
+            schemeVar => newTypeVar.map(typeVar => Assignment(schemeVar.name, typeVar.value))
+          )
+          substitution = Substitution(assignSments)
+        } yield CoTree(substitution.substitute(binding.qualifiedType), TreeF.Identifier(binding.name, true))
+    }
+  }
+}
 
 object AssignFreshTypeVars {
 

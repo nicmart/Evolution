@@ -5,10 +5,11 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
 import scala.collection.immutable.Nil
 import evolution.compiler.phases.typing.config.Constant1
-import evolution.compiler.types.Typed
 import cats.Traverse
 import cats.Applicative
 import cats.Eval
+import cats.Monad
+import cats.Functor
 
 sealed trait AST {
   val qualifiedType: Qualified[Type]
@@ -179,16 +180,16 @@ object TreeF {
 
   }
 
-  final case class Lambda[T](varName: Identifier, expr: T) extends TreeF[T]
+  final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
   final case class App[T](f: T, args: T) extends TreeF[T]
-  final case class Let[T](varName: Identifier, expr: T, in: T) extends TreeF[T]
+  final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
   final case class DoubleLiteral(n: Double) extends TreeF[Nothing]
   final case class IntLiteral(n: Int) extends TreeF[Nothing]
   final case class Bool(b: Boolean) extends TreeF[Nothing]
   final case class Lst[T](ts: List[T]) extends TreeF[T]
 
   final case class Tree(value: TreeF[Tree])
-  final case class TypedTree(value: Typed[TreeF[TypedTree]])
+  final case class CoTree[A](value: A, tail: TreeF[CoTree[A]])
 
   import cats.implicits._
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
@@ -231,8 +232,8 @@ object TreeF {
 
   def pprintTreeF(treeF: TreeF[String]): String = treeF match {
     case TreeF.App(g, args) => ppFunc("App", List(g, args))
-    case Let(id, expr, in)  => ppFunc("Let", List(id.name, expr, in))
-    case Lambda(id, expr)   => ppFunc("Lambda", List(id.name, expr))
+    case Let(id, expr, in)  => ppFunc("Let", List(id, expr, in))
+    case Lambda(id, expr)   => ppFunc("Lambda", List(id, expr))
     case id: Identifier     => id.name
     case DoubleLiteral(d)   => d.toString
     case Bool(b)            => b.toString
@@ -245,10 +246,17 @@ object TreeF {
   def cata[A](f: TreeF[A] => A)(tree: Tree): A =
     f(tree.value.map(cata(f)))
 
-  //f: TreeF[TypedTree] => TypedTree
+  def cataM[A, M[_]: Monad](f: TreeF[A] => M[A])(tree: Tree): M[A] =
+    tree.value.traverse(cataM(f)).flatMap(f)
+
+  def attrM[A, M[_]: Functor](f: TreeF[A] => M[A])(cotree: TreeF[CoTree[A]]): M[CoTree[A]] =
+    f(cotree.map(_.value)).map(a => CoTree(a, cotree))
 
   def ana[A](f: A => TreeF[A])(a: A): Tree =
     Tree(f(a).map(ana(f)))
+
+  def anaM[A, M[_]: Monad](f: A => M[TreeF[A]])(a: A): M[Tree] =
+    f(a).flatMap(_.traverse(anaM(f))).map(Tree)
 
   private def ppFunc(name: String, children: List[String]): String =
     children.mkString(s"$name(", ",", ")")
