@@ -64,6 +64,24 @@ class EvolutionSpec extends LanguageSpec {
       }
     }
 
+    "uniformChoice" - {
+      "should generate elements in the list" in {
+        val ns = uniformChoice(List.range(1, 1000)).run.take(1000).toList
+        Inspectors.forAll(ns) { n =>
+          n should be >= (1)
+          n should be <= (1000)
+        }
+      }
+
+      "should generate all elements" in {
+        val list = List.range(1, 5)
+        val ns = uniformChoice(list).run.take(10000).toList
+        Inspectors.forAll(list) { n =>
+          ns should contain(n)
+        }
+      }
+    }
+
     "range" - {
       "should be empty when positive step and start > stop" in {
         range(100, 0, 1).run.take(10).toList should be(empty)
