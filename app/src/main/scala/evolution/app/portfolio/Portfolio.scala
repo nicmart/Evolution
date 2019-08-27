@@ -178,7 +178,7 @@ object Portfolio {
           by = -0.001 in
           length = 10000 in
           
-          equation = r -> a -> b -> map(uniform(-1, 1), rnd -> z -> v -> r * rnd + a * z + b * v) in
+          equation(r, a, b) = map(uniform(-1, 1), rnd -> z -> v -> r * rnd + a * z + b * v) in
           
           randomPoints = @point(uniform(left, right), uniform(bottom, top)) in
           
@@ -258,7 +258,7 @@ object Portfolio {
             uniform(-randomForceStrength, randomForceStrength)
           ) in
           
-          acceleration = r -> x -> v -> r -viscosity * v + k * x in
+          acceleration(r, x, v) = r -viscosity * v + k * x in
           
           line = solve2(
             map(randomForces, acceleration),
@@ -346,7 +346,7 @@ object Portfolio {
           
           n <- noise in
           
-          vectorField = p -> polar(speed, noiseStrength * n(freq * p)) in
+          vectorField(p) = polar(speed, noiseStrength * n(freq * p)) in
           
           segment = v -> p ->
             take(
