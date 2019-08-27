@@ -111,6 +111,40 @@ object Portfolio {
       defaultRendererState
     ),
     Drawing(
+      Some("Brownian with puslsating speed"),
+      DrawingState(
+        0L,
+        """
+          r = .03 in
+          noise = uniform(-r, r) in
+          a = .1 in
+          b = -.00001 in
+          c = -.01 in
+          
+          eq(r, x, v) = a * r + b * x + c * v in
+          
+          speedMax = solve2(
+            map(noise, eq),
+            0,
+            0
+          ) in
+          
+          speed = product(
+            R <- map(speedMax, s -> abs(s)),
+            r1 <- take(1, uniform(-R, R)),
+            r2 <- take(1, uniform(-R, R))
+          ) in point(r1, r2)
+          in
+          
+          integrate(
+            point(0, 0),
+            speed
+          )
+          """.unindent
+      ),
+      defaultRendererState
+    ),
+    Drawing(
       Some("Comet"),
       DrawingState(
         0L,
