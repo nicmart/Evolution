@@ -415,12 +415,21 @@ object Portfolio {
         0L,
         """
           noise1 <- noise in
-          kr = .002 in
-          sr = 1 in
-          kalpha = 1 in
-          noiseStrength = 150 in
+          kr = .003 in
+          sr = 5 in
+          noiseStrength = 100 in
+          startAngle = 2 * pi in
+          endAngle = 0 * pi in
+          smoothlength = pi/2 in
           
-          n(r, alpha) = r + noiseStrength * noise1(polar(sr + kr * r, alpha)) in
+          endAngleC = 2 * pi - endAngle in
+          
+          smoothNoise(alpha) =
+            smoothStep(startAngle - smoothlength, startAngle, alpha) +
+            smoothStep(endAngleC - smoothlength, endAngleC, 2*pi-alpha)
+          in
+          
+          n(r, alpha) = r + noiseStrength * smoothNoise(alpha) * noise1(polar(sr + kr * r, alpha)) in
           
           circle(v, r) = map(
             take(floor(2 * r * pi  / v), integrate(0, const(v / r))),
@@ -429,7 +438,7 @@ object Portfolio {
           
           
           product(
-            r <- range(100, 800, 50),
+            r <- range(200, 800, 50),
             p <- circle(1, r)  
           ) in p
         """.unindent
