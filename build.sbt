@@ -4,6 +4,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 
 Test / fork := true
 
+// Experimental, turn off in case of problems
+ThisBuild / turbo := true
+
 bloopExportJarClassifiers in Global := Some(Set("sources"))
 logBuffered in Test := false
 
@@ -158,7 +161,6 @@ lazy val server = (project in file("server"))
       }
       .value
   )
-  
   .enablePlugins(SbtWeb, WebScalaJSBundlerPlugin)
 
 // Needed, so sbt finds the projects
