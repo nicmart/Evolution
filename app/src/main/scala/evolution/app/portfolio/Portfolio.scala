@@ -408,6 +408,33 @@ object Portfolio {
         """.unindent
       ),
       defaultRendererState
+    ),
+    Drawing(
+      Some("Concentric Perturbed Circles"),
+      DrawingState(
+        0L,
+        """
+          noise1 <- noise in
+          kr = .000002 in
+          sr = 1000 in
+          kalpha = 1 in
+          noiseStrength = 150 in
+          
+          n(r, alpha) = r + noiseStrength * noise1(polar(sr * kr * r, alpha)) in
+          
+          circle(v, r) = map(
+            take(floor(2 * r * pi  / v), integrate(0, const(v / r))),
+            alpha -> polar(n(r, alpha), alpha)
+          ) in
+          
+          
+          product(
+            r <- range(100, 800, 50),
+            p <- circle(1, r)  
+          ) in p
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas.copy(strokeSize = 5)
     )
   )
 
