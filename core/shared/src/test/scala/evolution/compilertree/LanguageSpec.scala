@@ -3,8 +3,14 @@ import org.scalatest.{ FreeSpec, Matchers }
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalactic.Prettifier
 import pprint.PPrinter
+import org.scalactic.TypeCheckedTripleEquals
 
-trait LanguageTreeSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks with ASTArbitraries {
+trait LanguageSpec
+    extends FreeSpec
+    with Matchers
+    with GeneratorDrivenPropertyChecks
+    with TreeArbitraries
+    with TypeCheckedTripleEquals {
   implicit class EitherOps[T](t: Either[String, T]) {
     def unsafeEvaluate: T =
       t.fold(

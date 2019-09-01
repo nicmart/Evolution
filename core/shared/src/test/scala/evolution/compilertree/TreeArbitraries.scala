@@ -4,11 +4,13 @@ import org.scalacheck.Gen
 import evolution.compiler.ast.AST
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
-import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.parsing.ParserConfig
+import evolution.compilertree.phases.parsing.Parser
+import evolution.compilertree.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
+import evolution.compilertree.ast.TreeF.Tree
+import evolution.compilertree.ast.TreeF._
 
-trait ASTArbitraries {
+trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =
     for {
       n <- Gen.choose(1, 6)
@@ -19,8 +21,8 @@ trait ASTArbitraries {
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
 
   // TODO move all operators here
-  def genOperatorWithAST: Gen[(String, AST)] =
-    Gen.oneOf[(String, AST)](Parser.binaryOperators)
+  def genOperatorWithTree: Gen[(String, Tree)] =
+    Gen.oneOf[(String, Tree)](Parser.binaryOperators)
 
   def genVarUsage: Gen[String] =
     genIdentifier.filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))
@@ -35,9 +37,9 @@ trait ASTArbitraries {
     body <- genLeafExpr
   } yield s"$id -> $body"
 
-  def genNumber: Gen[AST] = withRandomTypeVar(arbitrary[Double].map(d => AST.DoubleLiteral(d)))
-  def genIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(n => AST.IntLiteral(n)))
-  def genDoubleNotIntNumber: Gen[AST] = withRandomTypeVar(arbitrary[Int].map(d => AST.DoubleLiteral((0.1 + d))))
+  def genNumber: Gen[Tree] = arbitrary[Double].map(d => DoubleLiteral(d).embed)
+  def genIntNumber: Gen[Tree] = arbitrary[Int].map(n => IntLiteral(n).embed)
+  def genDoubleNotIntNumber: Gen[Tree] = arbitrary[Int].map(d => DoubleLiteral((0.1 + d)).embed)
 
   def genTypedNumber: Gen[AST.DoubleLiteral] =
     arbitrary[Double].map(d => AST.DoubleLiteral(d, Qualified(Type.Dbl)))
@@ -49,12 +51,6 @@ trait ASTArbitraries {
   def genBool: Gen[AST.Bool] = Gen.oneOf(true, false).map(AST.Bool(_))
 
   def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
-
-  def withRandomTypeVar(gen: Gen[AST]): Gen[AST] =
-    for {
-      expr <- gen
-      typeChar <- Gen.alphaChar
-    } yield expr.withType(Type.Var(typeChar.toString.toUpperCase))
 
   def genVar: Gen[AST.Identifier] =
     for {
