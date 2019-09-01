@@ -7,6 +7,7 @@ import cats.Applicative
 import cats.Eval
 import cats.Monad
 import cats.Functor
+import cats.implicits._
 import evolution.compilertree.types.TypeClasses.Qualified
 import evolution.compilertree.types.Type
 
@@ -33,8 +34,16 @@ object TreeF {
 
   final type TypedTree = CoTree[Qualified[Type]]
 
-  implicit class TreeFOps(tree: TreeF[Tree]) {
+  implicit class TreeFTreeOps(tree: TreeF[Tree]) {
     def embed: Tree = Tree(tree)
+  }
+
+  implicit class TreeFOps[A](tree: TreeF[A]) {
+    def children: List[A] = tree
+      .foldRight[List[A]](Eval.now(Nil)) { (a, evalAs) =>
+        evalAs.map(a :: _)
+      }
+      .value
   }
 
   implicit class CoTreeOps[A](tree: TreeF[CoTree[A]]) {
@@ -53,7 +62,6 @@ object TreeF {
     case head :: tail => AppN(Const(Constant2.Cons), head, ConsN(tail))
   }
 
-  import cats.implicits._
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match {
