@@ -6,6 +6,7 @@ import evolution.compiler.phases.typing.UnifyPredicates
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.compiler.phases.typing.model.Substitution
 import evolution.logging.NoOpLogger
+import evolution.language.LanguageSpec
 
 class UnifyPredicatesSpec extends LanguageSpec {
 

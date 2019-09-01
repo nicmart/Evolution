@@ -7,6 +7,7 @@ import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
+import evolution.language.LanguageSpec
 
 class UnifyTypesSpec extends LanguageSpec {
 

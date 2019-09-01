@@ -5,7 +5,7 @@ import evolution.compiler.ast.AST
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 
-class ParserSpec extends LanguageSpec {
+class ParserSpec extends LanguageTreeSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {

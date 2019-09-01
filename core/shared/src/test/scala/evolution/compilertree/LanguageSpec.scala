@@ -4,7 +4,7 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalactic.Prettifier
 import pprint.PPrinter
 
-trait LanguageSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks with ASTArbitraries {
+trait LanguageTreeSpec extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks with ASTArbitraries {
   implicit class EitherOps[T](t: Either[String, T]) {
     def unsafeEvaluate: T =
       t.fold(

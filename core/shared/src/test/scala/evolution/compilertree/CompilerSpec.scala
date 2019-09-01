@@ -11,7 +11,7 @@ import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
 
-class CompilerSpec extends LanguageSpec {
+class CompilerSpec extends evolution.language.LanguageSpec {
 
   "The compiler" - {
     "should successfully compile" - {
