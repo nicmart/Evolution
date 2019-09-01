@@ -1,8 +1,7 @@
 package evolution.compilertree.phases.typing.model
 
-import evolution.compiler.ast.AST
-import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
+import evolution.compilertree.types.Type
+import evolution.compilertree.types.TypeClasses.{ Predicate, Qualified }
 
 trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T
@@ -42,11 +41,6 @@ object CanBeSubstituted {
       def substitute(s: Substitution, qt: Qualified[T]): Qualified[T] =
         Qualified(s.substitute(qt.predicates), s.substitute(qt.value))
     }
-
-  implicit val ast: CanBeSubstituted[AST] = new CanBeSubstituted[AST] {
-    def substitute(s: Substitution, ast: AST): AST =
-      AST.transformRecursively(ast, tree => tree.withType(s.substitute(tree.qualifiedType)))
-  }
 
   implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
     def substitute(s: Substitution, constraint: Constraint): Constraint =

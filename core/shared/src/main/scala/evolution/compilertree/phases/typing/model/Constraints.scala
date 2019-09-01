@@ -1,7 +1,7 @@
 package evolution.compilertree.phases.typing.model
 
-import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClasses.Predicate
+import evolution.compilertree.types.Type
+import evolution.compilertree.types.TypeClasses.Predicate
 
 case class Constraints(constraints: List[Constraint]) {
   def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)

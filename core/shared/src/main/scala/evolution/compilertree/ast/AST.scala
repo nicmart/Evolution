@@ -7,6 +7,8 @@ import cats.Applicative
 import cats.Eval
 import cats.Monad
 import cats.Functor
+import evolution.compilertree.types.TypeClasses.Qualified
+import evolution.compilertree.types.Type
 
 sealed trait TreeF[+T]
 
@@ -28,6 +30,8 @@ object TreeF {
 
   final case class Tree(value: TreeF[Tree])
   final case class CoTree[A](value: A, tail: TreeF[CoTree[A]])
+
+  final type TypedTree = CoTree[Qualified[Type]]
 
   implicit class TreeFOps(tree: TreeF[Tree]) {
     def embed: Tree = Tree(tree)
