@@ -116,6 +116,9 @@ object TreeF {
   def cata[A](f: TreeF[A] => A)(tree: Tree): A =
     f(tree.value.map(cata(f)))
 
+  def cataCoTree[A, B](f: (B, TreeF[A]) => A)(tree: CoTree[B]): A =
+    f(tree.value, tree.tail.map(cataCoTree(f)))
+
   def cataM[A, M[_]: Monad](f: TreeF[A] => M[A])(tree: Tree): M[A] =
     tree.value.traverse(cataM(f)).flatMap(f)
 

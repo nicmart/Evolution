@@ -56,7 +56,7 @@ object AssignFreshTypeVars {
 
       case Lst(sts) =>
         (sts.sequence, newTypeVar).mapN { (ts, qt) =>
-          Lst(ts).annotate(qt)
+          Lst(ts).annotate(Qualified(Type.Lst(qt.value)))
         }
 
       case DoubleLiteral(n) =>

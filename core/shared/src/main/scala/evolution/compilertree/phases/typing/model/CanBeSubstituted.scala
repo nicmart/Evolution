@@ -2,6 +2,8 @@ package evolution.compilertree.phases.typing.model
 
 import evolution.compilertree.types.Type
 import evolution.compilertree.types.TypeClasses.{ Predicate, Qualified }
+import evolution.compilertree.ast.TreeF.TypedTree
+import evolution.compilertree.ast.TreeF
 
 trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T
@@ -29,6 +31,12 @@ object CanBeSubstituted {
   implicit val canBeSubstituted: CanBeSubstituted[Predicate] = new CanBeSubstituted[Predicate] {
     def substitute(s: Substitution, predicate: Predicate): Predicate =
       predicate.copy(types = s.substitute(predicate.types))
+  }
+
+  implicit val tree: CanBeSubstituted[TypedTree] = new CanBeSubstituted[TypedTree] {
+    def substitute(s: Substitution, typedTree: TypedTree): TypedTree =
+      TreeF.cataCoTree[TypedTree, Qualified[Type]]((qt, treeF) => treeF.annotate(s.substitute(qt)))(typedTree)
+
   }
 
   implicit def list[T](implicit inner: CanBeSubstituted[T]): CanBeSubstituted[List[T]] =
