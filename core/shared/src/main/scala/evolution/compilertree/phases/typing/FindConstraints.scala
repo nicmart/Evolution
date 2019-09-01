@@ -12,8 +12,8 @@ object FindConstraints {
     // TODO as you can see here predicates are extracted just for identifiers
     val exprType = expr.value
     val nodeConstraints: Either[String, Constraints] = expr.tail match {
-      case Identifier(_, qt) => Constraints.empty.withPredicates(exprType.predicates).asRight
-      case DoubleLiteral(_)  => Constraints(exprType.value -> Type.Dbl).asRight
+      case Identifier(_, _) => Constraints.empty.withPredicates(exprType.predicates).asRight
+      case DoubleLiteral(_) => Constraints(exprType.value -> Type.Dbl).asRight
       case IntLiteral(_) =>
         Constraints.empty.withPredicate(Predicate("Num", List(exprType.value))).asRight
       case Bool(_) => Constraints(exprType.value -> Type.Bool).asRight

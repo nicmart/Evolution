@@ -5,7 +5,8 @@ import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 Test / fork := true
 
 // Experimental, turn off in case of problems
-ThisBuild / turbo := true
+//ThisBuild / turbo := true
+ThisBuild / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.ScalaLibrary
 
 bloopExportJarClassifiers in Global := Some(Set("sources"))
 logBuffered in Test := false

@@ -1,4 +1,5 @@
 package evolution.compilertree
+
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.ast.AST
@@ -7,32 +8,12 @@ import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
-import evolution.language.LanguageSpec
 
 class UnifyTypesSpec extends LanguageSpec {
 
   "UnifyTypes" - {
-    "should generate constraints for" - {
-      "int literals" in {
-        forAll(genIntNumber) { numberExpr =>
-          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints.empty
-            .withPredicate(Predicate("Num", List(Type.Var("X"))))
-        }
-      }
 
-      "double literals" in {
-        forAll(genDoubleNotIntNumber) { numberExpr =>
-          assignVarsAndFindConstraints(numberExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints(
-            Type.Var("X") -> Type.Dbl
-          )
-        }
-      }
-
-      "vars" in {
-        forAll(genVar) { varExpr =>
-          assignVarsAndFindConstraints(varExpr.withType(Type.Var("X"))).unsafeEvaluate._2 shouldBe Constraints.empty
-        }
-      }
+    "should unify" - {
 
       "pre-defined constants" - {
         "point function" in {
@@ -60,9 +41,7 @@ class UnifyTypesSpec extends LanguageSpec {
           )
         }
       }
-    }
 
-    "should unify" - {
       "point expressions" in {
         val untyped = AST.AppN(AST.Const(Constant2.Point), AST.Identifier("a"), AST.Identifier("b"))
         val extraBindings = new TypeBindings(

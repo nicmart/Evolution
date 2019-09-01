@@ -13,28 +13,29 @@ class ParserSpec extends LanguageSpec {
     "should parse" - {
       "int literals" in {
         forAll { n: Int =>
-          unsafeParse(n.toString) === IntLiteral(n).embed
+          unsafeParse(n.toString) shouldEq IntLiteral(n).embed
         }
       }
 
       "doubles literals that are not integers" in {
         forAll { d: Double =>
+          1 === (0)
           whenever(d % 1 != 0) {
-            unsafeParse(d.toString) === DoubleLiteral(d).embed
+            unsafeParse(d.toString) shouldEq DoubleLiteral(d).embed
           }
         }
       }
 
       "variables" in {
         forAll(genIdentifier) { varName =>
-          unsafeParse(s"$varName") === Identifier(varName).embed
+          unsafeParse(s"$varName") shouldEq Identifier(varName).embed
         }
       }
 
       "parse binary operators" in {
         forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
           case (a, (op, opAST), b) =>
-            unsafeParse(s"$a $op $b") === AppN(opAST, unsafeParse(a), unsafeParse(b))
+            unsafeParse(s"$a $op $b") shouldEq AppN(opAST, unsafeParse(a), unsafeParse(b))
         }
       }
 
@@ -47,13 +48,13 @@ class ParserSpec extends LanguageSpec {
         expectations.foreach {
           case (left, right) =>
             s"$left = $right" in {
-              unsafeParse(left) === unsafeParse(right)
+              unsafeParse(left) shouldEq unsafeParse(right)
             }
         }
       }
 
       "inverses" in {
-        unsafeParse("-point(0, 0)") === App(
+        unsafeParse("-point(0, 0)") shouldEq App(
           Const(Constant1.Inverse),
           AppN(Const(Constant2.Point), IntLiteral(0).embed, IntLiteral(0).embed)
         ).embed
@@ -62,13 +63,13 @@ class ParserSpec extends LanguageSpec {
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id =$expr in $id") === Let(id.toLowerCase, unsafeParse(expr), Identifier(id).embed).embed
+            unsafeParse(s"$id =$expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Identifier(id).embed).embed
           }
         }
 
         "a = b in\\n 1 + 2" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id = $expr in 1 + 2") === Let(
+            unsafeParse(s"$id = $expr in 1 + 2") shouldEq Let(
               id.toLowerCase,
               unsafeParse(expr),
               AppN(Const(Constant2.Add), IntLiteral(1).embed, IntLiteral(2).embed)
@@ -78,34 +79,34 @@ class ParserSpec extends LanguageSpec {
 
         "a = aval in b = bval in body" in {
           forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
-            unsafeParse(s"$a = $aVal in $b = $bVal in $body") ===
+            unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldEq
               Let(a.toLowerCase, unsafeParse(aVal), Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)).embed).embed
           }
         }
 
         "f(x) = y in body" in {
           forAll(genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, body) =>
-            unsafeParse(s"$f($x) = $y in $body") === unsafeParse(s"$f = $x -> $y in $body")
+            unsafeParse(s"$f($x) = $y in $body") shouldEq unsafeParse(s"$f = $x -> $y in $body")
           }
         }
 
         "f(x, y) = z in body" in {
           forAll(genIdentifier, genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, z, body) =>
-            unsafeParse(s"$f($x, $y) = $z in $body") === unsafeParse(s"$f = $x -> $y -> $z in $body")
+            unsafeParse(s"$f($x, $y) = $z in $body") shouldEq unsafeParse(s"$f = $x -> $y -> $z in $body")
           }
         }
       }
 
       "sampling" - {
         "a <- b in a" in {
-          unsafeParse("a <- b in c") ===
+          unsafeParse("a <- b in c") shouldEq
             AppN(Const(Constant2.WithFirst), Identifier("b").embed, Lambda("a", Identifier("c").embed).embed)
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a * $b + $c") === AppN(
+          unsafeParse(s"$a * $b + $c") shouldEq AppN(
             Const(Constant2.Add),
             AppN(Const(Constant2.Multiply), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
@@ -115,7 +116,7 @@ class ParserSpec extends LanguageSpec {
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a + $b * $c") === AppN(
+          unsafeParse(s"$a + $b * $c") shouldEq AppN(
             Const(Constant2.Add),
             unsafeParse(a),
             AppN(Const(Constant2.Multiply), unsafeParse(b), unsafeParse(c))
@@ -125,7 +126,7 @@ class ParserSpec extends LanguageSpec {
 
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"($a + $b) * $c") === AppN(
+          unsafeParse(s"($a + $b) * $c") shouldEq AppN(
             Const(Constant2.Multiply),
             AppN(Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
             unsafeParse(c)
@@ -135,13 +136,13 @@ class ParserSpec extends LanguageSpec {
 
       "lambdas" in {
         forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
-          unsafeParse(s"$identifier -> $expr") === Lambda(identifier.toLowerCase, unsafeParse(expr)).embed
+          unsafeParse(s"$identifier -> $expr") shouldEq Lambda(identifier.toLowerCase, unsafeParse(expr)).embed
         }
       }
 
       "HO lambdas" in {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
-          unsafeParse(s"$identifier1 -> $identifier2 ->$expr") === Lambda(
+          unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldEq Lambda(
             identifier1.toLowerCase,
             Lambda(identifier2.toLowerCase, unsafeParse(expr)).embed
           ).embed
@@ -150,7 +151,7 @@ class ParserSpec extends LanguageSpec {
 
       "Let bindings" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-          unsafeParse(s"$id = $value in $in") === Let(id.toLowerCase, unsafeParse(value), unsafeParse(in)).embed
+          unsafeParse(s"$id = $value in $in") shouldEq Let(id.toLowerCase, unsafeParse(value), unsafeParse(in)).embed
         }
       }
 
@@ -159,14 +160,14 @@ class ParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
             val parsed = unsafeParse(s"$a < $b")
             val expected = AppN(Const(Constant2.LessThan), unsafeParse(a), unsafeParse(b))
-            parsed === expected
+            parsed shouldEq expected
           }
         }
       }
 
       "a -> b + c = a -> (b + c)" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$identifier1 -> $expr1 + $expr2") === Lambda(
+          unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
             identifier1.toLowerCase,
             AppN(Const(Constant2.Add), unsafeParse(expr1), unsafeParse(expr2))
           ).embed
@@ -175,20 +176,20 @@ class ParserSpec extends LanguageSpec {
 
       "expressions with whitespaces at the beginning and at the end" in {
         forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
-          unsafeParse(s"$wsStart$expr$wsEnd") === unsafeParse(expr)
+          unsafeParse(s"$wsStart$expr$wsEnd") shouldEq unsafeParse(expr)
         }
       }
 
       "ignore comments" in {
         forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
-          unsafeParse(s"//$comment1\n$expr\n//$comment2") === unsafeParse(expr)
+          unsafeParse(s"//$comment1\n$expr\n//$comment2") shouldEq unsafeParse(expr)
         }
 
       }
 
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$identifier1($expr1, $expr2)") === AppN(
+          unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq AppN(
             Identifier(identifier1).embed,
             unsafeParse(expr1),
             unsafeParse(expr2)
@@ -198,7 +199,7 @@ class ParserSpec extends LanguageSpec {
 
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
-          unsafeParse(s"($lambda)($expr)") === App(
+          unsafeParse(s"($lambda)($expr)") shouldEq App(
             unsafeParse(lambda),
             unsafeParse(expr)
           ).embed
@@ -207,7 +208,7 @@ class ParserSpec extends LanguageSpec {
 
       "parse exponentials" - {
         "2^3 + 1" in {
-          unsafeParse("2^3 + 1") === AppN(
+          unsafeParse("2^3 + 1") shouldEq AppN(
             Const(Constant2.Add),
             AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed),
             IntLiteral(1).embed
@@ -215,7 +216,7 @@ class ParserSpec extends LanguageSpec {
         }
 
         "2^3 * 2" in {
-          unsafeParse("2^3 * 2") === AppN(
+          unsafeParse("2^3 * 2") shouldEq AppN(
             Const(Constant2.Multiply),
             AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed),
             IntLiteral(2).embed
@@ -223,7 +224,7 @@ class ParserSpec extends LanguageSpec {
         }
 
         "2 * 2^3" in {
-          unsafeParse("2 * 2^3") === AppN(
+          unsafeParse("2 * 2^3") shouldEq AppN(
             Const(Constant2.Multiply),
             IntLiteral(2).embed,
             AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed)
@@ -234,7 +235,7 @@ class ParserSpec extends LanguageSpec {
       "divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a / $b + $c") === AppN(
+            unsafeParse(s"$a / $b + $c") shouldEq AppN(
               Const(Constant2.Add),
               AppN(Const(Constant2.Div), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
@@ -244,7 +245,7 @@ class ParserSpec extends LanguageSpec {
 
         "a + b / c = a + (b / c)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a + $b / $c") === AppN(
+            unsafeParse(s"$a + $b / $c") shouldEq AppN(
               Const(Constant2.Add),
               unsafeParse(a),
               AppN(Const(Constant2.Div), unsafeParse(b), unsafeParse(c))
@@ -254,7 +255,7 @@ class ParserSpec extends LanguageSpec {
 
         "(a + b) / c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"($a + $b) / $c") === AppN(
+            unsafeParse(s"($a + $b) / $c") shouldEq AppN(
               Const(Constant2.Div),
               AppN(Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
@@ -264,7 +265,7 @@ class ParserSpec extends LanguageSpec {
 
         "@point(a, b)" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-            unsafeParse(s"@point($a, $b)") === AppN(
+            unsafeParse(s"@point($a, $b)") shouldEq AppN(
               Const(Constant2.LiftedPoint),
               unsafeParse(a),
               unsafeParse(b)
@@ -274,7 +275,7 @@ class ParserSpec extends LanguageSpec {
 
         "const(expr(a, b))" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"const($expr($a, $b))") === App(
+            unsafeParse(s"const($expr($a, $b))") shouldEq App(
               Const(Constant1.Constant),
               AppN(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
             ).embed
@@ -283,14 +284,14 @@ class ParserSpec extends LanguageSpec {
 
         "const(n)" in {
           forAll(arbitrary[Double]) { d =>
-            unsafeParse(s"const($d)") ===
+            unsafeParse(s"const($d)") shouldEq
               App(Const(Constant1.Constant), unsafeParse(d.toString)).embed
           }
         }
 
         "[a, b, c]" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"[$a, $b, $c]") === AppN(
+            unsafeParse(s"[$a, $b, $c]") shouldEq AppN(
               Const(Constant2.Cons),
               unsafeParse(a),
               AppN(
@@ -325,7 +326,7 @@ class ParserSpec extends LanguageSpec {
             ).embed
           )
 
-          parsed === expected
+          parsed shouldEq expected
         }
       }
 
@@ -351,7 +352,7 @@ class ParserSpec extends LanguageSpec {
             ).embed
           )
 
-          parsed === expected
+          parsed shouldEq expected
         }
       }
 
@@ -360,7 +361,7 @@ class ParserSpec extends LanguageSpec {
           val parsed = unsafeParse(s"product(a <- $a, b <- $b) in $c")
           val expected = SpecialSyntax.product(List("a" -> unsafeParse(a), "b" -> unsafeParse(b)), unsafeParse(c))
 
-          parsed === expected
+          parsed shouldEq expected
         }
       }
 
@@ -368,25 +369,25 @@ class ParserSpec extends LanguageSpec {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           val parsed = unsafeParse(s"uniformChoice($a, $b, $c)")
           val expected = SpecialSyntax.uniformChoice(List(unsafeParse(a), unsafeParse(b), unsafeParse(c)))
-          parsed === expected
+          parsed shouldEq expected
         }
       }
 
       "boolean literals" in {
-        unsafeParse("true") === Bool(true).embed
-        unsafeParse("false") === Bool(false).embed
+        unsafeParse("true") shouldEq Bool(true).embed
+        unsafeParse("false") shouldEq Bool(false).embed
       }
 
       "not" in {
         forAll(genLeafExpr) { a =>
-          unsafeParse(s"!$a") ===
+          unsafeParse(s"!$a") shouldEq
             App(Const(Constant1.Not), unsafeParse(a)).embed
         }
       }
 
       "logical operators with the right precedence" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a || $b && $c") ===
+          unsafeParse(s"$a || $b && $c") shouldEq
             AppN(
               Const(Constant2.Or),
               unsafeParse(a),
@@ -405,7 +406,7 @@ class ParserSpec extends LanguageSpec {
         val failure = Parser.parse(expr)
         // The first line is 0
         val lineNumber = failure.left.map(_.lineNumber)
-        lineNumber === Left(1)
+        lineNumber shouldEq Left(1)
       }
     }
   }

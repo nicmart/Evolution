@@ -1,9 +1,7 @@
 package evolution.compilertree
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import evolution.compiler.ast.AST
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types.Type
+import evolution.compilertree.types.Type
 import evolution.compilertree.phases.parsing.Parser
 import evolution.compilertree.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
@@ -41,22 +39,14 @@ trait TreeArbitraries {
   def genIntNumber: Gen[Tree] = arbitrary[Int].map(n => IntLiteral(n).embed)
   def genDoubleNotIntNumber: Gen[Tree] = arbitrary[Int].map(d => DoubleLiteral((0.1 + d)).embed)
 
-  def genTypedNumber: Gen[AST.DoubleLiteral] =
-    arbitrary[Double].map(d => AST.DoubleLiteral(d, Qualified(Type.Dbl)))
-  def genTypedVar: Gen[AST.Identifier] = for {
-    id <- genIdentifier
-    tpe <- genType
-  } yield AST.Identifier(id, Qualified(tpe))
-
-  def genBool: Gen[AST.Bool] = Gen.oneOf(true, false).map(AST.Bool(_))
+  def genBool: Gen[Tree] = Gen.oneOf(true, false).map(Bool(_).embed)
 
   def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
 
-  def genVar: Gen[AST.Identifier] =
+  def genVar: Gen[Tree] =
     for {
       char <- Gen.alphaChar
-      typeChar <- Gen.alphaChar
-    } yield AST.Identifier(char.toString, Qualified(Type.Var(typeChar.toString.toUpperCase)))
+    } yield Identifier(char.toString).embed
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))

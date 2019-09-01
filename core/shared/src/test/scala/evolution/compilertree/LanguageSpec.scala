@@ -4,6 +4,7 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalactic.Prettifier
 import pprint.PPrinter
 import org.scalactic.TypeCheckedTripleEquals
+import org.scalactic.Equality
 
 trait LanguageSpec
     extends FreeSpec
@@ -17,6 +18,10 @@ trait LanguageSpec
         s => throw new Exception(s),
         identity
       )
+  }
+
+  implicit class ShouldEqOps[A: Equality](left: A) {
+    def shouldEq(right: A) = left shouldEqual right
   }
 
   implicit val pprinterPrettifier = new Prettifier {
