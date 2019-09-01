@@ -1,12 +1,12 @@
 package evolution.compilertree.phases.parsing
 
-import evolution.compilertree.ast.AST
 import fastparse.noApi.Parser
+import evolution.compilertree.ast.TreeF.Tree
 
-case class PrecedenceGroups(last: Parser[AST], groups: List[PrecedenceGroup]) {
-  def operand: Parser[AST] = groups.foldRight(last) { (group, accParser) =>
+case class PrecedenceGroups(last: Parser[Tree], groups: List[PrecedenceGroup]) {
+  def operand: Parser[Tree] = groups.foldRight(last) { (group, accParser) =>
     group.parser(accParser)
   }
 
-  def allOperators: List[(String, AST)] = groups.flatMap(group => group.operators)
+  def allOperators: List[(String, Tree)] = groups.flatMap(group => group.operators)
 }

@@ -1,19 +1,19 @@
 package evolution.compilertree.phases
 
 import cats.implicits._
-import evolution.compilertree.ast.AST
-import evolution.compilertree.phases.parsing.Parser
-import evolution.compilertree.phases.typing._
-import evolution.compilertree.phases.compiling._
-import evolution.compilertree.phases.typing.model.Constraints
-import evolution.compilertree.phases.compiling.model.VarContext
-import evolution.compilertree.types.Type
-import evolution.compilertree.types.TypeBindings
-import evolution.compilertree.phases.typing.config.TypingConfig
+import evolution.compiler.ast.AST
+import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.typing._
+import evolution.compiler.phases.compiling._
+import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeBindings
+import evolution.compiler.phases.typing.config.TypingConfig
 import scala.collection.immutable.Nil
 import evolution.materialization.Evolution
 import evolution.geometry.Point
-import evolution.compilertree.phases.materializing.Materialize
+import evolution.compiler.phases.materializing.Materialize
 import evolution.data.emptyCtx
 import evolution.logging.Logger
 

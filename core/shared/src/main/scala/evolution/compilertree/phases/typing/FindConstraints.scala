@@ -1,11 +1,11 @@
 package evolution.compilertree.phases.typing
 
-import evolution.compilertree.ast.AST
-import evolution.compilertree.ast.AST._
-import evolution.compilertree.types.Type
-import evolution.compilertree.types.TypeClasses.Predicate
+import evolution.compiler.ast.AST
+import evolution.compiler.ast.AST._
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
-import evolution.compilertree.phases.typing.model.Constraints
+import evolution.compiler.phases.typing.model.Constraints
 
 object FindConstraints {
   def find(expr: AST): Either[String, Constraints] = {

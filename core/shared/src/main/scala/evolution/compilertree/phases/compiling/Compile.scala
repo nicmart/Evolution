@@ -3,13 +3,13 @@ package evolution.compilertree.phases.compiling
 import cats.data.Kleisli
 import cats.implicits._
 import evolution.data.Expr
-import evolution.compilertree.types.TypeClasses._
-import evolution.compilertree.ast.AST
-import evolution.compilertree.ast.AST._
-import evolution.compilertree.phases.compiling.model.VarContext
-import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compilertree.types.Typed
-import evolution.compilertree.types.Type
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.ast.AST
+import evolution.compiler.ast.AST._
+import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.types.Typed
+import evolution.compiler.types.Type
 import evolution.materialization.Evolution
 
 object Compile {

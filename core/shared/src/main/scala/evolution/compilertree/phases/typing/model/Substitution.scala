@@ -1,8 +1,7 @@
 package evolution.compilertree.phases.typing.model
 
 import cats.implicits._
-import evolution.compilertree.phases.typing.model
-import evolution.compilertree.types.Type
+import evolution.compiler.types.Type
 
 final case class Substitution(assignments: List[Assignment]) {
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
@@ -21,7 +20,7 @@ final case class Substitution(assignments: List[Assignment]) {
 
 object Substitution {
   def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
-    case (s, t) => model.Assignment(s, t)
+    case (s, t) => Assignment(s, t)
   })
   val empty: Substitution = Substitution(Nil)
 }

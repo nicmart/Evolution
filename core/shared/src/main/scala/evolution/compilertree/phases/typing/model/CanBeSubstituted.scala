@@ -1,8 +1,8 @@
 package evolution.compilertree.phases.typing.model
 
-import evolution.compilertree.ast.AST
-import evolution.compilertree.types.Type
-import evolution.compilertree.types.TypeClasses.{ Predicate, Qualified }
+import evolution.compiler.ast.AST
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 
 trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T

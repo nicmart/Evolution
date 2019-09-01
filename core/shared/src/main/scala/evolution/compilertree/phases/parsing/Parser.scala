@@ -1,49 +1,51 @@
 package evolution.compilertree.phases.parsing
 
-import evolution.compilertree.ast.AST
 import evolution.compilertree.phases.parsing
 import evolution.compilertree.phases.parsing.ParserConfig.White._
 import evolution.compilertree.phases.parsing.ParserConfig.whitespaces
 import evolution.compilertree.phases.typing.config.{ Constant1, Constant2 }
 import fastparse.noApi._
+import evolution.compilertree.ast.TreeF._
+import evolution.compilertree.ast.TreeF
+import evolution.compilertree.ast
 
 object Parser {
-  def parse(astString: String): Either[ParserFailure, AST] =
+  def parse(astString: String): Either[ParserFailure, Tree] =
     Parser.program
       .parse(astString)
       .fold((_, failIndex, extra) => Left(new ParserFailure(failIndex, extra)), (expr, _) => Right(expr))
 
-  def binaryOperators: List[(String, AST)] = precedenceGroups.allOperators
+  def binaryOperators: List[(String, Tree)] = precedenceGroups.allOperators
 
-  private val program: Parser[AST] =
+  private val program: Parser[Tree] =
     P(whitespaces ~ expression ~ End)
 
-  private lazy val expression: Parser[AST] =
+  private lazy val expression: Parser[Tree] =
     P(notOperand | precedenceGroups.operand)
 
   // expressions that can't be an operand of a binary operator
-  private lazy val notOperand: Parser[AST] = {
-    def lambdaTail: Parser[String => AST] = P(whitespaces ~ "->" ~/ expression).map { expr =>
-      AST.Lambda(_, expr)
+  private lazy val notOperand: Parser[Tree] = {
+    def lambdaTail: Parser[String => Tree] = P(whitespaces ~ "->" ~/ expression).map { expr =>
+      TreeF.Lambda(_, expr).embed
     }
 
     // `a = 2 in` ... and `a == 2` share the same prefix, so the cut must be after the negative lookahead
-    def letTail: Parser[String => AST] =
+    def letTail: Parser[String => Tree] =
       P(whitespaces ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
         case (value, body) =>
-          AST.Let(_, value, body)
+          TreeF.Let(_, value, body).embed
       }
 
-    def sampleTail: Parser[String => AST] =
+    def sampleTail: Parser[String => Tree] =
       P(whitespaces ~ "<-" ~/ expression ~/ "in" ~/ expression).map {
         case (sampling, body) =>
-          variable => AST.SpecialSyntax.withFirst(variable -> sampling, body)
+          variable => ast.SpecialSyntax.withFirst(variable -> sampling, body)
       }
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
-    def argsTail: Parser[String => AST] =
+    def argsTail: Parser[String => Tree] =
       P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
-        case (args, value, body) => name => AST.SpecialSyntax.functionBinding(name, args, value, body)
+        case (args, value, body) => name => ast.SpecialSyntax.functionBinding(name, args, value, body)
       }
 
     // Note: a previous solution based on flatMap caused undesired back-tracking
@@ -57,69 +59,69 @@ object Parser {
     atomicOperand,
     List(
       PrecedenceGroup(
-        "||" -> AST.Identifier(Constant2.Or.entryName)
+        "||" -> Identifier(Constant2.Or.entryName).embed
       ),
       PrecedenceGroup(
-        "&&" -> AST.Identifier(Constant2.And.entryName)
+        "&&" -> Identifier(Constant2.And.entryName).embed
       ),
       PrecedenceGroup(
-        ">=" -> AST.Identifier(Constant2.GreaterThanOrEqual.entryName),
-        ">" -> AST.Identifier(Constant2.GreaterThan.entryName),
-        "<=" -> AST.Identifier(Constant2.LessThanOrEqual.entryName),
-        "<" -> AST.Identifier(Constant2.LessThan.entryName)
+        ">=" -> Identifier(Constant2.GreaterThanOrEqual.entryName).embed,
+        ">" -> Identifier(Constant2.GreaterThan.entryName).embed,
+        "<=" -> Identifier(Constant2.LessThanOrEqual.entryName).embed,
+        "<" -> Identifier(Constant2.LessThan.entryName).embed
       ),
       PrecedenceGroup(
-        "==" -> AST.Identifier(Constant2.Eq.entryName),
-        "!=" -> AST.Identifier(Constant2.Neq.entryName)
+        "==" -> Identifier(Constant2.Eq.entryName).embed,
+        "!=" -> Identifier(Constant2.Neq.entryName).embed
       ),
       PrecedenceGroup(
-        "+" -> AST.Identifier(Constant2.Add.entryName),
-        "-" -> AST.Identifier(Constant2.Minus.entryName)
+        "+" -> Identifier(Constant2.Add.entryName).embed,
+        "-" -> Identifier(Constant2.Minus.entryName).embed
       ),
       PrecedenceGroup(
-        "*" -> AST.Identifier(Constant2.Multiply.entryName),
-        "/" -> AST.Identifier(Constant2.Div.entryName),
-        "%" -> AST.Identifier(Constant2.Mod.entryName)
+        "*" -> Identifier(Constant2.Multiply.entryName).embed,
+        "/" -> Identifier(Constant2.Div.entryName).embed,
+        "%" -> Identifier(Constant2.Mod.entryName).embed
       ),
       PrecedenceGroup(
-        "^" -> AST.Identifier(Constant2.Exp.entryName)
+        "^" -> Identifier(Constant2.Exp.entryName).embed
       )
     )
   )
 
-  private lazy val factor: Parser[AST] =
+  private lazy val factor: Parser[Tree] =
     P(
       ("(" ~/ expression ~/ ")") | doubleLit | boolean | unaryPrefixOp |
         variable | list
     )
 
-  private lazy val atomicOperand: Parser[AST] =
+  private lazy val atomicOperand: Parser[Tree] =
     specialSyntax | P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
       case (f, None)            => f
-      case (f, Some(arguments)) => AST.AppN(f, arguments: _*)
+      case (f, Some(arguments)) => AppN(f, arguments: _*)
     }
 
-  private lazy val list: Parser[AST] = P("[" ~/ args ~/ "]").map(AST.ConsN)
+  private lazy val list: Parser[Tree] = P("[" ~/ args ~/ "]").map(ConsN)
 
-  private lazy val doubleLit: Parser[AST] =
-    numbers.doubleLiteral.map(d => if (d % 1 == 0) AST.IntLiteral(d.toInt) else AST.DoubleLiteral(d))
+  private lazy val doubleLit: Parser[Tree] =
+    numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt).embed else DoubleLiteral(d).embed)
 
-  private lazy val boolean: Parser[AST.Bool] =
-    (P("true").map(_ => true) | P("false").map(_ => false)).map(AST.Bool(_))
+  private lazy val boolean: Parser[Tree] =
+    (P("true").map(_ => true) | P("false").map(_ => false)).map(Bool).map(_.embed)
 
-  private lazy val variable: Parser[AST.Identifier] =
-    P(identifier).map(AST.Identifier(_)) ~/ Pass
+  private lazy val variable: Parser[Tree] =
+    P(identifier).map(Identifier(_).embed) ~/ Pass
 
-  private lazy val unaryOps: Parser[AST.Identifier] =
-    P("-").map(_ => AST.Identifier(Constant1.Inverse.entryName)) |
-      P("!").map(_ => AST.Identifier(Constant1.Not.entryName))
+  private lazy val unaryOps: Parser[Tree] =
+    P("-").map(_ => Identifier(Constant1.Inverse.entryName).embed) |
+      P("!").map(_ => Identifier(Constant1.Not.entryName).embed)
 
-  private lazy val unaryPrefixOp: Parser[AST] =
-    P(unaryOps ~/ atomicOperand).map { case (op, e) => AST.App(op, e) }
+  private lazy val unaryPrefixOp: Parser[Tree] =
+    P(unaryOps ~/ atomicOperand).map { case (op, e) => App(op, e).embed }
 
-  private lazy val args: Parser[List[AST]] = P(nonEmptyArgs | PassWith(Nil))
+  private lazy val args: Parser[List[Tree]] = P(nonEmptyArgs | PassWith(Nil))
 
-  private lazy val nonEmptyArgs: Parser[List[AST]] =
+  private lazy val nonEmptyArgs: Parser[List[Tree]] =
     nonEmptyCsv(expression)
 
   private def nonEmptyCsv[T](p: Parser[T]): Parser[List[T]] =
@@ -131,24 +133,24 @@ object Parser {
   private lazy val alpha: Parser[Unit] = P(CharIn('a' to 'z') | CharIn('A' to 'Z'))
   private lazy val alphaNum: Parser[Unit] = P(CharIn('0' to '9') | alpha)
 
-  private lazy val specialSyntax: Parser[AST] = SpecialSyntax.zip | SpecialSyntax.product | SpecialSyntax.uniformChoice
+  private lazy val specialSyntax: Parser[Tree] = SpecialSyntax.zip | SpecialSyntax.product | SpecialSyntax.uniformChoice
 
   private object SpecialSyntax {
-    lazy val zip: Parser[AST] =
+    lazy val zip: Parser[Tree] =
       P(StringInIgnoreCase("zip") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => AST.SpecialSyntax.zip(bindings, body)
+        case (bindings, body) => ast.SpecialSyntax.zip(bindings, body)
       }
 
-    lazy val product: Parser[AST] =
+    lazy val product: Parser[Tree] =
       P(StringInIgnoreCase("product") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => AST.SpecialSyntax.product(bindings, body)
+        case (bindings, body) => ast.SpecialSyntax.product(bindings, body)
       }
 
-    lazy val uniformChoice: Parser[AST] =
+    lazy val uniformChoice: Parser[Tree] =
       P(StringInIgnoreCase(Constant1.UniformChoice.entryName) ~ "(" ~/ nonEmptyArgs ~/ ")")
-        .map(AST.SpecialSyntax.uniformChoice)
+        .map(ast.SpecialSyntax.uniformChoice)
 
-    private lazy val comprehensionBinding: Parser[(String, AST)] =
+    private lazy val comprehensionBinding: Parser[(String, Tree)] =
       P(identifier ~/ "<-" ~/ expression)
   }
 

@@ -1,7 +1,7 @@
 package evolution.compilertree.phases.typing.config
 
-import evolution.compilertree.types.TypeClasses.Predicate
-import evolution.compilertree.types.{ Type, TypeBinding, TypeBindings }
+import evolution.compiler.types.TypeClasses.Predicate
+import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
 
 object TypingConfig {
   val constantQualifiedTypes: TypeBindings =
