@@ -61,7 +61,9 @@ object Compile {
 
       // Arity 1 identifiers
       case App(Identifier(Constant1(c), _, true), x, typeOut) =>
-        compileSafe(x).flatMap(compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result])
+        compileSafe(x).flatMap(
+          compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result]
+        )
 
       case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
         for {

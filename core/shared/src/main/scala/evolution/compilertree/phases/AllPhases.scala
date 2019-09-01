@@ -1,21 +1,22 @@
 package evolution.compilertree.phases
 
 import cats.implicits._
-import evolution.compiler.ast.AST
-import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.typing._
-import evolution.compiler.phases.compiling._
-import evolution.compiler.phases.typing.model.Constraints
-import evolution.compiler.phases.compiling.model.VarContext
-import evolution.compiler.types.Type
-import evolution.compiler.types.TypeBindings
-import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compilertree.phases.parsing.Parser
+import evolution.compilertree.phases.typing._
+import evolution.compilertree.phases.compiling._
+import evolution.compilertree.phases.typing.model.Constraints
+import evolution.compilertree.phases.compiling.model.VarContext
+import evolution.compilertree.types.Type
+import evolution.compilertree.types.TypeBindings
+import evolution.compilertree.phases.typing.config.TypingConfig
 import scala.collection.immutable.Nil
 import evolution.materialization.Evolution
 import evolution.geometry.Point
-import evolution.compiler.phases.materializing.Materialize
+import evolution.compilertree.phases.materializing.Materialize
 import evolution.data.emptyCtx
 import evolution.logging.Logger
+import evolution.compilertree.ast.TreeF._
+import evolution.compilertree.ast.TreeF
 
 class AllPhases(logger: Logger) {
   import logger.log
@@ -25,43 +26,43 @@ class AllPhases(logger: Logger) {
     serialisedExpr: String,
     expectedType: Type,
     typeBindings: TypeBindings,
-    varBindings: List[(String, AST)]
+    varBindings: List[(String, Tree)]
   ): Either[String, Evolution[Point]] =
     for {
       ast <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
       astWithVars = addVars(ast, varBindings)
-      astWithTypeVars <- AssignFreshTypeVars.assign(astWithVars, typeBindings).asRight
+      treeWithTypeVars <- AssignFreshTypeVars.assign(astWithVars, typeBindings).asRight
       _ = log(s"Un-typed expression:")
-      _ = log(AST.prettyPrint(astWithTypeVars))
-      constraints <- FindConstraints.find(astWithTypeVars)
+      //_ = log(TreeF.prettyPrint(treeWithTypeVars))
+      constraints <- FindConstraints.find(treeWithTypeVars)
       _ = log("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> astWithTypeVars.qualifiedType.value))
+      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> treeWithTypeVars.value.value))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = log("Done: unification")
       _ = log(s"Partially typed AST:")
-      _ = log(AST.prettyPrint(unification.substitution.substitute(astWithTypeVars)))
+      //_ = log(TreeF.pprintTree(unification.substitution.substitute(treeWithTypeVars)))
       start = System.currentTimeMillis()
       predicateSubst <- new UnifyPredicates(logger).unify(TypingConfig.instances, unification.substitutedPredicates)
       stop = System.currentTimeMillis()
       _ = log(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)
-      typedAst = subst.substitute(astWithTypeVars)
+      typedAst = subst.substitute(treeWithTypeVars)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
-      _ = log(AST.prettyPrint(typedAst))
-      expression <- Compile.compile(typedAst, varContext(varBindings))
+      //_ = log(AST.prettyPrint(typedAst))
+      expression <- Compile.compileTree(typedAst, varContext(varBindings))
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       evolution = Materialize.materialize(expression).apply(emptyCtx)
       _ = log(s"Materialized to $evolution")
     } yield evolution.asInstanceOf[Evolution[Point]]
 
-  private def varContext(varBindings: List[(String, AST)]): VarContext =
+  private def varContext(varBindings: List[(String, Tree)]): VarContext =
     new VarContext(varBindings.map(_._1))
 
-  private def addVars(ast: AST, varBindings: List[(String, AST)]): AST = varBindings match {
-    case (name, value) :: tl => AST.Let(name, value, addVars(ast, tl))
-    case Nil                 => ast
+  private def addVars(tree: Tree, varBindings: List[(String, Tree)]): Tree = varBindings match {
+    case (name, value) :: tl => Let(name, value, addVars(tree, tl)).embed
+    case Nil                 => tree
   }
 }
