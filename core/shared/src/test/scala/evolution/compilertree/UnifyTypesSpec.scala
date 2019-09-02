@@ -30,7 +30,7 @@ class UnifyTypesSpec extends LanguageSpec {
           val point = AppN(Const(Constant2.Point), DoubleLiteral(1).embed, DoubleLiteral(1).embed)
           val evolution =
             AssignFreshTypeVars.assign(
-              App(Const(Constant1.Constant), point).embed,
+              AppN(Const(Constant1.Constant), point),
               TypingConfig.constantQualifiedTypes
             )
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
@@ -58,7 +58,7 @@ class UnifyTypesSpec extends LanguageSpec {
 
       "app(x -> x, 2)" in {
         val identity = Lambda("x", Identifier("x").embed).embed
-        val untyped = App(identity, DoubleLiteral(2).embed).embed
+        val untyped = AppN(identity, DoubleLiteral(2).embed)
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).value.value shouldEq Type.Dbl
@@ -82,7 +82,7 @@ class UnifyTypesSpec extends LanguageSpec {
       }
 
       "const(1)" in {
-        val untyped = App(Const(Constant1.Constant), DoubleLiteral(1).embed).embed
+        val untyped = AppN(Const(Constant1.Constant), DoubleLiteral(1).embed)
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
@@ -96,8 +96,8 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped =
           AppN(
             Const(Constant2.LiftedPoint),
-            App(Const(Constant1.Constant), DoubleLiteral(1).embed).embed,
-            App(Const(Constant1.Constant), DoubleLiteral(2).embed).embed
+            AppN(Const(Constant1.Constant), DoubleLiteral(1).embed),
+            AppN(Const(Constant1.Constant), DoubleLiteral(2).embed)
           )
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
@@ -108,7 +108,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped =
           AppN(
             Const(Constant2.Solve1),
-            App(Const(Constant1.Constant), Lambda("x", Identifier("x").embed).embed).embed,
+            AppN(Const(Constant1.Constant), Lambda("x", Identifier("x").embed).embed),
             AppN(Const(Constant2.Point), DoubleLiteral(1).embed, DoubleLiteral(2).embed)
           )
 
@@ -120,10 +120,10 @@ class UnifyTypesSpec extends LanguageSpec {
 
       "uniformChoice(point(1, 2))" in {
         val untyped =
-          App(
+          AppN(
             Const(Constant1.UniformChoice),
             Lst(List(AppN(Const(Constant2.Point), IntLiteral(1).embed, IntLiteral(2).embed))).embed
-          ).embed
+          )
 
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution

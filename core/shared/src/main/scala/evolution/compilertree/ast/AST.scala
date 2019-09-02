@@ -10,6 +10,7 @@ import cats.Functor
 import cats.implicits._
 import evolution.compilertree.types.TypeClasses.Qualified
 import evolution.compilertree.types.Type
+import cats.data.NonEmptyList
 
 sealed trait TreeF[+T]
 
@@ -22,7 +23,7 @@ object TreeF {
   }
 
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
-  final case class App[T](f: T, args: T) extends TreeF[T]
+  final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
   final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
   final case class DoubleLiteral(n: Double) extends TreeF[Nothing]
   final case class IntLiteral(n: Int) extends TreeF[Nothing]
@@ -50,10 +51,8 @@ object TreeF {
     def annotate(a: A): CoTree[A] = CoTree(a, tree)
   }
 
-  def AppN(f: Tree, args: Tree*): Tree = args.toList match {
-    case Nil                => f
-    case argHead :: argTail => AppN(TreeF.App(f, argHead).embed, argTail: _*)
-  }
+  def AppN(f: Tree, argHead: Tree, argTail: Tree*): Tree =
+    App(f, NonEmptyList(argHead, argTail.toList)).embed
 
   def Const(constant: Constant): Tree = TreeF.Identifier(constant.entryName).embed
 
@@ -65,7 +64,7 @@ object TreeF {
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match {
-        case TreeF.App(g, args)          => (f(g), f(args)).mapN(TreeF.App[B])
+        case TreeF.App(g, args)          => (f(g), args.traverse(f)).mapN(TreeF.App[B])
         case Lambda(varName, expr)       => f(expr).map(Lambda(varName, _))
         case Lst(ts)                     => ts.traverse(f).map(Lst[B])
         case Let(varName, expr, in)      => (f(expr), f(in)).mapN(Let(varName, _, _))
@@ -77,7 +76,7 @@ object TreeF {
 
     def foldLeft[A, B](fa: TreeF[A], z: B)(f: (B, A) => B): B = fa match {
 
-      case TreeF.App(g, args) => f(f(z, g), args)
+      case TreeF.App(g, args) => args.foldLeft(f(z, g))(f)
       case Let(_, expr, in)   => f(f(z, expr), in)
       case Lambda(_, expr)    => f(z, expr)
       case _: Identifier      => z
@@ -89,7 +88,7 @@ object TreeF {
 
     def foldRight[A, B](fa: TreeF[A], z: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = fa match {
 
-      case TreeF.App(g, args) => f(g, f(args, z))
+      case TreeF.App(g, args) => f(g, args.foldRight(z)(f))
       case Let(_, expr, in)   => f(expr, f(in, z))
       case Lambda(_, expr)    => f(expr, z)
       case _: Identifier      => z
@@ -101,7 +100,7 @@ object TreeF {
   }
 
   def pprintTreeF(treeF: TreeF[String]): String = treeF match {
-    case TreeF.App(g, args) => ppFunc("App", List(g, args))
+    case TreeF.App(g, args) => ppFunc("App", g :: args.toList)
     case Let(id, expr, in)  => ppFunc("Let", List(id, expr, in))
     case Lambda(id, expr)   => ppFunc("Lambda", List(id, expr))
     case id: Identifier     => id.name

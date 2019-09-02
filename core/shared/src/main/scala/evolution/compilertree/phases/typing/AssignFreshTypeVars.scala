@@ -38,7 +38,7 @@ object AssignFreshTypeVars {
         } yield Lambda(varName, bodyWithType).annotate(lambdaType)
 
       case App(sf, sarg) =>
-        (sf, sarg, newTypeVar).mapN { (f, arg, qt) =>
+        (sf, sarg.sequence, newTypeVar).mapN { (f, arg, qt) =>
           App(f, arg).annotate(qt)
         }
 

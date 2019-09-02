@@ -61,40 +61,40 @@ object Compile {
       // Arity 1 identifiers
       // TODO: here we need contextual information, we need either to change the signature of compileSafe
       // or rethink how we handle predefined constants
-      case App(Identifier(Constant1(c), true), x) =>
-        compileSafe(x).flatMap(
-          compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result]
-        )
+      // case App(Identifier(Constant1(c), true), x) =>
+      //   compileSafe(x).flatMap(
+      //     compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result]
+      //   )
 
-      case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
-        for {
-          compiledX <- compileSafe(x)
-          compiledY <- compileSafe(y)
-          result <- c
-            .compile(Typed(x.qualifiedType.value, compiledX), Typed(y.qualifiedType.value, compiledY), typeOut.value)
-            .liftTo[Result]
-        } yield result
+      // case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
+      //   for {
+      //     compiledX <- compileSafe(x)
+      //     compiledY <- compileSafe(y)
+      //     result <- c
+      //       .compile(Typed(x.qualifiedType.value, compiledX), Typed(y.qualifiedType.value, compiledY), typeOut.value)
+      //       .liftTo[Result]
+      //   } yield result
 
-      // Arity 3 identifiers
-      case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, typeOut) =>
-        for {
-          compiledX <- compileSafe(x)
-          compiledY <- compileSafe(y)
-          compiledZ <- compileSafe(z)
-          result <- c
-            .compile(
-              Typed(x.qualifiedType.value, compiledX),
-              Typed(y.qualifiedType.value, compiledY),
-              Typed(z.qualifiedType.value, compiledZ),
-              typeOut.value
-            )
-            .liftTo[Result]
-        } yield result
+      // // Arity 3 identifiers
+      // case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, typeOut) =>
+      //   for {
+      //     compiledX <- compileSafe(x)
+      //     compiledY <- compileSafe(y)
+      //     compiledZ <- compileSafe(z)
+      //     result <- c
+      //       .compile(
+      //         Typed(x.qualifiedType.value, compiledX),
+      //         Typed(y.qualifiedType.value, compiledY),
+      //         Typed(z.qualifiedType.value, compiledZ),
+      //         typeOut.value
+      //       )
+      //       .liftTo[Result]
+      //   } yield result
 
-      case App(f, x) =>
-        (f, x).mapN { (compiledF, compiledX) =>
-          Expr.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
-        }
+      // case App(f, x) =>
+      //   (f, x).mapN { (compiledF, compiledX) =>
+      //     Expr.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
+      //   }
 
       // TODO this prevents exhaustivity checking
       case _ =>

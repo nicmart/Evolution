@@ -17,8 +17,8 @@ object FindConstraints {
       case IntLiteral(_) =>
         Constraints.empty.withPredicate(Predicate("Num", List(exprType.value))).asRight
       case Bool(_) => Constraints(exprType.value -> Type.Bool).asRight
-      case App(f, x) =>
-        Constraints(f.value.value -> (x.value.value =>: exprType.value)).asRight
+      case App(f, args) =>
+        Constraints(f.value.value -> lambdaType(args.map(_.value.value).toList, exprType.value)).asRight
       case Lambda(_, _) => Constraints.empty.asRight
       case Let(_, _, _) => Constraints.empty.asRight
       case Lst(ts) =>
@@ -32,5 +32,10 @@ object FindConstraints {
     (nodeConstraints, childrenConstraints).mapN { (n, c) =>
       n.merge(c)
     }
+  }
+
+  private def lambdaType(inputTypes: List[Type], returnType: Type): Type = inputTypes match {
+    case Nil          => returnType
+    case head :: tail => head =>: lambdaType(tail, returnType)
   }
 }

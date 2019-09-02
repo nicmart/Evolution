@@ -27,7 +27,7 @@ object SpecialSyntax {
     Let(name, buildLambda(args, value), body).embed
 
   def uniformChoice(args: List[Tree]): Tree =
-    App[Tree](Const(Constant1.UniformChoice), Lst(args).embed).embed
+    AppN(Const(Constant1.UniformChoice), Lst(args).embed)
 
   private def buildLambda(vars: List[String], body: Tree): Tree =
     vars match {
@@ -43,7 +43,7 @@ object SpecialSyntax {
           Const(Constant3.ZipWith),
           variadicZipWith(f, arg1, arg2, nonEmptyRest.dropRight(1)),
           nonEmptyRest.last,
-          Lambda("f", Lambda("x", App(Identifier("f").embed, Identifier("x").embed).embed).embed).embed
+          Lambda("f", Lambda("x", AppN(Identifier("f").embed, Identifier("x").embed)).embed).embed
         )
     }
 }

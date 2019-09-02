@@ -54,10 +54,10 @@ class ParserSpec extends LanguageSpec {
       }
 
       "inverses" in {
-        unsafeParse("-point(0, 0)") shouldEq App(
+        unsafeParse("-point(0, 0)") shouldEq AppN(
           Const(Constant1.Inverse),
           AppN(Const(Constant2.Point), IntLiteral(0).embed, IntLiteral(0).embed)
-        ).embed
+        )
       }
 
       "bindings" - {
@@ -199,10 +199,10 @@ class ParserSpec extends LanguageSpec {
 
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
-          unsafeParse(s"($lambda)($expr)") shouldEq App(
+          unsafeParse(s"($lambda)($expr)") shouldEq AppN(
             unsafeParse(lambda),
             unsafeParse(expr)
-          ).embed
+          )
         }
       }
 
@@ -275,17 +275,17 @@ class ParserSpec extends LanguageSpec {
 
         "const(expr(a, b))" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"const($expr($a, $b))") shouldEq App(
+            unsafeParse(s"const($expr($a, $b))") shouldEq AppN(
               Const(Constant1.Constant),
               AppN(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
-            ).embed
+            )
           }
         }
 
         "const(n)" in {
           forAll(arbitrary[Double]) { d =>
             unsafeParse(s"const($d)") shouldEq
-              App(Const(Constant1.Constant), unsafeParse(d.toString)).embed
+              AppN(Const(Constant1.Constant), unsafeParse(d.toString))
           }
         }
 
@@ -321,7 +321,7 @@ class ParserSpec extends LanguageSpec {
               "f",
               Lambda(
                 "x",
-                App(Identifier("f").embed, Identifier("x").embed).embed
+                AppN(Identifier("f").embed, Identifier("x").embed)
               ).embed
             ).embed
           )
@@ -347,7 +347,7 @@ class ParserSpec extends LanguageSpec {
               "f",
               Lambda(
                 "x",
-                App(Identifier("f").embed, Identifier("x").embed).embed
+                AppN(Identifier("f").embed, Identifier("x").embed)
               ).embed
             ).embed
           )
@@ -381,7 +381,7 @@ class ParserSpec extends LanguageSpec {
       "not" in {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldEq
-            App(Const(Constant1.Not), unsafeParse(a)).embed
+            AppN(Const(Constant1.Not), unsafeParse(a))
         }
       }
 

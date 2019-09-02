@@ -8,6 +8,7 @@ import fastparse.noApi._
 import evolution.compilertree.ast.TreeF._
 import evolution.compilertree.ast.TreeF
 import evolution.compilertree.ast
+import cats.data.NonEmptyList
 
 object Parser {
   def parse(astString: String): Either[ParserFailure, Tree] =
@@ -45,7 +46,7 @@ object Parser {
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
     def argsTail: Parser[String => Tree] =
       P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
-        case (args, value, body) => name => ast.SpecialSyntax.functionBinding(name, args, value, body)
+        case (args, value, body) => name => ast.SpecialSyntax.functionBinding(name, args.toList, value, body)
       }
 
     // Note: a previous solution based on flatMap caused undesired back-tracking
@@ -98,7 +99,7 @@ object Parser {
   private lazy val atomicOperand: Parser[Tree] =
     specialSyntax | P(factor ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
       case (f, None)            => f
-      case (f, Some(arguments)) => AppN(f, arguments: _*)
+      case (f, Some(arguments)) => App(f, arguments).embed
     }
 
   private lazy val list: Parser[Tree] = P("[" ~/ args ~/ "]").map(ConsN)
@@ -117,15 +118,15 @@ object Parser {
       P("!").map(_ => Identifier(Constant1.Not.entryName).embed)
 
   private lazy val unaryPrefixOp: Parser[Tree] =
-    P(unaryOps ~/ atomicOperand).map { case (op, e) => App(op, e).embed }
+    P(unaryOps ~/ atomicOperand).map { case (op, e) => AppN(op, e) }
 
-  private lazy val args: Parser[List[Tree]] = P(nonEmptyArgs | PassWith(Nil))
+  private lazy val args: Parser[List[Tree]] = P(nonEmptyArgs.map(_.toList) | PassWith(Nil))
 
-  private lazy val nonEmptyArgs: Parser[List[Tree]] =
+  private lazy val nonEmptyArgs: Parser[NonEmptyList[Tree]] =
     nonEmptyCsv(expression)
 
-  private def nonEmptyCsv[T](p: Parser[T]): Parser[List[T]] =
-    P(p ~/ ("," ~/ nonEmptyCsv(p)).?).map { case (head, tail) => head :: tail.getOrElse(Nil) }
+  private def nonEmptyCsv[T](p: Parser[T]): Parser[NonEmptyList[T]] =
+    P(p ~/ ("," ~/ nonEmptyCsv(p)).?).map { case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil)) }
 
   private lazy val identifier: Parser[String] =
     ((alpha | CharIn(Seq('@'))) ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
@@ -138,16 +139,17 @@ object Parser {
   private object SpecialSyntax {
     lazy val zip: Parser[Tree] =
       P(StringInIgnoreCase("zip") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => ast.SpecialSyntax.zip(bindings, body)
+        case (bindings, body) => ast.SpecialSyntax.zip(bindings.toList, body)
       }
 
     lazy val product: Parser[Tree] =
       P(StringInIgnoreCase("product") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => ast.SpecialSyntax.product(bindings, body)
+        case (bindings, body) => ast.SpecialSyntax.product(bindings.toList, body)
       }
 
     lazy val uniformChoice: Parser[Tree] =
       P(StringInIgnoreCase(Constant1.UniformChoice.entryName) ~ "(" ~/ nonEmptyArgs ~/ ")")
+        .map(_.toList)
         .map(ast.SpecialSyntax.uniformChoice)
 
     private lazy val comprehensionBinding: Parser[(String, Tree)] =
