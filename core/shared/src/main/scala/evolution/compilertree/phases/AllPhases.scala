@@ -17,7 +17,7 @@ import evolution.data.emptyCtx
 import evolution.logging.Logger
 import evolution.compilertree.ast.TreeF._
 
-final class AllPhases(logger: Logger) {
+class AllPhases(logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???

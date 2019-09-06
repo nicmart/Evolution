@@ -41,6 +41,7 @@ trait ASTArbitraries {
 
   def genTypedNumber: Gen[AST.DoubleLiteral] =
     arbitrary[Double].map(d => AST.DoubleLiteral(d, Qualified(Type.Dbl)))
+
   def genTypedVar: Gen[AST.Identifier] = for {
     id <- genIdentifier
     tpe <- genType

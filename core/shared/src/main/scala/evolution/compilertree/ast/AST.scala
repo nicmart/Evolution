@@ -55,6 +55,11 @@ object TreeF {
     App(f, NonEmptyList(argHead, argTail.toList)).embed
 
   def Const(constant: Constant): Tree = TreeF.Identifier(constant.entryName).embed
+  def TypedConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
+    CoTree(tpe, TreeF.Identifier(constant.entryName))
+  def PrimitiveConst(constant: Constant): Tree = TreeF.Identifier(constant.entryName, primitive = true).embed
+  def TypedPrimitiveConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
+    CoTree(tpe, TreeF.Identifier(constant.entryName, primitive = true))
 
   def ConsN(asts: List[Tree]): Tree = asts match {
     case Nil          => TreeF.Identifier(Constant0.Empty.entryName).embed

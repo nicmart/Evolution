@@ -1,97 +1,149 @@
 package evolution.compilertree
 import cats.implicits._
 import cats.kernel.{ Eq, Order }
+import cats.data.NonEmptyList
 import org.scalacheck.Gen
+import org.scalacheck.Shrink
+import org.scalacheck.Arbitrary.arbitrary
 import evolution.data.Expr
 import evolution.data.Expr._
-import evolution.compiler.ast.AST
-import evolution.compiler.phases.compiling.model.VarContext
-import evolution.compiler.phases.compiling.Compile
-import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types.Type
+import evolution.compilertree.phases.compiling.model.VarContext
+import evolution.compilertree.phases.compiling.Compile
+import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compilertree.types.TypeClasses._
+import evolution.compilertree.types.Type
+import evolution.compilertree.ast.TreeF
+import evolution.compilertree.ast.TreeF.CoTree
+import evolution.compilertree.ast.TreeF.TypedTree
 
-class CompilerSpec extends evolution.language.LanguageSpec {
-
+class CompilerSpec extends LanguageSpec {
+  implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   "The compiler" - {
     "should successfully compile" - {
-      "number literals" in forAll(genTypedNumber) { n =>
-        unsafeCompile(n) shouldBe Dbl(n.n.toDouble)
+      "number literals" in forAll(arbitrary[Double]) { n =>
+        unsafeCompile(TreeF.DoubleLiteral(n).annotate(Qualified(Type.Dbl))) shouldBe Dbl(n.toDouble)
       }
 
-      "variable usages" in forAll(genTypedVar) { v =>
-        unsafeCompile(v, VarContext.empty.push(v.name)) shouldBe Var[v.Out](v.name)
+      "variable usages" in forAll(genTypedVar) {
+        case (name, v) =>
+          println(name)
+          println(v)
+          unsafeCompile(v, VarContext.empty.push(name)) shouldBe Var(name)
       }
 
-      "variable usages in non-empty contexts" in forAll(genTypedVar) { v =>
-        whenever(v.name != "x") {
-          unsafeCompile(v, VarContext.empty.push(v.name).push("x")) shouldBe Var[v.Out](v.name)
-        }
+      "variable usages in non-empty contexts" in forAll(genTypedVar) {
+        case (name, v) =>
+          whenever(name != "x") {
+            unsafeCompile(v, VarContext.empty.push(name).push("x")) shouldBe Var(name)
+          }
       }
 
-      "let bindings" in forAll(genTypedVar, genTypedNumber, genTypedNumber) { (variable, n1, n2) =>
-        unsafeCompile(AST.Let(variable.name, n1, n2)) shouldBe Let(
-          variable.name,
-          unsafeCompile(n1),
-          unsafeCompile(n2)
-        )
+      "let bindings" in forAll(genTypedVar, genTypedNumber, genTypedNumber) {
+        case ((id, _), n1, n2) =>
+          unsafeCompile(TreeF.Let(id, n1, n2).withNoType) shouldBe Let(
+            id,
+            unsafeCompile(n1),
+            unsafeCompile(n2)
+          )
       }
 
-      "lambdas" in forAll(genTypedVar, genTypedNumber) { (variable, n) =>
-        unsafeCompile(AST.Lambda(variable.name, n)) shouldBe Lambda(variable.name, unsafeCompile(n))
+      "lambdas" in forAll(genTypedVar, genTypedNumber) {
+        case ((id, _), n) =>
+          unsafeCompile(TreeF.Lambda(id, n).withNoType) shouldBe Lambda(id, unsafeCompile(n))
       }
 
-      "ands" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.And), a, b)) shouldBe And(
+      "ands" in forAll(genTypedBool, genTypedBool) { (a, b) =>
+        unsafeCompile(
+          TreeF.App(TreeF.TypedPrimitiveConst(Constant2.And, unknownType), NonEmptyList.of(a, b)).withNoType
+        ) shouldBe And(
           unsafeCompile(a),
           unsafeCompile(b)
         )
       }
 
-      "ors" in forAll(genBool, genBool) { (a, b) =>
-        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.Or), a, b)) shouldBe Or(unsafeCompile(a), unsafeCompile(b))
+      "ors" in forAll(genTypedBool, genTypedBool) { (a, b) =>
+        unsafeCompile(
+          TreeF.App(TreeF.TypedPrimitiveConst(Constant2.Or, unknownType), NonEmptyList.of(a, b)).withNoType
+        ) shouldBe Or(
+          unsafeCompile(a),
+          unsafeCompile(b)
+        )
       }
 
-      "nots" in forAll(genBool) { a =>
-        unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Not), a)) shouldBe Not(unsafeCompile(a))
+      "nots" in forAll(genTypedBool) { a =>
+        unsafeCompile(
+          TreeF.App(TreeF.TypedPrimitiveConst(Constant1.Not, unknownType), NonEmptyList.of(a)).withNoType
+        ) shouldBe Not(
+          unsafeCompile(a)
+        )
       }
 
       "boolean literals" in forAll { b: Boolean =>
-        unsafeCompile(AST.Bool(b)) shouldBe Bool(b)
+        unsafeCompile(TreeF.Bool(b).withNoType) shouldBe Bool(b)
       }
 
       "binary minus" in forAll { (a: Int, b: Int) =>
         val ast =
-          AST.AppN(
-            AST.PrimitiveConst(Constant2.Minus),
-            AST.IntLiteral(a, Qualified(Type.Integer)),
-            AST.IntLiteral(b, Qualified(Type.Integer))
-          )
+          TreeF
+            .App(
+              TreeF.TypedPrimitiveConst(Constant2.Minus, unknownType),
+              NonEmptyList.of(
+                TreeF.IntLiteral(a).annotate(intType),
+                TreeF.IntLiteral(b).annotate(intType)
+              )
+            )
+            .withNoType
         unsafeCompile(ast) should matchPattern {
           case Expr.Minus(Expr.Integer(x), Expr.Integer(y), _, _) if x == a && y == b =>
         }
       }
 
-      "whiles" in forAll(genBool, genNumber) { (b, n) =>
-        val predicate = AST.Lambda("x", b)
-        val evolution = AST.AppN(AST.PrimitiveConst(Constant2.Cons), n, AST.PrimitiveConst(Constant0.Empty))
+      "whiles" in forAll(genTypedBool, genTypedNumber) { (b, n) =>
+        val predicate = TreeF.Lambda("x", b).withNoType
+        val evolution = TreeF
+          .App(
+            TreeF.TypedPrimitiveConst(Constant2.Cons, unknownType),
+            NonEmptyList.of(
+              n,
+              TreeF.TypedPrimitiveConst(Constant0.Empty, unknownType)
+            )
+          )
+          .withNoType
         val expected = TakeWhile[Double](unsafeCompile(evolution), unsafeCompile(predicate))
-        unsafeCompile(AST.AppN(AST.PrimitiveConst(Constant2.While), evolution, predicate)) shouldBe expected
+
+        unsafeCompile(
+          TreeF
+            .App(TreeF.TypedPrimitiveConst(Constant2.While, unknownType), NonEmptyList.of(evolution, predicate))
+            .withNoType
+        ) shouldBe expected
       }
 
-      "equality operators" in forAll(equalityOperators[Double], genTypedNumber, genTypedNumber) {
+      "equality operators" in forAll(equalityOperators[Int], genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
-          unsafeCompile(AST.AppN(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+          unsafeCompile(TreeF.App(ast, NonEmptyList.of(a, b)).withNoType) shouldBe f(
+            unsafeCompile(a),
+            unsafeCompile(b)
+          )
       }
 
-      "relation operators" in forAll(relationOperators[Double], genTypedNumber, genTypedNumber) {
+      "relation operators" in forAll(relationOperators[Int], genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
-          unsafeCompile(AST.AppN(ast, a, b)) shouldBe f(unsafeCompile(a), unsafeCompile(b))
+          unsafeCompile(TreeF.App(ast, NonEmptyList.of(a, b)).withNoType) shouldBe f(
+            unsafeCompile(a),
+            unsafeCompile(b)
+          )
       }
 
       "constant" - {
         "of numbers" in {
-          unsafeCompile(AST.App(AST.PrimitiveConst(Constant1.Constant), AST.DoubleLiteral(1))) shouldBe Expr.Constant(
+          unsafeCompile(
+            TreeF
+              .App(
+                TreeF.TypedPrimitiveConst(Constant1.Constant, unknownType),
+                NonEmptyList.of(TreeF.DoubleLiteral(1).withNoType)
+              )
+              .withNoType
+          ) shouldBe Expr.Constant(
             Dbl(1)
           )
         }
@@ -100,11 +152,16 @@ class CompilerSpec extends evolution.language.LanguageSpec {
       "zipWith" - {
         "of vars" in {
           unsafeCompile(
-            AST.AppN(
-              AST.PrimitiveConst(Constant3.ZipWith),
-              AST.Identifier("x"),
-              AST.Identifier("y"),
-              AST.Identifier("z")
+            CoTree(
+              unknownType,
+              TreeF.App(
+                TreeF.TypedPrimitiveConst(Constant3.ZipWith, unknownType),
+                NonEmptyList.of(
+                  CoTree(unknownType, TreeF.Identifier("x")),
+                  CoTree(unknownType, TreeF.Identifier("y")),
+                  CoTree(unknownType, TreeF.Identifier("z"))
+                )
+              )
             ),
             new VarContext(List("x", "y", "z"))
           ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
@@ -113,10 +170,18 @@ class CompilerSpec extends evolution.language.LanguageSpec {
 
       "uniformChoice" in {
         val compiled = unsafeCompile(
-          AST.AppN(
-            AST.PrimitiveConst(Constant1.UniformChoice),
-            AST.Lst(List(AST.Identifier("x"), AST.Identifier("y"), AST.Identifier("z")))
-          ),
+          TreeF
+            .App(
+              TreeF.TypedPrimitiveConst(Constant1.UniformChoice, unknownType),
+              NonEmptyList.of(
+                TreeF
+                  .Lst(
+                    List(TreeF.Identifier("x"), TreeF.Identifier("y"), TreeF.Identifier("z")).map(_.withNoType)
+                  )
+                  .withNoType
+              )
+            )
+            .withNoType,
           new VarContext(List("x", "y", "z"))
         )
         compiled shouldBe UniformChoice(Lst(List(Var("x"), Var("y"), Var("z"))))
@@ -124,20 +189,28 @@ class CompilerSpec extends evolution.language.LanguageSpec {
     }
   }
 
-  def equalityOperators[T: Eq]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
+  def equalityOperators[T: Eq]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.PrimitiveConst(Constant2.Eq) -> (Equals.apply[T](_, _, Eq[T])),
-      AST.PrimitiveConst(Constant2.Neq) -> (Neq.apply[T](_, _, Eq[T]))
+      TreeF.TypedPrimitiveConst(Constant2.Eq, unknownType) -> (Equals.apply[T](_, _, Eq[T])),
+      TreeF.TypedPrimitiveConst(Constant2.Neq, unknownType) -> (Neq.apply[T](_, _, Eq[T]))
     )
 
-  def relationOperators[T: Order]: Gen[(AST, (Expr[T], Expr[T]) => Expr[Boolean])] =
+  def relationOperators[T: Order]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      AST.PrimitiveConst(Constant2.GreaterThan) -> (GreaterThan[T](_, _, Order[T])),
-      AST.PrimitiveConst(Constant2.GreaterThanOrEqual) -> (GreaterThanOrEqual[T](_, _, Order[T])),
-      AST.PrimitiveConst(Constant2.LessThan) -> (LessThan[T](_, _, Order[T])),
-      AST.PrimitiveConst(Constant2.LessThanOrEqual) -> (LessThanOrEqual[T](_, _, Order[T]))
+      TreeF.TypedPrimitiveConst(Constant2.GreaterThan, unknownType) -> (GreaterThan[T](_, _, Order[T])),
+      TreeF.TypedPrimitiveConst(Constant2.GreaterThanOrEqual, unknownType) -> (GreaterThanOrEqual[T](_, _, Order[T])),
+      TreeF.TypedPrimitiveConst(Constant2.LessThan, unknownType) -> (LessThan[T](_, _, Order[T])),
+      TreeF.TypedPrimitiveConst(Constant2.LessThanOrEqual, unknownType) -> (LessThanOrEqual[T](_, _, Order[T]))
     )
 
-  private def unsafeCompile[T](expr: AST, ctx: VarContext = VarContext.empty): Expr[T] =
+  lazy val unknownType: Qualified[Type] = Qualified(Type.Var(""))
+  lazy val intType: Qualified[Type] = Qualified(Type.Integer)
+
+  private def unsafeCompile[T](expr: TypedTree, ctx: VarContext = VarContext.empty): Expr[T] =
     Compile.compile(expr, ctx).unsafeEvaluate.asInstanceOf[Expr[T]]
+
+  implicit class Ops(tree: TreeF[CoTree[Qualified[Type]]]) {
+    def withNoType = tree.annotate(unknownType)
+    def withType(tpe: Type) = tree.annotate(Qualified(tpe))
+  }
 }

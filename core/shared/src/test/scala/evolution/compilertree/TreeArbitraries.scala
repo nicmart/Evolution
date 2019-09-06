@@ -2,6 +2,7 @@ package evolution.compilertree
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import evolution.compilertree.types.Type
+import evolution.compilertree.types.TypeClasses._
 import evolution.compilertree.phases.parsing.Parser
 import evolution.compilertree.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
@@ -39,7 +40,14 @@ trait TreeArbitraries {
   def genIntNumber: Gen[Tree] = arbitrary[Int].map(n => IntLiteral(n).embed)
   def genDoubleNotIntNumber: Gen[Tree] = arbitrary[Int].map(d => DoubleLiteral((0.1 + d)).embed)
 
-  def genBool: Gen[Tree] = Gen.oneOf(true, false).map(Bool(_).embed)
+  def genTypedNumber: Gen[TypedTree] = arbitrary[Int].map(n => IntLiteral(n).annotate(Qualified(Type.Integer)))
+
+  def genTypedVar: Gen[(String, TypedTree)] = for {
+    id <- genIdentifier
+    tpe <- genType
+  } yield (id.toLowerCase, CoTree(Qualified(tpe), Identifier(id)))
+
+  def genTypedBool: Gen[TypedTree] = Gen.oneOf(true, false).map(Bool(_).annotate(Qualified(Type.Bool)))
 
   def genType: Gen[Type] = Gen.oneOf(Type.Dbl, Type.Bool, Type.Integer, Type.Point)
 
