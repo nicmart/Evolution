@@ -11,16 +11,27 @@ import evolution.compilertree.types.Type
 import evolution.materialization.Evolution
 import evolution.compilertree.ast.TreeF._
 import evolution.compilertree.ast.TreeF
+import cats.data.NonEmptyList
+import scala.collection.immutable.Nil
 
 object Compile {
 
   def compileTree(tree: TypedTree, varContext: VarContext): Either[String, Expr[tree.value.value.Out]] =
-    cataCoTree(compileSafe)(tree).run(varContext).asInstanceOf[Either[String, Expr[tree.value.value.Out]]]
+    ???
+
+  def compileTree2(tree: TypedTree, varContext: VarContext): Either[String, Expr[tree.value.value.Out]] =
+    ???
+  //cataCoTree(compileSafe)(tree).run(varContext).asInstanceOf[Either[String, Expr[tree.value.value.Out]]]
 
   // VarContext => Either[String, T]
-  private type Result[T] = Kleisli[Either[String, ?], VarContext, T]
+  case class Env(varContext: VarContext, expectedType: Type)
+  private type Result[T] = Kleisli[Either[String, ?], Env, T]
+  case class TypedResult(tpe: Qualified[Type], result: Result[Expr[Any]]) {
+    def typedResult: Result[Typed[Expr[Any]]] =
+      result.map(Typed(tpe.value, _))
+  }
 
-  private def compileSafe(tpe: Qualified[Type], tree: TreeF[Result[Expr[Any]]]): Result[Expr[Any]] =
+  def compileSafe(tree: TreeF[CoTree[TypedResult]]): Result[Expr[Any]] =
     tree match {
       case Identifier(name, false) =>
         varContext.flatMap { ctx =>
@@ -29,17 +40,17 @@ object Compile {
         }
 
       case Lambda(varName, body) =>
-        withVar(varName)(body).map(Expr.Lambda(varName, _))
+        withVar(varName)(body.value.result).map(Expr.Lambda(varName, _))
 
       case Let(varName, value, in) =>
-        (value, withVar(varName)(in)).mapN { (compiledValue, compiledIn) =>
+        (value.value.result, withVar(varName)(in.value.result)).mapN { (compiledValue, compiledIn) =>
           Expr.Let(varName, compiledValue, compiledIn)
         }
 
       case IntLiteral(n) =>
-        tpe.value match {
-          case Type.Dbl => Expr.Dbl(n.toDouble).pure[Result].widen
-          case _        => Expr.Integer(n).pure[Result].widen
+        expectedType.map[Expr[Any]] {
+          case Type.Dbl => Expr.Dbl(n.toDouble)
+          case _        => Expr.Integer(n)
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals
@@ -49,22 +60,24 @@ object Compile {
         Expr.Bool(b).pure[Result].widen
 
       case Identifier(Constant0(c), true) =>
-        c.compile(tpe).liftTo[Result]
+        expectedType.flatMap(tpe => c.compile(Qualified(tpe)).liftTo[Result])
 
       // Arity 0 identifiers
       case Identifier(id, _) =>
         s"Constant $id is not supported as first class value".raiseError[Result, Expr[Any]]
 
       case Lst(ts) =>
-        ts.sequence.map(Expr.Lst(_))
+        ts.map(_.value.result).sequence.map(Expr.Lst(_))
 
       // Arity 1 identifiers
       // TODO: here we need contextual information, we need either to change the signature of compileSafe
       // or rethink how we handle predefined constants
-      // case App(Identifier(Constant1(c), true), x) =>
-      //   compileSafe(x).flatMap(
-      //     compiledX => c.compile(Typed(x.qualifiedType.value, compiledX), typeOut.value).liftTo[Result]
-      //   )
+      case App(CoTree(_, Identifier(Constant1(c), true)), NonEmptyList(CoTree(arg1Result, _), Nil)) =>
+        for {
+          expectedType <- expectedType
+          argExpr <- arg1Result.typedResult
+          expr <- c.compile(argExpr, expectedType).liftTo[Result]
+        } yield expr
 
       // case App(App(Identifier(Constant2(c), _, true), x, _), y, typeOut) =>
       //   for {
@@ -74,6 +87,17 @@ object Compile {
       //       .compile(Typed(x.qualifiedType.value, compiledX), Typed(y.qualifiedType.value, compiledY), typeOut.value)
       //       .liftTo[Result]
       //   } yield result
+
+      case App(
+          CoTree(_, Identifier(Constant2(c), true)),
+          NonEmptyList(CoTree(arg1Result, _), List(CoTree(arg2Result, _)))
+          ) =>
+        for {
+          expectedType <- expectedType
+          arg1Expr <- arg1Result.typedResult
+          arg2Expr <- arg2Result.typedResult
+          expr <- c.compile(arg1Expr, arg2Expr, expectedType).liftTo[Result]
+        } yield expr
 
       // // Arity 3 identifiers
       // case App(App(App(Identifier(Constant3(c), _, true), x, _), y, _), z, typeOut) =>
@@ -91,6 +115,20 @@ object Compile {
       //       .liftTo[Result]
       //   } yield result
 
+      case App(
+          CoTree(_, Identifier(Constant3(c), true)),
+          NonEmptyList(CoTree(arg1Result, _), List(CoTree(arg2Result, _), CoTree(arg3Result, _)))
+          ) =>
+        for {
+          expectedType <- expectedType
+          arg1Expr <- arg1Result.typedResult
+          arg2Expr <- arg2Result.typedResult
+          arg3Expr <- arg3Result.typedResult
+          expr <- c.compile(arg1Expr, arg2Expr, arg3Expr, expectedType).liftTo[Result]
+        } yield expr
+
+      case App(f, args) => (f.value.result, args.map(_.value.result).sequence).mapN(buildAppExpr)
+
       // case App(f, x) =>
       //   (f, x).mapN { (compiledF, compiledX) =>
       //     Expr.App(compiledF.asExpr[Any => Any], compiledX.asExpr[Any])
@@ -101,10 +139,21 @@ object Compile {
         s"Invalid AST for expression $tree".raiseError[Result, Expr[Any]]
     }
 
-  private def withVar[A](name: String)(ka: Result[A]): Result[A] =
-    Kleisli.local[Either[String, ?], A, VarContext](_.push(name))(ka)
+  private def buildAppExpr(f: Expr[Any], args: NonEmptyList[Expr[Any]]): Expr[Any] =
+    args match {
+      case NonEmptyList(arg1, Nil) => Expr.App[Any, Any](f.asExpr, arg1)
+      case NonEmptyList(arg1, head :: tail) =>
+        buildAppExpr(Expr.App[Any, Any](f.asExpr, arg1), NonEmptyList(head, tail))
+    }
 
-  private def varContext: Result[VarContext] = Kleisli((ctx: VarContext) => Right(ctx))
+  private def withVar[A](name: String)(ka: Result[A]): Result[A] =
+    Kleisli.local[Either[String, ?], A, Env](env => env.copy(varContext = env.varContext.push(name)))(ka)
+
+  private def withExpectedType[A](tpe: Type)(ka: Result[A]): Result[A] =
+    Kleisli.local[Either[String, ?], A, Env](env => env.copy(expectedType = tpe))(ka)
+
+  private def varContext: Result[VarContext] = Kleisli((env: Env) => Right(env.varContext))
+  private def expectedType: Result[Type] = Kleisli((env: Env) => Right(env.expectedType))
 
   implicit class CastingOps(value: Any) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
