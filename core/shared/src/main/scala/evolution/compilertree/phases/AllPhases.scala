@@ -16,9 +16,8 @@ import evolution.compilertree.phases.materializing.Materialize
 import evolution.data.emptyCtx
 import evolution.logging.Logger
 import evolution.compilertree.ast.TreeF._
-import evolution.compilertree.ast.TreeF
 
-class AllPhases(logger: Logger) {
+final class AllPhases(logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -51,7 +50,7 @@ class AllPhases(logger: Logger) {
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       //_ = log(AST.prettyPrint(typedAst))
-      expression <- Compile.compileTree(typedAst, varContext(varBindings))
+      expression <- Compile.compile(typedAst, varContext(varBindings))
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       evolution = Materialize.materialize(expression).apply(emptyCtx)
