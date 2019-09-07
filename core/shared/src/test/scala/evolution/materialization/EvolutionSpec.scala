@@ -1,6 +1,6 @@
 package evolution.materialization
 
-import evolution.language.LanguageSpec
+import evolution.compiler.LanguageSpec
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import Evolution._

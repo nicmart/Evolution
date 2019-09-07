@@ -57,5 +57,5 @@ trait TreeArbitraries {
     } yield Identifier(char.toString).embed
 
   def genWhitespace: Gen[String] =
-    Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.map(_.mkString("")))).map(_.mkString(""))
+    Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.toList)).map(_.mkString(""))
 }

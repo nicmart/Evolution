@@ -63,7 +63,7 @@ class ParserSpec extends LanguageSpec {
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id =$expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Identifier(id).embed).embed
+            unsafeParse(s"$id = $expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Identifier(id).embed).embed
           }
         }
 

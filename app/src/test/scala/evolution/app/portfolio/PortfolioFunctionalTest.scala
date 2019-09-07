@@ -1,6 +1,6 @@
 package evolution.app.model.component
 
-import evolution.language.LanguageSpec
+import evolution.compiler.LanguageSpec
 import evolution.app.portfolio.Portfolio
 import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext

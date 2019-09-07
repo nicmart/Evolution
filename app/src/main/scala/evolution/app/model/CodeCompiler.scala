@@ -5,7 +5,8 @@ import evolution.compiler.phases.AllPhases
 import evolution.compiler.types.Type
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
-import evolution.compiler.ast.AST
+import evolution.compiler.ast.TreeF
+import evolution.compiler.ast.TreeF.Tree
 import evolution.materialization.Evolution
 
 class CodeCompiler(allPhases: AllPhases) {
@@ -22,10 +23,10 @@ class CodeCompiler(allPhases: AllPhases) {
         evolution.run
       }
 
-  private def varBindings(ctx: DrawingContext): List[(String, AST)] = List(
-    "top" -> AST.DoubleLiteral(ctx.top),
-    "bottom" -> AST.DoubleLiteral(ctx.bottom),
-    "left" -> AST.DoubleLiteral(ctx.left),
-    "right" -> AST.DoubleLiteral(ctx.right)
+  private def varBindings(ctx: DrawingContext): List[(String, Tree)] = List(
+    "top" -> TreeF.DoubleLiteral(ctx.top).embed,
+    "bottom" -> TreeF.DoubleLiteral(ctx.bottom).embed,
+    "left" -> TreeF.DoubleLiteral(ctx.left).embed,
+    "right" -> TreeF.DoubleLiteral(ctx.right).embed
   )
 }
