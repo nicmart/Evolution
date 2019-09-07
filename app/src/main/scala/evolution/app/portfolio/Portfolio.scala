@@ -4,7 +4,6 @@ import evolution.app.model.state.DrawingState
 import evolution.app.conf.Conf.defaultRendererState
 import evolution.app.model.DrawingRepository
 import cats.implicits._
-import cats.effect.IO
 import evolution.app.model.state.InfiniteCanvas
 import evolution.app.model.state.TrailSettings
 
@@ -457,7 +456,4 @@ object Portfolio {
       s.replaceAll(s"\n$indent", "\n").trim
     }
   }
-
-  def loadIntoRepository(repository: DrawingRepository): IO[Unit] =
-    drawings.zipWithIndex.traverse { case (d, i) => repository.save(i.toString, d) }.void
 }

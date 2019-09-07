@@ -3,7 +3,7 @@ package evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
-import evolution.compiler.phases.parsing.ParserConfig.whitespaces
+import evolution.compiler.phases.parsing.ParserConfig.whitespace
 import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import evolution.compiler.ast.TreeF._
 import evolution.compiler.ast.TreeF
@@ -19,7 +19,7 @@ object Parser {
   def binaryOperators: List[(String, Tree)] = allPrecedenceGroups.flatMap(group => group.operators)
 
   private def program[_: P]: P[Tree] =
-    P(whitespaces ~ expression ~ End)
+    P(whitespaces ~ expression ~ whitespaces ~ End)
 
   private def expression[_: P]: P[Tree] =
     P(NonOperandExpressions.nonOperand | precedenceGroups.operand)

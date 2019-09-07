@@ -182,7 +182,7 @@ class ParserSpec extends LanguageSpec {
 
       "ignore comments" in {
         forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
-          unsafeParse(s"//$comment1\n$expr\n//$comment2") shouldEq unsafeParse(expr)
+          unsafeParse(s"//x$comment1\n$expr\n//y$comment2") shouldEq unsafeParse(expr)
         }
       }
 
