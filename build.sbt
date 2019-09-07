@@ -127,8 +127,8 @@ lazy val jsApp = project
     version := "0.1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.7",
-      "com.github.japgolly.scalajs-react" %%% "core" % "1.4.2",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.4.2",
+      "com.github.japgolly.scalajs-react" %%% "core" % "1.5.0-RC2",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.5.0-RC2",
       "com.lihaoyi" %%% "scalatags" % "0.6.8",
       "io.circe" %%% "circe-core" % "0.11.1",
       "io.circe" %%% "circe-generic" % "0.11.1",
@@ -149,7 +149,8 @@ lazy val server = (project in file("server"))
     scalaJSProjects := Seq(jsApp),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % "10.0.15"
+      "com.typesafe.akka" %% "akka-http" % "10.1.9",
+      "com.typesafe.akka" %% "akka-stream" % "2.5.25"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     packagePrefix in Assets := "public/",

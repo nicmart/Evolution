@@ -184,7 +184,6 @@ class ParserSpec extends LanguageSpec {
         forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
           unsafeParse(s"//$comment1\n$expr\n//$comment2") shouldEq unsafeParse(expr)
         }
-
       }
 
       "parse applications of vars" in {

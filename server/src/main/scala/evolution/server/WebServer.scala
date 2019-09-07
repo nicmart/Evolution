@@ -1,6 +1,5 @@
 package evolution.server
 
-import akka.Done
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -34,13 +33,13 @@ object WebServer {
     val bindingFuture = Http().bindAndHandle(route, "localhost", port)
 
     def shutdown = {
-      val promise = Promise[Done]()
+      val promise = Promise[Unit]()
       sys.addShutdownHook {
-        promise.success(Done)
+        promise.success(())
       }
       Future {
         if (StdIn.readLine(s"Server online at http://localhost:$port/\nPress RETURN to stop...") != null)
-          promise.success(Done)
+          promise.success(())
       }
       promise.future
     }
