@@ -124,7 +124,8 @@ lazy val jsApp = project
       "com.lihaoyi" %%% "scalatags" % "0.7.0",
       "io.circe" %%% "circe-core" % "0.12.0-RC4",
       "io.circe" %%% "circe-generic" % "0.12.0-RC4",
-      "io.circe" %%% "circe-parser" % "0.12.0-RC4"
+      "io.circe" %%% "circe-parser" % "0.12.0-RC4",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
     ),
     npmDependencies in Compile ++= Seq(
       "react" -> "16.7.0",
