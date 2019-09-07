@@ -2,8 +2,6 @@ package evolution.app.portfolio
 import evolution.app.model.Drawing
 import evolution.app.model.state.DrawingState
 import evolution.app.conf.Conf.defaultRendererState
-import evolution.app.model.DrawingRepository
-import cats.implicits._
 import evolution.app.model.state.InfiniteCanvas
 import evolution.app.model.state.TrailSettings
 
