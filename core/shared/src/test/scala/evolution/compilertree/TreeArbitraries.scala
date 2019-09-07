@@ -1,13 +1,13 @@
-package evolution.compilertree
+package evolution.compiler
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import evolution.compilertree.types.Type
-import evolution.compilertree.types.TypeClasses._
-import evolution.compilertree.phases.parsing.Parser
-import evolution.compilertree.phases.parsing.ParserConfig
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
-import evolution.compilertree.ast.TreeF.Tree
-import evolution.compilertree.ast.TreeF._
+import evolution.compiler.ast.TreeF.Tree
+import evolution.compiler.ast.TreeF._
 
 trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =

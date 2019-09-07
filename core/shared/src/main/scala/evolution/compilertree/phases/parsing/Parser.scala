@@ -1,13 +1,13 @@
-package evolution.compilertree.phases.parsing
+package evolution.compiler.phases.parsing
 
-import evolution.compilertree.phases.parsing
-import evolution.compilertree.phases.parsing.ParserConfig.White._
-import evolution.compilertree.phases.parsing.ParserConfig.whitespaces
-import evolution.compilertree.phases.typing.config.{ Constant1, Constant2 }
+import evolution.compiler.phases.parsing
+import evolution.compiler.phases.parsing.ParserConfig.White._
+import evolution.compiler.phases.parsing.ParserConfig.whitespaces
+import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import fastparse.noApi._
-import evolution.compilertree.ast.TreeF._
-import evolution.compilertree.ast.TreeF
-import evolution.compilertree.ast
+import evolution.compiler.ast.TreeF._
+import evolution.compiler.ast.TreeF
+import evolution.compiler.ast
 import cats.data.NonEmptyList
 
 object Parser {

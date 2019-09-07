@@ -1,4 +1,4 @@
-package evolution.compilertree.phases.parsing
+package evolution.compiler.phases.parsing
 
 import fastparse.noApi._
 

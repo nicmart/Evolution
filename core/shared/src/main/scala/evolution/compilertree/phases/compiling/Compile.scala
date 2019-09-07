@@ -1,14 +1,14 @@
-package evolution.compilertree.phases.compiling
+package evolution.compiler.phases.compiling
 
 import cats.data.Kleisli
 import cats.implicits._
 import evolution.data.Expr
-import evolution.compilertree.phases.compiling.model.VarContext
-import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compilertree.types.Typed
-import evolution.compilertree.types.Type
+import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.types.Typed
+import evolution.compiler.types.Type
 import evolution.materialization.Evolution
-import evolution.compilertree.ast.TreeF._
+import evolution.compiler.ast.TreeF._
 import cats.data.NonEmptyList
 import scala.collection.immutable.Nil
 

@@ -1,10 +1,10 @@
-package evolution.compilertree
+package evolution.compiler
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
-import evolution.compilertree.ast.TreeF._
-import evolution.compilertree.phases.parsing.Parser
-import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compilertree.ast.SpecialSyntax
+import evolution.compiler.ast.TreeF._
+import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.ast.SpecialSyntax
 
 class ParserSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

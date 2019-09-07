@@ -1,9 +1,9 @@
-package evolution.compilertree.ast
+package evolution.compiler.ast
 
-import evolution.compilertree.phases.typing.config.{ Constant2, Constant3 }
+import evolution.compiler.phases.typing.config.{ Constant2, Constant3 }
 import scala.collection.immutable.Nil
-import evolution.compilertree.phases.typing.config.Constant1
-import evolution.compilertree.ast.TreeF._
+import evolution.compiler.phases.typing.config.Constant1
+import evolution.compiler.ast.TreeF._
 
 object SpecialSyntax {
   def zip(bindings: List[(String, Tree)], body: Tree): Tree = bindings match {

@@ -1,4 +1,4 @@
-package evolution.compilertree
+package evolution.compiler
 import cats.Eq
 import cats.implicits._
 import cats.kernel.Order

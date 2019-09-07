@@ -1,4 +1,4 @@
-package evolution.compilertree.phases.parsing
+package evolution.compiler.phases.parsing
 
 import fastparse.WhitespaceApi
 
@@ -11,3 +11,4 @@ object ParserConfig {
     NoTrace(ParserConfig.whitespaces)
   }
 }
+  

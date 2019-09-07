@@ -1,5 +1,5 @@
-package evolution.compilertree.phases.typing.model
+package evolution.compiler.phases.typing.model
 
-import evolution.compilertree.types.Type
+import evolution.compiler.types.Type
 
 final case class Assignment(variable: String, tpe: Type)

@@ -1,13 +1,13 @@
-package evolution.compilertree
+package evolution.compiler
 
-import evolution.compilertree.types._
-import evolution.compilertree.types.TypeClasses._
-import evolution.compilertree.phases.typing.FindConstraints
-import evolution.compilertree.phases.typing.AssignFreshTypeVars
-import evolution.compilertree.phases.typing.UnifyTypes.unify
-import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
-import evolution.compilertree.phases.typing.model.Constraints
-import evolution.compilertree.ast.TreeF._
+import evolution.compiler.types._
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.phases.typing.FindConstraints
+import evolution.compiler.phases.typing.AssignFreshTypeVars
+import evolution.compiler.phases.typing.UnifyTypes.unify
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
+import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.ast.TreeF._
 
 class UnifyTypesSpec extends LanguageSpec {
 

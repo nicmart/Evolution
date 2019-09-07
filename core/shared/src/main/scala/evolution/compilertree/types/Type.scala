@@ -1,4 +1,4 @@
-package evolution.compilertree.types
+package evolution.compiler.types
 
 import cats.implicits._
 import cats.{ Eq, Group, Order }

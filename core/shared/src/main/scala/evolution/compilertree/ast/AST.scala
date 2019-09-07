@@ -1,6 +1,6 @@
-package evolution.compilertree.ast
+package evolution.compiler.ast
 
-import evolution.compilertree.phases.typing.config.{ Constant, Constant0, Constant2 }
+import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2 }
 import scala.collection.immutable.Nil
 import cats.Traverse
 import cats.Applicative
@@ -8,8 +8,8 @@ import cats.Eval
 import cats.Monad
 import cats.Functor
 import cats.implicits._
-import evolution.compilertree.types.TypeClasses.Qualified
-import evolution.compilertree.types.Type
+import evolution.compiler.types.TypeClasses.Qualified
+import evolution.compiler.types.Type
 import cats.data.NonEmptyList
 
 sealed trait TreeF[+T]

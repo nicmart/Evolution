@@ -1,17 +1,17 @@
-package evolution.compilertree.phases.typing
+package evolution.compiler.phases.typing
 
-import evolution.compilertree.types.Type
-import evolution.compilertree.types.TypeClasses.Qualified
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
 import cats.data.State
-import evolution.compilertree.types.TypeBindings
-import evolution.compilertree.phases.typing.model.TypeVarGenerator
-import evolution.compilertree.types.TypeBinding
-import evolution.compilertree.phases.typing.model.Assignment
-import evolution.compilertree.phases.typing.model.Substitution
-import evolution.compilertree.ast.TreeF.Tree
-import evolution.compilertree.ast.TreeF
-import evolution.compilertree.ast.TreeF._
+import evolution.compiler.types.TypeBindings
+import evolution.compiler.phases.typing.model.TypeVarGenerator
+import evolution.compiler.types.TypeBinding
+import evolution.compiler.phases.typing.model.Assignment
+import evolution.compiler.phases.typing.model.Substitution
+import evolution.compiler.ast.TreeF.Tree
+import evolution.compiler.ast.TreeF
+import evolution.compiler.ast.TreeF._
 
 object AssignFreshTypeVars {
 

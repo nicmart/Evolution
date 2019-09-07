@@ -1,4 +1,4 @@
-package evolution.compilertree
+package evolution.compiler
 import cats.implicits._
 import cats.kernel.{ Eq, Order }
 import cats.data.NonEmptyList
@@ -7,14 +7,14 @@ import org.scalacheck.Shrink
 import org.scalacheck.Arbitrary.arbitrary
 import evolution.data.Expr
 import evolution.data.Expr._
-import evolution.compilertree.phases.compiling.model.VarContext
-import evolution.compilertree.phases.compiling.Compile
-import evolution.compilertree.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compilertree.types.TypeClasses._
-import evolution.compilertree.types.Type
-import evolution.compilertree.ast.TreeF
-import evolution.compilertree.ast.TreeF.CoTree
-import evolution.compilertree.ast.TreeF.TypedTree
+import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.compiling.Compile
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.Type
+import evolution.compiler.ast.TreeF
+import evolution.compiler.ast.TreeF.CoTree
+import evolution.compiler.ast.TreeF.TypedTree
 
 class CompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

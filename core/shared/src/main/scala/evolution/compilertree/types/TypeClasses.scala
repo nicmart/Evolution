@@ -1,4 +1,4 @@
-package evolution.compilertree.types
+package evolution.compiler.types
 
 object TypeClasses {
   case class Predicate(id: String, types: List[Type])

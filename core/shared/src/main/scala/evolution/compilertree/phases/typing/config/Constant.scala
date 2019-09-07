@@ -1,12 +1,12 @@
-package evolution.compilertree.phases.typing.config
+package evolution.compiler.phases.typing.config
 
 import cats.implicits._
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
-import evolution.compilertree.phases.typing.config.Constant._
-import evolution.compilertree.types.Type._
-import evolution.compilertree.types.TypeClasses._
-import evolution.compilertree.types.{ Type, TypeClasses, Typed }
+import evolution.compiler.phases.typing.config.Constant._
+import evolution.compiler.types.Type._
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.{ Type, TypeClasses, Typed }
 import evolution.data.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution

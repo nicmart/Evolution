@@ -1,7 +1,7 @@
-package evolution.compilertree.phases.typing.model
+package evolution.compiler.phases.typing.model
 
 import cats.implicits._
-import evolution.compilertree.types.Type
+import evolution.compiler.types.Type
 
 final case class Substitution(assignments: List[Assignment]) {
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)

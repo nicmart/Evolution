@@ -1,7 +1,7 @@
-package evolution.compilertree.phases.parsing
+package evolution.compiler.phases.parsing
 
 import fastparse.noApi.Parser
-import evolution.compilertree.ast.TreeF.Tree
+import evolution.compiler.ast.TreeF.Tree
 
 case class PrecedenceGroups(last: Parser[Tree], groups: List[PrecedenceGroup]) {
   def operand: Parser[Tree] = groups.foldRight(last) { (group, accParser) =>

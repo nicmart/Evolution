@@ -1,6 +1,6 @@
-package evolution.compilertree.types
+package evolution.compiler.types
 
-import evolution.compilertree.types.TypeClasses.Qualified
+import evolution.compiler.types.TypeClasses.Qualified
 
 final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
 
