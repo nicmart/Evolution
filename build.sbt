@@ -43,7 +43,6 @@ lazy val options = Seq(
   "-Xlint:type-parameter-shadow", // A local type parameter shadows a type already in scope.
   "-Xlint:unsound-match", // Pattern match may not be typesafe.
   "-Yno-adapted-args", // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
-  "-Ypartial-unification", // Enable partial unification in type constructor inference
   "-Ywarn-dead-code", // Warn when dead code is identified.
   "-Ywarn-extra-implicit", // Warn when more than one implicit parameter section is defined.
   "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
@@ -67,18 +66,12 @@ lazy val jvmScalatestSettings = Test / testOptions ++= Seq(
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.0",
   version := "0.1.0-SNAPSHOT",
   scalacOptions ++= Seq(
-    "-Ypartial-unification",
-    "-Ywarn-unused:implicits", // Warn if an implicit parameter is unused.
-    "-Ywarn-unused:imports", // Warn if an import selector is not referenced.
-    "-Ywarn-unused:locals", // Warn if a local definition is unused.
-    "-Ywarn-unused:params", // Warn if a value parameter is unused.
-    "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
-    "-Ywarn-unused:privates",
-    "-Ywarn-inaccessible",
-    "-Ywarn-dead-code"
+    "-Xlint:unused",
+    "-Xlint:inaccessible",
+    "-Wdead-code"
   ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
@@ -107,7 +100,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
       "org.typelevel" %%% "cats-core" % "2.0.0-RC2",
-      "org.scalacheck" %%% "scalacheck" % "1.13.5",
+      "org.scalacheck" %%% "scalacheck" % "1.14.0",
       "com.lihaoyi" %%% "fastparse" % "2.1.3",
       "com.lihaoyi" %%% "pprint" % "0.5.5",
       "com.beachape" %%% "enumeratum" % "1.5.13"
@@ -128,10 +121,10 @@ lazy val jsApp = project
       "org.scala-js" %%% "scalajs-dom" % "0.9.7",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.5.0-RC2",
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.5.0-RC2",
-      "com.lihaoyi" %%% "scalatags" % "0.6.8",
-      "io.circe" %%% "circe-core" % "0.11.1",
-      "io.circe" %%% "circe-generic" % "0.11.1",
-      "io.circe" %%% "circe-parser" % "0.11.1"
+      "com.lihaoyi" %%% "scalatags" % "0.7.0",
+      "io.circe" %%% "circe-core" % "0.12.0-RC4",
+      "io.circe" %%% "circe-generic" % "0.12.0-RC4",
+      "io.circe" %%% "circe-parser" % "0.12.0-RC4"
     ),
     npmDependencies in Compile ++= Seq(
       "react" -> "16.7.0",

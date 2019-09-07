@@ -68,9 +68,9 @@ object Evolution {
     step match {
       case 0 => constant(start)
       case _ =>
+        val length = ((end - start) / step).toInt + 1
         new Evolution[Double] {
-          def run: Iterator[Double] =
-            (start to end by step).toIterator
+          def run: Iterator[Double] = Iterator.tabulate(length)(n => start + n * step)
         }
     }
 

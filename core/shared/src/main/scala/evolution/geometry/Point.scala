@@ -47,15 +47,6 @@ object Point {
     )
   }
 
-  def pointsOnArc(n: Int, start: Point, angle: Double): IndexedSeq[Point] = {
-    (0.0 until n * angle by angle).map(start.rotate)
-  }
-
-  def regularPolygon(edges: Int, radius: Double = 1): IndexedSeq[Point] = {
-    val start = Point(0, radius)
-    pointsOnArc(edges, start, 2 * Math.PI / edges)
-  }
-
   def sequence(n: Int, from: Point, to: Point): List[Point] = {
     val step = (to - from) / n
     (0 to n).toList.map(from + step * _)

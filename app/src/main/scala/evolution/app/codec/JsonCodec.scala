@@ -4,9 +4,8 @@ import io.circe._
 
 object JsonCodec {
 
-  implicit
-  def fromCirce[T](implicit encoder: Encoder[T], decoder: Decoder[T]): JsonCodec[T] =
-    Codec.instance(
+  implicit def fromCirce[T](implicit encoder: Encoder[T], decoder: Decoder[T]): JsonCodec[T] =
+    evolution.app.codec.Codec.instance(
       t => encoder(t),
       json => decoder.decodeJson(json).toOption
     )
@@ -30,8 +29,7 @@ object JsonCodec {
   }
 
   /**
-    * Summoner method
-    */
-  def apply[T](implicit codec: JsonCodec[T]): JsonCodec[T]
-    = codec
+   * Summoner method
+   */
+  def apply[T](implicit codec: JsonCodec[T]): JsonCodec[T] = codec
 }
