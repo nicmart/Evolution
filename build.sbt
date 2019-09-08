@@ -162,4 +162,4 @@ lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
 addCommandAlias("testAll", "; coreJVM/test; jsApp/test")
-addCommandAlias("compileAll", "; compile; test/compile")
+addCommandAlias("compileAll", "; compile; test:compile")

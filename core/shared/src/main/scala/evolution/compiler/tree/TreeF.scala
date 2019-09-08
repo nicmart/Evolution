@@ -1,6 +1,6 @@
 package evolution.compiler.tree
 
-import cats.{Applicative, Eval, Traverse}
+import cats.{ Applicative, Eval, Traverse }
 import cats.data.NonEmptyList
 import cats.implicits._
 import evolution.compiler.phases.typing.config.Constant
@@ -12,12 +12,8 @@ import scala.collection.immutable.Nil
 sealed trait TreeF[+T]
 
 object TreeF {
+
   sealed abstract case class Identifier(name: String, primitive: Boolean = false) extends TreeF[Nothing]
-
-  object Identifier {
-    def apply(name: String, primitive: Boolean = false): Identifier = new Identifier(name.toLowerCase, primitive) {}
-  }
-
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
   final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
   final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
@@ -25,6 +21,16 @@ object TreeF {
   final case class IntLiteral(n: Int) extends TreeF[Nothing]
   final case class Bool(b: Boolean) extends TreeF[Nothing]
   final case class Lst[T](ts: List[T]) extends TreeF[T]
+
+  object Identifier {
+    def apply(name: String, primitive: Boolean = false): Identifier = new Identifier(name.toLowerCase, primitive) {}
+    def const[T](constant: Constant): TreeF[T] = TreeF.Identifier(constant.entryName, primitive = false)
+    def primitiveConst[T](constant: Constant): TreeF[T] = TreeF.Identifier(constant.entryName, primitive = true)
+  }
+
+  object App {
+    def of[T](f: T, arg1: T, args: T*): TreeF[T] = App(f, NonEmptyList(arg1, args.toList))
+  }
 
   final case class CoTree[A](value: A, tail: TreeF[CoTree[A]])
 
@@ -46,12 +52,9 @@ object TreeF {
     def annotate(a: A): CoTree[A] = CoTree(a, tree)
   }
 
-  def AppN(f: Tree, argHead: Tree, argTail: Tree*): Tree =
-    App(f, NonEmptyList(argHead, argTail.toList)).embed
-
-  def Const(constant: Constant): Tree = TreeF.Identifier(constant.entryName).embed
   def TypedConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
     CoTree(tpe, TreeF.Identifier(constant.entryName))
+
   def PrimitiveConst(constant: Constant): Tree = TreeF.Identifier(constant.entryName, primitive = true).embed
   def TypedPrimitiveConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
     CoTree(tpe, TreeF.Identifier(constant.entryName, primitive = true))
@@ -59,7 +62,7 @@ object TreeF {
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match {
-        case TreeF.App(g, args)          => (f(g), args.traverse(f)).mapN(TreeF.App[B])
+        case TreeF.App(g, args)          => (f(g), args.traverse(f)).mapN(TreeF.App[B] _)
         case Lambda(varName, expr)       => f(expr).map(Lambda(varName, _))
         case Lst(ts)                     => ts.traverse(f).map(Lst[B])
         case Let(varName, expr, in)      => (f(expr), f(in)).mapN(Let(varName, _, _))
@@ -105,6 +108,9 @@ object TreeF {
     case Lst(ts)            => ppFunc("Lst", ts)
   }
 
+  private def ppFunc(name: String, children: List[String]): String =
+    children.mkString(s"$name(", ",", ")")
+
   def pprintTree(tree: Tree): String = cata(pprintTreeF)(tree)
 
   def cata[A](f: TreeF[A] => A)(tree: Tree): A =
@@ -113,6 +119,4 @@ object TreeF {
   def cataCoTree[A, B](f: (B, TreeF[A]) => A)(tree: CoTree[B]): A =
     f(tree.value, tree.tail.map(cataCoTree(f)))
 
-  private def ppFunc(name: String, children: List[String]): String =
-    children.mkString(s"$name(", ",", ")")
 }

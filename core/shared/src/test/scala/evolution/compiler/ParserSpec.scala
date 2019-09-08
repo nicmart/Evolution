@@ -1,10 +1,10 @@
 package evolution.compiler
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{Gen, Shrink}
+import org.scalacheck.{ Gen, Shrink }
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.typing.config.{Constant0, Constant1, Constant2, Constant3}
-import evolution.compiler.tree.{SpecialSyntax, Tree}
+import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.tree.{ SpecialSyntax, Tree }
 
 class ParserSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -34,7 +34,7 @@ class ParserSpec extends LanguageSpec {
       "parse binary operators" in {
         forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
           case (a, (op, opAST), b) =>
-            unsafeParse(s"$a $op $b") shouldEq AppN(opAST, unsafeParse(a), unsafeParse(b))
+            unsafeParse(s"$a $op $b") shouldEq App.of(opAST, unsafeParse(a), unsafeParse(b)).embed
         }
       }
 
@@ -53,10 +53,12 @@ class ParserSpec extends LanguageSpec {
       }
 
       "inverses" in {
-        unsafeParse("-point(0, 0)") shouldEq AppN(
-          Const(Constant1.Inverse),
-          AppN(Const(Constant2.Point), IntLiteral(0).embed, IntLiteral(0).embed)
-        )
+        unsafeParse("-point(0, 0)") shouldEq App
+          .of(
+            Identifier.const(Constant1.Inverse).embed,
+            App.of(Identifier.const(Constant2.Point).embed, IntLiteral(0).embed, IntLiteral(0).embed).embed
+          )
+          .embed
       }
 
       "bindings" - {
@@ -71,7 +73,7 @@ class ParserSpec extends LanguageSpec {
             unsafeParse(s"$id = $expr in 1 + 2") shouldEq Let(
               id.toLowerCase,
               unsafeParse(expr),
-              AppN(Const(Constant2.Add), IntLiteral(1).embed, IntLiteral(2).embed)
+              App.of(Identifier.const(Constant2.Add).embed, IntLiteral(1).embed, IntLiteral(2).embed).embed
             ).embed
           }
         }
@@ -99,37 +101,49 @@ class ParserSpec extends LanguageSpec {
       "sampling" - {
         "a <- b in a" in {
           unsafeParse("a <- b in c") shouldEq
-            AppN(Const(Constant2.WithFirst), Identifier("b").embed, Lambda("a", Identifier("c").embed).embed)
+            App
+              .of(
+                Identifier.const(Constant2.WithFirst).embed,
+                Identifier("b").embed,
+                Lambda("a", Identifier("c").embed).embed
+              )
+              .embed
         }
       }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a * $b + $c") shouldEq AppN(
-            Const(Constant2.Add),
-            AppN(Const(Constant2.Multiply), unsafeParse(a), unsafeParse(b)),
-            unsafeParse(c)
-          )
+          unsafeParse(s"$a * $b + $c") shouldEq App
+            .of(
+              Identifier.const(Constant2.Add).embed,
+              App.of(Identifier.const(Constant2.Multiply).embed, unsafeParse(a), unsafeParse(b)).embed,
+              unsafeParse(c)
+            )
+            .embed
         }
       }
 
       "a + b * c = a + (b * c)" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"$a + $b * $c") shouldEq AppN(
-            Const(Constant2.Add),
-            unsafeParse(a),
-            AppN(Const(Constant2.Multiply), unsafeParse(b), unsafeParse(c))
-          )
+          unsafeParse(s"$a + $b * $c") shouldEq App
+            .of(
+              Identifier.const(Constant2.Add).embed,
+              unsafeParse(a),
+              App.of(Identifier.const(Constant2.Multiply).embed, unsafeParse(b), unsafeParse(c)).embed
+            )
+            .embed
         }
       }
 
       "(a + b) * c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-          unsafeParse(s"($a + $b) * $c") shouldEq AppN(
-            Const(Constant2.Multiply),
-            AppN(Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
-            unsafeParse(c)
-          )
+          unsafeParse(s"($a + $b) * $c") shouldEq App
+            .of(
+              Identifier.const(Constant2.Multiply).embed,
+              App.of(Identifier.const(Constant2.Add).embed, unsafeParse(a), unsafeParse(b)).embed,
+              unsafeParse(c)
+            )
+            .embed
         }
       }
 
@@ -158,7 +172,7 @@ class ParserSpec extends LanguageSpec {
         "a < b" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
             val parsed = unsafeParse(s"$a < $b")
-            val expected = AppN(Const(Constant2.LessThan), unsafeParse(a), unsafeParse(b))
+            val expected = App.of(Identifier.const(Constant2.LessThan).embed, unsafeParse(a), unsafeParse(b)).embed
             parsed shouldEq expected
           }
         }
@@ -168,7 +182,7 @@ class ParserSpec extends LanguageSpec {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
             identifier1.toLowerCase,
-            AppN(Const(Constant2.Add), unsafeParse(expr1), unsafeParse(expr2))
+            App.of(Identifier.const(Constant2.Add).embed, unsafeParse(expr1), unsafeParse(expr2)).embed
           ).embed
         }
       }
@@ -187,117 +201,147 @@ class ParserSpec extends LanguageSpec {
 
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-          unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq AppN(
-            Identifier(identifier1).embed,
-            unsafeParse(expr1),
-            unsafeParse(expr2)
-          )
+          unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq App
+            .of(
+              Identifier(identifier1).embed,
+              unsafeParse(expr1),
+              unsafeParse(expr2)
+            )
+            .embed
         }
       }
 
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
-          unsafeParse(s"($lambda)($expr)") shouldEq AppN(
-            unsafeParse(lambda),
-            unsafeParse(expr)
-          )
+          unsafeParse(s"($lambda)($expr)") shouldEq App
+            .of(
+              unsafeParse(lambda),
+              unsafeParse(expr)
+            )
+            .embed
         }
       }
 
       "parse exponentials" - {
         "2^3 + 1" in {
-          unsafeParse("2^3 + 1") shouldEq AppN(
-            Const(Constant2.Add),
-            AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed),
-            IntLiteral(1).embed
-          )
+          unsafeParse("2^3 + 1") shouldEq App
+            .of(
+              Identifier.const(Constant2.Add).embed,
+              App.of(Identifier.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed,
+              IntLiteral(1).embed
+            )
+            .embed
         }
 
         "2^3 * 2" in {
-          unsafeParse("2^3 * 2") shouldEq AppN(
-            Const(Constant2.Multiply),
-            AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed),
-            IntLiteral(2).embed
-          )
+          unsafeParse("2^3 * 2") shouldEq App
+            .of(
+              Identifier.const(Constant2.Multiply).embed,
+              App.of(Identifier.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed,
+              IntLiteral(2).embed
+            )
+            .embed
         }
 
         "2 * 2^3" in {
-          unsafeParse("2 * 2^3") shouldEq AppN(
-            Const(Constant2.Multiply),
-            IntLiteral(2).embed,
-            AppN(Const(Constant2.Exp), IntLiteral(2).embed, IntLiteral(3).embed)
-          )
+          unsafeParse("2 * 2^3") shouldEq App
+            .of(
+              Identifier.const(Constant2.Multiply).embed,
+              IntLiteral(2).embed,
+              App.of(Identifier.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed
+            )
+            .embed
         }
       }
 
       "divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a / $b + $c") shouldEq AppN(
-              Const(Constant2.Add),
-              AppN(Const(Constant2.Div), unsafeParse(a), unsafeParse(b)),
-              unsafeParse(c)
-            )
+            unsafeParse(s"$a / $b + $c") shouldEq App
+              .of(
+                Identifier.const(Constant2.Add).embed,
+                App.of(Identifier.const(Constant2.Div).embed, unsafeParse(a), unsafeParse(b)).embed,
+                unsafeParse(c)
+              )
+              .embed
           }
         }
 
         "a + b / c = a + (b / c)" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"$a + $b / $c") shouldEq AppN(
-              Const(Constant2.Add),
-              unsafeParse(a),
-              AppN(Const(Constant2.Div), unsafeParse(b), unsafeParse(c))
-            )
+            unsafeParse(s"$a + $b / $c") shouldEq App
+              .of(
+                Identifier.const(Constant2.Add).embed,
+                unsafeParse(a),
+                App.of(Identifier.const(Constant2.Div).embed, unsafeParse(b), unsafeParse(c)).embed
+              )
+              .embed
           }
         }
 
         "(a + b) / c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"($a + $b) / $c") shouldEq AppN(
-              Const(Constant2.Div),
-              AppN(Const(Constant2.Add), unsafeParse(a), unsafeParse(b)),
-              unsafeParse(c)
-            )
+            unsafeParse(s"($a + $b) / $c") shouldEq App
+              .of(
+                Identifier.const(Constant2.Div).embed,
+                App.of(Identifier.const(Constant2.Add).embed, unsafeParse(a), unsafeParse(b)).embed,
+                unsafeParse(c)
+              )
+              .embed
           }
         }
 
         "@point(a, b)" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-            unsafeParse(s"@point($a, $b)") shouldEq AppN(
-              Const(Constant2.LiftedPoint),
-              unsafeParse(a),
-              unsafeParse(b)
-            )
+            unsafeParse(s"@point($a, $b)") shouldEq App
+              .of(
+                Identifier.const(Constant2.LiftedPoint).embed,
+                unsafeParse(a),
+                unsafeParse(b)
+              )
+              .embed
           }
         }
 
         "const(expr(a, b))" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-            unsafeParse(s"const($expr($a, $b))") shouldEq AppN(
-              Const(Constant1.Constant),
-              AppN(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
-            )
+            unsafeParse(s"const($expr($a, $b))") shouldEq App
+              .of(
+                Identifier.const(Constant1.Constant).embed,
+                App.of(unsafeParse(expr), unsafeParse(a), unsafeParse(b)).embed
+              )
+              .embed
           }
         }
 
         "const(n)" in {
           forAll(arbitrary[Double]) { d =>
             unsafeParse(s"const($d)") shouldEq
-              AppN(Const(Constant1.Constant), unsafeParse(d.toString))
+              App.of(Identifier.const(Constant1.Constant).embed, unsafeParse(d.toString)).embed
           }
         }
 
         "[a, b, c]" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-            unsafeParse(s"[$a, $b, $c]") shouldEq AppN(
-              Const(Constant2.Cons),
-              unsafeParse(a),
-              AppN(
-                Const(Constant2.Cons),
-                unsafeParse(b),
-                AppN(Const(Constant2.Cons), unsafeParse(c), Const(Constant0.Empty))
+            unsafeParse(s"[$a, $b, $c]") shouldEq App
+              .of(
+                Identifier.const(Constant2.Cons).embed,
+                unsafeParse(a),
+                App
+                  .of(
+                    Identifier.const(Constant2.Cons).embed,
+                    unsafeParse(b),
+                    App
+                      .of(
+                        Identifier.const(Constant2.Cons).embed,
+                        unsafeParse(c),
+                        Identifier.const(Constant0.Empty).embed
+                      )
+                      .embed
+                  )
+                  .embed
               )
-            )
+              .embed
           }
         }
       }
@@ -306,23 +350,27 @@ class ParserSpec extends LanguageSpec {
         pending
         forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
           val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
-          val expected = AppN(
-            Const(Constant3.ZipWith),
-            AppN(
-              Const(Constant3.ZipWith),
-              unsafeParse(a),
-              unsafeParse(b),
-              unsafeParse(f)
-            ),
-            unsafeParse(c),
-            Lambda(
-              "f",
+          val expected = App
+            .of(
+              Identifier.const(Constant3.ZipWith).embed,
+              App
+                .of(
+                  Identifier.const(Constant3.ZipWith).embed,
+                  unsafeParse(a),
+                  unsafeParse(b),
+                  unsafeParse(f)
+                )
+                .embed,
+              unsafeParse(c),
               Lambda(
-                "x",
-                AppN(Identifier("f").embed, Identifier("x").embed)
+                "f",
+                Lambda(
+                  "x",
+                  App.of(Identifier("f").embed, Identifier("x").embed).embed
+                ).embed
               ).embed
-            ).embed
-          )
+            )
+            .embed
 
           parsed shouldEq expected
         }
@@ -332,23 +380,27 @@ class ParserSpec extends LanguageSpec {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, d) =>
           val parsed = unsafeParse(s"zip(a <- $a, b <- $b, c <- $c) in $d")
           val lambda = Lambda("a", Lambda("b", Lambda("c", unsafeParse(d)).embed).embed).embed
-          val expected = AppN(
-            Const(Constant3.ZipWith),
-            AppN(
-              Const(Constant3.ZipWith),
-              unsafeParse(a),
-              unsafeParse(b),
-              lambda
-            ),
-            unsafeParse(c),
-            Lambda(
-              "f",
+          val expected = App
+            .of(
+              Identifier.const(Constant3.ZipWith).embed,
+              App
+                .of(
+                  Identifier.const(Constant3.ZipWith).embed,
+                  unsafeParse(a),
+                  unsafeParse(b),
+                  lambda
+                )
+                .embed,
+              unsafeParse(c),
               Lambda(
-                "x",
-                AppN(Identifier("f").embed, Identifier("x").embed)
+                "f",
+                Lambda(
+                  "x",
+                  App.of(Identifier("f").embed, Identifier("x").embed).embed
+                ).embed
               ).embed
-            ).embed
-          )
+            )
+            .embed
 
           parsed shouldEq expected
         }
@@ -379,18 +431,18 @@ class ParserSpec extends LanguageSpec {
       "not" in {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldEq
-            AppN(Const(Constant1.Not), unsafeParse(a))
+            App.of(Identifier.const(Constant1.Not).embed, unsafeParse(a)).embed
         }
       }
 
       "logical operators with the right precedence" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a || $b && $c") shouldEq
-            AppN(
-              Const(Constant2.Or),
+            App.of(
+              Identifier.const(Constant2.Or).embed,
               unsafeParse(a),
-              AppN(Const(Constant2.And), unsafeParse(b), unsafeParse(c))
-            )
+              App.of(Identifier.const(Constant2.And).embed, unsafeParse(b), unsafeParse(c)).embed
+            ).embed
         }
       }
     }

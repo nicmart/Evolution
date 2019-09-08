@@ -4,9 +4,9 @@ import evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
 import evolution.compiler.phases.parsing.ParserConfig.whitespace
-import evolution.compiler.phases.typing.config.{Constant1, Constant2}
+import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree.{Tree, TreeF}
+import evolution.compiler.tree.{ Tree, TreeF }
 import evolution.compiler.tree
 import cats.data.NonEmptyList
 
@@ -121,7 +121,7 @@ object Parser {
       P("!").map(_ => Identifier(Constant1.Not.entryName).embed)
 
   private def unaryPrefixOp[_: P]: P[Tree] =
-    P(unaryOps ~/ atomicOperand).map { case (op, e) => AppN(op, e) }
+    P(unaryOps ~/ atomicOperand).map { case (op, e) => App.of(op, e).embed }
 
   private def args[_: P]: P[List[Tree]] = P(nonEmptyArgs.map(_.toList) | Pass.map(_ => Nil))
 
