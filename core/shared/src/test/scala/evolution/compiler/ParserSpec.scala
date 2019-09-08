@@ -1,10 +1,10 @@
 package evolution.compiler
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{ Gen, Shrink }
+import org.scalacheck.{Gen, Shrink}
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compiler.tree.SpecialSyntax
+import evolution.compiler.phases.typing.config.{Constant0, Constant1, Constant2, Constant3}
+import evolution.compiler.tree.{SpecialSyntax, Tree}
 
 class ParserSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -19,7 +19,6 @@ class ParserSpec extends LanguageSpec {
 
       "doubles literals that are not integers" in {
         forAll { d: Double =>
-          1 === (0)
           whenever(d % 1 != 0) {
             unsafeParse(d.toString) shouldEq DoubleLiteral(d).embed
           }

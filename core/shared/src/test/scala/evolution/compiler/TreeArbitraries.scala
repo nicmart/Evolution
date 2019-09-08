@@ -6,7 +6,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
-import evolution.compiler.tree.TreeF.Tree
+import evolution.compiler.tree.Tree
 import evolution.compiler.tree.TreeF._
 
 trait TreeArbitraries {

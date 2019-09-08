@@ -6,7 +6,7 @@ import evolution.compiler.types.Type
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.tree.TreeF
-import evolution.compiler.tree.TreeF.Tree
+import evolution.compiler.tree.Tree
 import evolution.materialization.Evolution
 
 class CodeCompiler(allPhases: AllPhases) {

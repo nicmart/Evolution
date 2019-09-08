@@ -9,10 +9,12 @@ import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
+
 import scala.collection.immutable.Nil
 import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
+import evolution.compiler.tree.Tree
 import evolution.data.emptyCtx
 import evolution.logging.Logger
 import evolution.compiler.tree.TreeF._

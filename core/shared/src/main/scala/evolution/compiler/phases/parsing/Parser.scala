@@ -4,9 +4,9 @@ import evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
 import evolution.compiler.phases.parsing.ParserConfig.whitespace
-import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
+import evolution.compiler.phases.typing.config.{Constant1, Constant2}
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree.TreeF
+import evolution.compiler.tree.{Tree, TreeF}
 import evolution.compiler.tree
 import cats.data.NonEmptyList
 
@@ -105,7 +105,7 @@ object Parser {
       case (f, Some(arguments)) => App(f, arguments).embed
     }
 
-  private def list[_: P]: P[Tree] = P("[" ~/ args ~/ "]").map(ConsN)
+  private def list[_: P]: P[Tree] = P("[" ~/ args ~/ "]").map(tree.SpecialSyntax.cons)
 
   private def doubleLit[_: P]: P[Tree] =
     numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt).embed else DoubleLiteral(d).embed)
@@ -137,9 +137,10 @@ object Parser {
   private def alpha[_: P]: P[Unit] = P(CharIn("a-z") | CharIn("A-Z"))
   private def alphaNum[_: P]: P[Unit] = P(CharIn("0-9") | alpha)
 
-  private def specialSyntax[_: P]: P[Tree] = SpecialSyntax.zip | SpecialSyntax.product | SpecialSyntax.uniformChoice
+  private def specialSyntax[_: P]: P[Tree] = special.zip | special.product | special.uniformChoice
 
-  private object SpecialSyntax {
+  private object special {
+
     def zip[_: P]: P[Tree] =
       P(StringInIgnoreCase("zip") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
         case (bindings, body) => tree.SpecialSyntax.zip(bindings.toList, body)

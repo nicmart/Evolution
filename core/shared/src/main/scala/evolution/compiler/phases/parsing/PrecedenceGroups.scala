@@ -1,7 +1,7 @@
 package evolution.compiler.phases.parsing
 
+import evolution.compiler.tree.Tree
 import fastparse._
-import evolution.compiler.tree.TreeF.Tree
 
 case class PrecedenceGroups(last: () => P[Tree], groups: List[PrecedenceGroup]) {
   def operand[_: P]: P[Tree] = {

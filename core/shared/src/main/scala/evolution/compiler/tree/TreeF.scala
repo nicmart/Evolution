@@ -1,16 +1,13 @@
 package evolution.compiler.tree
 
-import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2 }
-import scala.collection.immutable.Nil
-import cats.Traverse
-import cats.Applicative
-import cats.Eval
-import cats.Monad
-import cats.Functor
-import cats.implicits._
-import evolution.compiler.types.TypeClasses.Qualified
-import evolution.compiler.types.Type
+import cats.{Applicative, Eval, Traverse}
 import cats.data.NonEmptyList
+import cats.implicits._
+import evolution.compiler.phases.typing.config.Constant
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClasses.Qualified
+
+import scala.collection.immutable.Nil
 
 sealed trait TreeF[+T]
 
@@ -29,7 +26,6 @@ object TreeF {
   final case class Bool(b: Boolean) extends TreeF[Nothing]
   final case class Lst[T](ts: List[T]) extends TreeF[T]
 
-  final case class Tree(value: TreeF[Tree])
   final case class CoTree[A](value: A, tail: TreeF[CoTree[A]])
 
   final type TypedTree = CoTree[Qualified[Type]]
@@ -59,11 +55,6 @@ object TreeF {
   def PrimitiveConst(constant: Constant): Tree = TreeF.Identifier(constant.entryName, primitive = true).embed
   def TypedPrimitiveConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
     CoTree(tpe, TreeF.Identifier(constant.entryName, primitive = true))
-
-  def ConsN(asts: List[Tree]): Tree = asts match {
-    case Nil          => TreeF.Identifier(Constant0.Empty.entryName).embed
-    case head :: tail => AppN(Const(Constant2.Cons), head, ConsN(tail))
-  }
 
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
@@ -121,51 +112,6 @@ object TreeF {
 
   def cataCoTree[A, B](f: (B, TreeF[A]) => A)(tree: CoTree[B]): A =
     f(tree.value, tree.tail.map(cataCoTree(f)))
-
-  def cataM[A, M[_]: Monad](f: TreeF[A] => M[A])(tree: Tree): M[A] =
-    tree.value.traverse(cataM(f)).flatMap(f)
-
-  def cataMCoTree[A, B, M[_]: Monad](f: (B, TreeF[A]) => M[A])(tree: CoTree[B]): M[A] =
-    tree.tail.traverse(cataMCoTree(f)).flatMap(tfa => f(tree.value, tfa))
-
-  def attr[A](f: TreeF[A] => A)(tree: Tree): CoTree[A] = {
-    val x = tree.value.map(attr(f))
-    CoTree(cata(f)(tree), x)
-  }
-
-  def attrM[A, M[_]: Functor](f: TreeF[A] => M[A])(cotree: TreeF[CoTree[A]]): M[CoTree[A]] =
-    f(cotree.map(_.value)).map(a => CoTree(a, cotree))
-
-  def ana[A](f: A => TreeF[A])(a: A): Tree =
-    Tree(f(a).map(ana(f)))
-
-  def anaM[A, M[_]: Monad](f: A => M[TreeF[A]])(a: A): M[Tree] =
-    f(a).flatMap(_.traverse(anaM(f))).map(Tree)
-
-  def histoCo[A, B](f: (B, TreeF[CoTree[A]]) => A)(tree: CoTree[B]): A = ???
-  //f(tree.value, tree.tail.map(histo(f)))
-
-  implicit class CoOps[A](coTree: CoTree[A]) {
-    def cojoin: CoTree[CoTree[A]] = CoTree(coTree, coTree.tail.map(_.cojoin))
-    def map[B](f: A => B): CoTree[B] = CoTree(f(coTree.value), coTree.tail.map(_.map(f)))
-  }
-
-  def unfold[A, B](b: B)(f: B => (A, TreeF[B])): CoTree[A] = {
-    val (a, fb) = f(b)
-    CoTree(a, fb.map(unfold(_)(f)))
-  }
-
-  // Note: ∘ is just map!
-  // Cofree.unfold(m)(as => (as ∘ (_.copure), k(as ∘ (_.tail)))) ?
-  def dist[A](fca0: TreeF[CoTree[A]]): CoTree[TreeF[A]] =
-    unfold[TreeF[A], TreeF[CoTree[A]]](fca0)(fca => (fca.map(_.value), fca.map(_.tail)))
-
-  def histo[A](f: TreeF[CoTree[A]] => A)(tree: Tree): A =
-    cata[CoTree[A]](fca => dist(fca.map(_.cojoin)).map(f))(tree).value
-  // cata[W[A]](t)(fwa => k(fwa.map(_.cojoin)).map(g)).copoint
-  // k: TreeF[CoTree[?]] =? CoTree[TreeF[?]]
-  // tree.value // TreeF[Tree]
-  // tree.value.map(tree => histo(f)(tree), ) // TreeF[A]
 
   private def ppFunc(name: String, children: List[String]): String =
     children.mkString(s"$name(", ",", ")")

@@ -6,6 +6,7 @@ import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.tree.TreeF._
+import evolution.compiler.tree.Tree
 import evolution.compiler.phases.typing.model.TypeVarGenerator
 
 class FindConstraintsSpec extends LanguageSpec {

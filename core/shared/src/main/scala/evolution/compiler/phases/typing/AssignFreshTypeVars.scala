@@ -9,8 +9,7 @@ import evolution.compiler.phases.typing.model.TypeVarGenerator
 import evolution.compiler.types.TypeBinding
 import evolution.compiler.phases.typing.model.Assignment
 import evolution.compiler.phases.typing.model.Substitution
-import evolution.compiler.tree.TreeF.Tree
-import evolution.compiler.tree.TreeF
+import evolution.compiler.tree.{Tree, TreeF}
 import evolution.compiler.tree.TreeF._
 
 object AssignFreshTypeVars {

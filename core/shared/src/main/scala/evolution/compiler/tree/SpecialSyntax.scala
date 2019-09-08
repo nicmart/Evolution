@@ -1,8 +1,8 @@
 package evolution.compiler.tree
 
-import evolution.compiler.phases.typing.config.{ Constant2, Constant3 }
+import evolution.compiler.phases.typing.config.{Constant0, Constant1, Constant2, Constant3}
+
 import scala.collection.immutable.Nil
-import evolution.compiler.phases.typing.config.Constant1
 import evolution.compiler.tree.TreeF._
 
 object SpecialSyntax {
@@ -28,6 +28,11 @@ object SpecialSyntax {
 
   def uniformChoice(args: List[Tree]): Tree =
     AppN(Const(Constant1.UniformChoice), Lst(args).embed)
+
+  def cons(asts: List[Tree]): Tree = asts match {
+    case Nil          => TreeF.Identifier(Constant0.Empty.entryName).embed
+    case head :: tail => AppN(Const(Constant2.Cons), head, cons(tail))
+  }
 
   private def buildLambda(vars: List[String], body: Tree): Tree =
     vars match {

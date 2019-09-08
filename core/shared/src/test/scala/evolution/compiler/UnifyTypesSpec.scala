@@ -8,6 +8,7 @@ import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.tree.TreeF._
+import evolution.compiler.tree.Tree
 
 class UnifyTypesSpec extends LanguageSpec {
 
