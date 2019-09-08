@@ -18,6 +18,7 @@ import evolution.compiler.tree.Tree
 import evolution.data.emptyCtx
 import evolution.logging.Logger
 import evolution.compiler.tree.TreeF._
+import evolution.compiler.tree.PrettyPrintTypedTree
 
 class AllPhases(logger: Logger) {
   import logger.log
@@ -30,29 +31,29 @@ class AllPhases(logger: Logger) {
     varBindings: List[(String, Tree)]
   ): Either[String, Evolution[Point]] =
     for {
-      ast <- Parser.parse(serialisedExpr).leftMap(_.message)
+      tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
-      astWithVars = addVars(ast, varBindings)
-      treeWithTypeVars <- AssignFreshTypeVars.assign(astWithVars, typeBindings).asRight
+      treeWithVars = addVars(tree, varBindings)
+      treeWithTypeVars <- AssignFreshTypeVars.assign(treeWithVars, typeBindings).asRight
       _ = log(s"Un-typed expression:")
-      //_ = log(TreeF.prettyPrint(treeWithTypeVars))
+      _ = log(PrettyPrintTypedTree(treeWithTypeVars))
       constraints <- FindConstraints.find(treeWithTypeVars)
       _ = log("Done: Constraints generation")
       constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> treeWithTypeVars.annotation.value))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = log("Done: unification")
       _ = log(s"Partially typed AST:")
-      //_ = log(TreeF.pprintTree(unification.substitution.substitute(treeWithTypeVars)))
+      _ = log(PrettyPrintTypedTree(unification.substitution.substitute(treeWithTypeVars)))
       start = System.currentTimeMillis()
       predicateSubst <- new UnifyPredicates(logger).unify(TypingConfig.instances, unification.substitutedPredicates)
       stop = System.currentTimeMillis()
       _ = log(s"Predicate unification time: ${(stop - start)}")
       subst = predicateSubst.compose(unification.substitution)
-      typedAst = subst.substitute(treeWithTypeVars)
+      typedTree = subst.substitute(treeWithTypeVars)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
-      //_ = log(AST.prettyPrint(typedAst))
-      expression <- Compile.compile(typedAst, varContext(varBindings))
+      _ = log(PrettyPrintTypedTree(typedTree))
+      expression <- Compile.compile(typedTree, varContext(varBindings))
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       evolution = Materialize.materialize(expression).apply(emptyCtx)
