@@ -8,7 +8,7 @@ import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2
 import evolution.compiler.types.Typed
 import evolution.compiler.types.Type
 import evolution.materialization.Evolution
-import evolution.compiler.ast.TreeF._
+import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
 import scala.collection.immutable.Nil
 

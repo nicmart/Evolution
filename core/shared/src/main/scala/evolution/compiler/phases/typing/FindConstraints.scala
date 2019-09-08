@@ -4,8 +4,8 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typing.model.Constraints
-import evolution.compiler.ast.TreeF.TypedTree
-import evolution.compiler.ast.TreeF._
+import evolution.compiler.tree.TreeF.TypedTree
+import evolution.compiler.tree.TreeF._
 
 object FindConstraints {
   def find(expr: TypedTree): Either[String, Constraints] = {

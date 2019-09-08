@@ -5,9 +5,9 @@ import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
 import evolution.compiler.phases.parsing.ParserConfig.whitespace
 import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
-import evolution.compiler.ast.TreeF._
-import evolution.compiler.ast.TreeF
-import evolution.compiler.ast
+import evolution.compiler.tree.TreeF._
+import evolution.compiler.tree.TreeF
+import evolution.compiler.tree
 import cats.data.NonEmptyList
 
 object Parser {
@@ -46,13 +46,13 @@ object Parser {
     private def sampleTail[_: P]: P[String => Tree] =
       P(whitespaces ~ "<-" ~/ expression ~/ "in" ~/ expression).map {
         case (sampling, body) =>
-          variable => ast.SpecialSyntax.withFirst(variable -> sampling, body)
+          variable => tree.SpecialSyntax.withFirst(variable -> sampling, body)
       }
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
     private def argsTail[_: P]: P[String => Tree] =
       P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
-        case (args, value, body) => name => ast.SpecialSyntax.functionBinding(name, args.toList, value, body)
+        case (args, value, body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
       }
   }
 
@@ -142,18 +142,18 @@ object Parser {
   private object SpecialSyntax {
     def zip[_: P]: P[Tree] =
       P(StringInIgnoreCase("zip") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => ast.SpecialSyntax.zip(bindings.toList, body)
+        case (bindings, body) => tree.SpecialSyntax.zip(bindings.toList, body)
       }
 
     def product[_: P]: P[Tree] =
       P(StringInIgnoreCase("product") ~ "(" ~/ nonEmptyCsv(comprehensionBinding) ~/ ")" ~/ "in" ~/ expression).map {
-        case (bindings, body) => ast.SpecialSyntax.product(bindings.toList, body)
+        case (bindings, body) => tree.SpecialSyntax.product(bindings.toList, body)
       }
 
     def uniformChoice[_: P]: P[Tree] =
       P(IgnoreCase(Constant1.UniformChoice.entryName) ~ "(" ~/ nonEmptyArgs ~/ ")")
         .map(_.toList)
-        .map(ast.SpecialSyntax.uniformChoice)
+        .map(tree.SpecialSyntax.uniformChoice)
 
     private def comprehensionBinding[_: P]: P[(String, Tree)] =
       P(identifier ~/ "<-" ~/ expression)

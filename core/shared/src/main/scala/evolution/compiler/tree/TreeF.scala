@@ -1,4 +1,4 @@
-package evolution.compiler.ast
+package evolution.compiler.tree
 
 import evolution.compiler.phases.typing.config.{ Constant, Constant0, Constant2 }
 import scala.collection.immutable.Nil
@@ -19,7 +19,6 @@ object TreeF {
 
   object Identifier {
     def apply(name: String, primitive: Boolean = false): Identifier = new Identifier(name.toLowerCase, primitive) {}
-
   }
 
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]

@@ -15,7 +15,7 @@ import evolution.geometry.Point
 import evolution.compiler.phases.materializing.Materialize
 import evolution.data.emptyCtx
 import evolution.logging.Logger
-import evolution.compiler.ast.TreeF._
+import evolution.compiler.tree.TreeF._
 
 class AllPhases(logger: Logger) {
   import logger.log

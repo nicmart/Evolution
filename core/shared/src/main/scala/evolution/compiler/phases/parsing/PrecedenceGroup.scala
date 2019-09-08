@@ -2,8 +2,8 @@ package evolution.compiler.phases.parsing
 
 import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
-import evolution.compiler.ast.TreeF.Tree
-import evolution.compiler.ast.TreeF
+import evolution.compiler.tree.TreeF.Tree
+import evolution.compiler.tree.TreeF
 
 case class PrecedenceGroup(operators: (String, Tree)*) {
   def parser[_: P](next: () => P[Tree]): P[Tree] = P(next() ~/ (opsParser ~/ next()).rep).map {

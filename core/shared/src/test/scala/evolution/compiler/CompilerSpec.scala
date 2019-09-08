@@ -12,9 +12,9 @@ import evolution.compiler.phases.compiling.Compile
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
-import evolution.compiler.ast.TreeF
-import evolution.compiler.ast.TreeF.CoTree
-import evolution.compiler.ast.TreeF.TypedTree
+import evolution.compiler.tree.TreeF
+import evolution.compiler.tree.TreeF.CoTree
+import evolution.compiler.tree.TreeF.TypedTree
 
 class CompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

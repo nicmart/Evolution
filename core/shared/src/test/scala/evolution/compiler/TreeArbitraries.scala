@@ -6,8 +6,8 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
-import evolution.compiler.ast.TreeF.Tree
-import evolution.compiler.ast.TreeF._
+import evolution.compiler.tree.TreeF.Tree
+import evolution.compiler.tree.TreeF._
 
 trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =
