@@ -56,7 +56,7 @@ object Type {
       case Type.Point   => Group[Point].asRight
       case _            => s"Unable to find a group for type $t".asLeft
     }
-  }.asInstanceOf[Either[String, Group[t.Out]]]
+  }.map(_.innerAs[t.Out])
 
   def semigroup(
     t: Type
@@ -84,7 +84,7 @@ object Type {
         Multiplicative.evoDblEvoPointEvoPoint.asRight
       case _ => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
     }
-  }.asInstanceOf[Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+  }.map(_.innerAs[t1.Out, t2.Out, t3.Out])
 
   def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
@@ -98,7 +98,7 @@ object Type {
       case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.asRight
       case _                                                            => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
     }
-  }.asInstanceOf[Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]]]
+  }.map(_.innerAs[t1.Out, t2.Out, t3.Out])
 
   def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
     t match {
@@ -108,7 +108,7 @@ object Type {
       case Type.Bool    => Eq[Boolean].asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.asInstanceOf[Either[String, Eq[t.Out]]]
+  }.map(_.innerAs[t.Out])
 
   def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
@@ -119,7 +119,7 @@ object Type {
       case Type.Evo(Type.Point) => Invertible.Additive.pointEvoInvertible.asRight
       case _                    => s"Unable to find an invertible typeclass for type $t".asLeft
     }
-  }.asInstanceOf[Either[String, Invertible[t.Out]]]
+  }.map(_.innerAs[t.Out])
 
   def invertibleSemigroup(t: Type): Either[String, (Semigroup[t.Out], Invertible[t.Out])] =
     (semigroup(t), invertible(t)).tupled
@@ -130,7 +130,7 @@ object Type {
       case Type.Dbl     => Order[Double].asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.asInstanceOf[Either[String, Order[t.Out]]]
+  }.map(_.innerAs[t.Out])
 
   // TODO Bleah, I would like the AST to be hosting the inner type
   def unwrapEvo(t: Type): Either[String, Type] = t match {
@@ -141,5 +141,13 @@ object Type {
   def unwrapLst(t: Type): Either[String, Type] = t match {
     case Type.Lst(inner) => inner.asRight
     case _               => s"Type $t is not a Lst type".asLeft
+  }
+
+  private implicit class Casts1[F[_], T](f: F[T]) {
+    def innerAs[S]: F[S] = f.asInstanceOf[F[S]]
+  }
+
+  private implicit class Casts3[F[_, _, _], T1, T2, T3](f: F[T1, T2, T3]) {
+    def innerAs[S1, S2, S3]: F[S1, S2, S3] = f.asInstanceOf[F[S1, S2, S3]]
   }
 }
