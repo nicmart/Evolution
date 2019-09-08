@@ -396,10 +396,14 @@ object Portfolio {
           p2 = point(left, bottom) in
           p3 = point(right, bottom) in
           
-          vertexes = uniformChoice(p1, p2, p3) in
+          f1(p) = 0.5 * (p + p1) in
+          f2(p) = 0.5 * (p + p2) in
+          f3(p) = 0.5 * (p + p3) in
+          
+          functions = uniformChoice(f1, f2, f3) in
           
           solve1(
-            map(vertexes, v -> p -> -p + 0.5 * (v + p)),
+            map(functions, f -> p -> -p + f(p)),
             point(0, 0)
           )
         """.unindent
