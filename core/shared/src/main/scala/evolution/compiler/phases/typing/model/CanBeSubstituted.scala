@@ -2,8 +2,7 @@ package evolution.compiler.phases.typing.model
 
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
-import evolution.compiler.tree.TreeF.TypedTree
-import evolution.compiler.tree.TreeF
+import evolution.compiler.tree._
 
 trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T
@@ -35,7 +34,7 @@ object CanBeSubstituted {
 
   implicit val tree: CanBeSubstituted[TypedTree] = new CanBeSubstituted[TypedTree] {
     def substitute(s: Substitution, typedTree: TypedTree): TypedTree =
-      TreeF.cataCoTree[TypedTree, Qualified[Type]]((qt, treeF) => treeF.annotate(s.substitute(qt)))(typedTree)
+      AnnotatedTree.catamorphism[TypedTree, Qualified[Type]]((qt, treeF) => treeF.annotate(s.substitute(qt)))(typedTree)
 
   }
 

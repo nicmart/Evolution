@@ -8,7 +8,7 @@ import evolution.compiler.phases.typing.UnifyTypes.unify
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree.Tree
+import evolution.compiler.tree._
 
 class UnifyTypesSpec extends LanguageSpec {
 
@@ -22,7 +22,7 @@ class UnifyTypesSpec extends LanguageSpec {
             AssignFreshTypeVars.assign(Identifier.const(Constant2.Point).embed, TypingConfig.constantQualifiedTypes)
           val constraints = FindConstraints.find(point).unsafeEvaluate
           val unifier = unify(constraints)
-          unifier.map(_.substitution.substitute(point.value)) shouldEq Right(
+          unifier.map(_.substitution.substitute(point.annotation)) shouldEq Right(
             Qualified(Type.Dbl =>: Type.Dbl =>: Type.Point)
           )
         }
@@ -36,16 +36,17 @@ class UnifyTypesSpec extends LanguageSpec {
               TypingConfig.constantQualifiedTypes
             )
           val constraints = FindConstraints.find(evolution).unsafeEvaluate
-          val allConstraints = constraints.merge(Constraints(evolution.value.value -> Type.Evo(Type.Point)))
+          val allConstraints = constraints.merge(Constraints(evolution.annotation.value -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
-          unifier.map(_.substitution.substitute(evolution.value)) shouldEq Right(
+          unifier.map(_.substitution.substitute(evolution.annotation)) shouldEq Right(
             Qualified(Type.Evo(Type.Point))
           )
         }
       }
 
       "point expressions" in {
-        val untyped = App.of(Identifier.const(Constant2.Point).embed, Identifier("a").embed, Identifier("b").embed).embed
+        val untyped =
+          App.of(Identifier.const(Constant2.Point).embed, Identifier("a").embed, Identifier("b").embed).embed
         val extraBindings = new TypeBindings(
           Map(
             "a" -> TypeBinding.Fixed("a", Qualified(Type.Dbl)),
@@ -55,7 +56,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) =
           assignVarsAndFindConstraints(untyped, extraBindings).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).value.value shouldEq Type.Point
+        substitution.substitute(expr).annotation.value shouldEq Type.Point
       }
 
       "app(x -> x, 2)" in {
@@ -63,24 +64,26 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped = App.of(identity, DoubleLiteral(2).embed).embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).value.value shouldEq Type.Dbl
+        substitution.substitute(expr).annotation.value shouldEq Type.Dbl
       }
 
       "mapCons(empty, head -> tail -> cons(1, tail))" in {
-        val untyped = App.of(
-          Identifier.const(Constant2.MapCons).embed,
-          Identifier.const(Constant0.Empty).embed,
-          Lambda(
-            "head",
+        val untyped = App
+          .of(
+            Identifier.const(Constant2.MapCons).embed,
+            Identifier.const(Constant0.Empty).embed,
             Lambda(
-              "tail",
-              App.of(Identifier.const(Constant2.Cons).embed, DoubleLiteral(1).embed, Identifier("tail").embed).embed
+              "head",
+              Lambda(
+                "tail",
+                App.of(Identifier.const(Constant2.Cons).embed, DoubleLiteral(1).embed, Identifier("tail").embed).embed
+              ).embed
             ).embed
-          ).embed
-        ).embed
+          )
+          .embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).value.value shouldEq Type.Evo(Type.Dbl)
+        substitution.substitute(expr).annotation.value shouldEq Type.Evo(Type.Dbl)
       }
 
       "const(1)" in {
@@ -88,9 +91,9 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val finalExpr = substitution.substitute(expr)
-        finalExpr.value.value shouldEq Type.Evo(Type.Dbl)
+        finalExpr.annotation.value shouldEq Type.Evo(Type.Dbl)
 
-        val CoTree(_, App(CoTree(_, Identifier(_, isPrimitive)), _)) = finalExpr
+        val AnnotatedTree(_, App(AnnotatedTree(_, Identifier(_, isPrimitive)), _)) = finalExpr
         isPrimitive shouldEq true
       }
 
@@ -105,7 +108,7 @@ class UnifyTypesSpec extends LanguageSpec {
             .embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).value.value shouldEq Type.Evo(Type.Point)
+        substitution.substitute(expr).annotation.value shouldEq Type.Evo(Type.Point)
       }
 
       "solve1(const(x -> x), point(0, 0))" in {
@@ -121,7 +124,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
-        typedExpr.value.value shouldEq Type.Evo(Type.Point)
+        typedExpr.annotation.value shouldEq Type.Evo(Type.Point)
       }
 
       "uniformChoice(point(1, 2))" in {
@@ -140,7 +143,7 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         val typedExpr = substitution.substitute(expr)
-        typedExpr.value.value shouldEq Type.Evo(Type.Point)
+        typedExpr.annotation.value shouldEq Type.Evo(Type.Point)
       }
     }
   }

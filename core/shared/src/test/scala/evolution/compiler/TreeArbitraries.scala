@@ -6,7 +6,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.parsing.Parser
 import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
-import evolution.compiler.tree.Tree
+import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 
 trait TreeArbitraries {
@@ -45,7 +45,7 @@ trait TreeArbitraries {
   def genTypedVar: Gen[(String, TypedTree)] = for {
     id <- genIdentifier
     tpe <- genType
-  } yield (id.toLowerCase, CoTree(Qualified(tpe), Identifier(id)))
+  } yield (id.toLowerCase, Identifier(id).annotate(Qualified(tpe)))
 
   def genTypedBool: Gen[TypedTree] = Gen.oneOf(true, false).map(Bool(_).annotate(Qualified(Type.Bool)))
 

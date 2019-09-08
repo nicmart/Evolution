@@ -4,8 +4,6 @@ import cats.{ Applicative, Eval, Traverse }
 import cats.data.NonEmptyList
 import cats.implicits._
 import evolution.compiler.phases.typing.config.Constant
-import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClasses.Qualified
 
 import scala.collection.immutable.Nil
 
@@ -32,15 +30,11 @@ object TreeF {
     def of[T](f: T, arg1: T, args: T*): TreeF[T] = App(f, NonEmptyList(arg1, args.toList))
   }
 
-  final case class CoTree[A](value: A, tail: TreeF[CoTree[A]])
-
-  final type TypedTree = CoTree[Qualified[Type]]
-
-  implicit class TreeFTreeOps(tree: TreeF[Tree]) {
+  implicit class TreeOps(tree: TreeF[Tree]) {
     def embed: Tree = Tree(tree)
   }
 
-  implicit class TreeFOps[A](tree: TreeF[A]) {
+  implicit class Ops[A](tree: TreeF[A]) {
     def children: List[A] = tree
       .foldRight[List[A]](Eval.now(Nil)) { (a, evalAs) =>
         evalAs.map(a :: _)
@@ -48,16 +42,9 @@ object TreeF {
       .value
   }
 
-  implicit class CoTreeOps[A](tree: TreeF[CoTree[A]]) {
-    def annotate(a: A): CoTree[A] = CoTree(a, tree)
+  implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]) {
+    def annotate(a: A): AnnotatedTree[A] = AnnotatedTree(a, tree)
   }
-
-  def TypedConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
-    CoTree(tpe, TreeF.Identifier(constant.entryName))
-
-  def PrimitiveConst(constant: Constant): Tree = TreeF.Identifier(constant.entryName, primitive = true).embed
-  def TypedPrimitiveConst(constant: Constant, tpe: Qualified[Type]): TypedTree =
-    CoTree(tpe, TreeF.Identifier(constant.entryName, primitive = true))
 
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
@@ -111,12 +98,5 @@ object TreeF {
   private def ppFunc(name: String, children: List[String]): String =
     children.mkString(s"$name(", ",", ")")
 
-  def pprintTree(tree: Tree): String = cata(pprintTreeF)(tree)
-
-  def cata[A](f: TreeF[A] => A)(tree: Tree): A =
-    f(tree.value.map(cata(f)))
-
-  def cataCoTree[A, B](f: (B, TreeF[A]) => A)(tree: CoTree[B]): A =
-    f(tree.value, tree.tail.map(cataCoTree(f)))
-
+  def pprintTree(tree: Tree): String = Tree.catamorphism(pprintTreeF)(tree)
 }

@@ -38,7 +38,7 @@ class AllPhases(logger: Logger) {
       //_ = log(TreeF.prettyPrint(treeWithTypeVars))
       constraints <- FindConstraints.find(treeWithTypeVars)
       _ = log("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> treeWithTypeVars.value.value))
+      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> treeWithTypeVars.annotation.value))
       unification <- UnifyTypes.unify(constraintsWithExpectedType)
       _ = log("Done: unification")
       _ = log(s"Partially typed AST:")

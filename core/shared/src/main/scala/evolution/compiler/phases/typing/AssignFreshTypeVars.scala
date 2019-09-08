@@ -9,13 +9,13 @@ import evolution.compiler.phases.typing.model.TypeVarGenerator
 import evolution.compiler.types.TypeBinding
 import evolution.compiler.phases.typing.model.Assignment
 import evolution.compiler.phases.typing.model.Substitution
-import evolution.compiler.tree.{Tree, TreeF}
+import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 
 object AssignFreshTypeVars {
 
   def assign(expr: Tree, bindings: TypeBindings): TypedTree =
-    cata(assignS)(expr).runA(AssignmentState(TypeVarGenerator.empty, bindings)).value
+    Tree.catamorphism(assignS)(expr).runA(AssignmentState(TypeVarGenerator.empty, bindings)).value
 
   private type S[T] = State[AssignmentState, T]
 
@@ -33,7 +33,7 @@ object AssignFreshTypeVars {
         for {
           varType <- newTypeVar
           bodyWithType <- localBinding(varName, varType)(expr)
-          lambdaType = Qualified(varType.value =>: bodyWithType.value.value)
+          lambdaType = Qualified(varType.value =>: bodyWithType.annotation.value)
         } yield Lambda(varName, bodyWithType).annotate(lambdaType)
 
       case App(sf, sarg) =>
@@ -47,8 +47,8 @@ object AssignFreshTypeVars {
       case Let(varName, value, body) =>
         for {
           valueWithType <- value
-          bodyWithType <- localBinding(varName, valueWithType.value)(body)
-        } yield Let(varName, valueWithType, bodyWithType).annotate(bodyWithType.value)
+          bodyWithType <- localBinding(varName, valueWithType.annotation)(body)
+        } yield Let(varName, valueWithType, bodyWithType).annotate(bodyWithType.annotation)
 
       case IntLiteral(n) =>
         newTypeVar.map(qt => IntLiteral(n).annotate(qt))

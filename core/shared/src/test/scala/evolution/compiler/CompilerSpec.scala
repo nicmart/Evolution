@@ -13,8 +13,7 @@ import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
 import evolution.compiler.tree.TreeF
-import evolution.compiler.tree.TreeF.CoTree
-import evolution.compiler.tree.TreeF.TypedTree
+import evolution.compiler.tree._
 
 class CompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -54,7 +53,7 @@ class CompilerSpec extends LanguageSpec {
 
       "ands" in forAll(genTypedBool, genTypedBool) { (a, b) =>
         unsafeCompile(
-          TreeF.App(TreeF.TypedPrimitiveConst(Constant2.And, unknownType), NonEmptyList.of(a, b)).withNoType
+          TreeF.App(TreeF.Identifier.primitiveConst(Constant2.And).withNoType, NonEmptyList.of(a, b)).withNoType
         ) shouldBe And(
           unsafeCompile(a),
           unsafeCompile(b)
@@ -63,7 +62,7 @@ class CompilerSpec extends LanguageSpec {
 
       "ors" in forAll(genTypedBool, genTypedBool) { (a, b) =>
         unsafeCompile(
-          TreeF.App(TreeF.TypedPrimitiveConst(Constant2.Or, unknownType), NonEmptyList.of(a, b)).withNoType
+          TreeF.App(TreeF.Identifier.primitiveConst(Constant2.Or).withNoType, NonEmptyList.of(a, b)).withNoType
         ) shouldBe Or(
           unsafeCompile(a),
           unsafeCompile(b)
@@ -72,7 +71,7 @@ class CompilerSpec extends LanguageSpec {
 
       "nots" in forAll(genTypedBool) { a =>
         unsafeCompile(
-          TreeF.App(TreeF.TypedPrimitiveConst(Constant1.Not, unknownType), NonEmptyList.of(a)).withNoType
+          TreeF.App(TreeF.Identifier.primitiveConst(Constant1.Not).withNoType, NonEmptyList.of(a)).withNoType
         ) shouldBe Not(
           unsafeCompile(a)
         )
@@ -86,7 +85,7 @@ class CompilerSpec extends LanguageSpec {
         val ast =
           TreeF
             .App(
-              TreeF.TypedPrimitiveConst(Constant2.Minus, unknownType),
+              TreeF.Identifier.primitiveConst(Constant2.Minus).withNoType,
               NonEmptyList.of(
                 TreeF.IntLiteral(a).annotate(intType),
                 TreeF.IntLiteral(b).annotate(intType)
@@ -102,10 +101,10 @@ class CompilerSpec extends LanguageSpec {
         val predicate = TreeF.Lambda("x", b).withNoType
         val evolution = TreeF
           .App(
-            TreeF.TypedPrimitiveConst(Constant2.Cons, unknownType),
+            TreeF.Identifier.primitiveConst(Constant2.Cons).withNoType,
             NonEmptyList.of(
               n,
-              TreeF.TypedPrimitiveConst(Constant0.Empty, unknownType)
+              TreeF.Identifier.primitiveConst(Constant0.Empty).withNoType
             )
           )
           .withNoType
@@ -113,7 +112,7 @@ class CompilerSpec extends LanguageSpec {
 
         unsafeCompile(
           TreeF
-            .App(TreeF.TypedPrimitiveConst(Constant2.While, unknownType), NonEmptyList.of(evolution, predicate))
+            .App(TreeF.Identifier.primitiveConst(Constant2.While).withNoType, NonEmptyList.of(evolution, predicate))
             .withNoType
         ) shouldBe expected
       }
@@ -139,7 +138,7 @@ class CompilerSpec extends LanguageSpec {
           unsafeCompile(
             TreeF
               .App(
-                TreeF.TypedPrimitiveConst(Constant1.Constant, unknownType),
+                TreeF.Identifier.primitiveConst(Constant1.Constant).withNoType,
                 NonEmptyList.of(TreeF.DoubleLiteral(1).withNoType)
               )
               .withNoType
@@ -152,17 +151,14 @@ class CompilerSpec extends LanguageSpec {
       "zipWith" - {
         "of vars" in {
           unsafeCompile(
-            CoTree(
-              unknownType,
-              TreeF.App(
-                TreeF.TypedPrimitiveConst(Constant3.ZipWith, unknownType),
-                NonEmptyList.of(
-                  CoTree(unknownType, TreeF.Identifier("x")),
-                  CoTree(unknownType, TreeF.Identifier("y")),
-                  CoTree(unknownType, TreeF.Identifier("z"))
-                )
+            TreeF.App
+              .of(
+                TreeF.Identifier.primitiveConst(Constant3.ZipWith).withNoType,
+                TreeF.Identifier("x").withNoType,
+                TreeF.Identifier("y").withNoType,
+                TreeF.Identifier("z").withNoType
               )
-            ),
+              .withNoType,
             new VarContext(List("x", "y", "z"))
           ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
         }
@@ -170,16 +166,14 @@ class CompilerSpec extends LanguageSpec {
 
       "uniformChoice" in {
         val compiled = unsafeCompile(
-          TreeF
-            .App(
-              TreeF.TypedPrimitiveConst(Constant1.UniformChoice, unknownType),
-              NonEmptyList.of(
-                TreeF
-                  .Lst(
-                    List(TreeF.Identifier("x"), TreeF.Identifier("y"), TreeF.Identifier("z")).map(_.withNoType)
-                  )
-                  .withNoType
-              )
+          TreeF.App
+            .of(
+              TreeF.Identifier.primitiveConst(Constant1.UniformChoice).withNoType,
+              TreeF
+                .Lst(
+                  List(TreeF.Identifier("x"), TreeF.Identifier("y"), TreeF.Identifier("z")).map(_.withNoType)
+                )
+                .withNoType
             )
             .withNoType,
           new VarContext(List("x", "y", "z"))
@@ -191,16 +185,18 @@ class CompilerSpec extends LanguageSpec {
 
   def equalityOperators[T: Eq]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.TypedPrimitiveConst(Constant2.Eq, unknownType) -> (Equals.apply[T](_, _, Eq[T])),
-      TreeF.TypedPrimitiveConst(Constant2.Neq, unknownType) -> (Neq.apply[T](_, _, Eq[T]))
+      TreeF.Identifier.primitiveConst(Constant2.Eq).withNoType -> (Equals.apply[T](_, _, Eq[T])),
+      TreeF.Identifier.primitiveConst(Constant2.Neq).withNoType -> (Neq.apply[T](_, _, Eq[T]))
     )
 
   def relationOperators[T: Order]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.TypedPrimitiveConst(Constant2.GreaterThan, unknownType) -> (GreaterThan[T](_, _, Order[T])),
-      TreeF.TypedPrimitiveConst(Constant2.GreaterThanOrEqual, unknownType) -> (GreaterThanOrEqual[T](_, _, Order[T])),
-      TreeF.TypedPrimitiveConst(Constant2.LessThan, unknownType) -> (LessThan[T](_, _, Order[T])),
-      TreeF.TypedPrimitiveConst(Constant2.LessThanOrEqual, unknownType) -> (LessThanOrEqual[T](_, _, Order[T]))
+      TreeF.Identifier.primitiveConst(Constant2.GreaterThan).withNoType -> (GreaterThan[T](_, _, Order[T])),
+      TreeF.Identifier
+        .primitiveConst(Constant2.GreaterThanOrEqual)
+        .withNoType -> (GreaterThanOrEqual[T](_, _, Order[T])),
+      TreeF.Identifier.primitiveConst(Constant2.LessThan).withNoType -> (LessThan[T](_, _, Order[T])),
+      TreeF.Identifier.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, Order[T]))
     )
 
   lazy val unknownType: Qualified[Type] = Qualified(Type.Var(""))
@@ -209,7 +205,7 @@ class CompilerSpec extends LanguageSpec {
   private def unsafeCompile[T](expr: TypedTree, ctx: VarContext = VarContext.empty): Expr[T] =
     Compile.compile(expr, ctx).unsafeEvaluate.asInstanceOf[Expr[T]]
 
-  implicit class Ops(tree: TreeF[CoTree[Qualified[Type]]]) {
+  implicit class Ops(tree: TreeF[TypedTree]) {
     def withNoType = tree.annotate(unknownType)
     def withType(tpe: Type) = tree.annotate(Qualified(tpe))
   }
