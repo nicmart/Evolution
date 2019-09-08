@@ -142,8 +142,9 @@ lazy val server = (project in file("server"))
     scalaJSProjects := Seq(jsApp),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % "10.1.9",
-      "com.typesafe.akka" %% "akka-stream" % "2.5.25"
+      "org.http4s" %% "http4s-dsl" % "0.21.0-M4",
+      "org.http4s" %% "http4s-blaze-server" % "0.21.0-M4",
+      "ch.qos.logback" % "logback-classic" % "1.2.3"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     packagePrefix in Assets := "public/",
@@ -161,3 +162,4 @@ lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
 addCommandAlias("testAll", "; coreJVM/test; jsApp/test")
+addCommandAlias("compileAll", "; compile; test/compile")
