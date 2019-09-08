@@ -5,7 +5,8 @@ import cats.data.NonEmptyList
 import cats.implicits._
 import evolution.compiler.phases.typing.config.Constant
 
-import scala.collection.immutable.Nil
+import cats.data.Const
+import cats.Foldable
 
 sealed trait TreeF[+T]
 
@@ -34,12 +35,8 @@ object TreeF {
     def embed: Tree = Tree(tree)
   }
 
-  implicit class Ops[A](tree: TreeF[A]) {
-    def children: List[A] = tree
-      .foldRight[List[A]](Eval.now(Nil)) { (a, evalAs) =>
-        evalAs.map(a :: _)
-      }
-      .value
+  implicit class Ops[A](fa: TreeF[A]) {
+    def children: List[A] = fa.traverse[Const[List[A], ?], Nothing](a => Const(List(a))).getConst
   }
 
   implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]) {
@@ -59,44 +56,10 @@ object TreeF {
         case IntLiteral(n)               => IntLiteral(n).pure[G].widen
       }
 
-    def foldLeft[A, B](fa: TreeF[A], z: B)(f: (B, A) => B): B = fa match {
+    def foldLeft[A, B](fa: TreeF[A], z: B)(f: (B, A) => B): B =
+      Foldable[List].foldLeft(fa.children, z)(f)
 
-      case TreeF.App(g, args) => args.foldLeft(f(z, g))(f)
-      case Let(_, expr, in)   => f(f(z, expr), in)
-      case Lambda(_, expr)    => f(z, expr)
-      case _: Identifier      => z
-      case DoubleLiteral(_)   => z
-      case Bool(_)            => z
-      case IntLiteral(_)      => z
-      case Lst(ts)            => ts.foldLeft(z)(f)
-    }
-
-    def foldRight[A, B](fa: TreeF[A], z: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = fa match {
-
-      case TreeF.App(g, args) => f(g, args.foldRight(z)(f))
-      case Let(_, expr, in)   => f(expr, f(in, z))
-      case Lambda(_, expr)    => f(expr, z)
-      case _: Identifier      => z
-      case DoubleLiteral(_)   => z
-      case Bool(_)            => z
-      case IntLiteral(_)      => z
-      case Lst(ts)            => ts.foldRight(z)(f)
-    }
+    def foldRight[A, B](fa: TreeF[A], z: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+      Foldable[List].foldRight(fa.children, z)(f)
   }
-
-  def pprintTreeF(treeF: TreeF[String]): String = treeF match {
-    case TreeF.App(g, args) => ppFunc("App", g :: args.toList)
-    case Let(id, expr, in)  => ppFunc("Let", List(id, expr, in))
-    case Lambda(id, expr)   => ppFunc("Lambda", List(id, expr))
-    case id: Identifier     => id.name
-    case DoubleLiteral(d)   => d.toString
-    case Bool(b)            => b.toString
-    case IntLiteral(n)      => n.toString
-    case Lst(ts)            => ppFunc("Lst", ts)
-  }
-
-  private def ppFunc(name: String, children: List[String]): String =
-    children.mkString(s"$name(", ",", ")")
-
-  def pprintTree(tree: Tree): String = Tree.catamorphism(pprintTreeF)(tree)
 }
