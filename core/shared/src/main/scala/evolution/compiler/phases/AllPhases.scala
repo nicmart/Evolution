@@ -56,6 +56,7 @@ class AllPhases(logger: Logger) {
       expression <- Compile.compile(typedTree, varContext(varBindings))
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
+      // TODO here we do not need to know about the existence of a varcontext
       evolution = Materialize.materialize(expression).apply(emptyCtx)
       _ = log(s"Materialized to $evolution")
     } yield evolution.asInstanceOf[Evolution[Point]]
