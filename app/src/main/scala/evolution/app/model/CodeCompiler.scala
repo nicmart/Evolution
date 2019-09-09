@@ -7,7 +7,6 @@ import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree.Tree
-import evolution.materialization.Evolution
 
 class CodeCompiler(allPhases: AllPhases) {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =

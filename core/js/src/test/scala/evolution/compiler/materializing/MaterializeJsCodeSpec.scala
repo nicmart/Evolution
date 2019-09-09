@@ -5,7 +5,6 @@ import _root_.evolution.compiler.phases.materializing.MaterializeJsCode
 import _root_.evolution.data.Expr
 import scala.scalajs.js.Function
 import scala.scalajs.js
-import evolution.compiler.phases.materializing.MaterializeJsCode.JsExpr
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
