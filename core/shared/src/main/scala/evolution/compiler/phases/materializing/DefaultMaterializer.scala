@@ -6,16 +6,20 @@ import evolution.data.Expr
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.model.Contextual
 import evolution.compiler.phases.materializing.model.Contextual.WithContext
+import evolution.data.emptyCtx
 import Expr._
 
 // TODO this is an implementation
-object Materialize {
+object DefaultMaterializer extends Materializer {
 
-  def materialize[T](expr: Expr[T]): Contextual[T] = {
+  def materialize[T](expr: Expr[Evolution[T]]): Long => Iterator[T] =
+    seed => Evolution.runWithSeed(seed, materializeExpr(expr).apply(emptyCtx).asInstanceOf[Evolution[T]])
+
+  def materializeExpr[T](expr: Expr[T]): Contextual[T] = {
     expr match {
       case Dbl(d)     => Contextual.Pure(d)
-      case Floor(d)   => materialize(d).map(_.toInt)
-      case ToDbl(n)   => materialize(n).map(_.toDouble)
+      case Floor(d)   => materializeExpr(d).map(_.toInt)
+      case ToDbl(n)   => materializeExpr(n).map(_.toDouble)
       case Integer(n) => Contextual.Pure(n)
       case Pnt(x, y)  => interpret2(x, y)(Point.apply)
       case LiftedPnt(x, y) =>
@@ -31,8 +35,8 @@ object Materialize {
       case e @ Add(_, _, _)  => interpret2(e.a, e.b)(e.add.combine)
       case Div(a, b)         => interpret2(a, b)(_ / _)
       case Exp(a, b)         => interpret2(a, b)(Math.pow)
-      case Abs(a)            => materialize(a).map(Math.abs)
-      case Sign(a)           => materialize(a).map(Math.signum)
+      case Abs(a)            => materializeExpr(a).map(Math.abs)
+      case Sign(a)           => materializeExpr(a).map(Math.signum)
       case Mod(a, b) =>
         interpret2(a, b) { (ca, cb) =>
           if (ca >= 0) ca % cb else (ca % cb) + cb
@@ -42,7 +46,7 @@ object Materialize {
       case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
-      case Lst(ts)               => Contextual.lst(ts.map(materialize))
+      case Lst(ts)               => Contextual.lst(ts.map(materializeExpr))
       case SmoothStep(f, t, p) =>
         interpret3(f, t, p) { (from, to, position) =>
           val t = (position - from) / (to - from)
@@ -66,7 +70,7 @@ object Materialize {
         interpret2(a, b)(_ || _)
 
       case Not(a) =>
-        materialize(a).map(!_)
+        materializeExpr(a).map(!_)
 
       case GreaterThan(a, b, ord)        => interpret2(a, b)(ord.gt)
       case GreaterThanOrEqual(a, b, ord) => interpret2(a, b)(ord.gteqv)
@@ -84,10 +88,10 @@ object Materialize {
         }
 
       case Let(name, value, e) =>
-        materialize(App(Lambda(name, e), value))
+        materializeExpr(App(Lambda(name, e), value))
 
       case lambda: Lambda[s, t] =>
-        val interpretedBody = materialize(lambda.expr)
+        val interpretedBody = materializeExpr(lambda.expr)
         WithContext.instance[T] { ctx => (a: s) =>
           interpretedBody(addStrict(lambda.variable, a, ctx))
         }
@@ -98,7 +102,7 @@ object Materialize {
         interpret1(t)(Evolution.constant)
 
       case Fix(Lambda(name, lambdaBody)) =>
-        val interpretedBody = materialize(lambdaBody)
+        val interpretedBody = materializeExpr(lambdaBody)
         WithContext.instance[T] { ctx =>
           {
             lazy val self: T = interpretedBody(addLazy(name, () => self, ctx))
@@ -114,8 +118,8 @@ object Materialize {
       // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
       // recursive definitions
       case Cons(head, tail) =>
-        val interpretedHead = materialize(head)
-        val interpretedTail = materialize(tail)
+        val interpretedHead = materializeExpr(head)
+        val interpretedTail = materializeExpr(tail)
         WithContext.instance[T] { ctx =>
           Evolution.cons(interpretedHead(ctx), interpretedTail(ctx))
         }
@@ -188,16 +192,16 @@ object Materialize {
   }
 
   private def interpret1[A, B](a: Expr[A])(f: A => B): Contextual[B] =
-    materialize(a).map(f)
+    materializeExpr(a).map(f)
 
   private def interpret2[A, B, C](a: Expr[A], b: Expr[B])(f: (A, B) => C): Contextual[C] =
-    Contextual.map2(materialize(a), materialize(b))(f)
+    Contextual.map2(materializeExpr(a), materializeExpr(b))(f)
 
   private def interpret3[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(f: (A, B, C) => D): Contextual[D] =
-    Contextual.map3(materialize(a), materialize(b), materialize(c))(f)
+    Contextual.map3(materializeExpr(a), materializeExpr(b), materializeExpr(c))(f)
 
   private def interpret3Lazy[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(
     f: (=> A, => B, => C) => D
   ): Contextual[D] =
-    Contextual.map3Lazy(materialize(a), materialize(b), materialize(c))(f)
+    Contextual.map3Lazy(materializeExpr(a), materializeExpr(b), materializeExpr(c))(f)
 }

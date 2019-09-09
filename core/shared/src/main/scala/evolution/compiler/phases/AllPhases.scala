@@ -13,14 +13,14 @@ import evolution.compiler.phases.typing.config.TypingConfig
 import scala.collection.immutable.Nil
 import evolution.materialization.Evolution
 import evolution.geometry.Point
-import evolution.compiler.phases.materializing.Materialize
 import evolution.compiler.tree.Tree
-import evolution.data.emptyCtx
 import evolution.logging.Logger
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.PrettyPrintTypedTree
+import evolution.compiler.phases.materializing.Materializer
+import evolution.data.Expr
 
-class AllPhases(logger: Logger) {
+class AllPhases(materializer: Materializer, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -57,9 +57,7 @@ class AllPhases(logger: Logger) {
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       // TODO here we do not need to know about the existence of a varcontext
-      evolution = Materialize.materialize(expression).apply(emptyCtx).asInstanceOf[Evolution[Point]]
-      _ = log(s"Materialized to $evolution")
-    } yield seed => Evolution.runWithSeed(seed, evolution)
+    } yield materializer.materialize(expression.asInstanceOf[Expr[Evolution[Point]]])
 
   private def varContext(varBindings: List[(String, Tree)]): VarContext =
     new VarContext(varBindings.map(_._1))

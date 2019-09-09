@@ -10,7 +10,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
-import evolution.compiler.phases.materializing.Materialize.materialize
+import evolution.compiler.phases.materializing.DefaultMaterializer.materializeExpr
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
@@ -19,28 +19,28 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
 
   "The materializer" - {
     "should materialize Pnt" in {
-      materialize(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
+      materializeExpr(Pnt(Dbl(0), Dbl(0)))(emptyCtx) shouldBe Point(0, 0)
     }
 
     "should materialize booleans literals" in forAll(genBooleanLiteral) { literal =>
-      materialize(literal)(emptyCtx) shouldBe literal.b
+      materializeExpr(literal)(emptyCtx) shouldBe literal.b
     }
 
     "should materialize ands" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
-      materialize(And(a, b))(emptyCtx) shouldBe a.b && b.b
+      materializeExpr(And(a, b))(emptyCtx) shouldBe a.b && b.b
     }
 
     "should materialize ors" in forAll(genBooleanLiteral, genBooleanLiteral) { (a, b) =>
-      materialize(Or(a, b))(emptyCtx) shouldBe a.b || b.b
+      materializeExpr(Or(a, b))(emptyCtx) shouldBe a.b || b.b
     }
 
     "should materialize nots" in forAll(genBooleanLiteral) { a =>
-      materialize(Not(a))(emptyCtx) shouldBe !a.b
+      materializeExpr(Not(a))(emptyCtx) shouldBe !a.b
     }
 
     "should materialize inRect statements" in {
-      materialize(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
-      materialize(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
+      materializeExpr(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(5), Dbl(5))))(emptyCtx) shouldBe true
+      materializeExpr(InRect(Pnt(Dbl(0), Dbl(0)), Pnt(Dbl(10), Dbl(10)), Pnt(Dbl(20), Dbl(5))))(emptyCtx) shouldBe false
     }
 
     "should materialize relational operators" in forAll(
@@ -49,7 +49,10 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
       arbitrary[Dbl]
     ) {
       case ((op, expected), a, b) =>
-        materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
+        materializeExpr(op(a, b))(emptyCtx) shouldBe expected(
+          materializeExpr(a)(emptyCtx),
+          materializeExpr(b)(emptyCtx)
+        )
     }
 
     "should materialize equality operators" in forAll(
@@ -58,11 +61,14 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
       arbitrary[Dbl]
     ) {
       case ((op, expected), a, b) =>
-        materialize(op(a, b))(emptyCtx) shouldBe expected(materialize(a)(emptyCtx), materialize(b)(emptyCtx))
+        materializeExpr(op(a, b))(emptyCtx) shouldBe expected(
+          materializeExpr(a)(emptyCtx),
+          materializeExpr(b)(emptyCtx)
+        )
     }
 
     "should materialize uniformChoices" in forAll(arbitrary[List[Dbl]]) { dbls =>
-      val materialized = materialize(Expr.UniformChoice(Expr.Lst(dbls)))(emptyCtx).asInstanceOf[Evolution[Double]]
+      val materialized = materializeExpr(Expr.UniformChoice(Expr.Lst(dbls)))(emptyCtx).asInstanceOf[Evolution[Double]]
       val materializedDoubles = materialized.run.take(10).toList
       val expectedDoubles = dbls.map(_.d).toSet
       materializedDoubles foreach { d =>
@@ -72,7 +78,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
 
     "should lazily materialize if then else expressions" in {
       val expression = IfThen(Bool(true), Integer(1), Var("IShouldNotBeEvaluated"))
-      materialize(expression)(emptyCtx) shouldBe 1
+      materializeExpr(expression)(emptyCtx) shouldBe 1
     }
 
     "should materialize trivial fix expressions" in {
@@ -87,7 +93,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
           )
         )
 
-      val factorial = materialize(expression)(emptyCtx).asInstanceOf[Int => Int]
+      val factorial = materializeExpr(expression)(emptyCtx).asInstanceOf[Int => Int]
       factorial(3) shouldBe 3
     }
 
@@ -114,7 +120,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
           )
         )
 
-      val factorial = materialize(expression)(emptyCtx).asInstanceOf[Int => Int]
+      val factorial = materializeExpr(expression)(emptyCtx).asInstanceOf[Int => Int]
       factorial(3) shouldBe 6
     }
   }
