@@ -109,6 +109,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     jvmScalatestSettings
   )
+  .jsSettings()
 
 lazy val jsApp = project
   .in(file("app"))
