@@ -109,7 +109,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     jvmScalatestSettings
   )
-  .jsSettings()
+  .jsSettings(
+    libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.7")
+  )
 
 lazy val jsApp = project
   .in(file("app"))
