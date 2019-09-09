@@ -17,7 +17,7 @@ object MaterializeJsCode {
       case Var(name) => JsExpr.Raw(name)
       case Let(variable, value, expr) =>
         JsExpr.App(JsExpr.Lambda(List(variable), materialize(expr)), List(materialize(value)))
-      case Expr.Constant(t) => ???
+      case Expr.Constant(t) => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${materialize(t).js}; }"))
     }
   }
 
@@ -26,18 +26,28 @@ object MaterializeJsCode {
   }
 
   object JsExpr {
-    case class Raw(js: String) extends JsExpr
+    case class Raw(code: String) extends JsExpr {
+      def js: String = code.trim
+    }
     case class Obj(fields: (String, JsExpr)*) extends JsExpr {
       def js: String =
         fields.map { case (key, jsExpr) => s""""$key": ${jsExpr.js}""" }.mkString("{", ", ", "}")
     }
     case class Lambda(args: List[String], body: JsExpr) extends JsExpr {
-      def js: String =
-        s"""
+      def js: String = s"""
         function(${args.mkString(", ")}) {
           return ${body.js};
         }
-      """.stripMargin
+      """.trim
+    }
+    case class Iterable(expr: JsExpr) extends JsExpr {
+      def js: String = s"""
+          {
+            *[Symbol.iterator]() {
+                ${expr.js}
+            }
+          }
+        """.trim
     }
 
     case class App(func: JsExpr, args: List[JsExpr]) extends JsExpr {

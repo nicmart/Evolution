@@ -21,11 +21,16 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result("x") shouldBe 1.0
       result("y") shouldBe 2.0
     }
+
+    "materialize constant evolutions" in {
+      val jsExpr = MaterializeJsCode.materialize(Expr.Constant(Expr.Dbl(1.1)))
+      val result = evaluate(jsExpr).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(10).toList shouldBe List.fill(10)(1.1)
+    }
   }
 
   private def evaluate(expr: JsExpr): Any = {
-    val f = new Function(s" return ${expr.js};")
+    val f = new Function(s"return ${expr.js};")
     f.call((), ())
   }
-
 }
