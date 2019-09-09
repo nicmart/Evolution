@@ -19,8 +19,7 @@ class CodeCompiler(allPhases: AllPhases) {
         varBindings(ctx)
       )
       .map { evolution =>
-        Evolution.setSeed(seed)
-        evolution.run
+        evolution(seed)
       }
 
   private def varBindings(ctx: DrawingContext): List[(String, Tree)] = List(

@@ -16,6 +16,11 @@ object Evolution {
 
   private object Random extends Random
 
+  def runWithSeed[T](seed: Long, evolution: Evolution[T]): Iterator[T] = {
+    Evolution.setSeed(seed)
+    evolution.run
+  }
+
   def setSeed(long: Long): Unit = Random.setSeed(long)
 
   val empty: Evolution[Nothing] = new Evolution[Nothing] {

@@ -29,7 +29,7 @@ class AllPhases(logger: Logger) {
     expectedType: Type,
     typeBindings: TypeBindings,
     varBindings: List[(String, Tree)]
-  ): Either[String, Evolution[Point]] =
+  ): Either[String, Long => Iterator[Point]] =
     for {
       tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
@@ -57,9 +57,9 @@ class AllPhases(logger: Logger) {
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       // TODO here we do not need to know about the existence of a varcontext
-      evolution = Materialize.materialize(expression).apply(emptyCtx)
+      evolution = Materialize.materialize(expression).apply(emptyCtx).asInstanceOf[Evolution[Point]]
       _ = log(s"Materialized to $evolution")
-    } yield evolution.asInstanceOf[Evolution[Point]]
+    } yield seed => Evolution.runWithSeed(seed, evolution)
 
   private def varContext(varBindings: List[(String, Tree)]): VarContext =
     new VarContext(varBindings.map(_._1))
