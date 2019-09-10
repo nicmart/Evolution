@@ -22,8 +22,9 @@ object MaterializeJsCode {
       case Var(name) => JsExpr.Raw(name)
       case Let(variable, value, expr) =>
         JsExpr.App(JsExpr.Lambda(List(variable), toJs(expr)), List(toJs(value)))
-
-      case Expr.Constant(t) => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
+      case Lambda(name, body) => JsExpr.Lambda(List(name), toJs(body))
+      case App(f, a)          => JsExpr.App(toJs(f), List(toJs(a)))
+      case Expr.Constant(t)   => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
 
       case Uniform(from, to) =>
         JsExpr.Iterable(
