@@ -5,6 +5,7 @@ import _root_.evolution.compiler.phases.materializing.MaterializeJsCode
 import _root_.evolution.data.Expr
 import scala.scalajs.js.Function
 import scala.scalajs.js
+import evolution.geometry.Point
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
@@ -16,9 +17,8 @@ class MaterializeJsCodeSpec extends LanguageSpec {
 
     "materialize points" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Pnt(Expr.Dbl(1), Expr.Dbl(2)))
-      val result = evaluate(jsCode).asInstanceOf[js.Dictionary[Double]]
-      result("x") shouldBe 1.0
-      result("y") shouldBe 2.0
+      val result = evaluate(jsCode).asInstanceOf[Point]
+      result shouldBe Point(1, 2)
     }
 
     "materialize constant evolutions" in {
@@ -29,6 +29,7 @@ class MaterializeJsCodeSpec extends LanguageSpec {
   }
 
   private def evaluate(expr: String): Any = {
+
     val f = new Function(s"return $expr;")
     f.call((), ())
   }

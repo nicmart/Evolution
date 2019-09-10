@@ -15,7 +15,7 @@ object MaterializeJsCode {
       case Floor(d)   => JsExpr.App(JsExpr.Raw("Math.floor"), List(toJs(d)))
       case ToDbl(n)   => toJs(n) // There is only one numeric type in JS
       case Integer(n) => JsExpr.Raw(n.toString)
-      case Pnt(x, y)  => JsExpr.Obj("x" -> toJs(x), "y" -> toJs(y))
+      case Pnt(x, y)  => JsExpr.Instance("Point", List(toJs(x), toJs(y)))
 
       case Var(name) => JsExpr.Raw(name)
       case Let(variable, value, expr) =>
@@ -51,6 +51,11 @@ object MaterializeJsCode {
             }
           }
         """.trim
+    }
+
+    case class Instance(className: String, args: List[JsExpr]) extends JsExpr {
+      def js: String =
+        s"new $className(${args.map(_.js).mkString(", ")})"
     }
 
     case class App(func: JsExpr, args: List[JsExpr]) extends JsExpr {

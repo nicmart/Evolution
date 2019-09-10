@@ -2,7 +2,9 @@ package evolution.geometry
 
 import cats.Eq
 import cats.kernel.Group
+import scala.scalajs.js.annotation.JSExportTopLevel
 
+@JSExportTopLevel("Point")
 final case class Point(x: Double, y: Double) {
   def +(other: Point) = Point(x + other.x, y + other.y)
   def -(other: Point) = Point(x - other.x, y - other.y)

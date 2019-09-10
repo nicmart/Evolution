@@ -107,7 +107,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .jvmSettings(
-    jvmScalatestSettings
+    jvmScalatestSettings,
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % scalaJSVersion % "provided"
   )
   .jsSettings(
     libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.7")
@@ -136,6 +137,7 @@ lazy val jsApp = project
       "codemirror" -> "5.48.4",
       "react-codemirror2" -> "6.0.0"
     ),
+    webpackBundlingMode := BundlingMode.LibraryAndApplication(),
     scalaJSUseMainModuleInitializer := true,
     scalaJSStage in Global := FastOptStage
   )
