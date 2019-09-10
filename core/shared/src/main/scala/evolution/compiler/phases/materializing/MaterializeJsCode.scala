@@ -87,7 +87,7 @@ object MaterializeJsCode {
       var __b = __it2.next();
 
       while (!__a.done || !__b.done) {
-        yield ${f(JsExpr.Raw("__a.value"), JsExpr.Raw("__a.value")).js};
+        yield ${f(JsExpr.Raw("__a.value"), JsExpr.Raw("__b.value")).js};
         __a = __it1.next();
         __b = __it2.next();
       }
