@@ -17,10 +17,23 @@ object MaterializeJsCode {
       case Integer(n) => JsExpr.Raw(n.toString)
       case Pnt(x, y)  => JsExpr.Instance("Point", List(toJs(x), toJs(y)))
 
+      case LiftedPnt(x, y) => zipIterable(toJs(x), toJs(y), (xx, yy) => JsExpr.Instance("Point", List(xx, yy)))
+
       case Var(name) => JsExpr.Raw(name)
       case Let(variable, value, expr) =>
         JsExpr.App(JsExpr.Lambda(List(variable), toJs(expr)), List(toJs(value)))
+
       case Expr.Constant(t) => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
+
+      case Uniform(from, to) =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""while(true) {
+              var min = ${toJs(from).js};
+              yield Math.random() * (${toJs(to).js} - min) + min;
+            }"""
+          )
+        )
     }
   }
 
@@ -63,4 +76,22 @@ object MaterializeJsCode {
         s"(${func.js})(${args.map(_.js).mkString(", ")})"
     }
   }
+
+  private def zipIterable(a: JsExpr, b: JsExpr, f: (JsExpr, JsExpr) => JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${a.js}[Symbol.iterator]();
+      var __it2 = ${b.js}[Symbol.iterator]();
+
+      var __a = __it1.next();
+      var __b = __it2.next();
+
+      while (!__a.done || !__b.done) {
+        yield ${f(JsExpr.Raw("__a.value"), JsExpr.Raw("__a.value")).js};
+        __a = __it1.next();
+        __b = __it2.next();
+      }
+    """.trim
+    )
+  )
 }
