@@ -6,8 +6,8 @@ import _root_.evolution.data.Expr
 import scala.scalajs.js.Function
 import scala.scalajs.js
 import evolution.geometry.Point
-import scala.reflect.api.Exprs
 import org.scalatest.Inspectors
+import evolution.typeclass.Semigroupoid
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
@@ -47,6 +47,17 @@ class MaterializeJsCodeSpec extends LanguageSpec {
         d.x should (be >= 0.0 and be <= 1.0)
         d.y should (be >= 0.0 and be <= 1.0)
       }
+    }
+
+    "mapped evolution" in {
+      val expr = Expr.Map(
+        Expr.Constant(Expr.Dbl(1)),
+        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Semigroupoid.Additive.dblDblDbl))
+      )
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      first100 shouldBe List.fill(100)(2)
     }
   }
 

@@ -2,6 +2,7 @@ package evolution.compiler.phases.materializing
 
 import evolution.data.Expr
 import Expr._
+import evolution.compiler.phases.materializing.MaterializeJsCode.JsExpr.BinaryOp
 
 // TODO this is an implementation
 object MaterializeJsCode {
@@ -11,20 +12,32 @@ object MaterializeJsCode {
 
   private def toJs[T](expr: Expr[T]): JsExpr = {
     expr match {
-      case Dbl(d)     => JsExpr.Raw(d.toString)
-      case Floor(d)   => JsExpr.App(JsExpr.Raw("Math.floor"), List(toJs(d)))
-      case ToDbl(n)   => toJs(n) // There is only one numeric type in JS
+      case Dbl(d) => JsExpr.Raw(d.toString)
+
+      case Floor(d) => JsExpr.App(JsExpr.Raw("Math.floor"), List(toJs(d)))
+
+      case ToDbl(n) => toJs(n) // There is only one numeric type in JS
+
       case Integer(n) => JsExpr.Raw(n.toString)
-      case Pnt(x, y)  => JsExpr.Instance("Point", List(toJs(x), toJs(y)))
+
+      case Pnt(x, y) => JsExpr.Instance("Point", List(toJs(x), toJs(y)))
 
       case LiftedPnt(x, y) => zipIterable(toJs(x), toJs(y), (xx, yy) => JsExpr.Instance("Point", List(xx, yy)))
 
       case Var(name) => JsExpr.Raw(name)
+
       case Let(variable, value, expr) =>
         JsExpr.App(JsExpr.Lambda(List(variable), toJs(expr)), List(toJs(value)))
+
       case Lambda(name, body) => JsExpr.Lambda(List(name), toJs(body))
-      case App(f, a)          => JsExpr.App(toJs(f), List(toJs(a)))
-      case Expr.Constant(t)   => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
+
+      case App(f, a) => JsExpr.App(toJs(f), List(toJs(a)))
+
+      case Expr.Constant(t) => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
+
+      case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
+
+      case Add(a, b, _) => BinaryOp(toJs(a), "+", toJs(b))
 
       case Uniform(from, to) =>
         JsExpr.Iterable(
@@ -46,6 +59,11 @@ object MaterializeJsCode {
     case class Raw(code: String) extends JsExpr {
       def js: String = code.trim
     }
+
+    case class BinaryOp(left: JsExpr, op: String, right: JsExpr) extends JsExpr {
+      def js: String = s"(${left.js} $op ${right.js})"
+    }
+
     case class Obj(fields: (String, JsExpr)*) extends JsExpr {
       def js: String =
         fields.map { case (key, jsExpr) => s""""$key": ${jsExpr.js}""" }.mkString("{", ", ", "}")
@@ -79,6 +97,21 @@ object MaterializeJsCode {
         s"(${func.js})(${args.map(_.js).mkString(", ")})"
     }
   }
+
+  private def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${fa.js}[Symbol.iterator]();
+
+      var __a = __it1.next();
+
+      while (!__a.done) {
+        yield ${f(JsExpr.Raw("__a.value")).js};
+        __a = __it1.next();
+      }
+    """.trim
+    )
+  )
 
   private def zipIterable(a: JsExpr, b: JsExpr, f: (JsExpr, JsExpr) => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(

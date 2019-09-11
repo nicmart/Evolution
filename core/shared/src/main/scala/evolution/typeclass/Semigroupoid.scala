@@ -12,6 +12,30 @@ trait Semigroupoid[A, B, C] { self =>
   }
 }
 
+sealed trait Multiplicative[A, B, C]
+
+object Multicplicative {
+  case object DblDblDbl extends Multiplicative[Double, Double, Double]
+  case object DblPointPoint extends Multiplicative[Double, Point, Point]
+  case object PointDblPoint extends Multiplicative[Point, Double, Point]
+  case object IntIntInt extends Multiplicative[Int, Int, Int]
+  case object IntDblDbl extends Multiplicative[Int, Double, Double]
+  case object DblIntDbl extends Multiplicative[Double, Int, Double]
+  case object IntPointPoint extends Multiplicative[Int, Point, Point]
+  case object PointIntPoint extends Multiplicative[Point, Int, Point]
+  case object DblEvoDblEvoDbl extends Multiplicative[Double, Evolution[Double], Evolution[Double]]
+  case object EvoDblDblEvoDbl extends Multiplicative[Evolution[Double], Double, Evolution[Double]]
+  case object DblEvoPointEvoPoint extends Multiplicative[Double, Evolution[Point], Evolution[Point]]
+  case object EvoPointDblEvoPoint extends Multiplicative[Evolution[Point], Double, Evolution[Point]]
+  case object EvoDblEvoDblEvoDbl extends Multiplicative[Evolution[Double], Evolution[Double], Evolution[Double]]
+  case object EvoPointEvoDblEvoPoint extends Multiplicative[Evolution[Point], Evolution[Double], Evolution[Point]]
+  case object EvoDblEvoPointEvoPoint extends Multiplicative[Evolution[Double], Evolution[Point], Evolution[Point]]
+}
+
+sealed trait Additive[A, B, C]
+
+object Additive {}
+
 object Semigroupoid {
   type Semigroup[T] = Semigroupoid[T, T, T]
   def apply[A, B, C](implicit sg: Semigroupoid[A, B, C]): Semigroupoid[A, B, C] = sg
@@ -55,11 +79,16 @@ object Semigroupoid {
   }
 
   object Additive {
-    val dblDblDbl: Semigroupoid[Double, Double, Double] = (a, b) => a + b
-    val intIntInt: Semigroupoid[Int, Int, Int] = (a, b) => a + b
-    val intDblDbl: Semigroupoid[Int, Double, Double] = (a, b) => a + b
-    val dblIntDbl: Semigroupoid[Double, Int, Double] = (a, b) => a + b
-    val pointPointPoint: Semigroupoid[Point, Point, Point] = (a, b) => a + b
+    val dblDblDbl: Semigroupoid[Double, Double, Double] =
+      (a, b) => a + b
+    val intIntInt: Semigroupoid[Int, Int, Int] =
+      (a, b) => a + b
+    val intDblDbl: Semigroupoid[Int, Double, Double] =
+      (a, b) => a + b
+    val dblIntDbl: Semigroupoid[Double, Int, Double] =
+      (a, b) => a + b
+    val pointPointPoint: Semigroupoid[Point, Point, Point] =
+      (a, b) => a + b
     val evoDblEvoDblEvoDbl: Semigroupoid[Evolution[Double], Evolution[Double], Evolution[Double]] =
       (a, b) => Evolution.zipWithUncurried[Double, Double, Double]((x, y) => x + y)(a, b)
     val evoPointEvoPointEvoPoint: Semigroupoid[Evolution[Point], Evolution[Point], Evolution[Point]] =
