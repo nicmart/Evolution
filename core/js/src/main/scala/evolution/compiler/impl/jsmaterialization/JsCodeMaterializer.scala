@@ -1,8 +1,8 @@
-package evolution.compiler.materializing
+package evolution.compiler.impl.jsmaterialization
+
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
 import evolution.materialization.Evolution
-import evolution.compiler.phases.materializing.MaterializeJsCode
 import scala.scalajs.js
 
 object JsCodeMaterializer extends Materializer {

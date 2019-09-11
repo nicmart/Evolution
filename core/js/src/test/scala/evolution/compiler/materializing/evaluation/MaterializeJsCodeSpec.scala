@@ -1,8 +1,8 @@
-package evolution.compiler.materializing
+package evolution.compiler.materializing.evaluation
 
 import evolution.compiler.LanguageSpec
-import _root_.evolution.compiler.phases.materializing.MaterializeJsCode
-import _root_.evolution.data.Expr
+import evolution.compiler.impl.jsmaterialization.MaterializeJsCode
+import evolution.compiler.expression.Expr
 import scala.scalajs.js.Function
 import scala.scalajs.js
 import evolution.geometry.Point

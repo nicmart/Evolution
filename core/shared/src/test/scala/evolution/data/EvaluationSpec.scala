@@ -6,7 +6,7 @@ import evolution.compiler.expression.Expr
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.typeclass.Semigroupoid
 import evolution.materialization.Evolution
-import evolution.compiler.phases.materializing.DefaultMaterializer.materializeExpr
+import evolution.compiler.impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.compiler.phases.materializing.model.Contextual
 
 class EvaluationSpec extends FreeSpec with Matchers {

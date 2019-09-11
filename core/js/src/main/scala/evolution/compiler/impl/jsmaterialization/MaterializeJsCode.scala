@@ -1,8 +1,8 @@
-package evolution.compiler.phases.materializing
+package evolution.compiler.impl.jsmaterialization
 
 import evolution.compiler.expression.Expr
 import Expr._
-import evolution.compiler.phases.materializing.MaterializeJsCode.JsExpr.BinaryOp
+import MaterializeJsCode.JsExpr.BinaryOp
 
 // TODO this is an implementation
 object MaterializeJsCode {

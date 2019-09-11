@@ -1,4 +1,4 @@
-package evolution.compiler.phases.materializing
+package evolution.compiler.impl.evaluation
 
 import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
@@ -8,9 +8,10 @@ import evolution.compiler.phases.materializing.model.Contextual
 import evolution.compiler.phases.materializing.model.Contextual.WithContext
 import evolution.data.emptyCtx
 import Expr._
+import evolution.compiler.phases.materializing.Materializer
 
 // TODO this is an implementation
-object DefaultMaterializer extends Materializer {
+object EvalMaterializer extends Materializer {
 
   def materialize[T](expr: Expr[Evolution[T]]): Long => Iterator[T] =
     seed => Evolution.runWithSeed(seed, materializeExpr(expr).apply(emptyCtx).asInstanceOf[Evolution[T]])

@@ -1,4 +1,5 @@
 package evolution.compiler
+
 import cats.Eq
 import cats.implicits._
 import cats.kernel.Order
@@ -10,7 +11,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
-import evolution.compiler.phases.materializing.DefaultMaterializer.materializeExpr
+import impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
