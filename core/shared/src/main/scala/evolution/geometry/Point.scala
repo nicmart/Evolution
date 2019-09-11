@@ -3,14 +3,25 @@ package evolution.geometry
 import cats.Eq
 import cats.kernel.Group
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js.annotation.JSExportAll
 
-@JSExportTopLevel("Point")
+@JSExportTopLevel("Point") @JSExportAll
 final case class Point(x: Double, y: Double) {
-  def +(other: Point) = Point(x + other.x, y + other.y)
-  def -(other: Point) = Point(x - other.x, y - other.y)
-  def unary_-(): Point = Point(-x, -y)
-  def *(d: Double) = Point(x * d, y * d)
-  def /(d: Double) = Point(x / d, y / d)
+  def plus(other: Point) = Point(x + other.x, y + other.y)
+  def +(other: Point) = plus(other)
+
+  def minus(other: Point) = Point(x - other.x, y - other.y)
+  def -(other: Point) = minus(other)
+
+  def opposite: Point = Point(-x, -y)
+  def unary_-(): Point = opposite
+
+  def mult(d: Double) = Point(x * d, y * d)
+  def *(d: Double) = mult(d)
+
+  def divide(d: Double) = Point(x / d, y / d)
+  def /(d: Double) = divide(d)
+
   def rotate(angle: Double): Point = {
     val (cos, sin) = (Math.cos(angle), Math.sin(angle))
     Point(
@@ -19,7 +30,9 @@ final case class Point(x: Double, y: Double) {
     )
   }
   def norm: Double = Math.sqrt(x * x + y * y)
+
   def distance(other: Point): Double = (this - other).norm
+
   def angle: Double = (x, y) match {
     case (0, _)     => 0
     case _ if x > 0 => Math.atan(y / x)
@@ -30,8 +43,6 @@ final case class Point(x: Double, y: Double) {
     val normValue = norm
     if (normValue > 0) this / normValue else Point.zero
   }
-
-  def rounded(): Point = Point(x.toInt + 0.5, y.toInt + 0.5)
 
   def inRectangle(topLeft: Point, bottomRight: Point): Boolean = {
     topLeft.x <= x && topLeft.y <= y && bottomRight.x >= x && bottomRight.y >= y
@@ -47,11 +58,6 @@ object Point {
       positiveRadius * Math.cos(angle),
       positiveRadius * Math.sin(angle)
     )
-  }
-
-  def sequence(n: Int, from: Point, to: Point): List[Point] = {
-    val step = (to - from) / n
-    (0 to n).toList.map(from + step * _)
   }
 
   implicit val pointGroup: Group[Point] = new Group[Point] {

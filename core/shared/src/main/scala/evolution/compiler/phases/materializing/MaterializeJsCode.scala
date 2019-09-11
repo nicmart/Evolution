@@ -38,11 +38,11 @@ object MaterializeJsCode {
     }
   }
 
-  private sealed trait JsExpr {
+  sealed trait JsExpr {
     def js: String
   }
 
-  private object JsExpr {
+  object JsExpr {
     case class Raw(code: String) extends JsExpr {
       def js: String = code.trim
     }
@@ -50,6 +50,7 @@ object MaterializeJsCode {
       def js: String =
         fields.map { case (key, jsExpr) => s""""$key": ${jsExpr.js}""" }.mkString("{", ", ", "}")
     }
+
     case class Lambda(args: List[String], body: JsExpr) extends JsExpr {
       def js: String = s"""
         function(${args.mkString(", ")}) {
@@ -57,6 +58,7 @@ object MaterializeJsCode {
         }
       """.trim
     }
+
     case class Iterable(expr: JsExpr) extends JsExpr {
       def js: String = s"""
           {
