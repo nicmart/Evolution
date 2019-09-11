@@ -2,7 +2,7 @@ package evolution.compiler.phases.materializing
 
 import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
-import evolution.data.Expr
+import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.compiler.phases.materializing.model.Contextual
 import evolution.compiler.phases.materializing.model.Contextual.WithContext

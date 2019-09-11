@@ -18,7 +18,6 @@ import evolution.logging.Logger
 import evolution.logging.NoOpLogger
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.AllPhases
-import evolution.compiler.phases.materializing.DefaultMaterializer
 import evolution.compiler.materializing.JsCodeMaterializer
 
 object Conf {

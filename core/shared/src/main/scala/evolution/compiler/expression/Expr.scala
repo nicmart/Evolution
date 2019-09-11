@@ -1,4 +1,4 @@
-package evolution.data
+package evolution.compiler.expression
 import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.typeclass.Semigroupoid

@@ -18,7 +18,7 @@ import evolution.logging.Logger
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.phases.materializing.Materializer
-import evolution.data.Expr
+import evolution.compiler.expression.Expr
 
 class AllPhases(materializer: Materializer, logger: Logger) {
   import logger.log

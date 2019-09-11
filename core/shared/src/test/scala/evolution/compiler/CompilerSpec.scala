@@ -5,8 +5,8 @@ import cats.data.NonEmptyList
 import org.scalacheck.Gen
 import org.scalacheck.Shrink
 import org.scalacheck.Arbitrary.arbitrary
-import evolution.data.Expr
-import evolution.data.Expr._
+import evolution.compiler.expression.Expr
+import evolution.compiler.expression.Expr._
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.compiling.Compile
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }

@@ -1,7 +1,8 @@
 package evolution.data
 
 import evolution.data.EvaluationContext._
-import Expr._
+import evolution.compiler.expression.Expr._
+import evolution.compiler.expression.Expr
 import org.scalatest.{ FreeSpec, Matchers }
 import evolution.typeclass.Semigroupoid
 import evolution.materialization.Evolution

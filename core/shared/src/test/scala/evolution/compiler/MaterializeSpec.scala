@@ -4,8 +4,8 @@ import cats.implicits._
 import cats.kernel.Order
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
-import evolution.data.Expr
-import evolution.data.Expr._
+import evolution.compiler.expression.Expr
+import evolution.compiler.expression.Expr._
 import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks

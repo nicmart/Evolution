@@ -7,7 +7,7 @@ import evolution.compiler.phases.typing.config.Constant._
 import evolution.compiler.types.Type._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.{ Type, TypeClasses, Typed }
-import evolution.data.Expr
+import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 

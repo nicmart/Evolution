@@ -2,7 +2,7 @@ package evolution.compiler.phases.compiling
 
 import cats.data.Kleisli
 import cats.implicits._
-import evolution.data.Expr
+import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }

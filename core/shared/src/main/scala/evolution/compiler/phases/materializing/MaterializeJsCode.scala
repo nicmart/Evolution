@@ -1,6 +1,6 @@
 package evolution.compiler.phases.materializing
 
-import evolution.data.Expr
+import evolution.compiler.expression.Expr
 import Expr._
 import evolution.compiler.phases.materializing.MaterializeJsCode.JsExpr.BinaryOp
 
