@@ -24,8 +24,8 @@ import evolution.compiler.impl.evaluation.EvalMaterializer
 object Conf {
   lazy val logger: Logger = NoOpLogger
 
-  lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(EvalMaterializer, logger))
-  //lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(JsCodeMaterializer, logger))
+  //lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(EvalMaterializer, logger))
+  lazy val codeCompiler: CodeCompiler = new CodeCompiler(new AllPhases(JsCodeMaterializer, logger))
 
   lazy val canvasInitializer: CanvasInitializer =
     ColorCanvasInitializer("black", "white")

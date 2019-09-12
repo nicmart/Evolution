@@ -37,7 +37,7 @@ object MaterializeJsCode {
 
       case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
-      case Add(a, b, _) => BinaryOp(toJs(a), "+", toJs(b))
+      case Add(a, b, add) => MaterializeAddition(add)(toJs(a), toJs(b))
 
       case Uniform(from, to) =>
         JsExpr.Iterable(
@@ -96,9 +96,13 @@ object MaterializeJsCode {
       def js: String =
         s"(${func.js})(${args.map(_.js).mkString(", ")})"
     }
+
+    case class Select(obj: JsExpr, field: String) extends JsExpr {
+      def js: String = s"${obj.js}.$field"
+    }
   }
 
-  private def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
+  def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
       var __it1 = ${fa.js}[Symbol.iterator]();
@@ -113,7 +117,7 @@ object MaterializeJsCode {
     )
   )
 
-  private def zipIterable(a: JsExpr, b: JsExpr, f: (JsExpr, JsExpr) => JsExpr): JsExpr = JsExpr.Iterable(
+  def zipIterable(a: JsExpr, b: JsExpr, f: (JsExpr, JsExpr) => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
       var __it1 = ${a.js}[Symbol.iterator]();
