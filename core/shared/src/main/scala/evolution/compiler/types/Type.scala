@@ -59,19 +59,11 @@ object Type {
       case (Type.Integer, Type.Double, Type.Double)   => Multiplicative.IntDoubleDouble.asRight
       case (Type.Double, Type.Integer, Type.Double)   => Multiplicative.DoubleIntDouble.asRight
       case (Type.Integer, Type.Point, Type.Point)     => Multiplicative.IntPointPoint.asRight
-      case (Type.Double, Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
-        Multiplicative.DoubleEvoDoubleEvoDouble.asRight
-      case (Type.Evo(Type.Double), Type.Double, Type.Evo(Type.Double)) =>
-        Multiplicative.EvoDoubleDoubleEvoDouble.asRight
-      case (Type.Double, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.DoubleEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Point), Type.Double, Type.Evo(Type.Point)) => Multiplicative.EvoPointDoubleEvoPoint.asRight
-      case (Type.Evo(Type.Double), Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
-        Multiplicative.EvoDoubleEvoDoubleEvoDouble.asRight
-      case (Type.Evo(Type.Point), Type.Evo(Type.Double), Type.Evo(Type.Point)) =>
-        Multiplicative.EvoPointEvoDoubleEvoPoint.asRight
-      case (Type.Evo(Type.Double), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Multiplicative.EvoDoubleEvoPointEvoPoint.asRight
-      case _ => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
+
+      case (Type.Evo(a), Type.Evo(b), Type.Evo(c)) => multiplicative(a, b, c).map(Multiplicative.LiftBoth(_))
+      case (Type.Evo(a), b, Type.Evo(c))           => multiplicative(a, b, c).map(Multiplicative.LiftLeft(_))
+      case (a, Type.Evo(b), Type.Evo(c))           => multiplicative(a, b, c).map(Multiplicative.LiftRight(_))
+      case _                                       => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
     }
   }.map(_.asInstanceOf[Multiplicative[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
@@ -82,11 +74,8 @@ object Type {
       case (Type.Integer, Type.Double, Type.Double)   => Additive.IntDoubleDouble.asRight
       case (Type.Double, Type.Integer, Type.Double)   => Additive.DoubleIntDouble.asRight
       case (Type.Point, Type.Point, Type.Point)       => Additive.PointPointPoint.asRight
-      case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Additive.EvoPointEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Double), Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
-        Additive.EvoDoubleEvoDoubleEvoDouble.asRight
-      case _ => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
+      case (Type.Evo(a), Type.Evo(b), Type.Evo(c))    => additive(a, b, c).map(Additive.Pointwise(_))
+      case _                                          => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
     }
   }.map(_.asInstanceOf[Additive[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 

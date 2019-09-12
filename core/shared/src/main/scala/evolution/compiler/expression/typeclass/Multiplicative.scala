@@ -13,12 +13,9 @@ object Multiplicative {
   case object DoubleIntDouble extends Multiplicative[Double, Int, Double]
   case object IntPointPoint extends Multiplicative[Int, Point, Point]
   case object PointIntPoint extends Multiplicative[Point, Int, Point]
-  case object DoubleEvoDoubleEvoDouble extends Multiplicative[Double, Evolution[Double], Evolution[Double]]
-  case object EvoDoubleDoubleEvoDouble extends Multiplicative[Evolution[Double], Double, Evolution[Double]]
-  case object DoubleEvoPointEvoPoint extends Multiplicative[Double, Evolution[Point], Evolution[Point]]
-  case object EvoPointDoubleEvoPoint extends Multiplicative[Evolution[Point], Double, Evolution[Point]]
-  case object EvoDoubleEvoDoubleEvoDouble
-      extends Multiplicative[Evolution[Double], Evolution[Double], Evolution[Double]]
-  case object EvoPointEvoDoubleEvoPoint extends Multiplicative[Evolution[Point], Evolution[Double], Evolution[Point]]
-  case object EvoDoubleEvoPointEvoPoint extends Multiplicative[Evolution[Double], Evolution[Point], Evolution[Point]]
+
+  case class LiftLeft[A, B, C](m: Multiplicative[A, B, C]) extends Multiplicative[Evolution[A], B, Evolution[C]]
+  case class LiftRight[A, B, C](m: Multiplicative[A, B, C]) extends Multiplicative[A, Evolution[B], Evolution[C]]
+  case class LiftBoth[A, B, C](m: Multiplicative[A, B, C])
+      extends Multiplicative[Evolution[A], Evolution[B], Evolution[C]]
 }
