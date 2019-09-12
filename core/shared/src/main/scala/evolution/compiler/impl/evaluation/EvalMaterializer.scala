@@ -44,7 +44,7 @@ object EvalMaterializer extends Materializer {
         }
       case e @ Inverse(_, _)     => interpret1(e.t)(e.inv.inverse)
       case e @ Minus(_, _, _, _) => interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, e.inv.inverse(b)))
-      case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
+      case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(MaterializeMultiplication(e.mult))
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
       case Lst(ts)               => Contextual.lst(ts.map(materializeExpr))

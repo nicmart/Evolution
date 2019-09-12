@@ -4,7 +4,6 @@ import evolution.rng.PerlinNoise
 
 import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
-import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import scala.util.Random
 
@@ -269,7 +268,7 @@ object Evolution {
       }
     }
 
-  def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+  def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, mult: (A, A) => A): Evolution[A] =
     new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val accIterator = acc.run
@@ -282,8 +281,8 @@ object Evolution {
           val currentV = _nextV
           if (accIterator.hasNext) {
             _hasNext = true
-            _nextV = semigroupoid.combine(currentV, accIterator.next()(currentA)(currentV))
-            _nextA = semigroupoid.combine(currentA, _nextV)
+            _nextV = mult(currentV, accIterator.next()(currentA)(currentV))
+            _nextA = mult(currentA, _nextV)
           } else {
             _hasNext = false
           }

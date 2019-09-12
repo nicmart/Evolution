@@ -12,11 +12,10 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 import impl.evaluation.EvalMaterializer.materializeExpr
-import evolution.compiler.phases.materializing.model.Contextual
-import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass.Additive
+import evolution.compiler.expression.typeclass.Multiplicative
 
 class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
@@ -116,7 +115,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
                     Var("self"),
                     Minus(Var("n"), Integer(1), Additive.IntIntInt, Invertible.Additive.intInvertible)
                   ),
-                  Semigroupoid.Multiplicative.intIntInt
+                  Multiplicative.IntIntInt
                 )
               )
             )

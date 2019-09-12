@@ -4,10 +4,8 @@ import cats.implicits._
 import cats.{ Eq, Group, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
-import evolution.typeclass.Semigroupoid
-import evolution.typeclass.Semigroupoid.Multiplicative
 import evolution.typeclass.Invertible
-import evolution.compiler.expression.typeclass.Additive
+import evolution.compiler.expression.typeclass._
 
 sealed trait Type {
   type Out
@@ -64,28 +62,28 @@ object Type {
   ): Either[String, Additive[t.Out, t.Out, t.Out]] =
     addSemigrupoid(t, t, t)
 
-  def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+  def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Multiplicative[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.dblDblDbl.asRight
-      case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.dblPointPoint.asRight
-      case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.pointDblPoint.asRight
-      case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.intIntInt.asRight
-      case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.intDblDbl.asRight
-      case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.dblIntDbl.asRight
-      case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.intPointPoint.asRight
-      case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.dblEvoDblEvoDbl.asRight
-      case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.evoDblDblEvoDbl.asRight
-      case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.dblEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.evoPointDblEvoPoint.asRight
+      case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.DblDblDbl.asRight
+      case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.DblPointPoint.asRight
+      case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.PointDblPoint.asRight
+      case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.IntIntInt.asRight
+      case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.IntDblDbl.asRight
+      case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.DblIntDbl.asRight
+      case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.IntPointPoint.asRight
+      case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.DblEvoDblEvoDbl.asRight
+      case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.EvoDblDblEvoDbl.asRight
+      case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.DblEvoPointEvoPoint.asRight
+      case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.EvoPointDblEvoPoint.asRight
       case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) =>
-        Multiplicative.evoDblEvoDblEvoDbl.asRight
+        Multiplicative.EvoDblEvoDblEvoDbl.asRight
       case (Type.Evo(Type.Point), Type.Evo(Type.Dbl), Type.Evo(Type.Point)) =>
-        Multiplicative.evoPointEvoDblEvoPoint.asRight
+        Multiplicative.EvoPointEvoDblEvoPoint.asRight
       case (Type.Evo(Type.Dbl), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Multiplicative.evoDblEvoPointEvoPoint.asRight
+        Multiplicative.EvoDblEvoPointEvoPoint.asRight
       case _ => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
     }
-  }.map(_.innerAs[t1.Out, t2.Out, t3.Out])
+  }.map(_.asInstanceOf[Multiplicative[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
   def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Additive[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {

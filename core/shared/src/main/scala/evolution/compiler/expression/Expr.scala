@@ -1,10 +1,9 @@
 package evolution.compiler.expression
 import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
-import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
-import evolution.compiler.expression.typeclass.Additive
+import evolution.compiler.expression.typeclass._
 
 sealed abstract class Expr[+T](val children: List[Expr[_]])
 
@@ -40,7 +39,7 @@ object Expr {
       extends Expr[T](List(a, b))
   final case class Derive[T](t: Expr[Evolution[T]], sg: Additive[T, T, T], inv: Invertible[T])
       extends Expr[Evolution[T]](List(t))
-  final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
+  final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Multiplicative[A, B, C]) extends Expr[C](List(a, b))
   final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
   final case class Cos(d: Expr[Double]) extends Expr[Double](List(d))
   final case class Lst[T](ts: List[Expr[T]]) extends Expr[List[T]](ts)
