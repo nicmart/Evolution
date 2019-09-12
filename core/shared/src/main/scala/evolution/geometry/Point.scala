@@ -47,6 +47,8 @@ final case class Point(x: Double, y: Double) {
   def inRectangle(topLeft: Point, bottomRight: Point): Boolean = {
     topLeft.x <= x && topLeft.y <= y && bottomRight.x >= x && bottomRight.y >= y
   }
+
+  def isEqualTo(other: Point): Boolean = this == other
 }
 
 object Point {

@@ -42,6 +42,14 @@ object MaterializeJsCode {
 
       case Inverse(t, inv) => MaterializeInverse(inv)(toJs(t))
 
+      case Equals(a, b, eq) => MaterializeEquality(eq).eqv(toJs(a), toJs(b))
+      case Neq(a, b, eq)    => MaterializeEquality(eq).neqv(toJs(a), toJs(b))
+
+      case LessThan(a, b, cmp)           => MaterializeComparison(cmp).lt(toJs(a), toJs(b))
+      case LessThanOrEqual(a, b, cmp)    => MaterializeComparison(cmp).lteqv(toJs(a), toJs(b))
+      case GreaterThan(a, b, cmp)        => MaterializeComparison(cmp).gt(toJs(a), toJs(b))
+      case GreaterThanOrEqual(a, b, cmp) => MaterializeComparison(cmp).gteqv(toJs(a), toJs(b))
+
       case Uniform(from, to) =>
         JsExpr.Iterable(
           JsExpr.Raw(
