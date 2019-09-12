@@ -15,16 +15,16 @@ import evolution.compiler.impl.jsmaterialization.MaterializeJsCode.JsExpr
 
 object MaterializeMultiplication {
   def apply[A, B, C](mult: Multiplicative[A, B, C])(a: JsExpr, b: JsExpr): JsExpr = mult match {
-    case DoubleIntDouble    => ???
-    case LiftBoth(m)        => ???
-    case IntDoubleDouble    => ???
-    case PointDoublePoint   => ???
-    case PointIntPoint      => ???
-    case IntPointPoint      => ???
-    case IntIntInt          => ???
-    case DoubleDoubleDouble => ???
-    case LiftLeft(m)        => ???
-    case LiftRight(m)       => ???
-    case DoublePointPoint   => ???
+    case IntIntInt          => JsExpr.BinaryOp(a, "*", b)
+    case DoubleDoubleDouble => JsExpr.BinaryOp(a, "*", b)
+    case DoubleIntDouble    => JsExpr.BinaryOp(a, "*", b)
+    case DoublePointPoint   => JsExpr.App(JsExpr.Select(b, "mult"), List(a))
+    case IntPointPoint      => JsExpr.App(JsExpr.Select(b, "mult"), List(a))
+    case IntDoubleDouble    => JsExpr.BinaryOp(a, "*", b)
+    case PointDoublePoint   => JsExpr.App(JsExpr.Select(a, "mult"), List(b))
+    case PointIntPoint      => JsExpr.App(JsExpr.Select(a, "mult"), List(b))
+    case LiftLeft(m)        => MaterializeJsCode.mapIterable(a, aa => MaterializeMultiplication(m)(aa, b))
+    case LiftRight(m)       => MaterializeJsCode.mapIterable(b, bb => MaterializeMultiplication(m)(a, bb))
+    case LiftBoth(m)        => MaterializeJsCode.zipIterable(a, b, MaterializeMultiplication(m))
   }
 }

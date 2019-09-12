@@ -38,6 +38,10 @@ object MaterializeJsCode {
 
       case Add(a, b, add) => MaterializeAddition(add)(toJs(a), toJs(b))
 
+      case Multiply(a, b, mult) => MaterializeMultiplication(mult)(toJs(a), toJs(b))
+
+      case Inverse(t, inv) => MaterializeInverse(inv)(toJs(t))
+
       case Uniform(from, to) =>
         JsExpr.Iterable(
           JsExpr.Raw(
