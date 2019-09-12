@@ -91,12 +91,11 @@ object Type {
 
   def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
-      case Type.Integer          => Invertible.Int.asRight
-      case Type.Double           => Invertible.Double.asRight
-      case Type.Point            => Invertible.Point.asRight
-      case Type.Evo(Type.Double) => Invertible.DoubleEvo.asRight
-      case Type.Evo(Type.Point)  => Invertible.PointEvo.asRight
-      case _                     => s"Unable to find an invertible typeclass for type $t".asLeft
+      case Type.Integer => Invertible.Int.asRight
+      case Type.Double  => Invertible.Double.asRight
+      case Type.Point   => Invertible.Point.asRight
+      case Type.Evo(t)  => invertible(t).map(Invertible.Lift(_))
+      case _            => s"Unable to find an invertible typeclass for type $t".asLeft
     }
   }.map(_.asInstanceOf[Invertible[_]].innerAs[t.Out])
 

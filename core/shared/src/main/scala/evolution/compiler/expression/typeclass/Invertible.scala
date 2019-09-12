@@ -8,6 +8,5 @@ object Invertible {
   case object Int extends Invertible[Int]
   case object Double extends Invertible[Double]
   case object Point extends Invertible[Point]
-  case object DoubleEvo extends Invertible[Evolution[Double]]
-  case object PointEvo extends Invertible[Evolution[Point]]
+  case class Lift[T](inv: Invertible[T]) extends Invertible[Evolution[T]]
 }

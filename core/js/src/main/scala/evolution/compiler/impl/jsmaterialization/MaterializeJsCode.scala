@@ -2,7 +2,6 @@ package evolution.compiler.impl.jsmaterialization
 
 import evolution.compiler.expression.Expr
 import Expr._
-import MaterializeJsCode.JsExpr.BinaryOp
 
 // TODO this is an implementation
 object MaterializeJsCode {
@@ -58,6 +57,10 @@ object MaterializeJsCode {
   object JsExpr {
     case class Raw(code: String) extends JsExpr {
       def js: String = code.trim
+    }
+
+    case class PrefixOp(op: String, expr: JsExpr) extends JsExpr {
+      def js: String = s"${op}${expr.js})"
     }
 
     case class BinaryOp(left: JsExpr, op: String, right: JsExpr) extends JsExpr {
