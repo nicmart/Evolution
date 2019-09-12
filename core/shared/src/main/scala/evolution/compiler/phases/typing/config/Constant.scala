@@ -200,7 +200,7 @@ object Constant2 extends Enum[Constant2] {
         Qualified(List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.multSemigrupoid(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
+      Type.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Add
@@ -208,7 +208,7 @@ object Constant2 extends Enum[Constant2] {
         Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.addSemigrupoid(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
+      Type.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
@@ -240,13 +240,13 @@ object Constant2 extends Enum[Constant2] {
 
   case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.eqTypeClass(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
+      Type.equable(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
 
   }
 
   case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.eqTypeClass(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
+      Type.equable(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
   }
 
   case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {

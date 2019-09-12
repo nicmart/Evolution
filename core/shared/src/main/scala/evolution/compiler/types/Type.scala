@@ -48,9 +48,9 @@ object Type {
   def semigroup(
     t: Type
   ): Either[String, Additive[t.Out, t.Out, t.Out]] =
-    addSemigrupoid(t, t, t)
+    additive(t, t, t)
 
-  def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Multiplicative[t1.Out, t2.Out, t3.Out]] = {
+  def multiplicative(t1: Type, t2: Type, t3: Type): Either[String, Multiplicative[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
       case (Type.Double, Type.Double, Type.Double)    => Multiplicative.DoubleDoubleDouble.asRight
       case (Type.Double, Type.Point, Type.Point)      => Multiplicative.DoublePointPoint.asRight
@@ -75,7 +75,7 @@ object Type {
     }
   }.map(_.asInstanceOf[Multiplicative[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
-  def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Additive[t1.Out, t2.Out, t3.Out]] = {
+  def additive(t1: Type, t2: Type, t3: Type): Either[String, Additive[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
       case (Type.Double, Type.Double, Type.Double)    => Additive.DoubleDoubleDouble.asRight
       case (Type.Integer, Type.Integer, Type.Integer) => Additive.IntIntInt.asRight
@@ -90,7 +90,7 @@ object Type {
     }
   }.map(_.asInstanceOf[Additive[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
-  def eqTypeClass(t: Type): Either[String, Equable[t.Out]] = {
+  def equable(t: Type): Either[String, Equable[t.Out]] = {
     t match {
       case Type.Integer => Equable.Int.asRight
       case Type.Double  => Equable.Double.asRight
