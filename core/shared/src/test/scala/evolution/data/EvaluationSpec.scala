@@ -4,10 +4,10 @@ import evolution.data.EvaluationContext._
 import evolution.compiler.expression.Expr._
 import evolution.compiler.expression.Expr
 import org.scalatest.{ FreeSpec, Matchers }
-import evolution.typeclass.Semigroupoid
 import evolution.materialization.Evolution
 import evolution.compiler.impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.compiler.phases.materializing.model.Contextual
+import evolution.compiler.expression.typeclass.Additive
 
 class EvaluationSpec extends FreeSpec with Matchers {
   type F[T] = Evolution[T]
@@ -55,7 +55,7 @@ class EvaluationSpec extends FreeSpec with Matchers {
               "s",
               Cons(
                 Var("s"),
-                App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Semigroupoid.Additive.dblDblDbl))
+                App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Additive.DblDblDbl))
               )
             )
           )

@@ -7,7 +7,7 @@ import scala.scalajs.js.Function
 import scala.scalajs.js
 import evolution.geometry.Point
 import org.scalatest.Inspectors
-import evolution.typeclass.Semigroupoid
+import evolution.compiler.expression.typeclass.Additive
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
@@ -52,7 +52,7 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     "mapped evolution" in {
       val expr = Expr.Map(
         Expr.Constant(Expr.Dbl(1)),
-        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Semigroupoid.Additive.dblDblDbl))
+        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Additive.DblDblDbl))
       )
       val jsCode = MaterializeJsCode.materialize(expr)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]

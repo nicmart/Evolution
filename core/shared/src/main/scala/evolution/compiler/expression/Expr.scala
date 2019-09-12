@@ -4,6 +4,7 @@ import evolution.geometry.Point
 import evolution.typeclass.Semigroupoid
 import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
+import evolution.compiler.expression.typeclass.Additive
 
 sealed abstract class Expr[+T](val children: List[Expr[_]])
 
@@ -28,16 +29,16 @@ object Expr {
   final case class Y(p: Expr[Point]) extends Expr[Double](List(p))
   final case class Norm(p: Expr[Point]) extends Expr[Double](List(p))
   final case class Versor(p: Expr[Point]) extends Expr[Point](List(p))
-  final case class Add[A, B, C](a: Expr[A], b: Expr[B], add: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
+  final case class Add[A, B, C](a: Expr[A], b: Expr[B], add: Additive[A, B, C]) extends Expr[C](List(a, b))
   final case class Div(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
   final case class Exp(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
   final case class Abs(a: Expr[Double]) extends Expr[Double](List(a))
   final case class Sign(a: Expr[Double]) extends Expr[Double](List(a))
   final case class Mod(a: Expr[Double], b: Expr[Double]) extends Expr[Double](List(a, b))
   final case class Inverse[T](t: Expr[T], inv: Invertible[T]) extends Expr[T](List(t))
-  final case class Minus[T](a: Expr[T], b: Expr[T], sg: Semigroupoid.Semigroup[T], inv: Invertible[T])
+  final case class Minus[T](a: Expr[T], b: Expr[T], sg: Additive[T, T, T], inv: Invertible[T])
       extends Expr[T](List(a, b))
-  final case class Derive[T](t: Expr[Evolution[T]], sg: Semigroupoid.Semigroup[T], inv: Invertible[T])
+  final case class Derive[T](t: Expr[Evolution[T]], sg: Additive[T, T, T], inv: Invertible[T])
       extends Expr[Evolution[T]](List(t))
   final case class Multiply[A, B, C](a: Expr[A], b: Expr[B], mult: Semigroupoid[A, B, C]) extends Expr[C](List(a, b))
   final case class Sin(d: Expr[Double]) extends Expr[Double](List(d))
@@ -82,22 +83,22 @@ object Expr {
   final case class MapWithDerivative[A, B](
     fa: Expr[Evolution[A]],
     f: Expr[A => A => B],
-    sg: Semigroupoid.Semigroup[A],
+    sg: Additive[A, A, A],
     inv: Invertible[A]
   ) extends Expr[Evolution[B]](List(fa, f))
   final case class FlatMap[A, B](fa: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(fa, f))
   final case class Flatten[A, B](ffa: Expr[Evolution[Evolution[A]]]) extends Expr[Evolution[B]](List(ffa))
   final case class Parallel[A](ffa: Expr[Evolution[Evolution[A]]]) extends Expr[Evolution[A]](List(ffa))
-  final case class Integrate[A](start: Expr[A], speed: Expr[Evolution[A]], semigroup: Semigroupoid[A, A, A])
+  final case class Integrate[A](start: Expr[A], speed: Expr[Evolution[A]], semigroup: Additive[A, A, A])
       extends Expr[Evolution[A]](List(start, speed))
-  final case class Solve1[A](speed: Expr[Evolution[A => A]], start: Expr[A], semigroup: Semigroupoid[A, A, A])
+  final case class Solve1[A](speed: Expr[Evolution[A => A]], start: Expr[A], semigroup: Additive[A, A, A])
       extends Expr[Evolution[A]](List(speed, start))
   final case class Solve2[A](
     acc: Expr[Evolution[A => A => A]],
     a0: Expr[A],
     v0: Expr[A],
-    semigroup: Semigroupoid[A, A, A]
+    semigroup: Additive[A, A, A]
   ) extends Expr[Evolution[A]](List(acc, a0, v0))
   final case class WithFirst[A, B](as: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(as, f))

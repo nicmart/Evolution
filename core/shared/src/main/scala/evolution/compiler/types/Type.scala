@@ -5,8 +5,9 @@ import cats.{ Eq, Group, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import evolution.typeclass.Semigroupoid
-import evolution.typeclass.Semigroupoid._
+import evolution.typeclass.Semigroupoid.Multiplicative
 import evolution.typeclass.Invertible
+import evolution.compiler.expression.typeclass.Additive
 
 sealed trait Type {
   type Out
@@ -60,7 +61,7 @@ object Type {
 
   def semigroup(
     t: Type
-  ): Either[String, Semigroupoid[t.Out, t.Out, t.Out]] =
+  ): Either[String, Additive[t.Out, t.Out, t.Out]] =
     addSemigrupoid(t, t, t)
 
   def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
@@ -86,19 +87,19 @@ object Type {
     }
   }.map(_.innerAs[t1.Out, t2.Out, t3.Out])
 
-  def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Semigroupoid[t1.Out, t2.Out, t3.Out]] = {
+  def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Additive[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.dblDblDbl.asRight
-      case (Type.Integer, Type.Integer, Type.Integer) => Additive.intIntInt.asRight
-      case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.intDblDbl.asRight
-      case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.dblIntDbl.asRight
-      case (Type.Point, Type.Point, Type.Point)       => Additive.pointPointPoint.asRight
+      case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.DblDblDbl.asRight
+      case (Type.Integer, Type.Integer, Type.Integer) => Additive.IntIntInt.asRight
+      case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.IntDblDbl.asRight
+      case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.DblIntDbl.asRight
+      case (Type.Point, Type.Point, Type.Point)       => Additive.PointPointPoint.asRight
       case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Additive.evoPointEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.evoDblEvoDblEvoDbl.asRight
+        Additive.EvoPointEvoPointEvoPoint.asRight
+      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.EvoDblEvoDblEvoDbl.asRight
       case _                                                            => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
     }
-  }.map(_.innerAs[t1.Out, t2.Out, t3.Out])
+  }.map(_.asInstanceOf[Additive[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
   def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
     t match {
@@ -121,7 +122,7 @@ object Type {
     }
   }.map(_.innerAs[t.Out])
 
-  def invertibleSemigroup(t: Type): Either[String, (Semigroup[t.Out], Invertible[t.Out])] =
+  def invertibleSemigroup(t: Type): Either[String, (Additive[t.Out, t.Out, t.Out], Invertible[t.Out])] =
     (semigroup(t), invertible(t)).tupled
 
   def order(t: Type): Either[String, Order[t.Out]] = {

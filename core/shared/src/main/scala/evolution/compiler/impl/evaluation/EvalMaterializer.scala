@@ -33,7 +33,7 @@ object EvalMaterializer extends Materializer {
       case Y(p)              => interpret1(p)(_.y)
       case Norm(p)           => interpret1(p)(_.norm)
       case Versor(p)         => interpret1(p)(_.versor)
-      case e @ Add(_, _, _)  => interpret2(e.a, e.b)(e.add.combine)
+      case Add(a, b, add)    => interpret2(a, b)(MaterializeAddition(add))
       case Div(a, b)         => interpret2(a, b)(_ / _)
       case Exp(a, b)         => interpret2(a, b)(Math.pow)
       case Abs(a)            => materializeExpr(a).map(Math.abs)
@@ -43,7 +43,7 @@ object EvalMaterializer extends Materializer {
           if (ca >= 0) ca % cb else (ca % cb) + cb
         }
       case e @ Inverse(_, _)     => interpret1(e.t)(e.inv.inverse)
-      case e @ Minus(_, _, _, _) => interpret2(e.a, e.b)((a, b) => e.sg.combine(a, e.inv.inverse(b)))
+      case e @ Minus(_, _, _, _) => interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, e.inv.inverse(b)))
       case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(e.mult.combine)
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
@@ -154,7 +154,8 @@ object EvalMaterializer extends Materializer {
 
       case Map(fa, f) => interpret2(fa, f)(Evolution.map)
 
-      case MapWithDerivative(fa, f, sg, inv) => interpret2(fa, f)(Evolution.mapWithDerivative(_, _, sg, inv))
+      case MapWithDerivative(fa, f, sg, inv) =>
+        interpret2(fa, f)(Evolution.mapWithDerivative(_, _, MaterializeAddition(sg), inv))
 
       case Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
 
@@ -171,17 +172,21 @@ object EvalMaterializer extends Materializer {
         interpret2(n, ft)(Evolution.uniformFrom)
 
       case Integrate(startExpr, speedExpr, semigroup) =>
-        interpret2(startExpr, speedExpr)((start, speed) => Evolution.integrate(start, speed, semigroup))
+        interpret2(startExpr, speedExpr)(
+          (start, speed) => Evolution.integrate(start, speed, MaterializeAddition(semigroup))
+        )
 
       case Solve1(speedExpr, startExpr, semigroup) =>
-        interpret2(speedExpr, startExpr)((speed, start) => Evolution.solve1(speed, start, semigroup))
+        interpret2(speedExpr, startExpr)(
+          (speed, start) => Evolution.solve1(speed, start, MaterializeAddition(semigroup))
+        )
 
       case Solve2(accExpr, startExpr, speedExpr, semigroup) =>
         interpret3(accExpr, startExpr, speedExpr)(
-          (acc, start, speed) => Evolution.solve2(acc, start, speed, semigroup)
+          (acc, start, speed) => Evolution.solve2(acc, start, speed, MaterializeAddition(semigroup))
         )
 
-      case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, sg, inv))
+      case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, MaterializeAddition(sg), inv))
 
       case Normal(μ, σ) =>
         interpret2(μ, σ)(Evolution.normal)

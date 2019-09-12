@@ -182,7 +182,7 @@ object Evolution {
 
   }
 
-  def integrate[A](start: A, speed: Evolution[A], semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+  def integrate[A](start: A, speed: Evolution[A], add: (A, A) => A): Evolution[A] =
     new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -193,7 +193,7 @@ object Evolution {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = semigroupoid.combine(current, speedIterator.next())
+            _next = add(current, speedIterator.next())
           } else {
             _hasNext = false
           }
@@ -203,7 +203,7 @@ object Evolution {
       }
     }
 
-  def derive[A](as: Evolution[A], sg: Semigroupoid.Semigroup[A], inv: Invertible[A]): Evolution[A] =
+  def derive[A](as: Evolution[A], combine: (A, A) => A, inv: Invertible[A]): Evolution[A] =
     new Evolution[A] {
       override def run: Iterator[A] = {
         val derivingIterator: Iterator[A] = as.run
@@ -213,7 +213,7 @@ object Evolution {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): A = {
               val nextA = derivingIterator.next()
-              val nextDerivative = sg.combine(nextA, inv.inverse(_current))
+              val nextDerivative = combine(nextA, inv.inverse(_current))
               _current = nextA
               nextDerivative
             }
@@ -226,7 +226,7 @@ object Evolution {
   def mapWithDerivative[A, B](
     as: Evolution[A],
     f: A => A => B,
-    sg: Semigroupoid.Semigroup[A],
+    add: (A, A) => A,
     inv: Invertible[A]
   ): Evolution[B] =
     new Evolution[B] {
@@ -238,7 +238,7 @@ object Evolution {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): B = {
               val nextA = derivingIterator.next()
-              val nextB = f(_current)(sg.combine(nextA, inv.inverse(_current)))
+              val nextB = f(_current)(add(nextA, inv.inverse(_current)))
               _current = nextA
               nextB
             }
@@ -248,7 +248,7 @@ object Evolution {
     }
 
   // TODO DRY, see integrate
-  def solve1[A](speed: Evolution[A => A], start: A, semigroupoid: Semigroupoid[A, A, A]): Evolution[A] =
+  def solve1[A](speed: Evolution[A => A], start: A, add: (A, A) => A): Evolution[A] =
     new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val speedIterator = speed.run
@@ -259,7 +259,7 @@ object Evolution {
           val current = _next
           if (speedIterator.hasNext) {
             _hasNext = true
-            _next = semigroupoid.combine(current, speedIterator.next()(current))
+            _next = add(current, speedIterator.next()(current))
           } else {
             _hasNext = false
           }
