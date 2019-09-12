@@ -14,7 +14,7 @@ object TypingConfig {
   /**
    * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
    */
-  import Type._
+  import Type.{ Double => Dbl, _ }
   val instances: List[Predicate] = List(
     Predicate("Num", List(Dbl)),
     Predicate("Num", List(Integer)),

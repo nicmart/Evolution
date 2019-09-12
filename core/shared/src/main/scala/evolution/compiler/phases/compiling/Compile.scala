@@ -38,8 +38,8 @@ object Compile {
 
       case IntLiteral(n) =>
         typedTree.annotation.value match {
-          case Type.Dbl => Expr.Dbl(n.toDouble).pure[Result].widen
-          case _        => Expr.Integer(n).pure[Result].widen
+          case Type.Double => Expr.Dbl(n.toDouble).pure[Result].widen
+          case _           => Expr.Integer(n).pure[Result].widen
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals

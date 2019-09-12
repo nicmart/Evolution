@@ -52,7 +52,7 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     "mapped evolution" in {
       val expr = Expr.Map(
         Expr.Constant(Expr.Dbl(1)),
-        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Additive.DblDblDbl))
+        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Additive.DoubleDoubleDouble))
       )
       val jsCode = MaterializeJsCode.materialize(expr)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]

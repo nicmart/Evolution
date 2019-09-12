@@ -4,8 +4,8 @@ import evolution.geometry.Point
 sealed trait Equable[T]
 
 object Equable {
-  case object DblEquable extends Equable[Double]
-  case object IntEquable extends Equable[Int]
-  case object PointEquable extends Equable[Point]
-  case object BoolEquable extends Equable[Boolean]
+  case object Double extends Equable[Double]
+  case object Int extends Equable[Int]
+  case object Point extends Equable[Point]
+  case object Boolean extends Equable[Boolean]
 }

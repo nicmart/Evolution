@@ -19,7 +19,7 @@ class CompilerSpec extends LanguageSpec {
   "The compiler" - {
     "should successfully compile" - {
       "number literals" in forAll(arbitrary[Double]) { n =>
-        unsafeCompile(TreeF.DoubleLiteral(n).annotate(Qualified(Type.Dbl))) shouldBe Dbl(n.toDouble)
+        unsafeCompile(TreeF.DoubleLiteral(n).annotate(Qualified(Type.Double))) shouldBe Dbl(n.toDouble)
       }
 
       "variable usages" in forAll(genTypedVar) {
@@ -116,7 +116,7 @@ class CompilerSpec extends LanguageSpec {
         ) shouldBe expected
       }
 
-      "equality operators" in forAll(equalityOperators(Equable.IntEquable), genTypedNumber, genTypedNumber) {
+      "equality operators" in forAll(equalityOperators(Equable.Int), genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
           unsafeCompile(TreeF.App(ast, NonEmptyList.of(a, b)).withNoType) shouldBe f(
             unsafeCompile(a),

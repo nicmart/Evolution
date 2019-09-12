@@ -7,7 +7,6 @@ import evolution.geometry.Point
 import evolution.compiler.phases.materializing.model.Contextual
 import evolution.compiler.phases.materializing.model.Contextual.WithContext
 import evolution.data.emptyCtx
-import Expr._
 import evolution.compiler.phases.materializing.Materializer
 
 // TODO this is an implementation
@@ -18,92 +17,92 @@ object EvalMaterializer extends Materializer {
 
   def materializeExpr[T](expr: Expr[T]): Contextual[T] = {
     expr match {
-      case Dbl(d)     => Contextual.Pure(d)
-      case Floor(d)   => materializeExpr(d).map(_.toInt)
-      case ToDbl(n)   => materializeExpr(n).map(_.toDouble)
-      case Integer(n) => Contextual.Pure(n)
-      case Pnt(x, y)  => interpret2(x, y)(Point.apply)
-      case LiftedPnt(x, y) =>
+      case Expr.Dbl(d)      => Contextual.Pure(d)
+      case Expr.Floor(d)    => materializeExpr(d).map(_.toInt)
+      case Expr.ToDouble(n) => materializeExpr(n).map(_.toDouble)
+      case Expr.Integer(n)  => Contextual.Pure(n)
+      case Expr.Pnt(x, y)   => interpret2(x, y)(Point.apply)
+      case Expr.LiftedPnt(x, y) =>
         interpret2[Evolution[Double], Evolution[Double], Evolution[Point]](x, y)(
           Evolution.zipWithUncurried(Point.apply)
         )
-      case Polar(x, y)       => interpret2(x, y)(Point.polar)
-      case LiftedPolar(x, y) => interpret2(x, y)(Evolution.zipWithUncurried(Point.polar))
-      case X(p)              => interpret1(p)(_.x)
-      case Y(p)              => interpret1(p)(_.y)
-      case Norm(p)           => interpret1(p)(_.norm)
-      case Versor(p)         => interpret1(p)(_.versor)
-      case Add(a, b, add)    => interpret2(a, b)(MaterializeAddition(add))
-      case Div(a, b)         => interpret2(a, b)(_ / _)
-      case Exp(a, b)         => interpret2(a, b)(Math.pow)
-      case Abs(a)            => materializeExpr(a).map(Math.abs)
-      case Sign(a)           => materializeExpr(a).map(Math.signum)
-      case Mod(a, b) =>
+      case Expr.Polar(x, y)       => interpret2(x, y)(Point.polar)
+      case Expr.LiftedPolar(x, y) => interpret2(x, y)(Evolution.zipWithUncurried(Point.polar))
+      case Expr.X(p)              => interpret1(p)(_.x)
+      case Expr.Y(p)              => interpret1(p)(_.y)
+      case Expr.Norm(p)           => interpret1(p)(_.norm)
+      case Expr.Versor(p)         => interpret1(p)(_.versor)
+      case Expr.Add(a, b, add)    => interpret2(a, b)(MaterializeAddition(add))
+      case Expr.Div(a, b)         => interpret2(a, b)(_ / _)
+      case Expr.Exp(a, b)         => interpret2(a, b)(Math.pow)
+      case Expr.Abs(a)            => materializeExpr(a).map(Math.abs)
+      case Expr.Sign(a)           => materializeExpr(a).map(Math.signum)
+      case Expr.Mod(a, b) =>
         interpret2(a, b) { (ca, cb) =>
           if (ca >= 0) ca % cb else (ca % cb) + cb
         }
-      case e @ Inverse(_, _) => interpret1(e.t)(MaterializeInverse(e.inv))
-      case e @ Minus(_, _, _, _) =>
+      case e @ Expr.Inverse(_, _) => interpret1(e.t)(MaterializeInverse(e.inv))
+      case e @ Expr.Minus(_, _, _, _) =>
         interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, MaterializeInverse(e.inv)(b)))
-      case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(MaterializeMultiplication(e.mult))
-      case Sin(d)                => interpret1(d)(Math.sin)
-      case Cos(d)                => interpret1(d)(Math.cos)
-      case Lst(ts)               => Contextual.lst(ts.map(materializeExpr))
-      case SmoothStep(f, t, p) =>
+      case e @ Expr.Multiply(_, _, _) => interpret2(e.a, e.b)(MaterializeMultiplication(e.mult))
+      case Expr.Sin(d)                => interpret1(d)(Math.sin)
+      case Expr.Cos(d)                => interpret1(d)(Math.cos)
+      case Expr.Lst(ts)               => Contextual.lst(ts.map(materializeExpr))
+      case Expr.SmoothStep(f, t, p) =>
         interpret3(f, t, p) { (from, to, position) =>
           val t = (position - from) / (to - from)
           if (t <= 0) 0.0
           else if (t >= 1) 1.0
           else t * t * (3.0 - 2.0 * t)
         }
-      case Equals(a, b, eq) => interpret2(a, b)(MaterializeEquality(eq).eqv)
-      case Neq(a, b, eq)    => interpret2(a, b)(MaterializeEquality(eq).neqv)
-      case IfThen(condition, a, b) =>
+      case Expr.Equals(a, b, eq) => interpret2(a, b)(MaterializeEquality(eq).eqv)
+      case Expr.Neq(a, b, eq)    => interpret2(a, b)(MaterializeEquality(eq).neqv)
+      case Expr.IfThen(condition, a, b) =>
         interpret3Lazy(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB
         }
 
-      case Bool(b) => Contextual.Pure(b)
+      case Expr.Bool(b) => Contextual.Pure(b)
 
-      case And(a, b) =>
+      case Expr.And(a, b) =>
         interpret2(a, b)(_ && _)
 
-      case Or(a, b) =>
+      case Expr.Or(a, b) =>
         interpret2(a, b)(_ || _)
 
-      case Not(a) =>
+      case Expr.Not(a) =>
         materializeExpr(a).map(!_)
 
-      case GreaterThan(a, b, cmp)        => interpret2(a, b)(MaterializeComparison(cmp).gt)
-      case GreaterThanOrEqual(a, b, cmp) => interpret2(a, b)(MaterializeComparison(cmp).gteqv)
-      case LessThan(a, b, cmp)           => interpret2(a, b)(MaterializeComparison(cmp).lt)
-      case LessThanOrEqual(a, b, cmp)    => interpret2(a, b)(MaterializeComparison(cmp).lteqv)
+      case Expr.GreaterThan(a, b, cmp)        => interpret2(a, b)(MaterializeComparison(cmp).gt)
+      case Expr.GreaterThanOrEqual(a, b, cmp) => interpret2(a, b)(MaterializeComparison(cmp).gteqv)
+      case Expr.LessThan(a, b, cmp)           => interpret2(a, b)(MaterializeComparison(cmp).lt)
+      case Expr.LessThanOrEqual(a, b, cmp)    => interpret2(a, b)(MaterializeComparison(cmp).lteqv)
 
-      case InRect(topLeft, bottomRight, p) =>
+      case Expr.InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>
           compiledP.inRectangle(compiledTopLeft, compiledBottomRight)
         }
 
-      case Var(name) =>
+      case Expr.Var(name) =>
         WithContext.instance[T] { ctx =>
           get[Any](ctx, name).asInstanceOf[T]
         }
 
-      case Let(name, value, e) =>
-        materializeExpr(App(Lambda(name, e), value))
+      case Expr.Let(name, value, e) =>
+        materializeExpr(Expr.App(Expr.Lambda(name, e), value))
 
-      case lambda: Lambda[s, t] =>
+      case lambda: Expr.Lambda[s, t] =>
         val interpretedBody = materializeExpr(lambda.expr)
         WithContext.instance[T] { ctx => (a: s) =>
           interpretedBody(addStrict(lambda.variable, a, ctx))
         }
 
-      case App(f, a) => interpret2(f, a)(_(_))
+      case Expr.App(f, a) => interpret2(f, a)(_(_))
 
       case Expr.Constant(t) =>
         interpret1(t)(Evolution.constant)
 
-      case Fix(Lambda(name, lambdaBody)) =>
+      case Expr.Fix(Expr.Lambda(name, lambdaBody)) =>
         val interpretedBody = materializeExpr(lambdaBody)
         WithContext.instance[T] { ctx =>
           {
@@ -112,89 +111,90 @@ object EvalMaterializer extends Materializer {
           }
         }
 
-      case Fix(_) => ???
+      case Expr.Fix(_) => ???
 
-      case Empty() =>
+      case Expr.Empty() =>
         Contextual.Pure(Evolution.empty)
 
       // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
       // recursive definitions
-      case Cons(head, tail) =>
+      case Expr.Cons(head, tail) =>
         val interpretedHead = materializeExpr(head)
         val interpretedTail = materializeExpr(tail)
         WithContext.instance[T] { ctx =>
           Evolution.cons(interpretedHead(ctx), interpretedTail(ctx))
         }
 
-      case Concat(ev1, ev2) =>
+      case Expr.Concat(ev1, ev2) =>
         interpret2(ev1, ev2)(Evolution.concat)
 
-      case MapEmpty(ev1, ev2) =>
+      case Expr.MapEmpty(ev1, ev2) =>
         interpret2(ev1, ev2)(Evolution.mapEmpty)
 
-      case MapCons(eva, f) =>
+      case Expr.MapCons(eva, f) =>
         interpret2(eva, f)(Evolution.mapCons)
 
-      case ZipWith(fa, fb, f) =>
+      case Expr.ZipWith(fa, fb, f) =>
         interpret3(fa, fb, f)(Evolution.zipWith)
 
-      case Take(nExpr, faExpr) =>
+      case Expr.Take(nExpr, faExpr) =>
         interpret2(nExpr, faExpr)(Evolution.take)
 
-      case TakeWhile(fa, p) =>
+      case Expr.TakeWhile(fa, p) =>
         interpret2(fa, p)(Evolution.takeWhile)
 
-      case WithFirst(as, f) =>
+      case Expr.WithFirst(as, f) =>
         interpret2(as, f)(Evolution.withFirst1)
 
-      case FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Evolution.flatMap)
+      case Expr.FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Evolution.flatMap)
 
-      case Flatten(ffa) => interpret1(ffa)(Evolution.flatten)
+      case Expr.Flatten(ffa) => interpret1(ffa)(Evolution.flatten)
 
-      case Parallel(ffa) => interpret1(ffa)(Evolution.parallel)
+      case Expr.Parallel(ffa) => interpret1(ffa)(Evolution.parallel)
 
-      case Map(fa, f) => interpret2(fa, f)(Evolution.map)
+      case Expr.Map(fa, f) => interpret2(fa, f)(Evolution.map)
 
-      case MapWithDerivative(fa, f, sg, inv) =>
+      case Expr.MapWithDerivative(fa, f, sg, inv) =>
         interpret2(fa, f)(Evolution.mapWithDerivative(_, _, MaterializeAddition(sg), MaterializeInverse(inv)))
 
-      case Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
+      case Expr.Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
 
-      case Uniform(from, to) =>
+      case Expr.Uniform(from, to) =>
         interpret2(from, to)(Evolution.uniform)
 
-      case UniformChoice(choices) =>
+      case Expr.UniformChoice(choices) =>
         interpret1(choices)(Evolution.uniformChoice)
 
-      case UniformDiscrete(from, to, step) =>
+      case Expr.UniformDiscrete(from, to, step) =>
         interpret3(from, to, step)(Evolution.uniformDiscrete)
 
-      case UniformFrom(n, ft) =>
+      case Expr.UniformFrom(n, ft) =>
         interpret2(n, ft)(Evolution.uniformFrom)
 
-      case Integrate(startExpr, speedExpr, semigroup) =>
+      case Expr.Integrate(startExpr, speedExpr, semigroup) =>
         interpret2(startExpr, speedExpr)(
           (start, speed) => Evolution.integrate(start, speed, MaterializeAddition(semigroup))
         )
 
-      case Solve1(speedExpr, startExpr, semigroup) =>
+      case Expr.Solve1(speedExpr, startExpr, semigroup) =>
         interpret2(speedExpr, startExpr)(
           (speed, start) => Evolution.solve1(speed, start, MaterializeAddition(semigroup))
         )
 
-      case Solve2(accExpr, startExpr, speedExpr, semigroup) =>
+      case Expr.Solve2(accExpr, startExpr, speedExpr, semigroup) =>
         interpret3(accExpr, startExpr, speedExpr)(
           (acc, start, speed) => Evolution.solve2(acc, start, speed, MaterializeAddition(semigroup))
         )
 
-      case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, MaterializeAddition(sg), MaterializeInverse(inv)))
+      case Expr.Derive(t, sg, inv) =>
+        interpret1(t)(Evolution.derive(_, MaterializeAddition(sg), MaterializeInverse(inv)))
 
-      case Normal(μ, σ) =>
+      case Expr.Normal(μ, σ) =>
         interpret2(μ, σ)(Evolution.normal)
 
-      case Noise() => Contextual.Pure(Evolution.noiseEvolution)
+      case Expr.Noise() => Contextual.Pure(Evolution.noiseEvolution)
 
-      case OctaveNoise() => Contextual.Pure(Evolution.octaveNoiseEvolution)
+      case Expr.OctaveNoise() => Contextual.Pure(Evolution.octaveNoiseEvolution)
     }
   }
 

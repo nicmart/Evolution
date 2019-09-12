@@ -14,7 +14,7 @@ object Expr {
 
   final case class Dbl(d: Double) extends Expr[Double](Nil)
   final case class Floor(d: Expr[Double]) extends Expr[Int](List(d))
-  final case class ToDbl(n: Expr[Int]) extends Expr[Double](List(n))
+  final case class ToDouble(n: Expr[Int]) extends Expr[Double](List(n))
   final case class Integer(n: Int) extends Expr[Int](Nil)
   final case class Pnt(x: Expr[Double], y: Expr[Double]) extends Expr[Point](List(x, y))
   final case class LiftedPnt(x: Expr[Evolution[Double]], y: Expr[Evolution[Double]])

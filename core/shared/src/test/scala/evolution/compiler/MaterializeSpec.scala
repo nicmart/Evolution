@@ -55,7 +55,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
     }
 
     "should materialize equality operators" in forAll(
-      genEqualityOperatorExpectations(Equable.DblEquable),
+      genEqualityOperatorExpectations(Equable.Double),
       arbitrary[Dbl],
       arbitrary[Dbl]
     ) {
@@ -110,7 +110,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
                   Var("n"),
                   App(
                     Var("self"),
-                    Minus(Var("n"), Integer(1), Additive.IntIntInt, Invertible.IntInvertible)
+                    Minus(Var("n"), Integer(1), Additive.IntIntInt, Invertible.Int)
                   ),
                   Multiplicative.IntIntInt
                 )

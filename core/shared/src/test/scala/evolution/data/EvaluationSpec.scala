@@ -55,7 +55,7 @@ class EvaluationSpec extends FreeSpec with Matchers {
               "s",
               Cons(
                 Var("s"),
-                App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Additive.DblDblDbl))
+                App(Var[Double => F[Double]]("f"), Add(Var[Double]("s"), Dbl(1), Additive.DoubleDoubleDouble))
               )
             )
           )

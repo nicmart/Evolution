@@ -35,7 +35,7 @@ object Type {
   }
 
   final case object Integer extends Type { type Out = Int }
-  final case object Dbl extends Type { type Out = Double }
+  final case object Double extends Type { type Out = Double }
   final case object Point extends Type { type Out = Point }
   final case object Bool extends Type { type Out = Boolean }
   final case class Evo(inner: Type) extends Type { type Out = Evolution[inner.type] }
@@ -52,59 +52,62 @@ object Type {
 
   def multSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Multiplicative[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)                         => Multiplicative.DblDblDbl.asRight
-      case (Type.Dbl, Type.Point, Type.Point)                     => Multiplicative.DblPointPoint.asRight
-      case (Type.Point, Type.Dbl, Type.Point)                     => Multiplicative.PointDblPoint.asRight
-      case (Type.Integer, Type.Integer, Type.Integer)             => Multiplicative.IntIntInt.asRight
-      case (Type.Integer, Type.Dbl, Type.Dbl)                     => Multiplicative.IntDblDbl.asRight
-      case (Type.Dbl, Type.Integer, Type.Dbl)                     => Multiplicative.DblIntDbl.asRight
-      case (Type.Integer, Type.Point, Type.Point)                 => Multiplicative.IntPointPoint.asRight
-      case (Type.Dbl, Type.Evo(Type.Dbl), Type.Evo(Type.Dbl))     => Multiplicative.DblEvoDblEvoDbl.asRight
-      case (Type.Evo(Type.Dbl), Type.Dbl, Type.Evo(Type.Dbl))     => Multiplicative.EvoDblDblEvoDbl.asRight
-      case (Type.Dbl, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.DblEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Point), Type.Dbl, Type.Evo(Type.Point)) => Multiplicative.EvoPointDblEvoPoint.asRight
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) =>
-        Multiplicative.EvoDblEvoDblEvoDbl.asRight
-      case (Type.Evo(Type.Point), Type.Evo(Type.Dbl), Type.Evo(Type.Point)) =>
-        Multiplicative.EvoPointEvoDblEvoPoint.asRight
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
-        Multiplicative.EvoDblEvoPointEvoPoint.asRight
+      case (Type.Double, Type.Double, Type.Double)    => Multiplicative.DoubleDoubleDouble.asRight
+      case (Type.Double, Type.Point, Type.Point)      => Multiplicative.DoublePointPoint.asRight
+      case (Type.Point, Type.Double, Type.Point)      => Multiplicative.PointDoublePoint.asRight
+      case (Type.Integer, Type.Integer, Type.Integer) => Multiplicative.IntIntInt.asRight
+      case (Type.Integer, Type.Double, Type.Double)   => Multiplicative.IntDoubleDouble.asRight
+      case (Type.Double, Type.Integer, Type.Double)   => Multiplicative.DoubleIntDouble.asRight
+      case (Type.Integer, Type.Point, Type.Point)     => Multiplicative.IntPointPoint.asRight
+      case (Type.Double, Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
+        Multiplicative.DoubleEvoDoubleEvoDouble.asRight
+      case (Type.Evo(Type.Double), Type.Double, Type.Evo(Type.Double)) =>
+        Multiplicative.EvoDoubleDoubleEvoDouble.asRight
+      case (Type.Double, Type.Evo(Type.Point), Type.Evo(Type.Point)) => Multiplicative.DoubleEvoPointEvoPoint.asRight
+      case (Type.Evo(Type.Point), Type.Double, Type.Evo(Type.Point)) => Multiplicative.EvoPointDoubleEvoPoint.asRight
+      case (Type.Evo(Type.Double), Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
+        Multiplicative.EvoDoubleEvoDoubleEvoDouble.asRight
+      case (Type.Evo(Type.Point), Type.Evo(Type.Double), Type.Evo(Type.Point)) =>
+        Multiplicative.EvoPointEvoDoubleEvoPoint.asRight
+      case (Type.Evo(Type.Double), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
+        Multiplicative.EvoDoubleEvoPointEvoPoint.asRight
       case _ => s"Unable to find a Mult instance for types $t1, $t2, $t3".asLeft
     }
   }.map(_.asInstanceOf[Multiplicative[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
   def addSemigrupoid(t1: Type, t2: Type, t3: Type): Either[String, Additive[t1.Out, t2.Out, t3.Out]] = {
     (t1, t2, t3) match {
-      case (Type.Dbl, Type.Dbl, Type.Dbl)             => Additive.DblDblDbl.asRight
+      case (Type.Double, Type.Double, Type.Double)    => Additive.DoubleDoubleDouble.asRight
       case (Type.Integer, Type.Integer, Type.Integer) => Additive.IntIntInt.asRight
-      case (Type.Integer, Type.Dbl, Type.Dbl)         => Additive.IntDblDbl.asRight
-      case (Type.Dbl, Type.Integer, Type.Dbl)         => Additive.DblIntDbl.asRight
+      case (Type.Integer, Type.Double, Type.Double)   => Additive.IntDoubleDouble.asRight
+      case (Type.Double, Type.Integer, Type.Double)   => Additive.DoubleIntDouble.asRight
       case (Type.Point, Type.Point, Type.Point)       => Additive.PointPointPoint.asRight
       case (Type.Evo(Type.Point), Type.Evo(Type.Point), Type.Evo(Type.Point)) =>
         Additive.EvoPointEvoPointEvoPoint.asRight
-      case (Type.Evo(Type.Dbl), Type.Evo(Type.Dbl), Type.Evo(Type.Dbl)) => Additive.EvoDblEvoDblEvoDbl.asRight
-      case _                                                            => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
+      case (Type.Evo(Type.Double), Type.Evo(Type.Double), Type.Evo(Type.Double)) =>
+        Additive.EvoDoubleEvoDoubleEvoDouble.asRight
+      case _ => s"Unable to find an Add instance for types $t1, $t2, $t3".asLeft
     }
   }.map(_.asInstanceOf[Additive[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
   def eqTypeClass(t: Type): Either[String, Equable[t.Out]] = {
     t match {
-      case Type.Integer => Equable.IntEquable.asRight
-      case Type.Dbl     => Equable.DblEquable.asRight
-      case Type.Point   => Equable.PointEquable.asRight
-      case Type.Bool    => Equable.BoolEquable.asRight
+      case Type.Integer => Equable.Int.asRight
+      case Type.Double  => Equable.Double.asRight
+      case Type.Point   => Equable.Point.asRight
+      case Type.Bool    => Equable.Boolean.asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
   }.map(_.asInstanceOf[Equable[_]].innerAs[t.Out])
 
   def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
-      case Type.Integer         => Invertible.IntInvertible.asRight
-      case Type.Dbl             => Invertible.DblInvertible.asRight
-      case Type.Point           => Invertible.PointInvertible.asRight
-      case Type.Evo(Type.Dbl)   => Invertible.DblEvoInvertible.asRight
-      case Type.Evo(Type.Point) => Invertible.PointEvoInvertible.asRight
-      case _                    => s"Unable to find an invertible typeclass for type $t".asLeft
+      case Type.Integer          => Invertible.Int.asRight
+      case Type.Double           => Invertible.Double.asRight
+      case Type.Point            => Invertible.Point.asRight
+      case Type.Evo(Type.Double) => Invertible.DoubleEvo.asRight
+      case Type.Evo(Type.Point)  => Invertible.PointEvo.asRight
+      case _                     => s"Unable to find an invertible typeclass for type $t".asLeft
     }
   }.map(_.asInstanceOf[Invertible[_]].innerAs[t.Out])
 
@@ -114,7 +117,7 @@ object Type {
   def order(t: Type): Either[String, Comparable[t.Out]] = {
     t match {
       case Type.Integer => Comparable.Int.asRight
-      case Type.Dbl     => Comparable.Double.asRight
+      case Type.Double  => Comparable.Double.asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
   }.map(_.asInstanceOf[Comparable[_]].innerAs[t.Out])

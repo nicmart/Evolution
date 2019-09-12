@@ -16,7 +16,7 @@ object MaterializeJsCode {
 
       case Floor(d) => JsExpr.App(JsExpr.Raw("Math.floor"), List(toJs(d)))
 
-      case ToDbl(n) => toJs(n) // There is only one numeric type in JS
+      case ToDouble(n) => toJs(n) // There is only one numeric type in JS
 
       case Integer(n) => JsExpr.Raw(n.toString)
 
