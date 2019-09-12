@@ -42,8 +42,9 @@ object EvalMaterializer extends Materializer {
         interpret2(a, b) { (ca, cb) =>
           if (ca >= 0) ca % cb else (ca % cb) + cb
         }
-      case e @ Inverse(_, _)     => interpret1(e.t)(e.inv.inverse)
-      case e @ Minus(_, _, _, _) => interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, e.inv.inverse(b)))
+      case e @ Inverse(_, _) => interpret1(e.t)(MaterializeInverse(e.inv))
+      case e @ Minus(_, _, _, _) =>
+        interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, MaterializeInverse(e.inv)(b)))
       case e @ Multiply(_, _, _) => interpret2(e.a, e.b)(MaterializeMultiplication(e.mult))
       case Sin(d)                => interpret1(d)(Math.sin)
       case Cos(d)                => interpret1(d)(Math.cos)
@@ -155,7 +156,7 @@ object EvalMaterializer extends Materializer {
       case Map(fa, f) => interpret2(fa, f)(Evolution.map)
 
       case MapWithDerivative(fa, f, sg, inv) =>
-        interpret2(fa, f)(Evolution.mapWithDerivative(_, _, MaterializeAddition(sg), inv))
+        interpret2(fa, f)(Evolution.mapWithDerivative(_, _, MaterializeAddition(sg), MaterializeInverse(inv)))
 
       case Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
 
@@ -186,7 +187,7 @@ object EvalMaterializer extends Materializer {
           (acc, start, speed) => Evolution.solve2(acc, start, speed, MaterializeAddition(semigroup))
         )
 
-      case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, MaterializeAddition(sg), inv))
+      case Derive(t, sg, inv) => interpret1(t)(Evolution.derive(_, MaterializeAddition(sg), MaterializeInverse(inv)))
 
       case Normal(μ, σ) =>
         interpret2(μ, σ)(Evolution.normal)

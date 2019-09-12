@@ -4,7 +4,6 @@ import evolution.rng.PerlinNoise
 
 import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
-import evolution.typeclass.Invertible
 import scala.util.Random
 
 sealed trait Evolution[+T] {
@@ -202,7 +201,7 @@ object Evolution {
       }
     }
 
-  def derive[A](as: Evolution[A], combine: (A, A) => A, inv: Invertible[A]): Evolution[A] =
+  def derive[A](as: Evolution[A], combine: (A, A) => A, inverse: A => A): Evolution[A] =
     new Evolution[A] {
       override def run: Iterator[A] = {
         val derivingIterator: Iterator[A] = as.run
@@ -212,7 +211,7 @@ object Evolution {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): A = {
               val nextA = derivingIterator.next()
-              val nextDerivative = combine(nextA, inv.inverse(_current))
+              val nextDerivative = combine(nextA, inverse(_current))
               _current = nextA
               nextDerivative
             }
@@ -226,7 +225,7 @@ object Evolution {
     as: Evolution[A],
     f: A => A => B,
     add: (A, A) => A,
-    inv: Invertible[A]
+    inverse: A => A
   ): Evolution[B] =
     new Evolution[B] {
       override def run: Iterator[B] = {
@@ -237,7 +236,7 @@ object Evolution {
             override def hasNext: Boolean = derivingIterator.hasNext
             override def next(): B = {
               val nextA = derivingIterator.next()
-              val nextB = f(_current)(add(nextA, inv.inverse(_current)))
+              val nextB = f(_current)(add(nextA, inverse(_current)))
               _current = nextA
               nextB
             }

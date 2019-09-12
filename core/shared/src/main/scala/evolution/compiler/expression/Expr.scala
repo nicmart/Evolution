@@ -1,7 +1,6 @@
 package evolution.compiler.expression
 import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
-import evolution.typeclass.Invertible
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
 

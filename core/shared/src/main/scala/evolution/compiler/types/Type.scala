@@ -1,10 +1,9 @@
 package evolution.compiler.types
 
 import cats.implicits._
-import cats.{ Eq, Group, Order }
+import cats.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
-import evolution.typeclass.Invertible
 import evolution.compiler.expression.typeclass._
 
 sealed trait Type {
@@ -46,16 +45,6 @@ object Type {
     type Out = from.type => to.type
     override def toString: String = s"$from -> $to"
   }
-
-  // TODO can we do better thant this?
-  def group(t: Type): Either[String, Group[t.Out]] = {
-    t match {
-      case Type.Integer => Group[Int].asRight
-      case Type.Dbl     => Group[Double].asRight
-      case Type.Point   => Group[Point].asRight
-      case _            => s"Unable to find a group for type $t".asLeft
-    }
-  }.map(_.innerAs[t.Out])
 
   def semigroup(
     t: Type
@@ -111,14 +100,14 @@ object Type {
 
   def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
-      case Type.Integer         => Invertible.Additive.intInvertible.asRight
-      case Type.Dbl             => Invertible.Additive.dblInvertible.asRight
-      case Type.Point           => Invertible.Additive.pointInvertible.asRight
-      case Type.Evo(Type.Dbl)   => Invertible.Additive.dblEvoInvertible.asRight
-      case Type.Evo(Type.Point) => Invertible.Additive.pointEvoInvertible.asRight
+      case Type.Integer         => Invertible.IntInvertible.asRight
+      case Type.Dbl             => Invertible.DblInvertible.asRight
+      case Type.Point           => Invertible.PointInvertible.asRight
+      case Type.Evo(Type.Dbl)   => Invertible.DblEvoInvertible.asRight
+      case Type.Evo(Type.Point) => Invertible.PointEvoInvertible.asRight
       case _                    => s"Unable to find an invertible typeclass for type $t".asLeft
     }
-  }.map(_.innerAs[t.Out])
+  }.map(_.asInstanceOf[Invertible[_]].innerAs[t.Out])
 
   def invertibleSemigroup(t: Type): Either[String, (Additive[t.Out, t.Out, t.Out], Invertible[t.Out])] =
     (semigroup(t), invertible(t)).tupled
