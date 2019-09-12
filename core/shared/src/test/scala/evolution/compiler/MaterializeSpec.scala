@@ -1,8 +1,5 @@
 package evolution.compiler
 
-import cats.Eq
-import cats.implicits._
-import cats.kernel.Order
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 import evolution.compiler.expression.Expr
@@ -13,9 +10,9 @@ import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
 import impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.materialization.Evolution
-import evolution.compiler.expression.typeclass.Additive
-import evolution.compiler.expression.typeclass.Multiplicative
-import evolution.compiler.expression.typeclass.Invertible
+import evolution.compiler.expression.typeclass._
+import evolution.compiler.impl.evaluation.MaterializeEquality
+import evolution.compiler.impl.evaluation.MaterializeComparison
 
 class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
@@ -46,7 +43,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
     }
 
     "should materialize relational operators" in forAll(
-      genRelationOperatorExpectations[Double],
+      genRelationOperatorExpectations(Comparable.Double),
       arbitrary[Dbl],
       arbitrary[Dbl]
     ) {
@@ -58,7 +55,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
     }
 
     "should materialize equality operators" in forAll(
-      genEqualityOperatorExpectations[Double],
+      genEqualityOperatorExpectations(Equable.DblEquable),
       arbitrary[Dbl],
       arbitrary[Dbl]
     ) {
@@ -107,7 +104,7 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
             Lambda(
               "n",
               IfThen(
-                LessThanOrEqual(Var("n"), Integer(0), Order[Int]),
+                LessThanOrEqual(Var("n"), Integer(0), Comparable.Int),
                 Integer(1),
                 Multiply(
                   Var("n"),
@@ -132,20 +129,20 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
 
   // TODO are we just replicating the implementation here?
   def genEqualityOperatorExpectations[T](
-    implicit eq: Eq[T]
+    eq: Equable[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
-      (Equals[T](_, _, Eq[T])) -> eq.eqv _,
-      (Neq[T](_, _, Eq[T])) -> eq.neqv _
+      (Equals[T](_, _, eq)) -> MaterializeEquality(eq).eqv _,
+      (Neq[T](_, _, eq)) -> MaterializeEquality(eq).neqv _
     )
 
   def genRelationOperatorExpectations[T](
-    implicit ord: Order[T]
+    cmp: Comparable[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
-      (GreaterThan[T](_, _, Order[T])) -> ord.gt _,
-      (GreaterThanOrEqual[T](_, _, Order[T])) -> ord.gteqv _,
-      (LessThan[T](_, _, Order[T])) -> ord.lt _,
-      (LessThanOrEqual[T](_, _, Order[T])) -> ord.lteqv _
+      (GreaterThan[T](_, _, cmp)) -> MaterializeComparison(cmp).gt _,
+      (GreaterThanOrEqual[T](_, _, cmp)) -> MaterializeComparison(cmp).gteqv _,
+      (LessThan[T](_, _, cmp)) -> MaterializeComparison(cmp).lt _,
+      (LessThanOrEqual[T](_, _, cmp)) -> MaterializeComparison(cmp).lteqv _
     )
 }

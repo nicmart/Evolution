@@ -1,7 +1,6 @@
 package evolution.compiler.types
 
 import cats.implicits._
-import cats.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
@@ -88,15 +87,15 @@ object Type {
     }
   }.map(_.asInstanceOf[Additive[_, _, _]].innerAs[t1.Out, t2.Out, t3.Out])
 
-  def eqTypeClass(t: Type): Either[String, Eq[t.Out]] = {
+  def eqTypeClass(t: Type): Either[String, Equable[t.Out]] = {
     t match {
-      case Type.Integer => Eq[Int].asRight
-      case Type.Dbl     => Eq[Double].asRight
-      case Type.Point   => Eq[Point].asRight
-      case Type.Bool    => Eq[Boolean].asRight
+      case Type.Integer => Equable.IntEquable.asRight
+      case Type.Dbl     => Equable.DblEquable.asRight
+      case Type.Point   => Equable.PointEquable.asRight
+      case Type.Bool    => Equable.BoolEquable.asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.map(_.innerAs[t.Out])
+  }.map(_.asInstanceOf[Equable[_]].innerAs[t.Out])
 
   def invertible(t: Type): Either[String, Invertible[t.Out]] = {
     t match {
@@ -112,13 +111,13 @@ object Type {
   def invertibleSemigroup(t: Type): Either[String, (Additive[t.Out, t.Out, t.Out], Invertible[t.Out])] =
     (semigroup(t), invertible(t)).tupled
 
-  def order(t: Type): Either[String, Order[t.Out]] = {
+  def order(t: Type): Either[String, Comparable[t.Out]] = {
     t match {
-      case Type.Integer => Order[Int].asRight
-      case Type.Dbl     => Order[Double].asRight
+      case Type.Integer => Comparable.Int.asRight
+      case Type.Dbl     => Comparable.Double.asRight
       case _            => s"Unable to find an eq typeclass for type $t".asLeft
     }
-  }.map(_.innerAs[t.Out])
+  }.map(_.asInstanceOf[Comparable[_]].innerAs[t.Out])
 
   // TODO Bleah, I would like the AST to be hosting the inner type
   def unwrapEvo(t: Type): Either[String, Type] = t match {

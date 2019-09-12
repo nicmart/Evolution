@@ -1,6 +1,4 @@
 package evolution.compiler
-import cats.implicits._
-import cats.kernel.{ Eq, Order }
 import cats.data.NonEmptyList
 import org.scalacheck.Gen
 import org.scalacheck.Shrink
@@ -14,6 +12,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
+import evolution.compiler.expression.typeclass._
 
 class CompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -117,7 +116,7 @@ class CompilerSpec extends LanguageSpec {
         ) shouldBe expected
       }
 
-      "equality operators" in forAll(equalityOperators[Int], genTypedNumber, genTypedNumber) {
+      "equality operators" in forAll(equalityOperators(Equable.IntEquable), genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
           unsafeCompile(TreeF.App(ast, NonEmptyList.of(a, b)).withNoType) shouldBe f(
             unsafeCompile(a),
@@ -125,7 +124,7 @@ class CompilerSpec extends LanguageSpec {
           )
       }
 
-      "relation operators" in forAll(relationOperators[Int], genTypedNumber, genTypedNumber) {
+      "relation operators" in forAll(relationOperators(Comparable.Int), genTypedNumber, genTypedNumber) {
         case ((ast, f), a, b) =>
           unsafeCompile(TreeF.App(ast, NonEmptyList.of(a, b)).withNoType) shouldBe f(
             unsafeCompile(a),
@@ -183,20 +182,18 @@ class CompilerSpec extends LanguageSpec {
     }
   }
 
-  def equalityOperators[T: Eq]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
+  def equalityOperators[T](eq: Equable[T]): Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.Identifier.primitiveConst(Constant2.Eq).withNoType -> (Equals.apply[T](_, _, Eq[T])),
-      TreeF.Identifier.primitiveConst(Constant2.Neq).withNoType -> (Neq.apply[T](_, _, Eq[T]))
+      TreeF.Identifier.primitiveConst(Constant2.Eq).withNoType -> (Equals.apply[T](_, _, eq)),
+      TreeF.Identifier.primitiveConst(Constant2.Neq).withNoType -> (Neq.apply[T](_, _, eq))
     )
 
-  def relationOperators[T: Order]: Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
+  def relationOperators[T](cmp: Comparable[T]): Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.Identifier.primitiveConst(Constant2.GreaterThan).withNoType -> (GreaterThan[T](_, _, Order[T])),
-      TreeF.Identifier
-        .primitiveConst(Constant2.GreaterThanOrEqual)
-        .withNoType -> (GreaterThanOrEqual[T](_, _, Order[T])),
-      TreeF.Identifier.primitiveConst(Constant2.LessThan).withNoType -> (LessThan[T](_, _, Order[T])),
-      TreeF.Identifier.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, Order[T]))
+      TreeF.Identifier.primitiveConst(Constant2.GreaterThan).withNoType -> (GreaterThan[T](_, _, cmp)),
+      TreeF.Identifier.primitiveConst(Constant2.GreaterThanOrEqual).withNoType -> (GreaterThanOrEqual[T](_, _, cmp)),
+      TreeF.Identifier.primitiveConst(Constant2.LessThan).withNoType -> (LessThan[T](_, _, cmp)),
+      TreeF.Identifier.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, cmp))
     )
 
   lazy val unknownType: Qualified[Type] = Qualified(Type.Var(""))

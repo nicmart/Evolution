@@ -1,5 +1,4 @@
 package evolution.compiler.expression
-import cats.kernel.{ Eq, Order }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
@@ -45,8 +44,8 @@ object Expr {
   final case class SmoothStep(from: Expr[Double], to: Expr[Double], position: Expr[Double])
       extends Expr[Double](List(from, to, position))
 
-  final case class Equals[T](a: Expr[T], b: Expr[T], eq: Eq[T]) extends Expr[Boolean](List(a, b))
-  final case class Neq[T](a: Expr[T], b: Expr[T], eq: Eq[T]) extends Expr[Boolean](List(a, b))
+  final case class Equals[T](a: Expr[T], b: Expr[T], eq: Equable[T]) extends Expr[Boolean](List(a, b))
+  final case class Neq[T](a: Expr[T], b: Expr[T], eq: Equable[T]) extends Expr[Boolean](List(a, b))
 
   // Boolean
   final case class Bool(b: Boolean) extends Expr[Boolean](Nil)
@@ -58,10 +57,10 @@ object Expr {
   final case class Not(a: Expr[Boolean]) extends Expr[Boolean](List(a))
 
   // Relations
-  final case class GreaterThan[T](a: Expr[T], b: Expr[T], ord: Order[T]) extends Expr[Boolean](List(a, b))
-  final case class GreaterThanOrEqual[T](a: Expr[T], b: Expr[T], ord: Order[T]) extends Expr[Boolean](List(a, b))
-  final case class LessThan[T](a: Expr[T], b: Expr[T], ord: Order[T]) extends Expr[Boolean](List(a, b))
-  final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T], ord: Order[T]) extends Expr[Boolean](List(a, b))
+  final case class GreaterThan[T](a: Expr[T], b: Expr[T], cmp: Comparable[T]) extends Expr[Boolean](List(a, b))
+  final case class GreaterThanOrEqual[T](a: Expr[T], b: Expr[T], cmp: Comparable[T]) extends Expr[Boolean](List(a, b))
+  final case class LessThan[T](a: Expr[T], b: Expr[T], cmp: Comparable[T]) extends Expr[Boolean](List(a, b))
+  final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T], cmp: Comparable[T]) extends Expr[Boolean](List(a, b))
 
   // Chain
   final case class Empty[A]() extends Expr[Evolution[A]](Nil)

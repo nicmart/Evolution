@@ -56,8 +56,8 @@ object EvalMaterializer extends Materializer {
           else if (t >= 1) 1.0
           else t * t * (3.0 - 2.0 * t)
         }
-      case Equals(a, b, eq) => interpret2(a, b)(eq.eqv)
-      case Neq(a, b, eq)    => interpret2(a, b)(eq.neqv)
+      case Equals(a, b, eq) => interpret2(a, b)(MaterializeEquality(eq).eqv)
+      case Neq(a, b, eq)    => interpret2(a, b)(MaterializeEquality(eq).neqv)
       case IfThen(condition, a, b) =>
         interpret3Lazy(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB
@@ -74,10 +74,10 @@ object EvalMaterializer extends Materializer {
       case Not(a) =>
         materializeExpr(a).map(!_)
 
-      case GreaterThan(a, b, ord)        => interpret2(a, b)(ord.gt)
-      case GreaterThanOrEqual(a, b, ord) => interpret2(a, b)(ord.gteqv)
-      case LessThan(a, b, ord)           => interpret2(a, b)(ord.lt)
-      case LessThanOrEqual(a, b, ord)    => interpret2(a, b)(ord.lteqv)
+      case GreaterThan(a, b, cmp)        => interpret2(a, b)(MaterializeComparison(cmp).gt)
+      case GreaterThanOrEqual(a, b, cmp) => interpret2(a, b)(MaterializeComparison(cmp).gteqv)
+      case LessThan(a, b, cmp)           => interpret2(a, b)(MaterializeComparison(cmp).lt)
+      case LessThanOrEqual(a, b, cmp)    => interpret2(a, b)(MaterializeComparison(cmp).lteqv)
 
       case InRect(topLeft, bottomRight, p) =>
         interpret3(topLeft, bottomRight, p) { (compiledTopLeft, compiledBottomRight, compiledP) =>

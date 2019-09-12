@@ -7,4 +7,5 @@ object Equable {
   case object DblEquable extends Equable[Double]
   case object IntEquable extends Equable[Int]
   case object PointEquable extends Equable[Point]
+  case object BoolEquable extends Equable[Boolean]
 }
