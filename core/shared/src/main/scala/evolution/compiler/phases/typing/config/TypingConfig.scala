@@ -49,8 +49,44 @@ object TypingConfig {
     Instance(InvertibleInst(Invertible.Double), List(Dbl)),
     Instance(InvertibleInst(Invertible.Point), List(Point)),
     Instance(InvertibleInst(Invertible.Lift(Invertible.Double)), List(Evo(Dbl))),
-    Instance(InvertibleInst(Invertible.Lift(Invertible.Point)), List(Evo(Point)))
+    Instance(InvertibleInst(Invertible.Lift(Invertible.Point)), List(Evo(Point))),
+    Instance(EquableInst(Equable.Boolean), List(Type.Bool)),
+    Instance(EquableInst(Equable.Double), List(Type.Double)),
+    Instance(EquableInst(Equable.Point), List(Type.Point)),
+    Instance(EquableInst(Equable.Int), List(Type.Integer)),
+    Instance(ComparableInst(Comparable.Int), List(Type.Integer)),
+    Instance(ComparableInst(Comparable.Double), List(Type.Double))
   )
 
   val instancesPredicates: List[Predicate] = instances.map(_.predicate)
+
+  def numeric(tpe: Type): Either[String, Numeric[_]] =
+    instances.collectFirst {
+      case Instance(NumericInst(num), types) if List(tpe) == types => num
+    }.toRight(s"No Numeric instance found for $tpe")
+
+  def additive(tpe1: Type, tpe2: Type, tpe3: Type): Either[String, Additive[_, _, _]] =
+    instances.collectFirst {
+      case Instance(AdditiveInst(num), types) if List(tpe1, tpe2, tpe3) == types => num
+    }.toRight(s"No Additive instance found for $tpe1, $tpe2, $tpe3")
+
+  def multiplicative(tpe1: Type, tpe2: Type, tpe3: Type): Either[String, Multiplicative[_, _, _]] =
+    instances.collectFirst {
+      case Instance(MultiplicativeInst(num), types) if List(tpe1, tpe2, tpe3) == types => num
+    }.toRight(s"No Multiplicative instance found for $tpe1, $tpe2, $tpe3")
+
+  def invertible(tpe1: Type): Either[String, Invertible[_]] =
+    instances.collectFirst {
+      case Instance(InvertibleInst(num), types) if List(tpe1) == types => num
+    }.toRight(s"No invertible instance found for $tpe1")
+
+  def equable(tpe1: Type): Either[String, Equable[_]] =
+    instances.collectFirst {
+      case Instance(EquableInst(eq), types) if List(tpe1) == types => eq
+    }.toRight(s"No equable instance found for $tpe1")
+
+  def comparable(tpe1: Type): Either[String, Comparable[_]] =
+    instances.collectFirst {
+      case Instance(ComparableInst(cmp), types) if List(tpe1) == types => cmp
+    }.toRight(s"No comparable instance found for $tpe1")
 }

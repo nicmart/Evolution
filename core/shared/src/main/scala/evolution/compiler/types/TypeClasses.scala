@@ -9,6 +9,8 @@ object TypeClassInstance {
   case class MultiplicativeInst[A, B, C](add: Multiplicative[A, B, C]) extends TypeClassInstance("Mult")
   case class InvertibleInst[A](inv: Invertible[A]) extends TypeClassInstance("Invertible")
   case class NumericInst[A](num: Numeric[A]) extends TypeClassInstance("Num")
+  case class EquableInst[A](eq: Equable[A]) extends TypeClassInstance("Eq")
+  case class ComparableInst[A](cmp: Comparable[A]) extends TypeClassInstance("Comp")
 }
 
 object TypeClasses {

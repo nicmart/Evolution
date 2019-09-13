@@ -105,7 +105,7 @@ object Constant1 extends Enum[Constant1] {
 
   case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
     override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.invertible(x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
+      TypingConfig.invertible(x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
   }
 
   case object Sin extends Constant1Plain(Qualified(Type.Double =>: Type.Double)) {
@@ -142,9 +142,9 @@ object Constant1 extends Enum[Constant1] {
     override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
         innerType <- Type.unwrapEvo(x.tpe)
-        sgAndInv <- Type.invertibleSemigroup(innerType)
-        (sg, inv) = sgAndInv
-      } yield Expr.Derive(x.value.asExprF, sg, inv).asExprF
+        add <- TypingConfig.additive(innerType, innerType, innerType)
+        inv <- TypingConfig.invertible(innerType)
+      } yield Expr.Derive(x.value.asExprF, add.asInstanceOf, inv.asInstanceOf).asExprF
   }
 
   case object UniformChoice extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
@@ -200,7 +200,7 @@ object Constant2 extends Enum[Constant2] {
         Qualified(List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
+      TypingConfig.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Add
@@ -208,14 +208,15 @@ object Constant2 extends Enum[Constant2] {
         Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
+      TypingConfig.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
   }
 
   case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.invertibleSemigroup(x.tpe).map {
-        case (sg, inv) => Expr.Minus(x.value.asExpr, y.value.asExpr, sg, inv)
-      }
+      for {
+        inv <- TypingConfig.invertible(x.tpe)
+        add <- TypingConfig.additive(x.tpe, x.tpe, x.tpe)
+      } yield Expr.Minus(x.value.asExpr, y.value.asExpr, add.asInstanceOf, inv.asInstanceOf)
   }
 
   case object Div extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double)) {
@@ -240,33 +241,33 @@ object Constant2 extends Enum[Constant2] {
 
   case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.equable(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
+      TypingConfig.equable(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
 
   }
 
   case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.equable(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
+      TypingConfig.equable(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
   }
 
   case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.order(y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
+      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.order(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.order(y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
+      TypingConfig.comparable(y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.order(y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+      TypingConfig.comparable(y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
   }
 
   case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -295,14 +296,16 @@ object Constant2 extends Enum[Constant2] {
 
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.semigroup(x.tpe).map(sg => Expr.Integrate(x.value.asExpr, y.value.asExprF, sg))
+      TypingConfig
+        .additive(x.tpe, x.tpe, x.tpe)
+        .map(add => Expr.Integrate(x.value.asExpr, y.value.asExprF, add.asInstanceOf))
   }
 
   case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type
-        .semigroup(y.tpe)
-        .map(sg => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, sg))
+      TypingConfig
+        .additive(y.tpe, y.tpe, y.tpe)
+        .map(add => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, add.asInstanceOf))
   }
 
   case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -324,9 +327,12 @@ object Constant2 extends Enum[Constant2] {
     override def compile(f: Typed[Expr[_]], x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
         innerType <- Type.unwrapEvo(x.tpe)
-        sgAndInv <- Type.invertibleSemigroup(innerType)
-        (sg, inv) = sgAndInv
-      } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], sg, inv).asExpr
+        inv <- TypingConfig.invertible(innerType)
+        add <- TypingConfig.additive(innerType, innerType, innerType)
+      } yield
+        Expr
+          .MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], add.asInstanceOf, inv.asInstanceOf)
+          .asExpr
   }
 
   case object FlatMap
@@ -405,12 +411,12 @@ object Constant3 extends Enum[Constant3] {
         Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
       ) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      Type.semigroup(y.tpe).map { sg =>
+      TypingConfig.additive(y.tpe, y.tpe, y.tpe).map { add =>
         Expr.Solve2[y.tpe.Out](
           x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
           y.value.asExpr[y.tpe.Out],
           z.value.asExpr[y.tpe.Out],
-          sg
+          add.asInstanceOf
         )
       }
   }
