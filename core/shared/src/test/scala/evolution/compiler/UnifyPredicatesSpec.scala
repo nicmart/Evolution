@@ -11,12 +11,12 @@ class UnifyPredicatesSpec extends LanguageSpec {
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
-      val subst = predicatesUnifier.unify(TypingConfig.instances, Nil)
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Nil)
       subst shouldBe Right(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
-      val subst = predicatesUnifier.unify(TypingConfig.instances, TypingConfig.instances.take(1))
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, TypingConfig.instancesPredicates.take(1))
       subst shouldBe Right(Substitution.empty)
     }
 
@@ -75,7 +75,7 @@ class UnifyPredicatesSpec extends LanguageSpec {
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = predicatesUnifier.unify(TypingConfig.instances, Random.shuffle(predicates)).unsafeEvaluate
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeEvaluate
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Double
     }
@@ -88,7 +88,7 @@ class UnifyPredicatesSpec extends LanguageSpec {
         Predicate("Mult", List(Type.Var("T0"), Type.Point, Type.Var("T1")))
       ) ++ (1 to 40).map(predicate)
 
-      val subst = predicatesUnifier.unify(TypingConfig.instances, predicates).unsafeEvaluate
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeEvaluate
 
       subst.substitute[Type](Type.Var("T0")) shouldBe Type.Double
     }
