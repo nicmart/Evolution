@@ -23,7 +23,7 @@ class FindConstraintsSpec extends LanguageSpec {
       "double literals" in {
         forAll(genDoubleNotIntNumber) { numberExpr =>
           val constraints = assignVarsAndFindConstraints(numberExpr).unsafeEvaluate._2
-          val expected = Constraints(firstTypeVar -> Type.Double)
+          val expected = Constraints(firstTypeVar -> TypeT.Double)
           constraints shouldEq expected
         }
       }

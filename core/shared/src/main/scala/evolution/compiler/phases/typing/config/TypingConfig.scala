@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typing.config
 
 import evolution.compiler.types.TypeClasses.Predicate
-import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
+import evolution.compiler.types.{ Type, TypeT, TypeBinding, TypeBindings }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.expression.typeclass._
@@ -20,7 +20,7 @@ object TypingConfig {
   /**
    * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
    */
-  import Type.{ Double => Dbl, _ }
+  import TypeT.{ Double => Dbl, _ }
   val instances: List[Instance] = List(
     Instance(NumericInst(Numeric.Double), List(Dbl)),
     Instance(NumericInst(Numeric.Int), List(Integer)),
@@ -50,12 +50,12 @@ object TypingConfig {
     Instance(InvertibleInst(Invertible.Point), List(Point)),
     Instance(InvertibleInst(Invertible.Lift(Invertible.Double)), List(Evo(Dbl))),
     Instance(InvertibleInst(Invertible.Lift(Invertible.Point)), List(Evo(Point))),
-    Instance(EquableInst(Equable.Boolean), List(Type.Bool)),
-    Instance(EquableInst(Equable.Double), List(Type.Double)),
-    Instance(EquableInst(Equable.Point), List(Type.Point)),
-    Instance(EquableInst(Equable.Int), List(Type.Integer)),
-    Instance(ComparableInst(Comparable.Int), List(Type.Integer)),
-    Instance(ComparableInst(Comparable.Double), List(Type.Double))
+    Instance(EquableInst(Equable.Boolean), List(TypeT.Bool)),
+    Instance(EquableInst(Equable.Double), List(TypeT.Double)),
+    Instance(EquableInst(Equable.Point), List(TypeT.Point)),
+    Instance(EquableInst(Equable.Int), List(TypeT.Integer)),
+    Instance(ComparableInst(Comparable.Int), List(TypeT.Integer)),
+    Instance(ComparableInst(Comparable.Double), List(TypeT.Double))
   )
 
   val instancesPredicates: List[Predicate] = instances.map(_.predicate)

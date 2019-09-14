@@ -1,6 +1,7 @@
 package evolution.compiler.phases.typing.model
 
 import evolution.compiler.types.Type
+import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 import evolution.compiler.tree._
 
@@ -11,16 +12,16 @@ trait CanBeSubstituted[T] {
 object CanBeSubstituted {
   implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
     def substitute(s: Substitution, t: Type): Type = t match {
-      case Type.Var(name)                                      => s.lookup(name).getOrElse(t)
-      case Type.Evo(inner)                                     => Type.Evo(substitute(s, inner))
-      case Type.Lst(inner)                                     => Type.Lst(substitute(s, inner))
-      case Type.Arrow(from, to)                                => Type.Arrow(substitute(s, from), substitute(s, to))
-      case Type.Bool | Type.Integer | Type.Point | Type.Double => t
+      case TypeT.Var(name)                                         => s.lookup(name).getOrElse(t)
+      case TypeT.Evo(inner)                                        => TypeT.Evo(substitute(s, inner))
+      case TypeT.Lst(inner)                                        => TypeT.Lst(substitute(s, inner))
+      case TypeT.Arrow(from, to)                                   => TypeT.Arrow(substitute(s, from), substitute(s, to))
+      case TypeT.Bool | TypeT.Integer | TypeT.Point | TypeT.Double => t
     }
   }
 
   implicit val assignment: CanBeSubstituted[Assignment] = new CanBeSubstituted[Assignment] {
-    def substitute(s: Substitution, a: Assignment): Assignment = a.copy(tpe = s.substitute(a.tpe))
+    def substitute(s: Substitution, a: Assignment): Assignment = a.copy(tpe = s.substitute[Type](a.tpe))
   }
 
   implicit val subst: CanBeSubstituted[Substitution] = new CanBeSubstituted[Substitution] {
@@ -52,7 +53,7 @@ object CanBeSubstituted {
   implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
     def substitute(s: Substitution, constraint: Constraint): Constraint =
       constraint match {
-        case Constraint.Eq(a, b) => Constraint.Eq(s.substitute(a), s.substitute(b))
+        case Constraint.Eq(a, b) => Constraint.Eq(s.substitute[Type](a), s.substitute[Type](b))
         case Constraint.Pred(p)  => Constraint.Pred(s.substitute(p))
       }
   }

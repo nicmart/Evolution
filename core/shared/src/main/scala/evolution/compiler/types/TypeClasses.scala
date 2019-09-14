@@ -20,7 +20,7 @@ object TypeClasses {
     def predicate: Predicate = Predicate(typeclass.id, types)
   }
 
-  case class Qualified[T](predicates: List[Predicate], value: T)
+  case class Qualified[+T](predicates: List[Predicate], value: T)
   object Qualified {
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
   }

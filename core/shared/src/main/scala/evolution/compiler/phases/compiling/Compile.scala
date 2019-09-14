@@ -7,7 +7,7 @@ import evolution.compiler.tree._
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.Typed
-import evolution.compiler.types.Type
+import evolution.compiler.types.TypeT
 import evolution.materialization.Evolution
 import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
@@ -15,7 +15,7 @@ import scala.collection.immutable.Nil
 
 object Compile {
 
-  def compile(tree: TypedTree, varContext: VarContext): Either[String, Expr[tree.annotation.value.Out]] =
+  def compile(tree: TypedTree, varContext: VarContext): Either[String, Expr[_]] =
     compileSafe(tree).run(varContext).map(_.asExpr)
 
   private type Result[T] = Kleisli[Either[String, ?], VarContext, T]
@@ -38,8 +38,8 @@ object Compile {
 
       case IntLiteral(n) =>
         typedTree.annotation.value match {
-          case Type.Double => Expr.Dbl(n.toDouble).pure[Result].widen
-          case _           => Expr.Integer(n).pure[Result].widen
+          case TypeT.Double => Expr.Dbl(n.toDouble).pure[Result].widen
+          case _            => Expr.Integer(n).pure[Result].widen
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals

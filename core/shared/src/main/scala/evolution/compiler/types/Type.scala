@@ -4,55 +4,57 @@ import cats.implicits._
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 
-sealed trait Type {
-  type Out
+sealed trait TypeT[T] {
+  final def =>:[S](from: TypeT[S]): TypeT[S => T] = TypeT.Arrow(from, this)
 }
 
-object Type {
-  final case class Var(name: String) extends Type {
-    type Out = Nothing
+object TypeT {
+  final case class Var(name: String) extends TypeT[Any] {
     override def toString: String = name
   }
-  final case object Integer extends Type { type Out = Int }
-  final case object Double extends Type { type Out = Double }
-  final case object Point extends Type { type Out = Point }
-  final case object Bool extends Type { type Out = Boolean }
-  final case class Evo(inner: Type) extends Type { type Out = Evolution[inner.type] }
-  final case class Lst(inner: Type) extends Type { type Out = List[inner.type] }
-  final case class Arrow(from: Type, to: Type) extends Type {
-    type Out = from.type => to.type
+  final case object Integer extends TypeT[Int]
+  final case object Double extends TypeT[Double]
+  final case object Point extends TypeT[Point]
+  final case object Bool extends TypeT[Boolean]
+  final case class Evo[T](inner: TypeT[T]) extends TypeT[Evolution[T]]
+  final case class Lst[T](inner: TypeT[T]) extends TypeT[List[T]]
+  final case class Arrow[A, B](from: TypeT[A], to: TypeT[B]) extends TypeT[A => B] {
     override def toString: String = s"$from -> $to"
   }
 
-  implicit class TypeOps(val self: Type) extends AnyVal {
+  final def findChilren[T](self: TypeT[T]): List[TypeT[_]] = self match {
+    case TypeT.Evo(inner)      => List(inner)
+    case TypeT.Lst(inner)      => List(inner)
+    case TypeT.Arrow(from, to) => List(from, to)
+    case _                     => Nil
+  }
 
-    final def children: List[Type] = self match {
-      case Type.Evo(inner)      => List(inner)
-      case Type.Lst(inner)      => List(inner)
-      case Type.Arrow(from, to) => List(from, to)
-      case _                    => Nil
+  implicit class TypeTOpsUntyped(val self: TypeT[_]) extends AnyVal {
+    final def children: List[TypeT[_]] = self match {
+      case TypeT.Evo(inner)      => List(inner)
+      case TypeT.Lst(inner)      => List(inner)
+      case TypeT.Arrow(from, to) => List(from, to)
+      case _                     => Nil
     }
 
-    final def =>:(from: Type): Type = Type.Arrow(from, self)
-
-    final def typeVars: Set[Type.Var] = self match {
-      case Type.Var(name) => Set(Type.Var(name))
-      case _              => children.flatMap(_.typeVars).toSet
+    final def typeVars: Set[TypeT.Var] = self match {
+      case TypeT.Var(name) => Set(TypeT.Var(name))
+      case _               => children.flatMap(_.typeVars).toSet
     }
 
-    final def typeVarUsages(varName: String): List[Type] =
+    final def typeVarUsages(varName: String): List[TypeT[_]] =
       typeVars.collect {
-        case tpe @ Type.Var(name) if varName == name => tpe
+        case tpe @ TypeT.Var(name) if varName == name => tpe
       }.toList
 
-    final def unwrapEvo: Either[String, Type] = self match {
-      case Type.Evo(inner) => inner.asRight
-      case _               => s"Type $self is not an Evolution type".asLeft
+    final def unwrapEvo: Either[String, TypeT[_]] = self match {
+      case TypeT.Evo(inner) => inner.asRight
+      case _                => s"TypeT $self is not an Evolution type".asLeft
     }
 
-    final def unwrapLst: Either[String, Type] = self match {
-      case Type.Lst(inner) => inner.asRight
-      case _               => s"Type $self is not a Lst type".asLeft
+    final def unwrapLst: Either[String, TypeT[_]] = self match {
+      case TypeT.Lst(inner) => inner.asRight
+      case _                => s"TypeT $self is not a Lst type".asLeft
     }
   }
 }

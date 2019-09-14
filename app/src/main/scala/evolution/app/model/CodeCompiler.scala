@@ -2,7 +2,7 @@ package evolution.app.model
 
 import evolution.geometry.Point
 import evolution.compiler.phases.AllPhases
-import evolution.compiler.types.Type
+import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.tree.TreeF
@@ -13,7 +13,7 @@ class CodeCompiler(allPhases: AllPhases) {
     allPhases
       .compile(
         code,
-        Type.Evo(Type.Point),
+        TypeT.Evo(TypeT.Point),
         TypingConfig.constantQualifiedTypes,
         varBindings(ctx)
       )
