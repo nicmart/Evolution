@@ -44,14 +44,15 @@ object Type {
     override def toString: String = s"$from -> $to"
   }
 
-  // TODO Bleah, I would like the AST to be hosting the inner type
-  def unwrapEvo(t: Type): Either[String, Type] = t match {
-    case Type.Evo(inner) => inner.asRight
-    case _               => s"Type $t is not an Evolution type".asLeft
-  }
+  implicit class TypeOps(val self: Type) extends AnyVal {
+    def unwrapEvo: Either[String, Type] = self match {
+      case Type.Evo(inner) => inner.asRight
+      case _               => s"Type $self is not an Evolution type".asLeft
+    }
 
-  def unwrapLst(t: Type): Either[String, Type] = t match {
-    case Type.Lst(inner) => inner.asRight
-    case _               => s"Type $t is not a Lst type".asLeft
+    def unwrapLst: Either[String, Type] = self match {
+      case Type.Lst(inner) => inner.asRight
+      case _               => s"Type $self is not a Lst type".asLeft
+    }
   }
 }

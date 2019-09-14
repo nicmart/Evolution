@@ -9,7 +9,7 @@ import evolution.compiler.tree.TreeF._
 
 object FindConstraints {
   def find(typedTree: TypedTree): Either[String, Constraints] = {
-    // TODO as you can see here predicates are extracted just for identifiers
+    // TODO as you can see here predicates are extracted just for identifiers and literals
     val exprType = typedTree.annotation
     val nodeConstraints: Either[String, Constraints] = typedTree.tree match {
       case Identifier(_, _) => Constraints.empty.withPredicates(exprType.predicates).asRight
@@ -22,7 +22,7 @@ object FindConstraints {
       case Lambda(_, _) => Constraints.empty.asRight
       case Let(_, _, _) => Constraints.empty.asRight
       case Lst(ts) =>
-        Type.unwrapLst(exprType.value).map { inner =>
+        exprType.value.unwrapLst.map { inner =>
           Constraints(ts.map(t => inner -> t.annotation.value): _*)
         }
     }

@@ -10,7 +10,7 @@ import evolution.compiler.types.{ Type, TypeClasses, Typed }
 import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
-
+import evolution.compiler.expression.typeclass._
 import scala.collection.immutable
 
 /**
@@ -141,10 +141,10 @@ object Constant1 extends Enum[Constant1] {
 
     override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
-        innerType <- Type.unwrapEvo(x.tpe)
+        innerType <- x.tpe.unwrapEvo
         add <- TypingConfig.additive(innerType, innerType, innerType)
         inv <- TypingConfig.invertible(innerType)
-      } yield Expr.Derive(x.value.asExprF, add.asInstanceOf, inv.asInstanceOf).asExprF
+      } yield Expr.Derive(x.value.asExprF, add.as, inv.as).asExprF
   }
 
   case object UniformChoice extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
@@ -216,7 +216,7 @@ object Constant2 extends Enum[Constant2] {
       for {
         inv <- TypingConfig.invertible(x.tpe)
         add <- TypingConfig.additive(x.tpe, x.tpe, x.tpe)
-      } yield Expr.Minus(x.value.asExpr, y.value.asExpr, add.asInstanceOf, inv.asInstanceOf)
+      } yield Expr.Minus[Any](x.value.asExpr, y.value.asExpr, add.as, inv.as)
   }
 
   case object Div extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double)) {
@@ -296,16 +296,14 @@ object Constant2 extends Enum[Constant2] {
 
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig
-        .additive(x.tpe, x.tpe, x.tpe)
-        .map(add => Expr.Integrate(x.value.asExpr, y.value.asExprF, add.asInstanceOf))
+      TypingConfig.additive(x.tpe, x.tpe, x.tpe).map(add => Expr.Integrate(x.value.asExpr, y.value.asExprF, add.as))
   }
 
   case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
     override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       TypingConfig
         .additive(y.tpe, y.tpe, y.tpe)
-        .map(add => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, add.asInstanceOf))
+        .map(add => Expr.Solve1[y.tpe.Out](x.value.asExprF[y.tpe.Out => y.tpe.Out], y.value.asExpr, add.as))
   }
 
   case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -326,13 +324,10 @@ object Constant2 extends Enum[Constant2] {
 
     override def compile(f: Typed[Expr[_]], x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
       for {
-        innerType <- Type.unwrapEvo(x.tpe)
+        innerType <- x.tpe.unwrapEvo
         inv <- TypingConfig.invertible(innerType)
         add <- TypingConfig.additive(innerType, innerType, innerType)
-      } yield
-        Expr
-          .MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], add.asInstanceOf, inv.asInstanceOf)
-          .asExpr
+      } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], add.as, inv.as).asExpr
   }
 
   case object FlatMap
@@ -416,7 +411,7 @@ object Constant3 extends Enum[Constant3] {
           x.value.asExprF[y.tpe.Out => y.tpe.Out => y.tpe.Out],
           y.value.asExpr[y.tpe.Out],
           z.value.asExpr[y.tpe.Out],
-          add.asInstanceOf
+          add.as
         )
       }
   }
@@ -450,5 +445,25 @@ object Constant {
   implicit class CastingOps(value: Expr[_]) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
     def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]
+  }
+
+  implicit class AdditiveCasting(add: Additive[_, _, _]) {
+    def as[A, B, C] = add.asInstanceOf[Additive[A, B, C]]
+  }
+
+  implicit class MultiplicativeCasting(mult: Multiplicative[_, _, _]) {
+    def as[A, B, C] = mult.asInstanceOf[Multiplicative[A, B, C]]
+  }
+
+  implicit class InvertibleCasting(inv: Invertible[_]) {
+    def as[A] = inv.asInstanceOf[Invertible[A]]
+  }
+
+  implicit class ComparableCasting(cmp: Comparable[_]) {
+    def as[A] = cmp.asInstanceOf[Comparable[A]]
+  }
+
+  implicit class EquableCasting(eq: Equable[_]) {
+    def as[A] = eq.asInstanceOf[Equable[A]]
   }
 }
