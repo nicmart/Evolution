@@ -1,6 +1,4 @@
 package evolution.compiler.expression.typeclass
-import evolution.geometry.Point
-import evolution.materialization.Evolution
 import evolution.compiler.types.TypeT
 
 sealed abstract class Invertible[T](val t: TypeT[T])

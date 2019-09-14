@@ -1,5 +1,4 @@
 package evolution.compiler.expression.typeclass
-import evolution.geometry.Point
 import evolution.compiler.types.TypeT
 
 sealed abstract class Equable[T](val t: TypeT[T])
