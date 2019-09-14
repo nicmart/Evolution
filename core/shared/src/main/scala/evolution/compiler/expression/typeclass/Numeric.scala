@@ -1,8 +1,9 @@
 package evolution.compiler.expression.typeclass
+import evolution.compiler.types.TypeT
 
-sealed trait Numeric[T]
+sealed abstract class Numeric[T](t: TypeT[T])
 
 object Numeric {
-  case object Int extends Numeric[Int]
-  case object Double extends Numeric[Double]
+  case object Int extends Numeric(TypeT.Integer)
+  case object Double extends Numeric(TypeT.Double)
 }
