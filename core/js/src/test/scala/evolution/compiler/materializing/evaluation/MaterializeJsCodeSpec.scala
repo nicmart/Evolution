@@ -90,6 +90,20 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val first100 = result.iterator.take(100).toList
       first100 shouldBe List.fill(100)(2)
     }
+
+    "materialize integrations" in {
+      val expr = Expr.Integrate(
+        Expr.Dbl(0),
+        Expr.Constant(Expr.Dbl(1)),
+        Additive.DoubleDoubleDouble
+      )
+
+      val jsCode = MaterializeJsCode.materialize(expr)
+      println(jsCode)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      first100 shouldBe (0 to 99).toList
+    }
   }
 
   private def evaluate(expr: String): Any = {

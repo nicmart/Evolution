@@ -140,7 +140,23 @@ object MaterializeJsCode {
 
       case UniformFrom(n, ft) => ???
 
-      case Integrate(start, speed, semigroup) => ???
+      case Integrate(start, speed, semigroup) =>
+        val adder = MaterializeAddition(semigroup) _
+        JsExpr.Iterable(JsExpr.Raw(s"""
+          var __it1 = ${toJs(speed).js}[Symbol.iterator]();
+    
+          var __current = ${toJs(start).js};
+
+          yield __current;
+
+          var __a = __it1.next();
+
+          while (!__a.done) {
+            __current = ${adder(JsExpr.Raw("__current"), JsExpr.Raw("__a.value")).js};
+            yield __current;
+            __a = __it1.next();
+          }
+      """.trim))
 
       case Solve1(speed, start, semigroup) => ???
 
