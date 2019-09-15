@@ -1,7 +1,6 @@
 package evolution.geometry
 
 import cats.Eq
-import cats.kernel.Group
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation.JSExportAll
 
@@ -54,18 +53,13 @@ final case class Point(x: Double, y: Double) {
 object Point {
   val zero = Point(0, 0)
 
+  @JSExportTopLevel("polar")
   def polar(radius: Double, angle: Double): Point = {
     val positiveRadius = Math.abs(radius)
     Point(
       positiveRadius * Math.cos(angle),
       positiveRadius * Math.sin(angle)
     )
-  }
-
-  implicit val pointGroup: Group[Point] = new Group[Point] {
-    override def empty: Point = zero
-    override def combine(x: Point, y: Point): Point = x + y
-    override def inverse(point: Point): Point = -point
   }
 
   implicit val pointEq: Eq[Point] = Eq.instance((p1, p2) => p1 == p2)

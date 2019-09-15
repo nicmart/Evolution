@@ -23,6 +23,12 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result shouldBe Point(1, 2)
     }
 
+    "materialize points in polar coordinates" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.Polar(Expr.Dbl(1), Expr.Dbl(0)))
+      val result = evaluate(jsCode).asInstanceOf[Point]
+      result shouldBe Point(1, 0)
+    }
+
     "materialize constant evolutions" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Constant(Expr.Dbl(1.1)))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]

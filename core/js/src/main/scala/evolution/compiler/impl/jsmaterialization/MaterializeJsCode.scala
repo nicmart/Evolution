@@ -23,6 +23,15 @@ object MaterializeJsCode {
 
       case LiftedPnt(x, y) => zipIterable(toJs(x), toJs(y), (xx, yy) => JsExpr.Instance("Point", List(xx, yy)))
 
+      case Polar(x, y) =>
+        JsExpr.Instance(
+          "Point",
+          List(
+            JsExpr.BinaryOp(toJs(x), "*", JsExpr.App(JsExpr.Raw("Math.cos"), List(toJs(y)))),
+            JsExpr.BinaryOp(toJs(x), "*", JsExpr.App(JsExpr.Raw("Math.sin"), List(toJs(y))))
+          )
+        )
+
       case Var(name) => JsExpr.Raw(name)
 
       case Let(variable, value, expr) =>
