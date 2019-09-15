@@ -104,6 +104,23 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val first100 = result.iterator.take(100).toList
       first100 shouldBe (0 to 99).toList
     }
+
+    "materialize lambdas with more than one argument" in {
+      val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Pnt(Expr.Var("x"), Expr.Var("y"))))
+      val jsCode = MaterializeJsCode.materialize(f)
+      val result = evaluate(jsCode).asInstanceOf[js.Function1[Double, js.Function1[Double, Point]]]
+      result(1)(2) shouldBe Point(1, 2)
+    }
+
+    "materialize zipWiths" in {
+      val c1 = Expr.Constant(Expr.Dbl(1))
+      val c2 = Expr.Constant(Expr.Dbl(2))
+      val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Pnt(Expr.Var("x"), Expr.Var("y"))))
+      val jsCode = MaterializeJsCode.materialize(Expr.ZipWith(c1, c2, f))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+      val first100 = result.iterator.take(100).toList
+      first100 shouldBe List.fill(100)(Point(1, 2))
+    }
   }
 
   private def evaluate(expr: String): Any = {

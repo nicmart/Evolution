@@ -104,7 +104,7 @@ object MaterializeJsCode {
 
       case MapCons(eva, f) => ???
 
-      case ZipWith(fa, fb, f) => ???
+      case ZipWith(fa, fb, f) => zipIterableApp(toJs(fa), toJs(fb), toJs(f))
 
       case Take(n, fa) => ???
 
@@ -222,6 +222,11 @@ object MaterializeJsCode {
         s"(${func.js})(${args.map(_.js).mkString(", ")})"
     }
 
+    case class AppCurried(func: JsExpr, args: List[JsExpr]) extends JsExpr {
+      def js: String =
+        s"(${func.js})${args.map(arg => s"(${arg.js})").mkString("")}"
+    }
+
     case class Select(obj: JsExpr, field: String) extends JsExpr {
       def js: String = s"${obj.js}.$field"
     }
@@ -267,4 +272,7 @@ object MaterializeJsCode {
     """.trim
     )
   )
+
+  def zipIterableApp(a: JsExpr, b: JsExpr, f: JsExpr): JsExpr =
+    zipIterable(a, b, (aa, bb) => JsExpr.AppCurried(f, List(aa, bb)))
 }
