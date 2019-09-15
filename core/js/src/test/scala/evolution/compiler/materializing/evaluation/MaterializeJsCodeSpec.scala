@@ -29,6 +29,20 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result shouldBe Point(1, 0)
     }
 
+    "materialize x projections" in {
+      val expr = Expr.X(Expr.Pnt(Expr.Dbl(1), Expr.Dbl(2)))
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[Double]
+      result shouldBe 1
+    }
+
+    "materialize y projections" in {
+      val expr = Expr.Y(Expr.Pnt(Expr.Dbl(1), Expr.Dbl(2)))
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[Double]
+      result shouldBe 2
+    }
+
     "materialize constant evolutions" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Constant(Expr.Dbl(1.1)))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
@@ -52,6 +66,17 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       Inspectors.forAll(first100) { d =>
         d.x should (be >= 0.0 and be <= 1.0)
         d.y should (be >= 0.0 and be <= 1.0)
+      }
+    }
+
+    "materialize lifted polars" in {
+      val r = Expr.Constant(Expr.Dbl(1))
+      val alpha = Expr.Constant(Expr.Dbl(0))
+      val jsCode = MaterializeJsCode.materialize(Expr.LiftedPolar(r, alpha))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+      val first100 = result.iterator.take(100).toList
+      Inspectors.forAll(first100) { p =>
+        p shouldBe Point.polar(1, 0)
       }
     }
 

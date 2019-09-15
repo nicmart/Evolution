@@ -23,14 +23,13 @@ object MaterializeJsCode {
 
       case LiftedPnt(x, y) => zipIterable(toJs(x), toJs(y), (xx, yy) => JsExpr.Instance("Point", List(xx, yy)))
 
-      case Polar(x, y) =>
-        JsExpr.Instance(
-          "Point",
-          List(
-            JsExpr.BinaryOp(toJs(x), "*", JsExpr.App(JsExpr.Raw("Math.cos"), List(toJs(y)))),
-            JsExpr.BinaryOp(toJs(x), "*", JsExpr.App(JsExpr.Raw("Math.sin"), List(toJs(y))))
-          )
-        )
+      case Polar(x, y) => polar(toJs(x), toJs(y))
+
+      case LiftedPolar(r, alpha) => zipIterable(toJs(r), toJs(alpha), polar)
+
+      case X(p) => JsExpr.Select(toJs(p), "x")
+
+      case Y(p) => JsExpr.Select(toJs(p), "y")
 
       case Var(name) => JsExpr.Raw(name)
 
@@ -125,6 +124,14 @@ object MaterializeJsCode {
       def js: String = s"${obj.js}.$field"
     }
   }
+
+  def polar(x: JsExpr, y: JsExpr): JsExpr = JsExpr.Instance(
+    "Point",
+    List(
+      JsExpr.BinaryOp(x, "*", JsExpr.App(JsExpr.Raw("Math.cos"), List(y))),
+      JsExpr.BinaryOp(x, "*", JsExpr.App(JsExpr.Raw("Math.sin"), List(y)))
+    )
+  )
 
   def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
