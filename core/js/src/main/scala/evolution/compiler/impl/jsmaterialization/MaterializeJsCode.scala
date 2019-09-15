@@ -31,6 +31,56 @@ object MaterializeJsCode {
 
       case Y(p) => JsExpr.Select(toJs(p), "y")
 
+      case Norm(p) => JsExpr.Select(toJs(p), "norm")
+
+      case Versor(p) => JsExpr.Select(toJs(p), "versor")
+
+      case Add(a, b, add) => MaterializeAddition(add)(toJs(a), toJs(b))
+
+      case Div(a, b) => JsExpr.BinaryOp(toJs(a), "/", toJs(b))
+
+      case Exp(a, b) => ???
+
+      case Sign(a) => ???
+
+      case Mod(a, b) => ???
+
+      case Inverse(t, inv) => MaterializeInverse(inv)(toJs(t))
+
+      case Multiply(a, b, mult) => MaterializeMultiplication(mult)(toJs(a), toJs(b))
+
+      case Sin(d) => ???
+
+      case Cos(d) => ???
+
+      case Lst(ts) => ???
+
+      case SmoothStep(from, to, position) => ???
+
+      case Equals(a, b, eq) => MaterializeEquality(eq).eqv(toJs(a), toJs(b))
+
+      case Neq(a, b, eq) => MaterializeEquality(eq).neqv(toJs(a), toJs(b))
+
+      case IfThen(condition, a, b) => ???
+
+      case Bool(b) => ???
+
+      case And(a, b) => ???
+
+      case Or(a, b) => ???
+
+      case Not(a) => ???
+
+      case LessThan(a, b, cmp) => MaterializeComparison(cmp).lt(toJs(a), toJs(b))
+
+      case LessThanOrEqual(a, b, cmp) => MaterializeComparison(cmp).lteqv(toJs(a), toJs(b))
+
+      case GreaterThan(a, b, cmp) => MaterializeComparison(cmp).gt(toJs(a), toJs(b))
+
+      case GreaterThanOrEqual(a, b, cmp) => MaterializeComparison(cmp).gteqv(toJs(a), toJs(b))
+
+      case InRect(topLeft, bottomDown, point) => ???
+
       case Var(name) => JsExpr.Raw(name)
 
       case Let(variable, value, expr) =>
@@ -42,21 +92,37 @@ object MaterializeJsCode {
 
       case Expr.Constant(t) => JsExpr.Iterable(JsExpr.Raw(s"while(true) { yield ${toJs(t).js}; }"))
 
+      case Fix(expr) => ???
+
+      case Empty() => ???
+
+      case Cons(head, tail) => ???
+
+      case Concat(as1, as2) => ???
+
+      case MapEmpty(eva, eva2) => ???
+
+      case MapCons(eva, f) => ???
+
+      case ZipWith(fa, fb, f) => ???
+
+      case Take(n, fa) => ???
+
+      case TakeWhile(fa, predicate) => ???
+
+      case WithFirst(as, f) => ???
+
+      case FlatMap(fa, f) => ???
+
+      case Flatten(ffa) => ???
+
+      case Parallel(ffa) => ???
+
       case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
-      case Add(a, b, add) => MaterializeAddition(add)(toJs(a), toJs(b))
+      case MapWithDerivative(fa, f, sg, inv) => ???
 
-      case Multiply(a, b, mult) => MaterializeMultiplication(mult)(toJs(a), toJs(b))
-
-      case Inverse(t, inv) => MaterializeInverse(inv)(toJs(t))
-
-      case Equals(a, b, eq) => MaterializeEquality(eq).eqv(toJs(a), toJs(b))
-      case Neq(a, b, eq)    => MaterializeEquality(eq).neqv(toJs(a), toJs(b))
-
-      case LessThan(a, b, cmp)           => MaterializeComparison(cmp).lt(toJs(a), toJs(b))
-      case LessThanOrEqual(a, b, cmp)    => MaterializeComparison(cmp).lteqv(toJs(a), toJs(b))
-      case GreaterThan(a, b, cmp)        => MaterializeComparison(cmp).gt(toJs(a), toJs(b))
-      case GreaterThanOrEqual(a, b, cmp) => MaterializeComparison(cmp).gteqv(toJs(a), toJs(b))
+      case Range(from, to, step) => ???
 
       case Uniform(from, to) =>
         JsExpr.Iterable(
@@ -67,6 +133,26 @@ object MaterializeJsCode {
             }"""
           )
         )
+
+      case UniformChoice(choices) => ???
+
+      case UniformDiscrete(from, to, step) => ???
+
+      case UniformFrom(n, ft) => ???
+
+      case Integrate(start, speed, semigroup) => ???
+
+      case Solve1(speed, start, semigroup) => ???
+
+      case Solve2(acc, a0, v0, semigroup) => ???
+
+      case Derive(t, sg, inv) => ???
+
+      case Normal(μ, σ) => ???
+
+      case Noise() => ???
+
+      case OctaveNoise() => ???
     }
   }
 
