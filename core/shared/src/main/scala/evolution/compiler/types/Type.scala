@@ -4,7 +4,7 @@ import cats.implicits._
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 
-sealed trait TypeT[T] {
+sealed trait TypeT[+T] {
   final def =>:[S](from: TypeT[S]): TypeT[S => T] = TypeT.Arrow(from, this)
 }
 

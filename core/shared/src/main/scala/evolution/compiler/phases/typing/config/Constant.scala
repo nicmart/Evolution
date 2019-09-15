@@ -12,7 +12,6 @@ import evolution.compiler.types.{ Type, TypeClasses, Typed }
 import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
-import evolution.compiler.expression.typeclass._
 import scala.collection.immutable
 
 /**
@@ -46,12 +45,12 @@ object Constant0 extends Enum[Constant0] {
 
   case object Noise extends Constant0(Qualified(Evo(TypeT.Point =>: TypeT.Double))) {
     override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
-      Expr.Noise().asExpr.asRight
+      Expr.Noise().asRight
   }
 
   case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: TypeT.Double =>: TypeT.Point =>: TypeT.Double))) {
     override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
-      Expr.OctaveNoise().asExpr.asRight
+      Expr.OctaveNoise().asRight
   }
 
   def unapply(s: String): Option[Constant0] = withNameInsensitiveOption(s)
@@ -61,12 +60,12 @@ abstract sealed class Constant1(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile(x: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
+  def compile(x: Typed[_], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Constant1(qualifiedType) {
   def compilePlain(x: Expr[_]): Expr[_]
-  override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+  override def compile(x: Typed[_], out: Type): Either[String, Expr[_]] =
     compilePlain(x.value).asRight
 }
 
@@ -106,8 +105,8 @@ object Constant1 extends Enum[Constant1] {
   }
 
   case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
-    override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.invertible(x.tpe).map(inv => Expr.Inverse(x.value.asExpr, inv))
+    override def compile(x: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.invertible(x.tpe).map(inv => Expr.Inverse(x.value, inv))
   }
 
   case object Sin extends Constant1Plain(Qualified(TypeT.Double =>: TypeT.Double)) {
@@ -141,12 +140,12 @@ object Constant1 extends Enum[Constant1] {
 
   case object Derive extends Constant1(Qualified(isInvertSemigroup("T"), Evo(Var("T")) =>: Evo(Var("T")))) {
 
-    override def compile(x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    override def compile(x: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
         innerType <- x.tpe.unwrapEvo
         add <- TypingConfig.additive(innerType, innerType, innerType)
         inv <- TypingConfig.invertible(innerType)
-      } yield Expr.Derive(x.value.asExprF, add.as, inv.as).asExprF
+      } yield Expr.Derive(x.value.asExprF, add, inv)
   }
 
   case object UniformChoice extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
@@ -160,13 +159,13 @@ abstract sealed class Constant2(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
+  def compile(x: Typed[_], y: Typed[_], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Constant2(qualifiedType) {
   override def compile(
-    x: Typed[Expr[_]],
-    y: Typed[Expr[_]],
+    x: Typed[_],
+    y: Typed[_],
     out: Type
   ): Either[String, Expr[_]] =
     compilePlain(x.value, y.value).asRight
@@ -203,24 +202,24 @@ object Constant2 extends Enum[Constant2] {
       extends Constant2(
         Qualified(List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value.asExpr, y.value.asExpr, sg))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value, y.value, sg))
   }
 
   case object Add
       extends Constant2(
         Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
       ) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value.asExpr, y.value.asExpr, sg))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value, y.value, sg))
   }
 
   case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
         inv <- TypingConfig.invertible(x.tpe)
         add <- TypingConfig.additive(x.tpe, x.tpe, x.tpe)
-      } yield Expr.Minus[Any](x.value.asExpr, y.value.asExpr, add.as, inv.as)
+      } yield Expr.Minus(x.value, y.value, add, inv)
   }
 
   case object Div extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double)) {
@@ -244,34 +243,34 @@ object Constant2 extends Enum[Constant2] {
   }
 
   case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.equable(y.tpe).map(eq => Expr.Equals(x.value.asExpr, y.value.asExpr, eq))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.equable(y.tpe).map(eq => Expr.Equals(x.value, y.value, eq))
 
   }
 
   case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.equable(y.tpe).map(eq => Expr.Neq(x.value.asExpr, y.value.asExpr, eq))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.equable(y.tpe).map(eq => Expr.Neq(x.value, y.value, eq))
   }
 
   case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThan(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThan(x.value, y.value, order))
   }
 
   case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value, y.value, order))
   }
 
   case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.comparable(y.tpe).map(order => Expr.LessThan(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.comparable(y.tpe).map(order => Expr.LessThan(x.value, y.value, order))
   }
 
   case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.comparable(y.tpe).map(order => Expr.LessThanOrEqual(x.value.asExpr, y.value.asExpr, order))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.comparable(y.tpe).map(order => Expr.LessThanOrEqual(x.value, y.value, order))
   }
 
   case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -299,13 +298,13 @@ object Constant2 extends Enum[Constant2] {
   }
 
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.additive(x.tpe, x.tpe, x.tpe).map(add => Expr.Integrate(x.value.asExpr, y.value.asExprF, add.as))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.additive(x.tpe, x.tpe, x.tpe).map(add => Expr.Integrate(x.value, y.value.asExprF, add))
   }
 
   case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
-      TypingConfig.additive(y.tpe, y.tpe, y.tpe).map(add => Expr.Solve1(x.value.asExprF, y.value.asExpr, add.as))
+    override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
+      TypingConfig.additive(y.tpe, y.tpe, y.tpe).map(add => Expr.Solve1(x.value.asExprF, y.value, add))
   }
 
   case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
@@ -324,12 +323,12 @@ object Constant2 extends Enum[Constant2] {
         )
       ) {
 
-    override def compile(f: Typed[Expr[_]], x: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    override def compile(f: Typed[_], x: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
         innerType <- x.tpe.unwrapEvo
         inv <- TypingConfig.invertible(innerType)
         add <- TypingConfig.additive(innerType, innerType, innerType)
-      } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], add.as, inv.as).asExpr
+      } yield Expr.MapWithDerivative(x.value.asExprF, f.value.asExpr[Any => Any => Any], add, inv)
   }
 
   case object FlatMap
@@ -372,12 +371,12 @@ abstract sealed class Constant3(qualifiedType: Qualified[Type])
     extends Constant(qualifiedType)
     with EnumEntry
     with Lowercase {
-  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], outType: Type): Either[String, Expr[_]]
+  def compile(x: Typed[_], y: Typed[_], z: Typed[_], outType: Type): Either[String, Expr[_]]
 }
 
 abstract sealed class Constant3Plain(qualifiedType: Qualified[Type]) extends Constant3(qualifiedType) {
   def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_]
-  def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+  def compile(x: Typed[_], y: Typed[_], z: Typed[_], out: Type): Either[String, Expr[_]] =
     compilePlain(x.value, y.value, z.value).asRight
 }
 
@@ -407,14 +406,9 @@ object Constant3 extends Enum[Constant3] {
       extends Constant3(
         Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
       ) {
-    override def compile(x: Typed[Expr[_]], y: Typed[Expr[_]], z: Typed[Expr[_]], out: Type): Either[String, Expr[_]] =
+    override def compile(x: Typed[_], y: Typed[_], z: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(y.tpe, y.tpe, y.tpe).map { add =>
-        Expr.Solve2(
-          x.value.asExprF,
-          y.value.asExpr,
-          z.value.asExpr,
-          add.as
-        )
+        Expr.Solve2(x.value.asExprF, y.value, z.value, add)
       }
   }
 
@@ -447,25 +441,5 @@ object Constant {
   implicit class CastingOps(value: Expr[_]) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
     def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]
-  }
-
-  implicit class AdditiveCasting(add: Additive[_, _, _]) {
-    def as[A, B, C] = add.asInstanceOf[Additive[A, B, C]]
-  }
-
-  implicit class MultiplicativeCasting(mult: Multiplicative[_, _, _]) {
-    def as[A, B, C] = mult.asInstanceOf[Multiplicative[A, B, C]]
-  }
-
-  implicit class InvertibleCasting(inv: Invertible[_]) {
-    def as[A] = inv.asInstanceOf[Invertible[A]]
-  }
-
-  implicit class ComparableCasting(cmp: Comparable[_]) {
-    def as[A] = cmp.asInstanceOf[Comparable[A]]
-  }
-
-  implicit class EquableCasting(eq: Equable[_]) {
-    def as[A] = eq.asInstanceOf[Equable[A]]
   }
 }

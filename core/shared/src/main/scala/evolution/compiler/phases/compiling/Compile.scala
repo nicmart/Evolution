@@ -86,7 +86,7 @@ object Compile {
         s"Invalid AST for expression $typedTree".raiseError[Result, Expr[Any]]
     }
 
-  private def compileTyped(typedTree: TypedTree): Result[Typed[Expr[Any]]] =
+  private def compileTyped(typedTree: TypedTree): Result[Typed[_]] =
     compileSafe(typedTree).map(Typed(typedTree.annotation.value, _))
 
   private def buildAppExpr(f: Expr[Any], args: NonEmptyList[Expr[Any]]): Expr[Any] =
