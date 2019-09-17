@@ -110,7 +110,13 @@ object MaterializeJsCode {
 
       case TakeWhile(fa, predicate) => ???
 
-      case WithFirst(as, f) => ???
+      case WithFirst(as, f) => JsExpr.Iterable(JsExpr.Raw(s"""
+        var __it1 = ${toJs(as).js}[Symbol.iterator]();
+        var __a = __it1.next();
+        if (!__a.done) {
+          yield* ${JsExpr.App(toJs(f), List(JsExpr.Raw("__a.value"))).js};
+        }
+      """.trim))
 
       case FlatMap(fa, f) => flatMapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
