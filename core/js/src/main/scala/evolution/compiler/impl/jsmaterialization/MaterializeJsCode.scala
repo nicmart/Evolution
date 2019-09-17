@@ -94,9 +94,9 @@ object MaterializeJsCode {
 
       case Fix(expr) => ???
 
-      case Empty() => ???
+      case Empty() => JsExpr.Raw("[]")
 
-      case Cons(head, tail) => ???
+      case Cons(head, tail) => JsExpr.Iterable(JsExpr.Raw(s"yield ${toJs(head).js}; yield* ${toJs(tail).js};"))
 
       case Concat(as1, as2) => ???
 
@@ -112,7 +112,7 @@ object MaterializeJsCode {
 
       case WithFirst(as, f) => ???
 
-      case FlatMap(fa, f) => ???
+      case FlatMap(fa, f) => flatMapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
       case Flatten(ffa) => ???
 
@@ -250,6 +250,21 @@ object MaterializeJsCode {
       while (!__a.done) {
         yield ${f(JsExpr.Raw("__a.value")).js};
         __a = __it1.next();
+      }
+    """.trim
+    )
+  )
+
+  def flatMapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${fa.js}[Symbol.iterator]();
+
+      var __a = __it1.next();
+
+      while (!__a.done) {
+        var __b = ${f(JsExpr.Raw("__a.value")).js};
+        yield* __b;
       }
     """.trim
     )

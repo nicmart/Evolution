@@ -43,6 +43,12 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result shouldBe 2
     }
 
+    "materialize cons" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.Cons(Expr.Dbl(1), Expr.Constant(Expr.Dbl(2))))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(10).toList shouldBe 1 :: List.fill(9)(2)
+    }
+
     "materialize constant evolutions" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Constant(Expr.Dbl(1.1)))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
@@ -80,7 +86,7 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       }
     }
 
-    "mapped evolution" in {
+    "materialize mapped evolution" in {
       val expr = Expr.Map(
         Expr.Constant(Expr.Dbl(1)),
         Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Var("x"), Additive.DoubleDoubleDouble))
@@ -91,6 +97,16 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       first100 shouldBe List.fill(100)(2)
     }
 
+    "materialize flatMapped evolutions" in {
+      val expr = Expr.FlatMap(
+        Expr.Constant(Expr.Dbl(1)),
+        Expr.Lambda("x", Expr.Cons(Expr.Dbl(2), Expr.Cons(Expr.Var("x"), Expr.Empty())))
+      )
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(8).toList shouldBe List.fill(4)(List(2, 1)).flatten
+    }
+
     "materialize integrations" in {
       val expr = Expr.Integrate(
         Expr.Dbl(0),
@@ -99,7 +115,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       )
 
       val jsCode = MaterializeJsCode.materialize(expr)
-      println(jsCode)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       val first100 = result.iterator.take(100).toList
       first100 shouldBe (0 to 99).toList
