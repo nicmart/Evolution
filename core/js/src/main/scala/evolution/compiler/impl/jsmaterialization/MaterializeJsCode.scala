@@ -114,7 +114,7 @@ object MaterializeJsCode {
 
       case FlatMap(fa, f) => flatMapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
-      case Flatten(ffa) => ???
+      case Flatten(ffa) => flatMapIterable(toJs(ffa), identity)
 
       case Parallel(ffa) => ???
 

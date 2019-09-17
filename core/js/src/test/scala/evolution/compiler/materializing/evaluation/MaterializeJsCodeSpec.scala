@@ -107,6 +107,15 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(8).toList shouldBe List.fill(4)(List(2, 1)).flatten
     }
 
+    "materialize flatten evolutions" in {
+      val expr = Expr.Flatten(
+        Expr.Constant(Expr.Constant(Expr.Dbl(1)))
+      )
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(10).toList shouldBe List.fill(10)(1)
+    }
+
     "materialize integrations" in {
       val expr = Expr.Integrate(
         Expr.Dbl(0),
