@@ -106,7 +106,7 @@ object MaterializeJsCode {
 
       case ZipWith(fa, fb, f) => zipIterableApp(toJs(fa), toJs(fb), toJs(f))
 
-      case Take(n, fa) => ???
+      case Take(n, fa) => takeIterable(toJs(n), toJs(fa))
 
       case TakeWhile(fa, predicate) => ???
 
@@ -237,6 +237,23 @@ object MaterializeJsCode {
     List(
       JsExpr.BinaryOp(x, "*", JsExpr.App(JsExpr.Raw("Math.cos"), List(y))),
       JsExpr.BinaryOp(x, "*", JsExpr.App(JsExpr.Raw("Math.sin"), List(y)))
+    )
+  )
+
+  def takeIterable(n: JsExpr, fa: JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${fa.js}[Symbol.iterator]();
+
+      var __a = __it1.next();
+      var __n = ${n.js};
+
+      while (!__a.done && __n > 0) {
+        yield __a.value;
+        __a = __it1.next();
+        --__n;
+      }
+    """.trim
     )
   )
 

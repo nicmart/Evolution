@@ -145,6 +145,13 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val first100 = result.iterator.take(100).toList
       first100 shouldBe List.fill(100)(Point(1, 2))
     }
+
+    "materialize takes" in {
+      val expr = Expr.Take(Expr.Integer(10), Expr.Constant(Expr.Dbl(1)))
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+      result.iterator.take(100).toList shouldBe List.fill(10)(1)
+    }
   }
 
   private def evaluate(expr: String): Any = {
