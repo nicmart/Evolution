@@ -243,13 +243,8 @@ object MaterializeJsCode {
   def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
-      var __it1 = ${fa.js}[Symbol.iterator]();
-
-      var __a = __it1.next();
-
-      while (!__a.done) {
-        yield ${f(JsExpr.Raw("__a.value")).js};
-        __a = __it1.next();
+      for(let __value of ${fa.js}){
+        yield ${f(JsExpr.Raw("__value")).js};
       }
     """.trim
     )
@@ -258,13 +253,8 @@ object MaterializeJsCode {
   def flatMapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
-      var __it1 = ${fa.js}[Symbol.iterator]();
-
-      var __a = __it1.next();
-
-      while (!__a.done) {
-        var __b = ${f(JsExpr.Raw("__a.value")).js};
-        yield* __b;
+      for(let __value of ${fa.js}){
+        yield* ${f(JsExpr.Raw("__value")).js};
       }
     """.trim
     )
