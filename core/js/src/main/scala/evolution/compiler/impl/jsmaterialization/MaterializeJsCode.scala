@@ -153,12 +153,7 @@ object MaterializeJsCode {
           )
         )
 
-      case UniformChoice(choices) => JsExpr.Iterable(JsExpr.Raw(s"""
-          var __items = ${toJs(choices).js};
-          while(true) {
-            yield __items[Math.floor(Math.random()*__items.length)];
-          }
-        """.trim))
+      case UniformChoice(choices) => uniformChoice(toJs(choices))
 
       case UniformDiscrete(from, to, step) => JsExpr.Iterable(JsExpr.Raw(s"""
             var __from = ${toJs(from).js};
@@ -172,7 +167,7 @@ object MaterializeJsCode {
             }
         """.trim))
 
-      case UniformFrom(n, ft) => ???
+      case UniformFrom(n, ft) => uniformChoice(JsExpr.Raw(s"[...${takeIterable(toJs(n), toJs(ft)).js}]"))
 
       case Integrate(start, speed, semigroup) =>
         val adder = MaterializeAddition(semigroup) _
@@ -332,6 +327,15 @@ object MaterializeJsCode {
     """.trim
     )
   )
+
+  def uniformChoice(choices: JsExpr): JsExpr = {
+    JsExpr.Iterable(JsExpr.Raw(s"""
+          var __items = ${choices.js};
+          while(true) {
+            yield __items[Math.floor(Math.random()*__items.length)];
+          }
+        """.trim))
+  }
 
   def zipIterableApp(a: JsExpr, b: JsExpr, f: JsExpr): JsExpr =
     zipIterable(a, b, (aa, bb) => JsExpr.AppCurried(f, List(aa, bb)))

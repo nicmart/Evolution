@@ -196,6 +196,19 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       }
     }
 
+    "materialize uniformFrom" in {
+      val jsCode = MaterializeJsCode.materialize(
+        Expr.UniformFrom(Expr.Integer(2), Expr.Range(Expr.Dbl(1), Expr.Dbl(10), Expr.Dbl(1)))
+      )
+      println(jsCode)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      val choices = List(1, 2)
+      Inspectors.forAll(first100) { d =>
+        choices should contain(d)
+      }
+    }
+
   }
 
   private def evaluate(expr: String): Any = {
