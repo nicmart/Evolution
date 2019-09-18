@@ -121,7 +121,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     }
 
     "materialize lists" in {
-      pending
       val jsCode = MaterializeJsCode.materialize(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1), Expr.Dbl(2))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       result.iterator.take(100).toList shouldBe List(0, 1, 2)
@@ -157,7 +156,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
         Expr.Lambda("x", Expr.Cons(Expr.Dbl(2), Expr.Cons(Expr.Var("x"), Expr.Empty())))
       )
       val jsCode = MaterializeJsCode.materialize(expr)
-      println(jsCode)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       result.iterator.take(100).toList shouldBe List(2, 1)
     }
@@ -182,8 +180,19 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val jsCode = MaterializeJsCode.materialize(Expr.UniformChoice(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1)))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       val first100 = result.iterator.take(100).toList
+      first100 should have length (100)
       Inspectors.forAll(first100) { d =>
         Set(0, 1) should contain(d)
+      }
+    }
+
+    "materialize uniformDiscrete" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.UniformDiscrete(Expr.Dbl(2), Expr.Dbl(10.5), Expr.Dbl(2)))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      val choices = List(2, 4, 6, 8, 10)
+      Inspectors.forAll(first100) { d =>
+        choices should contain(d)
       }
     }
 

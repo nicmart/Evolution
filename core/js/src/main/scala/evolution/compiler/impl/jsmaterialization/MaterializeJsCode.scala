@@ -155,10 +155,22 @@ object MaterializeJsCode {
 
       case UniformChoice(choices) => JsExpr.Iterable(JsExpr.Raw(s"""
           var __items = ${toJs(choices).js};
-          yield __items[Math.floor(Math.random()*__items.length)];
+          while(true) {
+            yield __items[Math.floor(Math.random()*__items.length)];
+          }
         """.trim))
 
-      case UniformDiscrete(from, to, step) => ???
+      case UniformDiscrete(from, to, step) => JsExpr.Iterable(JsExpr.Raw(s"""
+            var __from = ${toJs(from).js};
+            var __to = ${toJs(to).js};
+            var __step = ${toJs(step).js};
+            
+            var __length = Math.floor((__to - __from) / __step) + 1;
+
+            while(true) {
+              yield __from + __step * Math.floor(Math.random()*__length) ;
+            }
+        """.trim))
 
       case UniformFrom(n, ft) => ???
 
