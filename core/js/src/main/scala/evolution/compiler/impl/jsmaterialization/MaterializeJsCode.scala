@@ -128,7 +128,20 @@ object MaterializeJsCode {
 
       case MapWithDerivative(fa, f, sg, inv) => ???
 
-      case Range(from, to, step) => ???
+      case Range(from, to, step) =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+              var __to = ${toJs(to).js};
+              var __current = ${toJs(from).js};
+              var __step = ${toJs(step).js};
+              while(__current <= __to) {
+                yield __current;
+                __current += __step;
+              }
+            """.trim
+          )
+        )
 
       case Uniform(from, to) =>
         JsExpr.Iterable(
