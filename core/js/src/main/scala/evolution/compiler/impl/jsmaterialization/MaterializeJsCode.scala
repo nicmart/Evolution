@@ -53,7 +53,7 @@ object MaterializeJsCode {
 
       case Cos(d) => ???
 
-      case Lst(ts) => ???
+      case Lst(ts) => JsExpr.Array(ts.map(toJs))
 
       case SmoothStep(from, to, position) => ???
 
@@ -248,6 +248,10 @@ object MaterializeJsCode {
 
     case class Select(obj: JsExpr, field: String) extends JsExpr {
       def js: String = s"${obj.js}.$field"
+    }
+
+    case class Array(elements: List[JsExpr]) extends JsExpr {
+      def js: String = elements.map(_.js).mkString("[", ", ", "]")
     }
   }
 

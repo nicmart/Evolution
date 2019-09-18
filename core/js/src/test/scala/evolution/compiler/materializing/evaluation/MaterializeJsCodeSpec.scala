@@ -55,15 +55,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(10).toList shouldBe List.fill(10)(1.1)
     }
 
-    "materialize uniform evolutions" in {
-      val jsCode = MaterializeJsCode.materialize(Expr.Uniform(Expr.Dbl(0), Expr.Dbl(1)))
-      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
-      val first100 = result.iterator.take(100).toList
-      Inspectors.forAll(first100) { d =>
-        d should (be >= 0.0 and be <= 1.0)
-      }
-    }
-
     "materialize lifted points" in {
       val uniform = Expr.Uniform(Expr.Dbl(0), Expr.Dbl(1))
       val jsCode = MaterializeJsCode.materialize(Expr.LiftedPnt(uniform, uniform))
@@ -129,6 +120,13 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       first100 shouldBe (0 to 99).toList
     }
 
+    "materialize lists" in {
+      pending
+      val jsCode = MaterializeJsCode.materialize(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1), Expr.Dbl(2))))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(100).toList shouldBe List(0, 1, 2)
+    }
+
     "materialize lambdas with more than one argument" in {
       val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Pnt(Expr.Var("x"), Expr.Var("y"))))
       val jsCode = MaterializeJsCode.materialize(f)
@@ -170,6 +168,26 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
       result.iterator.take(100).toList shouldBe List.range(0, 11)
     }
+
+    "materialize uniform evolutions" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.Uniform(Expr.Dbl(0), Expr.Dbl(1)))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      Inspectors.forAll(first100) { d =>
+        d should (be >= 0.0 and be <= 1.0)
+      }
+    }
+
+    "materialize uniform choices" in {
+      pending
+      val jsCode = MaterializeJsCode.materialize(Expr.UniformChoice(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1)))))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val first100 = result.iterator.take(100).toList
+      Inspectors.forAll(first100) { d =>
+        Set(0, 1) should contain(d)
+      }
+    }
+
   }
 
   private def evaluate(expr: String): Any = {
