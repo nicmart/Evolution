@@ -179,7 +179,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     }
 
     "materialize uniform choices" in {
-      pending
       val jsCode = MaterializeJsCode.materialize(Expr.UniformChoice(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1)))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       val first100 = result.iterator.take(100).toList
