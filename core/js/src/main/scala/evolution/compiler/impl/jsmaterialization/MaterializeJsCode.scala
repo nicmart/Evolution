@@ -114,7 +114,7 @@ object MaterializeJsCode {
         var __it1 = ${toJs(as).js}[Symbol.iterator]();
         var __a = __it1.next();
         if (!__a.done) {
-          yield* ${JsExpr.App(toJs(f), List(JsExpr.Raw("__a.value"))).js};
+          yield* ${app(toJs(f).js, "__a.value").js};
         }
       """.trim))
 
@@ -169,8 +169,8 @@ object MaterializeJsCode {
 
       case UniformFrom(n, ft) => uniformChoice(JsExpr.Raw(s"[...${takeIterable(toJs(n), toJs(ft)).js}]"))
 
-      case Integrate(start, speed, semigroup) =>
-        val adder = MaterializeAddition(semigroup) _
+      case Integrate(start, speed, add) =>
+        val adder = MaterializeAddition(add) _
         JsExpr.Iterable(JsExpr.Raw(s"""
           var __it1 = ${toJs(speed).js}[Symbol.iterator]();
     
@@ -187,9 +187,25 @@ object MaterializeJsCode {
           }
       """.trim))
 
-      case Solve1(speed, start, semigroup) => ???
+      case Solve1(speed, start, add) =>
+        val adder = MaterializeAddition(add) _
+        JsExpr.Iterable(JsExpr.Raw(s"""
+          var __it1 = ${toJs(speed).js}[Symbol.iterator]();
+    
+          var __current = ${toJs(start).js};
 
-      case Solve2(acc, a0, v0, semigroup) => ???
+          yield __current;
+
+          var __a = __it1.next();
+
+          while (!__a.done) {
+            __current = ${adder(JsExpr.Raw("__current"), app("__a.value", "__current")).js};
+            yield __current;
+            __a = __it1.next();
+          }
+      """.trim))
+
+      case Solve2(acc, a0, v0, add) => ???
 
       case Derive(t, sg, inv) => ???
 
@@ -264,6 +280,8 @@ object MaterializeJsCode {
       def js: String = elements.map(_.js).mkString("[", ", ", "]")
     }
   }
+
+  def app(name: String, args: String*): JsExpr = JsExpr.App(JsExpr.Raw(name), args.map(JsExpr.Raw).toList)
 
   def polar(x: JsExpr, y: JsExpr): JsExpr = JsExpr.Instance(
     "Point",
