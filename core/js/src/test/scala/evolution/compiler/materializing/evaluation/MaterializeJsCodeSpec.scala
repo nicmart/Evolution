@@ -132,6 +132,19 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(4).toList shouldBe List(1, 2, 4, 8)
     }
 
+    "materialize solve2" in {
+      val expr = Expr.Solve2(
+        Expr.Constant(Expr.Lambda("x", Expr.Lambda("y", Expr.Var("y")))),
+        Expr.Dbl(0),
+        Expr.Dbl(1),
+        Additive.DoubleDoubleDouble
+      )
+
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(4).toList shouldBe List(0, 2, 6, 14)
+    }
+
     "materialize lists" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1), Expr.Dbl(2))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]

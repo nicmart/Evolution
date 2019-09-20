@@ -205,6 +205,26 @@ object MaterializeJsCode {
           }
       """.trim))
 
+      case Solve2(speed, x0, v0, add) =>
+        val adder = MaterializeAddition(add) _
+        JsExpr.Iterable(JsExpr.Raw(s"""
+        var __it1 = ${toJs(speed).js}[Symbol.iterator]();
+  
+        var __x = ${toJs(x0).js};
+        var __v = ${toJs(v0).js};
+
+        yield __x;
+
+        var __a = __it1.next();
+
+        while (!__a.done) {
+          __v = ${adder(JsExpr.Raw("__v"), appCurried("__a.value", "__x", "__v")).js};
+          __x = ${adder(JsExpr.Raw("__v"), JsExpr.Raw("__x")).js};
+          yield __x;
+          __a = __it1.next();
+        }
+    """.trim))
+
       case Solve2(acc, a0, v0, add) => ???
 
       case Derive(t, sg, inv) => ???
@@ -282,6 +302,7 @@ object MaterializeJsCode {
   }
 
   def app(name: String, args: String*): JsExpr = JsExpr.App(JsExpr.Raw(name), args.map(JsExpr.Raw).toList)
+  def appCurried(name: String, args: String*): JsExpr = JsExpr.AppCurried(JsExpr.Raw(name), args.map(JsExpr.Raw).toList)
 
   def polar(x: JsExpr, y: JsExpr): JsExpr = JsExpr.Instance(
     "Point",
