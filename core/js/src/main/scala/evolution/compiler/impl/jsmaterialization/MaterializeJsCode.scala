@@ -99,7 +99,7 @@ object MaterializeJsCode {
 
       case Cons(head, tail) => JsExpr.Iterable(JsExpr.Raw(s"yield ${toJs(head).js}; yield* ${toJs(tail).js};"))
 
-      case Concat(as1, as2) => ???
+      case Concat(as1, as2) => JsExpr.Iterable(JsExpr.Raw(s"yield* ${toJs(as1).js}; yield* ${toJs(as2).js}"))
 
       case ZipWith(fa, fb, f) => zipIterableApp(toJs(fa), toJs(fb), toJs(f))
 

@@ -207,6 +207,15 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(100).toList shouldBe List(1)
     }
 
+    "materialize concats" in {
+      val ev1 = Expr.Cons(Expr.Dbl(1), Expr.Empty())
+      val ev2 = Expr.Cons(Expr.Dbl(2), Expr.Empty())
+      val expr = Expr.Concat(ev1, ev2)
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(100).toList shouldBe List(1, 2)
+    }
+
     "materialize withFirst" in {
       val expr = Expr.WithFirst(
         Expr.Constant(Expr.Dbl(1)),
