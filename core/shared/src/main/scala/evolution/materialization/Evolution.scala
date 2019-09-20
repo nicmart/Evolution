@@ -45,28 +45,6 @@ object Evolution {
       def run: Iterator[T] = it1.run ++ it2.run
     }
 
-  def mapEmpty[T](it1: Evolution[T], it2: Evolution[T]): Evolution[T] = new Evolution[T] {
-    def run: Iterator[T] = {
-      val iterator1 = it1.run
-      val iterator1HasNext = iterator1.hasNext
-      if (iterator1HasNext) Iterator.single(iterator1.next()) ++ iterator1
-      else it2.run
-    }
-  }
-
-  def mapCons[A, B](it1: Evolution[A], f: A => Evolution[A] => Evolution[B]): Evolution[B] =
-    new Evolution[B] {
-      def run: Iterator[B] = {
-        val iterator1 = it1.run
-        val iterator1HasNext = iterator1.hasNext
-        if (iterator1HasNext) {
-          val head = iterator1.next()
-          val tail = new Evolution[A] { val run = iterator1 }
-          f(head)(tail).run
-        } else empty.run
-      }
-    }
-
   def range(start: Double, end: Double, step: Double): Evolution[Double] =
     step match {
       case 0 => constant(start)

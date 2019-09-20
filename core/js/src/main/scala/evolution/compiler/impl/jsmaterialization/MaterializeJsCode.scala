@@ -64,7 +64,7 @@ object MaterializeJsCode {
 
       case IfThen(condition, a, b) => ???
 
-      case Bool(b) => ???
+      case Bool(b) => JsExpr.Raw(b.toString)
 
       case And(a, b) => ???
 
@@ -256,7 +256,16 @@ object MaterializeJsCode {
           )
         )
 
-      case Normal(μ, σ) => ???
+      case Normal(mu, gamma) =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+              while (true) {
+                yield gaussian() * ${toJs(gamma).js} + ${toJs(mu).js};
+              }
+            """.trim
+          )
+        )
 
       case Noise() => ???
 
@@ -454,6 +463,21 @@ object MaterializeJsCode {
 
   def zipIterableApp(a: JsExpr, b: JsExpr, f: JsExpr): JsExpr =
     zipIterable(a, b, (aa, bb) => JsExpr.AppCurried(f, List(aa, bb)))
+
+  @JSExportTopLevel("gaussian")
+  def gaussian(): Double = {
+    var v1: Double = 0
+    var v2: Double = 0
+    var s: Double = 0
+
+    do {
+      v1 = 2 * scalajs.js.Math.random - 1 // between -1 and 1
+      v2 = 2 * scalajs.js.Math.random - 1 // between -1 and 1
+      s = v1 * v1 + v2 * v2
+    } while (s >= 1 || s == 0)
+    val multiplier = scalajs.js.Math.sqrt(-2 * scalajs.js.Math.log(s) / s)
+    return v1 * multiplier
+  }
 
   @JSExportTopLevel("smoothstep")
   def smoothstep(from: Double, to: Double, position: Double): Double = {

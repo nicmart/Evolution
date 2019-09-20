@@ -304,6 +304,15 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       }
     }
 
+    "materialize normal distributions" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.Normal(Expr.Dbl(0), Expr.Dbl(1)))
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val n = 10000
+      val sample = result.iterator.take(n).toList
+      sample should have length (n)
+      sample.filter(d => d > -2 && d < 2).size should be > ((0.9 * n).toInt)
+    }
+
   }
 
   private def evaluate(expr: String): Any = {
