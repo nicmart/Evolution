@@ -105,7 +105,7 @@ object MaterializeJsCode {
 
       case Take(n, fa) => takeIterable(toJs(n), toJs(fa))
 
-      case TakeWhile(fa, predicate) => ???
+      case TakeWhile(fa, predicate) => takeWhileIterable(toJs(fa), toJs(predicate))
 
       case WithFirst(as, f) => JsExpr.Iterable(JsExpr.Raw(s"""
         var __it1 = ${toJs(as).js}[Symbol.iterator]();
@@ -222,7 +222,7 @@ object MaterializeJsCode {
         }
     """.trim))
 
-      case Derive(t, sg, inv) => ???
+      case Derive(t, add, inv) => ???
 
       case Normal(μ, σ) => ???
 
@@ -319,6 +319,22 @@ object MaterializeJsCode {
         yield __a.value;
         __a = __it1.next();
         --__n;
+      }
+    """.trim
+    )
+  )
+
+  def takeWhileIterable(fa: JsExpr, predicate: JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${fa.js}[Symbol.iterator]();
+
+      var __a = __it1.next();
+      var __p = ${predicate.js};
+
+      while (!__a.done && __p(__a.value)) {
+        yield __a.value;
+        __a = __it1.next();
       }
     """.trim
     )

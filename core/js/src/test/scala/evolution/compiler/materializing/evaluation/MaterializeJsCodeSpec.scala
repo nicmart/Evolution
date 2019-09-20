@@ -7,7 +7,7 @@ import scala.scalajs.js.Function
 import scala.scalajs.js
 import evolution.geometry.Point
 import org.scalatest.Inspectors
-import evolution.compiler.expression.typeclass.Additive
+import evolution.compiler.expression.typeclass._
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
@@ -198,6 +198,15 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(100).toList shouldBe List.fill(10)(1)
     }
 
+    "materialize takeWhile" in {
+      val list = Expr.Cons(Expr.Dbl(1), Expr.Cons(Expr.Dbl(-1), Expr.Cons(Expr.Dbl(1), Expr.Empty())))
+      val predicate = Expr.Lambda("x", Expr.GreaterThan(Expr.Var("x"), Expr.Dbl(0), Comparable.Double))
+      val expr = Expr.TakeWhile(list, predicate)
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(100).toList shouldBe List(1)
+    }
+
     "materialize withFirst" in {
       val expr = Expr.WithFirst(
         Expr.Constant(Expr.Dbl(1)),
@@ -248,7 +257,6 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       val jsCode = MaterializeJsCode.materialize(
         Expr.UniformFrom(Expr.Integer(2), Expr.Range(Expr.Dbl(1), Expr.Dbl(10), Expr.Dbl(1)))
       )
-      println(jsCode)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
       val first100 = result.iterator.take(100).toList
       val choices = List(1, 2)
