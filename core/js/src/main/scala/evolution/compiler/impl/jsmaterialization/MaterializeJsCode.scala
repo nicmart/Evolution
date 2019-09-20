@@ -123,7 +123,24 @@ object MaterializeJsCode {
 
       case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
-      case MapWithDerivative(fa, f, sg, inv) => ???
+      case MapWithDerivative(fa, f, sg, inv) =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+            var __it1 = ${toJs(fa).js}[Symbol.iterator]();
+            var __f = ${toJs(f).js};
+            var __entry1 = __it1.next();
+            if (!__entry1.done) {
+              var __a1 = __entry1.value;
+              for (let __a2 of __it1) {
+                var __v = ${MaterializeAddition(sg)(JsExpr.Raw("__a2"), MaterializeInverse(inv)(JsExpr.Raw("__a1"))).js};
+                yield ${appCurried("__f", "__a2", "__v").js};
+                __a1 = __a2;
+              }
+            }
+          """
+          )
+        )
 
       case Range(from, to, step) =>
         JsExpr.Iterable(
@@ -242,7 +259,7 @@ object MaterializeJsCode {
     }
 
     case class PrefixOp(op: String, expr: JsExpr) extends JsExpr {
-      def js: String = s"${op}${expr.js})"
+      def js: String = s"${op}(${expr.js})"
     }
 
     case class BinaryOp(left: JsExpr, op: String, right: JsExpr) extends JsExpr {

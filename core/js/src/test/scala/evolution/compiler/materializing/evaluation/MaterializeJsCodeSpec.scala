@@ -8,6 +8,8 @@ import scala.scalajs.js
 import evolution.geometry.Point
 import org.scalatest.Inspectors
 import evolution.compiler.expression.typeclass._
+import evolution.materialization.Evolution
+import evolution.compiler.expression.Expr.Lambda
 
 class MaterializeJsCodeSpec extends LanguageSpec {
   "Materializing expressions" - {
@@ -141,6 +143,16 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(100).toList shouldBe List.fill(50)(List(1, 2)).flatten
     }
 
+    "materialize mapWithDerivative" in {
+      val fa = finite(1, 2, 3, 4, 8)
+      val f = Lambda("x", Lambda("y", Expr.Add(Expr.Var("x"), Expr.Var("y"), Additive.DoubleDoubleDouble)))
+      val expr = Expr.MapWithDerivative(fa, f, Additive.DoubleDoubleDouble, Invertible.Double)
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+
+      result.iterator.take(100).toList shouldBe List(2 + 2 - 1, 3 + 3 - 2, 4 + 4 - 3, 8 + 8 - 4)
+    }
+
     "materialize integrations" in {
       val expr = Expr.Integrate(
         Expr.Dbl(0),
@@ -210,7 +222,7 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     }
 
     "materialize takeWhile" in {
-      val list = Expr.Cons(Expr.Dbl(1), Expr.Cons(Expr.Dbl(-1), Expr.Cons(Expr.Dbl(1), Expr.Empty())))
+      val list = finite(1, -1, 1)
       val predicate = Expr.Lambda("x", Expr.GreaterThan(Expr.Var("x"), Expr.Dbl(0), Comparable.Double))
       val expr = Expr.TakeWhile(list, predicate)
       val jsCode = MaterializeJsCode.materialize(expr)
@@ -219,8 +231,8 @@ class MaterializeJsCodeSpec extends LanguageSpec {
     }
 
     "materialize concats" in {
-      val ev1 = Expr.Cons(Expr.Dbl(1), Expr.Empty())
-      val ev2 = Expr.Cons(Expr.Dbl(2), Expr.Empty())
+      val ev1 = finite(1)
+      val ev2 = finite(2)
       val expr = Expr.Concat(ev1, ev2)
       val jsCode = MaterializeJsCode.materialize(expr)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
@@ -288,8 +300,12 @@ class MaterializeJsCodeSpec extends LanguageSpec {
   }
 
   private def evaluate(expr: String): Any = {
-
     val f = new Function(s"return $expr;")
     f.call((), ())
+  }
+
+  private def finite(ts: Double*): Expr[Evolution[Double]] = ts.toList match {
+    case Nil          => Expr.Empty()
+    case head :: tail => Expr.Cons(Expr.Dbl(head), finite(tail: _*))
   }
 }
