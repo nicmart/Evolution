@@ -239,7 +239,22 @@ object MaterializeJsCode {
         }
     """.trim))
 
-      case Derive(t, add, inv) => ???
+      case Derive(fa, add, inv) =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+            var __it1 = ${toJs(fa).js}[Symbol.iterator]();
+            var __entry = __it1.next();
+            if (!__entry.done) {
+              var __prev = __entry.value;
+              for (let __a of __it1) {
+                yield ${MaterializeAddition(add)(JsExpr.Raw("__a"), MaterializeInverse(inv)(JsExpr.Raw("__prev"))).js};
+                __prev = __a;
+              }
+            }
+          """.trim
+          )
+        )
 
       case Normal(μ, σ) => ???
 

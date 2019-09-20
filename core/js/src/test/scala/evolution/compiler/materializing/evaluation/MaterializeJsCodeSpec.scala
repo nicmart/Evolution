@@ -191,6 +191,13 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(4).toList shouldBe List(0, 2, 6, 14)
     }
 
+    "materialize derivatives" in {
+      val expr = Expr.Derive(finite(1, 2, 3, 4), Additive.DoubleDoubleDouble, Invertible.Double)
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      result.iterator.take(100).toList shouldBe List(1, 1, 1)
+    }
+
     "materialize lists" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Lst(List(Expr.Dbl(0), Expr.Dbl(1), Expr.Dbl(2))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
