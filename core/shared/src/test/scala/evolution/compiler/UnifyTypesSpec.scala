@@ -5,7 +5,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.typing.FindConstraints
 import evolution.compiler.phases.typing.AssignFreshTypeVars
 import evolution.compiler.phases.typing.UnifyTypes.unify
-import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, TypingConfig }
+import evolution.compiler.phases.typing.config.{ Constant1, Constant2, TypingConfig }
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree._
@@ -65,25 +65,6 @@ class UnifyTypesSpec extends LanguageSpec {
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).annotation.value shouldBe TypeT.Double
-      }
-
-      "mapCons(empty, head -> tail -> cons(1, tail))" in {
-        val untyped = App
-          .of(
-            Identifier.const(Constant2.MapCons).embed,
-            Identifier.const(Constant0.Empty).embed,
-            Lambda(
-              "head",
-              Lambda(
-                "tail",
-                App.of(Identifier.const(Constant2.Cons).embed, DoubleLiteral(1).embed, Identifier("tail").embed).embed
-              ).embed
-            ).embed
-          )
-          .embed
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
-        substitution.substitute(expr).annotation.value shouldBe TypeT.Evo(TypeT.Double)
       }
 
       "const(1)" in {

@@ -128,12 +128,6 @@ object EvalMaterializer extends Materializer {
       case Expr.Concat(ev1, ev2) =>
         interpret2(ev1, ev2)(Evolution.concat)
 
-      case Expr.MapEmpty(ev1, ev2) =>
-        interpret2(ev1, ev2)(Evolution.mapEmpty)
-
-      case Expr.MapCons(eva, f) =>
-        interpret2(eva, f)(Evolution.mapCons)
-
       case Expr.ZipWith(fa, fb, f) =>
         interpret3(fa, fb, f)(Evolution.zipWith)
 

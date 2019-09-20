@@ -277,20 +277,6 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Cons(x.asExpr, y.asExprF)
   }
 
-  case object MapEmpty extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapEmpty(x.asExprF, y.asExprF)
-  }
-
-  case object MapCons
-      extends Constant2Plain(
-        Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T1")) =>: Evo(Var("T2"))) =>: Evo(Var("T2")))
-      ) {
-    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.MapCons(
-      x.asExprF,
-      y.asExpr[Any => Evolution[Any] => Evolution[Any]]
-    )
-  }
-
   case object WithFirst
       extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =

@@ -101,10 +101,6 @@ object MaterializeJsCode {
 
       case Concat(as1, as2) => ???
 
-      case MapEmpty(eva, eva2) => ???
-
-      case MapCons(eva, f) => ???
-
       case ZipWith(fa, fb, f) => zipIterableApp(toJs(fa), toJs(fb), toJs(f))
 
       case Take(n, fa) => takeIterable(toJs(n), toJs(fa))
@@ -225,8 +221,6 @@ object MaterializeJsCode {
           __a = __it1.next();
         }
     """.trim))
-
-      case Solve2(acc, a0, v0, add) => ???
 
       case Derive(t, sg, inv) => ???
 
