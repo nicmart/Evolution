@@ -284,7 +284,20 @@ object MaterializeJsCode {
           )
         )
 
-      case OctaveNoise() => ???
+      case OctaveNoise() =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+              var __permutation = [];
+              for(var i = 0; i < 256; i++){
+                __permutation.push(i);
+              }
+              while (true) {
+                yield octaveNoise(__permutation);
+              }
+            """.trim
+          )
+        )
     }
   }
 
@@ -506,5 +519,11 @@ object MaterializeJsCode {
   def noise(permutation: scalajs.js.Array[Int]): scalajs.js.Function1[Point, Double] = {
     val perlin = new PerlinNoise(permutation.toArray)
     p => perlin.noise(p.x, p.y)
+  }
+
+  @JSExportTopLevel("octaveNoise")
+  def octaveNoise(permutation: scalajs.js.Array[Int]): scalajs.js.Function3[Int, Double, Point, Double] = {
+    val perlin = new PerlinNoise(permutation.toArray)
+    (n, persistence, p) => perlin.octaveNoise(n, persistence, p.x, p.y)
   }
 }

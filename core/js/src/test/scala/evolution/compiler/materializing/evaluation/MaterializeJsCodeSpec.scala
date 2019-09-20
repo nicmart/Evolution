@@ -315,9 +315,17 @@ class MaterializeJsCodeSpec extends LanguageSpec {
 
     "materialize noise" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Noise())
-      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[js.Function1[Point, Double]]]
       val n = 10000
-      val sample = result.iterator.take(n).toList
+      val sample = result.iterator.take(n).toList.map(f => f(Point(1, 2)))
+      sample should have length (n)
+    }
+
+    "materialize octave noise" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.OctaveNoise())
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[js.Function3[Int, Double, Point, Double]]]
+      val n = 10000
+      val sample = result.iterator.take(n).toList.map(f => f(10, 1, Point(1, 2)))
       sample should have length (n)
     }
   }
