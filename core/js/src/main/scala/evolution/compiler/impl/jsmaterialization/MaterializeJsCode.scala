@@ -2,6 +2,7 @@ package evolution.compiler.impl.jsmaterialization
 
 import evolution.compiler.expression.Expr
 import Expr._
+import scala.scalajs.js.annotation.JSExportTopLevel
 
 // TODO this is an implementation
 object MaterializeJsCode {
@@ -55,7 +56,7 @@ object MaterializeJsCode {
 
       case Lst(ts) => JsExpr.Array(ts.map(toJs))
 
-      case SmoothStep(from, to, position) => ???
+      case SmoothStep(from, to, position) => app("smoothstep", toJs(from).js, toJs(to).js, toJs(position).js)
 
       case Equals(a, b, eq) => MaterializeEquality(eq).eqv(toJs(a), toJs(b))
 
@@ -378,4 +379,12 @@ object MaterializeJsCode {
 
   def zipIterableApp(a: JsExpr, b: JsExpr, f: JsExpr): JsExpr =
     zipIterable(a, b, (aa, bb) => JsExpr.AppCurried(f, List(aa, bb)))
+
+  @JSExportTopLevel("smoothstep")
+  def smoothstep(from: Double, to: Double, position: Double): Double = {
+    val t = (position - from) / (to - from)
+    if (t <= 0) 0.0
+    else if (t >= 1) 1.0
+    else t * t * (3.0 - 2.0 * t)
+  }
 }

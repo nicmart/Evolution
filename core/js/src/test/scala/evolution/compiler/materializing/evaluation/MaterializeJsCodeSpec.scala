@@ -43,6 +43,29 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result shouldBe 2
     }
 
+    "materialize smoothstep" - {
+      "on the left of the interval should be 0" in {
+        val expr = Expr.SmoothStep(Expr.Dbl(0), Expr.Dbl(10), Expr.Dbl(-1))
+        val jsCode = MaterializeJsCode.materialize(expr)
+        val result = evaluate(jsCode).asInstanceOf[Double]
+        result shouldBe 0
+      }
+
+      "on the right of the interval should be 1" in {
+        val expr = Expr.SmoothStep(Expr.Dbl(0), Expr.Dbl(10), Expr.Dbl(11))
+        val jsCode = MaterializeJsCode.materialize(expr)
+        val result = evaluate(jsCode).asInstanceOf[Double]
+        result shouldBe 1
+      }
+
+      "on the interval should be between the 0 and 1" in {
+        val expr = Expr.SmoothStep(Expr.Dbl(0), Expr.Dbl(10), Expr.Dbl(5))
+        val jsCode = MaterializeJsCode.materialize(expr)
+        val result = evaluate(jsCode).asInstanceOf[Double]
+        result should (be >= 0.0 and be <= 1.0)
+      }
+    }
+
     "materialize cons" in {
       val jsCode = MaterializeJsCode.materialize(Expr.Cons(Expr.Dbl(1), Expr.Constant(Expr.Dbl(2))))
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
