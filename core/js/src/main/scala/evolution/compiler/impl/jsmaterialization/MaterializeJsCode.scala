@@ -4,6 +4,7 @@ import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import Expr._
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js
 import evolution.rng.PerlinNoise
 
 // TODO this is an implementation
@@ -40,11 +41,15 @@ object MaterializeJsCode {
 
       case Add(a, b, add) => MaterializeAddition(add)(toJs(a), toJs(b))
 
+      case Minus(a, b, add, inv) => MaterializeAddition(add)(toJs(a), MaterializeInverse(inv)(toJs(b)))
+
       case Div(a, b) => JsExpr.BinaryOp(toJs(a), "/", toJs(b))
 
       case Exp(a, b) => JsExpr.App(JsExpr.Raw("Math.pow"), List(toJs(a), toJs(b)))
 
       case Sign(a) => JsExpr.App(JsExpr.Raw("Math.sign"), List(toJs(a)))
+
+      case Abs(a) => JsExpr.App(JsExpr.Raw("Math.abs"), List(toJs(a)))
 
       case Mod(a, b) => JsExpr.BinaryOp(toJs(a), "%", toJs(b))
 
@@ -278,7 +283,7 @@ object MaterializeJsCode {
             __permutation.push(i);
           }
           while (true) {
-            yield noise(__permutation);
+            yield noise(shuffle(__permutation));
           }
           """.trim
           )
@@ -293,7 +298,7 @@ object MaterializeJsCode {
                 __permutation.push(i);
               }
               while (true) {
-                yield octaveNoise(__permutation);
+                yield octaveNoise(shuffle(__permutation));
               }
             """.trim
           )
@@ -522,8 +527,22 @@ object MaterializeJsCode {
   }
 
   @JSExportTopLevel("octaveNoise")
-  def octaveNoise(permutation: scalajs.js.Array[Int]): scalajs.js.Function3[Int, Double, Point, Double] = {
+  def octaveNoise(
+    permutation: scalajs.js.Array[Int]
+  ): scalajs.js.Function1[Int, scalajs.js.Function1[Double, scalajs.js.Function1[Point, Double]]] = {
     val perlin = new PerlinNoise(permutation.toArray)
-    (n, persistence, p) => perlin.octaveNoise(n, persistence, p.x, p.y)
+    n => persistence => p => perlin.octaveNoise(n, persistence, p.x, p.y)
+  }
+
+  @JSExportTopLevel("shuffle")
+  def shuffle[T](array: js.Array[T]): js.Array[T] = {
+    array.indices.foreach { i =>
+      val j = js.Math.floor(js.Math.random() * (i + 1)).toInt;
+      val tmp = array(i)
+      array(i) = array(j)
+      array(j) = tmp
+    }
+
+    array
   }
 }
