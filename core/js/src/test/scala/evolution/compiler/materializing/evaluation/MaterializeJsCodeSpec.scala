@@ -313,6 +313,13 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       sample.filter(d => d > -2 && d < 2).size should be > ((0.9 * n).toInt)
     }
 
+    "materialize noise" in {
+      val jsCode = MaterializeJsCode.materialize(Expr.Noise())
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+      val n = 10000
+      val sample = result.iterator.take(n).toList
+      sample should have length (n)
+    }
   }
 
   private def evaluate(expr: String): Any = {

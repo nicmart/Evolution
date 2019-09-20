@@ -1,8 +1,10 @@
 package evolution.compiler.impl.jsmaterialization
 
 import evolution.compiler.expression.Expr
+import evolution.geometry.Point
 import Expr._
 import scala.scalajs.js.annotation.JSExportTopLevel
+import evolution.rng.PerlinNoise
 
 // TODO this is an implementation
 object MaterializeJsCode {
@@ -40,19 +42,19 @@ object MaterializeJsCode {
 
       case Div(a, b) => JsExpr.BinaryOp(toJs(a), "/", toJs(b))
 
-      case Exp(a, b) => ???
+      case Exp(a, b) => JsExpr.App(JsExpr.Raw("Math.pow"), List(toJs(a), toJs(b)))
 
-      case Sign(a) => ???
+      case Sign(a) => JsExpr.App(JsExpr.Raw("Math.sign"), List(toJs(a)))
 
-      case Mod(a, b) => ???
+      case Mod(a, b) => JsExpr.BinaryOp(toJs(a), "%", toJs(b))
 
       case Inverse(t, inv) => MaterializeInverse(inv)(toJs(t))
 
       case Multiply(a, b, mult) => MaterializeMultiplication(mult)(toJs(a), toJs(b))
 
-      case Sin(d) => ???
+      case Sin(d) => JsExpr.App(JsExpr.Raw("Math.sin"), List(toJs(d)))
 
-      case Cos(d) => ???
+      case Cos(d) => JsExpr.App(JsExpr.Raw("Math.cos"), List(toJs(d)))
 
       case Lst(ts) => JsExpr.Array(ts.map(toJs))
 
@@ -66,11 +68,11 @@ object MaterializeJsCode {
 
       case Bool(b) => JsExpr.Raw(b.toString)
 
-      case And(a, b) => ???
+      case And(a, b) => JsExpr.BinaryOp(toJs(a), "&&", toJs(b))
 
-      case Or(a, b) => ???
+      case Or(a, b) => JsExpr.BinaryOp(toJs(a), "||", toJs(b))
 
-      case Not(a) => ???
+      case Not(a) => JsExpr.PrefixOp("!", toJs(a))
 
       case LessThan(a, b, cmp) => MaterializeComparison(cmp).lt(toJs(a), toJs(b))
 
@@ -267,7 +269,20 @@ object MaterializeJsCode {
           )
         )
 
-      case Noise() => ???
+      case Noise() =>
+        JsExpr.Iterable(
+          JsExpr.Raw(
+            s"""
+          var __permutation = [];
+          for(var i = 0; i < 256; i++){
+            __permutation.push(i);
+          }
+          while (true) {
+            yield noise(__permutation);
+          }
+          """.trim
+          )
+        )
 
       case OctaveNoise() => ???
     }
@@ -485,5 +500,11 @@ object MaterializeJsCode {
     if (t <= 0) 0.0
     else if (t >= 1) 1.0
     else t * t * (3.0 - 2.0 * t)
+  }
+
+  @JSExportTopLevel("noise")
+  def noise(permutation: scalajs.js.Array[Int]): scalajs.js.Function1[Point, Double] = {
+    val perlin = new PerlinNoise(permutation.toArray)
+    p => perlin.noise(p.x, p.y)
   }
 }
