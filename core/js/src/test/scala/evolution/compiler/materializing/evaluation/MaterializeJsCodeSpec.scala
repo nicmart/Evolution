@@ -127,7 +127,18 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       )
       val jsCode = MaterializeJsCode.materialize(expr)
       val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+
       result.iterator.take(10).toList shouldBe List.fill(10)(1)
+    }
+
+    "materialize parallel evolutions" in {
+      val expr1 = Expr.Constant(Expr.Dbl(1))
+      val expr2 = Expr.Constant(Expr.Dbl(2))
+      val expr = Expr.Parallel(Expr.Cons(expr1, Expr.Cons(expr2, Expr.Empty())))
+      val jsCode = MaterializeJsCode.materialize(expr)
+      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Double]]
+
+      result.iterator.take(100).toList shouldBe List.fill(50)(List(1, 2)).flatten
     }
 
     "materialize integrations" in {

@@ -119,7 +119,7 @@ object MaterializeJsCode {
 
       case Flatten(ffa) => flatMapIterable(toJs(ffa), identity)
 
-      case Parallel(ffa) => ???
+      case Parallel(ffa) => parallelIterable(toJs(ffa))
 
       case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
@@ -343,7 +343,7 @@ object MaterializeJsCode {
   def mapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
-      for(let __value of ${fa.js}){
+      for (let __value of ${fa.js}) {
         yield ${f(JsExpr.Raw("__value")).js};
       }
     """.trim
@@ -353,9 +353,42 @@ object MaterializeJsCode {
   def flatMapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
       s"""
-      for(let __value of ${fa.js}){
+      for (let __value of ${fa.js}) {
         yield* ${f(JsExpr.Raw("__value")).js};
       }
+    """.trim
+    )
+  )
+
+  def parallelIterable(ffa: JsExpr): JsExpr = JsExpr.Iterable(
+    JsExpr.Raw(
+      s"""
+      var __it1 = ${ffa.js}[Symbol.iterator]();
+      var __fas = [];
+      for (let __fa of __it1) {
+        var __itfa = __fa[Symbol.iterator]();
+        var __a = __itfa.next();
+        if (!__a.done) {
+          __fas.push(__itfa);
+          yield __a.value;
+        }
+      }
+
+      while (__fas.length > 0) {
+        var __length = __fas.length;
+        var j = 0;
+        for (let i = 0; i < __length; i++) {
+          var __a = __fas[i - j].next();
+          if (!__a.done) {;
+            yield __a.value;
+          } else {
+            __fas.splice(i, 1);
+            j++;
+          }
+        }
+      }
+      
+
     """.trim
     )
   )
