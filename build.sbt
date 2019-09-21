@@ -145,8 +145,8 @@ lazy val server = (project in file("server"))
     scalaJSProjects := Seq(jsApp),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-dsl" % "0.21.0-M4",
-      "org.http4s" %% "http4s-blaze-server" % "0.21.0-M4",
+      "org.http4s" %% "http4s-dsl" % "0.21.0-M5",
+      "org.http4s" %% "http4s-blaze-server" % "0.21.0-M5",
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
