@@ -114,10 +114,14 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.7")
   )
 
+// Needed, so sbt finds the projects
+lazy val coreJVM = core.jvm
+lazy val coreJS = core.js
+
 lazy val jsApp = project
   .in(file("app"))
   .dependsOn(core.js % "test->test;compile->compile")
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, ScalaJSBundlerPlugin)
+  .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     inThisBuild(commonSettings),
     version := "0.1.0-SNAPSHOT",
@@ -153,7 +157,6 @@ lazy val server = (project in file("server"))
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     packagePrefix in Assets := "public/",
-    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline.map(f => f(Seq.empty))).value,
     npmAssets ++= NpmAssets
       .ofProject(jsApp) { nodeModules =>
         (nodeModules / "codemirror").allPaths // sbt 1.0.0+
@@ -161,10 +164,6 @@ lazy val server = (project in file("server"))
       .value
   )
   .enablePlugins(SbtWeb, WebScalaJSBundlerPlugin)
-
-// Needed, so sbt finds the projects
-lazy val coreJVM = core.jvm
-lazy val coreJS = core.js
 
 addCommandAlias("testAll", "; coreJVM/test; jsApp/test")
 addCommandAlias("compileAll", "; compile; test:compile")
