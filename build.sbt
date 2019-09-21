@@ -120,13 +120,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-lazy val jsApp = project
-  .in(file("app"))
-  .dependsOn(core.js % "test->test;compile->compile")
-  .enablePlugins(ScalaJSBundlerPlugin)
-  .settings(
-    inThisBuild(commonSettings),
-    version := "0.1.0-SNAPSHOT",
+lazy val jsAppSettings =
+  Seq(
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.7",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.5.0-RC2",
@@ -136,7 +131,30 @@ lazy val jsApp = project
       "io.circe" %%% "circe-generic" % "0.12.0-RC4",
       "io.circe" %%% "circe-parser" % "0.12.0-RC4",
       "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
-    ),
+    )
+  )
+
+// Creating this "clone" project was the only way I fould to be able to run
+// jsAppTest/test without the "ReferenceError" for core module exported classes
+lazy val jsAppTest = project
+  .in(file("app"))
+  .dependsOn(core.js % "test->test;compile->compile")
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    inThisBuild(commonSettings),
+    jsAppSettings,
+    target := {
+      (ThisBuild / baseDirectory).value / "target" / thisProject.value.id
+    }
+  )
+
+lazy val jsApp = project
+  .in(file("app"))
+  .dependsOn(core.js % "test->test;compile->compile")
+  .enablePlugins(ScalaJSBundlerPlugin)
+  .settings(
+    inThisBuild(commonSettings),
+    jsAppSettings,
     npmDependencies in Compile ++= Seq(
       "react" -> "16.7.0",
       "react-dom" -> "16.7.0",
