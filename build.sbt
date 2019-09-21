@@ -7,6 +7,7 @@ Test / fork := true
 // Experimental, turn off in case of problems
 //ThisBuild / turbo := true
 ThisBuild / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.ScalaLibrary
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 bloopExportJarClassifiers in Global := Some(Set("sources"))
 logBuffered in Test := false
@@ -71,7 +72,8 @@ lazy val commonSettings = List(
   scalacOptions ++= Seq(
     "-Xlint:unused",
     "-Xlint:inaccessible",
-    "-Wdead-code"
+    "-Wdead-code",
+    "-P:scalajs:sjsDefinedByDefault"
   ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
