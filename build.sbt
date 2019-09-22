@@ -72,8 +72,7 @@ lazy val commonSettings = List(
   scalacOptions ++= Seq(
     "-Xlint:unused",
     "-Xlint:inaccessible",
-    "-Wdead-code",
-    "-P:scalajs:sjsDefinedByDefault"
+    "-Wdead-code"
   ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
