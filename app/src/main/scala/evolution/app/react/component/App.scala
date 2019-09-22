@@ -110,15 +110,15 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private val codeCompiler = new CodeCompiler(new AllPhases(JsCodeMaterializer, Conf.logger))
+  private def codeCompiler(pageState: PageState) = new CodeCompiler(new AllPhases(JsCodeMaterializer, Conf.logger))
 
-  private def compile(props: PageState, state: State): CompilationResult =
+  private def compile(pageState: PageState, state: State): CompilationResult =
     CompilationResult(
-      evolutionKey(props, state),
-      codeCompiler.compile(
-        props.drawingState.code,
-        props.drawingState.seed,
-        state.layout.drawingContext * props.rendererState.resolutionFactor
+      evolutionKey(pageState, state),
+      codeCompiler(pageState).compile(
+        pageState.drawingState.code,
+        pageState.drawingState.seed,
+        state.layout.drawingContext * pageState.rendererState.resolutionFactor
       )
     )
 
