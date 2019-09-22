@@ -17,7 +17,6 @@ import evolution.app.model.Drawing
 import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.AllPhases
-import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 
 object App {
 
@@ -110,7 +109,9 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private def codeCompiler(pageState: PageState) = new CodeCompiler(new AllPhases(JsCodeMaterializer, Conf.logger))
+  private def codeCompiler(pageState: PageState) = new CodeCompiler(
+    new AllPhases(pageState.rendererState.materialization.materializer, Conf.logger)
+  )
 
   private def compile(pageState: PageState, state: State): CompilationResult =
     CompilationResult(
