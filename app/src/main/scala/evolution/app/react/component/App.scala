@@ -109,9 +109,12 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private def codeCompiler(pageState: PageState) = new CodeCompiler(
-    new AllPhases(pageState.materializer.materializer, Conf.logger)
-  )
+  private def codeCompiler(pageState: PageState) = {
+    println(s"materializer is ${pageState.materializer}")
+    new CodeCompiler(
+      new AllPhases(pageState.materializer.materializer, Conf.logger)
+    )
+  }
 
   private def compile(pageState: PageState, state: State): CompilationResult =
     CompilationResult(

@@ -16,12 +16,6 @@ class Routing(
   pageStateCodec: Codec[LoadDrawingPage, DrawingPageUrl]
 ) {
 
-  private val drawingStateCodec: Codec[LoadDrawingPage, String] =
-    pageStateCodec >> new Codec[DrawingPageUrl, String] {
-      def decode(r: String): Option[DrawingPageUrl] = Some(DrawingPageUrl(r, ""))
-      def encode(t: DrawingPageUrl): String = t.drawingSegment
-    }
-
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
 
@@ -54,8 +48,19 @@ class Routing(
     val rule: dsl.Rule =
       route ~> renderPage
 
+    private def url: RouteB[DrawingPageUrl] = (string("js/").option ~ string(".*")).pmap {
+      case (optJsSegment, drawingSegment) =>
+        Some(
+          DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
+        )
+    }(
+      url => (Some(url.materializerSegment).filter(_.nonEmpty), url.drawingSegment)
+    )
+
     private def route =
-      dynamicRouteCT[LoadDrawingPage](routeFromCodec(string(".*"), drawingStateCodec))
+      dynamicRouteCT[LoadDrawingPage](
+        routeFromCodec[LoadDrawingPage, DrawingPageUrl](url, pageStateCodec)
+      )
 
     private def renderPage: LoadDrawingPage => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
