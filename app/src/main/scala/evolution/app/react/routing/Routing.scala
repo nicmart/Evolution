@@ -13,8 +13,15 @@ class Routing(
   urlDelimiter: String,
   appComponent: App.ReactComponent,
   defaultPage: MyPages,
-  drawingStateCodec: Codec[LoadDrawingPage, String]
+  pageStateCodec: Codec[LoadDrawingPage, DrawingPageUrl]
 ) {
+
+  private val drawingStateCodec: Codec[LoadDrawingPage, String] =
+    pageStateCodec >> new Codec[DrawingPageUrl, String] {
+      def decode(r: String): Option[DrawingPageUrl] = Some(DrawingPageUrl(r, ""))
+      def encode(t: DrawingPageUrl): String = t.drawingSegment
+    }
+
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
 
@@ -77,3 +84,5 @@ class Routing(
   private def routeFromCodec[T, R](path: RouteB[R], codec: Codec[T, R]): RouteB[T] =
     path.pmap(codec.decode)(codec.encode)
 }
+
+final case class DrawingPageUrl(drawingSegment: String, materializerSegment: String)

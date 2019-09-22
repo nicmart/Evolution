@@ -16,6 +16,7 @@ import japgolly.scalajs.react.extra.router.Router
 import scala.util.Random
 import evolution.logging.Logger
 import evolution.logging.NoOpLogger
+import evolution.app.react.routing.DrawingPageUrl
 
 object Conf {
   lazy val logger: Logger = NoOpLogger
@@ -35,12 +36,18 @@ object Conf {
       state => Some(LoadDrawingPage(state))
     )
 
-  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, String] =
+  lazy val drawingPageUrlCodec = new Codec[String, DrawingPageUrl] {
+    def encode(t: String): DrawingPageUrl = DrawingPageUrl(t, "")
+    def decode(r: DrawingPageUrl): Option[String] = Some(r.drawingSegment)
+  }
+
+  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, DrawingPageUrl] =
     pageDrawingCodec >>
       pageStateCodec >>
       JsonStringCodec >>
       StringByteCodec >>
-      Base64Codec
+      Base64Codec >>
+      drawingPageUrlCodec
 
   lazy val urlDelimiter = "#"
 
