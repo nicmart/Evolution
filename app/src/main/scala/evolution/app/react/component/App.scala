@@ -15,6 +15,9 @@ import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
 import evolution.app.model.Drawing
 import evolution.app.conf.Conf
+import evolution.app.model.CodeCompiler
+import evolution.compiler.phases.AllPhases
+import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 
 object App {
 
@@ -107,10 +110,12 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
+  private val codeCompiler = new CodeCompiler(new AllPhases(JsCodeMaterializer, Conf.logger))
+
   private def compile(props: PageState, state: State): CompilationResult =
     CompilationResult(
       evolutionKey(props, state),
-      Conf.codeCompiler.compile(
+      codeCompiler.compile(
         props.drawingState.code,
         props.drawingState.seed,
         state.layout.drawingContext * props.rendererState.resolutionFactor
