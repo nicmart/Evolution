@@ -30,8 +30,11 @@ object Conf {
   lazy val rendererStateCodec: JsonCodec[RendererState] =
     RendererState.jsonCodec
 
-  lazy val pageStateCodec: JsonCodec[PageState] =
-    PageState.jsonCodec(drawingStateCodec, rendererStateCodec)
+  lazy val loadDrawingPageCodec: Codec[LoadDrawingPage, DrawingPageUrl] =
+    pageDrawingCodec >> pageStateCodec
+
+  lazy val pageStateCodec: Codec[PageState, DrawingPageUrl] =
+    PageState.codec(stateCodec, MaterializationOption.codec)
 
   lazy val pageDrawingCodec: Codec[LoadDrawingPage, PageState] =
     Codec.instance[LoadDrawingPage, PageState](
@@ -39,18 +42,11 @@ object Conf {
       state => Some(LoadDrawingPage(state))
     )
 
-  lazy val drawingPageUrlCodec = new Codec[String, DrawingPageUrl] {
-    def encode(t: String): DrawingPageUrl = DrawingPageUrl(t, "")
-    def decode(r: DrawingPageUrl): Option[String] = Some(r.drawingSegment)
-  }
-
-  lazy val loadDrawingPageStringCodec: Codec[LoadDrawingPage, DrawingPageUrl] =
-    pageDrawingCodec >>
-      pageStateCodec >>
+  lazy val stateCodec: Codec[(DrawingState, RendererState), String] =
+    StateJsonCodec >>
       JsonStringCodec >>
       StringByteCodec >>
-      Base64Codec >>
-      drawingPageUrlCodec
+      Base64Codec
 
   lazy val urlDelimiter = "#"
 
@@ -90,7 +86,7 @@ object Conf {
     App.component(initialRateCounter, pageComponent)
 
   lazy val routingConfig: Routing =
-    new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageStringCodec)
+    new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageCodec)
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)

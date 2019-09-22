@@ -1,12 +1,12 @@
 package evolution.app.react.pages
 
-import evolution.app.codec.JsonCodec
+import evolution.app.codec.Codec
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.model.Drawing
-import io.circe.Json
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
+import evolution.app.react.routing.DrawingPageUrl
 
 sealed trait MyPages
 
@@ -21,24 +21,23 @@ final case class PageState(
 )
 
 object PageState {
-  def jsonCodec(
-    drawingStateCodec: JsonCodec[DrawingState],
-    rendererStateCodec: JsonCodec[RendererState]
-  ): JsonCodec[PageState] =
-    new JsonCodec[PageState] {
-      private val drawingStateField = "drawingState"
-      private val rendererStateField = "rendererState"
-      def decode(r: Json): Option[PageState] =
-        for {
-          drawingStateJson <- r.hcursor.get[Json](drawingStateField).toOption
-          drawingState <- drawingStateCodec.decode(drawingStateJson)
-          rendererStateJson <- r.hcursor.get[Json](rendererStateField).toOption
-          rendererState <- rendererStateCodec.decode(rendererStateJson)
-        } yield PageState(drawingState, rendererState, MaterializationOption.Eval)
 
-      def encode(t: PageState): Json = Json.obj(
-        drawingStateField -> drawingStateCodec.encode(t.drawingState),
-        rendererStateField -> rendererStateCodec.encode(t.rendererState)
+  def codec(
+    stateCodec: Codec[(DrawingState, RendererState), String],
+    materializationOptionCodec: Codec[MaterializationOption, String]
+  ): Codec[PageState, DrawingPageUrl] =
+    new Codec[PageState, DrawingPageUrl] {
+
+      def decode(r: DrawingPageUrl): Option[PageState] =
+        for {
+          state <- stateCodec.decode(r.drawingSegment)
+          (drawingState, rendererState) = state
+          materialization <- materializationOptionCodec.decode(r.materializerSegment)
+        } yield PageState(drawingState, rendererState, materialization)
+
+      def encode(t: PageState): DrawingPageUrl = DrawingPageUrl(
+        stateCodec.encode((t.drawingState, t.rendererState)),
+        materializationOptionCodec.encode(t.materializer)
       )
     }
 
@@ -50,4 +49,15 @@ sealed abstract class MaterializationOption(val materializer: Materializer)
 object MaterializationOption {
   case object Eval extends MaterializationOption(EvalMaterializer)
   case object CodeGenerator extends MaterializationOption(JsCodeMaterializer)
+
+  val codec = new Codec[MaterializationOption, String] {
+    def encode(t: MaterializationOption): String = t match {
+      case CodeGenerator => "js"
+      case Eval          => ""
+    }
+    def decode(r: String): Option[MaterializationOption] = r match {
+      case "js" => Some(CodeGenerator)
+      case _    => Some(Eval)
+    }
+  }
 }
