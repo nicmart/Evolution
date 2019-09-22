@@ -445,6 +445,115 @@ object Portfolio {
         """.unindent
       ),
       defaultRendererWithInfiniteCanvas.copy(strokeSize = 5)
+    ),
+    Drawing(
+      Some("Some Spirographs"),
+      DrawingState(
+        0L,
+        """
+          grid = gridSize -> product(
+            y <- range(bottom, top, gridSize),
+            x <- range(left, right, gridSize)
+          ) in point(x, y) in
+          
+          onPoints = points -> drawings -> length ->
+            parallel(zipWith(
+              points,
+              drawings,
+              p -> drawing -> take(length, map(drawing, q -> q + p))
+            ))
+          in
+          
+          circle = alpha -> r -> w ->
+            @polar(const(r), integrate(alpha, const(w)))
+          in
+          
+          r = 50 in
+          
+          circles = k ->
+          
+            zip(
+              alpha <- uniform(0, 2 * pi),
+              w1 <- uniformDiscrete(-3, 3, 1),
+              w2 <- uniformDiscrete(-30, 30, 2),
+              w3 <- uniformDiscrete(-30, 200, 10),
+              w4 <- uniformDiscrete(-200, 30, 21),
+              w5 <- uniformDiscrete(-30, 30, 5),
+              w6 <- uniformDiscrete(-5, 5, 1),
+              r1 <- uniformDiscrete(1, 50, .1),
+              r2 <- uniformDiscrete(1, 10, .1),
+              r3 <- uniformDiscrete(1, 30, .1),
+              r4 <- uniformDiscrete(1, 30, .1),
+              r5 <- uniformDiscrete(1, 10, .1),
+              r6 <- uniformDiscrete(4, 50, 1)
+            ) in
+                sum = r1 + r2 + r3 + r4 + r5 + r6 in
+          
+                circle(alpha, r1 * r / sum, k * w1) +
+                circle(alpha, r2 * r / sum, k * w2) +
+                circle(alpha, r3 * r / sum, k * w3) +
+                circle(alpha, r4 * r / sum, k * w4) +
+                circle(alpha, r5 * r / sum, k * w5) +
+                circle(alpha, r6 * r / sum, k * w6)
+          in
+          
+          
+          k = .01 in
+          length = 20 in
+          
+          onPoints(grid(150), circles(k), floor(length / k))
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Simple Spirographs"),
+      DrawingState(
+        0L,
+        """
+          grid = gridSize -> product(
+            y <- range(top, bottom, -gridSize),
+            x <- range(left, right, gridSize)
+          ) in point(x, y)
+          in
+          
+          onPoints = points -> drawings -> length ->
+            flatten(zip(
+              p <- points,
+              drawing <- drawings
+              ) in take(length, map(drawing, q -> q + p)
+            ))
+          in
+          
+          circle = r -> w ->
+            @polar(const(r), integrate(0, const(w)))
+          in
+          
+          w1s = uniformDiscrete(3, 7, 1) in
+          w2s = uniformDiscrete(-5, -2, 1) in
+          rs = uniformDiscrete(10, 30, 1) in
+          
+          mainCircles = k -> map(w1s, w -> circle(10, k * w)) in
+          secondaryCircles = k -> zip(
+            w <- w2s,
+            r <- rs
+          ) in circle(r, k * w)
+          in
+          
+          circles = k ->
+            zip(
+              c1 <- mainCircles(k),
+              c2 <- secondaryCircles(k)
+            ) in c1 + c2
+          in
+          
+          k = .03 in
+          length = 20 in
+          
+          onPoints(grid(80), circles(k), floor(length / k))
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
