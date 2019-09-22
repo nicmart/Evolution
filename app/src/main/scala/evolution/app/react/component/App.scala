@@ -110,7 +110,7 @@ object App {
       .hashCode()
 
   private def codeCompiler(pageState: PageState) = new CodeCompiler(
-    new AllPhases(pageState.rendererState.materialization.materializer, Conf.logger)
+    new AllPhases(pageState.materializer.materializer, Conf.logger)
   )
 
   private def compile(pageState: PageState, state: State): CompilationResult =

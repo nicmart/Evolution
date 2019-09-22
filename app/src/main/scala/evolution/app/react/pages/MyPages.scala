@@ -4,6 +4,9 @@ import evolution.app.codec.JsonCodec
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.model.Drawing
 import io.circe.Json
+import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.impl.evaluation.EvalMaterializer
+import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 
 sealed trait MyPages
 
@@ -13,7 +16,8 @@ case object NotFound extends MyPages
 
 final case class PageState(
   drawingState: DrawingState,
-  rendererState: RendererState
+  rendererState: RendererState,
+  materializer: MaterializationOption
 )
 
 object PageState {
@@ -30,7 +34,7 @@ object PageState {
           drawingState <- drawingStateCodec.decode(drawingStateJson)
           rendererStateJson <- r.hcursor.get[Json](rendererStateField).toOption
           rendererState <- rendererStateCodec.decode(rendererStateJson)
-        } yield PageState(drawingState, rendererState)
+        } yield PageState(drawingState, rendererState, MaterializationOption.Eval)
 
       def encode(t: PageState): Json = Json.obj(
         drawingStateField -> drawingStateCodec.encode(t.drawingState),
@@ -38,5 +42,12 @@ object PageState {
       )
     }
 
-  def fromDrawing(drawing: Drawing): PageState = PageState(drawing.drawingState, drawing.rendererState)
+  def fromDrawing(drawing: Drawing): PageState =
+    PageState(drawing.drawingState, drawing.rendererState, MaterializationOption.Eval)
+}
+
+sealed abstract class MaterializationOption(val materializer: Materializer)
+object MaterializationOption {
+  case object Eval extends MaterializationOption(EvalMaterializer)
+  case object CodeGenerator extends MaterializationOption(JsCodeMaterializer)
 }

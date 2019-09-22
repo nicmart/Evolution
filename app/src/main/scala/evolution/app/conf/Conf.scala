@@ -8,7 +8,7 @@ import evolution.app.model.state
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Page
 import evolution.app.react.component.{ App, Canvas }
-import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState }
+import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState, MaterializationOption }
 import evolution.app.react.routing.Routing
 import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
 import japgolly.scalajs.react.extra.router.Router
@@ -59,15 +59,15 @@ object Conf {
     strokeSize = 1,
     resolutionFactor = 2,
     trail = TrailSettings(active = false, opacity = 0.12),
-    offCanvasSettings = TorusCanvas,
-    MaterializationOption.Eval
+    offCanvasSettings = TorusCanvas
   )
 
   lazy val initialPage: MyPages =
     LoadDrawingPage(
       PageState(
         DrawingState(Random.nextLong(), "integrate(point(0, 0), @point(uniform(-2, 2), uniform(-2, 2)))"),
-        defaultRendererState
+        defaultRendererState,
+        MaterializationOption.Eval
       )
     )
 
