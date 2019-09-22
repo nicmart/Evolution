@@ -27,8 +27,11 @@ object Conf {
   lazy val drawingStateCodec: JsonCodec[DrawingState] =
     DrawingState.jsonCodec
 
+  lazy val rendererStateCodec: JsonCodec[RendererState] =
+    RendererState.jsonCodec
+
   lazy val pageStateCodec: JsonCodec[PageState] =
-    PageState.jsonCodec(drawingStateCodec)
+    PageState.jsonCodec(drawingStateCodec, rendererStateCodec)
 
   lazy val pageDrawingCodec: Codec[LoadDrawingPage, PageState] =
     Codec.instance[LoadDrawingPage, PageState](

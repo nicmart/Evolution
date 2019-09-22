@@ -1,11 +1,9 @@
 package evolution.app.react.pages
 
-import com.github.ghik.silencer.silent
 import evolution.app.codec.JsonCodec
 import evolution.app.model.state.{ DrawingState, RendererState }
-import io.circe.generic.auto._
-import io.circe.{ Decoder, Encoder }
 import evolution.app.model.Drawing
+import io.circe.Json
 
 sealed trait MyPages
 
@@ -19,12 +17,26 @@ final case class PageState(
 )
 
 object PageState {
-  def jsonCodec(implicit drawingStateCodec: JsonCodec[DrawingState]): JsonCodec[PageState] = {
-    import JsonCodec._
-    @silent implicit val decoder: Decoder[DrawingState] = toCirceDecoder(drawingStateCodec)
-    @silent implicit val encoder: Encoder[DrawingState] = toCirceEncoder(drawingStateCodec)
-    JsonCodec[PageState]
-  }
+  def jsonCodec(
+    drawingStateCodec: JsonCodec[DrawingState],
+    rendererStateCodec: JsonCodec[RendererState]
+  ): JsonCodec[PageState] =
+    new JsonCodec[PageState] {
+      private val drawingStateField = "drawingState"
+      private val rendererStateField = "rendererState"
+      def decode(r: Json): Option[PageState] =
+        for {
+          drawingStateJson <- r.hcursor.get[Json](drawingStateField).toOption
+          drawingState <- drawingStateCodec.decode(drawingStateJson)
+          rendererStateJson <- r.hcursor.get[Json](rendererStateField).toOption
+          rendererState <- rendererStateCodec.decode(rendererStateJson)
+        } yield PageState(drawingState, rendererState)
+
+      def encode(t: PageState): Json = Json.obj(
+        drawingStateField -> drawingStateCodec.encode(t.drawingState),
+        rendererStateField -> rendererStateCodec.encode(t.rendererState)
+      )
+    }
 
   def fromDrawing(drawing: Drawing): PageState = PageState(drawing.drawingState, drawing.rendererState)
 }

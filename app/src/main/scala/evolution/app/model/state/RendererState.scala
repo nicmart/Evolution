@@ -4,9 +4,11 @@ import evolution.app.canvas.drawer._
 import evolution.app.model.context.DrawingContext
 import io.circe._
 import io.circe.generic.auto._
+import io.circe.syntax._
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
+import evolution.app.codec.JsonCodec
 
 final case class RendererState(
   iterations: Int,
@@ -18,13 +20,17 @@ final case class RendererState(
 )
 
 object RendererState {
-  // This is for backward compatibility
-  implicit val rendererStateDecoder = Decoder[RendererState].prepare { cursor =>
-    cursor.withFocus(_.mapObject(addMissingResolutionFactor))
-  }
 
-  private def addMissingResolutionFactor(json: JsonObject): JsonObject =
-    if (json.contains("resolutionFactor")) json else json.add("resolutionFactor", Json.fromInt(2))
+  val jsonCodec: JsonCodec[RendererState] = {
+    new JsonCodec[RendererState] {
+
+      override def encode(state: RendererState): Json =
+        state.asJson
+
+      override def decode(json: Json): Option[RendererState] =
+        json.as[RendererState].toOption
+    }
+  }
 }
 
 final case class TrailSettings(
