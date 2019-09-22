@@ -4,13 +4,17 @@ import evolution.app.canvas.drawer._
 import evolution.app.model.context.DrawingContext
 import io.circe._
 import io.circe.generic.auto._
+import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.impl.evaluation.EvalMaterializer
+import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 
 final case class RendererState(
   iterations: Int,
   strokeSize: Int,
   resolutionFactor: Int,
   trail: TrailSettings,
-  offCanvasSettings: OffCanvasStrategy
+  offCanvasSettings: OffCanvasStrategy,
+  materialization: MaterializationOption
 )
 
 object RendererState {
@@ -66,4 +70,10 @@ object RendererStateToPointDrawer {
       ctx
     )
   }
+}
+
+sealed abstract class MaterializationOption(val materializer: Materializer)
+object MaterializationOption {
+  case object Eval extends MaterializationOption(EvalMaterializer)
+  case object CodeGenerator extends MaterializationOption(JsCodeMaterializer)
 }

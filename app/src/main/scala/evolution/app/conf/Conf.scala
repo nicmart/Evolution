@@ -56,7 +56,8 @@ object Conf {
     strokeSize = 1,
     resolutionFactor = 2,
     trail = TrailSettings(active = false, opacity = 0.12),
-    offCanvasSettings = TorusCanvas
+    offCanvasSettings = TorusCanvas,
+    MaterializationOption.Eval
   )
 
   lazy val initialPage: MyPages =

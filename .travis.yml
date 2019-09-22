@@ -1,12 +1,7 @@
 language: scala
 
 scala:
-   - 2.12.8
    - 2.13.0
-
-matrix:
-  allow_failures:
-    - scala: 2.13.0
 
 script:
   - sbt coreJVM/test jsAppTest/test server/webStage
