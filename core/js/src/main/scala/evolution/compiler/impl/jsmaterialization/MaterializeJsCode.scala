@@ -153,12 +153,21 @@ object MaterializeJsCode {
         JsExpr.Iterable(
           JsExpr.Raw(
             s"""
+              var __from = ${toJs(from).js};
               var __to = ${toJs(to).js};
               var __current = ${toJs(from).js};
               var __step = ${toJs(step).js};
-              while(__current <= __to) {
-                yield __current;
-                __current += __step;
+
+              if (__step >= 0) {
+                while(__current <= __to) {
+                  yield __current;
+                  __current += __step;
+                }
+              } else {
+                while(__current >= __to) {
+                  yield __current;
+                  __current += __step;
+                }
               }
             """.trim
           )

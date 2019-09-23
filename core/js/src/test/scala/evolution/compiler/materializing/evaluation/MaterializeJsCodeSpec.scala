@@ -263,11 +263,20 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result.iterator.take(100).toList shouldBe List(2, 1)
     }
 
-    "materialize ranges" in {
-      val expr = Expr.Range(Expr.Dbl(0), Expr.Dbl(10.5), Expr.Dbl(1))
-      val jsCode = MaterializeJsCode.materialize(expr)
-      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
-      result.iterator.take(100).toList shouldBe List.range(0, 11)
+    "materialize ranges" - {
+      "with positive step" in {
+        val expr = Expr.Range(Expr.Dbl(0), Expr.Dbl(10.5), Expr.Dbl(1))
+        val jsCode = MaterializeJsCode.materialize(expr)
+        val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+        result.iterator.take(100).toList shouldBe List.range(0, 11)
+      }
+
+      "with negative step" in {
+        val expr = Expr.Range(Expr.Dbl(10), Expr.Dbl(-.5), Expr.Dbl(-1))
+        val jsCode = MaterializeJsCode.materialize(expr)
+        val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+        result.iterator.take(100).toList shouldBe List.range(0, 11).reverse
+      }
     }
 
     "materialize uniform evolutions" in {

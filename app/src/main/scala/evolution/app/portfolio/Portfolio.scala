@@ -511,21 +511,22 @@ object Portfolio {
       DrawingState(
         0L,
         """
-          grid = gridSize -> product(
+          grid(gridSize) = product(
             y <- range(top, bottom, -gridSize),
             x <- range(left, right, gridSize)
           ) in point(x, y)
           in
           
-          onPoints = points -> drawings -> length ->
-            flatten(zip(
-              p <- points,
-              drawing <- drawings
-              ) in take(length, map(drawing, q -> q + p)
-            ))
+          onPoints(points, drawings, length) =
+            flatten(
+              zip(
+                p <- points,
+                drawing <- drawings
+              ) in take(length, map(drawing, q -> q + p))
+            )
           in
           
-          circle = r -> w ->
+          circle(r, w) =
             @polar(const(r), integrate(0, const(w)))
           in
           
@@ -533,20 +534,21 @@ object Portfolio {
           w2s = uniformDiscrete(-5, -2, 1) in
           rs = uniformDiscrete(10, 30, 1) in
           
-          mainCircles = k -> map(w1s, w -> circle(10, k * w)) in
-          secondaryCircles = k -> zip(
+          mainCircles(k) = map(w1s, w -> circle(10, k * w)) in
+          secondaryCircles(k) = zip(
             w <- w2s,
             r <- rs
           ) in circle(r, k * w)
           in
           
-          circles = k ->
+          circles(k) =
             zip(
               c1 <- mainCircles(k),
               c2 <- secondaryCircles(k)
             ) in c1 + c2
           in
-          
+
+
           k = .03 in
           length = 20 in
           
