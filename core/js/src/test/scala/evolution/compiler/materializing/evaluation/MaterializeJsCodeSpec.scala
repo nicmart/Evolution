@@ -218,14 +218,25 @@ class MaterializeJsCodeSpec extends LanguageSpec {
       result(1)(2) shouldBe Point(1, 2)
     }
 
-    "materialize zipWiths" in {
-      val c1 = Expr.Constant(Expr.Dbl(1))
-      val c2 = Expr.Constant(Expr.Dbl(2))
-      val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Pnt(Expr.Var("x"), Expr.Var("y"))))
-      val jsCode = MaterializeJsCode.materialize(Expr.ZipWith(c1, c2, f))
-      val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
-      val first100 = result.iterator.take(100).toList
-      first100 shouldBe List.fill(100)(Point(1, 2))
+    "materialize zipWiths" - {
+      "both of the same length" in {
+        val c1 = Expr.Constant(Expr.Dbl(1))
+        val c2 = Expr.Constant(Expr.Dbl(2))
+        val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Pnt(Expr.Var("x"), Expr.Var("y"))))
+        val jsCode = MaterializeJsCode.materialize(Expr.ZipWith(c1, c2, f))
+        val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+        val first100 = result.iterator.take(100).toList
+        first100 shouldBe List.fill(100)(Point(1, 2))
+      }
+
+      "one longer than the other" in {
+        val c1 = finite(1, 2)
+        val c2 = finite(3)
+        val f = Expr.Lambda("x", Expr.Lambda("y", Expr.Var("x")))
+        val jsCode = MaterializeJsCode.materialize(Expr.ZipWith(c1, c2, f))
+        val result = evaluate(jsCode).asInstanceOf[js.Iterable[Point]]
+        result.iterator.take(100).toList shouldBe List(1)
+      }
     }
 
     "materialize takes" in {
