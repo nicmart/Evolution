@@ -36,8 +36,8 @@ object PageState {
         } yield PageState(drawingState, rendererState, materialization)
 
       def encode(t: PageState): DrawingPageUrl = DrawingPageUrl(
-        stateCodec.encode((t.drawingState, t.rendererState)),
-        materializationOptionCodec.encode(t.materializer)
+        drawingSegment = stateCodec.encode((t.drawingState, t.rendererState)),
+        materializerSegment = materializationOptionCodec.encode(t.materializer)
       )
     }
 

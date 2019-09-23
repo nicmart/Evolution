@@ -48,13 +48,14 @@ class Routing(
     val rule: dsl.Rule =
       route ~> renderPage
 
-    private def url: RouteB[DrawingPageUrl] = (string("js/").option ~ string(".*")).pmap {
+    private def url: RouteB[DrawingPageUrl] = (("js/").option ~ remainingPath).pmap {
       case (optJsSegment, drawingSegment) =>
+        println(s"In Router: optJsSegment: $optJsSegment, drawing segments: $drawingSegment")
         Some(
           DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
         )
     }(
-      url => (Some(url.materializerSegment).filter(_.nonEmpty), url.drawingSegment)
+      url => (url.materializerSegment.headOption.map(_ => ()), url.drawingSegment)
     )
 
     private def route =
@@ -67,7 +68,9 @@ class Routing(
         appComponent(
           SnapshotUnderware.simpleSnapshot[PageState](loadDrawingPage.state)(
             pageState =>
-              Callback(println("PageStateSnapshot Callback called")) >> router.set(LoadDrawingPage(pageState))
+              Callback(println(s"PageStateSnapshot Callback called with state $pageState")) >> router.set(
+                LoadDrawingPage(pageState)
+              )
           )
         )
       }
