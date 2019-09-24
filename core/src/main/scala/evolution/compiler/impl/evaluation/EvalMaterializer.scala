@@ -13,7 +13,7 @@ import evolution.compiler.phases.materializing.Materializer
 object EvalMaterializer extends Materializer {
 
   def materialize[T](expr: Expr[Evolution[T]]): Long => Iterator[T] =
-    seed => Evolution.runWithSeed(seed, materializeExpr(expr).apply(emptyCtx).asInstanceOf[Evolution[T]])
+    seed => Evolution.runWithSeed(seed, materializeExpr(expr).apply(emptyCtx))
 
   def materializeExpr[T](expr: Expr[T]): Contextual[T] = {
     expr match {
