@@ -1,6 +1,5 @@
 import WebKeys._
 import sbt.Keys.resolvers
-import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 
 Test / fork := true
 
@@ -83,20 +82,10 @@ lazy val commonSettings = List(
   )
 )
 
-// FROM https://github.com/portable-scala/sbt-crossproject/blob/ec514cb96892cb27e3376a5c5d9914b5ae86c69b/sbt-crossproject/src/main/scala/sbtcrossproject/CrossProject.scala#L207
-// Since CrossBuild by default do things only for Test Config
-def makeCrossSources(sharedSrcDir: Option[File], scalaBinaryVersion: String): Seq[File] = {
-  sharedSrcDir match {
-    case Some(dir) =>
-      Seq(dir.getParentFile / s"${dir.name}-$scalaBinaryVersion", dir)
-    case None => Seq()
-  }
-}
-
-lazy val core = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Full)
+lazy val core = project
+  .in(file("core"))
+  .enablePlugins(ScalaJSPlugin)
   .settings(
-    name := "core",
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
@@ -104,20 +93,10 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.scalacheck" %%% "scalacheck" % "1.14.0",
       "com.lihaoyi" %%% "fastparse" % "2.1.3",
       "com.lihaoyi" %%% "pprint" % "0.5.5",
-      "com.beachape" %%% "enumeratum" % "1.5.13"
+      "com.beachape" %%% "enumeratum" % "1.5.13",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
     )
   )
-  .jvmSettings(
-    jvmScalatestSettings,
-    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % scalaJSVersion % "provided"
-  )
-  .jsSettings(
-    libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.7")
-  )
-
-// Needed, so sbt finds the projects
-lazy val coreJVM = core.jvm
-lazy val coreJS = core.js
 
 lazy val jsAppSettings =
   Seq(
@@ -137,7 +116,7 @@ lazy val jsAppSettings =
 // jsAppTest/test without the "ReferenceError" for core module exported classes
 lazy val jsAppTest = project
   .in(file("app"))
-  .dependsOn(core.js % "test->test;compile->compile")
+  .dependsOn(core % "test->test;compile->compile")
   .enablePlugins(ScalaJSPlugin)
   .settings(
     inThisBuild(commonSettings),
@@ -149,7 +128,7 @@ lazy val jsAppTest = project
 
 lazy val jsApp = project
   .in(file("app"))
-  .dependsOn(core.js % "test->test;compile->compile")
+  .dependsOn(core % "test->test;compile->compile")
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     inThisBuild(commonSettings),
@@ -184,5 +163,5 @@ lazy val server = (project in file("server"))
   )
   .enablePlugins(SbtWeb, WebScalaJSBundlerPlugin)
 
-addCommandAlias("testAll", "; coreJVM/test; jsApp/test")
+addCommandAlias("testAll", "; core/test; jsAppTest/test")
 addCommandAlias("compileAll", "; compile; test:compile")

@@ -2,7 +2,6 @@ resolvers += Resolver.bintrayRepo("vmunier", "scalajs")
 resolvers += Resolver.sonatypeRepo("releases")
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.29")
-addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1")
 
 // Use Scalajs 0.6 specific version
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.9-0.6")
