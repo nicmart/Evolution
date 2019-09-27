@@ -36,7 +36,8 @@ class AllPhases(materializer: Materializer, logger: Logger) {
       tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
       treeWithVars = addVars(tree, varBindings)
-      treeWithTypeVars <- AssignFreshTypeVars.assign(treeWithVars, typeBindings).asRight
+      allTypeBindings = typeBindings.merge(module.typeBindings)
+      treeWithTypeVars <- AssignFreshTypeVars.assign(treeWithVars, allTypeBindings).asRight
       _ = log(s"Un-typed expression:")
       _ = log(PrettyPrintTypedTree(treeWithTypeVars))
       constraints <- FindConstraints.find(treeWithTypeVars)
@@ -57,10 +58,11 @@ class AllPhases(materializer: Materializer, logger: Logger) {
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
       expression <- Compile.compile(typedTree, varContext(varBindings))
+      expressionWithModule = module.load(expression)
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       // TODO here we do not need to know about the existence of a varcontext
-    } yield materializer.materialize(expression.asInstanceOf[Expr[Evolution[Point]]])
+    } yield materializer.materialize(expressionWithModule.asInstanceOf[Expr[Evolution[Point]]])
 
   private def varContext(varBindings: List[(String, Tree)]): VarContext =
     new VarContext(varBindings.map(_._1))
