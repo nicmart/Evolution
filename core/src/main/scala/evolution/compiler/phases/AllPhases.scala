@@ -19,6 +19,7 @@ import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
+import evolution.compiler.module.Module
 
 class AllPhases(materializer: Materializer, logger: Logger) {
   import logger.log
@@ -27,6 +28,7 @@ class AllPhases(materializer: Materializer, logger: Logger) {
   def compile(
     serialisedExpr: String,
     expectedType: Type,
+    module: Module,
     typeBindings: TypeBindings,
     varBindings: List[(String, Tree)]
   ): Either[String, Long => Iterator[Point]] =
