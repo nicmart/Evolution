@@ -19,6 +19,7 @@ import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
+import evolution.compiler.phases.checkvars.CheckVars
 
 class AllPhases(materializer: Materializer, logger: Logger) {
   import logger.log
@@ -57,6 +58,7 @@ class AllPhases(materializer: Materializer, logger: Logger) {
       _ = log(PrettyPrintTypedTree(typedTree))
       expression <- Compile.compile(typedTree, varContext(varBindings))
       expressionWithModule = module.load(expression)
+      _ <- CheckVars(expressionWithModule, varContext(varBindings))
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       // TODO here we do not need to know about the existence of a varcontext
