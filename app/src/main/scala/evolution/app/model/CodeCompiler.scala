@@ -15,8 +15,7 @@ class CodeCompiler(allPhases: AllPhases) {
       .compile(
         code,
         TypeT.Evo(TypeT.Point),
-        Module.empty,
-        TypingConfig.constantQualifiedTypes,
+        Module(TypingConfig.constantQualifiedTypes, identity),
         varBindings(ctx)
       )
       .map { evolution =>

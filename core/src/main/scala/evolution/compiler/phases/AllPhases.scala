@@ -7,7 +7,6 @@ import evolution.compiler.phases.compiling._
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeBindings
 import evolution.compiler.phases.typing.config.TypingConfig
 
 import scala.collection.immutable.Nil
@@ -29,14 +28,13 @@ class AllPhases(materializer: Materializer, logger: Logger) {
     serialisedExpr: String,
     expectedType: Type,
     module: Module,
-    typeBindings: TypeBindings,
     varBindings: List[(String, Tree)]
   ): Either[String, Long => Iterator[Point]] =
     for {
       tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
       treeWithVars = addVars(tree, varBindings)
-      allTypeBindings = typeBindings.merge(module.typeBindings)
+      allTypeBindings = module.typeBindings
       treeWithTypeVars <- AssignFreshTypeVars.assign(treeWithVars, allTypeBindings).asRight
       _ = log(s"Un-typed expression:")
       _ = log(PrettyPrintTypedTree(treeWithTypeVars))
