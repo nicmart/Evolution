@@ -3,7 +3,7 @@ import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr.Let
 
-object ExtractVarContext {
+private[module] object ExtractVarContext {
   def apply(expr: Expr[Any]): VarContext = buildContext(VarContext.empty)(expr)
 
   private def buildContext(ctx: VarContext)(expr: Expr[Any]): VarContext =
