@@ -128,22 +128,5 @@ object Expr {
   implicit class ExprOps[T](expr: Expr[T]) {
     def freshVarName(prefix: String): String = Expr.freshVar(expr, prefix)
     // TODO write a more performant version of these methods, where variables are extracted just once
-    def freshVarName2(prefix1: String, prefix2: String): (String, String) =
-      (Expr.freshVar(expr, prefix1), Expr.freshVar(expr, prefix2))
-    def freshVarName3(prefix1: String, prefix2: String, prefix3: String): (String, String, String) =
-      (Expr.freshVar(expr, prefix1), Expr.freshVar(expr, prefix2), Expr.freshVar(expr, prefix3))
-    def freshVarName4(
-      prefix1: String,
-      prefix2: String,
-      prefix3: String,
-      prefix4: String
-    ): (String, String, String, String) =
-      (
-        Expr.freshVar(expr, prefix1),
-        Expr.freshVar(expr, prefix2),
-        Expr.freshVar(expr, prefix3),
-        Expr.freshVar(expr, prefix4)
-      )
-    def freshVar[S](prefix: String): Var[S] = Var(Expr.freshVar(expr, prefix))
   }
 }
