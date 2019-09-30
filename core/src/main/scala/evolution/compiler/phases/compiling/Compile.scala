@@ -23,10 +23,7 @@ object Compile {
   private def compileSafe(typedTree: TypedTree): Result[Expr[Any]] =
     typedTree.tree match {
       case Identifier(name, false) =>
-        varContext.flatMap { ctx =>
-          if (ctx.has(name)) Expr.Var(name).pure[Result].widen
-          else s"Variable $name is not defined for identifier $typedTree".raiseError[Result, Expr[Any]]
-        }
+        Expr.Var(name).pure[Result].widen
 
       case Lambda(varName, body) =>
         withVar(varName)(compileSafe(body)).map(Expr.Lambda(varName, _))

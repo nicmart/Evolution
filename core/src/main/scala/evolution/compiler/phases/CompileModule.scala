@@ -8,7 +8,6 @@ import evolution.compiler.phases.typing.config.TypingConfig
 
 import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
-import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars
@@ -16,7 +15,7 @@ import evolution.compiler.tree._
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.tree.TreeF.Let
 
-final class CompileModule(materializer: Materializer, logger: Logger) {
+final class CompileModule(logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -46,7 +45,6 @@ final class CompileModule(materializer: Materializer, logger: Logger) {
       typeBindings = extractTypeBindings(typedTree, initialModule.typeBindings)
       expression <- Compile.compile(typedTree, initialModule.varContext)
       expressionWithModule = initialModule.load(expression)
-      _ <- CheckVars(expressionWithModule, initialModule.varContext)
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       loadModule = replaceVarExpr("export", expressionWithModule) _
