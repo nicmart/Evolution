@@ -7,18 +7,25 @@ import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.module.Module
 import evolution.compiler.expression.Expr
+import evolution.compiler.stdlib.StandardLibraryModule
 
-class CodeCompiler(allPhases: AllPhases) {
+final class CodeCompiler(allPhases: AllPhases) {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
-    allPhases
-      .compile(
-        code,
-        TypeT.Evo(TypeT.Point),
-        Module(TypingConfig.constantQualifiedTypes, loadVars(ctx))
-      )
-      .map { evolution =>
-        evolution(seed)
-      }
+    module(ctx).flatMap(
+      mod =>
+        allPhases
+          .compile(
+            code,
+            TypeT.Evo(TypeT.Point),
+            mod
+          )
+          .map { evolution =>
+            evolution(seed)
+          }
+    )
+
+  private def module(ctx: DrawingContext): Either[String, Module] =
+    StandardLibraryModule.module.map(Module(TypingConfig.constantQualifiedTypes, loadVars(ctx)).compose)
 
   private def loadVars(ctx: DrawingContext)(expr: Expr[Any]): Expr[Any] = {
     val vars = List(

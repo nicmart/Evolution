@@ -16,7 +16,6 @@ import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars
-import evolution.compiler.stdlib.StandardLibraryModule
 
 final class AllPhases(materializer: Materializer, logger: Logger) {
   import logger.log
@@ -25,13 +24,11 @@ final class AllPhases(materializer: Materializer, logger: Logger) {
   def compile(
     serialisedExpr: String,
     expectedType: Type,
-    initialModule: Module
+    module: Module
   ): Either[String, Long => Iterator[Point]] =
     for {
       tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
-      stdLibModule <- StandardLibraryModule.module
-      module = initialModule.compose(stdLibModule)
       treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.typeBindings).asRight
       _ = log(s"Un-typed expression:")
       _ = log(PrettyPrintTypedTree(treeWithTypeVars))
