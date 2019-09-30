@@ -1,6 +1,5 @@
 package evolution.compiler.phases.compiling
 
-import cats.data.Kleisli
 import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
@@ -16,41 +15,39 @@ import scala.collection.immutable.Nil
 object Compile {
 
   def compile(tree: TypedTree, varContext: VarContext): Either[String, Expr[_]] =
-    compileSafe(tree).run(varContext).map(_.asExpr)
+    compileSafe(tree)
 
-  private type Result[T] = Kleisli[Either[String, ?], VarContext, T]
-
-  private def compileSafe(typedTree: TypedTree): Result[Expr[Any]] =
+  private def compileSafe(typedTree: TypedTree): Either[String, Expr[Any]] =
     typedTree.tree match {
       case Identifier(name, false) =>
-        Expr.Var(name).pure[Result].widen
+        Expr.Var(name).asRight
 
       case Lambda(varName, body) =>
-        withVar(varName)(compileSafe(body)).map(Expr.Lambda(varName, _))
+        compileSafe(body).map(Expr.Lambda(varName, _))
 
       case Let(varName, value, in) =>
-        (compileSafe(value), withVar(varName)(compileSafe(in))).mapN { (compiledValue, compiledIn) =>
+        (compileSafe(value), compileSafe(in)).mapN { (compiledValue, compiledIn) =>
           Expr.Let(varName, compiledValue, compiledIn)
         }
 
       case IntLiteral(n) =>
         typedTree.annotation.value match {
-          case TypeT.Double => Expr.Dbl(n.toDouble).pure[Result].widen
-          case _            => Expr.Integer(n).pure[Result].widen
+          case TypeT.Double => Expr.Dbl(n.toDouble).asRight
+          case _            => Expr.Integer(n).asRight
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals
-        Expr.Dbl(n.toDouble).pure[Result].widen
+        Expr.Dbl(n.toDouble).asRight
 
       case Bool(b) =>
-        Expr.Bool(b).pure[Result].widen
+        Expr.Bool(b).asRight
 
       case Identifier(Constant0(c), true) =>
-        c.compile(typedTree.annotation).liftTo[Result]
+        c.compile(typedTree.annotation)
 
       // Arity 0 identifiers
       case Identifier(id, _) =>
-        s"Constant $id is not supported as first class value".raiseError[Result, Expr[Any]]
+        s"Constant $id is not supported as first class value".asLeft
 
       case Lst(ts) =>
         ts.traverse(compileSafe).map(Expr.Lst(_))
@@ -59,14 +56,14 @@ object Compile {
       case App(AnnotatedTree(_, Identifier(Constant1(c), true)), NonEmptyList(arg1, Nil)) =>
         for {
           argExpr <- compileTyped(arg1)
-          expr <- c.compile(argExpr, typedTree.annotation.value).liftTo[Result]
+          expr <- c.compile(argExpr, typedTree.annotation.value)
         } yield expr
 
       case App(AnnotatedTree(_, Identifier(Constant2(c), true)), NonEmptyList(arg1, List(arg2))) =>
         for {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)
-          expr <- c.compile(arg1Expr, arg2Expr, typedTree.annotation.value).liftTo[Result]
+          expr <- c.compile(arg1Expr, arg2Expr, typedTree.annotation.value)
         } yield expr
 
       case App(AnnotatedTree(_, Identifier(Constant3(c), true)), NonEmptyList(arg1, List(arg2, arg3))) =>
@@ -74,16 +71,16 @@ object Compile {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)
           arg3Expr <- compileTyped(arg3)
-          expr <- c.compile(arg1Expr, arg2Expr, arg3Expr, typedTree.annotation.value).liftTo[Result]
+          expr <- c.compile(arg1Expr, arg2Expr, arg3Expr, typedTree.annotation.value)
         } yield expr
 
       case App(f, args) => (compileSafe(f), args.traverse(compileSafe)).mapN(buildAppExpr)
 
       case _ =>
-        s"Invalid AST for expression $typedTree".raiseError[Result, Expr[Any]]
+        s"Invalid AST for expression $typedTree".asLeft
     }
 
-  private def compileTyped(typedTree: TypedTree): Result[Typed[_]] =
+  private def compileTyped(typedTree: TypedTree): Either[String, Typed[_]] =
     compileSafe(typedTree).map(Typed(typedTree.annotation.value, _))
 
   private def buildAppExpr(f: Expr[Any], args: NonEmptyList[Expr[Any]]): Expr[Any] =
@@ -92,9 +89,6 @@ object Compile {
       case NonEmptyList(arg1, head :: tail) =>
         buildAppExpr(Expr.App[Any, Any](f.asExpr, arg1), NonEmptyList(head, tail))
     }
-
-  private def withVar[A](name: String)(ka: Result[A]): Result[A] =
-    Kleisli.local[Either[String, ?], A, VarContext](ctx => ctx.push(name))(ka)
 
   private implicit class CastingOps(value: Any) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
