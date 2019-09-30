@@ -96,8 +96,6 @@ object Compile {
   private def withVar[A](name: String)(ka: Result[A]): Result[A] =
     Kleisli.local[Either[String, ?], A, VarContext](ctx => ctx.push(name))(ka)
 
-  private def varContext: Result[VarContext] = Kleisli((ctx: VarContext) => Right(ctx))
-
   private implicit class CastingOps(value: Any) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
     def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]

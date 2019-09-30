@@ -31,7 +31,7 @@ final class AllPhases(materializer: Materializer, logger: Logger) {
       tree <- Parser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
       stdLibModule <- StandardLibraryModule.module
-      module = stdLibModule.compose(initialModule)
+      module = initialModule.compose(stdLibModule)
       treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.typeBindings).asRight
       _ = log(s"Un-typed expression:")
       _ = log(PrettyPrintTypedTree(treeWithTypeVars))

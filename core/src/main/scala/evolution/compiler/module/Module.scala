@@ -7,7 +7,8 @@ final case class Module(typeBindings: TypeBindings, load: Expr[Any] => Expr[Any]
   def compose(other: Module): Module =
     Module(typeBindings.merge(other.typeBindings), other.load andThen load)
 
-  def varContext: VarContext = ExtractVarContext(load(Expr.Var("dummy")))
+  def varContext: VarContext =
+    ExtractVarContext(load(Expr.Var("dummy")))
 }
 
 object Module {

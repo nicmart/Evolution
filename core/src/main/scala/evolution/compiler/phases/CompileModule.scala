@@ -10,7 +10,6 @@ import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
-import evolution.compiler.phases.checkvars.CheckVars
 import evolution.compiler.tree._
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.tree.TreeF.Let
