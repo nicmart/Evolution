@@ -23,14 +23,5 @@ object StandardLibraryModule {
   private lazy val moduleCompiler =
     new ModuleCompiler(new TypedTreeCompiler(NoOpLogger), NoOpLogger)
 
-  private lazy val code = s"""
-
-        grid(gridSize) = product(
-            y <- range(top, bottom, -gridSize),
-            x <- range(left, right, gridSize)
-        ) in point(x, y)
-        
-        in export
-
-    """
+  private lazy val code = StdLib.code
 }
