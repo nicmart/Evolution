@@ -1,6 +1,6 @@
 package evolution.compiler.stdlib
 
-import evolution.compiler.phases.CompileModule
+import evolution.compiler.phases.ModuleCompiler
 import evolution.logging.NoOpLogger
 import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
@@ -21,7 +21,7 @@ object StandardLibraryModule {
   )
 
   private lazy val moduleCompiler =
-    new CompileModule(new TypedTreeCompiler(NoOpLogger), NoOpLogger)
+    new ModuleCompiler(new TypedTreeCompiler(NoOpLogger), NoOpLogger)
 
   private lazy val code = s"""
 

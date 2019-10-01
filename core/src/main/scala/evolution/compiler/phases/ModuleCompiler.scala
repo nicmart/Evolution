@@ -10,7 +10,7 @@ import evolution.compiler.tree._
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.tree.TreeF.Let
 
-final class CompileModule(typedTreeCompiler: TypedTreeCompiler, logger: Logger) {
+final class ModuleCompiler(typedTreeCompiler: TypedTreeCompiler, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
