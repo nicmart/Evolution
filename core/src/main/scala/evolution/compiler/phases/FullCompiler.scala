@@ -11,7 +11,7 @@ import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars
 
-final class AllPhases(typedTreeCompiler: TypedTreeCompiler, materializer: Materializer, logger: Logger) {
+final class FullCompiler(typedTreeCompiler: TypedTreeCompiler, materializer: Materializer, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???

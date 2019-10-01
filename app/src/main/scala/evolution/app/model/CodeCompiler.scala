@@ -1,7 +1,7 @@
 package evolution.app.model
 
 import evolution.geometry.Point
-import evolution.compiler.phases.AllPhases
+import evolution.compiler.phases.FullCompiler
 import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typing.config.TypingConfig
 import evolution.app.model.context.DrawingContext
@@ -9,11 +9,11 @@ import evolution.compiler.module.Module
 import evolution.compiler.expression.Expr
 import evolution.compiler.stdlib.StandardLibraryModule
 
-final class CodeCompiler(allPhases: AllPhases) {
+final class CodeCompiler(fullCompiler: FullCompiler) {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
     module(ctx).flatMap(
       mod =>
-        allPhases
+        fullCompiler
           .compile(
             code,
             TypeT.Evo(TypeT.Point),
