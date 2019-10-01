@@ -7,8 +7,15 @@ grid(gridSize) = product(
     y <- range(top, bottom, -gridSize),
     x <- range(left, right, gridSize)
 ) in point(x, y)
+in
 
-in export
+randomPointInGrid(gridSize) = zip(
+    x <- range(left, right, gridSize),
+    y <- range(bottom, top, gridSize)
+) in point(x, y)
+in 
+
+export
 
 
 """

@@ -333,14 +333,6 @@ object Portfolio {
           noiseStrength = 3 in
           freq = 0.003 in
           
-          grid = gridSize -> flatMap(
-            range(bottom, top, gridSize),
-            y -> map(
-              range(left, right, gridSize),
-              x -> point(x, y)
-            )
-          ) in
-          
           n <- noise in
           
           vectorField(p) = polar(speed, noiseStrength * n(freq * p)) in
@@ -451,11 +443,6 @@ object Portfolio {
       DrawingState(
         0L,
         """
-          grid = gridSize -> product(
-            y <- range(bottom, top, gridSize),
-            x <- range(left, right, gridSize)
-          ) in point(x, y) in
-          
           onPoints = points -> drawings -> length ->
             parallel(zipWith(
               points,
@@ -511,12 +498,6 @@ object Portfolio {
       DrawingState(
         0L,
         """
-          grid(gridSize) = product(
-            y <- range(top, bottom, -gridSize),
-            x <- range(left, right, gridSize)
-          ) in point(x, y)
-          in
-          
           onPoints(points, drawings, length) =
             flatten(
               zip(
