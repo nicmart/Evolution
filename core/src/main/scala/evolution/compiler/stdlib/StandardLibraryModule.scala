@@ -1,10 +1,12 @@
 package evolution.compiler.stdlib
+
 import evolution.compiler.phases.CompileModule
 import evolution.logging.NoOpLogger
 import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compiler.phases.TypedTreeCompiler
 
 object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
@@ -18,7 +20,8 @@ object StandardLibraryModule {
     identity
   )
 
-  private lazy val moduleCompiler = new CompileModule(NoOpLogger)
+  private lazy val moduleCompiler =
+    new CompileModule(new TypedTreeCompiler(NoOpLogger), NoOpLogger)
 
   private lazy val code = s"""
 

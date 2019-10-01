@@ -8,6 +8,7 @@ import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.AllPhases
 import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
+import evolution.compiler.phases.TypedTreeCompiler
 
 class PortfolioSpec extends LanguageSpec {
   "Drawings in Portfolio" - {
@@ -28,5 +29,6 @@ class PortfolioSpec extends LanguageSpec {
     }
   }
 
-  lazy val compiler = new CodeCompiler(new AllPhases(JsCodeMaterializer, Conf.logger))
+  lazy val typedTreeCompiler = new TypedTreeCompiler(Conf.logger)
+  lazy val compiler = new CodeCompiler(new AllPhases(typedTreeCompiler, JsCodeMaterializer, Conf.logger))
 }

@@ -17,6 +17,7 @@ import evolution.app.model.Drawing
 import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.AllPhases
+import evolution.compiler.phases.TypedTreeCompiler
 
 object App {
 
@@ -112,7 +113,7 @@ object App {
   private def codeCompiler(pageState: PageState) = {
     println(s"materializer is ${pageState.materializer}")
     new CodeCompiler(
-      new AllPhases(pageState.materializer.materializer, Conf.logger)
+      new AllPhases(new TypedTreeCompiler(Conf.logger), pageState.materializer.materializer, Conf.logger)
     )
   }
 

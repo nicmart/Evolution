@@ -1,23 +1,17 @@
 package evolution.compiler.phases
 
-import cats.implicits._
-import evolution.compiler.phases.parsing.Parser
-import evolution.compiler.phases.typing._
 import evolution.compiler.phases.compiling._
-import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.types.Type
-import evolution.compiler.phases.typing.config.TypingConfig
-
 import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.logging.Logger
-import evolution.compiler.tree.PrettyPrintTypedTree
+import evolution.compiler.tree._
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars
 
-final class AllPhases(materializer: Materializer, logger: Logger) {
+final class AllPhases(typedTreeCompiler: TypedTreeCompiler, materializer: Materializer, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -27,25 +21,7 @@ final class AllPhases(materializer: Materializer, logger: Logger) {
     module: Module
   ): Either[String, Long => Iterator[Point]] =
     for {
-      tree <- Parser.parse(serialisedExpr).leftMap(_.message)
-      _ = log("Done: Parsing of AST")
-      treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.typeBindings).asRight
-      _ = log(s"Un-typed expression:")
-      _ = log(PrettyPrintTypedTree(treeWithTypeVars))
-      constraints <- FindConstraints.find(treeWithTypeVars)
-      _ = log("Done: Constraints generation")
-      constraintsWithExpectedType = constraints.merge(Constraints(expectedType -> treeWithTypeVars.annotation.value))
-      unification <- UnifyTypes.unify(constraintsWithExpectedType)
-      _ = log("Done: unification")
-      _ = log(s"Partially typed AST:")
-      _ = log(PrettyPrintTypedTree(unification.substitution.substitute(treeWithTypeVars)))
-      start = System.currentTimeMillis()
-      predicateSubst <- new UnifyPredicates(logger)
-        .unify(TypingConfig.instancesPredicates, unification.substitutedPredicates)
-      stop = System.currentTimeMillis()
-      _ = log(s"Predicate unification time: ${(stop - start)}")
-      subst = predicateSubst.compose(unification.substitution)
-      typedTree = subst.substitute(treeWithTypeVars)
+      typedTree <- typedTreeCompiler.compile(serialisedExpr, Some(expectedType), module)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
