@@ -19,6 +19,8 @@ randomPoint = @point(
     uniform(bottom, top)
 ) in
 
+uniformPoint(r) = @point(uniform(-r, r), uniform(-r, r)) in
+
 line(from, to, step) =
     total = floor(norm(to - from) / step) + 1 in
     v = versor(to - from) in
