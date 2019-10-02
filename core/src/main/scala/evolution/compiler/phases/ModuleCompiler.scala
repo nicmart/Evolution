@@ -21,6 +21,8 @@ final class ModuleCompiler(typedTreeCompiler: TypedTreeCompiler, logger: Logger)
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
       typeBindings = extractTypeBindings(typedTree, initialModule.typeBindings)
+      _ = log(s"Type bindings extracted")
+      _ = log(typeBindings.allBindings)
       expression <- Compile.compile(typedTree, initialModule.varContext)
       expressionWithModule = initialModule.load(expression)
       _ = log(s"Compiled to $expression")
@@ -32,7 +34,7 @@ final class ModuleCompiler(typedTreeCompiler: TypedTreeCompiler, logger: Logger)
   private def extractTypeBindings(typedTree: TypedTree, currentBindings: TypeBindings): TypeBindings =
     typedTree.tree match {
       case Let(varName, expr, in) =>
-        extractTypeBindings(expr, currentBindings.withVarBinding(varName, expr.annotation))
+        extractTypeBindings(in, currentBindings.withVarBinding(varName, expr.annotation))
       case _ => currentBindings
     }
 

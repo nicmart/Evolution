@@ -9,11 +9,15 @@ grid(gridSize) = product(
 ) in point(x, y)
 in
 
-randomPointInGrid(gridSize) = zip(
-    x <- range(left, right, gridSize),
-    y <- range(bottom, top, gridSize)
-) in point(x, y)
-in
+randomPointInGrid(gridSize) = @point(
+    uniformDiscrete(left, right, gridSize),
+    uniformDiscrete(bottom, top, gridSize)
+) in
+
+randomPoint = @point(
+    uniform(left, right),
+    uniform(bottom, top)
+) in
 
 line(from, to, step) =
     total = floor(norm(to - from) / step) + 1 in

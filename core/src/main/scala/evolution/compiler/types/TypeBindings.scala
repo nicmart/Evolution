@@ -4,6 +4,8 @@ import evolution.compiler.types.TypeClasses.Qualified
 
 final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
 
+  def allBindings = bindings
+
   def getBinding(name: String): Option[TypeBinding] = bindings.get(name)
 
   def merge(other: TypeBindings): TypeBindings =

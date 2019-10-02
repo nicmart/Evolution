@@ -26,6 +26,7 @@ final class TypedTreeCompiler(logger: Logger) {
       _ = log(s"Un-typed expression:")
       _ = log(PrettyPrintTypedTree(treeWithTypeVars))
       constraints <- FindConstraints.find(treeWithTypeVars)
+      _ = log(constraints)
       _ = log("Done: Constraints generation")
       expectedTypeConstraint = expectedType
         .map(tp => Constraints(tp -> treeWithTypeVars.annotation.value))
