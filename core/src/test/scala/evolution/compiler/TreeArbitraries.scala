@@ -9,6 +9,7 @@ import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
+import evolution.compiler.phases.parsing.PrecedenceGroup.BinaryOperator
 
 trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =
@@ -21,8 +22,8 @@ trait TreeArbitraries {
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
 
   // TODO move all operators here
-  def genOperatorWithTree: Gen[(String, Tree)] =
-    Gen.oneOf[(String, Tree)](Parser.binaryOperators)
+  def genOperatorWithTree: Gen[(String, BinaryOperator)] =
+    Gen.oneOf[(String, BinaryOperator)](Parser.binaryOperators)
 
   def genVarUsage: Gen[String] =
     genIdentifier.filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))

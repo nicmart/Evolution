@@ -9,6 +9,7 @@ import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.{ Tree, TreeF }
 import evolution.compiler.tree
 import cats.data.NonEmptyList
+import PrecedenceGroup.BinaryOperator
 
 object Parser {
   def parse(astString: String): Either[ParserFailure, Tree] =
@@ -16,7 +17,7 @@ object Parser {
       .parse(astString, program(_))
       .fold((_, failIndex, extra) => Left(new ParserFailure(failIndex, extra)), (expr, _) => Right(expr))
 
-  def binaryOperators: List[(String, Tree)] = allPrecedenceGroups.flatMap(group => group.operators)
+  def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
   private def program[_: P]: P[Tree] =
     P(whitespaces ~ expression ~ whitespaces ~ End)
@@ -58,34 +59,37 @@ object Parser {
 
   private val allPrecedenceGroups = List(
     PrecedenceGroup(
-      "||" -> Identifier(Constant2.Or.entryName).embed
+      "||" -> constOp(Constant2.Or.entryName)
     ),
     PrecedenceGroup(
-      "&&" -> Identifier(Constant2.And.entryName).embed
+      "&&" -> constOp(Constant2.And.entryName)
     ),
     PrecedenceGroup(
-      ">=" -> Identifier(Constant2.GreaterThanOrEqual.entryName).embed,
-      ">" -> Identifier(Constant2.GreaterThan.entryName).embed,
-      "<=" -> Identifier(Constant2.LessThanOrEqual.entryName).embed,
-      "<" -> Identifier(Constant2.LessThan.entryName).embed
+      ">=" -> constOp(Constant2.GreaterThanOrEqual.entryName),
+      ">" -> constOp(Constant2.GreaterThan.entryName),
+      "<=" -> constOp(Constant2.LessThanOrEqual.entryName),
+      "<" -> constOp(Constant2.LessThan.entryName)
     ),
     PrecedenceGroup(
-      "==" -> Identifier(Constant2.Eq.entryName).embed,
-      "!=" -> Identifier(Constant2.Neq.entryName).embed
+      "==" -> constOp(Constant2.Eq.entryName),
+      "!=" -> constOp(Constant2.Neq.entryName)
     ),
     PrecedenceGroup(
-      "+" -> Identifier(Constant2.Add.entryName).embed,
-      "-" -> Identifier(Constant2.Minus.entryName).embed
+      "+" -> constOp(Constant2.Add.entryName),
+      "-" -> constOp(Constant2.Minus.entryName)
     ),
     PrecedenceGroup(
-      "*" -> Identifier(Constant2.Multiply.entryName).embed,
-      "/" -> Identifier(Constant2.Div.entryName).embed,
-      "%" -> Identifier(Constant2.Mod.entryName).embed
+      "*" -> constOp(Constant2.Multiply.entryName),
+      "/" -> constOp(Constant2.Div.entryName),
+      "%" -> constOp(Constant2.Mod.entryName)
     ),
     PrecedenceGroup(
-      "^" -> Identifier(Constant2.Exp.entryName).embed
+      "^" -> constOp(Constant2.Exp.entryName)
     )
   )
+
+  private def constOp(name: String)(left: Tree, right: Tree): Tree =
+    TreeF.App.of(Identifier(name).embed, left, right).embed
 
   // Operator groups, order by ascending Precedence
   private def precedenceGroups[_: P]: PrecedenceGroups = parsing.PrecedenceGroups(

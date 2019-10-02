@@ -33,8 +33,8 @@ class ParserSpec extends LanguageSpec {
 
       "parse binary operators" in {
         forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
-          case (a, (op, opAST), b) =>
-            unsafeParse(s"$a $op $b") shouldEq App.of(opAST, unsafeParse(a), unsafeParse(b)).embed
+          case (a, (op, opFunc), b) =>
+            unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
         }
       }
 
@@ -206,6 +206,18 @@ class ParserSpec extends LanguageSpec {
               Identifier(identifier1).embed,
               unsafeParse(expr1),
               unsafeParse(expr2)
+            )
+            .embed
+        }
+      }
+
+      "parse applications with pipe syntax" in {
+        pending
+        forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
+          unsafeParse(s"$expr1 >> $identifier1") shouldEq App
+            .of(
+              Identifier(identifier1).embed,
+              unsafeParse(expr1)
             )
             .embed
         }
@@ -438,11 +450,13 @@ class ParserSpec extends LanguageSpec {
       "logical operators with the right precedence" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a || $b && $c") shouldEq
-            App.of(
-              Identifier.const(Constant2.Or).embed,
-              unsafeParse(a),
-              App.of(Identifier.const(Constant2.And).embed, unsafeParse(b), unsafeParse(c)).embed
-            ).embed
+            App
+              .of(
+                Identifier.const(Constant2.Or).embed,
+                unsafeParse(a),
+                App.of(Identifier.const(Constant2.And).embed, unsafeParse(b), unsafeParse(c)).embed
+              )
+              .embed
         }
       }
     }
