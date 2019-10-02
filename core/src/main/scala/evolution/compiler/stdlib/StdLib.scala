@@ -19,7 +19,10 @@ randomPoint = @point(
     uniform(bottom, top)
 ) in
 
-uniformPoint(r) = @point(uniform(-r, r), uniform(-r, r)) in
+uniformPoint(r) = @point(
+    uniform(-r, r),
+    uniform(-r, r)
+) in
 
 line(from, to, step) =
     total = floor(norm(to - from) / step) + 1 in
@@ -29,6 +32,18 @@ line(from, to, step) =
         s -> from + s * step * v
     )
 in
+
+arc(r, a1, a2, w) = map(
+    range(a1, a2, w),
+    a -> polar(r, a)
+) in
+
+finiteCircle(r, w) = arc(r, 0, 2 * pi, w) in
+
+circle(r, w) = map(
+    integrate(0, const(w)),
+    a -> polar(r, a)
+) in
 
 export
 
