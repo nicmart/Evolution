@@ -537,6 +537,35 @@ object Portfolio {
         """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("vertical multilines"),
+      DrawingState(
+        0L,
+        """
+        r = 30 in
+        gridSize = 100 in
+        delta = point(0, 100) in
+        n = 100 in
+        
+        ps = @point(uniform(-r, r), uniform(-r, r)) in
+        
+        points(p) = ps + const(p) in
+        
+        vertLine(p) =
+          product(
+            start <- take(n, points(p)),
+            p <- line(start, start + delta, 1)
+          ) in p
+        in
+        
+        product(
+          p <- randomPointInGrid(gridSize),
+          q <- vertLine(p)
+        ) in q
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
