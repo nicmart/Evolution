@@ -59,6 +59,9 @@ object Parser {
 
   private val allPrecedenceGroups = List(
     PrecedenceGroup(
+      ">>" -> ((left, right) => TreeF.App.of(right, left).embed)
+    ),
+    PrecedenceGroup(
       "||" -> constOp(Constant2.Or.entryName)
     ),
     PrecedenceGroup(

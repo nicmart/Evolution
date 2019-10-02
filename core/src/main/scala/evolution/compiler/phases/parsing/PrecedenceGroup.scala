@@ -12,7 +12,7 @@ case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
 
   private def opsParser[_: P]: P[BinaryOperator] = operators.foldLeft[P[BinaryOperator]](Fail) {
     case (accParser, (opString, ast)) =>
-      accParser | P(opString).map(_ => ast)
+      accParser | P(opString ~ &(allowedCharsAfterOp)).map(_ => ast)
   }
 
   private def evalAssocBinaryOp(head: Tree, tail: List[(BinaryOperator, Tree)]): Tree =
@@ -21,6 +21,8 @@ case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
       case (op, tailHead) :: tailTail =>
         evalAssocBinaryOp(op(head, tailHead), tailTail)
     }
+
+  private def allowedCharsAfterOp[_: P]: P[Unit] = CharIn("a-zA-Z0-9\\- \n\r")
 }
 
 object PrecedenceGroup {

@@ -212,7 +212,6 @@ class ParserSpec extends LanguageSpec {
       }
 
       "parse applications with pipe syntax" in {
-        pending
         forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
           unsafeParse(s"$expr1 >> $identifier1") shouldEq App
             .of(
