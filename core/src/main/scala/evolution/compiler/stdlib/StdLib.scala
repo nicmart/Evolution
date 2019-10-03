@@ -53,6 +53,11 @@ dampedOscillator(a, b, rnd) =
   )
 in
 
+bernoulli(p, r) = map(
+  uniform(0, 1),
+  sample -> if (sample < p, r, 0)
+) in
+
 export
 
 
