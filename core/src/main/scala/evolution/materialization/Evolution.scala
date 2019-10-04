@@ -179,49 +179,30 @@ object Evolution {
       }
     }
 
-  def derive[A](as: Evolution[A], combine: (A, A) => A, inverse: A => A): Evolution[A] =
-    new Evolution[A] {
-      override def run: Iterator[A] = {
+  def slidingMap[A, B](as: Evolution[A], f: A => A => B): Evolution[B] =
+    new Evolution[B] {
+      override def run: Iterator[B] = {
         val derivingIterator: Iterator[A] = as.run
         if (derivingIterator.hasNext) {
-          new AbstractIterator[A] {
-            var _current: A = derivingIterator.next()
+          new AbstractIterator[B] {
+            var previous: A = derivingIterator.next()
             override def hasNext: Boolean = derivingIterator.hasNext
-            override def next(): A = {
-              val nextA = derivingIterator.next()
-              val nextDerivative = combine(nextA, inverse(_current))
-              _current = nextA
-              nextDerivative
+            override def next(): B = {
+              val current = derivingIterator.next()
+              val b = f(previous)(current)
+              previous = current
+              b
             }
           }
         } else Iterator.empty
       }
     }
 
-  // TODO DRY with derivative?
-  def mapWithDerivative[A, B](
-    as: Evolution[A],
-    f: A => A => B,
-    add: (A, A) => A,
-    inverse: A => A
-  ): Evolution[B] =
-    new Evolution[B] {
-      override def run: Iterator[B] = {
-        val derivingIterator: Iterator[A] = as.run
-        if (derivingIterator.hasNext) {
-          new AbstractIterator[B] {
-            var _current: A = derivingIterator.next()
-            override def hasNext: Boolean = derivingIterator.hasNext
-            override def next(): B = {
-              val nextA = derivingIterator.next()
-              val nextB = f(_current)(add(nextA, inverse(_current)))
-              _current = nextA
-              nextB
-            }
-          }
-        } else Iterator.empty
-      }
-    }
+  def derive[A](as: Evolution[A], add: (A, A) => A, inverse: A => A): Evolution[A] =
+    slidingMap[A, A](as, a1 => a2 => add(a2, inverse(a1)))
+
+  def mapWithDerivative[A, B](as: Evolution[A], f: A => A => B, add: (A, A) => A, inverse: A => A): Evolution[B] =
+    slidingMap[A, B](as, previous => current => f(previous)(add(current, inverse(previous))))
 
   // TODO DRY, see integrate
   def solve1[A](speed: Evolution[A => A], start: A, add: (A, A) => A): Evolution[A] =

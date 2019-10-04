@@ -74,6 +74,8 @@ object Expr {
   final case class TakeWhile[A](fa: Expr[Evolution[A]], predicate: Expr[A => Boolean])
       extends Expr[Evolution[A]](List(fa, predicate))
   final case class Map[A, B](fa: Expr[Evolution[A]], f: Expr[A => B]) extends Expr[Evolution[B]](List(fa, f))
+  final case class SlidingMap[A, B](fa: Expr[Evolution[A]], f: Expr[A => A => B])
+      extends Expr[Evolution[B]](List(fa, f))
   final case class MapWithDerivative[A, B](
     fa: Expr[Evolution[A]],
     f: Expr[A => A => B],

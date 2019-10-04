@@ -80,6 +80,23 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
       materializeExpr(expression)(emptyCtx) shouldBe 1
     }
 
+    "should materialize sliding maps" in {
+      val mappee = Expr.Cons(Expr.Dbl(1), Expr.Cons(Expr.Dbl(2), Expr.Cons(Expr.Dbl(3), Expr.Empty())))
+      val expression = Expr.SlidingMap(
+        mappee,
+        Expr.Lambda(
+          "a",
+          Expr.Lambda(
+            "b",
+            Expr.Add(Expr.Var("a"), Expr.Var("b"), Additive.DoubleDoubleDouble)
+          )
+        )
+      )
+      val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(10).toList
+
+      elems shouldBe List(3, 5)
+    }
+
     "should materialize trivial fix expressions" in {
       val expression =
         Fix[Int => Int](
