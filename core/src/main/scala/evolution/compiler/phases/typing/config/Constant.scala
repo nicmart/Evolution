@@ -301,6 +301,10 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Map(x.asExprF, y.asExpr[Any => Any])
   }
 
+  case object SlidingMap extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.SlidingMap(x.asExprF, y.asExpr[Any => Any => Any])
+  }
+
   case object MapWithDerivative
       extends Constant2(
         Qualified(
