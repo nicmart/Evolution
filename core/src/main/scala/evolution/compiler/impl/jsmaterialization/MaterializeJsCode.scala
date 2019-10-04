@@ -69,7 +69,7 @@ object MaterializeJsCode {
 
       case Neq(a, b, eq) => MaterializeEquality(eq).neqv(toJs(a), toJs(b))
 
-      case IfThen(condition, a, b) => ???
+      case IfThen(condition, a, b) => JsExpr.Raw(s"${toJs(condition).js} ? ${toJs(a).js} : ${toJs(b).js}")
 
       case Bool(b) => JsExpr.Raw(b.toString)
 
@@ -130,23 +130,14 @@ object MaterializeJsCode {
 
       case Map(fa, f) => mapIterable(toJs(fa), a => JsExpr.App(toJs(f), List(a)))
 
+      case SlidingMap(fa, f) =>
+        slidingMapIterable(toJs(fa), prev => curr => JsExpr.App(toJs(f), List(prev, curr)))
+
       case MapWithDerivative(fa, f, sg, inv) =>
-        JsExpr.Iterable(
-          JsExpr.Raw(
-            s"""
-            var __it1 = ${toJs(fa).js}[Symbol.iterator]();
-            var __f = ${toJs(f).js};
-            var __entry1 = __it1.next();
-            if (!__entry1.done) {
-              var __a1 = __entry1.value;
-              for (let __a2 of __it1) {
-                var __v = ${MaterializeAddition(sg)(JsExpr.Raw("__a2"), MaterializeInverse(inv)(JsExpr.Raw("__a1"))).js};
-                yield ${appCurried("__f", "__a2", "__v").js};
-                __a1 = __a2;
-              }
-            }
-          """
-          )
+        slidingMapIterable(
+          toJs(fa),
+          prev =>
+            curr => JsExpr.AppCurried(toJs(f), List(curr, MaterializeAddition(sg)(curr, MaterializeInverse(inv)(prev))))
         )
 
       case Range(from, to, step) =>
@@ -256,21 +247,7 @@ object MaterializeJsCode {
     """.trim))
 
       case Derive(fa, add, inv) =>
-        JsExpr.Iterable(
-          JsExpr.Raw(
-            s"""
-            var __it1 = ${toJs(fa).js}[Symbol.iterator]();
-            var __entry = __it1.next();
-            if (!__entry.done) {
-              var __prev = __entry.value;
-              for (let __a of __it1) {
-                yield ${MaterializeAddition(add)(JsExpr.Raw("__a"), MaterializeInverse(inv)(JsExpr.Raw("__prev"))).js};
-                __prev = __a;
-              }
-            }
-          """.trim
-          )
-        )
+        slidingMapIterable(toJs(fa), prev => curr => MaterializeAddition(add)(curr, MaterializeInverse(inv)(prev)))
 
       case Normal(mu, gamma) =>
         JsExpr.Iterable(
@@ -432,6 +409,23 @@ object MaterializeJsCode {
     """.trim
     )
   )
+
+  def slidingMapIterable(fa: JsExpr, f: JsExpr => JsExpr => JsExpr): JsExpr =
+    JsExpr.Iterable(
+      JsExpr.Raw(
+        s"""
+      var __it1 = ${fa.js}[Symbol.iterator]();
+      var __entry1 = __it1.next();
+      if (!__entry1.done) {
+        var __previous = __entry1.value;
+        for (let __current of __it1) {
+          yield ${f(JsExpr.Raw("__previous"))(JsExpr.Raw("__current")).js};
+          __previous = __current;
+        }
+      }
+    """
+      )
+    )
 
   def flatMapIterable(fa: JsExpr, f: JsExpr => JsExpr): JsExpr = JsExpr.Iterable(
     JsExpr.Raw(
