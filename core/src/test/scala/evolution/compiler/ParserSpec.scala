@@ -222,6 +222,29 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
+      "parse applications with dot syntax and single arguments" in {
+        forAll(genIdentifier, genIdentifier) { (identifier1, expr1) =>
+          unsafeParse(s"$expr1.$identifier1") shouldEq App
+            .of(
+              Identifier(identifier1).embed,
+              unsafeParse(expr1)
+            )
+            .embed
+        }
+      }
+
+      "parse applications with dot syntax and multiple arguments" in {
+        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$expr1.$identifier1($expr2)") shouldEq App
+            .of(
+              Identifier(identifier1).embed,
+              unsafeParse(expr1),
+              unsafeParse(expr2)
+            )
+            .embed
+        }
+      }
+
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
           unsafeParse(s"($lambda)($expr)") shouldEq App
