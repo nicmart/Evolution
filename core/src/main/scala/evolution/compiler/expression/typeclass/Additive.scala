@@ -9,6 +9,6 @@ object Additive {
   case object IntDoubleDouble extends Additive(TypeT.Integer, TypeT.Double, TypeT.Double)
   case object DoubleIntDouble extends Additive(TypeT.Double, TypeT.Integer, TypeT.Double)
   case object PointPointPoint extends Additive(TypeT.Point, TypeT.Point, TypeT.Point)
-  case class Pointwise[A, B, C](add: Additive[A, B, C])
+  case class LiftBoth[A, B, C](add: Additive[A, B, C])
       extends Additive(TypeT.Evo(add.t1), TypeT.Evo(add.t2), TypeT.Evo(add.t3))
 }

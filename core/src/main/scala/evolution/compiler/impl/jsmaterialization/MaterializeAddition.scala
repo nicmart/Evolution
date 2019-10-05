@@ -5,7 +5,7 @@ import evolution.compiler.impl.jsmaterialization.MaterializeJsCode.JsExpr
 import evolution.compiler.expression.typeclass.Additive.IntDoubleDouble
 import evolution.compiler.expression.typeclass.Additive.DoubleDoubleDouble
 import evolution.compiler.expression.typeclass.Additive.DoubleIntDouble
-import evolution.compiler.expression.typeclass.Additive.Pointwise
+import evolution.compiler.expression.typeclass.Additive.LiftBoth
 import evolution.compiler.expression.typeclass.Additive.PointPointPoint
 import evolution.compiler.expression.typeclass.Additive.IntIntInt
 
@@ -16,6 +16,6 @@ object MaterializeAddition {
     case DoubleIntDouble    => JsExpr.BinaryOp(a, "+", b)
     case PointPointPoint    => JsExpr.App(JsExpr.Select(a, "plus"), List(b))
     case IntIntInt          => JsExpr.BinaryOp(a, "+", b)
-    case Pointwise(add)     => MaterializeJsCode.zipIterable(a, b, MaterializeAddition(add))
+    case LiftBoth(add)      => MaterializeJsCode.zipIterable(a, b, MaterializeAddition(add))
   }
 }

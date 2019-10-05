@@ -11,6 +11,6 @@ object MaterializeAddition {
       case IntDoubleDouble    => a + b
       case IntIntInt          => a + b
       case PointPointPoint    => a.plus(b)
-      case Pointwise(add)     => Evolution.zipWithUncurried(MaterializeAddition(add))(a, b)
+      case LiftBoth(add)      => Evolution.zipWithUncurried(MaterializeAddition(add))(a, b)
     }
 }
