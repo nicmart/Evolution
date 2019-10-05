@@ -97,7 +97,7 @@ class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks wi
       elems shouldBe List(3, 5)
     }
 
-    "should materialize iterated functions" in {
+    "should materialize iterate expressions" in {
       val expression = Expr.Iterate(
         Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Dbl(1), Additive.DoubleDoubleDouble)),
         Expr.Dbl(0)
@@ -105,6 +105,17 @@ class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks wi
       val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(5).toList
 
       elems shouldBe List(0, 1, 2, 3, 4)
+    }
+
+    "should materialize iterate2 expressions" in {
+      val expression = Expr.Iterate2(
+        Expr.Lambda("x", Expr.Lambda("y", Expr.Add(Expr.Var("x"), Expr.Var("y"), Additive.DoubleDoubleDouble))),
+        Expr.Dbl(1),
+        Expr.Dbl(1)
+      )
+      val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(10).toList
+
+      elems shouldBe List(1, 1, 2, 3, 5, 8, 13, 21, 34, 55)
     }
 
     "should materialize trivial fix expressions" in {

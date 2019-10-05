@@ -203,6 +203,21 @@ object Evolution {
       override def run: Iterator[A] = Iterator.iterate(start)(f)
     }
 
+  def iterate2[A](f: A => A => A, a0: A, a1: A): Evolution[A] =
+    new Evolution[A] {
+      def run: Iterator[A] = Iterator(a0, a1) ++ new AbstractIterator[A] {
+        private var _prev = a0
+        private var _current = a1
+        def hasNext: Boolean = true
+        def next(): A = {
+          val current = f(_prev)(_current)
+          _prev = _current
+          _current = current
+          current
+        }
+      }
+    }
+
   def derive[A](as: Evolution[A], add: (A, A) => A, inverse: A => A): Evolution[A] =
     slidingMap[A, A](as, a1 => a2 => add(a2, inverse(a1)))
 

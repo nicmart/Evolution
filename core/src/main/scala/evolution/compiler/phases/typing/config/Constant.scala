@@ -426,6 +426,14 @@ object Constant3 extends Enum[Constant3] {
       }
   }
 
+  case object Iterate2
+      extends Constant3Plain(
+        Qualified((Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+      ) {
+    def compilePlain(f: Expr[_], a0: Expr[_], a1: Expr[_]): Expr[_] =
+      Expr.Iterate2(f.asExpr, a0.asExpr, a1.asExpr)
+  }
+
   case object InRect extends Constant3Plain(Qualified(TypeT.Point =>: TypeT.Point =>: TypeT.Point =>: Bool)) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.InRect(x.asExpr[Point], y.asExpr[Point], z.asExpr[Point])
