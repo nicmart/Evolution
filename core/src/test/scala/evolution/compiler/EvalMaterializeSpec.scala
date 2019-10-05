@@ -14,7 +14,7 @@ import evolution.compiler.expression.typeclass._
 import evolution.compiler.impl.evaluation.MaterializeEquality
 import evolution.compiler.impl.evaluation.MaterializeComparison
 
-class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
+class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
   "The materializer" - {
     "should materialize Pnt" in {
@@ -95,6 +95,16 @@ class MaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with M
       val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(10).toList
 
       elems shouldBe List(3, 5)
+    }
+
+    "should materialize iterated functions" in {
+      val expression = Expr.Iterate(
+        Expr.Lambda("x", Expr.Add(Expr.Var("x"), Expr.Dbl(1), Additive.DoubleDoubleDouble)),
+        Expr.Dbl(0)
+      )
+      val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(5).toList
+
+      elems shouldBe List(0, 1, 2, 3, 4)
     }
 
     "should materialize trivial fix expressions" in {

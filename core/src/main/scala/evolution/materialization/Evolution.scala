@@ -198,6 +198,11 @@ object Evolution {
       }
     }
 
+  def iterate[A](f: A => A, start: A): Evolution[A] =
+    new Evolution[A] {
+      override def run: Iterator[A] = Iterator.iterate(start)(f)
+    }
+
   def derive[A](as: Evolution[A], add: (A, A) => A, inverse: A => A): Evolution[A] =
     slidingMap[A, A](as, a1 => a2 => add(a2, inverse(a1)))
 

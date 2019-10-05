@@ -82,6 +82,7 @@ object Expr {
     sg: Additive[A, A, A],
     inv: Invertible[A]
   ) extends Expr[Evolution[B]](List(fa, f))
+  final case class Iterate[A](f: Expr[A => A], start: Expr[A]) extends Expr[Evolution[A]](List(f, start))
   final case class FlatMap[A, B](fa: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(fa, f))
   final case class Flatten[A, B](ffa: Expr[Evolution[Evolution[A]]]) extends Expr[Evolution[B]](List(ffa))

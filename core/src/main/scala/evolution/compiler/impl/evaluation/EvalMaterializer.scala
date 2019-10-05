@@ -9,6 +9,7 @@ import evolution.compiler.phases.materializing.model.Contextual.WithContext
 import evolution.data.emptyCtx
 import evolution.compiler.phases.materializing.Materializer
 import evolution.compiler.expression.Expr.SlidingMap
+import evolution.compiler.expression.Expr.Iterate
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {
@@ -153,6 +154,8 @@ object EvalMaterializer extends Materializer {
         interpret2(fa, f)(Evolution.mapWithDerivative(_, _, MaterializeAddition(sg), MaterializeInverse(inv)))
 
       case SlidingMap(fa, f) => interpret2(fa, f)(Evolution.slidingMap)
+
+      case Iterate(f, start) => interpret2(f, start)(Evolution.iterate)
 
       case Expr.Range(from, to, step) => interpret3(from, to, step)(Evolution.range)
 
