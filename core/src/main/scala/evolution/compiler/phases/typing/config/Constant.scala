@@ -301,7 +301,8 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Map(x.asExprF, y.asExpr[Any => Any])
   }
 
-  case object SlidingMap extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
+  case object SlidingMap
+      extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.SlidingMap(x.asExprF, y.asExpr[Any => Any => Any])
   }
 
@@ -329,6 +330,24 @@ object Constant2 extends Enum[Constant2] {
 
   case object Take extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExpr, y.asExprF)
+  }
+
+  // syntactic sugar
+  case object Filter extends Constant2Plain(Qualified(Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = {
+      val varName = y.freshVarName("__element")
+      Expr.FlatMap(
+        x.asExprF,
+        Expr.Lambda(
+          varName,
+          Expr.IfThen(
+            Expr.App(y.asExpr[Any => Boolean], Expr.Var(varName)),
+            Expr.Cons(Expr.Var(varName), Expr.Empty()),
+            Expr.Empty()
+          )
+        )
+      )
+    }
   }
 
   case object While extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
