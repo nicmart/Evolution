@@ -48,6 +48,10 @@ object TypingConfig {
     AdditiveInst(Additive.PointPointPoint),
     AdditiveInst(Additive.LiftBoth(Additive.DoubleDoubleDouble)),
     AdditiveInst(Additive.LiftBoth(Additive.PointPointPoint)),
+    AdditiveInst(Additive.LiftRight(Additive.DoubleDoubleDouble)),
+    AdditiveInst(Additive.LiftLeft(Additive.DoubleDoubleDouble)),
+    AdditiveInst(Additive.LiftRight(Additive.PointPointPoint)),
+    AdditiveInst(Additive.LiftLeft(Additive.PointPointPoint)),
     // Invertible
     InvertibleInst(Invertible.Int),
     InvertibleInst(Invertible.Double),

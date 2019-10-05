@@ -11,6 +11,12 @@ object MaterializeAddition {
       case IntDoubleDouble    => a + b
       case IntIntInt          => a + b
       case PointPointPoint    => a.plus(b)
-      case LiftBoth(add)      => Evolution.zipWithUncurried(MaterializeAddition(add))(a, b)
+      case add: LiftLeft[a, b, c] =>
+        val f = MaterializeAddition(add.add) _
+        Evolution.map[a, c](a, aa => f(aa, b))
+      case add: LiftRight[a, b, c] =>
+        val f = MaterializeAddition(add.add) _
+        Evolution.map[b, c](b, bb => f(a, bb))
+      case LiftBoth(add) => Evolution.zipWithUncurried(MaterializeAddition(add))(a, b)
     }
 }
