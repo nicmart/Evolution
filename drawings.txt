@@ -1274,3 +1274,26 @@ onPoints(grid(50), circles(k), floor(length / k))
 
 ---------
 
+// Lines 
+
+r = 20 in
+xDelta = point(200, 0) in
+yDelta = point(0, 200) in
+
+lines(delta, p) =
+	product(
+		start <- uniformPoint(r) + p,
+    q <- line(start, start + delta, 1)
+  ) in q
+in
+
+linesX = lines(xDelta) in
+linesY = lines(yDelta) in
+
+N = 2000 in
+
+flatMap(
+	randomPointInGrid(100),
+  p -> concat(take(N, linesX(p)), take(N, linesY(p)))
+)
+  
