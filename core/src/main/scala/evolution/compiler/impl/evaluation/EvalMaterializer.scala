@@ -178,6 +178,12 @@ object EvalMaterializer extends Materializer {
           (start, speed) => Evolution.integrate(start, speed, MaterializeAddition(semigroup))
         )
 
+      case Expr.Roll(fExpr, startExpr) =>
+        interpret2(fExpr, startExpr)(Evolution.roll)
+
+      case Expr.Roll2(f, a0, a1) =>
+        interpret3(f, a0, a1)(Evolution.roll2)
+
       case Expr.Solve1(speedExpr, startExpr, semigroup) =>
         interpret2(speedExpr, startExpr)(
           (speed, start) => Evolution.solve1(speed, start, MaterializeAddition(semigroup))

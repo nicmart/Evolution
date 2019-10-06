@@ -293,6 +293,11 @@ object Constant2 extends Enum[Constant2] {
       TypingConfig.additive(y.tpe, y.tpe, y.tpe).map(add => Expr.Solve1(x.value.asExprF, y.value, add))
   }
 
+  case object Roll extends Constant2Plain(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+      Expr.Roll(x.asExprF[Any => Any], y)
+  }
+
   case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Concat(x.asExprF, y.asExprF)
   }
@@ -424,6 +429,14 @@ object Constant3 extends Enum[Constant3] {
       TypingConfig.additive(y.tpe, y.tpe, y.tpe).map { add =>
         Expr.Solve2(x.value.asExprF, y.value, z.value, add)
       }
+  }
+
+  case object Roll2
+      extends Constant3Plain(
+        Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+      ) {
+    override def compilePlain(f: Expr[_], a0: Expr[_], a1: Expr[_]): Expr[_] =
+      Expr.Roll2(f.asExprF[Any => Any => Any], a0, a1)
   }
 
   case object Iterate2
