@@ -224,27 +224,37 @@ object Evolution {
   def mapWithDerivative[A, B](as: Evolution[A], f: A => A => B, add: (A, A) => A, inverse: A => A): Evolution[B] =
     slidingMap[A, B](as, previous => current => f(previous)(add(current, inverse(previous))))
 
-  // TODO DRY, see integrate
-  def solve1[A](speed: Evolution[A => A], start: A, add: (A, A) => A): Evolution[A] =
+  def roll[A](f: Evolution[A => A], start: A): Evolution[A] =
     new Evolution[A] {
-      def run: Iterator[A] = new AbstractIterator[A] {
-        private val speedIterator = speed.run
-        private var _hasNext = true
-        private var _next = start
-        def hasNext: Boolean = _hasNext
+      def run: Iterator[A] = Iterator.single(start) ++ new AbstractIterator[A] {
+        private val fIterator = f.run
+        private var current = start
+        def hasNext: Boolean = fIterator.hasNext
         def next(): A = {
-          val current = _next
-          if (speedIterator.hasNext) {
-            _hasNext = true
-            _next = add(current, speedIterator.next()(current))
-          } else {
-            _hasNext = false
-          }
-
+          current = fIterator.next()(current)
           current
         }
       }
     }
+
+  def roll2[A](f: Evolution[A => A => A], a0: A, a1: A): Evolution[A] =
+    new Evolution[A] {
+      def run: Iterator[A] = Iterator(a0, a1) ++ new AbstractIterator[A] {
+        private val fIterator = f.run
+        private var currentA0 = a0
+        private var currentA1 = a1
+        def hasNext: Boolean = fIterator.hasNext
+        def next(): A = {
+          val current = fIterator.next()(currentA0)(currentA1)
+          currentA0 = currentA1
+          currentA1 = current
+          current
+        }
+      }
+    }
+
+  def solve1[A](speed: Evolution[A => A], start: A, add: (A, A) => A): Evolution[A] =
+    roll(Evolution.map[A => A, A => A](speed, vFunc => a => add(a, vFunc(a))), start)
 
   def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, mult: (A, A) => A): Evolution[A] =
     new Evolution[A] {
