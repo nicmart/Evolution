@@ -100,19 +100,23 @@ object Parser {
     allPrecedenceGroups
   )
 
-  private def factor[_: P]: P[Tree] =
-    P(
-      ("(" ~/ expression ~/ ")") | doubleLit | boolean | unaryPrefixOp |
-        variable | list
-    )
+  private def factor[_: P]: P[Tree] = {
+    def prefix: P[Tree] = P(("(" ~/ expression ~/ ")") | doubleLit | boolean | unaryPrefixOp | variable | list)
 
-  private def atomicOperand[_: P]: P[Tree] =
-    specialSyntax | P(factor ~/ ("." ~/ variable).? ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
-      case (f, None, None)            => f
-      case (f, None, Some(arguments)) => App(f, arguments).embed
-      case (receiver, Some(f), maybeArgs) =>
+    def app: P[Tree] = P(prefix ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
+      case (tree, None)         => tree
+      case (f, Some(arguments)) => App(f, arguments).embed
+    }
+
+    P(app ~/ ("." ~/ variable ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).?).map {
+      case (tree, None) => tree
+      case (receiver, Some((f, maybeArgs))) =>
         App(f, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))).embed
     }
+  }
+
+  private def atomicOperand[_: P]: P[Tree] =
+    specialSyntax | factor
 
   private def list[_: P]: P[Tree] = P("[" ~/ args ~/ "]").map(tree.SpecialSyntax.cons)
 

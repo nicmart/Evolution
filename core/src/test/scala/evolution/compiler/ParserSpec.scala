@@ -245,6 +245,16 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
+      "parse applications with dot syntax where receiver is an application" in {
+        unsafeParse(s"a(b).method(c)") shouldEq App
+          .of(
+            Identifier("method").embed,
+            App.of(Identifier("a").embed, Identifier("b").embed).embed,
+            Identifier("c").embed
+          )
+          .embed
+      }
+
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
           unsafeParse(s"($lambda)($expr)") shouldEq App
