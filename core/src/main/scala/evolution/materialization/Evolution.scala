@@ -49,7 +49,7 @@ object Evolution {
     step match {
       case 0 => constant(start)
       case _ =>
-        val length = ((end - start) / step).toInt + 1
+        val length = (1 + (end - start) / step).toInt
         new Evolution[Double] {
           def run: Iterator[Double] = Iterator.tabulate(length)(n => start + n * step)
         }
@@ -77,7 +77,7 @@ object Evolution {
       case -1 => empty
       case 1 =>
         new Evolution[Double] {
-          private val size = (Math.abs((to - from) / step)).toInt + 1
+          private val size = (Math.abs((to - from) / step) + 1).toInt
           def run: Iterator[Double] = Iterator.continually(from + Random.nextInt(size) * step)
         }
     }

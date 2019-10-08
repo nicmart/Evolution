@@ -26,6 +26,20 @@ uniformPoint(r) = @point(
   uniform(-r, r)
 ) in
 
+randomPointOnSquareBorder(r, g) = 
+	coord = uniformDiscrete(-r, r, g) in
+
+  flatMap(
+    uniformChoice(
+      coord.map(x -> point(x, -r)),
+      coord.map(x -> point(x, r)),
+      coord.map(y -> point(-r, y)),
+      coord.map(y -> point(r, y))
+    ),
+    ps -> ps.take(1)
+  )
+in
+
 randomWalk(r) = integrate(point(0, 0), uniformPoint(r)) in
 
 line(from, to, step) =
