@@ -70,7 +70,7 @@ object Expr {
 
   final case class ZipWith[A, B, C](fa: Expr[Evolution[A]], fb: Expr[Evolution[B]], f: Expr[A => B => C])
       extends Expr[Evolution[C]](List(fa, fb, f))
-  final case class Take[A](n: Expr[Int], fa: Expr[Evolution[A]]) extends Expr[Evolution[A]](List(n, fa))
+  final case class Take[A](fa: Expr[Evolution[A]], n: Expr[Int]) extends Expr[Evolution[A]](List(n, fa))
   final case class TakeWhile[A](fa: Expr[Evolution[A]], predicate: Expr[A => Boolean])
       extends Expr[Evolution[A]](List(fa, predicate))
   final case class Map[A, B](fa: Expr[Evolution[A]], f: Expr[A => B]) extends Expr[Evolution[B]](List(fa, f))

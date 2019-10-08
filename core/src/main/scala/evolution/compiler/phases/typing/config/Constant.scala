@@ -338,8 +338,8 @@ object Constant2 extends Enum[Constant2] {
       Expr.FlatMap(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
-  case object Take extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
-    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExpr, y.asExprF)
+  case object Take extends Constant2Plain(Qualified(Evo(Var("T")) =>: Integer =>: Evo(Var("T")))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExprF, y.asExpr)
   }
 
   // syntactic sugar

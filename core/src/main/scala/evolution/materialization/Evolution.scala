@@ -106,7 +106,7 @@ object Evolution {
       }
     }
 
-  def take[A](n: Int, fa: Evolution[A]): Evolution[A] = new Evolution[A] {
+  def take[A](fa: Evolution[A], n: Int): Evolution[A] = new Evolution[A] {
     def run: Iterator[A] = fa.run.take(n)
   }
 

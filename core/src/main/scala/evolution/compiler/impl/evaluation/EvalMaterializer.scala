@@ -134,8 +134,8 @@ object EvalMaterializer extends Materializer {
       case Expr.ZipWith(fa, fb, f) =>
         interpret3(fa, fb, f)(Evolution.zipWith)
 
-      case Expr.Take(nExpr, faExpr) =>
-        interpret2(nExpr, faExpr)(Evolution.take)
+      case Expr.Take(fa, n) =>
+        interpret2(fa, n)(Evolution.take)
 
       case Expr.TakeWhile(fa, p) =>
         interpret2(fa, p)(Evolution.takeWhile)

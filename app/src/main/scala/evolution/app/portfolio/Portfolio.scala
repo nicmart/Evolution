@@ -50,11 +50,11 @@ object Portfolio {
           flatten(
             const(
               take(
-                total,
                 integrate(
                   start,
                   const(point(jump, 0)) + @point(normal(0, r), normal(0, r))
-                )
+                ),
+                total
               )
             )
           )""".unindent
@@ -80,10 +80,7 @@ object Portfolio {
           
           flatMap(
             rndPoint,
-            p -> take(
-              l,
-              trajectory(p)
-            ) 
+            p -> trajectory(p).take(l)
           )
           """.unindent
       ),
@@ -128,8 +125,8 @@ object Portfolio {
           
           speed = product(
             R <- map(speedMax, s -> abs(s)),
-            r1 <- take(1, uniform(-R, R)),
-            r2 <- take(1, uniform(-R, R))
+            r1 <- uniform(-R, R).take(1),
+            r2 <- uniform(-R, R).take(1)
           ) in point(r1, r2)
           in
           
@@ -148,14 +145,11 @@ object Portfolio {
         """
           flatten(
             const(
-              take(
-                200,
-                solve2(
-                  map(@point(uniform(-0.8, 0.1), uniform(-0.8, 0.5)), r -> x -> v -> r + -0.01 * v),
-                  point(0, 0),
-                  point(0, 0)
-                )
-              )
+              solve2(
+                map(@point(uniform(-0.8, 0.1), uniform(-0.8, 0.5)), r -> x -> v -> r + -0.01 * v),
+                point(0, 0),
+                point(0, 0)
+              ).take(200)
             )
           )
           """.unindent
@@ -181,13 +175,11 @@ object Portfolio {
           
           flatMap(
             randomPoints,
-            p -> take(
-              length,
-              const(p) + @point(
+            p ->
+              p + @point(
                 solve2(equation(rx, ax, bx), 0, 0),
                 solve2(equation(ry, ay, by), 0, 0)
-              )
-            )
+              ).take(length)
           )
           """.unindent
       ),
@@ -228,13 +220,12 @@ object Portfolio {
         """
           total = 1500 in
           
-          circle = r -> w -> @polar(const(r), integrate(0, const(w))) in
-          rndPoint = take(total, @point(uniform(left, right), uniform(bottom, top))) in
+          rndPoint = randomPoint.take(total) in
           radiuses = uniform(1, 30) in
           
           flatMap(
             rndPoint,
-            p -> take(100, flatMap(radiuses, r -> map(circle(r, .1), p2 -> p + p2)))
+            p -> flatMap(radiuses, r -> map(circle(r, .1), p2 -> p + p2)).take(100)
           )""".unindent
       ),
       defaultRendererWithInfiniteCanvas
@@ -267,7 +258,7 @@ object Portfolio {
             p -> v ->
               rotated = orthogonalFactor * point(y(v), -x(v)) in
               start = p - (toDbl(orthogonalLineLength)/2) * rotated in
-              integrate(start, take(orthogonalLineLength, const(rotated))),
+              integrate(start, const(rotated).take(orthogonalLineLength)),
             line
           ))""".unindent
       ),
@@ -310,13 +301,10 @@ object Portfolio {
             range(startY, maxDepth, depthStep),
             y ->
               xlength = length * (y/startY) * 2 / v in
-              take(
-                floor(xlength),
                 map(
                   integrate(-xlength, const(v)),
                   x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-                )
-              )
+                ).take(xlength.floor)
           )
           """.unindent
       ),
@@ -338,10 +326,7 @@ object Portfolio {
           vectorField(p) = polar(speed, noiseStrength * n(freq * p)) in
           
           segment = v -> p ->
-            take(
-              length,
-              integrate(-.5 * length * v + p, const(v))
-            )
+            integrate(-.5 * length * v + p, const(v)).take(length)
           in
           
           
@@ -374,7 +359,7 @@ object Portfolio {
           ) in particle(p, alpha, r)
           in
           
-          parallel(take(1000, particles))
+          parallel(particles.take(1000))
         """.unindent
       ),
       defaultRendererWithInfiniteCanvas.copy(strokeSize = 5, iterations = 5000, trail = TrailSettings(true, 0.12))
@@ -425,7 +410,7 @@ object Portfolio {
           n(r, alpha) = r + noiseStrength * smoothNoise(alpha) * noise1(polar(sr + kr * r, alpha)) in
           
           circle(v, r) = map(
-            take(floor(2 * r * pi  / v), integrate(0, const(v / r))),
+            integrate(0, const(v / r)).take(floor(2 * r * pi  / v)),
             alpha -> polar(n(r, alpha), alpha)
           ) in
           
@@ -447,7 +432,7 @@ object Portfolio {
             parallel(zipWith(
               points,
               drawings,
-              p -> drawing -> take(length, map(drawing, q -> q + p))
+              p -> drawing -> map(drawing, q -> q + p).take(length)
             ))
           in
           
@@ -503,7 +488,7 @@ object Portfolio {
               zip(
                 p <- points,
                 drawing <- drawings
-              ) in take(length, map(drawing, q -> q + p))
+              ) in map(drawing, q -> q + p).take(length)
             )
           in
           
@@ -554,7 +539,7 @@ object Portfolio {
         
         vertLine(p) =
           product(
-            start <- take(n, points(p)),
+            start <- points(p).take(n),
             p <- line(start, start + delta, 1)
           ) in p
         in
