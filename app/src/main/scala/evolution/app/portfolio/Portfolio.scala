@@ -368,7 +368,7 @@ object Portfolio {
           ) in
           
           particles = zip(
-            p <- @point(uniform(left, right), uniform(bottom, top)),
+            p <- randomPoint,
             alpha <- uniform(0, 2 * pi),
             r <- uniform(0, 1)
           ) in particle(p, alpha, r)
@@ -394,8 +394,8 @@ object Portfolio {
           
           functions = uniformChoice(f1, f2, f3) in
           
-          solve1(
-            map(functions, f -> p -> -p + f(p)),
+          roll(
+            functions,
             point(0, 0)
           )
         """.unindent
