@@ -547,6 +547,25 @@ object Portfolio {
         """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Connect dots on squares borders"),
+      DrawingState(
+        0L,
+        """
+        r = 50 in
+        g = 50 in
+        
+        ps = randomPointOnSquareBorder(r, g).take(10) in
+        
+        lines =
+          slidingMap(ps, s -> e -> line(s, e, 1)).flatten
+        in
+        
+        flatten(grid(2 * r).map(p -> lines + p))
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
