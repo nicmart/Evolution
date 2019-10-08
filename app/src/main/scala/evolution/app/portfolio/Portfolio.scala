@@ -533,13 +533,9 @@ object Portfolio {
         delta = point(0, 100) in
         n = 100 in
         
-        ps = @point(uniform(-r, r), uniform(-r, r)) in
-        
-        points(p) = ps + const(p) in
-        
         vertLine(p) =
           product(
-            start <- points(p).take(n),
+            start <- p + uniformPoint(r).take(n),
             p <- line(start, start + delta, 1)
           ) in p
         in

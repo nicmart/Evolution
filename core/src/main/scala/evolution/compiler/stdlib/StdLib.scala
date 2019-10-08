@@ -3,6 +3,8 @@ package evolution.compiler.stdlib
 object StdLib {
   val code = """
 
+origin = point(0, 0) in
+
 grid(gridSize) = product(
   y <- range(top, bottom, -gridSize),
   x <- range(left, right, gridSize)
