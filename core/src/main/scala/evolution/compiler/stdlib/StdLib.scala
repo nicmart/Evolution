@@ -63,6 +63,35 @@ circle(r, w) = map(
   a -> polar(r, a)
 ) in
 
+rectangle(p1, p2, v) =
+  p12 = point(p2.x, p1.y) in
+	p21 = point(p1.x, p2.y) in
+	w = abs(p2.x - p1.x) in
+	h = abs(p2.y - p1.y) in
+	l = 2 * (w + h) in
+	tot = (l / v + 1) in
+	range(0, l, v).map(
+    u ->
+      x1 = u in
+    	y1 = u - w in
+      x2 = u - w - h in
+      y2 = u - 2 * w - h in
+    	if(
+        x1 < w,
+        (1 - x1/w) * p1 + (x1/w) * p12,
+        if (
+          y1 < h,
+          (1 - y1/h) * p12 + (y1/h) * p2,
+          if (
+            x2 < w,
+            (1 - x2/w) * p2 + (x2/w) * p21,
+            (1 - y2/h) * p21 + (y2/h) * p1
+        )
+      )
+  	)
+  )
+in
+
 dampedOscillator(a, b, rnd) = 
   solve2(
     map(rnd, r -> x -> v -> r + a * x + b * v),
