@@ -147,8 +147,8 @@ object Parser {
   private def identifier[_: P]: P[String] =
     ((alpha | CharIn("@")) ~~ alphaNum.repX(1).?).!.map(_.toLowerCase)
 
-  private def alpha[_: P]: P[Unit] = P(CharIn("a-z") | CharIn("A-Z"))
-  private def alphaNum[_: P]: P[Unit] = P(CharIn("0-9") | alpha)
+  private def alpha[_: P]: P[Unit] = P(CharIn("a-zA-Z_"))
+  private def alphaNum[_: P]: P[Unit] = P(CharIn("0-9_") | alpha)
 
   private def specialSyntax[_: P]: P[Tree] = special.zip | special.product | special.uniformChoice
 

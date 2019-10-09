@@ -63,19 +63,22 @@ circle(r, w) = map(
   a -> polar(r, a)
 ) in
 
-rectangle(p1, p2, v) =
+
+
+__rectangle(p1, p2, v, steps) =
   p12 = point(p2.x, p1.y) in
 	p21 = point(p1.x, p2.y) in
 	w = abs(p2.x - p1.x) in
 	h = abs(p2.y - p1.y) in
 	l = 2 * (w + h) in
 	tot = (l / v + 1) in
-	range(0, l, v).map(
+	steps.map(
     u ->
-      x1 = u in
-    	y1 = u - w in
-      x2 = u - w - h in
-      y2 = u - 2 * w - h in
+      uMod = u % l in
+      x1 = uMod in
+    	y1 = uMod - w in
+      x2 = uMod - w - h in
+      y2 = uMod - 2 * w - h in
     	if(
         x1 < w,
         (1 - x1/w) * p1 + (x1/w) * p12,
@@ -91,6 +94,15 @@ rectangle(p1, p2, v) =
   	)
   )
 in
+
+finiteRectangle(p1, p2, v) =
+  __rectangle(p1, p2, v, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
+
+rectangle(p1, p2, v) =
+  __rectangle(p1, p2, v, iterate(x -> x + v, 0)) in
+
+finiteSquare(r, v) = finiteRectangle(point(-r, -r), point(r, r), v) in
+square(r, v) = rectangle(point(-r, -r), point(r, r), v) in
 
 dampedOscillator(a, b, rnd) = 
   solve2(
