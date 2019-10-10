@@ -5,6 +5,11 @@ object StdLib {
 
 origin = point(0, 0) in
 
+topLeft = point(left, top) in
+topRight = point(right, top) in
+bottomLeft = point(left, bottom) in
+bottomRight = point(right, bottom) in 
+
 grid(gridSize) = product(
   y <- range(top, bottom, -gridSize),
   x <- range(left, right, gridSize)
@@ -65,13 +70,12 @@ circle(r, w) = map(
 
 
 
-__rectangle(p1, p2, v, steps) =
+__rectangle(p1, p2, steps) =
   p12 = point(p2.x, p1.y) in
 	p21 = point(p1.x, p2.y) in
 	w = abs(p2.x - p1.x) in
 	h = abs(p2.y - p1.y) in
 	l = 2 * (w + h) in
-	tot = (l / v + 1) in
 	steps.map(
     u ->
       uMod = u % l in
@@ -96,10 +100,10 @@ __rectangle(p1, p2, v, steps) =
 in
 
 finiteRectangle(p1, p2, v) =
-  __rectangle(p1, p2, v, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
+  __rectangle(p1, p2, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
 
 rectangle(p1, p2, v) =
-  __rectangle(p1, p2, v, iterate(x -> x + v, 0)) in
+  __rectangle(p1, p2, iterate(x -> x + v, 0)) in
 
 finiteSquare(r, v) = finiteRectangle(point(-r, -r), point(r, r), v) in
 square(r, v) = rectangle(point(-r, -r), point(r, r), v) in
