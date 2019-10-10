@@ -1296,4 +1296,29 @@ flatMap(
 	randomPointInGrid(100),
   p -> concat(take(N, linesX(p)), take(N, linesY(p)))
 )
+
+//-------
+//web with some noise on the grid
+
+g = 50 in
+l = 80 in
+r = integrate(0, uniform(-l, l)) in
+
+n1 <- noise in
+n2 <- noise in
+
+f = .01 in
+rn = 20 in
+
+perturbate(p) = p + rn * point(n1(f * p), n2(f * p)) in
+
+r(p) = __rectangle(point(-g, -g), point(g, g), r) * .5 + p in
+
+rp(p) = r(p).map(p -> perturbate(p)) in
+
+d(p) = rp(p).slidingMap(
+  p1 -> p2 -> line(p1, p2, 1)
+).flatten in
+
+grid(g).map(d).parallel
   

@@ -22,7 +22,7 @@ case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
         evalAssocBinaryOp(op(head, tailHead), tailTail)
     }
 
-  private def allowedCharsAfterOp[_: P]: P[Unit] = CharIn("a-zA-Z0-9\\- \n\r()@.")
+  private def allowedCharsAfterOp[_: P]: P[Unit] = CharIn("a-zA-Z0-9\\- \n\r()@._")
 }
 
 object PrecedenceGroup {
