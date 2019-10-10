@@ -255,6 +255,22 @@ class ParserSpec extends LanguageSpec {
           .embed
       }
 
+      "parse chained dot selections" in {
+        unsafeParse(s"a(b).method1(c).method2(d)") shouldEq App
+          .of(
+            Identifier("method2").embed,
+            App
+              .of(
+                Identifier("method1").embed,
+                App.of(Identifier("a").embed, Identifier("b").embed).embed,
+                Identifier("c").embed
+              )
+              .embed,
+            Identifier("d").embed
+          )
+          .embed
+      }
+
       "parse applications of lambdas" in {
         forAll(genLambda, genLeafExpr) { (lambda, expr) =>
           unsafeParse(s"($lambda)($expr)") shouldEq App

@@ -108,12 +108,21 @@ object Parser {
       case (f, Some(arguments)) => App(f, arguments).embed
     }
 
-    P(app ~/ ("." ~/ variable ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).?).map {
-      case (tree, None) => tree
-      case (receiver, Some((f, maybeArgs))) =>
-        App(f, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))).embed
+    P(app ~/ ("." ~/ variable ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).rep).map {
+      case (tree, selections) => dotSelection(tree, selections.toList)
     }
   }
+
+  private def dotSelection(receiver: Tree, selections: List[(Tree, Option[NonEmptyList[Tree]])]): Tree =
+    selections match {
+      case Nil => receiver
+      case (firstMethod, maybeArgs) :: nextSelections =>
+        dotSelection(
+          
+          App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))).embed,
+          nextSelections
+        )
+    }
 
   private def atomicOperand[_: P]: P[Tree] =
     specialSyntax | factor
