@@ -566,6 +566,26 @@ object Portfolio {
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Square web"),
+      DrawingState(
+        0L,
+        """
+        g = 50 in
+        l = 70 in
+        r = integrate(0, uniform(-l, l)) in
+        
+        r = __rectangle(point(-g, -g), point(g, g), r) * .5 in
+        
+        d = r.slidingMap(
+          p1 -> p2 -> line(p1, p2, 1)
+        ).flatten in
+        
+        grid(g).map(p -> p + d).parallel
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
