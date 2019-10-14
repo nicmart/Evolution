@@ -1312,7 +1312,7 @@ rn = 20 in
 
 perturbate(p) = p + rn * point(n1(f * p), n2(f * p)) in
 
-r(p) = __rectangle(point(-g, -g), point(g, g), r) * .5 + p in
+r(p) = rectangleP(point(-g, -g), point(g, g), r) * .5 + p in
 
 rp(p) = r(p).map(p -> perturbate(p)) in
 

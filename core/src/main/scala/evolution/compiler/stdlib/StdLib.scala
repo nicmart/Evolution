@@ -47,13 +47,19 @@ in
 
 randomWalk(r) = integrate(point(0, 0), uniformPoint(r)) in
 
+lineP(from, to, step, ts) =
+  v = step * versor(to - from) in
+  ts.map(t -> from + t * v)
+in
+
 line(from, to, step) =
   total = floor(norm(to - from) / step) + 1 in
-  v = versor(to - from) in
-  map(
-    range(0, total, 1),
-    s -> from + s * step * v
-  )
+  lineP(from, to, step, range(0, total, 1))
+in
+
+arcP(r, ts) = 
+  k = 2 * r * pi in
+  ts.map(t -> polar(r, t / k))
 in
 
 arc(r, a1, a2, w) = map(
@@ -68,15 +74,13 @@ circle(r, w) = map(
   a -> polar(r, a)
 ) in
 
-
-
-__rectangle(p1, p2, steps) =
+rectangleP(p1, p2, ts) =
   p12 = point(p2.x, p1.y) in
 	p21 = point(p1.x, p2.y) in
 	w = abs(p2.x - p1.x) in
 	h = abs(p2.y - p1.y) in
 	l = 2 * (w + h) in
-	steps.map(
+	ts.map(
     u ->
       uMod = u % l in
       x1 = uMod in
@@ -100,10 +104,10 @@ __rectangle(p1, p2, steps) =
 in
 
 finiteRectangle(p1, p2, v) =
-  __rectangle(p1, p2, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
+  rectangleP(p1, p2, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
 
 rectangle(p1, p2, v) =
-  __rectangle(p1, p2, iterate(x -> x + v, 0)) in
+  rectangleP(p1, p2, iterate(x -> x + v, 0)) in
 
 finiteSquare(r, v) = finiteRectangle(point(-r, -r), point(r, r), v) in
 square(r, v) = rectangle(point(-r, -r), point(r, r), v) in
