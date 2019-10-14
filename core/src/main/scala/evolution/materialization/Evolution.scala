@@ -134,8 +134,14 @@ object Evolution {
         private var currentIndex = 0
         private var outerIterationEnded = false
         override def hasNext: Boolean = {
-          if (outerIterationEnded) iterators(currentIndex).hasNext
-          else {
+          if (outerIterationEnded) {
+            if (iterators(currentIndex).hasNext) true
+            else {
+              iterators.remove(currentIndex)
+              iterators.nonEmpty && hasNext
+            }
+
+          } else {
             if (iteratorOfEvolutions.hasNext) {
               iterators.append(iteratorOfEvolutions.next().run)
               iterators.last.hasNext

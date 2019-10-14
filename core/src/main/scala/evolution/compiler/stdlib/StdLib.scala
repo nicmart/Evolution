@@ -21,6 +21,17 @@ randomPointInGrid(gridSize) = @point(
   uniformDiscrete(bottom, top, gridSize)
 ) in
 
+copyOnGrid(gridSize, evolution) = 
+  flatMap(
+    evolution,
+    p -> grid(gridSize).map(q -> p + q) // using overloaded "+" makes type ambiguous...
+  )
+in
+
+replicateOnGrid(gridSize, evolution) =
+  grid(gridSize).map(p -> evolution.map(q -> p + q)).parallel
+in
+
 randomPoint = @point(
   uniform(left, right),
   uniform(bottom, top)
