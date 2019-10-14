@@ -69,8 +69,7 @@ line(from, to, step) =
 in
 
 arcP(r, ts) = 
-  k = 2 * r * pi in
-  ts.map(t -> polar(r, t / k))
+  ts.map(t -> polar(r, t / r))
 in
 
 arc(r, a1, a2, w) = map(
