@@ -126,6 +126,10 @@ object Constant1 extends Enum[Constant1] {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Constant(x.asExpr)
   }
 
+  case object FromList extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
+    def compilePlain(x: Expr[_]): Expr[_] = Expr.FromList(x.asExpr)
+  }
+
   case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
   }
@@ -340,6 +344,10 @@ object Constant2 extends Enum[Constant2] {
 
   case object Take extends Constant2Plain(Qualified(Evo(Var("T")) =>: Integer =>: Evo(Var("T")))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExprF, y.asExpr)
+  }
+
+  case object Grouped extends Constant2Plain(Qualified(Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T"))))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Grouped(x.asExprF, y.asExpr)
   }
 
   // syntactic sugar

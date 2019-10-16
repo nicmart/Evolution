@@ -12,6 +12,7 @@ import evolution.compiler.expression.Expr.SlidingMap
 import evolution.compiler.expression.Expr.Iterate
 import evolution.compiler.expression.Expr.Iterate2
 import evolution.compiler.expression.Expr.FromList
+import evolution.compiler.expression.Expr.Grouped
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {
@@ -121,6 +122,8 @@ object EvalMaterializer extends Materializer {
         Contextual.Pure(Evolution.empty)
 
       case FromList(ts) => interpret1(ts)(Evolution.fromIterable)
+
+      case Grouped(as, n) => interpret2(as, n)(Evolution.grouped)
 
       // TODO we need a well-defined strategy for lazyness. In this case, we delay the materialization of cons, to allow
       // recursive definitions

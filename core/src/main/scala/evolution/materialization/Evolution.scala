@@ -55,6 +55,11 @@ object Evolution {
         }
     }
 
+  def grouped[T](evo: Evolution[T], n: Int): Evolution[List[T]] =
+    new Evolution[List[T]] {
+      def run: Iterator[List[T]] = evo.run.grouped(n).map(_.toList)
+    }
+
   def uniform(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(from + Random.nextDouble() * (to - from))
   }

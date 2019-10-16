@@ -28,8 +28,17 @@ copyOn(evolution, base) =
   )
 in
 
+copyOnFrozen(evo, base) = 
+	frozen <- freeze(base, 10000) in 
+	evo.copyOn(frozen)
+in
+
 replicateOn(evolution, base) =
-  base.map(p -> evolution.map(q -> p + q)).parallel
+  base.take(10000).map(p -> evolution.map(q -> p + q)).parallel
+in
+
+freeze(evo, n) = 
+  evo.grouped(n).map(lst -> fromList(lst))
 in
 
 randomPoint = @point(

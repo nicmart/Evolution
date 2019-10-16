@@ -68,6 +68,7 @@ object Expr {
   final case class Cons[A](head: Expr[A], tail: Expr[Evolution[A]]) extends Expr[Evolution[A]](List(head, tail))
   final case class Concat[A](as1: Expr[Evolution[A]], as2: Expr[Evolution[A]])
       extends Expr[Evolution[A]](List(as1, as2))
+  final case class Grouped[A](as: Expr[Evolution[A]], n: Expr[Int]) extends Expr[Evolution[List[A]]](List(as))
 
   final case class ZipWith[A, B, C](fa: Expr[Evolution[A]], fb: Expr[Evolution[B]], f: Expr[A => B => C])
       extends Expr[Evolution[C]](List(fa, fb, f))
