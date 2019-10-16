@@ -63,6 +63,7 @@ object Expr {
   final case class LessThanOrEqual[T](a: Expr[T], b: Expr[T], cmp: Comparable[T]) extends Expr[Boolean](List(a, b))
 
   // Chain
+  final case class FromList[T](ts: Expr[List[T]]) extends Expr[Evolution[T]](List(ts))
   final case class Empty[A]() extends Expr[Evolution[A]](Nil)
   final case class Cons[A](head: Expr[A], tail: Expr[Evolution[A]]) extends Expr[Evolution[A]](List(head, tail))
   final case class Concat[A](as1: Expr[Evolution[A]], as2: Expr[Evolution[A]])

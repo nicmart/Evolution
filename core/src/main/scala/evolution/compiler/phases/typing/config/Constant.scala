@@ -40,7 +40,7 @@ object Constant0 extends Enum[Constant0] {
 
   case object Empty extends Constant0(Qualified(Var("T"))) {
     def compile(tpe: Qualified[Type]): Either[String, Expr[_]] =
-      Expr.Empty().asRight
+      Expr.FromList(Expr.Lst(Nil)).asRight
   }
 
   case object Noise extends Constant0(Qualified(Evo(TypeT.Point =>: TypeT.Double))) {
