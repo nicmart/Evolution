@@ -324,11 +324,11 @@ object Constant2 extends Enum[Constant2] {
       extends Constant2(
         Qualified(
           isInvertSemigroup("T1"),
-          (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T1")) =>: Evo(Var("T2"))
+          Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2"))
         )
       ) {
 
-    override def compile(f: Typed[_], x: Typed[_], out: Type): Either[String, Expr[_]] =
+    override def compile(x: Typed[_], f: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
         innerType <- x.tpe.unwrapEvo
         inv <- TypingConfig.invertible(innerType)

@@ -255,11 +255,11 @@ object Portfolio {
           ) in
           
           flatten(mapWithDerivative(
+            line,
             p -> v ->
               rotated = orthogonalFactor * point(y(v), -x(v)) in
               start = p - (toDbl(orthogonalLineLength)/2) * rotated in
-              integrate(start, const(rotated).take(orthogonalLineLength)),
-            line
+              integrate(start, const(rotated).take(orthogonalLineLength))
           ))""".unindent
       ),
       defaultRendererState
