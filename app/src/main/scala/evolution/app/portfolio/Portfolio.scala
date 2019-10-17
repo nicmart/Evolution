@@ -139,22 +139,23 @@ object Portfolio {
       defaultRendererState
     ),
     Drawing(
-      Some("Comet"),
+      Some("Oscillator drawn on brownian"),
       DrawingState(
         0L,
         """
-          flatten(
-            const(
-              solve2(
-                map(@point(uniform(-0.8, 0.1), uniform(-0.8, 0.5)), r -> x -> v -> r + -0.01 * v),
-                point(0, 0),
-                point(0, 0)
-              ).take(200)
-            )
-          )
+          evo = randomWalk(2) in
+
+          noiseStrength = @polar(bernoulli(.00003, 30), uniform(0, 2 * pi)) in
+          
+          oscillator =
+            dampedOscillator(-1, -.0003, noiseStrength)
+          in
+          
+          
+          oscillator.drawOn(evo)
           """.unindent
       ),
-      defaultRendererWithInfiniteCanvas
+      defaultRendererState
     ),
     Drawing(
       Some("Doodles"),

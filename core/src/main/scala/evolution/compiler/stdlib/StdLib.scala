@@ -10,6 +10,22 @@ topRight = point(right, top) in
 bottomLeft = point(left, bottom) in
 bottomRight = point(right, bottom) in 
 
+matrix(a, b, c, d, p) =
+  point(a * p.x + b * p.y, c * p.x + d * p.y)
+in
+
+rotateAndScale(v, p) =
+	matrix(v.x, -v.y, v.y, v.x, p)
+in
+
+rotateOn(v, p) =
+	(1 / norm(v)) * rotateAndScale(v, p)
+in
+
+rotate(alpha, p) =
+  matrix(cos(alpha), -sin(alpha), sin(alpha), cos(alpha), p)
+in
+
 grid(gridSize) = product(
   y <- range(top, bottom, -gridSize),
   x <- range(left, right, gridSize)
@@ -35,6 +51,13 @@ in
 
 replicateOn(evolution, base) =
   base.take(10000).map(p -> evolution.map(q -> p + q)).parallel
+in
+
+drawOn(evo, base) =
+	zip(
+  	f <- base.mapWithDerivative(q -> v -> p -> q + rotateAndScale(v, p)),
+    p <- evo
+  ) in f(p)
 in
 
 freeze(evo, n) = 
