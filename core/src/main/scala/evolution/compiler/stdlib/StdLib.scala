@@ -55,6 +55,13 @@ in
 
 drawOn(evo, base) =
 	zip(
+  	f <- base.mapWithDerivative(q -> v -> p -> q + rotateOn(v, p)),
+    p <- evo
+  ) in f(p)
+in
+
+drawOnAndScale(evo, base) =
+	zip(
   	f <- base.mapWithDerivative(q -> v -> p -> q + rotateAndScale(v, p)),
     p <- evo
   ) in f(p)
