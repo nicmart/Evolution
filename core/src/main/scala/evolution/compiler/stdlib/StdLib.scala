@@ -26,6 +26,11 @@ rotate(alpha, p) =
   matrix(cos(alpha), -sin(alpha), sin(alpha), cos(alpha), p)
 in
 
+reflect(alpha) = matrix(
+	cos(2 * alpha), sin(2 * alpha),
+  sin(2 * alpha), -cos(2 * alpha)
+) in
+
 grid(gridSize) = product(
   y <- range(top, bottom, -gridSize),
   x <- range(left, right, gridSize)
