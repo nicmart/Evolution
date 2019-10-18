@@ -222,7 +222,7 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
-      "parse applications with dot syntax and single arguments" in {
+      "parse applications with dot syntax and no arguments" in {
         forAll(genIdentifier, genIdentifier) { (identifier1, expr1) =>
           unsafeParse(s"$expr1.$identifier1") shouldEq App
             .of(
@@ -233,7 +233,7 @@ class ParserSpec extends LanguageSpec {
         }
       }
 
-      "parse applications with dot syntax and multiple arguments" in {
+      "parse applications with dot syntax and single argument" in {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$expr1.$identifier1($expr2)") shouldEq App
             .of(
@@ -243,6 +243,17 @@ class ParserSpec extends LanguageSpec {
             )
             .embed
         }
+      }
+
+      "parse applications with dot syntax and multiple arguments" in {
+        unsafeParse(s"a.method(b, c)") shouldEq App
+          .of(
+            Identifier("method").embed,
+            Identifier("a").embed,
+            Identifier("b").embed,
+            Identifier("c").embed
+          )
+          .embed
       }
 
       "parse applications with dot syntax where receiver is an application" in {
