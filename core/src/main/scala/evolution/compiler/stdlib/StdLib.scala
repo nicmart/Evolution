@@ -31,6 +31,23 @@ reflect(alpha) = matrix(
   sin(2 * alpha), -cos(2 * alpha)
 ) in
 
+clip(evo, topLeft, bottomRight) =
+	evo.while(p -> inRect(topLeft, bottomRight, p))
+in
+
+clipSquare(evo, r) =
+	clip(evo, point(-r/2, -r/2), point(r/2, r/2))
+in
+
+symmFunctions(numberOfEdges) = range(0, numberOfEdges - 1, 1).flatMap(
+  i -> [rotate(2 * pi * i / numberOfEdges), reflect(pi * i / numberOfEdges)]
+) in
+
+symmetric(evo, numberOfEdges) =
+  fs = symmFunctions(numberOfEdges) in
+  evo.flatMap(p -> fs.map(f -> f(p))
+) in
+
 grid(gridSize) = product(
   y <- range(top, bottom, -gridSize),
   x <- range(left, right, gridSize)
