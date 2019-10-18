@@ -39,6 +39,10 @@ clipSquare(evo, r) =
 	clip(evo, point(-r/2, -r/2), point(r/2, r/2))
 in
 
+moduloSquare(evo, r) =
+	evo.map(p -> -point(r/2, r/2) + point((p.x + r/2) % r, (p.y + r/2) % r))
+in
+
 symmFunctions(numberOfEdges) = range(0, numberOfEdges - 1, 1).flatMap(
   i -> [rotate(2 * pi * i / numberOfEdges), reflect(pi * i / numberOfEdges)]
 ) in
