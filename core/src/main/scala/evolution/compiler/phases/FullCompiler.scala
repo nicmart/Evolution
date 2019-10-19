@@ -25,7 +25,7 @@ final class FullCompiler(typedTreeCompiler: TypedTreeCompiler, materializer: Mat
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
-      expression <- Compile.compile(typedTree, module.varContext)
+      expression <- Compile.compile(typedTree)
       expressionWithModule = module.load(expression)
       _ <- CheckVars(expressionWithModule, module.varContext)
       _ = log(s"Compiled to $expression")

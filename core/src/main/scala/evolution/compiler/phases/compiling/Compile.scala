@@ -3,7 +3,6 @@ package evolution.compiler.phases.compiling
 import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
-import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.Typed
 import evolution.compiler.types.TypeT
@@ -14,7 +13,7 @@ import scala.collection.immutable.Nil
 
 object Compile {
 
-  def compile(tree: TypedTree, varContext: VarContext): Either[String, Expr[_]] =
+  def compile(tree: TypedTree): Either[String, Expr[_]] =
     compileSafe(tree)
 
   private def compileSafe(typedTree: TypedTree): Either[String, Expr[Any]] =

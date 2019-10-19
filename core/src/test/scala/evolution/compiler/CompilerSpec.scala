@@ -5,7 +5,6 @@ import org.scalacheck.Shrink
 import org.scalacheck.Arbitrary.arbitrary
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
-import evolution.compiler.phases.compiling.model.VarContext
 import evolution.compiler.phases.compiling.Compile
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
@@ -27,13 +26,13 @@ class CompilerSpec extends LanguageSpec {
         case (name, v) =>
           println(name)
           println(v)
-          unsafeCompile(v, VarContext.empty.push(name)) shouldBe Var(name)
+          unsafeCompile(v) shouldBe Var(name)
       }
 
       "variable usages in non-empty contexts" in forAll(genTypedVar) {
         case (name, v) =>
           whenever(name != "x") {
-            unsafeCompile(v, VarContext.empty.push(name).push("x")) shouldBe Var(name)
+            unsafeCompile(v) shouldBe Var(name)
           }
       }
 
@@ -158,8 +157,7 @@ class CompilerSpec extends LanguageSpec {
                 TreeF.Identifier("y").withNoType,
                 TreeF.Identifier("z").withNoType
               )
-              .withNoType,
-            new VarContext(List("x", "y", "z"))
+              .withNoType
           ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
         }
       }
@@ -175,8 +173,7 @@ class CompilerSpec extends LanguageSpec {
                 )
                 .withNoType
             )
-            .withNoType,
-          new VarContext(List("x", "y", "z"))
+            .withNoType
         )
         compiled shouldBe UniformChoice(Lst(List(Var("x"), Var("y"), Var("z"))))
       }
@@ -200,8 +197,8 @@ class CompilerSpec extends LanguageSpec {
   lazy val unknownType: Qualified[Type] = Qualified(TypeT.Var(""))
   lazy val intType: Qualified[Type] = Qualified(TypeT.Integer)
 
-  private def unsafeCompile[T](expr: TypedTree, ctx: VarContext = VarContext.empty): Expr[T] =
-    Compile.compile(expr, ctx).unsafeEvaluate.asInstanceOf[Expr[T]]
+  private def unsafeCompile[T](expr: TypedTree): Expr[T] =
+    Compile.compile(expr).unsafeEvaluate.asInstanceOf[Expr[T]]
 
   implicit class Ops(tree: TreeF[TypedTree]) {
     def withNoType = tree.annotate(unknownType)
