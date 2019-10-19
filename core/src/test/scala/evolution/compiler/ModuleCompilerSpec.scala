@@ -8,7 +8,7 @@ import evolution.compiler.types.TypeT
 import evolution.logging.NoOpLogger
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
-import evolution.compiler.phases.compiling.DefaultCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
 
 class ModuleCompilerSpec extends LanguageSpec {
   "Module compiler" - {

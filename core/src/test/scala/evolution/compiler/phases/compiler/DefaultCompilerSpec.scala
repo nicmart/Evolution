@@ -1,11 +1,12 @@
-package evolution.compiler
+package evolution.compiler.phases.compiler
+
 import cats.data.NonEmptyList
 import org.scalacheck.Gen
 import org.scalacheck.Shrink
 import org.scalacheck.Arbitrary.arbitrary
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
-import evolution.compiler.phases.compiling.DefaultCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
@@ -14,6 +15,7 @@ import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
 import evolution.compiler.expression.typeclass._
 import evolution.compiler.module.Module
+import evolution.compiler.LanguageSpec
 
 class DefaultCompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

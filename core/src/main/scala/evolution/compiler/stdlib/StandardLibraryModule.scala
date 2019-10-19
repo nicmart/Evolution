@@ -8,7 +8,7 @@ import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
-import evolution.compiler.phases.compiling.DefaultCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
 
 object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)

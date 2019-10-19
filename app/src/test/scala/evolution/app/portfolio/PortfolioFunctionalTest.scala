@@ -11,7 +11,7 @@ import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.compiling.DefaultCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
 
 class PortfolioSpec extends LanguageSpec {
   "Drawings in Portfolio" - {

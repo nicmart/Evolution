@@ -19,7 +19,7 @@ import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
-import evolution.compiler.phases.compiling.DefaultCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
 
 object App {
 

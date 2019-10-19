@@ -1,4 +1,4 @@
-package evolution.compiler.phases.compiling
+package evolution.compiler.phases.compiler
 
 import cats.implicits._
 import evolution.compiler.expression.Expr
