@@ -6,7 +6,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
 import evolution.compiler.phases.compiling.DefaultCompiler
-import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT

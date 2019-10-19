@@ -1,8 +1,8 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typer
 
 import evolution.compiler.types.TypeT
 import cats.implicits._
-import evolution.compiler.phases.typing.model.{ Constraint, Constraints, Substitution, Unification }
+import evolution.compiler.phases.typer.model.{ Constraint, Constraints, Substitution, Unification }
 
 object UnifyTypes {
   def unify(constraints: Constraints): Either[String, Unification] =

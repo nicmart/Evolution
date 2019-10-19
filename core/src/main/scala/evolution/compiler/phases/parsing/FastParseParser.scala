@@ -4,7 +4,7 @@ import evolution.compiler.phases.parsing
 import evolution.compiler.phases.parsing.ParserConfig._
 import fastparse._
 import evolution.compiler.phases.parsing.ParserConfig.whitespace
-import evolution.compiler.phases.typing.config.{ Constant1, Constant2 }
+import evolution.compiler.phases.typer.config.{ Constant1, Constant2 }
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.{ Tree, TreeF }
 import evolution.compiler.tree

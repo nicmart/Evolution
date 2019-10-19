@@ -1,11 +1,11 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
-import evolution.compiler.phases.typing.model.Substitution
-import evolution.compiler.phases.typing.model.Assignment
+import evolution.compiler.phases.typer.model.Substitution
+import evolution.compiler.phases.typer.model.Assignment
 import evolution.logging.Logger
 
 class UnifyPredicates(logger: Logger) {

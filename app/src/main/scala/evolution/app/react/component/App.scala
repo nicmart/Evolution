@@ -18,7 +18,7 @@ import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parsing.FastParseParser
-import evolution.compiler.phases.typing.UnificationTyper
+import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.compiling.DefaultCompiler
 
 object App {

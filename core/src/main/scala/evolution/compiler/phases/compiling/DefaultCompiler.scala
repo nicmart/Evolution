@@ -3,7 +3,7 @@ package evolution.compiler.phases.compiling
 import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
-import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.phases.Compiler
 import evolution.compiler.types.Typed
 import evolution.compiler.types.TypeT

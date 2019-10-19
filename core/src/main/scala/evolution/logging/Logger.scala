@@ -1,6 +1,6 @@
 package evolution.logging
 import pprint.PPrinter.Color
-import evolution.compiler.phases.typing.model.Assignment
+import evolution.compiler.phases.typer.model.Assignment
 import pprint.Tree
 
 trait Logger {

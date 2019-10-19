@@ -2,9 +2,9 @@ package evolution.compiler
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.typing.UnifyPredicates
-import evolution.compiler.phases.typing.config.TypingConfig
-import evolution.compiler.phases.typing.model.Substitution
+import evolution.compiler.phases.typer.UnifyPredicates
+import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.model.Substitution
 import evolution.logging.NoOpLogger
 
 class UnifyPredicatesSpec extends LanguageSpec {

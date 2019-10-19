@@ -2,11 +2,11 @@ package evolution.compiler
 
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.typing.FindConstraints
-import evolution.compiler.phases.typing.AssignFreshTypeVars
-import evolution.compiler.phases.typing.UnifyTypes.unify
-import evolution.compiler.phases.typing.config.{ Constant1, Constant2, TypingConfig }
-import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.phases.typer.FindConstraints
+import evolution.compiler.phases.typer.AssignFreshTypeVars
+import evolution.compiler.phases.typer.UnifyTypes.unify
+import evolution.compiler.phases.typer.config.{ Constant1, Constant2, TypingConfig }
+import evolution.compiler.phases.typer.model.Constraints
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree._
 

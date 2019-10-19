@@ -1,4 +1,4 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT
@@ -6,10 +6,10 @@ import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
 import cats.data.State
 import evolution.compiler.types.TypeBindings
-import evolution.compiler.phases.typing.model.TypeVarGenerator
+import evolution.compiler.phases.typer.model.TypeVarGenerator
 import evolution.compiler.types.TypeBinding
-import evolution.compiler.phases.typing.model.Assignment
-import evolution.compiler.phases.typing.model.Substitution
+import evolution.compiler.phases.typer.model.Assignment
+import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 

@@ -1,9 +1,9 @@
-package evolution.compiler.phases.typing.config
+package evolution.compiler.phases.typer.config
 
 import cats.implicits._
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
-import evolution.compiler.phases.typing.config.Constant._
+import evolution.compiler.phases.typer.config.Constant._
 import evolution.compiler.types.TypeT._
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT

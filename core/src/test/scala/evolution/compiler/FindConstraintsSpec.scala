@@ -1,12 +1,12 @@
 package evolution.compiler
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.typing.FindConstraints
-import evolution.compiler.phases.typing.AssignFreshTypeVars
-import evolution.compiler.phases.typing.config.TypingConfig
-import evolution.compiler.phases.typing.model.Constraints
+import evolution.compiler.phases.typer.FindConstraints
+import evolution.compiler.phases.typer.AssignFreshTypeVars
+import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.model.Constraints
 import evolution.compiler.tree._
-import evolution.compiler.phases.typing.model.TypeVarGenerator
+import evolution.compiler.phases.typer.model.TypeVarGenerator
 
 class FindConstraintsSpec extends LanguageSpec {
 

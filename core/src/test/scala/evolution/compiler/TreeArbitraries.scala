@@ -6,7 +6,7 @@ import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.parsing.ParserConfig
-import evolution.compiler.phases.typing.config.Constant
+import evolution.compiler.phases.typer.config.Constant
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.phases.parsing.PrecedenceGroup.BinaryOperator

@@ -1,4 +1,4 @@
-package evolution.compiler.phases.typing
+package evolution.compiler.phases.typer
 
 import cats.implicits._
 import evolution.compiler.phases.Typer
@@ -6,8 +6,8 @@ import evolution.compiler.module.Module
 import evolution.compiler.tree._
 import evolution.compiler.types._
 import evolution.logging.Logger
-import evolution.compiler.phases.typing.model.Constraints
-import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compiler.phases.typer.model.Constraints
+import evolution.compiler.phases.typer.config.TypingConfig
 
 final class UnificationTyper(logger: Logger) extends Typer {
   import logger.log

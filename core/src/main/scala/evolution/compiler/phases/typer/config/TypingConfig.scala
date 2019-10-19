@@ -1,4 +1,4 @@
-package evolution.compiler.phases.typing.config
+package evolution.compiler.phases.typer.config
 
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }

@@ -3,7 +3,7 @@ package evolution.app.model
 import evolution.geometry.Point
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.types.TypeT
-import evolution.compiler.phases.typing.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.module.Module
 import evolution.compiler.expression.Expr
