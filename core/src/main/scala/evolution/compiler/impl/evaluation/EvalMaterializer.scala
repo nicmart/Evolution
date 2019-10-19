@@ -7,7 +7,7 @@ import evolution.geometry.Point
 import evolution.compiler.phases.materializing.model.Contextual
 import evolution.compiler.phases.materializing.model.Contextual.WithContext
 import evolution.data.emptyCtx
-import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.phases.Materializer
 import evolution.compiler.expression.Expr.SlidingMap
 import evolution.compiler.expression.Expr.Iterate
 import evolution.compiler.expression.Expr.Iterate2

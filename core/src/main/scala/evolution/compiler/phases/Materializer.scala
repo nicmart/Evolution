@@ -1,4 +1,4 @@
-package evolution.compiler.phases.materializing
+package evolution.compiler.phases
 import evolution.compiler.expression.Expr
 import evolution.materialization.Evolution
 

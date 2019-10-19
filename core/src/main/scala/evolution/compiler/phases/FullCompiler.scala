@@ -6,7 +6,7 @@ import evolution.materialization.Evolution
 import evolution.geometry.Point
 import evolution.logging.Logger
 import evolution.compiler.tree._
-import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.phases.Materializer
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars

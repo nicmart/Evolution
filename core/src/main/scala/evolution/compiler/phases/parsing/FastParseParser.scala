@@ -11,7 +11,7 @@ import evolution.compiler.tree
 import cats.data.NonEmptyList
 import PrecedenceGroup.BinaryOperator
 
-object Parser {
+object FastParseParser {
   def parse(astString: String): Either[ParserFailure, Tree] =
     fastparse
       .parse(astString, program(_))

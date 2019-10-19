@@ -2,11 +2,11 @@ package evolution.compiler
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{ Gen, Shrink }
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.tree.{ SpecialSyntax, Tree }
 
-class ParserSpec extends LanguageSpec {
+class FastParseParserSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {
@@ -526,7 +526,7 @@ class ParserSpec extends LanguageSpec {
                       |g(a a)
                    """.stripMargin
 
-        val failure = Parser.parse(expr)
+        val failure = FastParseParser.parse(expr)
         // The first line is 0
         val lineNumber = failure.left.map(_.lineNumber)
         lineNumber shouldEq Left(1)
@@ -534,5 +534,5 @@ class ParserSpec extends LanguageSpec {
     }
   }
 
-  def unsafeParse(string: String): Tree = Parser.parse(string).toTry.get
+  def unsafeParse(string: String): Tree = FastParseParser.parse(string).toTry.get
 }

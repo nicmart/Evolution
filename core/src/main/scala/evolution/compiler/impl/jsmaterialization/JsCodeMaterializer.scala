@@ -1,6 +1,6 @@
 package evolution.compiler.impl.jsmaterialization
 
-import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.phases.Materializer
 import evolution.compiler.expression.Expr
 import evolution.materialization.Evolution
 import scala.scalajs.js

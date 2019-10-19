@@ -4,7 +4,7 @@ import org.scalacheck.Gen
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.parsing.ParserConfig
 import evolution.compiler.phases.typing.config.Constant
 import evolution.compiler.tree._
@@ -23,7 +23,7 @@ trait TreeArbitraries {
 
   // TODO move all operators here
   def genOperatorWithTree: Gen[(String, BinaryOperator)] =
-    Gen.oneOf[(String, BinaryOperator)](Parser.binaryOperators)
+    Gen.oneOf[(String, BinaryOperator)](FastParseParser.binaryOperators)
 
   def genVarUsage: Gen[String] =
     genIdentifier.filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))

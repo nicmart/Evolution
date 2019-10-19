@@ -1,7 +1,7 @@
 package evolution.compiler.phases
 
 import cats.implicits._
-import evolution.compiler.phases.parsing.Parser
+import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.typing._
 import evolution.compiler.phases.typing.model.Constraints
 import evolution.compiler.types.Type
@@ -20,7 +20,7 @@ final class TypedTreeCompiler(logger: Logger) {
     module: Module
   ): Either[String, TypedTree] =
     for {
-      tree <- Parser.parse(serialisedExpr).leftMap(_.message)
+      tree <- FastParseParser.parse(serialisedExpr).leftMap(_.message)
       _ = log("Done: Parsing of AST")
       treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.typeBindings).asRight
       _ = log(s"Un-typed expression:")

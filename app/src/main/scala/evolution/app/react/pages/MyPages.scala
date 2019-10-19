@@ -3,7 +3,7 @@ package evolution.app.react.pages
 import evolution.app.codec.Codec
 import evolution.app.model.state.{ DrawingState, RendererState }
 import evolution.app.model.Drawing
-import evolution.compiler.phases.materializing.Materializer
+import evolution.compiler.phases.Materializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 import evolution.app.react.routing.DrawingPageUrl
