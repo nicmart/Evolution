@@ -6,7 +6,7 @@ import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.phases.parsing.FastParseParser
+import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.compiling.DefaultCompiler
 

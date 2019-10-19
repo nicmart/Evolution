@@ -1,4 +1,4 @@
-package evolution.compiler.phases.parsing
+package evolution.compiler.phases.parser
 
 import evolution.compiler.tree.Tree
 import fastparse._

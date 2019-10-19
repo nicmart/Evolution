@@ -1,5 +1,5 @@
 package evolution.compiler.phases
-import evolution.compiler.phases.parsing.ParserFailure
+import evolution.compiler.phases.parser.ParserFailure
 import evolution.compiler.tree.Tree
 
 trait Parser {

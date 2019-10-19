@@ -1,6 +1,6 @@
-package evolution.compiler.phases.parsing
+package evolution.compiler.phases.parser
 
-import evolution.compiler.phases.parsing.ParserConfig._
+import evolution.compiler.phases.parser.ParserConfig._
 import fastparse._
 import evolution.compiler.tree.Tree
 import PrecedenceGroup.BinaryOperator

@@ -1,9 +1,9 @@
-package evolution.compiler.phases.parsing
+package evolution.compiler.phases.parser
 
-import evolution.compiler.phases.parsing
-import evolution.compiler.phases.parsing.ParserConfig._
+import evolution.compiler.phases.parser
+import evolution.compiler.phases.parser.ParserConfig._
 import fastparse._
-import evolution.compiler.phases.parsing.ParserConfig.whitespace
+import evolution.compiler.phases.parser.ParserConfig.whitespace
 import evolution.compiler.phases.typer.config.{ Constant1, Constant2 }
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree.{ Tree, TreeF }
@@ -96,7 +96,7 @@ object FastParseParser extends Parser {
     TreeF.App.of(Identifier(name).embed, left, right).embed
 
   // Operator groups, order by ascending Precedence
-  private def precedenceGroups[_: P]: PrecedenceGroups = parsing.PrecedenceGroups(
+  private def precedenceGroups[_: P]: PrecedenceGroups = parser.PrecedenceGroups(
     () => atomicOperand,
     allPrecedenceGroups
   )

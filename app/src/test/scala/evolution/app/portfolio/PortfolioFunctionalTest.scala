@@ -10,7 +10,7 @@ import evolution.compiler.phases.FullCompiler
 import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.phases.typer.UnificationTyper
-import evolution.compiler.phases.parsing.FastParseParser
+import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.compiling.DefaultCompiler
 
 class PortfolioSpec extends LanguageSpec {
