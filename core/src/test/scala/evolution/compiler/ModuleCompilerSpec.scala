@@ -8,11 +8,12 @@ import evolution.compiler.types.TypeT
 import evolution.logging.NoOpLogger
 import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.typing.UnificationTyper
+import evolution.compiler.phases.compiling.DefaultCompiler
 
 class ModuleCompilerSpec extends LanguageSpec {
   "Module compiler" - {
     "should extract type bindings" in {
-      val compiler = new ModuleCompiler(FastParseParser, new UnificationTyper(NoOpLogger), NoOpLogger)
+      val compiler = new ModuleCompiler(FastParseParser, new UnificationTyper(NoOpLogger), DefaultCompiler, NoOpLogger)
       val code = "blah(x, y) = point(x, y) in line(x, y) = point(x, y) in export"
       val module = compiler.compile(code, initialModule)
 

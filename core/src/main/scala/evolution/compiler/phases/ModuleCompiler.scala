@@ -1,7 +1,6 @@
 package evolution.compiler.phases
 
 import cats.syntax.either._
-import evolution.compiler.phases.compiling._
 import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
@@ -10,7 +9,7 @@ import evolution.compiler.tree._
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.tree.TreeF.Let
 
-final class ModuleCompiler(parser: Parser, typer: Typer, logger: Logger) {
+final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -24,11 +23,10 @@ final class ModuleCompiler(parser: Parser, typer: Typer, logger: Logger) {
       typeBindings = extractTypeBindings(typedTree, initialModule.typeBindings)
       _ = log(s"Type bindings extracted")
       _ = log(typeBindings.allBindings)
-      expression <- Compile.compile(typedTree)
-      expressionWithModule = initialModule.load(expression)
+      expression <- compiler.compile(typedTree, initialModule)
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
-      loadModule = replaceVarExpr("export", expressionWithModule) _
+      loadModule = replaceVarExpr("export", expression) _
     } yield Module(typeBindings, loadModule)
 
   // 1. Find type bindings

@@ -11,6 +11,7 @@ import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.phases.typing.UnificationTyper
 import evolution.compiler.phases.parsing.FastParseParser
+import evolution.compiler.phases.compiling.DefaultCompiler
 
 class PortfolioSpec extends LanguageSpec {
   "Drawings in Portfolio" - {
@@ -18,7 +19,7 @@ class PortfolioSpec extends LanguageSpec {
       Portfolio.drawings.foreach { drawing =>
         drawing.title.getOrElse("untitled") in {
           val result =
-            compiler.compile(
+            codeCompiler.compile(
               drawing.drawingState.code,
               drawing.drawingState.seed,
               DrawingContext(CanvasSize(200, 200))
@@ -33,6 +34,8 @@ class PortfolioSpec extends LanguageSpec {
 
   lazy val parser = FastParseParser
   lazy val typer = new UnificationTyper(Conf.logger)
+  lazy val compiler = DefaultCompiler
+  lazy val materializer = EvalMaterializer
   //lazy val compiler = new CodeCompiler(new FullCompiler(typedTreeCompiler, JsCodeMaterializer, Conf.logger))
-  lazy val compiler = new CodeCompiler(new FullCompiler(parser, typer, EvalMaterializer, Conf.logger))
+  lazy val codeCompiler = new CodeCompiler(new FullCompiler(parser, typer, compiler, materializer, Conf.logger))
 }

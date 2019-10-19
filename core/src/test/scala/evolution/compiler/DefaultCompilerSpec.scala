@@ -5,7 +5,7 @@ import org.scalacheck.Shrink
 import org.scalacheck.Arbitrary.arbitrary
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
-import evolution.compiler.phases.compiling.Compile
+import evolution.compiler.phases.compiling.DefaultCompiler
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
@@ -13,8 +13,9 @@ import evolution.compiler.types.TypeT
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
 import evolution.compiler.expression.typeclass._
+import evolution.compiler.module.Module
 
-class CompilerSpec extends LanguageSpec {
+class DefaultCompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
   "The compiler" - {
     "should successfully compile" - {
@@ -198,7 +199,7 @@ class CompilerSpec extends LanguageSpec {
   lazy val intType: Qualified[Type] = Qualified(TypeT.Integer)
 
   private def unsafeCompile[T](expr: TypedTree): Expr[T] =
-    Compile.compile(expr).unsafeEvaluate.asInstanceOf[Expr[T]]
+    DefaultCompiler.compile(expr, Module.empty).unsafeEvaluate.asInstanceOf[Expr[T]]
 
   implicit class Ops(tree: TreeF[TypedTree]) {
     def withNoType = tree.annotate(unknownType)

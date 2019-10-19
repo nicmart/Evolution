@@ -4,17 +4,19 @@ import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
 import evolution.compiler.phases.typing.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.phases.Compiler
 import evolution.compiler.types.Typed
 import evolution.compiler.types.TypeT
 import evolution.materialization.Evolution
 import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
 import scala.collection.immutable.Nil
+import evolution.compiler.module.Module
 
-object Compile {
-
-  def compile(tree: TypedTree): Either[String, Expr[_]] =
-    compileSafe(tree)
+object DefaultCompiler extends Compiler {
+  // TODO module here?
+  def compile(tree: TypedTree, module: Module): Either[String, Expr[_]] =
+    compileSafe(tree).map(module.load)
 
   private def compileSafe(typedTree: TypedTree): Either[String, Expr[Any]] =
     typedTree.tree match {

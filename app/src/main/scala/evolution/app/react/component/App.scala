@@ -19,6 +19,7 @@ import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parsing.FastParseParser
 import evolution.compiler.phases.typing.UnificationTyper
+import evolution.compiler.phases.compiling.DefaultCompiler
 
 object App {
 
@@ -117,6 +118,7 @@ object App {
       new FullCompiler(
         FastParseParser,
         new UnificationTyper(Conf.logger),
+        DefaultCompiler,
         pageState.materializer.materializer,
         Conf.logger
       )
