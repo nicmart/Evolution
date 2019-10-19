@@ -5,11 +5,11 @@ import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 import evolution.compiler.tree._
 
-trait CanBeSubstituted[T] {
+private[typer] trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T
 }
 
-object CanBeSubstituted {
+private[typer] object CanBeSubstituted {
   implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
     def substitute(s: Substitution, t: Type): Type = t match {
       case TypeT.Var(name)                                         => s.lookup(name).getOrElse(t)

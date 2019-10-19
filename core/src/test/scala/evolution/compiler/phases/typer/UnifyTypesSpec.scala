@@ -1,4 +1,4 @@
-package evolution.compiler
+package evolution.compiler.phases.typer
 
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
@@ -9,6 +9,7 @@ import evolution.compiler.phases.typer.config.{ Constant1, Constant2, TypingConf
 import evolution.compiler.phases.typer.model.Constraints
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree._
+import evolution.compiler.LanguageSpec
 
 class UnifyTypesSpec extends LanguageSpec {
 

@@ -4,7 +4,7 @@ import cats.implicits._
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT
 
-final case class Substitution(assignments: List[Assignment]) {
+private[typer] final case class Substitution(assignments: List[Assignment]) {
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
   def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
   def compose(s2: Substitution): Substitution = Substitution(substitute(s2).assignments ++ assignments)
@@ -19,7 +19,7 @@ final case class Substitution(assignments: List[Assignment]) {
   }
 }
 
-object Substitution {
+private[typer] object Substitution {
   def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
     case (s, t) => Assignment(s, t)
   })

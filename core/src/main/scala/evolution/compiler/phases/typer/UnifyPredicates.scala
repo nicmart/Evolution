@@ -8,7 +8,7 @@ import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.phases.typer.model.Assignment
 import evolution.logging.Logger
 
-class UnifyPredicates(logger: Logger) {
+private[typer] final class UnifyPredicates(logger: Logger) {
 
   import logger.log
 

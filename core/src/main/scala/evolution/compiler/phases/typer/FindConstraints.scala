@@ -8,7 +8,7 @@ import evolution.compiler.phases.typer.model.Constraints
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 
-object FindConstraints {
+private[typer] object FindConstraints {
   def find(typedTree: TypedTree): Either[String, Constraints] = {
     // TODO as you can see here predicates are extracted just for identifiers and literals
     val exprType = typedTree.annotation

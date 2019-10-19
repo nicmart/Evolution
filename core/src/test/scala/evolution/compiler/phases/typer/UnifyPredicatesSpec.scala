@@ -1,4 +1,5 @@
-package evolution.compiler
+package evolution.compiler.phases.typer
+
 import scala.util.Random
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
@@ -6,6 +7,7 @@ import evolution.compiler.phases.typer.UnifyPredicates
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.logging.NoOpLogger
+import evolution.compiler.LanguageSpec
 
 class UnifyPredicatesSpec extends LanguageSpec {
 

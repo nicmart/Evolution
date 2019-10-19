@@ -13,7 +13,7 @@ import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
 
-object AssignFreshTypeVars {
+private[typer] object AssignFreshTypeVars {
 
   def assign(expr: Tree, bindings: TypeBindings): TypedTree =
     Tree.catamorphism(assignS)(expr).runA(AssignmentState(TypeVarGenerator.empty, bindings)).value

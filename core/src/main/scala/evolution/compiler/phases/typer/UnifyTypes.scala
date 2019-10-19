@@ -4,7 +4,7 @@ import evolution.compiler.types.TypeT
 import cats.implicits._
 import evolution.compiler.phases.typer.model.{ Constraint, Constraints, Substitution, Unification }
 
-object UnifyTypes {
+private[typer] object UnifyTypes {
   def unify(constraints: Constraints): Either[String, Unification] =
     constraints.constraints match {
       case Nil => Unification.empty.asRight

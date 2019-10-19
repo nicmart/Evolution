@@ -3,7 +3,7 @@ package evolution.compiler.phases.typer.model
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 
-case class Constraints(constraints: List[Constraint]) {
+private[typer] final case class Constraints(constraints: List[Constraint]) {
   def merge(other: Constraints): Constraints = Constraints(constraints ++ other.constraints)
   def merge(other: List[Constraints]): Constraints = other.foldLeft(this) { (constraints, current) =>
     constraints.merge(current)
@@ -17,7 +17,7 @@ case class Constraints(constraints: List[Constraint]) {
   override def toString: String = constraints.mkString("\n")
 }
 
-object Constraints {
+private[typer] object Constraints {
   val empty: Constraints = Constraints(Nil)
   def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
     case (a, b) => Constraint.Eq(a, b)
