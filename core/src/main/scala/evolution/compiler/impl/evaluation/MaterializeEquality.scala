@@ -5,7 +5,7 @@ import cats.kernel.Eq
 import cats.implicits._
 import evolution.geometry.Point
 
-object MaterializeEquality {
+private[evaluation] object MaterializeEquality {
   def apply[T](eq: Equable[T]): Eq[T] = eq match {
     case Equable.Double  => Eq[Double]
     case Equable.Int     => Eq[Int]

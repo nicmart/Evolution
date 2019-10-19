@@ -3,7 +3,7 @@ import evolution.compiler.expression.typeclass.Additive
 import evolution.compiler.expression.typeclass.Additive._
 import evolution.materialization.Evolution
 
-object MaterializeAddition {
+private[evaluation] object MaterializeAddition {
   def apply[A, B, C](additive: Additive[A, B, C])(a: A, b: B): C =
     additive match {
       case DoubleIntDouble    => a + b

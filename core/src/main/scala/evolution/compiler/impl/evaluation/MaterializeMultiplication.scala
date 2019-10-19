@@ -4,7 +4,7 @@ import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass.Multiplicative
 import evolution.compiler.expression.typeclass.Multiplicative._
 
-object MaterializeMultiplication {
+private[evaluation] object MaterializeMultiplication {
   def apply[A, B, C](multiplicative: Multiplicative[A, B, C])(a: A, b: B): C =
     multiplicative match {
       case IntIntInt          => a * b

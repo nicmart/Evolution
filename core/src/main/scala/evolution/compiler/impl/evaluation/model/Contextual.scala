@@ -1,8 +1,8 @@
-package evolution.compiler.phases.materializer.model
+package evolution.compiler.impl.evaluation.model
 
 import evolution.data.Ctx
 
-sealed trait Contextual[+T] { self =>
+private[evaluation] sealed trait Contextual[+T] { self =>
   def apply(ctx: Ctx): T
   final def map[S](f: T => S): Contextual[S] = Contextual.map(this, f)
   final def isPure: Boolean = this match {
@@ -11,7 +11,7 @@ sealed trait Contextual[+T] { self =>
   }
 }
 
-object Contextual {
+private[evaluation] object Contextual {
   case class Pure[T](t: T) extends Contextual[T] {
     override def apply(ctx: Ctx): T = t
   }
