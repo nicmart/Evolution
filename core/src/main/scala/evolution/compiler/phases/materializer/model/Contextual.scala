@@ -1,4 +1,4 @@
-package evolution.compiler.phases.materializing.model
+package evolution.compiler.phases.materializer.model
 
 import evolution.data.Ctx
 

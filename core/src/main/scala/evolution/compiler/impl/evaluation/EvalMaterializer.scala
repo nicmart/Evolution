@@ -4,8 +4,8 @@ import evolution.materialization.Evolution
 import evolution.data.EvaluationContext._
 import evolution.compiler.expression.Expr
 import evolution.geometry.Point
-import evolution.compiler.phases.materializing.model.Contextual
-import evolution.compiler.phases.materializing.model.Contextual.WithContext
+import evolution.compiler.phases.materializer.model.Contextual
+import evolution.compiler.phases.materializer.model.Contextual.WithContext
 import evolution.data.emptyCtx
 import evolution.compiler.phases.Materializer
 import evolution.compiler.expression.Expr.SlidingMap
