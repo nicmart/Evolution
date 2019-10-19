@@ -1,5 +1,6 @@
 package evolution.compiler.phases
 
+import cats.syntax.either._
 import evolution.compiler.phases.compiling._
 import evolution.compiler.types.Type
 import evolution.materialization.Evolution
@@ -11,7 +12,7 @@ import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.phases.checkvars.CheckVars
 
-final class FullCompiler(typedTreeCompiler: TypedTreeCompiler, materializer: Materializer, logger: Logger) {
+final class FullCompiler(parser: Parser, typer: Typer, materializer: Materializer, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
@@ -21,7 +22,8 @@ final class FullCompiler(typedTreeCompiler: TypedTreeCompiler, materializer: Mat
     module: Module
   ): Either[String, Long => Iterator[Point]] =
     for {
-      typedTree <- typedTreeCompiler.compile(serialisedExpr, Some(expectedType), module)
+      untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
+      typedTree <- typer.typeTree(untypedTree, Some(expectedType), module)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))

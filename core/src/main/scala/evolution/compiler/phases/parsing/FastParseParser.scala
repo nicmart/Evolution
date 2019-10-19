@@ -10,8 +10,9 @@ import evolution.compiler.tree.{ Tree, TreeF }
 import evolution.compiler.tree
 import cats.data.NonEmptyList
 import PrecedenceGroup.BinaryOperator
+import evolution.compiler.phases.Parser
 
-object FastParseParser {
+object FastParseParser extends Parser {
   def parse(astString: String): Either[ParserFailure, Tree] =
     fastparse
       .parse(astString, program(_))
@@ -118,7 +119,6 @@ object FastParseParser {
       case Nil => receiver
       case (firstMethod, maybeArgs) :: nextSelections =>
         dotSelection(
-          
           App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))).embed,
           nextSelections
         )

@@ -17,7 +17,8 @@ import evolution.app.model.Drawing
 import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
-import evolution.compiler.phases.TypedTreeCompiler
+import evolution.compiler.phases.parsing.FastParseParser
+import evolution.compiler.phases.typing.UnificationTyper
 
 object App {
 
@@ -113,7 +114,12 @@ object App {
   private def codeCompiler(pageState: PageState) = {
     println(s"materializer is ${pageState.materializer}")
     new CodeCompiler(
-      new FullCompiler(new TypedTreeCompiler(Conf.logger), pageState.materializer.materializer, Conf.logger)
+      new FullCompiler(
+        FastParseParser,
+        new UnificationTyper(Conf.logger),
+        pageState.materializer.materializer,
+        Conf.logger
+      )
     )
   }
 

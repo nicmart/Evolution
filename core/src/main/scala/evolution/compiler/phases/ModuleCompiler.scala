@@ -1,7 +1,7 @@
 package evolution.compiler.phases
 
+import cats.syntax.either._
 import evolution.compiler.phases.compiling._
-
 import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
@@ -10,13 +10,14 @@ import evolution.compiler.tree._
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.tree.TreeF.Let
 
-final class ModuleCompiler(typedTreeCompiler: TypedTreeCompiler, logger: Logger) {
+final class ModuleCompiler(parser: Parser, typer: Typer, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {
-      typedTree <- typedTreeCompiler.compile(serialisedExpr, None, initialModule)
+      untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
+      typedTree <- typer.typeTree(untypedTree, None, initialModule)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))

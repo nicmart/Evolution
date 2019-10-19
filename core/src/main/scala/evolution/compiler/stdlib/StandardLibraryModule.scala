@@ -6,7 +6,8 @@ import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.TypeT
 import evolution.compiler.phases.typing.config.TypingConfig
-import evolution.compiler.phases.TypedTreeCompiler
+import evolution.compiler.phases.parsing.FastParseParser
+import evolution.compiler.phases.typing.UnificationTyper
 
 object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
@@ -21,7 +22,7 @@ object StandardLibraryModule {
   )
 
   private lazy val moduleCompiler =
-    new ModuleCompiler(new TypedTreeCompiler(NoOpLogger), NoOpLogger)
+    new ModuleCompiler(FastParseParser, new UnificationTyper(NoOpLogger), NoOpLogger)
 
   private lazy val code = StdLib.code
 }
