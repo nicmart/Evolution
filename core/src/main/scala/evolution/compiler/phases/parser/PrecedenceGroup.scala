@@ -5,7 +5,7 @@ import fastparse._
 import evolution.compiler.tree.Tree
 import PrecedenceGroup.BinaryOperator
 
-case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
+private[parser] final case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
   def parser[_: P](next: () => P[Tree]): P[Tree] = P(next() ~/ (opsParser ~/ next()).rep).map {
     case (head, tail) => evalAssocBinaryOp(head, tail.toList)
   }

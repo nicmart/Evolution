@@ -2,7 +2,7 @@ package evolution.compiler.phases.parser
 
 import fastparse._
 
-object ParserConfig {
+private[parser] object ParserConfig {
   //import fastparse.NoWhitespace._
   val whitespacesChars = " \n\r\t"
 
