@@ -1,7 +1,8 @@
-package evolution.materialization
+package evolution.compiler.impl.evaluation
 
 import evolution.compiler.LanguageSpec
-import Evolution._
+import evolution.materialization.Evolution
+import evolution.materialization.Evolution._
 import evolution.geometry.Point
 import org.scalatest.Inspectors
 import evolution.compiler.expression.typeclass._

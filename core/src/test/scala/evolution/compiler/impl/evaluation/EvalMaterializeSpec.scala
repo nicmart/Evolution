@@ -1,4 +1,4 @@
-package evolution.compiler
+package evolution.compiler.impl.evaluation
 
 import evolution.data.EvaluationContext._
 import evolution.geometry.Point
@@ -8,7 +8,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{ FreeSpec, Matchers }
-import impl.evaluation.EvalMaterializer.materializeExpr
+import EvalMaterializer.materializeExpr
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
 import evolution.compiler.impl.evaluation.MaterializeEquality

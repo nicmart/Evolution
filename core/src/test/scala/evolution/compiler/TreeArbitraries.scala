@@ -5,7 +5,6 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.parser.ParserConfig
 import evolution.compiler.phases.typer.config.Constant
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
@@ -59,5 +58,5 @@ trait TreeArbitraries {
     } yield Identifier(char.toString).embed
 
   def genWhitespace: Gen[String] =
-    Gen.listOf(Gen.oneOf(ParserConfig.whitespacesChars.toList)).map(_.mkString(""))
+    Gen.listOf(Gen.oneOf(List(" ", "\n", "\r", "\t"))).map(_.mkString(""))
 }

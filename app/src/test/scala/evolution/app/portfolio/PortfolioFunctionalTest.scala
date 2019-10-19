@@ -7,7 +7,6 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
-import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.parser.FastParseParser

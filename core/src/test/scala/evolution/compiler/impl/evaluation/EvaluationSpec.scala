@@ -1,4 +1,4 @@
-package evolution.data
+package evolution.compiler.impl.evaluation
 
 import evolution.data.EvaluationContext._
 import evolution.compiler.expression.Expr._
@@ -9,7 +9,7 @@ import evolution.compiler.impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.compiler.impl.evaluation.model.Contextual
 import evolution.compiler.expression.typeclass.Additive
 
-class EvaluationSpec extends FreeSpec with Matchers {
+final class EvaluationSpec extends FreeSpec with Matchers {
   type F[T] = Evolution[T]
   "a var0 expression" - {
     "evaluates to the first item in the stack" in {
