@@ -1,5 +1,5 @@
 package evolution.compiler.module
-import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.checkvars.model.VarContext
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr.Let
 

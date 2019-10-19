@@ -1,4 +1,4 @@
-package evolution.compiler.phases.compiling.model
+package evolution.compiler.phases.checkvars.model
 
 case class VarContext(vars: List[String]) {
   def has(variable: String): Boolean = vars.contains(variable)

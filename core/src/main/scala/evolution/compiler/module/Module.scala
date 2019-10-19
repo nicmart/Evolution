@@ -1,7 +1,7 @@
 package evolution.compiler.module
 import evolution.compiler.types.TypeBindings
 import evolution.compiler.expression.Expr
-import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.checkvars.model.VarContext
 
 final case class Module(typeBindings: TypeBindings, load: Expr[Any] => Expr[Any]) {
   def compose(other: Module): Module =

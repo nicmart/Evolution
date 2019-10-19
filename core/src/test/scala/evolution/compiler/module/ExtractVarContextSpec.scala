@@ -1,7 +1,7 @@
 package evolution.compiler.module
 import evolution.compiler.LanguageSpec
 import evolution.compiler.expression.Expr
-import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.checkvars.model.VarContext
 
 class ExtractVarContextSpec extends LanguageSpec {
   "ExtractVarContext" - {

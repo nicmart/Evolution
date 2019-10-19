@@ -2,7 +2,7 @@ package evolution.compiler.phases.checkvars
 
 import cats.data.Kleisli
 import cats.implicits._
-import evolution.compiler.phases.compiling.model.VarContext
+import evolution.compiler.phases.checkvars.model.VarContext
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr.Var
 import evolution.compiler.expression.Expr.Let
