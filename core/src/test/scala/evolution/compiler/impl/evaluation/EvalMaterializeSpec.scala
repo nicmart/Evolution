@@ -160,6 +160,19 @@ class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks wi
       val factorial = materializeExpr(expression)(emptyCtx).asInstanceOf[Int => Int]
       factorial(3) shouldBe 6
     }
+
+    "should materialize connect expressions" in {
+      val expression = Expr.Connect(
+        Expr.Cons(Expr.Dbl(0), Expr.Empty()),
+        Expr.Lambda[Double, Evolution[Double]](
+          "x",
+          Expr.Constant(Expr.Add(Expr.Var("x"), Expr.Dbl(1), Additive.DoubleDoubleDouble))
+        )
+      )
+      val elems = materializeExpr(expression)(emptyCtx).asInstanceOf[Evolution[Double]].run.take(10).toList
+
+      elems shouldBe 0 :: List.fill(9)(1)
+    }
   }
 
   val genBooleanLiteral: Gen[Bool] = Gen.oneOf(false, true).map(Bool)

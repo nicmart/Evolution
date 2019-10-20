@@ -110,6 +110,9 @@ object Expr {
   final case class WithFirst[A, B](as: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(as, f))
 
+  final case class Connect[A](as: Expr[Evolution[A]], f: Expr[A => Evolution[A]])
+      extends Expr[Evolution[A]](List(as, f))
+
   // Distributions
   final case class Constant[T](t: Expr[T]) extends Expr[Evolution[T]](List(t))
   final case class Range(from: Expr[Double], to: Expr[Double], step: Expr[Double])

@@ -13,6 +13,7 @@ import evolution.compiler.expression.Expr.Iterate
 import evolution.compiler.expression.Expr.Iterate2
 import evolution.compiler.expression.Expr.FromList
 import evolution.compiler.expression.Expr.Grouped
+import evolution.compiler.expression.Expr.Connect
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {
@@ -148,6 +149,8 @@ object EvalMaterializer extends Materializer {
 
       case Expr.WithFirst(as, f) =>
         interpret2(as, f)(Evolution.withFirst1)
+
+      case Connect(as, f) => interpret2(as, f)(Evolution.connect)
 
       case Expr.FlatMap(faExpr, fExpr) => interpret2(faExpr, fExpr)(Evolution.flatMap)
 

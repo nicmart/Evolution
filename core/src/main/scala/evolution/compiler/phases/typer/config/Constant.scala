@@ -287,6 +287,12 @@ object Constant2 extends Enum[Constant2] {
       Expr.WithFirst(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
+  case object Connect
+      extends Constant2Plain(Qualified(Evo(Var("T")) =>: (Var("T") =>: Evo(Var("T"))) =>: Evo(Var("T")))) {
+    override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
+      Expr.Connect(x.asExprF, y.asExpr[Any => Evolution[Any]])
+  }
+
   case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(x.tpe, x.tpe, x.tpe).map(add => Expr.Integrate(x.value, y.value.asExprF, add))
