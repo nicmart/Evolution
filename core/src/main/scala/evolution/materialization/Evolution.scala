@@ -300,6 +300,32 @@ object Evolution {
       }
   }
 
+  def connect[A](first: Evolution[A], f: A => Evolution[A]): Evolution[A] = new Evolution[A] {
+    override def run: Iterator[A] = new AbstractIterator[A] {
+      val firstIterator = first.run
+      var currentIteratorIsFirst = true
+      var isLastDefined = false
+      var last: A = _
+      var currentIterator = firstIterator
+      def hasNext: Boolean = currentIterator.hasNext || hasNextWhenCurrentIteratorIsEmpty()
+      def next(): A = {
+        last = currentIterator.next()
+        isLastDefined = true
+        last
+      }
+
+      private def hasNextWhenCurrentIteratorIsEmpty(): Boolean = {
+        if (currentIteratorIsFirst) {
+          if (isLastDefined) {
+            currentIterator = f(last).run
+            currentIteratorIsFirst = false
+            currentIterator.hasNext
+          } else false
+        } else false
+      }
+    }
+  }
+
   def shuffle[T](ts: List[T]): Evolution[List[T]] = new Evolution[List[T]] {
     def run: Iterator[List[T]] = Iterator.continually(Random.shuffle(ts))
   }

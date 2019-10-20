@@ -109,5 +109,18 @@ class EvolutionSpec extends LanguageSpec {
         result shouldBe (1 to 100 by 3).toList
       }
     }
+
+    "connect" - {
+      "should be empty when the first evolution is empty" in {
+        val result = connect[Int](Evolution.empty, Evolution.constant).run.take(100).toList
+        result should be(empty)
+      }
+
+      "should use the last element to generate the second evolution" in {
+        val result =
+          connect[Int](Evolution.cons(0, Evolution.empty), last => Evolution.constant(last + 1)).run.take(100).toList
+        result shouldBe 0 :: List.fill(99)(1)
+      }
+    }
   }
 }
