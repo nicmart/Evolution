@@ -1,12 +1,13 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.compiler.expression.typeclass.Additive
+import evolution.compiler.expression.typeclass.{ Additive, Multiplicative }
 import evolution.compiler.phases.typer.config._
+import evolution.compiler.types.{ Type, Typed }
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 
 class ConstantMaterializer {
-  def materialize(const: Constant): Any = const match {
+  def materialize(const: Constant, tpe: Type): Any = const match {
     case constant: Constant0 =>
       constant match {
         case Constant0.PI          => Math.PI
@@ -70,8 +71,12 @@ class ConstantMaterializer {
             case Constant2.UniformFrom => ???
             case Constant2.Normal      => ???
           }
-        case Constant2.Multiply           => ???
-        case Constant2.Add                => (add: Additive[Any, Any, Any], a: Any, b: Any) => MaterializeAddition(add)(a, b)
+        case Constant2.Multiply => // Type-classes - option 1: someone gives us the type-class
+          (mul: Multiplicative[Any, Any, Any], a: Any, b: Any) => MaterializeMultiplication(mul)(a, b)
+
+        case Constant2.Add => // Type-classes - option 2: we receive the types and we extract the type-class
+          (a: Typed[Any], b: Typed[Any]) => // Note: this would be very slow, instance should be extracted outside
+            MaterializeAddition(TypingConfig.additive(a.tpe, b.tpe, tpe).right.get)(a, b)
         case Constant2.Minus              => ???
         case Constant2.Eq                 => ???
         case Constant2.Neq                => ???
