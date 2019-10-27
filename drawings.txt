@@ -1321,4 +1321,29 @@ d(p) = rp(p).slidingMap(
 ).flatten in
 
 grid(g).map(d).parallel
-  
+
+--------------------------------------
+// brownians on circles
+l = 50 in
+
+square = finiteRectangle(point(-l, -l), point(l, l), 1) in
+
+replicateOnGridAndClip(evo, l) = 
+	evo.clip(point(-l/2, -l/2), point(l/2, l/2)).replicateOn(grid(l))
+in
+
+rw = integrate(origin, @point(uniform(-.4, .4), uniform(-.41, .4))) in
+
+rw.drawOn(
+  r <- uniform(10, 30) in
+  circle(5, .04)
+)
+	.replicateOnGridAndClip(100)
+
+// oscillators on straight lines
+------------------------------------------
+b1 = randomWalk(1000).slidingMap(p1 -> p2 -> line(p1, p2, .1)).flatten in
+
+n = @polar(bernoulli(.001, 10), uniform(0, 2 * pi)) in
+
+dampedOscillator(-.01, -.01, n).drawOn(b1)
