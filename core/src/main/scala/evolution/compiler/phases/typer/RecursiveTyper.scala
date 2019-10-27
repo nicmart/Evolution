@@ -32,7 +32,7 @@ final class RecursiveTyper extends Typer {
     tree.value match {
       case Bool(b)          => Bool(b).typeWithNoPredicates(TypeT.Bool).pure[F]
       case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(TypeT.Double).pure[F]
-      
+
       case IntLiteral(n) =>
         for {
           typeVar <- newTypeVar
@@ -58,8 +58,10 @@ final class RecursiveTyper extends Typer {
 sealed trait Inference[F[+ _]] {
   def monad: Monad[F]
   def newTypeVar: F[TypeT.Var]
-  def currentSubstitution: F[Substitution]
+  def substitution: F[Substitution]
+  def typeBindings: F[TypeBindings]
   def setSubstitution(subst: Substitution): F[Unit]
+  def setTypeBindings(typeBindings: TypeBindings): F[Unit]
   def error(message: String): F[Nothing]
 }
 
