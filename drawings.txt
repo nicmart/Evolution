@@ -1347,3 +1347,66 @@ b1 = randomWalk(1000).slidingMap(p1 -> p2 -> line(p1, p2, .1)).flatten in
 n = @polar(bernoulli(.001, 10), uniform(0, 2 * pi)) in
 
 dampedOscillator(-.01, -.01, n).drawOn(b1)
+-------------------------------------------------
+// Another kind of web
+uniformFrom(1000000, randomWalk(2))
+    .slidingMap(p1 -> p2 ->
+    	if (norm(p2 - p1) <100, line(p1, p2, 2), [])
+    ).flatten
+-------------------------------------------
+// Squares with perlin noise
+n <- noise in
+
+rectangleR(r) = finiteRectangle(point(r, r), point(-r, -r), 1) in
+
+grid(50).flatMap(p ->
+  p + rectangleR(40 * abs(n(.003 * p)) + 5)
+)
+--------------------------------------------
+// Wave Clock (Generative art book, page 77)
+noiseK(length, strength, offset) = noise.map(n -> p -> strength * n(length * p) + offset) in
+noiseKScalar(length, strength, offset) =
+	noiseK(length, strength, offset).map(n -> d -> n(point(d, 0)))
+in
+
+noiseKPosScalar(length, strength, offset) =
+	noise.map(n -> d -> strength * abs(n(length * point(d, 0))) + offset)
+in
+
+n <- noiseKScalar(.003, 5, 0) in
+nr <- noiseKScalar(.01, 300, 400) in
+nop <- noiseKPosScalar(.001, 10, 1) in
+
+perturbate(d) = d + n(d) in
+
+alphas = integrate(0, 1.const).map(a -> n(a)) in
+rs = integrate(0, 1.const).map(r -> nr(r)) in
+steps = integrate(0, 1.const).map(s -> nop(s)) in
+origins = dampedOscillator(-.1, -.1, uniformPoint(1)) in
+
+lines = zip(
+  alpha <- alphas,
+	r <- rs,
+  s <- steps,
+  o <- origins
+) in o + line(-polar(r, alpha), polar(r, alpha), s)
+in
+
+lines.flatten
+
+-------------------------------------------
+RandomWalk plus noise on speed
+
+noiseK(l, s) =
+	zip(
+    n1 <- noise,
+    n2 <- noise
+  ) in p ->  s * point(n1(l *p), n2(l*p))
+in
+
+n <- noiseK(.07, 30) in
+
+roll(
+  uniformPoint(4).map(q -> p -> q + p + n(p)),
+  origin
+)
