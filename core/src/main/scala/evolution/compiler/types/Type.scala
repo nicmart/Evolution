@@ -24,6 +24,13 @@ object Type {
     def withType(t: Type): Type = replaceVar(tpe, varName, t)
   }
 
+  object ForAll {
+    def apply(vars: List[String], tpe: Type): Type = vars match {
+      case Nil          => tpe
+      case head :: tail => ForAll(head, ForAll(tail, tpe))
+    }
+  }
+
   // TODO this is already done with substitutions
   def replaceVar(tpe: Type, varName: String, replaceWith: Type): Type = {
     def replace(tpe: Type): Type = replaceVar(tpe, varName, replaceWith)
@@ -38,6 +45,15 @@ object Type {
     }
   }
 
+  def mapChildren(tpe: Type, f: Type => Type): Type =
+    tpe match {
+      case Arrow(from, to)      => Arrow(f(from), f(to))
+      case Lst(inner)           => Lst(f(inner))
+      case ForAll(varName, tpe) => ForAll(varName, f(tpe))
+      case Evo(inner)           => Evo(f(inner))
+      case _                    => tpe
+    }
+
   implicit final class TypeOpsUntyped(val self: Type) extends AnyVal {
     def children: List[Type] = self match {
       case Type.Evo(inner)      => List(inner)
@@ -47,9 +63,18 @@ object Type {
       case _                    => Nil
     }
 
+    def mapChildren(f: Type => Type): Type = Type.mapChildren(self, f)
+
+    def transformRec(f: Type => Type): Type = f(self.mapChildren(child => child.transformRec(f)))
+
     def typeVars: Set[Type.Var] = self match {
       case Type.Var(name) => Set(Type.Var(name))
       case _              => children.flatMap(_.typeVars).toSet
+    }
+
+    def quantifiedTypeVars: Set[Type.Var] = self match {
+      case ForAll(varName, tpe) => children.flatMap(_.quantifiedTypeVars).toSet + Type.Var(varName)
+      case _                    => children.flatMap(_.quantifiedTypeVars).toSet
     }
 
     def typeVarUsages(varName: String): List[Type] =

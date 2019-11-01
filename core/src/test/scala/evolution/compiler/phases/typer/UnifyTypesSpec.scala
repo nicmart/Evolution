@@ -50,8 +50,8 @@ class UnifyTypesSpec extends LanguageSpec {
           App.of(Identifier.const(Constant2.Point).embed, Identifier("a").embed, Identifier("b").embed).embed
         val extraBindings = new TypeBindings(
           Map(
-            "a" -> TypeBinding.Fixed("a", Qualified(Type.Double)),
-            "b" -> TypeBinding.Fixed("b", Qualified(Type.Double))
+            "a" -> TypeBinding("a", Qualified(Type.Double), false),
+            "b" -> TypeBinding("b", Qualified(Type.Double), false)
           )
         )
         val (expr, constraints) =

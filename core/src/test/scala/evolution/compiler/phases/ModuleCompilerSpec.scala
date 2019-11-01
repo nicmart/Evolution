@@ -19,7 +19,7 @@ class ModuleCompilerSpec extends LanguageSpec {
 
       val inferredBinding = module.unsafeEvaluate.typeBindings.getBinding("line")
 
-      val expectedBinding = TypeBinding.Fixed("line", Qualified(Type.Double =>: Type.Double =>: Type.Point))
+      val expectedBinding = TypeBinding("line", Qualified(Type.Double =>: Type.Double =>: Type.Point), false)
       inferredBinding should contain(expectedBinding)
     }
   }

@@ -11,6 +11,7 @@ import evolution.compiler.phases.typer.model.Assignment
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
+import evolution.compiler.types.Type.ForAll
 
 private[typer] object AssignFreshTypeVars {
 
@@ -90,18 +91,22 @@ private[typer] object AssignFreshTypeVars {
 
   // Resolve type-bindings for predefined constants schemes
   private def identifier(binding: TypeBinding): S[TypedTree] = {
-    binding match {
-      case TypeBinding.Fixed(_, _) =>
-        Identifier(binding.name).annotate(binding.qualifiedType).pure[S]
-      case TypeBinding.Scheme(_, _) =>
-        val varsInScheme = binding.qualifiedType.value.typeVars.toList
-        for {
-          assignSments <- varsInScheme.traverse(
-            schemeVar => newTypeVar.map(typeVar => Assignment(schemeVar.name, typeVar.value))
-          )
-          substitution = Substitution(assignSments)
-          substitutedType = substitution.substitute(binding.qualifiedType)
-        } yield Identifier(binding.name, true).annotate(substitutedType)
-    }
+    val quantifiedTypeVars = binding.qualifiedType.value.quantifiedTypeVars.toList
+    for {
+      assignments <- quantifiedTypeVars.traverse(
+        quantifiedVar => newTypeVar.map(typeVar => Assignment(quantifiedVar.name, typeVar.value))
+      )
+      substitution = Substitution(assignments)
+      substitutedType = Qualified(
+        substitution.substitute(binding.qualifiedType.predicates),
+        instantiateQuantifiedTypes(binding.qualifiedType.value, substitution)
+      )
+    } yield Identifier(binding.name, binding.primitive).annotate(substitutedType)
   }
+
+  private def instantiateQuantifiedTypes(tpe: Type, substitution: Substitution): Type = tpe match {
+    case ForAll(varName, body) => instantiateQuantifiedTypes(body, substitution)
+    case _                     => substitution.substitute(tpe)
+  }
+
 }

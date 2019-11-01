@@ -38,7 +38,7 @@ object Constant0 extends Enum[Constant0] {
       Expr.Dbl(Math.PI).asRight
   }
 
-  case object Empty extends Constant0(Qualified(Var("T"))) {
+  case object Empty extends Constant0(Qualified(ForAll("T", Var("T")))) {
     def compile(tpe: Qualified[Type]): Either[String, Expr[_]] =
       Expr.FromList(Expr.Lst(Nil)).asRight
   }
@@ -104,7 +104,7 @@ object Constant1 extends Enum[Constant1] {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Versor(x.asExpr)
   }
 
-  case object Inverse extends Constant1(Qualified(Var("T") =>: Var("T"))) {
+  case object Inverse extends Constant1(Qualified(ForAll("T", Var("T") =>: Var("T")))) {
     override def compile(x: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.invertible(x.tpe).map(inv => Expr.Inverse(x.value, inv))
   }
@@ -121,28 +121,29 @@ object Constant1 extends Enum[Constant1] {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Not(x.asExpr)
   }
 
-  case object Constant extends Constant1Plain(Qualified(Var("T") =>: Evo(Var("T")))) {
+  case object Constant extends Constant1Plain(Qualified(ForAll("T", Var("T") =>: Evo(Var("T"))))) {
     override def entryName: String = "const"
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Constant(x.asExpr)
   }
 
-  case object FromList extends Constant1Plain(Qualified(Lst(Var("T")) =>: Evo(Var("T")))) {
+  case object FromList extends Constant1Plain(Qualified(ForAll("T", Lst(Var("T")) =>: Evo(Var("T"))))) {
     def compilePlain(x: Expr[_]): Expr[_] = Expr.FromList(x.asExpr)
   }
 
-  case object Fix extends Constant1Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T"))) {
+  case object Fix extends Constant1Plain(Qualified(ForAll("T", (Var("T") =>: Var("T")) =>: Var("T")))) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Fix(x.asExpr[Any => Any])
   }
 
-  case object Flatten extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
+  case object Flatten extends Constant1Plain(Qualified(ForAll("T", Evo(Evo(Var("T"))) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Flatten(x.asExprF[Evolution[Any]])
   }
 
-  case object Parallel extends Constant1Plain(Qualified(Evo(Evo(Var("T"))) =>: Evo(Var("T")))) {
+  case object Parallel extends Constant1Plain(Qualified(ForAll("T", Evo(Evo(Var("T"))) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Parallel(x.asExprF[Evolution[Any]])
   }
 
-  case object Derive extends Constant1(Qualified(isInvertSemigroup("T"), Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object Derive
+      extends Constant1(Qualified(isInvertSemigroup("T"), ForAll("T", Evo(Var("T")) =>: Evo(Var("T"))))) {
 
     override def compile(x: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
@@ -184,8 +185,7 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
   }
 
-  case object LiftedPoint
-      extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
+  case object LiftedPoint extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
     override def entryName: String = "@point"
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.LiftedPnt(x.asExprF, y.asExprF).asExpr[Evolution[_]]
@@ -195,8 +195,7 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Polar(x.asExpr, y.asExpr)
   }
 
-  case object LiftedPolar
-      extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
+  case object LiftedPolar extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
     override def entryName: String = "@polar"
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.LiftedPolar(x.asExprF, y.asExprF)
@@ -204,7 +203,10 @@ object Constant2 extends Enum[Constant2] {
 
   case object Multiply
       extends Constant2(
-        Qualified(List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
+        Qualified(
+          List(Predicate("Mult", List(Var("A"), Var("B"), Var("C")))),
+          ForAll(List("A", "B", "C"), Var("A") =>: Var("B") =>: Var("C"))
+        )
       ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.multiplicative(x.tpe, y.tpe, out).map(sg => Expr.Multiply(x.value, y.value, sg))
@@ -212,13 +214,17 @@ object Constant2 extends Enum[Constant2] {
 
   case object Add
       extends Constant2(
-        Qualified(List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))), Var("A") =>: Var("B") =>: Var("C"))
+        Qualified(
+          List(Predicate("Add", List(Var("A"), Var("B"), Var("C")))),
+          ForAll(List("A", "B", "C"), Var("A") =>: Var("B") =>: Var("C"))
+        )
       ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(x.tpe, y.tpe, out).map(sg => Expr.Add(x.value, y.value, sg))
   }
 
-  case object Minus extends Constant2(Qualified(isInvertSemigroup("T"), Var("T") =>: Var("T") =>: Var("T"))) {
+  case object Minus
+      extends Constant2(Qualified(isInvertSemigroup("T"), ForAll("T", Var("T") =>: Var("T") =>: Var("T")))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       for {
         inv <- TypingConfig.invertible(x.tpe)
@@ -246,82 +252,94 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Or(x.asExpr, y.asExpr)
   }
 
-  case object Eq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object Eq extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.equable(y.tpe).map(eq => Expr.Equals(x.value, y.value, eq))
 
   }
 
-  case object Neq extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object Neq extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.equable(y.tpe).map(eq => Expr.Neq(x.value, y.value, eq))
   }
 
-  case object GreaterThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object GreaterThan extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThan(x.value, y.value, order))
   }
 
-  case object GreaterThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object GreaterThanOrEqual extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value, y.value, order))
   }
 
-  case object LessThan extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object LessThan extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.LessThan(x.value, y.value, order))
   }
 
-  case object LessThanOrEqual extends Constant2(Qualified(Var("T") =>: Var("T") =>: Bool)) {
+  case object LessThanOrEqual extends Constant2(Qualified(ForAll("T", Var("T") =>: Var("T") =>: Bool))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.LessThanOrEqual(x.value, y.value, order))
   }
 
-  case object Cons extends Constant2Plain(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object Cons extends Constant2Plain(Qualified(ForAll("T", Var("T") =>: Evo(Var("T")) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Cons(x.asExpr, y.asExprF)
   }
 
   case object WithFirst
-      extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      extends Constant2Plain(
+        Qualified(ForAll(List("T1", "T2"), Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2"))))
+      ) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.WithFirst(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
   case object Connect
-      extends Constant2Plain(Qualified(Evo(Var("T")) =>: (Var("T") =>: Evo(Var("T"))) =>: Evo(Var("T")))) {
+      extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: (Var("T") =>: Evo(Var("T"))) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.Connect(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
-  case object Integrate extends Constant2(Qualified(Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object Integrate extends Constant2(Qualified(ForAll("T", Var("T") =>: Evo(Var("T")) =>: Evo(Var("T"))))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(x.tpe, x.tpe, x.tpe).map(add => Expr.Integrate(x.value, y.value.asExprF, add))
   }
 
-  case object Solve1 extends Constant2(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
+  case object Solve1
+      extends Constant2(Qualified(ForAll("T", Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T"))))) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(y.tpe, y.tpe, y.tpe).map(add => Expr.Solve1(x.value.asExprF, y.value, add))
   }
 
-  case object Roll extends Constant2Plain(Qualified(Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
+  case object Roll
+      extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.Roll(x.asExprF[Any => Any], y)
   }
 
-  case object Concat extends Constant2Plain(Qualified(Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object Concat extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Concat(x.asExprF, y.asExprF)
   }
 
-  case object Map extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
+  case object Map
+      extends Constant2Plain(
+        Qualified(ForAll(List("T1", "T2"), Evo(Var("T1")) =>: (Var("T1") =>: Var("T2")) =>: Evo(Var("T2"))))
+      ) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Map(x.asExprF, y.asExpr[Any => Any])
   }
 
   case object SlidingMap
-      extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))) {
+      extends Constant2Plain(
+        Qualified(
+          ForAll(List("T1", "T2"), Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))
+        )
+      ) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.SlidingMap(x.asExprF, y.asExpr[Any => Any => Any])
   }
 
-  case object Iterate extends Constant2Plain(Qualified((Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))) {
+  case object Iterate
+      extends Constant2Plain(Qualified(ForAll("T", (Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T"))))) {
     override def compilePlain(f: Expr[_], start: Expr[_]): Expr[_] =
       Expr.Iterate(f.asExpr[Any => Any], start)
   }
@@ -330,7 +348,7 @@ object Constant2 extends Enum[Constant2] {
       extends Constant2(
         Qualified(
           isInvertSemigroup("T1"),
-          Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2"))
+          ForAll(List("T1", "T2"), Evo(Var("T1")) =>: (Var("T1") =>: Var("T1") =>: Var("T2")) =>: Evo(Var("T2")))
         )
       ) {
 
@@ -343,21 +361,24 @@ object Constant2 extends Enum[Constant2] {
   }
 
   case object FlatMap
-      extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2")))) {
+      extends Constant2Plain(
+        Qualified(ForAll(List("T1", "T2"), Evo(Var("T1")) =>: (Var("T1") =>: Evo(Var("T2"))) =>: Evo(Var("T2"))))
+      ) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.FlatMap(x.asExprF, y.asExpr[Any => Evolution[Any]])
   }
 
-  case object Take extends Constant2Plain(Qualified(Evo(Var("T")) =>: Integer =>: Evo(Var("T")))) {
+  case object Take extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: Integer =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Take(x.asExprF, y.asExpr)
   }
 
-  case object Grouped extends Constant2Plain(Qualified(Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T"))))) {
+  case object Grouped extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T")))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Grouped(x.asExprF, y.asExpr)
   }
 
   // syntactic sugar
-  case object Filter extends Constant2Plain(Qualified(Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))) {
+  case object Filter
+      extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = {
       val varName = y.freshVarName("__element")
       Expr.FlatMap(
@@ -374,11 +395,13 @@ object Constant2 extends Enum[Constant2] {
     }
   }
 
-  case object While extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
+  case object While
+      extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.TakeWhile(x.asExprF, y.asExpr[Any => Boolean])
   }
 
-  case object Until extends Constant2Plain(Qualified(Evo(Var("T1")) =>: (Var("T1") =>: Bool) =>: Evo(Var("T1")))) {
+  case object Until
+      extends Constant2Plain(Qualified(ForAll("T", Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = {
       val t = y.freshVarName("t")
       Expr.TakeWhile(x.asExprF, Expr.Lambda(t, Expr.Not(Expr.App(y.asExpr[Any => Boolean], Expr.Var(t)))))
@@ -389,7 +412,7 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Uniform(x.asExpr, y.asExpr)
   }
 
-  case object UniformFrom extends Constant2Plain(Qualified(Integer =>: Evo(Var("T")) =>: Evo(Var("T")))) {
+  case object UniformFrom extends Constant2Plain(Qualified(ForAll("T", Integer =>: Evo(Var("T")) =>: Evo(Var("T"))))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.UniformFrom(x.asExpr, y.asExprF)
   }
 
@@ -424,7 +447,12 @@ object Constant3 extends Enum[Constant3] {
 
   case object ZipWith
       extends Constant3Plain(
-        Qualified(Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")))
+        Qualified(
+          ForAll(
+            List("T1", "T2", "T3"),
+            Evo(Var("T1")) =>: Evo(Var("T2")) =>: (Var("T1") =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3"))
+          )
+        )
       ) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.ZipWith(x.asExprF, y.asExprF, z.asExpr[Any => Any => Any])
@@ -437,7 +465,7 @@ object Constant3 extends Enum[Constant3] {
 
   case object Solve2
       extends Constant3(
-        Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+        Qualified(ForAll("T", Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T"))))
       ) {
     override def compile(x: Typed[_], y: Typed[_], z: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.additive(y.tpe, y.tpe, y.tpe).map { add =>
@@ -447,7 +475,7 @@ object Constant3 extends Enum[Constant3] {
 
   case object Roll2
       extends Constant3Plain(
-        Qualified(Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+        Qualified(ForAll("T", Evo(Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T"))))
       ) {
     override def compilePlain(f: Expr[_], a0: Expr[_], a1: Expr[_]): Expr[_] =
       Expr.Roll2(f.asExprF[Any => Any => Any], a0, a1)
@@ -455,7 +483,7 @@ object Constant3 extends Enum[Constant3] {
 
   case object Iterate2
       extends Constant3Plain(
-        Qualified((Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T")))
+        Qualified(ForAll("T", (Var("T") =>: Var("T") =>: Var("T")) =>: Var("T") =>: Var("T") =>: Evo(Var("T"))))
       ) {
     def compilePlain(f: Expr[_], a0: Expr[_], a1: Expr[_]): Expr[_] =
       Expr.Iterate2(f.asExpr, a0.asExpr, a1.asExpr)
@@ -465,7 +493,7 @@ object Constant3 extends Enum[Constant3] {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.InRect(x.asExpr[Point], y.asExpr[Point], z.asExpr[Point])
   }
-  case object If extends Constant3Plain(Qualified(Bool =>: Var("T") =>: Var("T") =>: Var("T"))) {
+  case object If extends Constant3Plain(Qualified(ForAll("T", Bool =>: Var("T") =>: Var("T") =>: Var("T")))) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.IfThen(x.asExpr, y, z.asExpr)
   }

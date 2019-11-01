@@ -15,7 +15,7 @@ final class TypeBindings(private val bindings: Map[String, TypeBinding]) {
     new TypeBindings(bindings.updated(name, binding))
 
   def withVarBinding(name: String, tpe: Qualified[Type]): TypeBindings =
-    withBinding(name, TypeBinding.Fixed(name, tpe))
+    withBinding(name, TypeBinding(name, tpe, false))
 }
 
 object TypeBindings {
