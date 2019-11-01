@@ -1,9 +1,9 @@
 package evolution.compiler.phases.typer.model
 
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 
 private[typer] class TypeVarGenerator(total: Int) {
-  def current: TypeT.Var = TypeT.Var(s"T$total")
+  def current: Type.Var = Type.Var(s"T$total")
   def next: TypeVarGenerator = new TypeVarGenerator(total + 1)
 }
 

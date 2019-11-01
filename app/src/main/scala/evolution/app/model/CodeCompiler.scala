@@ -2,7 +2,7 @@ package evolution.app.model
 
 import evolution.geometry.Point
 import evolution.compiler.phases.FullCompiler
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.module.Module
@@ -16,7 +16,7 @@ final class CodeCompiler(fullCompiler: FullCompiler) {
         fullCompiler
           .compile(
             code,
-            TypeT.Evo(TypeT.Point),
+            Type.Evo(Type.Point),
             mod
           )
           .map { evolution =>

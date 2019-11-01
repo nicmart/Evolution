@@ -22,16 +22,16 @@ import RecursiveTyper._
 import cats.Monad
 
 final class RecursiveTyper extends Typer {
-  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] = ???
+  def Typeree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] = ???
 
-  def typeTreeF[F[+ _]: Inference](tree: Tree, expectedType: Option[Type], module: Module): F[TypedTree] = {
+  def TypereeF[F[+ _]: Inference](tree: Tree, expectedType: Option[Type], module: Module): F[TypedTree] = {
     val inf: Inference[F] = Inference[F]
     import inf._
     implicit val FMonad: Monad[F] = monad
 
     tree.value match {
-      case Bool(b)          => Bool(b).typeWithNoPredicates(TypeT.Bool).pure[F]
-      case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(TypeT.Double).pure[F]
+      case Bool(b)          => Bool(b).typeWithNoPredicates(Type.Bool).pure[F]
+      case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[F]
 
       case IntLiteral(n) =>
         for {
@@ -57,7 +57,7 @@ final class RecursiveTyper extends Typer {
 
 sealed trait Inference[F[+ _]] {
   def monad: Monad[F]
-  def newTypeVar: F[TypeT.Var]
+  def newTypeVar: F[Type.Var]
   def substitution: F[Substitution]
   def typeBindings: F[TypeBindings]
   def setSubstitution(subst: Substitution): F[Unit]
@@ -75,13 +75,13 @@ object RecursiveTyper {
   def get: S[TyperState] = State.get
   def set(state: TyperState): S[Unit] = State.set(state)
 
-  def newTypeVar: S[TypeT.Var] = for {
+  def newTypeVar: S[Type.Var] = for {
     currentState <- get
     _ <- set(currentState.withNewTypeVar)
   } yield currentState.currentTypeVar
 
   final class TyperState(private val count: Int, private val subst: Substitution) {
-    def currentTypeVar: TypeT.Var = TypeT.Var(s"T$count")
+    def currentTypeVar: Type.Var = Type.Var(s"T$count")
     def withNewTypeVar: TyperState = new TyperState(count + 1, subst)
 
     def currentSubstitution: Substitution = subst

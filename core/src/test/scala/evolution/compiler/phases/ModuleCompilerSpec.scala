@@ -4,7 +4,7 @@ import evolution.compiler.module.Module
 import evolution.compiler.types.TypeBinding
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.logging.NoOpLogger
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
@@ -19,7 +19,7 @@ class ModuleCompilerSpec extends LanguageSpec {
 
       val inferredBinding = module.unsafeEvaluate.typeBindings.getBinding("line")
 
-      val expectedBinding = TypeBinding.Fixed("line", Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Point))
+      val expectedBinding = TypeBinding.Fixed("line", Qualified(Type.Double =>: Type.Double =>: Type.Point))
       inferredBinding should contain(expectedBinding)
     }
   }

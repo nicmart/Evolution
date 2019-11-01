@@ -4,9 +4,9 @@ import cats.implicits._
 import enumeratum.EnumEntry.Lowercase
 import enumeratum.{ Enum, EnumEntry }
 import evolution.compiler.phases.typer.config.Constant._
-import evolution.compiler.types.TypeT._
+import evolution.compiler.types.Type._
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.{ Type, TypeClasses, Typed }
 import evolution.compiler.expression.Expr
@@ -33,7 +33,7 @@ abstract sealed class Constant0(qualifiedType: Qualified[Type])
 object Constant0 extends Enum[Constant0] {
   lazy val values: immutable.IndexedSeq[Constant0] = findValues
 
-  case object PI extends Constant0(Qualified(TypeT.Double)) {
+  case object PI extends Constant0(Qualified(Type.Double)) {
     def compile(tpe: Qualified[Type]): Either[String, Expr[_]] =
       Expr.Dbl(Math.PI).asRight
   }
@@ -43,12 +43,12 @@ object Constant0 extends Enum[Constant0] {
       Expr.FromList(Expr.Lst(Nil)).asRight
   }
 
-  case object Noise extends Constant0(Qualified(Evo(TypeT.Point =>: TypeT.Double))) {
+  case object Noise extends Constant0(Qualified(Evo(Type.Point =>: Type.Double))) {
     override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
       Expr.Noise().asRight
   }
 
-  case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: TypeT.Double =>: TypeT.Point =>: TypeT.Double))) {
+  case object OctaveNoise extends Constant0(Qualified(Evo(Integer =>: Type.Double =>: Type.Point =>: Type.Double))) {
     override def compile(tpe: TypeClasses.Qualified[Type]): Either[String, Expr[_]] =
       Expr.OctaveNoise().asRight
   }
@@ -72,35 +72,35 @@ abstract sealed class Constant1Plain(qualifiedType: Qualified[Type]) extends Con
 object Constant1 extends Enum[Constant1] {
   val values: immutable.IndexedSeq[Constant1] = findValues
 
-  case object X extends Constant1Plain(Qualified(TypeT.Point =>: TypeT.Double)) {
+  case object X extends Constant1Plain(Qualified(Type.Point =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.X(x.asExpr)
   }
 
-  case object Y extends Constant1Plain(Qualified(TypeT.Point =>: TypeT.Double)) {
+  case object Y extends Constant1Plain(Qualified(Type.Point =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Y(x.asExpr)
   }
 
-  case object Floor extends Constant1Plain(Qualified(TypeT.Double =>: Integer)) {
+  case object Floor extends Constant1Plain(Qualified(Type.Double =>: Integer)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Floor(x.asExpr)
   }
 
-  case object ToDbl extends Constant1Plain(Qualified(Integer =>: TypeT.Double)) {
+  case object ToDbl extends Constant1Plain(Qualified(Integer =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.ToDouble(x.asExpr)
   }
 
-  case object Abs extends Constant1Plain(Qualified(TypeT.Double =>: TypeT.Double)) {
+  case object Abs extends Constant1Plain(Qualified(Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Abs(x.asExpr)
   }
 
-  case object Sign extends Constant1Plain(Qualified(TypeT.Double =>: TypeT.Double)) {
+  case object Sign extends Constant1Plain(Qualified(Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Sign(x.asExpr)
   }
 
-  case object Norm extends Constant1Plain(Qualified(TypeT.Point =>: TypeT.Double)) {
+  case object Norm extends Constant1Plain(Qualified(Type.Point =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Norm(x.asExpr)
   }
 
-  case object Versor extends Constant1Plain(Qualified(TypeT.Point =>: TypeT.Point)) {
+  case object Versor extends Constant1Plain(Qualified(Type.Point =>: Type.Point)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Versor(x.asExpr)
   }
 
@@ -109,11 +109,11 @@ object Constant1 extends Enum[Constant1] {
       TypingConfig.invertible(x.tpe).map(inv => Expr.Inverse(x.value, inv))
   }
 
-  case object Sin extends Constant1Plain(Qualified(TypeT.Double =>: TypeT.Double)) {
+  case object Sin extends Constant1Plain(Qualified(Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Sin(x.asExpr)
   }
 
-  case object Cos extends Constant1Plain(Qualified(TypeT.Double =>: TypeT.Double)) {
+  case object Cos extends Constant1Plain(Qualified(Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_]): Expr[_] = Expr.Cos(x.asExpr)
   }
 
@@ -180,23 +180,23 @@ abstract sealed class Constant2Plain(qualifiedType: Qualified[Type]) extends Con
 object Constant2 extends Enum[Constant2] {
   lazy val values: immutable.IndexedSeq[Constant2] = findValues
 
-  case object Point extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Point)) {
+  case object Point extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Point)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Pnt(x.asExpr, y.asExpr)
   }
 
   case object LiftedPoint
-      extends Constant2Plain(Qualified(Evo(TypeT.Double) =>: Evo(TypeT.Double) =>: Evo(TypeT.Point))) {
+      extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
     override def entryName: String = "@point"
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.LiftedPnt(x.asExprF, y.asExprF).asExpr[Evolution[_]]
   }
 
-  case object Polar extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Point)) {
+  case object Polar extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Point)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Polar(x.asExpr, y.asExpr)
   }
 
   case object LiftedPolar
-      extends Constant2Plain(Qualified(Evo(TypeT.Double) =>: Evo(TypeT.Double) =>: Evo(TypeT.Point))) {
+      extends Constant2Plain(Qualified(Evo(Type.Double) =>: Evo(Type.Double) =>: Evo(Type.Point))) {
     override def entryName: String = "@polar"
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] =
       Expr.LiftedPolar(x.asExprF, y.asExprF)
@@ -226,15 +226,15 @@ object Constant2 extends Enum[Constant2] {
       } yield Expr.Minus(x.value, y.value, add, inv)
   }
 
-  case object Div extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double)) {
+  case object Div extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Div(x.asExpr, y.asExpr)
   }
 
-  case object Exp extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double)) {
+  case object Exp extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Exp(x.asExpr, y.asExpr)
   }
 
-  case object Mod extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double)) {
+  case object Mod extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Mod(x.asExpr, y.asExpr)
   }
 
@@ -385,7 +385,7 @@ object Constant2 extends Enum[Constant2] {
     }
   }
 
-  case object Uniform extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: Evo(TypeT.Double))) {
+  case object Uniform extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Evo(Type.Double))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Uniform(x.asExpr, y.asExpr)
   }
 
@@ -393,7 +393,7 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.UniformFrom(x.asExpr, y.asExprF)
   }
 
-  case object Normal extends Constant2Plain(Qualified(TypeT.Double =>: TypeT.Double =>: Evo(TypeT.Double))) {
+  case object Normal extends Constant2Plain(Qualified(Type.Double =>: Type.Double =>: Evo(Type.Double))) {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Normal(x.asExpr, y.asExpr)
   }
 
@@ -417,7 +417,7 @@ object Constant3 extends Enum[Constant3] {
   lazy val values: immutable.IndexedSeq[Constant3] = findValues
 
   case object SmoothStep
-      extends Constant3Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double =>: TypeT.Double)) {
+      extends Constant3Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double =>: Type.Double)) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.SmoothStep(x.asExpr, y.asExpr, z.asExpr)
   }
@@ -431,7 +431,7 @@ object Constant3 extends Enum[Constant3] {
   }
 
   case object Range
-      extends Constant3Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double =>: Evo(TypeT.Double))) {
+      extends Constant3Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double =>: Evo(Type.Double))) {
     def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] = Expr.Range(x.asExpr, y.asExpr, z.asExpr)
   }
 
@@ -461,7 +461,7 @@ object Constant3 extends Enum[Constant3] {
       Expr.Iterate2(f.asExpr, a0.asExpr, a1.asExpr)
   }
 
-  case object InRect extends Constant3Plain(Qualified(TypeT.Point =>: TypeT.Point =>: TypeT.Point =>: Bool)) {
+  case object InRect extends Constant3Plain(Qualified(Type.Point =>: Type.Point =>: Type.Point =>: Bool)) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.InRect(x.asExpr[Point], y.asExpr[Point], z.asExpr[Point])
   }
@@ -471,7 +471,7 @@ object Constant3 extends Enum[Constant3] {
   }
 
   case object UniformDiscrete
-      extends Constant3Plain(Qualified(TypeT.Double =>: TypeT.Double =>: TypeT.Double =>: Evo(TypeT.Double))) {
+      extends Constant3Plain(Qualified(Type.Double =>: Type.Double =>: Type.Double =>: Evo(Type.Double))) {
     override def compilePlain(x: Expr[_], y: Expr[_], z: Expr[_]): Expr[_] =
       Expr.UniformDiscrete(x.asExpr, y.asExpr, z.asExpr)
   }

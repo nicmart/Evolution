@@ -10,7 +10,7 @@ import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
 import evolution.compiler.expression.typeclass._
@@ -22,7 +22,7 @@ class DefaultCompilerSpec extends LanguageSpec {
   "The compiler" - {
     "should successfully compile" - {
       "number literals" in forAll(arbitrary[Double]) { n =>
-        unsafeCompile(TreeF.DoubleLiteral(n).annotate(Qualified(TypeT.Double))) shouldBe Dbl(n.toDouble)
+        unsafeCompile(TreeF.DoubleLiteral(n).annotate(Qualified(Type.Double))) shouldBe Dbl(n.toDouble)
       }
 
       "variable usages" in forAll(genTypedVar) {
@@ -197,8 +197,8 @@ class DefaultCompilerSpec extends LanguageSpec {
       TreeF.Identifier.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, cmp))
     )
 
-  lazy val unknownType: Qualified[Type] = Qualified(TypeT.Var(""))
-  lazy val intType: Qualified[Type] = Qualified(TypeT.Integer)
+  lazy val unknownType: Qualified[Type] = Qualified(Type.Var(""))
+  lazy val intType: Qualified[Type] = Qualified(Type.Integer)
 
   private def unsafeCompile[T](expr: TypedTree): Expr[T] =
     DefaultCompiler.compile(expr, Module.empty).unsafeEvaluate.asInstanceOf[Expr[T]]

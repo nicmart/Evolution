@@ -1,7 +1,6 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
 import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
 import cats.data.State
@@ -56,7 +55,7 @@ private[typer] object AssignFreshTypeVars {
 
       case Lst(sts) =>
         (sts.sequence, newTypeVar).mapN { (ts, qt) =>
-          Lst(ts).annotate(Qualified(TypeT.Lst(qt.value)))
+          Lst(ts).annotate(Qualified(Type.Lst(qt.value)))
         }
 
       case DoubleLiteral(n) =>

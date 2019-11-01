@@ -13,7 +13,7 @@ import evolution.compiler.expression.Expr.Iterate
 import evolution.compiler.expression.Expr.Iterate2
 import evolution.compiler.expression.Expr.FromList
 import evolution.compiler.expression.Expr.Grouped
-import evolution.compiler.expression.Expr.Connect                 
+import evolution.compiler.expression.Expr.Connect
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {
@@ -49,7 +49,9 @@ object EvalMaterializer extends Materializer {
         }
       case e @ Expr.Inverse(_, _) => interpret1(e.t)(MaterializeInverse(e.inv))
       case e @ Expr.Minus(_, _, _, _) =>
-        interpret2(e.a, e.b)((a, b) => MaterializeAddition(e.sg)(a, MaterializeInverse(e.inv)(b)))
+        val add = MaterializeAddition(e.sg)
+        val inv = MaterializeInverse(e.inv)
+        interpret2(e.a, e.b)((a, b) => add(a, inv(b)))
       case e @ Expr.Multiply(_, _, _) => interpret2(e.a, e.b)(MaterializeMultiplication(e.mult))
       case Expr.Sin(d)                => interpret1(d)(Math.sin)
       case Expr.Cos(d)                => interpret1(d)(Math.cos)
@@ -61,8 +63,12 @@ object EvalMaterializer extends Materializer {
           else if (t >= 1) 1.0
           else t * t * (3.0 - 2.0 * t)
         }
-      case Expr.Equals(a, b, eq) => interpret2(a, b)(MaterializeEquality(eq).eqv)
-      case Expr.Neq(a, b, eq)    => interpret2(a, b)(MaterializeEquality(eq).neqv)
+      case Expr.Equals(a, b, equality) =>
+        val eq = MaterializeEquality(equality)
+        interpret2(a, b)(eq.eqv)
+      case Expr.Neq(a, b, equality) =>
+        val eq = MaterializeEquality(equality)
+        interpret2(a, b)(eq.neqv)
       case Expr.IfThen(condition, a, b) =>
         interpret3Lazy(condition, a, b) { (compiledCondition, compiledA, compiledB) =>
           if (compiledCondition) compiledA else compiledB

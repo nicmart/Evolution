@@ -3,26 +3,27 @@ package evolution.compiler.impl.evaluation
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass.Multiplicative
 import evolution.compiler.expression.typeclass.Multiplicative._
+import evolution.geometry.Point
 
 private[evaluation] object MaterializeMultiplication {
-  def apply[A, B, C](multiplicative: Multiplicative[A, B, C])(a: A, b: B): C =
+  def apply[A, B, C](multiplicative: Multiplicative[A, B, C]): (A, B) => C =
     multiplicative match {
-      case IntIntInt          => a * b
-      case DoubleDoubleDouble => a * b
-      case DoublePointPoint   => b.mult(a)
-      case IntDoubleDouble    => a * b
-      case DoubleIntDouble    => a * b
-      case IntPointPoint      => b.mult(a)
-      case PointIntPoint      => a.mult(b)
-      case PointDoublePoint   => a.mult(b)
-      case m: LiftLeft[a, b, c] =>
-        val f = MaterializeMultiplication(m.m) _
-        Evolution.map[a, c](a, aa => f(aa, b))
-      case m: LiftRight[a, b, c] =>
-        val f = MaterializeMultiplication(m.m) _
-        Evolution.map[b, c](b, bb => f(a, bb))
-      case m: LiftBoth[a, b, c] =>
-        val f = MaterializeMultiplication(m.m) _
-        Evolution.zipWithUncurried[a, b, c]((aa, bb) => f(aa, bb))(a, b)
+      case IntIntInt          => (a: Int, b: Int) => a * b
+      case DoubleDoubleDouble => (a: Double, b: Double) => a * b
+      case DoublePointPoint   => (a: Double, b: Point) => b.mult(a)
+      case IntDoubleDouble    => (a: Int, b: Double) => a * b
+      case DoubleIntDouble    => (a: Double, b: Int) => a * b
+      case IntPointPoint      => (a: Int, b: Point) => b.mult(a)
+      case PointIntPoint      => (a: Point, b: Int) => a.mult(b)
+      case PointDoublePoint   => (a: Point, b: Double) => a.mult(b)
+      case LiftLeft(m) =>
+        val f = MaterializeMultiplication(m)
+        (a, b) => Evolution.map(a, aa => f(aa, b))
+      case LiftRight(m) =>
+        val f = MaterializeMultiplication(m)
+        (a, b) => Evolution.map(b, bb => f(a, bb))
+      case LiftBoth(m) =>
+        val f = MaterializeMultiplication(m)
+        (a, b) => Evolution.zipWithUncurried(f)(a, b)
     }
 }

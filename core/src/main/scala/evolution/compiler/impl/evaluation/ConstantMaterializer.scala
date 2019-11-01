@@ -1,6 +1,6 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.compiler.expression.typeclass.{ Additive, Multiplicative }
+import evolution.compiler.expression.typeclass._
 import evolution.compiler.phases.typer.config._
 import evolution.compiler.types.{ Type, Typed }
 import evolution.geometry.Point
@@ -76,7 +76,7 @@ class ConstantMaterializer {
 
         case Constant2.Add => // Type-classes - option 2: we receive the types and we extract the type-class
           (a: Typed[Any], b: Typed[Any]) => // Note: this would be very slow, instance should be extracted outside
-            MaterializeAddition(TypingConfig.additive(a.tpe, b.tpe, tpe).right.get)(a, b)
+        //MaterializeAddition(TypingConfig.additive(a.tpe, b.tpe, tpe).right.get)(a.value, b.value)
         case Constant2.Minus              => ???
         case Constant2.Eq                 => ???
         case Constant2.Neq                => ???

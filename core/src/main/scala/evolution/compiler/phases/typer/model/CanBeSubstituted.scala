@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer.model
 
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 import evolution.compiler.tree._
 
@@ -12,11 +12,11 @@ private[typer] trait CanBeSubstituted[T] {
 private[typer] object CanBeSubstituted {
   implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
     def substitute(s: Substitution, t: Type): Type = t match {
-      case TypeT.Var(name)                                         => s.lookup(name).getOrElse(t)
-      case TypeT.Evo(inner)                                        => TypeT.Evo(substitute(s, inner))
-      case TypeT.Lst(inner)                                        => TypeT.Lst(substitute(s, inner))
-      case TypeT.Arrow(from, to)                                   => TypeT.Arrow(substitute(s, from), substitute(s, to))
-      case TypeT.Bool | TypeT.Integer | TypeT.Point | TypeT.Double => t
+      case Type.Var(name)                                         => s.lookup(name).getOrElse(t)
+      case Type.Evo(inner)                                        => Type.Evo(substitute(s, inner))
+      case Type.Lst(inner)                                        => Type.Lst(substitute(s, inner))
+      case Type.Arrow(from, to)                                   => Type.Arrow(substitute(s, from), substitute(s, to))
+      case Type.Bool | Type.Integer | Type.Point | Type.Double => t
     }
   }
 

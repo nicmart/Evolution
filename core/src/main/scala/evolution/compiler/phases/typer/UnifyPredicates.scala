@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typer.model.Substitution
@@ -54,10 +54,10 @@ private[typer] final class UnifyPredicates(logger: Logger) {
     }
 
   private def matchType(instType: Type, predType: Type): Option[Substitution] = (instType, predType) match {
-    case (t1, TypeT.Var(name))          => Some(Substitution(name -> t1))
-    case (TypeT.Evo(t1), TypeT.Evo(t2)) => matchType(t1, t2)
-    case (TypeT.Lst(t1), TypeT.Lst(t2)) => matchType(t1, t2)
-    case (TypeT.Arrow(t11, t12), TypeT.Arrow(t21, t22)) =>
+    case (t1, Type.Var(name))          => Some(Substitution(name -> t1))
+    case (Type.Evo(t1), Type.Evo(t2)) => matchType(t1, t2)
+    case (Type.Lst(t1), Type.Lst(t2)) => matchType(t1, t2)
+    case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) =>
       for {
         s1 <- matchType(t11, t21)
         s2 <- matchType(t12, t22)

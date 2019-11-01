@@ -11,7 +11,7 @@ import evolution.compiler.phases.typer.config.TypingConfig
 
 final class UnificationTyper(logger: Logger) extends Typer {
   import logger.log
-  def typeTree(
+  def Typeree(
     tree: Tree,
     expectedType: Option[Type],
     module: Module

@@ -1,22 +1,24 @@
 package evolution.compiler.expression.typeclass
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
+import evolution.geometry.Point
+import evolution.materialization.Evolution
 
-sealed abstract class Multiplicative[A, B, C](val t1: TypeT[A], val t2: TypeT[B], val t3: TypeT[C])
+sealed abstract class Multiplicative[A, B, C](val t1: Type, val t2: Type, val t3: Type)
 
 object Multiplicative {
-  case object DoubleDoubleDouble extends Multiplicative(TypeT.Double, TypeT.Double, TypeT.Double)
-  case object DoublePointPoint extends Multiplicative(TypeT.Double, TypeT.Point, TypeT.Point)
-  case object PointDoublePoint extends Multiplicative(TypeT.Point, TypeT.Double, TypeT.Point)
-  case object IntIntInt extends Multiplicative(TypeT.Integer, TypeT.Integer, TypeT.Integer)
-  case object IntDoubleDouble extends Multiplicative(TypeT.Integer, TypeT.Double, TypeT.Double)
-  case object DoubleIntDouble extends Multiplicative(TypeT.Double, TypeT.Integer, TypeT.Double)
-  case object IntPointPoint extends Multiplicative(TypeT.Integer, TypeT.Point, TypeT.Point)
-  case object PointIntPoint extends Multiplicative(TypeT.Point, TypeT.Integer, TypeT.Point)
+  case object DoubleDoubleDouble extends Multiplicative[Double, Double, Double](Type.Double, Type.Double, Type.Double)
+  case object DoublePointPoint extends Multiplicative[Double, Point, Point](Type.Double, Type.Point, Type.Point)
+  case object PointDoublePoint extends Multiplicative[Point, Double, Point](Type.Point, Type.Double, Type.Point)
+  case object IntIntInt extends Multiplicative[Int, Int, Int](Type.Integer, Type.Integer, Type.Integer)
+  case object IntDoubleDouble extends Multiplicative[Int, Double, Double](Type.Integer, Type.Double, Type.Double)
+  case object DoubleIntDouble extends Multiplicative[Double, Int, Double](Type.Double, Type.Integer, Type.Double)
+  case object IntPointPoint extends Multiplicative[Int, Point, Point](Type.Integer, Type.Point, Type.Point)
+  case object PointIntPoint extends Multiplicative[Point, Int, Point](Type.Point, Type.Integer, Type.Point)
 
   case class LiftLeft[A, B, C](m: Multiplicative[A, B, C])
-      extends Multiplicative(TypeT.Evo(m.t1), m.t2, TypeT.Evo(m.t3))
+      extends Multiplicative[Evolution[A], B, Evolution[C]](Type.Evo(m.t1), m.t2, Type.Evo(m.t3))
   case class LiftRight[A, B, C](m: Multiplicative[A, B, C])
-      extends Multiplicative(m.t1, TypeT.Evo(m.t2), TypeT.Evo(m.t3))
+      extends Multiplicative[A, Evolution[B], Evolution[C]](m.t1, Type.Evo(m.t2), Type.Evo(m.t3))
   case class LiftBoth[A, B, C](m: Multiplicative[A, B, C])
-      extends Multiplicative(TypeT.Evo(m.t1), TypeT.Evo(m.t2), TypeT.Evo(m.t3))
+      extends Multiplicative[Evolution[A], Evolution[B], Evolution[C]](Type.Evo(m.t1), Type.Evo(m.t2), Type.Evo(m.t3))
 }

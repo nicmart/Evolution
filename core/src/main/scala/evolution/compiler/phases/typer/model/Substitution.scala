@@ -2,7 +2,7 @@ package evolution.compiler.phases.typer.model
 
 import cats.implicits._
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 
 private[typer] final case class Substitution(assignments: List[Assignment]) {
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
@@ -12,7 +12,7 @@ private[typer] final case class Substitution(assignments: List[Assignment]) {
   def merge(s2: Substitution): Either[String, Substitution] = {
     val commonVars = assignments.map(_.variable).intersect(s2.assignments.map(_.variable))
     val agree = commonVars.forall { variable =>
-      substitute[Type](TypeT.Var(variable)) == s2.substitute[Type](TypeT.Var(variable))
+      substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
     }
     if (agree) Substitution(assignments ++ s2.assignments).asRight
     else "Merge has failed".asLeft

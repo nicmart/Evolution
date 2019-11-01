@@ -1,11 +1,13 @@
 package evolution.compiler.expression.typeclass
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
+import evolution.geometry.Point
+import evolution.materialization.Evolution
 
-sealed abstract class Invertible[T](val t: TypeT[T])
+sealed abstract class Invertible[T](val t: Type)
 
 object Invertible {
-  case object Int extends Invertible(TypeT.Integer)
-  case object Double extends Invertible(TypeT.Double)
-  case object Point extends Invertible(TypeT.Point)
-  case class Lift[T](inv: Invertible[T]) extends Invertible(TypeT.Evo(inv.t))
+  case object Int extends Invertible[Int](Type.Integer)
+  case object Double extends Invertible[Double](Type.Double)
+  case object Point extends Invertible[Point](Type.Point)
+  case class Lift[T](inv: Invertible[T]) extends Invertible[Evolution[T]](Type.Evo(inv.t))
 }

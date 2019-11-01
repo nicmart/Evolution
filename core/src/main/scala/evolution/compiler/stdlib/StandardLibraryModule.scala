@@ -4,7 +4,7 @@ import evolution.compiler.phases.ModuleCompiler
 import evolution.logging.NoOpLogger
 import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.UnificationTyper
@@ -15,10 +15,10 @@ object StandardLibraryModule {
 
   private lazy val initialModule = Module(
     TypingConfig.constantQualifiedTypes
-      .withVarBinding("top", Qualified(TypeT.Double))
-      .withVarBinding("bottom", Qualified(TypeT.Double))
-      .withVarBinding("left", Qualified(TypeT.Double))
-      .withVarBinding("right", Qualified(TypeT.Double)),
+      .withVarBinding("top", Qualified(Type.Double))
+      .withVarBinding("bottom", Qualified(Type.Double))
+      .withVarBinding("left", Qualified(Type.Double))
+      .withVarBinding("right", Qualified(Type.Double)),
     identity
   )
 

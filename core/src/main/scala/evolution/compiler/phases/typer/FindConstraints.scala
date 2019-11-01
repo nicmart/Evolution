@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typer.model.Constraints
@@ -14,10 +14,10 @@ private[typer] object FindConstraints {
     val exprType = typedTree.annotation
     val nodeConstraints: Either[String, Constraints] = typedTree.tree match {
       case Identifier(_, _) => Constraints.empty.withPredicates(exprType.predicates).asRight
-      case DoubleLiteral(_) => Constraints(exprType.value -> TypeT.Double).asRight
+      case DoubleLiteral(_) => Constraints(exprType.value -> Type.Double).asRight
       case IntLiteral(_) =>
         Constraints.empty.withPredicate(Predicate("Num", List(exprType.value))).asRight
-      case Bool(_) => Constraints(exprType.value -> TypeT.Bool).asRight
+      case Bool(_) => Constraints(exprType.value -> Type.Bool).asRight
       case App(f, args) =>
         Constraints(f.annotation.value -> lambdaType(args.map(_.annotation.value).toList, exprType.value)).asRight
       case Lambda(_, _) => Constraints.empty.asRight

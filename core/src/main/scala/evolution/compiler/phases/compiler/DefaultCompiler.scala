@@ -6,7 +6,7 @@ import evolution.compiler.tree._
 import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
 import evolution.compiler.phases.Compiler
 import evolution.compiler.types.Typed
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 import evolution.materialization.Evolution
 import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
@@ -33,7 +33,7 @@ object DefaultCompiler extends Compiler {
 
       case IntLiteral(n) =>
         typedTree.annotation.value match {
-          case TypeT.Double => Expr.Dbl(n.toDouble).asRight
+          case Type.Double => Expr.Dbl(n.toDouble).asRight
           case _            => Expr.Integer(n).asRight
         }
 

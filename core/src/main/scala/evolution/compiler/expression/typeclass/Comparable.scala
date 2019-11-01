@@ -1,9 +1,9 @@
 package evolution.compiler.expression.typeclass
-import evolution.compiler.types.TypeT
+import evolution.compiler.types.Type
 
-sealed abstract class Comparable[T](val t: TypeT[T])
+sealed abstract class Comparable[T](val t: Type)
 
 object Comparable {
-  case object Int extends Comparable(TypeT.Integer)
-  case object Double extends Comparable(TypeT.Double)
+  case object Int extends Comparable[Int](Type.Integer)
+  case object Double extends Comparable[Double](Type.Double)
 }
