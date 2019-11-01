@@ -21,6 +21,21 @@ object Type {
   }
   case class ForAll(varName: String, tpe: Type) extends Type {
     override def toString: String = s"∀ $varName $tpe"
+    def withType(t: Type): Type = replaceVar(tpe, varName, t)
+  }
+
+  // TODO this is already done with substitutions
+  def replaceVar(tpe: Type, varName: String, replaceWith: Type): Type = {
+    def replace(tpe: Type): Type = replaceVar(tpe, varName, replaceWith)
+    tpe match {
+      case Type.ForAll(forallT, body) => // Shadowing
+        if (forallT == varName) tpe else Type.ForAll(forallT, replace(body))
+      case Type.Lst(inner)      => Type.Lst(replace(inner))
+      case Type.Arrow(from, to) => Type.Arrow(replace(from), replace(to))
+      case Type.Evo(inner)      => Type.Evo(replace(inner))
+      case Type.Var(name)       => if (name == varName) replaceWith else tpe
+      case _                    => tpe
+    }
   }
 
   implicit final class TypeOpsUntyped(val self: Type) extends AnyVal {
