@@ -9,7 +9,6 @@ import evolution.compiler.tree.Tree
 import evolution.compiler.types._
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.tree._
-import model.TypeVarGenerator
 import model.Substitution
 import evolution.compiler.tree.TreeF.Lst
 import evolution.compiler.tree.TreeF.Let
@@ -18,7 +17,6 @@ import evolution.compiler.tree.TreeF.Bool
 import evolution.compiler.tree.TreeF.DoubleLiteral
 import evolution.compiler.tree.TreeF.IntLiteral
 import evolution.compiler.tree.TreeF.Identifier
-import RecursiveTyper._
 import cats.Monad
 
 final class RecursiveTyper extends Typer {

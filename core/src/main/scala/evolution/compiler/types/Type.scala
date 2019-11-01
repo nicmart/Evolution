@@ -1,8 +1,6 @@
 package evolution.compiler.types
 
 import cats.implicits._
-import evolution.geometry.Point
-import evolution.materialization.Evolution
 
 sealed trait Type {
   final def =>:(from: Type): Type = Type.Arrow(from, this)
@@ -21,12 +19,8 @@ object Type {
   case class Arrow(from: Type, to: Type) extends Type {
     override def toString: String = s"$from -> $to"
   }
-
-  def findChilren(self: Type): List[Type] = self match {
-    case Type.Evo(inner)      => List(inner)
-    case Type.Lst(inner)      => List(inner)
-    case Type.Arrow(from, to) => List(from, to)
-    case _                    => Nil
+  case class ForAll(varName: String, tpe: Type) extends Type {
+    override def toString: String = s"∀ $varName $tpe"
   }
 
   implicit final class TypeOpsUntyped(val self: Type) extends AnyVal {
@@ -34,6 +28,7 @@ object Type {
       case Type.Evo(inner)      => List(inner)
       case Type.Lst(inner)      => List(inner)
       case Type.Arrow(from, to) => List(from, to)
+      case Type.ForAll(_, tpe)  => List(tpe)
       case _                    => Nil
     }
 
