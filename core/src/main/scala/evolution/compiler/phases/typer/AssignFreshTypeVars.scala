@@ -4,36 +4,36 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Qualified
 import cats.implicits._
 import cats.data.State
-import evolution.compiler.types.TypeBindings
+import evolution.compiler.types.Assumptions
 import evolution.compiler.phases.typer.model.TypeVarGenerator
-import evolution.compiler.types.TypeBinding
+import evolution.compiler.types.Assumption
 import evolution.compiler.phases.typer.model.Assignment
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.types.Type.ForAll
+import evolution.compiler.types.Type.Scheme
 
 private[typer] object AssignFreshTypeVars {
 
-  def assign(expr: Tree, bindings: TypeBindings): TypedTree =
-    Tree.catamorphism(assignS)(expr).runA(AssignmentState(TypeVarGenerator.empty, bindings)).value
+  def assign(expr: Tree, assumptions: Assumptions): TypedTree =
+    Tree.catamorphism(assignS)(expr).runA(AssignmentState(TypeVarGenerator.empty, assumptions)).value
 
   private type S[T] = State[AssignmentState, T]
 
   private def assignS(tree: TreeF[S[TypedTree]]): S[TypedTree] =
     tree match {
       case Identifier(name, _) =>
-        getBinding(name).flatMap {
+        getAssumption(name).flatMap {
           case None =>
             newTypeVar.map(qt => Identifier(name, false).annotate(qt))
-          case Some(binding) =>
-            identifier(binding).widen
+          case Some(assumption) =>
+            identifier(assumption).widen
         }
 
       case Lambda(varName, expr) =>
         for {
           varType <- newTypeVar
-          bodyWithType <- localBinding(varName, varType)(expr)
+          bodyWithType <- localAssumption(varName, varType)(expr)
           lambdaType = Qualified(varType.value =>: bodyWithType.annotation.value)
         } yield Lambda(varName, bodyWithType).annotate(lambdaType)
 
@@ -48,7 +48,7 @@ private[typer] object AssignFreshTypeVars {
       case Let(varName, value, body) =>
         for {
           valueWithType <- value
-          bodyWithType <- localBinding(varName, valueWithType.annotation)(body)
+          bodyWithType <- localAssumption(varName, valueWithType.annotation)(body)
         } yield Let(varName, valueWithType, bodyWithType).annotate(bodyWithType.annotation)
 
       case IntLiteral(n) =>
@@ -63,50 +63,44 @@ private[typer] object AssignFreshTypeVars {
         newTypeVar.map(qt => DoubleLiteral(n).annotate(qt))
     }
 
-  private case class AssignmentState(vars: TypeVarGenerator, bindings: TypeBindings) {
+  private case class AssignmentState(vars: TypeVarGenerator, assumptions: Assumptions) {
     def next: AssignmentState = copy(vars = vars.next)
-    def withBinding(name: String, tpe: Qualified[Type]): AssignmentState = copy(
-      bindings = bindings.withVarBinding(name, tpe)
+    def withAssumption(name: String, tpe: Qualified[Type]): AssignmentState = copy(
+      assumptions = assumptions.withAssumption(Assumption(name, tpe.map(Scheme(_)), false))
     )
   }
 
   private def newTypeVar: S[Qualified[Type]] = State(s => (s.next, Qualified(s.vars.current)))
 
-  private def localBinding[T](name: String, tpe: Qualified[Type])(st: S[T]): S[T] =
+  private def localAssumption[T](name: String, tpe: Qualified[Type])(st: S[T]): S[T] =
     for {
       initialState <- State.get
-      _ <- withBinding(name, tpe)
+      _ <- withAssumption(name, tpe)
       t <- st
-      _ <- resetBindings(initialState.bindings)
+      _ <- resetAssumptions(initialState.assumptions)
     } yield t
 
-  private def withBinding(name: String, tpe: Qualified[Type]): S[Unit] =
-    State.modify[AssignmentState](_.withBinding(name, tpe))
+  private def withAssumption(name: String, tpe: Qualified[Type]): S[Unit] =
+    State.modify[AssignmentState](_.withAssumption(name, tpe))
 
-  private def getBinding(name: String): S[Option[TypeBinding]] =
-    State.get.map(s => s.bindings.getBinding(name))
+  private def getAssumption(name: String): S[Option[Assumption]] =
+    State.get.map(s => s.assumptions.get(name))
 
-  private def resetBindings(bindings: TypeBindings): S[Unit] =
-    State.modify[AssignmentState](s => s.copy(bindings = bindings))
+  private def resetAssumptions(assumptions: Assumptions): S[Unit] =
+    State.modify[AssignmentState](s => s.copy(assumptions = assumptions))
 
-  // Resolve type-bindings for predefined constants schemes
-  private def identifier(binding: TypeBinding): S[TypedTree] = {
-    val quantifiedTypeVars = binding.qualifiedType.value.quantifiedTypeVars.toList
+  // Resolve assumptions for predefined constants schemes
+  private def identifier(assumption: Assumption): S[TypedTree] = {
+    val typeVars = assumption.qualifiedScheme.value.vars
     for {
-      assignments <- quantifiedTypeVars.traverse(
-        quantifiedVar => newTypeVar.map(typeVar => Assignment(quantifiedVar.name, typeVar.value))
+      assignments <- typeVars.traverse(
+        quantifiedVar => newTypeVar.map(typeVar => Assignment(quantifiedVar, typeVar.value))
       )
       substitution = Substitution(assignments)
       substitutedType = Qualified(
-        substitution.substitute(binding.qualifiedType.predicates),
-        instantiateQuantifiedTypes(binding.qualifiedType.value, substitution)
+        substitution.substitute(assumption.qualifiedScheme.predicates),
+        assumption.qualifiedScheme.value.instantiate(assignments.map(_.tpe))
       )
-    } yield Identifier(binding.name, binding.primitive).annotate(substitutedType)
+    } yield Identifier(assumption.name, assumption.primitive).annotate(substitutedType)
   }
-
-  private def instantiateQuantifiedTypes(tpe: Type, substitution: Substitution): Type = tpe match {
-    case ForAll(varName, body) => instantiateQuantifiedTypes(body, substitution)
-    case _                     => substitution.substitute(tpe)
-  }
-
 }

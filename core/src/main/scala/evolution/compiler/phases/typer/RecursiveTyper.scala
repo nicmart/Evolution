@@ -20,9 +20,9 @@ import evolution.compiler.tree.TreeF.Identifier
 import cats.Monad
 
 final class RecursiveTyper extends Typer {
-  def Typeree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] = ???
+  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] = ???
 
-  def TypereeF[F[+ _]: Inference](tree: Tree, expectedType: Option[Type], module: Module): F[TypedTree] = {
+  def typeTreeF[F[+ _]: Inference](tree: Tree, expectedType: Option[Type], module: Module): F[TypedTree] = {
     val inf: Inference[F] = Inference[F]
     import inf._
     implicit val FMonad: Monad[F] = monad
@@ -57,9 +57,9 @@ sealed trait Inference[F[+ _]] {
   def monad: Monad[F]
   def newTypeVar: F[Type.Var]
   def substitution: F[Substitution]
-  def typeBindings: F[TypeBindings]
+  def assumptions: F[Assumptions]
   def setSubstitution(subst: Substitution): F[Unit]
-  def setTypeBindings(typeBindings: TypeBindings): F[Unit]
+  def setAssumptions(assumptions: Assumptions): F[Unit]
   def error(message: String): F[Nothing]
 }
 

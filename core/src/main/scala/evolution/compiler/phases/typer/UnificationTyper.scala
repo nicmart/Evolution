@@ -11,12 +11,12 @@ import evolution.compiler.phases.typer.config.TypingConfig
 
 final class UnificationTyper(logger: Logger) extends Typer {
   import logger.log
-  def Typeree(
+  def typeTree(
     tree: Tree,
     expectedType: Option[Type],
     module: Module
   ): Either[String, TypedTree] = for {
-    treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.typeBindings).asRight
+    treeWithTypeVars <- AssignFreshTypeVars.assign(tree, module.assumptions).asRight
     _ = log(s"Un-typed expression:")
     _ = log(PrettyPrintTypedTree(treeWithTypeVars))
     constraints <- FindConstraints.find(treeWithTypeVars)

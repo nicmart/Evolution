@@ -23,7 +23,9 @@ object TypeClassInstance {
 object TypeClasses {
 
   case class Predicate(id: String, types: List[Type])
-  case class Qualified[+T](predicates: List[Predicate], value: T)
+  case class Qualified[+T](predicates: List[Predicate], value: T) {
+    def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
+  }
   object Qualified {
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
   }

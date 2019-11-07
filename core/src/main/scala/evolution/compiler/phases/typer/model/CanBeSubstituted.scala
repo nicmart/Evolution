@@ -11,14 +11,8 @@ private[typer] trait CanBeSubstituted[T] {
 
 private[typer] object CanBeSubstituted {
   implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
-    def substitute(s: Substitution, t: Type): Type = t match {
-      case Type.Var(name)                                      => s.lookup(name).getOrElse(t)
-      case Type.Evo(inner)                                     => Type.Evo(substitute(s, inner))
-      case Type.Lst(inner)                                     => Type.Lst(substitute(s, inner))
-      case Type.Arrow(from, to)                                => Type.Arrow(substitute(s, from), substitute(s, to))
-      case Type.ForAll(varName, tpe)                           => Type.ForAll(varName, substitute(s.without(varName), tpe))
-      case Type.Bool | Type.Integer | Type.Point | Type.Double => t
-    }
+    def substitute(s: Substitution, t: Type): Type =
+      Type.replaceVars(t, s.assignments.map(a => a.variable -> a.tpe))
   }
 
   implicit val assignment: CanBeSubstituted[Assignment] = new CanBeSubstituted[Assignment] {

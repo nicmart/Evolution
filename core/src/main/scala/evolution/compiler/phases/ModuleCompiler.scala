@@ -6,8 +6,11 @@ import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
 import evolution.compiler.tree._
-import evolution.compiler.types.TypeBindings
+import evolution.compiler.types.Assumptions
 import evolution.compiler.tree.TreeF.Let
+import evolution.compiler.types.TypeClasses.Qualified
+import evolution.compiler.types.Type.Scheme
+import evolution.compiler.types.Assumption
 
 final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, logger: Logger) {
   import logger.log
@@ -16,25 +19,26 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, log
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
-      typedTree <- typer.Typeree(untypedTree, None, initialModule)
+      typedTree <- typer.typeTree(untypedTree, None, initialModule)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
-      typeBindings = extractTypeBindings(typedTree, initialModule.typeBindings)
-      _ = log(s"Type bindings extracted")
-      _ = log(typeBindings.allBindings)
+      assumptions = extractAssumptions(typedTree, initialModule.assumptions)
+      _ = log(s"Assumptions extracted")
+      _ = log(assumptions.all)
       expression <- compiler.compile(typedTree, initialModule)
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
       loadModule = replaceVarExpr("export", expression) _
-    } yield Module(typeBindings, loadModule)
+    } yield Module(assumptions, loadModule)
 
-  // 1. Find type bindings
-  private def extractTypeBindings(typedTree: TypedTree, currentBindings: TypeBindings): TypeBindings =
+  // 1. Find assumptions
+  private def extractAssumptions(typedTree: TypedTree, currentAssumptions: Assumptions): Assumptions =
     typedTree.tree match {
       case Let(varName, expr, in) =>
-        extractTypeBindings(in, currentBindings.withVarBinding(varName, expr.annotation))
-      case _ => currentBindings
+        val qualifiedScheme = Qualified(expr.annotation.predicates, Scheme(expr.annotation.value))
+        extractAssumptions(in, currentAssumptions.withAssumption(Assumption(varName, qualifiedScheme, false)))
+      case _ => currentAssumptions
     }
 
   // 2. Build load function

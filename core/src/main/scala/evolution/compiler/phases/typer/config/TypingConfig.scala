@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer.config
 
 import evolution.compiler.types.TypeClasses.Predicate
-import evolution.compiler.types.{ Type, TypeBinding, TypeBindings }
+import evolution.compiler.types.{ Type, Assumption, Assumptions }
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.expression.typeclass._
@@ -11,10 +11,10 @@ import evolution.compiler.expression.typeclass.Multiplicative.LiftBoth
 import evolution.compiler.types.TypeClassInstance
 
 object TypingConfig {
-  val constantQualifiedTypes: TypeBindings =
-    new TypeBindings(
+  val constantQualifiedTypes: Assumptions =
+    new Assumptions(
       Constant.values
-        .map(constant => constant.entryName -> TypeBinding(constant.entryName, constant.qualifiedType, true))
+        .map(constant => constant.entryName -> Assumption(constant.entryName, constant.qualifiedScheme, true))
         .toMap
     )
 

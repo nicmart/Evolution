@@ -5,5 +5,5 @@ import evolution.compiler.types._
 import evolution.compiler.module.Module
 
 trait Typer {
-  def Typeree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree]
+  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree]
 }

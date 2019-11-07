@@ -1,6 +1,7 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types._
+import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.typer.FindConstraints
 import evolution.compiler.phases.typer.AssignFreshTypeVars
@@ -48,14 +49,14 @@ class UnifyTypesSpec extends LanguageSpec {
       "point expressions" in {
         val untyped =
           App.of(Identifier.const(Constant2.Point).embed, Identifier("a").embed, Identifier("b").embed).embed
-        val extraBindings = new TypeBindings(
+        val extraAssumptions = new Assumptions(
           Map(
-            "a" -> TypeBinding("a", Qualified(Type.Double), false),
-            "b" -> TypeBinding("b", Qualified(Type.Double), false)
+            "a" -> Assumption("a", Qualified(Scheme(Type.Double)), false),
+            "b" -> Assumption("b", Qualified(Scheme(Type.Double)), false)
           )
         )
         val (expr, constraints) =
-          assignVarsAndFindConstraints(untyped, extraBindings).unsafeEvaluate
+          assignVarsAndFindConstraints(untyped, extraAssumptions).unsafeEvaluate
         val substitution = unify(constraints).unsafeEvaluate.substitution
         substitution.substitute(expr).annotation.value shouldBe Type.Point
       }
@@ -132,10 +133,10 @@ class UnifyTypesSpec extends LanguageSpec {
 
   def assignVarsAndFindConstraints(
     expr: Tree,
-    extraTypeBindings: TypeBindings = TypeBindings.empty
+    extraAssumptions: Assumptions = Assumptions.empty
   ): Either[String, (TypedTree, Constraints)] = {
 
-    val exprWithVars = AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraTypeBindings))
+    val exprWithVars = AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraAssumptions))
 
     for {
       constraints <- FindConstraints.find(exprWithVars)
