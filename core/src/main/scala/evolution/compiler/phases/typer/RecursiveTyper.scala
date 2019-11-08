@@ -1,35 +1,29 @@
 package evolution.compiler.phases.typer
 
 //import cats.syntax.either._
-import cats.implicits._
-import cats.data.State
-import evolution.compiler.phases.Typer
-import evolution.compiler.module.Module
-import evolution.compiler.tree.Tree
-import evolution.compiler.types._
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.tree._
-import model.Substitution
-import evolution.compiler.tree.TreeF.Lst
-import evolution.compiler.tree.TreeF.Let
-import evolution.compiler.tree.TreeF.Lambda
-import evolution.compiler.tree.TreeF.Bool
-import evolution.compiler.tree.TreeF.DoubleLiteral
-import evolution.compiler.tree.TreeF.IntLiteral
-import evolution.compiler.tree.TreeF.Identifier
 import cats.Monad
+import cats.implicits._
+import evolution.compiler.module.Module
+import evolution.compiler.phases.Typer
+import evolution.compiler.phases.typer.RecursiveTyper.ReprInference._
+import evolution.compiler.phases.typer.RecursiveTyper._
+import evolution.compiler.phases.typer.model.{ Assignment, Substitution }
+import evolution.compiler.tree.TreeF.{ Bool, DoubleLiteral, Identifier, IntLiteral, Lambda, Let, Lst }
+import evolution.compiler.tree.{ Tree, _ }
+import evolution.compiler.types.Type.Scheme
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types._
 
 final class RecursiveTyper extends Typer {
-  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] = ???
 
-  def typeTreeF[F[+ _]: Inference](tree: Tree, expectedType: Option[Type], module: Module): F[TypedTree] = {
-    val inf: Inference[F] = Inference[F]
-    import inf._
-    implicit val FMonad: Monad[F] = monad
+  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] =
+    typeTreeF(tree, expectedType, module).run(InferenceState.empty).map(_._2)
 
+  private[typer] def typeTreeF(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] = {
     tree.value match {
-      case Bool(b)          => Bool(b).typeWithNoPredicates(Type.Bool).pure[F]
-      case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[F]
+      case Bool(b) => Bool(b).typeWithNoPredicates(Type.Bool).pure[Repr]
+
+      case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[Repr]
 
       case IntLiteral(n) =>
         for {
@@ -37,12 +31,53 @@ final class RecursiveTyper extends Typer {
           predicate = Predicate("Num", List(typeVar))
         } yield IntLiteral(n).typeWithSinglePredicate(predicate, typeVar)
 
-      case Identifier(name, _)    => ???
+      case Identifier(name, primitive) =>
+        for {
+          assumption <- getAssumption(name)
+          qualifiedScheme = assumption.qualifiedScheme
+          vars = qualifiedScheme.value.vars.map(Type.Var)
+          freshTypeVars <- vars.traverse(_ => newTypeVar)
+          newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
+        } yield Identifier(name, primitive).annotate(newQualifiedType)
+
       case Lst(ts)                => ???
       case Let(varName, expr, in) => ???
       case Lambda(varName, expr)  => ???
       case TreeF.App(f, args)     => ???
     }
+  }
+}
+
+object RecursiveTyper {
+  def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
+    val assignments = qs.value.vars.zip(types).map { case (from, to) => Assignment(from, to) }
+    val substitution = Substitution(assignments)
+    Qualified(substitution.substitute(qs.predicates), qs.value.instantiate(types))
+  }
+
+  sealed trait Inference[F[+ _]] extends InferenceOps[F] {
+    def newTypeVar: F[Type.Var]
+    def substitution: F[Substitution]
+    def assumptions: F[Assumptions]
+    def setSubstitution(subst: Substitution): F[Unit]
+    def setAssumptions(assumptions: Assumptions): F[Unit]
+    def error(message: String): F[Nothing]
+  }
+
+  trait InferenceOps[F[+ _]] { self: Inference[F] =>
+    final def withLocalAssumption[T](assumption: Assumption)(ft: F[T])(implicit M: Monad[F]): F[T] =
+      for {
+        initialAssumptions <- assumptions
+        _ <- setAssumptions(initialAssumptions.withAssumption(assumption))
+        t <- ft
+        _ <- setAssumptions(initialAssumptions)
+      } yield t
+
+    final def getAssumption(name: String)(implicit M: Monad[F]): F[Assumption] =
+      assumptions.map(_.get(name)).flatMap {
+        case None             => error(s"assumption not found for varname $name")
+        case Some(assumption) => assumption.pure[F]
+      }
   }
 
   implicit class LeafOps(tree: TreeF[Nothing]) {
@@ -51,42 +86,60 @@ final class RecursiveTyper extends Typer {
     def typeWithSinglePredicate(predicate: Predicate, tpe: Type): TypedTree =
       typed.annotate(Qualified(List(predicate), tpe))
   }
-}
 
-sealed trait Inference[F[+ _]] {
-  def monad: Monad[F]
-  def newTypeVar: F[Type.Var]
-  def substitution: F[Substitution]
-  def assumptions: F[Assumptions]
-  def setSubstitution(subst: Substitution): F[Unit]
-  def setAssumptions(assumptions: Assumptions): F[Unit]
-  def error(message: String): F[Nothing]
-}
+  case class Repr[+T](run: InferenceState => Either[String, (InferenceState, T)])
 
-object Inference {
-  def apply[F[+ _]](implicit inf: Inference[F]): Inference[F] = inf
-}
-
-object RecursiveTyper {
-  type S[T] = State[TyperState, T]
-
-  def get: S[TyperState] = State.get
-  def set(state: TyperState): S[Unit] = State.set(state)
-
-  def newTypeVar: S[Type.Var] = for {
-    currentState <- get
-    _ <- set(currentState.withNewTypeVar)
-  } yield currentState.currentTypeVar
-
-  final class TyperState(private val count: Int, private val subst: Substitution) {
-    def currentTypeVar: Type.Var = Type.Var(s"T$count")
-    def withNewTypeVar: TyperState = new TyperState(count + 1, subst)
-
-    def currentSubstitution: Substitution = subst
-    def withSubstitution(substitution: Substitution): TyperState = new TyperState(count, subst)
+  object ReprInference extends Inference[Repr] {
+    override def newTypeVar: Repr[Type.Var] = Repr(is => Right((is.withNewTypeVar, is.currentTypeVar)))
+    override def substitution: Repr[Substitution] = Repr(is => Right((is, is.substitution)))
+    override def assumptions: Repr[Assumptions] = Repr(is => Right((is, is.assumptions)))
+    override def setSubstitution(subst: Substitution): Repr[Unit] = Repr(is => Right((is.withSubstitution(subst), ())))
+    override def setAssumptions(assumptions: Assumptions): Repr[Unit] =
+      Repr(is => Right((is.withAssumptions(assumptions), ())))
+    override def error(message: String): Repr[Nothing] = Repr(_ => Left(message))
   }
 
-  object TyperState {
-    def empty: TyperState = new TyperState(0, Substitution.empty)
+  implicit def reprMonadInstance: Monad[Repr] = ReprMonad
+
+  object ReprMonad extends Monad[Repr] {
+    override def pure[A](x: A): Repr[A] = Repr(is => Right((is, x)))
+    override def flatMap[A, B](fa: Repr[A])(f: A => Repr[B]): Repr[B] = Repr(
+      is =>
+        fa.run(is) match {
+          case Left(value)    => Left(value)
+          case Right((is, a)) => f(a).run(is)
+        }
+    )
+    override def tailRecM[A, B](a: A)(f: A => Repr[Either[A, B]]): Repr[B] =
+      Repr(
+        is =>
+          f(a).run(is) match {
+            case Left(value) => Left(value)
+            case Right((is2, aOrb)) =>
+              aOrb match {
+                case Left(a)  => tailRecM(a)(f).run(is2)
+                case Right(b) => Right((is2, b))
+              }
+          }
+      )
+  }
+
+  final case class InferenceState(
+    private val count: Int,
+    substitution: Substitution,
+    assumptions: Assumptions
+  ) {
+    def currentTypeVar: Type.Var = Type.Var(s"T$count")
+    def withNewTypeVar: InferenceState = copy(count = count + 1)
+
+    def withSubstitution(substitution: Substitution): InferenceState =
+      copy(substitution = substitution)
+
+    def withAssumptions(assumptions: Assumptions): InferenceState =
+      copy(assumptions = assumptions)
+  }
+
+  object InferenceState {
+    def empty: InferenceState = new InferenceState(0, Substitution.empty, Assumptions.empty)
   }
 }
