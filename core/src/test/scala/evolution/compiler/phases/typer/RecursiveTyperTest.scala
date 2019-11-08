@@ -4,13 +4,22 @@ import evolution.compiler.module.Module
 import evolution.compiler.phases.typer.RecursiveTyper.InferenceState
 import evolution.compiler.tree.TreeF
 import evolution.compiler.types.Type.Scheme
-import evolution.compiler.types.TypeClasses.Qualified
+import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 import evolution.compiler.types.{ Assumption, Assumptions, Type }
 import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 
 class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
 
   "RecursiveTyperTest should type" - {
+    "integer literals" in {
+      val untyped = TreeF.IntLiteral(1)
+      val state = InferenceState.empty
+      val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
+      typed.right.value shouldBe untyped.annotate(
+        Qualified(List(Predicate("Num", List(state.currentTypeVar))), state.currentTypeVar)
+      )
+    }
+
     "double literals" in {
       val untyped = TreeF.DoubleLiteral(2.1)
       val typed = typer.typeTree(untyped.embed, None, Module.empty)
