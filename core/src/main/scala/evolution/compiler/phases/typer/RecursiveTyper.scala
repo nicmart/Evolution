@@ -17,7 +17,7 @@ import evolution.compiler.types._
 final class RecursiveTyper extends Typer {
 
   def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] =
-    typeTreeF(tree, expectedType, module).run(InferenceState.empty).map(_._2)
+    typeTreeF(tree, expectedType, module).runA(InferenceState.empty)
 
   private[typer] def typeTreeF(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] = {
     tree.value match {
@@ -87,7 +87,9 @@ object RecursiveTyper {
       typed.annotate(Qualified(List(predicate), tpe))
   }
 
-  case class Repr[+T](run: InferenceState => Either[String, (InferenceState, T)])
+  case class Repr[+T](run: InferenceState => Either[String, (InferenceState, T)]) {
+    def runA(is: InferenceState): Either[String, T] = run(is).map(_._2)
+  }
 
   object ReprInference extends Inference[Repr] {
     override def newTypeVar: Repr[Type.Var] = Repr(is => Right((is.withNewTypeVar, is.currentTypeVar)))
