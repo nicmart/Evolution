@@ -200,7 +200,7 @@ bernoulli(p, r) = map(
   sample -> if (sample < p, r, 0)
 ) in
 
-export
+export 
 
 
 """

@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer
 
 //import cats.syntax.either._
-import cats.Monad
+import cats.{ Functor, Monad }
 import cats.implicits._
 import evolution.compiler.module.Module
 import evolution.compiler.phases.Typer
@@ -40,9 +40,18 @@ final class RecursiveTyper extends Typer {
           newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
         } yield Identifier(name, primitive).annotate(newQualifiedType)
 
+      case Lambda(varName, body) =>
+        for {
+          freshTypeVarname <- newTypeVarname
+          assumption = Assumption(varName, Qualified(Scheme(Type.Var(freshTypeVarname))), false)
+          typedBody <- withLocalAssumption(assumption)(typeTreeF(body, None, module))
+          lambdaType = Type.Var(freshTypeVarname) =>: typedBody.annotation.value
+          lambdaPredicates = typedBody.annotation.predicates
+          lambdaQualifiedType = Qualified(lambdaPredicates, lambdaType)
+        } yield Lambda(varName, typedBody).annotate(lambdaQualifiedType)
+
       case Lst(ts)                => ???
       case Let(varName, expr, in) => ???
-      case Lambda(varName, expr)  => ???
       case TreeF.App(f, args)     => ???
     }
   }
@@ -56,7 +65,7 @@ object RecursiveTyper {
   }
 
   sealed trait Inference[F[+ _]] extends InferenceOps[F] {
-    def newTypeVar: F[Type.Var]
+    def newTypeVarname: F[String]
     def substitution: F[Substitution]
     def assumptions: F[Assumptions]
     def setSubstitution(subst: Substitution): F[Unit]
@@ -65,6 +74,8 @@ object RecursiveTyper {
   }
 
   trait InferenceOps[F[+ _]] { self: Inference[F] =>
+    final def newTypeVar(implicit M: Functor[F]): F[Type] = newTypeVarname.map(Type.Var)
+
     final def withLocalAssumption[T](assumption: Assumption)(ft: F[T])(implicit M: Monad[F]): F[T] =
       for {
         initialAssumptions <- assumptions
@@ -92,7 +103,7 @@ object RecursiveTyper {
   }
 
   object ReprInference extends Inference[Repr] {
-    override def newTypeVar: Repr[Type.Var] = Repr(is => Right((is.withNewTypeVar, is.currentTypeVar)))
+    override def newTypeVarname: Repr[String] = Repr(is => Right((is.withNewTypeVar, is.currentTypeVarname)))
     override def substitution: Repr[Substitution] = Repr(is => Right((is, is.substitution)))
     override def assumptions: Repr[Assumptions] = Repr(is => Right((is, is.assumptions)))
     override def setSubstitution(subst: Substitution): Repr[Unit] = Repr(is => Right((is.withSubstitution(subst), ())))
@@ -131,7 +142,8 @@ object RecursiveTyper {
     substitution: Substitution,
     assumptions: Assumptions
   ) {
-    def currentTypeVar: Type.Var = Type.Var(s"T$count")
+    def currentTypeVarname: String = s"T$count"
+    def currentTypeVar: Type = Type.Var(currentTypeVarname)
     def withNewTypeVar: InferenceState = copy(count = count + 1)
 
     def withSubstitution(substitution: Substitution): InferenceState =

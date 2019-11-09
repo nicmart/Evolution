@@ -15,8 +15,9 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
       val untyped = TreeF.IntLiteral(1)
       val state = InferenceState.empty
       val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
+      val currentTypeVar = Type.Var(state.currentTypeVarname)
       typed.right.value shouldBe untyped.annotate(
-        Qualified(List(Predicate("Num", List(state.currentTypeVar))), state.currentTypeVar)
+        Qualified(List(Predicate("Num", List(currentTypeVar))), currentTypeVar)
       )
     }
 
@@ -55,6 +56,29 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
         val state = InferenceState.empty
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
         typed.isLeft shouldBe true
+      }
+    }
+
+    "lambdas" - {
+      "identity" in {
+        val untyped = TreeF.Lambda("x", TreeF.Identifier("x").embed)
+        val state = InferenceState.empty
+        val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
+        typed.right.value shouldBe TreeF
+          .Lambda("x", TreeF.Identifier("x").annotate(Qualified(state.currentTypeVar)))
+          .annotate(Qualified[Type](state.currentTypeVar =>: state.currentTypeVar))
+      }
+
+      "existing assumptions are preserved" in {
+        val untyped = TreeF.Lambda("x", TreeF.Identifier("y").embed)
+        val yPredicates = List(Predicate("MyPred", List(Type.Var("Y"))))
+        val yQualifiedType = Qualified[Type](yPredicates, Type.Var("Y"))
+        val yAssumption = Assumption("y", yQualifiedType.map(Scheme.apply), false)
+        val state = InferenceState.empty.withAssumptions(Assumptions.empty.withAssumption(yAssumption))
+        val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
+        typed.right.value shouldBe TreeF
+          .Lambda("x", TreeF.Identifier("y").annotate(yQualifiedType))
+          .annotate(Qualified[Type](yPredicates, state.currentTypeVar =>: Type.Var("Y")))
       }
     }
   }
