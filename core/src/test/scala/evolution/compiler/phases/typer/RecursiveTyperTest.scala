@@ -36,17 +36,14 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
     "identifiers" - {
       "fixed type" in {
         val untyped = TreeF.Identifier("x")
-        val assumption = Assumptions.empty.withAssumption(Assumption("x", Qualified(Scheme(Type.Var("T1"))), false))
-        val state = InferenceState.empty.withAssumptions(assumption)
+        val state = stateWithSingleAssumption(Assumption("x", Qualified(Scheme(Type.Var("T1"))), false))
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
         typed.right.value shouldBe untyped.annotate(Qualified(Type.Var("T1")))
       }
 
       "schema type" in {
         val untyped = TreeF.Identifier("x")
-        val assumption =
-          Assumptions.empty.withAssumption(Assumption("x", Qualified(Scheme(List("Y"), Type.Var("Y"))), false))
-        val state = InferenceState.empty.withAssumptions(assumption)
+        val state = stateWithSingleAssumption(Assumption("x", Qualified(Scheme(List("Y"), Type.Var("Y"))), false))
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
         typed.right.value shouldBe untyped.annotate(Qualified(state.currentTypeVar))
       }
@@ -69,19 +66,36 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
           .annotate(Qualified[Type](state.currentTypeVar =>: state.currentTypeVar))
       }
 
-      "existing assumptions are preserved" in {
+      "use existing assumptions for other identifiers" in {
         val untyped = TreeF.Lambda("x", TreeF.Identifier("y").embed)
         val yPredicates = List(Predicate("MyPred", List(Type.Var("Y"))))
         val yQualifiedType = Qualified[Type](yPredicates, Type.Var("Y"))
         val yAssumption = Assumption("y", yQualifiedType.map(Scheme.apply), false)
-        val state = InferenceState.empty.withAssumptions(Assumptions.empty.withAssumption(yAssumption))
+        val state = stateWithSingleAssumption(yAssumption)
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
         typed.right.value shouldBe TreeF
           .Lambda("x", TreeF.Identifier("y").annotate(yQualifiedType))
           .annotate(Qualified[Type](yPredicates, state.currentTypeVar =>: Type.Var("Y")))
       }
+
+      "new assumption shadows existing one" in {
+        val untyped = TreeF.Lambda("x", TreeF.Identifier("x").embed)
+        val assumptionThatWillBeShadowed = Assumption("x", Qualified(Scheme(Type.Double)), false)
+        val state = stateWithSingleAssumption(assumptionThatWillBeShadowed)
+        val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
+        typed.right.value shouldBe TreeF
+          .Lambda("x", TreeF.Identifier("x").annotate(Qualified(state.currentTypeVar)))
+          .annotate(Qualified[Type](state.currentTypeVar =>: state.currentTypeVar))
+      }
+    }
+
+    "app" - {
+      "asdasd" in {}
     }
   }
+
+  def stateWithSingleAssumption(assumption: Assumption): InferenceState =
+    InferenceState.empty.withAssumptions(Assumptions.empty.withAssumption(assumption))
 
   val typer = new RecursiveTyper
 }
