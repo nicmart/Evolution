@@ -1,6 +1,7 @@
 package evolution.compiler.phases.typer
 
 //import cats.syntax.either._
+import cats.data.NonEmptyList
 import cats.{ Functor, Monad }
 import cats.implicits._
 import evolution.compiler.module.Module
@@ -17,7 +18,13 @@ import evolution.compiler.types._
 final class RecursiveTyper extends Typer {
 
   def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] =
-    typeTreeF(tree, expectedType, module).runA(InferenceState.empty)
+    typeTreeAndSubstitute(tree, expectedType, module).runA(InferenceState.empty)
+
+  private[typer] def typeTreeAndSubstitute(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] =
+    for {
+      typed <- typeTreeF(tree, expectedType, module)
+      finalSubstitution <- substitution
+    } yield finalSubstitution.substitute(typed)
 
   private[typer] def typeTreeF(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] = {
     tree.value match {
@@ -50,9 +57,17 @@ final class RecursiveTyper extends Typer {
           lambdaQualifiedType = Qualified(lambdaPredicates, lambdaType)
         } yield Lambda(varName, typedBody).annotate(lambdaQualifiedType)
 
+      case TreeF.App(f, NonEmptyList(x, Nil)) =>
+        for {
+          typedF <- typeTreeF(f, None, Module.empty)
+          typedX <- typeTreeF(x, None, Module.empty)
+          returnType <- newTypeVar
+          _ <- unify(typedF.annotation.value, typedX.annotation.value =>: returnType)
+          qualifiedType = Qualified(typedF.annotation.predicates ++ typedX.annotation.predicates, returnType)
+        } yield TreeF.App(typedF, NonEmptyList.of(typedX)).annotate(qualifiedType)
+
       case Lst(ts)                => ???
       case Let(varName, expr, in) => ???
-      case TreeF.App(f, args)     => ???
     }
   }
 }
@@ -89,6 +104,15 @@ object RecursiveTyper {
         case None             => error(s"assumption not found for varname $name")
         case Some(assumption) => assumption.pure[F]
       }
+
+    final def fromEither[T](either: Either[String, T])(implicit M: Monad[F]): F[T] =
+      either.fold(error, M.pure)
+
+    final def unify(t1: Type, t2: Type)(implicit M: Monad[F]): F[Unit] = for {
+      currentSubstitution <- substitution
+      unifyingSubstitution <- fromEither(UnifyTypes.mostGeneralUnifier(t1, t2))
+      _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
+    } yield ()
   }
 
   implicit class LeafOps(tree: TreeF[Nothing]) {
