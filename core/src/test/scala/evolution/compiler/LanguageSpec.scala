@@ -18,6 +18,12 @@ trait LanguageSpec
         s => throw new Exception(s),
         identity
       )
+
+    def unsafeLeft: String =
+      t.fold(
+        identity,
+        s => throw new Exception(s"Getting a Left on a Right($s)")
+      )
   }
 
   implicit class ShouldEqOps[A: Equality](left: A) {

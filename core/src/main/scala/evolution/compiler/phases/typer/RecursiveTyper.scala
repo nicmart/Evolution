@@ -23,6 +23,7 @@ final class RecursiveTyper extends Typer {
   private[typer] def typeTreeAndSubstitute(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] =
     for {
       typed <- typeTreeF(tree, module)
+      _ <- expectedType.fold(ReprMonad.pure(()))(expected => unify(expected, typed.annotation.value))
       finalSubstitution <- substitution
     } yield finalSubstitution.substitute(typed)
 
@@ -155,7 +156,7 @@ object RecursiveTyper {
     override def error(message: String): Repr[Nothing] = Repr(_ => Left(message))
   }
 
-  implicit def reprMonadInstance: Monad[Repr] = ReprMonad
+  implicit val reprMonadInstance: Monad[Repr] = ReprMonad
 
   object ReprMonad extends Monad[Repr] {
     override def pure[A](x: A): Repr[A] = Repr(is => Right((is, x)))
