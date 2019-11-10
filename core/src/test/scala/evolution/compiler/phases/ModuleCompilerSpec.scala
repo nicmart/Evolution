@@ -8,13 +8,14 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.logging.NoOpLogger
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.compiler.phases.typer.RecursiveTyper
 
 class ModuleCompilerSpec extends LanguageSpec {
   "Module compiler" - {
     "should extract assumptions" in {
-      val compiler = new ModuleCompiler(FastParseParser, new UnificationTyper(NoOpLogger), DefaultCompiler, NoOpLogger)
+      val typer = new RecursiveTyper
+      val compiler = new ModuleCompiler(FastParseParser, typer, DefaultCompiler, NoOpLogger)
       val code = "blah(x, y) = point(x, y) in line(x, y) = point(x, y) in export"
       val module = compiler.compile(code, initialModule)
 

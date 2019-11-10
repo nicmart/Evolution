@@ -8,7 +8,7 @@ final case class Module(assumptions: Assumptions, load: Expr[Any] => Expr[Any]) 
     Module(assumptions.merge(other.assumptions), other.load andThen load)
 
   def varContext: VarContext =
-    ExtractVarContext(load(Expr.Var("dummy")))
+    VarContext(assumptions.vars ++ ExtractVarContext(load(Expr.Var("dummy"))).vars)
 }
 
 object Module {

@@ -57,7 +57,7 @@ final class RecursiveTyper extends Typer {
           vars = qualifiedScheme.value.vars.map(Type.Var)
           freshTypeVars <- vars.traverse(_ => newTypeVar)
           newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
-        } yield Identifier(name, primitive).annotate(newQualifiedType)
+        } yield Identifier(name, assumption.primitive).annotate(newQualifiedType)
 
       case Lambda(varName, body) =>
         for {
