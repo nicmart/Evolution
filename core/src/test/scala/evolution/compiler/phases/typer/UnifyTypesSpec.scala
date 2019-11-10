@@ -22,7 +22,7 @@ class UnifyTypesSpec extends LanguageSpec {
         "point function" in {
           val point =
             AssignFreshTypeVars.assign(Identifier.const(Constant2.Point).embed, TypingConfig.constantQualifiedTypes)
-          val constraints = FindConstraints.find(point).unsafeEvaluate
+          val constraints = FindConstraints.find(point).unsafeRight
           val unifier = unify(constraints)
           unifier.map(_.substitution.substitute(point.annotation)) shouldBe Right(
             Qualified(Type.Double =>: Type.Double =>: Type.Point)
@@ -37,7 +37,7 @@ class UnifyTypesSpec extends LanguageSpec {
               App.of(Identifier.const(Constant1.Constant).embed, point).embed,
               TypingConfig.constantQualifiedTypes
             )
-          val constraints = FindConstraints.find(evolution).unsafeEvaluate
+          val constraints = FindConstraints.find(evolution).unsafeRight
           val allConstraints = constraints.merge(Constraints(evolution.annotation.value -> Type.Evo(Type.Point)))
           val unifier = unify(allConstraints)
           unifier.map(_.substitution.substitute(evolution.annotation)) shouldBe Right(
@@ -56,23 +56,23 @@ class UnifyTypesSpec extends LanguageSpec {
           )
         )
         val (expr, constraints) =
-          assignVarsAndFindConstraints(untyped, extraAssumptions).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+          assignVarsAndFindConstraints(untyped, extraAssumptions).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         substitution.substitute(expr).annotation.value shouldBe Type.Point
       }
 
       "app(x -> x, 2)" in {
         val identity = Lambda("x", Identifier("x").embed).embed
         val untyped = App.of(identity, DoubleLiteral(2).embed).embed
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         substitution.substitute(expr).annotation.value shouldBe Type.Double
       }
 
       "const(1)" in {
         val untyped = App.of(Identifier.const(Constant1.Constant).embed, DoubleLiteral(1).embed).embed
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         val finalExpr = substitution.substitute(expr)
         finalExpr.annotation.value shouldBe Type.Evo(Type.Double)
 
@@ -89,8 +89,8 @@ class UnifyTypesSpec extends LanguageSpec {
               App.of(Identifier.const(Constant1.Constant).embed, DoubleLiteral(2).embed).embed
             )
             .embed
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         substitution.substitute(expr).annotation.value shouldBe Type.Evo(Type.Point)
       }
 
@@ -104,8 +104,8 @@ class UnifyTypesSpec extends LanguageSpec {
             )
             .embed
 
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         val typedExpr = substitution.substitute(expr)
         typedExpr.annotation.value shouldBe Type.Evo(Type.Point)
       }
@@ -123,8 +123,8 @@ class UnifyTypesSpec extends LanguageSpec {
             )
             .embed
 
-        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeEvaluate
-        val substitution = unify(constraints).unsafeEvaluate.substitution
+        val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
+        val substitution = unify(constraints).unsafeRight.substitution
         val typedExpr = substitution.substitute(expr)
         typedExpr.annotation.value shouldBe Type.Evo(Type.Point)
       }

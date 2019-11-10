@@ -16,7 +16,7 @@ class FindConstraintsSpec extends LanguageSpec {
     "should generate constraints for" - {
       "int literals" in {
         forAll(genIntNumber) { numberExpr =>
-          val constraints = assignVarsAndFindConstraints(numberExpr).unsafeEvaluate._2
+          val constraints = assignVarsAndFindConstraints(numberExpr).unsafeRight._2
           val expected = Constraints.empty.withPredicate(Predicate("Num", List(firstTypeVar)))
           constraints shouldEq expected
         }
@@ -24,7 +24,7 @@ class FindConstraintsSpec extends LanguageSpec {
 
       "double literals" in {
         forAll(genDoubleNotIntNumber) { numberExpr =>
-          val constraints = assignVarsAndFindConstraints(numberExpr).unsafeEvaluate._2
+          val constraints = assignVarsAndFindConstraints(numberExpr).unsafeRight._2
           val expected = Constraints(firstTypeVar -> Type.Double)
           constraints shouldEq expected
         }
@@ -32,7 +32,7 @@ class FindConstraintsSpec extends LanguageSpec {
 
       "vars" in {
         forAll(genVar) { varExpr =>
-          val constraints = assignVarsAndFindConstraints(varExpr).unsafeEvaluate._2
+          val constraints = assignVarsAndFindConstraints(varExpr).unsafeRight._2
           constraints shouldEq Constraints.empty
         }
       }

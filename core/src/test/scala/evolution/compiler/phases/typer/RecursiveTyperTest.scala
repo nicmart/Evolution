@@ -1,16 +1,15 @@
 package evolution.compiler.phases.typer
 
-import cats.data.NonEmptyList
+import evolution.compiler.LanguageSpec
 import evolution.compiler.module.Module
 import evolution.compiler.phases.typer.RecursiveTyper.InferenceState
 import evolution.compiler.tree.TreeF
+import evolution.compiler.tree.TreeF._
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
 import evolution.compiler.types.{ Assumption, Assumptions, Type }
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
-import evolution.compiler.tree.TreeF._
 
-class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
+class RecursiveTyperTest extends LanguageSpec {
 
   "RecursiveTyperTest should type" - {
     "integer literals" in {
@@ -18,7 +17,7 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
       val state = InferenceState.empty
       val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
       val currentTypeVar = Type.Var(state.currentTypeVarname)
-      typed.right.value shouldBe untyped.annotate(
+      typed.unsafeRight shouldBe untyped.annotate(
         Qualified(List(Predicate("Num", List(currentTypeVar))), currentTypeVar)
       )
     }
@@ -26,13 +25,13 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
     "double literals" in {
       val untyped = DoubleLiteral(2.1)
       val typed = typer.typeTree(untyped.embed, None, Module.empty)
-      typed.right.value shouldBe untyped.annotate(Qualified(Type.Double))
+      typed.unsafeRight shouldBe untyped.annotate(Qualified(Type.Double))
     }
 
     "booleans" in {
       val untyped = Bool(true)
       val typed = typer.typeTree(untyped.embed, None, Module.empty)
-      typed.right.value shouldBe untyped.annotate(Qualified(Type.Bool))
+      typed.unsafeRight shouldBe untyped.annotate(Qualified(Type.Bool))
     }
 
     "identifiers" - {
@@ -40,14 +39,14 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
         val untyped = Identifier("x")
         val state = stateWithAssumptions(Assumption("x", Qualified(Scheme(Type.Var("T1"))), false))
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
-        typed.right.value shouldBe untyped.annotate(Qualified(Type.Var("T1")))
+        typed.unsafeRight shouldBe untyped.annotate(Qualified(Type.Var("T1")))
       }
 
       "schema type" in {
         val untyped = Identifier("x")
         val state = stateWithAssumptions(Assumption("x", Qualified(Scheme(List("Y"), Type.Var("Y"))), false))
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
-        typed.right.value shouldBe untyped.annotate(Qualified(state.currentTypeVar))
+        typed.unsafeRight shouldBe untyped.annotate(Qualified(state.currentTypeVar))
       }
 
       "undefined type" in {
@@ -63,7 +62,7 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
         val untyped = Lambda("x", Identifier("x").embed)
         val state = InferenceState.empty
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
-        typed.right.value shouldBe TreeF
+        typed.unsafeRight shouldBe TreeF
           .Lambda("x", Identifier("x").annotate(Qualified(state.currentTypeVar)))
           .annotate(Qualified[Type](state.currentTypeVar =>: state.currentTypeVar))
       }
@@ -75,7 +74,7 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
         val yAssumption = Assumption("y", yQualifiedType.map(Scheme.apply), false)
         val state = stateWithAssumptions(yAssumption)
         val typed = typer.typeTreeF(untyped.embed, None, Module.empty).runA(state)
-        typed.right.value shouldBe TreeF
+        typed.unsafeRight shouldBe TreeF
           .Lambda("x", Identifier("y").annotate(yQualifiedType))
           .annotate(Qualified[Type](yPredicates, state.currentTypeVar =>: Type.Var("Y")))
       }
@@ -85,7 +84,7 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
         val assumptionThatWillBeShadowed = Assumption("x", Qualified(Scheme(Type.Double)), false)
         val state = stateWithAssumptions(assumptionThatWillBeShadowed)
         val typed = typer.typeTreeF(untyped, None, Module.empty).runA(state)
-        typed.right.value shouldBe TreeF
+        typed.unsafeRight shouldBe TreeF
           .Lambda("x", Identifier("x").annotate(Qualified(state.currentTypeVar)))
           .annotate(Qualified[Type](state.currentTypeVar =>: state.currentTypeVar))
       }
@@ -93,14 +92,33 @@ class RecursiveTyperTest extends FreeSpec with Matchers with EitherValues {
 
     "app" - {
       "app(f: X -> Double, x: Bool): Double" in {
-        val untyped = App(Identifier("f").embed, NonEmptyList.of(Identifier("x").embed)).embed
+        val untyped = App.of(Identifier("f").embed, Identifier("x").embed).embed
         val state = stateWithAssumptions(
           Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Double)), false),
           Assumption("x", Qualified(Scheme(Type.Bool)), false)
         )
-        val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(state).right.value
+        val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(state).unsafeRight
         typed.annotation.value shouldBe Type.Double
       }
+
+      "app(f: X -> Y -> Double, x: Bool, y: Double): Double" in {
+        val untyped = App
+          .of(
+            Identifier("f").embed,
+            Identifier("x").embed,
+            Identifier("y").embed
+          )
+          .embed
+
+        val state = stateWithAssumptions(
+          Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Var("Y1") =>: Type.Double)), false),
+          Assumption("x", Qualified(Scheme(Type.Bool)), false),
+          Assumption("y", Qualified(Scheme(Type.Var("Y2"))), false)
+        )
+        val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(state)
+        typed.unsafeRight.annotation.value shouldBe Type.Double
+      }
+
     }
   }
 

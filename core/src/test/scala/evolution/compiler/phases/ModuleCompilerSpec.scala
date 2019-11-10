@@ -18,7 +18,7 @@ class ModuleCompilerSpec extends LanguageSpec {
       val code = "blah(x, y) = point(x, y) in line(x, y) = point(x, y) in export"
       val module = compiler.compile(code, initialModule)
 
-      val inferredAssumption = module.unsafeEvaluate.assumptions.get("line")
+      val inferredAssumption = module.unsafeRight.assumptions.get("line")
 
       val expectedAssumption = Assumption("line", Qualified(Scheme(Type.Double =>: Type.Double =>: Type.Point)), false)
       inferredAssumption should contain(expectedAssumption)

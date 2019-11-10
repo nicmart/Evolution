@@ -201,7 +201,7 @@ class DefaultCompilerSpec extends LanguageSpec {
   lazy val intType: Qualified[Type] = Qualified(Type.Integer)
 
   private def unsafeCompile[T](expr: TypedTree): Expr[T] =
-    DefaultCompiler.compile(expr, Module.empty).unsafeEvaluate.asInstanceOf[Expr[T]]
+    DefaultCompiler.compile(expr, Module.empty).unsafeRight.asInstanceOf[Expr[T]]
 
   implicit class Ops(tree: TreeF[TypedTree]) {
     def withNoType = tree.annotate(unknownType)

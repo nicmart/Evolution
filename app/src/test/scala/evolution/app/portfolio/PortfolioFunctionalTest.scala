@@ -24,8 +24,8 @@ class PortfolioSpec extends LanguageSpec {
               DrawingContext(CanvasSize(200, 200))
             )
 
-          result.unsafeEvaluate shouldBe a[Iterator[_]]
-          result.unsafeEvaluate.take(100).toList should have length (100)
+          result.unsafeRight shouldBe a[Iterator[_]]
+          result.unsafeRight.take(100).toList should have length (100)
         }
       }
     }

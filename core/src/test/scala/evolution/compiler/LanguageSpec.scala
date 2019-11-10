@@ -13,7 +13,7 @@ trait LanguageSpec
     with TreeArbitraries
     with TypeCheckedTripleEquals {
   implicit class EitherOps[T](t: Either[String, T]) {
-    def unsafeEvaluate: T =
+    def unsafeRight: T =
       t.fold(
         s => throw new Exception(s),
         identity

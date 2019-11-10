@@ -57,14 +57,16 @@ final class RecursiveTyper extends Typer {
           lambdaQualifiedType = Qualified(lambdaPredicates, lambdaType)
         } yield Lambda(varName, typedBody).annotate(lambdaQualifiedType)
 
-      case TreeF.App(f, NonEmptyList(x, Nil)) =>
+      case TreeF.App(f, inputs) =>
         for {
           typedF <- typeTreeF(f, None, Module.empty)
-          typedX <- typeTreeF(x, None, Module.empty)
+          typedInputs <- inputs.traverse(tree => typeTreeF(tree, None, Module.empty))
+          inputTypes = typedInputs.map(_.annotation.value).toList
+          inputPredicates = typedInputs.toList.flatMap(_.annotation.predicates)
           returnType <- newTypeVar
-          _ <- unify(typedF.annotation.value, typedX.annotation.value =>: returnType)
-          qualifiedType = Qualified(typedF.annotation.predicates ++ typedX.annotation.predicates, returnType)
-        } yield TreeF.App(typedF, NonEmptyList.of(typedX)).annotate(qualifiedType)
+          _ <- unify(typedF.annotation.value, arrowType(inputTypes, returnType))
+          qualifiedType = Qualified(typedF.annotation.predicates ++ inputPredicates, returnType)
+        } yield TreeF.App(typedF, typedInputs).annotate(qualifiedType)
 
       case Lst(ts)                => ???
       case Let(varName, expr, in) => ???
@@ -78,6 +80,9 @@ object RecursiveTyper {
     val substitution = Substitution(assignments)
     Qualified(substitution.substitute(qs.predicates), qs.value.instantiate(types))
   }
+
+  def arrowType(inputs: List[Type], result: Type): Type =
+    inputs.foldRight(result)(_ =>: _)
 
   sealed trait Inference[F[+ _]] extends InferenceOps[F] {
     def newTypeVarname: F[String]

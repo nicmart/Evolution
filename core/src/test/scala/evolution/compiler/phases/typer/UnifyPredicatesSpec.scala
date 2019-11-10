@@ -50,7 +50,7 @@ class UnifyPredicatesSpec extends LanguageSpec {
         Predicate("Both", List(Type.Double, Type.Double)),
         Predicate("Both", List(Type.Integer, Type.Integer))
       )
-      val subst = predicatesUnifier.unify(instances, predicates).unsafeEvaluate
+      val subst = predicatesUnifier.unify(instances, predicates).unsafeRight
 
       subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
       subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
@@ -77,7 +77,7 @@ class UnifyPredicatesSpec extends LanguageSpec {
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeEvaluate
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
 
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Double
     }
@@ -90,7 +90,7 @@ class UnifyPredicatesSpec extends LanguageSpec {
         Predicate("Mult", List(Type.Var("T0"), Type.Point, Type.Var("T1")))
       ) ++ (1 to 40).map(predicate)
 
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeEvaluate
+      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeRight
 
       subst.substitute[Type](Type.Var("T0")) shouldBe Type.Double
     }
