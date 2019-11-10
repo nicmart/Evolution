@@ -27,8 +27,8 @@ object StandardLibraryModule {
     identity
   )
 
-  private lazy val typer = new RecursiveTyper
-  //private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
+  //private lazy val typer = new RecursiveTyper
+  private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
 
   private lazy val moduleCompiler =
     new ModuleCompiler(FastParseParser, typer, DefaultCompiler, NoOpLogger)
