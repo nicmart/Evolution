@@ -118,7 +118,18 @@ class RecursiveTyperTest extends LanguageSpec {
         val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(state)
         typed.unsafeRight.annotation.value shouldBe Type.Double
       }
+    }
 
+    "lists" - {
+      "list(a: Double, b: X): List[Double]" in {
+        val untyped = Lst(List(Identifier("a").embed, Identifier("b").embed)).embed
+        val state = stateWithAssumptions(
+          Assumption("a", Qualified(Scheme(Type.Double)), false),
+          Assumption("b", Qualified(Scheme(Type.Var("X"))), false)
+        )
+        val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(state).unsafeRight
+        typed.annotation.value shouldBe Type.Lst(Type.Double)
+      }
     }
   }
 
@@ -127,5 +138,5 @@ class RecursiveTyperTest extends LanguageSpec {
       case (ass, a) => ass.withAssumption(a)
     })
 
-  val typer = new RecursiveTyper
+  lazy val typer = new RecursiveTyper
 }
