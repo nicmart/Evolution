@@ -120,6 +120,16 @@ class RecursiveTyperTest extends LanguageSpec {
       }
     }
 
+    "lets" - {
+      "f(x) = x in f(2)" in {
+        val untyped =
+          Let("f", Lambda("x", Identifier("x").embed).embed, App.of(Identifier("f").embed, IntLiteral(2).embed).embed).embed
+        val typed = typer.typeTreeAndSubstitute(untyped, None, Module.empty).runA(InferenceState.empty)
+        val Qualified(predicates, Type.Var(t)) = typed.unsafeRight.annotation
+        predicates should contain only Predicate("Num", List(Type.Var(t)))
+      }
+    }
+
     "lists" - {
       "list(a: Double, b: X): List[Double]" in {
         val untyped = Lst(List(Identifier("a").embed, Identifier("b").embed)).embed

@@ -76,7 +76,14 @@ final class RecursiveTyper extends Typer {
           qualifiedType = Qualified(typedTs.flatMap(_.annotation.predicates), Type.Lst(freshTypeVar))
         } yield Lst(typedTs).annotate(qualifiedType)
 
-      case Let(varName, expr, in) => ???
+      case Let(varName, expr, in) =>
+        for {
+          typedExpr <- typeTreeF(expr, None, Module.empty)
+          assumption = Assumption(varName, typedExpr.annotation.map(Scheme.apply), false)
+          typedIn <- withLocalAssumption(assumption)(typeTreeF(in, None, Module.empty))
+          letPredicates = typedExpr.annotation.predicates ++ typedIn.annotation.predicates
+          letType = Qualified(letPredicates, typedIn.annotation.value)
+        } yield Let(varName, typedExpr, typedIn).annotate(letType)
     }
   }
 }
