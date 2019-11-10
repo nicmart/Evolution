@@ -163,6 +163,21 @@ class RecursiveTyperTest extends LanguageSpec {
         typer.typeTree(untyped, Some(Type.Integer), assumptions).unsafeLeft
       }
     }
+
+    "functional tests" - {
+      "1 + 1" in {
+        val addScheme = Scheme(List("A"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
+        val addPredicates = List(Predicate("Add", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
+        val assumptions = withAssumptions(Assumption("add", Qualified(addPredicates, addScheme), true))
+        val untyped = App.of(Identifier("add").embed, IntLiteral(1).embed, IntLiteral(1).embed).embed
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        val List(Predicate("Add", List(x, y, z)), Predicate("Num", List(xx)), Predicate("Num", List(yy))) =
+          typed.annotation.predicates
+        x shouldBe xx
+        y shouldBe yy
+        z shouldBe typed.annotation.value
+      }
+    }
   }
   def withAssumptions(assumptions: Assumption*): Assumptions =
     assumptions.foldLeft(Assumptions.empty) {

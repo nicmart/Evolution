@@ -22,9 +22,15 @@ object TypeClassInstance {
 
 object TypeClasses {
 
-  case class Predicate(id: String, types: List[Type])
+  case class Predicate(id: String, types: List[Type]) {
+    override def toString: String = s"$id(${types.mkString(", ")})"
+  }
   case class Qualified[+T](predicates: List[Predicate], value: T) {
     def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
+    override def toString: String =
+      if (predicates.isEmpty) value.toString
+      else
+        s"${predicates.mkString(", ")} => $value"
   }
   object Qualified {
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
