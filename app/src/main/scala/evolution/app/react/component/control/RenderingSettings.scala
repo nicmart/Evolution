@@ -4,11 +4,11 @@ import evolution.app.data.PointedSeq
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Select.Item
 import evolution.app.react.component.presentational.styled.FormField
-import evolution.app.react.component.presentational.{ DoubleInputComponent, IntInputComponent, Select }
+import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, Select}
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ ScalaComponent, _ }
+import japgolly.scalajs.react.{ScalaComponent, _}
 
 object RenderingSettings {
 
@@ -93,7 +93,7 @@ object RenderingSettings {
       s.zoomState(_.offCanvasSettings)(settings => state => state.copy(offCanvasSettings = settings))
 
     private def offCanvasStrategyItems(
-      s: StateSnapshot[RendererState]
+        s: StateSnapshot[RendererState]
     ): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
       def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
         PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))

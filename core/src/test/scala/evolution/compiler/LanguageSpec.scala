@@ -1,5 +1,5 @@
 package evolution.compiler
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalactic.Prettifier
 import pprint.PPrinter

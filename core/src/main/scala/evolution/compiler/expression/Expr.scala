@@ -79,10 +79,10 @@ object Expr {
   final case class SlidingMap[A, B](fa: Expr[Evolution[A]], f: Expr[A => A => B])
       extends Expr[Evolution[B]](List(fa, f))
   final case class MapWithDerivative[A, B](
-    fa: Expr[Evolution[A]],
-    f: Expr[A => A => B],
-    sg: Additive[A, A, A],
-    inv: Invertible[A]
+      fa: Expr[Evolution[A]],
+      f: Expr[A => A => B],
+      sg: Additive[A, A, A],
+      inv: Invertible[A]
   ) extends Expr[Evolution[B]](List(fa, f))
 
   final case class Iterate[A](f: Expr[A => A], start: Expr[A]) extends Expr[Evolution[A]](List(f, start))
@@ -102,10 +102,10 @@ object Expr {
   final case class Solve1[A](speed: Expr[Evolution[A => A]], start: Expr[A], semigroup: Additive[A, A, A])
       extends Expr[Evolution[A]](List(speed, start))
   final case class Solve2[A](
-    acc: Expr[Evolution[A => A => A]],
-    a0: Expr[A],
-    v0: Expr[A],
-    semigroup: Additive[A, A, A]
+      acc: Expr[Evolution[A => A => A]],
+      a0: Expr[A],
+      v0: Expr[A],
+      semigroup: Additive[A, A, A]
   ) extends Expr[Evolution[A]](List(acc, a0, v0))
   final case class WithFirst[A, B](as: Expr[Evolution[A]], f: Expr[A => Evolution[B]])
       extends Expr[Evolution[B]](List(as, f))

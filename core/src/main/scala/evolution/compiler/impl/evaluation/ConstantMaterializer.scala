@@ -2,7 +2,7 @@ package evolution.compiler.impl.evaluation
 
 import evolution.compiler.expression.typeclass._
 import evolution.compiler.phases.typer.config._
-import evolution.compiler.types.{ Type, Typed }
+import evolution.compiler.types.{Type, Typed}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 

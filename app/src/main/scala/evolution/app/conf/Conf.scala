@@ -7,10 +7,10 @@ import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Page
-import evolution.app.react.component.{ App, Canvas }
-import evolution.app.react.pages.{ LoadDrawingPage, MyPages, PageState, MaterializationOption }
+import evolution.app.react.component.{App, Canvas}
+import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState, MaterializationOption}
 import evolution.app.react.routing.Routing
-import evolution.app.{ CanvasInitializer, ColorCanvasInitializer }
+import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import japgolly.scalajs.react.extra.router.Router
 
 import scala.util.Random

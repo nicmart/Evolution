@@ -19,7 +19,8 @@ private[typer] final case class Constraints(constraints: List[Constraint]) {
 
 private[typer] object Constraints {
   val empty: Constraints = Constraints(Nil)
-  def apply(constraints: (Type, Type)*): Constraints = Constraints(constraints.toList.map {
-    case (a, b) => Constraint.Eq(a, b)
-  })
+  def apply(constraints: (Type, Type)*): Constraints =
+    Constraints(constraints.toList.map {
+      case (a, b) => Constraint.Eq(a, b)
+    })
 }

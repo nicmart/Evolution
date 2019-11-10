@@ -10,9 +10,9 @@ trait FrameDrawer {
 }
 
 final case class BaseFrameDrawer(
-  drawingContext: DrawingContext,
-  iterations: Int,
-  pointDrawer: PointDrawer
+    drawingContext: DrawingContext,
+    iterations: Int,
+    pointDrawer: PointDrawer
 ) extends FrameDrawer {
   private val offsetX = drawingContext.canvasSize.width / 2
   private val offsetY = drawingContext.canvasSize.height / 2

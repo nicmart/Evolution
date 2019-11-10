@@ -50,6 +50,6 @@ private[evaluation] object Contextual {
     }
 
   def map3Lazy[A, B, C, D](a: Contextual[A], b: Contextual[B], c: Contextual[C])(
-    f: (=> A, => B, => C) => D
+      f: (=> A, => B, => C) => D
   ): Contextual[D] = new WithContext[D] { override def apply(ctx: Ctx): D = f(a(ctx), b(ctx), c(ctx)) }
 }

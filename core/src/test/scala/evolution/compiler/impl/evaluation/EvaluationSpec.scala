@@ -3,7 +3,7 @@ package evolution.compiler.impl.evaluation
 import evolution.data.EvaluationContext._
 import evolution.compiler.expression.Expr._
 import evolution.compiler.expression.Expr
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import evolution.materialization.Evolution
 import evolution.compiler.impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.compiler.impl.evaluation.model.Contextual

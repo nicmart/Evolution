@@ -1,13 +1,13 @@
 package evolution.app.codec
 
-import java.io.{ ByteArrayOutputStream, ByteArrayInputStream }
-import java.util.zip.{ GZIPOutputStream, GZIPInputStream }
+import java.io.{ByteArrayOutputStream, ByteArrayInputStream}
+import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 
 import scala.util.Try
 
 /**
- * @see <a href="https://gist.github.com/owainlewis/1e7d1e68a6818ee4d50e">
- */
+  * @see <a href="https://gist.github.com/owainlewis/1e7d1e68a6818ee4d50e">
+  */
 object GzipCodec extends Codec[String, Array[Byte]] {
 
   override def encode(input: String): Array[Byte] = {

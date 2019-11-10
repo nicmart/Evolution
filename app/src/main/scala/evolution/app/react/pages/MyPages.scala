@@ -1,7 +1,7 @@
 package evolution.app.react.pages
 
 import evolution.app.codec.Codec
-import evolution.app.model.state.{ DrawingState, RendererState }
+import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.model.Drawing
 import evolution.compiler.phases.Materializer
 import evolution.compiler.impl.evaluation.EvalMaterializer
@@ -15,16 +15,16 @@ final case class LoadDrawingPage(state: PageState) extends MyPages
 case object NotFound extends MyPages
 
 final case class PageState(
-  drawingState: DrawingState,
-  rendererState: RendererState,
-  materializer: MaterializationOption
+    drawingState: DrawingState,
+    rendererState: RendererState,
+    materializer: MaterializationOption
 )
 
 object PageState {
 
   def codec(
-    stateCodec: Codec[(DrawingState, RendererState), String],
-    materializationOptionCodec: Codec[MaterializationOption, String]
+      stateCodec: Codec[(DrawingState, RendererState), String],
+      materializationOptionCodec: Codec[MaterializationOption, String]
   ): Codec[PageState, DrawingPageUrl] =
     new Codec[PageState, DrawingPageUrl] {
 

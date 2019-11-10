@@ -54,7 +54,7 @@ private[typer] final class UnifyPredicates(logger: Logger) {
     }
 
   private def matchType(instType: Type, predType: Type): Option[Substitution] = (instType, predType) match {
-    case (t1, Type.Var(name))          => Some(Substitution(name -> t1))
+    case (t1, Type.Var(name))         => Some(Substitution(name -> t1))
     case (Type.Evo(t1), Type.Evo(t2)) => matchType(t1, t2)
     case (Type.Lst(t1), Type.Lst(t2)) => matchType(t1, t2)
     case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) =>

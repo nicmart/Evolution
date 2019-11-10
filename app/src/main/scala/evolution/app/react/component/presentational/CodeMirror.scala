@@ -47,13 +47,13 @@ object CodeMirror {
   // for options used by Scastie
   object Options {
     def apply(
-      theme: String,
-      mode: String,
-      tabSize: Int,
-      lineNumbers: Boolean,
-      lineWrapping: Boolean,
-      matchBrackets: Boolean,
-      keyMap: String
+        theme: String,
+        mode: String,
+        tabSize: Int,
+        lineNumbers: Boolean,
+        lineWrapping: Boolean,
+        matchBrackets: Boolean,
+        keyMap: String
     ): Options = {
       val options = (new js.Object).asInstanceOf[Options]
       options.theme = theme
@@ -79,9 +79,9 @@ object CodeMirror {
   }
 
   def props(
-    value: String,
-    onChange: (Editor, Data, String) => Callback,
-    onBeforeChange: (Editor, Data, String) => Callback
+      value: String,
+      onChange: (Editor, Data, String) => Callback,
+      onBeforeChange: (Editor, Data, String) => Callback
   ): Props = {
     val p = (new js.Object).asInstanceOf[Props]
     p.value = value

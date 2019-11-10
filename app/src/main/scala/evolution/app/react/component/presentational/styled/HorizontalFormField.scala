@@ -4,14 +4,15 @@ import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.vdom.html_<^._
 
 case class HorizontalFormField(
-  label: String,
-  className: String
+    label: String,
+    className: String
 )
 
 object HorizontalFormField {
 
   val component =
-    ScalaComponent.builder[HorizontalFormField]("Horizontal Input")
+    ScalaComponent
+      .builder[HorizontalFormField]("Horizontal Input")
       .render_PC { (props, children) =>
         <.div(
           ^.className := "field is-horizontal",

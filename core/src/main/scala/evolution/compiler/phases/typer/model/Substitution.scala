@@ -22,8 +22,9 @@ private[typer] final case class Substitution(assignments: List[Assignment]) {
 }
 
 private[typer] object Substitution {
-  def apply(assignments: (String, Type)*): Substitution = Substitution(assignments.toList.map {
-    case (s, t) => Assignment(s, t)
-  })
+  def apply(assignments: (String, Type)*): Substitution =
+    Substitution(assignments.toList.map {
+      case (s, t) => Assignment(s, t)
+    })
   val empty: Substitution = Substitution(Nil)
 }

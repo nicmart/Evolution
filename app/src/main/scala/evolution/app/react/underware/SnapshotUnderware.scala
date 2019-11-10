@@ -5,8 +5,8 @@ import japgolly.scalajs.react.Callback
 
 object SnapshotUnderware {
   def simpleSnapshot[S](initial: S)(f: S => Callback): StateSnapshot[S] =
-  StateSnapshot(initial) {
-    case (Some(s), _) => f(s)
-    case (None, clb) => clb
-  }
+    StateSnapshot(initial) {
+      case (Some(s), _) => f(s)
+      case (None, clb)  => clb
+    }
 }

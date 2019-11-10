@@ -8,7 +8,7 @@ import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
+import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
 
 object Canvas {
@@ -17,12 +17,12 @@ object Canvas {
   val canvasId = "drawing-canvas"
 
   case class Props(
-    context: DrawingContext,
-    canvasInitializer: dom.html.Canvas => Unit,
-    rendererState: RendererState,
-    points: Option[Iterator[Point]],
-    onFrameDidDraw: Callback,
-    running: Boolean
+      context: DrawingContext,
+      canvasInitializer: dom.html.Canvas => Unit,
+      rendererState: RendererState,
+      points: Option[Iterator[Point]],
+      onFrameDidDraw: Callback,
+      running: Boolean
   )
 
   class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) {

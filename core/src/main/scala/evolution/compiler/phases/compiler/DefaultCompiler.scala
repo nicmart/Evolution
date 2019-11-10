@@ -3,7 +3,7 @@ package evolution.compiler.phases.compiler
 import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
-import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
 import evolution.compiler.phases.Compiler
 import evolution.compiler.types.Typed
 import evolution.compiler.types.Type
@@ -34,7 +34,7 @@ object DefaultCompiler extends Compiler {
       case IntLiteral(n) =>
         typedTree.annotation.value match {
           case Type.Double => Expr.Dbl(n.toDouble).asRight
-          case _            => Expr.Integer(n).asRight
+          case _           => Expr.Integer(n).asRight
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals

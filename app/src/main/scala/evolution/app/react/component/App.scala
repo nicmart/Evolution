@@ -4,10 +4,10 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.counter.RateCounter
 import evolution.app.react.component.presentational._
-import japgolly.scalajs.react.component.Scala.{ BackendScope, Component }
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import org.scalajs.dom
-import japgolly.scalajs.react.{ Callback, CallbackTo, CtorType, ScalaComponent }
+import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import evolution.geometry.Point
 import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
@@ -26,12 +26,12 @@ object App {
   type ReactComponent = Component[StateSnapshot[PageState], State, Backend, CtorType.Props]
 
   case class State(
-    pointRateCounter: RateCounter,
-    running: Boolean,
-    layout: LayoutState,
-    compilationResult: Option[CompilationResult],
-    selectedDrawing: Option[Drawing],
-    id: Int
+      pointRateCounter: RateCounter,
+      running: Boolean,
+      layout: LayoutState,
+      compilationResult: Option[CompilationResult],
+      selectedDrawing: Option[Drawing],
+      id: Int
   ) {
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
@@ -145,15 +145,15 @@ object App {
     !state.compilationResult.exists(cr => cr.key == evolutionKey(props.value, state))
 
   def component(
-    rateCounter: RateCounter,
-    pageComponent: Page.ReactComponent
+      rateCounter: RateCounter,
+      pageComponent: Page.ReactComponent
   ) =
     ScalaComponent
       .builder[StateSnapshot[PageState]]("App")
       .initialStateCallback(
         initialLayout.map(layout => State(rateCounter, running = true, layout, None, None, 1))
       )
-      .backend[Backend](scope => new Backend(pageComponent)(scope))
+      .backend[Backend](scope => new Backend(pageComponent) (scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
         CallbackTo.pure {

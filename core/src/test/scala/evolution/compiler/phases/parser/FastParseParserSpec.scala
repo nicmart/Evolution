@@ -1,11 +1,11 @@
 package evolution.compiler.phases.parser
 
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{ Gen, Shrink }
+import org.scalacheck.{Gen, Shrink}
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
-import evolution.compiler.tree.{ SpecialSyntax, Tree }
+import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
+import evolution.compiler.tree.{SpecialSyntax, Tree}
 import evolution.compiler.LanguageSpec
 
 class FastParseParserSpec extends LanguageSpec {

@@ -531,7 +531,7 @@ object MaterializeJsCode {
 
   @JSExportTopLevel("octaveNoise")
   def octaveNoise(
-    permutation: scalajs.js.Array[Int]
+      permutation: scalajs.js.Array[Int]
   ): scalajs.js.Function1[Int, scalajs.js.Function1[Double, scalajs.js.Function1[Point, Double]]] = {
     val perlin = new PerlinNoise(permutation.toArray)
     n => persistence => p => perlin.octaveNoise(n, persistence, p.x, p.y)

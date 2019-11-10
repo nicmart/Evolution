@@ -10,9 +10,9 @@ case class RGBAColor(red: Short, blue: Short, green: Short, opacity: Double) {
 }
 
 final class ClearCanvasFrameDrawer(
-  drawingContext: DrawingContext,
-  drawer: FrameDrawer,
-  color: RGBAColor
+    drawingContext: DrawingContext,
+    drawer: FrameDrawer,
+    color: RGBAColor
 ) extends FrameDrawer {
 
   @inline override def drawFrame(context: CanvasRenderingContext2D, points: Iterator[Point]): Iterator[Point] = {

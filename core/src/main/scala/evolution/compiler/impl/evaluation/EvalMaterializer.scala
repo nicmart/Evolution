@@ -231,7 +231,7 @@ object EvalMaterializer extends Materializer {
     Contextual.map3(materializeExpr(a), materializeExpr(b), materializeExpr(c))(f)
 
   private def interpret3Lazy[A, B, C, D](a: Expr[A], b: Expr[B], c: Expr[C])(
-    f: (=> A, => B, => C) => D
+      f: (=> A, => B, => C) => D
   ): Contextual[D] =
     Contextual.map3Lazy(materializeExpr(a), materializeExpr(b), materializeExpr(c))(f)
 }

@@ -2,24 +2,24 @@ package evolution.compiler.phases.typer.config
 
 import cats.implicits._
 import enumeratum.EnumEntry.Lowercase
-import enumeratum.{ Enum, EnumEntry }
+import enumeratum.{Enum, EnumEntry}
 import evolution.compiler.phases.typer.config.Constant._
 import evolution.compiler.types.Type._
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types.{ Type, TypeClasses, Typed }
+import evolution.compiler.types.{Type, TypeClasses, Typed}
 import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import scala.collection.immutable
 
 /**
- * The modeling here is a bit loose.
- * Constants are domain concepts and not only "config" concepts.
- * The list of concrete instances is a "config".
- * But it is not easy to split the two now (mainly because we are using enumeratum, and that requires the traits to be sealed)
- */
+  * The modeling here is a bit loose.
+  * Constants are domain concepts and not only "config" concepts.
+  * The list of concrete instances is a "config".
+  * But it is not easy to split the two now (mainly because we are using enumeratum, and that requires the traits to be sealed)
+  */
 abstract sealed class Constant(val qualifiedScheme: Qualified[Scheme]) extends EnumEntry with Lowercase
 
 abstract sealed class Constant0(qualifiedScheme: Qualified[Scheme])
@@ -170,9 +170,9 @@ abstract sealed class Constant2(qualifiedScheme: Qualified[Scheme])
 
 abstract sealed class Constant2Plain(qualifiedScheme: Qualified[Scheme]) extends Constant2(qualifiedScheme) {
   override def compile(
-    x: Typed[_],
-    y: Typed[_],
-    out: Type
+      x: Typed[_],
+      y: Typed[_],
+      out: Type
   ): Either[String, Expr[_]] =
     compilePlain(x.value, y.value).asRight
 

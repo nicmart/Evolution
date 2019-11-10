@@ -4,7 +4,7 @@ import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ Callback, ReactEventFromInput, ScalaComponent }
+import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
 import scala.util.Try
 
@@ -34,7 +34,7 @@ object SingleInput {
     ScalaComponent
       .builder[StateSnapshot[T]]("Single input")
       .initialStateFromProps[Option[String]](_ => None)
-      .backend(s => new Backend(parser)(s))
+      .backend(s => new Backend(parser) (s))
       .render(s => s.backend.render(s.props, s.state))
       .build
 }

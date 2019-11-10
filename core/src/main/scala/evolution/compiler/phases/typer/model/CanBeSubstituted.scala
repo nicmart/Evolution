@@ -2,7 +2,7 @@ package evolution.compiler.phases.typer.model
 
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClasses.{ Predicate, Qualified }
+import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.tree._
 
 private[typer] trait CanBeSubstituted[T] {

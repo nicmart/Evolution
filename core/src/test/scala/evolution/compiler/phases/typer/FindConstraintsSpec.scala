@@ -40,8 +40,8 @@ class FindConstraintsSpec extends LanguageSpec {
   }
 
   def assignVarsAndFindConstraints(
-    expr: Tree,
-    extraAssumptions: Assumptions = Assumptions.empty
+      expr: Tree,
+      extraAssumptions: Assumptions = Assumptions.empty
   ): Either[String, (TypedTree, Constraints)] = {
 
     val exprWithVars = AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraAssumptions))

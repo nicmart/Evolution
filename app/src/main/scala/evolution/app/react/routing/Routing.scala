@@ -6,14 +6,14 @@ import evolution.app.react.pages._
 import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
-import japgolly.scalajs.react.extra.router.{ BaseUrl, Redirect, RouterConfig, RouterConfigDsl }
+import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, RouterConfig, RouterConfigDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 
 class Routing(
-  urlDelimiter: String,
-  appComponent: App.ReactComponent,
-  defaultPage: MyPages,
-  pageStateCodec: Codec[LoadDrawingPage, DrawingPageUrl]
+    urlDelimiter: String,
+    appComponent: App.ReactComponent,
+    defaultPage: MyPages,
+    pageStateCodec: Codec[LoadDrawingPage, DrawingPageUrl]
 ) {
 
   val baseUrl: BaseUrl =
@@ -48,15 +48,16 @@ class Routing(
     val rule: dsl.Rule =
       route ~> renderPage
 
-    private def url: RouteB[DrawingPageUrl] = (("js/").option ~ remainingPath).pmap {
-      case (optJsSegment, drawingSegment) =>
-        println(s"In Router: optJsSegment: $optJsSegment, drawing segments: $drawingSegment")
-        Some(
-          DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
-        )
-    }(
-      url => (url.materializerSegment.headOption.map(_ => ()), url.drawingSegment)
-    )
+    private def url: RouteB[DrawingPageUrl] =
+      (("js/").option ~ remainingPath).pmap {
+        case (optJsSegment, drawingSegment) =>
+          println(s"In Router: optJsSegment: $optJsSegment, drawing segments: $drawingSegment")
+          Some(
+            DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
+          )
+      }(
+        url => (url.materializerSegment.headOption.map(_ => ()), url.drawingSegment)
+      )
 
     private def route =
       dynamicRouteCT[LoadDrawingPage](

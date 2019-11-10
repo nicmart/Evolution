@@ -1,6 +1,6 @@
 package evolution.compiler.tree
 
-import evolution.compiler.phases.typer.config.{ Constant0, Constant1, Constant2, Constant3 }
+import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
 
 import scala.collection.immutable.Nil
 import evolution.compiler.tree.TreeF._
@@ -14,7 +14,9 @@ object SpecialSyntax {
   }
 
   def withFirst(binding: (String, Tree), body: Tree): Tree =
-    TreeF.App.of(TreeF.Identifier.const(Constant2.WithFirst).embed, binding._2, buildLambda(List(binding._1), body)).embed
+    TreeF.App
+      .of(TreeF.Identifier.const(Constant2.WithFirst).embed, binding._2, buildLambda(List(binding._1), body))
+      .embed
 
   def product(bindings: List[(String, Tree)], body: Tree): Tree = bindings match {
     case Nil       => body

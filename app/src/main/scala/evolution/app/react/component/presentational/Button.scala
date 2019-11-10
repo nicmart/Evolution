@@ -1,7 +1,7 @@
 package evolution.app.react.component.presentational
 
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ Callback, ScalaComponent }
+import japgolly.scalajs.react.{Callback, ScalaComponent}
 
 object Button {
 

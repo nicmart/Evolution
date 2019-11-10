@@ -4,9 +4,9 @@ import evolution.compiler.phases.parser
 import evolution.compiler.phases.parser.ParserConfig._
 import fastparse._
 import evolution.compiler.phases.parser.ParserConfig.whitespace
-import evolution.compiler.phases.typer.config.{ Constant1, Constant2 }
+import evolution.compiler.phases.typer.config.{Constant1, Constant2}
 import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree.{ Tree, TreeF }
+import evolution.compiler.tree.{Tree, TreeF}
 import evolution.compiler.tree
 import cats.data.NonEmptyList
 import PrecedenceGroup.BinaryOperator
@@ -53,9 +53,10 @@ object FastParseParser extends Parser {
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
     private def argsTail[_: P]: P[String => Tree] =
-      P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
-        case (args, value, body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
-      }
+      P(whitespaces ~~ "(" ~ NoCut(nonEmptyCsv(identifier)) ~ ")" ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression)
+        .map {
+          case (args, value, body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
+        }
   }
 
   private val allPrecedenceGroups = List(

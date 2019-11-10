@@ -10,8 +10,8 @@ trait Codec[T, R] {
 
 object Codec {
   def instance[T, R](
-    enc: T => R,
-    dec: R => Option[T]
+      enc: T => R,
+      dec: R => Option[T]
   ): Codec[T, R] =
     new Codec[T, R] {
       override def encode(t: T): R = enc(t)
@@ -19,8 +19,8 @@ object Codec {
     }
 
   def compose[T, R1, R2](
-    codec1: Codec[T, R1],
-    codec2: Codec[R1, R2]
+      codec1: Codec[T, R1],
+      codec2: Codec[R1, R2]
   ): Codec[T, R2] =
     new Codec[T, R2] {
       override def encode(t: T): R2 =

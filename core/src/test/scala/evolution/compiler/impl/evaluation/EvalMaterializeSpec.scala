@@ -4,10 +4,10 @@ import evolution.data.EvaluationContext._
 import evolution.geometry.Point
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
-import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import EvalMaterializer.materializeExpr
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
@@ -180,7 +180,7 @@ class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks wi
 
   // TODO are we just replicating the implementation here?
   def genEqualityOperatorExpectations[T](
-    eq: Equable[T]
+      eq: Equable[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
       (Equals[T](_, _, eq)) -> MaterializeEquality(eq).eqv _,
@@ -188,7 +188,7 @@ class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks wi
     )
 
   def genRelationOperatorExpectations[T](
-    cmp: Comparable[T]
+      cmp: Comparable[T]
   ): Gen[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)] =
     Gen.oneOf[((Expr[T], Expr[T]) => Expr[Boolean], (T, T) => Boolean)](
       (GreaterThan[T](_, _, cmp)) -> MaterializeComparison(cmp).gt _,

@@ -6,7 +6,7 @@ import evolution.compiler.types.TypeClasses._
 import evolution.compiler.phases.typer.FindConstraints
 import evolution.compiler.phases.typer.AssignFreshTypeVars
 import evolution.compiler.phases.typer.UnifyTypes.unify
-import evolution.compiler.phases.typer.config.{ Constant1, Constant2, TypingConfig }
+import evolution.compiler.phases.typer.config.{Constant1, Constant2, TypingConfig}
 import evolution.compiler.phases.typer.model.Constraints
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree._
@@ -132,8 +132,8 @@ class UnifyTypesSpec extends LanguageSpec {
   }
 
   def assignVarsAndFindConstraints(
-    expr: Tree,
-    extraAssumptions: Assumptions = Assumptions.empty
+      expr: Tree,
+      extraAssumptions: Assumptions = Assumptions.empty
   ): Either[String, (TypedTree, Constraints)] = {
 
     val exprWithVars = AssignFreshTypeVars.assign(expr, TypingConfig.constantQualifiedTypes.merge(extraAssumptions))

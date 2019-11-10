@@ -19,7 +19,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, log
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
-      typedTree <- typer.typeTree(untypedTree, None, initialModule)
+      typedTree <- typer.typeTree(untypedTree, None, initialModule.assumptions)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))

@@ -9,4 +9,5 @@ addSbtPlugin("ch.epfl.scala" % "sbt-web-scalajs-bundler" % "0.15.0-0.6")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.3.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.0")
 //addCompilerPlugin("ch.epfl.scala" %% "scalac-profiling" % "1.0.0")

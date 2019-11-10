@@ -29,7 +29,7 @@ object JsonCodec {
   }
 
   /**
-   * Summoner method
-   */
+    * Summoner method
+    */
   def apply[T](implicit codec: JsonCodec[T]): JsonCodec[T] = codec
 }

@@ -1,6 +1,6 @@
 package evolution.app.react.component.presentational
 
-import japgolly.scalajs.react.{ Callback, PropsChildren, ReactMouseEvent }
+import japgolly.scalajs.react.{Callback, PropsChildren, ReactMouseEvent}
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._

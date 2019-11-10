@@ -2,18 +2,18 @@ package evolution.app.react.component.presentational
 
 import com.github.ghik.silencer.silent
 import evolution.app.conf.Conf
-import evolution.app.model.state.{ DrawingState, RendererState }
+import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.react.component.App.LayoutState
 import evolution.app.react.component.Canvas
-import evolution.app.react.component.control.{ PlayToggle, RenderingSettings }
+import evolution.app.react.component.control.{PlayToggle, RenderingSettings}
 import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ Callback, CtorType, ScalaComponent }
+import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
-import org.scalajs.dom.raw.{ Blob, URL }
+import org.scalajs.dom.raw.{Blob, URL}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
@@ -27,17 +27,17 @@ object Page {
     Conf.canvasInitializer
 
   case class Props(
-    running: StateSnapshot[Boolean],
-    layout: StateSnapshot[LayoutState],
-    rendererState: StateSnapshot[RendererState],
-    compilationResult: Either[String, Iterator[Point]],
-    drawingState: StateSnapshot[DrawingState],
-    selectedDrawing: StateSnapshot[Option[Drawing]],
-    pointRate: Int,
-    onShuffle: Callback,
-    onReload: Callback,
-    onFrameDraw: Callback,
-    id: Int
+      running: StateSnapshot[Boolean],
+      layout: StateSnapshot[LayoutState],
+      rendererState: StateSnapshot[RendererState],
+      compilationResult: Either[String, Iterator[Point]],
+      drawingState: StateSnapshot[DrawingState],
+      selectedDrawing: StateSnapshot[Option[Drawing]],
+      pointRate: Int,
+      onShuffle: Callback,
+      onReload: Callback,
+      onFrameDraw: Callback,
+      id: Int
   ) {
     def canvasKey: String = (rendererState.value, drawingState.value, layout.value, id).hashCode().toString
     def code: StateSnapshot[String] =

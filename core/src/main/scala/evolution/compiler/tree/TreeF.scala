@@ -1,6 +1,6 @@
 package evolution.compiler.tree
 
-import cats.{ Applicative, Eval, Traverse }
+import cats.{Applicative, Eval, Traverse}
 import cats.data.NonEmptyList
 import cats.implicits._
 import evolution.compiler.phases.typer.config.Constant

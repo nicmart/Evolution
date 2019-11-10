@@ -8,11 +8,11 @@ import io.circe.syntax._
 import evolution.app.codec.JsonCodec
 
 final case class RendererState(
-  iterations: Int,
-  strokeSize: Int,
-  resolutionFactor: Int,
-  trail: TrailSettings,
-  offCanvasSettings: OffCanvasStrategy
+    iterations: Int,
+    strokeSize: Int,
+    resolutionFactor: Int,
+    trail: TrailSettings,
+    offCanvasSettings: OffCanvasStrategy
 )
 
 object RendererState {
@@ -30,8 +30,8 @@ object RendererState {
 }
 
 final case class TrailSettings(
-  active: Boolean,
-  opacity: Double
+    active: Boolean,
+    opacity: Double
 ) {
   def decorate(frameDrawer: FrameDrawer, ctx: DrawingContext): FrameDrawer = {
     if (active) new ClearCanvasFrameDrawer(ctx, frameDrawer, RGBAColor(0, 0, 0, opacity))
@@ -52,7 +52,7 @@ case object RealProjectivePlane extends OffCanvasStrategy
 
 object RendererStateToFrameDrawer {
   def apply(
-    f: (RendererState, DrawingContext) => PointDrawer
+      f: (RendererState, DrawingContext) => PointDrawer
   )(state: RendererState, drawingContext: DrawingContext): FrameDrawer = {
     state.trail.decorate(
       BaseFrameDrawer(

@@ -1,37 +1,48 @@
 package evolution.compiler.phases.typer
 
 //import cats.syntax.either._
-import cats.data.NonEmptyList
-import cats.{ Functor, Monad }
 import cats.implicits._
-import evolution.compiler.module.Module
+import cats.{Functor, Monad}
 import evolution.compiler.phases.Typer
 import evolution.compiler.phases.typer.RecursiveTyper.ReprInference._
 import evolution.compiler.phases.typer.RecursiveTyper._
-import evolution.compiler.phases.typer.model.{ Assignment, Substitution }
-import evolution.compiler.tree.TreeF.{ Bool, DoubleLiteral, Identifier, IntLiteral, Lambda, Let, Lst }
-import evolution.compiler.tree.{ Tree, _ }
+import evolution.compiler.phases.typer.model.{Assignment, Substitution}
+import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Identifier, IntLiteral, Lambda, Let, Lst}
+import evolution.compiler.tree.{Tree, _}
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types._
 
 final class RecursiveTyper extends Typer {
 
-  def typeTree(tree: Tree, expectedType: Option[Type], module: Module): Either[String, TypedTree] =
-    typeTreeAndSubstitute(tree, expectedType, module).runA(InferenceState.empty)
+  def typeTree(
+      tree: Tree,
+      expectedType: Option[Type],
+      assumptions: Assumptions
+  ): Either[String, TypedTree] =
+    typeTreeAndSubstitute(tree, expectedType, assumptions).runA(
+      InferenceState.empty
+    )
 
-  private[typer] def typeTreeAndSubstitute(tree: Tree, expectedType: Option[Type], module: Module): Repr[TypedTree] =
+  private def typeTreeAndSubstitute(
+      tree: Tree,
+      expectedType: Option[Type],
+      initialAssumptions: Assumptions
+  ): Repr[TypedTree] =
     for {
-      typed <- typeTreeF(tree, module)
+      currentAssumptions <- assumptions
+      _ <- setAssumptions(currentAssumptions.merge(initialAssumptions))
+      typed <- typeTreeF(tree)
       _ <- expectedType.fold(ReprMonad.pure(()))(expected => unify(expected, typed.annotation.value))
       finalSubstitution <- substitution
     } yield finalSubstitution.substitute(typed)
 
-  private[typer] def typeTreeF(tree: Tree, module: Module): Repr[TypedTree] = {
+  private def typeTreeF(tree: Tree): Repr[TypedTree] = {
     tree.value match {
       case Bool(b) => Bool(b).typeWithNoPredicates(Type.Bool).pure[Repr]
 
-      case DoubleLiteral(n) => DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[Repr]
+      case DoubleLiteral(n) =>
+        DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[Repr]
 
       case IntLiteral(n) =>
         for {
@@ -52,7 +63,7 @@ final class RecursiveTyper extends Typer {
         for {
           freshTypeVarname <- newTypeVarname
           assumption = Assumption(varName, Qualified(Scheme(Type.Var(freshTypeVarname))), false)
-          typedBody <- withLocalAssumption(assumption)(typeTreeF(body, module))
+          typedBody <- withLocalAssumption(assumption)(typeTreeF(body))
           lambdaType = Type.Var(freshTypeVarname) =>: typedBody.annotation.value
           lambdaPredicates = typedBody.annotation.predicates
           lambdaQualifiedType = Qualified(lambdaPredicates, lambdaType)
@@ -60,8 +71,8 @@ final class RecursiveTyper extends Typer {
 
       case TreeF.App(f, inputs) =>
         for {
-          typedF <- typeTreeF(f, Module.empty)
-          typedInputs <- inputs.traverse(tree => typeTreeF(tree, Module.empty))
+          typedF <- typeTreeF(f)
+          typedInputs <- inputs.traverse(tree => typeTreeF(tree))
           inputTypes = typedInputs.map(_.annotation.value).toList
           inputPredicates = typedInputs.toList.flatMap(_.annotation.predicates)
           returnType <- newTypeVar
@@ -71,7 +82,7 @@ final class RecursiveTyper extends Typer {
 
       case Lst(ts) =>
         for {
-          typedTs <- ts.traverse(tree => typeTreeF(tree, Module.empty))
+          typedTs <- ts.traverse(tree => typeTreeF(tree))
           freshTypeVar <- newTypeVar
           _ <- typedTs.traverse(typedTree => unify(freshTypeVar, typedTree.annotation.value))
           qualifiedType = Qualified(typedTs.flatMap(_.annotation.predicates), Type.Lst(freshTypeVar))
@@ -79,9 +90,9 @@ final class RecursiveTyper extends Typer {
 
       case Let(varName, expr, in) =>
         for {
-          typedExpr <- typeTreeF(expr, Module.empty)
+          typedExpr <- typeTreeF(expr)
           assumption = Assumption(varName, typedExpr.annotation.map(Scheme.apply), false)
-          typedIn <- withLocalAssumption(assumption)(typeTreeF(in, Module.empty))
+          typedIn <- withLocalAssumption(assumption)(typeTreeF(in))
           letPredicates = typedExpr.annotation.predicates ++ typedIn.annotation.predicates
           letType = Qualified(letPredicates, typedIn.annotation.value)
         } yield Let(varName, typedExpr, typedIn).annotate(letType)
@@ -91,15 +102,19 @@ final class RecursiveTyper extends Typer {
 
 object RecursiveTyper {
   def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
-    val assignments = qs.value.vars.zip(types).map { case (from, to) => Assignment(from, to) }
+    val assignments =
+      qs.value.vars.zip(types).map { case (from, to) => Assignment(from, to) }
     val substitution = Substitution(assignments)
-    Qualified(substitution.substitute(qs.predicates), qs.value.instantiate(types))
+    Qualified(
+      substitution.substitute(qs.predicates),
+      qs.value.instantiate(types)
+    )
   }
 
   def arrowType(inputs: List[Type], result: Type): Type =
     inputs.foldRight(result)(_ =>: _)
 
-  sealed trait Inference[F[+ _]] extends InferenceOps[F] {
+  sealed trait Inference[F[+_]] extends InferenceOps[F] {
     def newTypeVarname: F[String]
     def substitution: F[Substitution]
     def assumptions: F[Assumptions]
@@ -108,10 +123,13 @@ object RecursiveTyper {
     def error(message: String): F[Nothing]
   }
 
-  trait InferenceOps[F[+ _]] { self: Inference[F] =>
-    final def newTypeVar(implicit M: Functor[F]): F[Type] = newTypeVarname.map(Type.Var)
+  trait InferenceOps[F[+_]] { self: Inference[F] =>
+    final def newTypeVar(implicit M: Functor[F]): F[Type] =
+      newTypeVarname.map(Type.Var)
 
-    final def withLocalAssumption[T](assumption: Assumption)(ft: F[T])(implicit M: Monad[F]): F[T] =
+    final def withLocalAssumption[T](
+        assumption: Assumption
+    )(ft: F[T])(implicit M: Monad[F]): F[T] =
       for {
         initialAssumptions <- assumptions
         _ <- setAssumptions(initialAssumptions.withAssumption(assumption))
@@ -125,24 +143,32 @@ object RecursiveTyper {
         case Some(assumption) => assumption.pure[F]
       }
 
-    final def fromEither[T](either: Either[String, T])(implicit M: Monad[F]): F[T] =
+    final def fromEither[T](
+        either: Either[String, T]
+    )(implicit M: Monad[F]): F[T] =
       either.fold(error, M.pure)
 
-    final def unify(t1: Type, t2: Type)(implicit M: Monad[F]): F[Unit] = for {
-      currentSubstitution <- substitution
-      unifyingSubstitution <- fromEither(UnifyTypes.mostGeneralUnifier(t1, t2))
-      _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
-    } yield ()
+    final def unify(t1: Type, t2: Type)(implicit M: Monad[F]): F[Unit] =
+      for {
+        currentSubstitution <- substitution
+        unifyingSubstitution <- fromEither(
+          UnifyTypes.mostGeneralUnifier(t1, t2)
+        )
+        _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
+      } yield ()
   }
 
   implicit class LeafOps(tree: TreeF[Nothing]) {
     def typed: TreeF[TypedTree] = tree
-    def typeWithNoPredicates(tpe: Type): TypedTree = typed.annotate(Qualified(tpe))
+    def typeWithNoPredicates(tpe: Type): TypedTree =
+      typed.annotate(Qualified(tpe))
     def typeWithSinglePredicate(predicate: Predicate, tpe: Type): TypedTree =
       typed.annotate(Qualified(List(predicate), tpe))
   }
 
-  case class Repr[+T](run: InferenceState => Either[String, (InferenceState, T)]) {
+  case class Repr[+T](
+      run: InferenceState => Either[String, (InferenceState, T)]
+  ) {
     def runA(is: InferenceState): Either[String, T] = run(is).map(_._2)
   }
 
@@ -182,9 +208,9 @@ object RecursiveTyper {
   }
 
   final case class InferenceState(
-    private val count: Int,
-    substitution: Substitution,
-    assumptions: Assumptions
+      private val count: Int,
+      substitution: Substitution,
+      assumptions: Assumptions
   ) {
     def currentTypeVarname: String = s"T$count"
     def currentTypeVar: Type = Type.Var(currentTypeVarname)
@@ -198,6 +224,7 @@ object RecursiveTyper {
   }
 
   object InferenceState {
-    def empty: InferenceState = new InferenceState(0, Substitution.empty, Assumptions.empty)
+    def empty: InferenceState =
+      new InferenceState(0, Substitution.empty, Assumptions.empty)
   }
 }

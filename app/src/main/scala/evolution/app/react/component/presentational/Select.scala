@@ -6,7 +6,7 @@ import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ CtorType, ReactEventFromInput }
+import japgolly.scalajs.react.{CtorType, ReactEventFromInput}
 import japgolly.scalajs.react.Callback
 
 object Select {
@@ -34,10 +34,10 @@ object Select {
   }
 
   /**
-   * WARNING:
-   * Don't use this method directly inside render methods, but first fix its value
-   * outside, and then use it.
-   */
+    * WARNING:
+    * Don't use this method directly inside render methods, but first fix its value
+    * outside, and then use it.
+    */
   def component[T]: ReactComponent[T] =
     react.ScalaComponent.builder[StateSnapshot[PointedSeq[Item[T]]]]("dropdown").renderBackend[Backend[T]].build
 }
