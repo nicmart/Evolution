@@ -1,7 +1,6 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
-import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typer.model.Substitution
@@ -34,10 +33,11 @@ final class UnifyPredicates(logger: Logger) {
     }
   }
 
-  private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
+  private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[InstanceSubstitution] =
     (instance, predicate) match {
-      case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId => matchTypes(iTypes, pTypes)
-      case _                                                              => None
+      case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId =>
+        matchTypes(iTypes, pTypes).map(substitution => InstanceSubstitution(instance, substitution))
+      case _ => None
     }
 
   private def matchTypes(instTypes: List[Type], predTypes: List[Type]): Option[Substitution] =
@@ -75,21 +75,32 @@ final class UnifyPredicates(logger: Logger) {
     result
   }
 
+  sealed abstract case class TypeInInstance(instance: Predicate, tpe: Type, position: Int)
+
+  object TypeInInstance {
+    def apply(instance: Predicate, position: Int): Option[TypeInInstance] =
+      instance.types.get(position).map(tpe => new TypeInInstance(instance, tpe, position) {})
+  }
+
   final case class Alternatives(variable: String, alternatives: Set[Type]) {
     def isFinal: Boolean = alternatives.size == 1
+    // TODO: taking the head where there are multiple alternatives is wrong
     def assignment: Option[Assignment] = alternatives.headOption.map(Assignment(variable, _))
     def isCompatibleWithSubstitution(subst: Substitution): Boolean =
       subst.assignments.forall(isCompatibleWithAssignment)
     def isCompatibleWithAssignment(assignment: Assignment): Boolean =
       assignment.variable != variable || alternatives.contains(assignment.tpe)
   }
-  case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]) {
+
+  case class InstanceSubstitution(instance: Predicate, substitution: Substitution)
+
+  case class PredicateConditions(predicate: Predicate, instanceSubstitutions: Set[InstanceSubstitution]) {
     lazy val requirements: Map[String, Alternatives] =
-      substitutions.flatMap(_.assignments).groupBy(_.variable).map {
+      instanceSubstitutions.flatMap(_.substitution.assignments).groupBy(_.variable).map {
         case (variable, assignments) => variable -> Alternatives(variable, assignments.map(_.tpe))
       }
     lazy val isFinal: Boolean = requirements.values.forall(_.isFinal)
-    def nonEmpty: Boolean = substitutions.nonEmpty
+    def nonEmpty: Boolean = instanceSubstitutions.nonEmpty
     def assignments: List[Assignment] = requirements.values.flatMap(_.assignment).toList
     def substitution: Either[String, Substitution] =
       Either.cond(nonEmpty, Substitution(assignments), s"Predicate $predicate has no possible substitutions")
@@ -97,7 +108,9 @@ final class UnifyPredicates(logger: Logger) {
     def reduce(otherRequirements: Map[String, Alternatives]): Either[String, PredicateConditions] =
       PredicateConditions(
         predicate,
-        substitutions.filter(subst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(subst)))
+        instanceSubstitutions.filter(
+          instSubst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(instSubst.substitution))
+        )
       ).asRight.filterOrElse(_.nonEmpty, s"Predicate $predicate is incompatible with requirements $otherRequirements")
 
   }

@@ -1,8 +1,6 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.module.Module
-import evolution.compiler.phases.typer.RecursiveTyper.InferenceState
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.types.Type.Scheme
@@ -166,7 +164,7 @@ class RecursiveTyperTest extends LanguageSpec {
 
     "functional tests" - {
       "1 + 1" in {
-        val addScheme = Scheme(List("A"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
+        val addScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
         val addPredicates = List(Predicate("Add", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
         val assumptions = withAssumptions(Assumption("add", Qualified(addPredicates, addScheme), true))
         val untyped = App.of(Identifier("add").embed, IntLiteral(1).embed, IntLiteral(1).embed).embed
@@ -176,6 +174,26 @@ class RecursiveTyperTest extends LanguageSpec {
         x shouldBe xx
         y shouldBe yy
         z shouldBe typed.annotation.value
+      }
+
+      "f(a, b) = a * b in f" in {
+        val multScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
+        val addPredicates = List(Predicate("Mult", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
+        val assumptions = withAssumptions(Assumption("mult", Qualified(addPredicates, multScheme), true))
+        val untyped =
+          Let(
+            "f",
+            Lambda(
+              "a",
+              Lambda("b", App.of(Identifier("mult").embed, Identifier("a").embed, Identifier("b").embed).embed).embed
+            ).embed,
+            Identifier("f").embed
+          ).embed
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        val List(Predicate("Mult", List(x, y, z))) =
+          typed.annotation.predicates.distinct
+        println(typed)
+        typed.annotation.value shouldBe x =>: y =>: z
       }
     }
   }
