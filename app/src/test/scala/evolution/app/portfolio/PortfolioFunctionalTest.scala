@@ -15,7 +15,7 @@ import evolution.compiler.phases.typer._
 class PortfolioSpec extends LanguageSpec {
   "Drawings in Portfolio" - {
     "should compile" - {
-      Portfolio.drawings.foreach { drawing =>
+      Portfolio.drawings.take(1).foreach { drawing =>
         drawing.title.getOrElse("untitled") in {
           val result =
             codeCompiler.compile(

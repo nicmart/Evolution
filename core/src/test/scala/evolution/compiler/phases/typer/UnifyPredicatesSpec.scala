@@ -1,13 +1,13 @@
 package evolution.compiler.phases.typer
 
-import scala.util.Random
-import evolution.compiler.types._
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.typer.UnifyPredicates
+import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.Substitution
+import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types._
 import evolution.logging.{ColorPPrinterLogger, NoOpLogger}
-import evolution.compiler.LanguageSpec
+
+import scala.util.Random
 
 class UnifyPredicatesSpec extends LanguageSpec {
 
