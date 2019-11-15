@@ -1,5 +1,6 @@
 package evolution.compiler.tree
 
+import evolution.compiler.tree.PrettyPrintTree.ppFunc
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.Type
 

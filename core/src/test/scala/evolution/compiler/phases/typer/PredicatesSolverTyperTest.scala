@@ -1,11 +1,11 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.types.Type.Scheme
 import evolution.compiler.tree.Tree._
-import evolution.compiler.types.{Assumption, Assumptions, Type}
+import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
-import evolution.logging.{ColorPPrinterLogger, NoOpLogger}
+import evolution.compiler.types.{Assumption, Assumptions, Type}
+import evolution.logging.NoOpLogger
 
 class PredicatesSolverTyperTest extends LanguageSpec {
   "PredicatesSolverTyper" - {
@@ -25,8 +25,6 @@ class PredicatesSolverTyperTest extends LanguageSpec {
       val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
       val List(Predicate("Mult", List(x, y, z))) =
         typed.annotation.predicates.distinct
-      println(typed)
-      println(typed.annotation)
       typed.annotation.value shouldBe x =>: y =>: z
     }
   }
@@ -37,5 +35,5 @@ class PredicatesSolverTyperTest extends LanguageSpec {
     }
 
   //lazy val typer = new RecursiveTyper
-  lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(ColorPPrinterLogger))
+  lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
 }

@@ -18,7 +18,6 @@ final class FullCompiler(parser: Parser, typer: Typer, compiler: Compiler, mater
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
       typedTree <- typer.typeTree(untypedTree, Some(expectedType), module.assumptions)
-      //_ = println(typedTree)
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))

@@ -27,8 +27,6 @@ class DefaultCompilerSpec extends LanguageSpec {
 
       "variable usages" in forAll(genTypedVar) {
         case (name, v) =>
-          println(name)
-          println(v)
           unsafeCompile(v) shouldBe Var(name)
       }
 

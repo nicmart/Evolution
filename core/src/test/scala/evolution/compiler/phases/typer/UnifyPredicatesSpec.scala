@@ -5,7 +5,7 @@ import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types._
-import evolution.logging.{ColorPPrinterLogger, NoOpLogger}
+import evolution.logging.NoOpLogger
 
 import scala.util.Random
 
@@ -58,7 +58,6 @@ class UnifyPredicatesSpec extends LanguageSpec {
 
     // This is mostly to test perfomance of predicates unification
     "should uniffy predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
-      pending
       val predicates = List(
         Predicate("Num", List(Type.Double)),
         Predicate("Mult", List(Type.Var("T1"), Type.Var("T7"), Type.Double)),
@@ -80,7 +79,6 @@ class UnifyPredicatesSpec extends LanguageSpec {
 
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
 
-      ColorPPrinterLogger.log(subst.substitute(predicates))
       subst.substitute[Type](Type.Var("T4")) shouldBe Type.Double
     }
 

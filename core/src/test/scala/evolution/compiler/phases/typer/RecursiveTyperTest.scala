@@ -6,7 +6,6 @@ import evolution.compiler.tree.{TypedTree => T}
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.types.{Assumption, Assumptions, Type}
-import evolution.logging.ColorPPrinterLogger
 
 class RecursiveTyperTest extends LanguageSpec {
 
@@ -178,6 +177,15 @@ class RecursiveTyperTest extends LanguageSpec {
         z shouldBe typed.annotation.value
       }
 
+      "f(f(1.0)): Double where f: forall X. X => X" in {
+        val assumptions = withAssumptions(
+          Assumption("f", Qualified(Scheme(List("X"), Type.Var("X") =>: Type.Var("X"))), true)
+        )
+        val untyped = App.of(Id("f"), App.of(Id("f"), DoubleLiteral(1)))
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        typed.annotation.value shouldBe Type.Double
+      }
+
       "f(a, b) = a * b in f" in {
         val multScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
         val addPredicates = List(Predicate("Mult", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
@@ -186,7 +194,6 @@ class RecursiveTyperTest extends LanguageSpec {
           Let("f", Lambda("a", Lambda("b", App.of(Id("mult"), Id("a"), Id("b")))), Id("f"))
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
         val List(Predicate("Mult", List(x, y, z))) = typed.annotation.predicates.distinct
-        println(typed)
         typed.annotation.value shouldBe x =>: y =>: z
       }
 
@@ -213,9 +220,27 @@ class RecursiveTyperTest extends LanguageSpec {
           )
 
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
-        //val List(Predicate("Mult", List(x, y, z))) = typed.annotation.predicates.distinct
-        ColorPPrinterLogger.log(typed.annotation)
-        //typed.annotation.value shouldBe x =>: y =>: z
+        val List(
+          Predicate("Add", List(Type.Var(var1), Type.Var(var2), Type.Var(var3))),
+          Predicate("Inv", List(Type.Var(var4)))
+        ) = typed.annotation.predicates
+
+        var2 shouldBe var4
+        typed.annotation.value shouldBe Type.Var(var1) =>: Type.Var(var2) =>: Type.Var(var3)
+      }
+
+      "f(1.1, 2.1)" in {
+        val scheme = Scheme(List("A", "B"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("A"))
+
+        val assumptions = withAssumptions(
+          Assumption("f", Qualified(scheme), true)
+        )
+
+        val untyped =
+          App.of(Id("f"), DoubleLiteral(1.1), DoubleLiteral(2.2))
+
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        typed.annotation.value shouldBe Type.Double
       }
     }
   }

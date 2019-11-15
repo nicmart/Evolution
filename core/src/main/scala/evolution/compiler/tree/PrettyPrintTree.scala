@@ -6,9 +6,9 @@ object PrettyPrintTree {
   def apply(tree: Tree): String = Tree.catamorphism(prettyPrintTreeF)(tree)
 
   private[tree] def prettyPrintTreeF(treeF: TreeF[String]): String = treeF match {
-    case TreeF.App(g, args) => ppFunc("App", g :: args.toList)
+    case TreeF.App(g, args) => ppFunc(s"($g)", args.toList)
     case Let(id, expr, in)  => ppFunc("Let", List(id, expr, in))
-    case Lambda(id, expr)   => ppFunc("Lambda", List(id, expr))
+    case Lambda(id, expr)   => s"$id -> $expr"
     case id: Id             => id.name
     case DoubleLiteral(d)   => d.toString
     case Bool(b)            => b.toString
@@ -17,5 +17,5 @@ object PrettyPrintTree {
   }
 
   private def ppFunc(name: String, children: List[String]): String =
-    children.mkString(s"$name(", ",", ")")
+    children.mkString(s"$name(", ", ", ")")
 }

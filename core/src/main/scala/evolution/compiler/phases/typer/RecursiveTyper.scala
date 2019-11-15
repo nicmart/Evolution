@@ -6,6 +6,7 @@ import cats.{Functor, Monad}
 import evolution.compiler.phases.Typer
 import evolution.compiler.phases.typer.RecursiveTyper.ReprInference._
 import evolution.compiler.phases.typer.RecursiveTyper._
+import evolution.compiler.phases.typer.UnifyTypes.mostGeneralUnifier
 import evolution.compiler.phases.typer.model.{Assignment, Substitution}
 import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Id, IntLiteral, Lambda, Let, Lst}
 import evolution.compiler.tree.{Tree, _}
@@ -155,7 +156,7 @@ object RecursiveTyper {
       for {
         currentSubstitution <- substitution
         unifyingSubstitution <- fromEither(
-          UnifyTypes.mostGeneralUnifier(t1, t2)
+          mostGeneralUnifier(currentSubstitution.substitute(t1), currentSubstitution.substitute(t2))
         )
         _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
       } yield ()
