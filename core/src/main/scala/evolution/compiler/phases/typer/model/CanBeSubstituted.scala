@@ -45,16 +45,4 @@ private[typer] object CanBeSubstituted {
         Qualified(s.substitute(qt.predicates), s.substitute(qt.value))
     }
 
-  implicit val constraint: CanBeSubstituted[Constraint] = new CanBeSubstituted[Constraint] {
-    def substitute(s: Substitution, constraint: Constraint): Constraint =
-      constraint match {
-        case Constraint.Eq(a, b) => Constraint.Eq(s.substitute[Type](a), s.substitute[Type](b))
-        case Constraint.Pred(p)  => Constraint.Pred(s.substitute(p))
-      }
-  }
-
-  implicit val constraints: CanBeSubstituted[Constraints] = new CanBeSubstituted[Constraints] {
-    def substitute(s: Substitution, constraints: Constraints): Constraints =
-      Constraints(s.substitute(constraints.constraints))
-  }
 }

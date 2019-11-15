@@ -6,7 +6,6 @@ import cats.{Functor, Monad}
 import evolution.compiler.phases.Typer
 import evolution.compiler.phases.typer.RecursiveTyper.ReprInference._
 import evolution.compiler.phases.typer.RecursiveTyper._
-import evolution.compiler.phases.typer.UnifyTypes.mostGeneralUnifier
 import evolution.compiler.phases.typer.model.{Assignment, Substitution}
 import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Id, IntLiteral, Lambda, Let, Lst}
 import evolution.compiler.tree.{Tree, _}
@@ -102,10 +101,30 @@ final class RecursiveTyper extends Typer {
 }
 
 object RecursiveTyper {
+  // TODO move outside
+  private def mostGeneralUnifier(a: Type, b: Type): Either[String, Substitution] = (a, b) match {
+    case (Type.Arrow(a1, a2), Type.Arrow(b1, b2)) =>
+      for {
+        s1 <- mostGeneralUnifier(a1, b1)
+        s2 <- mostGeneralUnifier(s1.substitute(a2), s1.substitute(b2))
+      } yield s1.andThen(s2)
+    case (Type.Var(x), t)           => varBind(x, t)
+    case (t, Type.Var(x))           => varBind(x, t)
+    case (Type.Lst(a), Type.Lst(b)) => mostGeneralUnifier(a, b)
+    case (Type.Evo(a), Type.Evo(b)) => mostGeneralUnifier(a, b)
+    case _ if a == b                => Right(Substitution.empty)
+    case _                          => Left(s"$a can't be unified with $b")
+  }
+
+  private def varBind(name: String, tpe: Type): Either[String, Substitution] =
+    if (tpe == Type.Var(name)) Right(Substitution.empty)
+    else if (tpe.typeVarUsages(name).isEmpty) Right(Substitution(name -> tpe))
+    else Left(s"$name cannot be bound to $tpe")
+
   private def qualified(predicates: List[Predicate], tpe: Type): Qualified[Type] =
     Qualified(predicates.distinct, tpe)
 
-  def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
+  private def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
     val assignments =
       qs.value.vars.zip(types).map { case (from, to) => Assignment(from, to) }
     val substitution = Substitution(assignments)

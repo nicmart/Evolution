@@ -18,8 +18,9 @@ import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.UnificationTyper
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, UnifyPredicates}
 import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.logging.NoOpLogger
 
 object App {
 
@@ -117,7 +118,10 @@ object App {
     new CodeCompiler(
       new FullCompiler(
         FastParseParser,
-        new UnificationTyper(Conf.logger),
+        new PredicatesSolverTyper(
+          new RecursiveTyper,
+          new UnifyPredicates(NoOpLogger)
+        ),
         DefaultCompiler,
         pageState.materializer.materializer,
         Conf.logger

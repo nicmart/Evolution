@@ -8,7 +8,6 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.UnificationTyper
 import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.types.Assumption
 import evolution.compiler.phases.typer.RecursiveTyper
