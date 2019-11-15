@@ -1,13 +1,12 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.types.Type
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 import cats.implicits._
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.phases.typer.model.Assignment
 import evolution.logging.Logger
-
-import scala.util.chaining.scalaUtilChainingOps
 
 final class UnifyPredicates(logger: Logger) {
 
@@ -19,14 +18,12 @@ final class UnifyPredicates(logger: Logger) {
 
     val predicateConditions: List[PredicateConditions] =
       logTime("Compute Substitutions") {
-        predicates.distinct
-          .map { predicate =>
-            PredicateConditions(
-              predicate,
-              instances.flatMap(instance => matchPredicateWithInstance(instance, predicate)).toSet
-            )
-          }
-          .tap(log)
+        predicates.distinct.map { predicate =>
+          PredicateConditions(
+            predicate,
+            instances.flatMap(instance => matchPredicateWithInstance(instance, predicate)).toSet
+          )
+        }
       }
 
     logTime("Compute Solution") {
@@ -37,11 +34,10 @@ final class UnifyPredicates(logger: Logger) {
     }
   }
 
-  private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[InstanceSubstitution] =
+  private def matchPredicateWithInstance(instance: Predicate, predicate: Predicate): Option[Substitution] =
     (instance, predicate) match {
-      case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId =>
-        matchTypes(iTypes, pTypes).map(substitution => InstanceSubstitution(instance, substitution))
-      case _ => None
+      case (Predicate(iId, iTypes), Predicate(pId, pTypes)) if iId == pId => matchTypes(iTypes, pTypes)
+      case _                                                              => None
     }
 
   private def matchTypes(instTypes: List[Type], predTypes: List[Type]): Option[Substitution] =
@@ -79,47 +75,21 @@ final class UnifyPredicates(logger: Logger) {
     result
   }
 
-  /**
-    * A Type that was found in an instance and that was used in a substitution
-    */
-  case class TypeInInstance(instance: Predicate, tpe: Type)
-
-  /**
-    * A set of alternatives types allowed for a type value. Each type carries the instance it came from
-    */
-  final case class Alternatives(variable: String, alternatives: Set[TypeInInstance]) {
+  final case class Alternatives(variable: String, alternatives: Set[Type]) {
     def isFinal: Boolean = alternatives.size == 1
-    // TODO: taking the head where there are multiple alternatives is wrong
-    def assignment: Option[Assignment] = alternatives.headOption.map(typeInInst => Assignment(variable, typeInInst.tpe))
+    def assignment: Option[Assignment] = alternatives.headOption.map(Assignment(variable, _))
     def isCompatibleWithSubstitution(subst: Substitution): Boolean =
       subst.assignments.forall(isCompatibleWithAssignment)
     def isCompatibleWithAssignment(assignment: Assignment): Boolean =
-      assignment.variable != variable || alternatives.exists(_.tpe == assignment.tpe)
+      assignment.variable != variable || alternatives.contains(assignment.tpe)
   }
-
-  /**
-    * A substitution that will transform the input predicate to that instance
-    */
-  case class InstanceSubstitution(instance: Predicate, substitution: Substitution) {
-    def alternatives: List[Alternatives] =
-      for {
-        assignment <- substitution.assignments
-      } yield Alternatives(assignment.variable, Set(TypeInInstance(instance, assignment.tpe)))
-  }
-
-  /**
-    * A predicate together with all the possible substitutions that transform it to an instance
-    */
-  case class PredicateConditions(predicate: Predicate, instanceSubstitutions: Set[InstanceSubstitution]) {
+  case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]) {
     lazy val requirements: Map[String, Alternatives] =
-      instanceSubstitutions
-        .flatMap(_.alternatives)
-        .groupMapReduce(_.variable)(identity) {
-          case (alt1, alt2) => Alternatives(alt1.variable, alt1.alternatives ++ alt2.alternatives)
-        }
-
+      substitutions.flatMap(_.assignments).groupBy(_.variable).map {
+        case (variable, assignments) => variable -> Alternatives(variable, assignments.map(_.tpe))
+      }
     lazy val isFinal: Boolean = requirements.values.forall(_.isFinal)
-    def nonEmpty: Boolean = instanceSubstitutions.nonEmpty
+    def nonEmpty: Boolean = substitutions.nonEmpty
     def assignments: List[Assignment] = requirements.values.flatMap(_.assignment).toList
     def substitution: Either[String, Substitution] =
       Either.cond(nonEmpty, Substitution(assignments), s"Predicate $predicate has no possible substitutions")
@@ -127,16 +97,11 @@ final class UnifyPredicates(logger: Logger) {
     def reduce(otherRequirements: Map[String, Alternatives]): Either[String, PredicateConditions] =
       PredicateConditions(
         predicate,
-        instanceSubstitutions.filter(
-          instSubst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(instSubst.substitution))
-        )
+        substitutions.filter(subst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(subst)))
       ).asRight.filterOrElse(_.nonEmpty, s"Predicate $predicate is incompatible with requirements $otherRequirements")
 
   }
 
-  /**
-    * Given a list of predicates conditions, find a substitution that satisfies all the conditions
-    */
   final case class PredicatesSolver(current: PredicateConditions, otherConditions: Vector[PredicateConditions]) {
     def total = 1 + otherConditions.size
     def allConditions: Seq[PredicateConditions] = current +: otherConditions
@@ -149,15 +114,10 @@ final class UnifyPredicates(logger: Logger) {
 
     def next: Either[String, PredicatesSolver] = {
       val requirements = current.requirements
-      log(requirements)
       for {
         otherConditionsReduced <- otherConditions.traverse(_.reduce(requirements))
-//        _ = println("total" -> total)
-//        _ = println("requirements" -> requirements)
         conditions = otherConditionsReduced :+ current
-//        _ = println("conditions" -> conditions)
         nextSolver = PredicatesSolver(conditions.head, conditions.tail)
-//        _ = println("isEqual" -> (this == nextSolver))
       } yield nextSolver
     }
 
@@ -171,10 +131,8 @@ final class UnifyPredicates(logger: Logger) {
       val reducedN = cycle
       reducedN match {
         case Left(value)                             => Left(value)
-        case Right(nextSolver) if nextSolver == this =>
-          //log(allConditions.map(_.requirements))
-          this.substitution
-        case Right(nextSolver) => nextSolver.solve
+        case Right(nextSolver) if nextSolver == this => this.substitution
+        case Right(nextSolver)                       => nextSolver.solve
       }
     }
   }

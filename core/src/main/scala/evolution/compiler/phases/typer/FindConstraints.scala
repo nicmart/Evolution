@@ -13,7 +13,7 @@ private[typer] object FindConstraints {
     // TODO as you can see here predicates are extracted just for identifiers and literals
     val exprType = typedTree.annotation
     val nodeConstraints: Either[String, Constraints] = typedTree.tree match {
-      case Identifier(_, _) => Constraints.empty.withPredicates(exprType.predicates).asRight
+      case Id(_, _)         => Constraints.empty.withPredicates(exprType.predicates).asRight
       case DoubleLiteral(_) => Constraints(exprType.value -> Type.Double).asRight
       case IntLiteral(_) =>
         Constraints.empty.withPredicate(Predicate("Num", List(exprType.value))).asRight

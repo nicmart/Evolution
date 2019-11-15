@@ -94,7 +94,7 @@ object FastParseParser extends Parser {
   )
 
   private def constOp(name: String)(left: Tree, right: Tree): Tree =
-    TreeF.App.of(Identifier(name).embed, left, right).embed
+    TreeF.App.of(Id(name).embed, left, right).embed
 
   // Operator groups, order by ascending Precedence
   private def precedenceGroups[_: P]: PrecedenceGroups = parser.PrecedenceGroups(
@@ -137,11 +137,11 @@ object FastParseParser extends Parser {
     (P("true").map(_ => true) | P("false").map(_ => false)).map(Bool).map(_.embed)
 
   private def variable[_: P]: P[Tree] =
-    P(identifier).map(Identifier(_).embed) ~/ Pass
+    P(identifier).map(Id(_).embed) ~/ Pass
 
   private def unaryOps[_: P]: P[Tree] =
-    P("-").map(_ => Identifier(Constant1.Inverse.entryName).embed) |
-      P("!").map(_ => Identifier(Constant1.Not.entryName).embed)
+    P("-").map(_ => Id(Constant1.Inverse.entryName).embed) |
+      P("!").map(_ => Id(Constant1.Not.entryName).embed)
 
   private def unaryPrefixOp[_: P]: P[Tree] =
     P(unaryOps ~/ atomicOperand).map { case (op, e) => App.of(op, e).embed }

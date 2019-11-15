@@ -21,7 +21,7 @@ class UnifyTypesSpec extends LanguageSpec {
       "pre-defined constants" - {
         "point function" in {
           val point =
-            AssignFreshTypeVars.assign(Identifier.const(Constant2.Point).embed, TypingConfig.constantQualifiedTypes)
+            AssignFreshTypeVars.assign(Id.const(Constant2.Point).embed, TypingConfig.constantQualifiedTypes)
           val constraints = FindConstraints.find(point).unsafeRight
           val unifier = unify(constraints)
           unifier.map(_.substitution.substitute(point.annotation)) shouldBe Right(
@@ -31,10 +31,10 @@ class UnifyTypesSpec extends LanguageSpec {
 
         "constant evolution of a point" in {
           val point =
-            App.of(Identifier.const(Constant2.Point).embed, DoubleLiteral(1).embed, DoubleLiteral(1).embed).embed
+            App.of(Id.const(Constant2.Point).embed, DoubleLiteral(1).embed, DoubleLiteral(1).embed).embed
           val evolution =
             AssignFreshTypeVars.assign(
-              App.of(Identifier.const(Constant1.Constant).embed, point).embed,
+              App.of(Id.const(Constant1.Constant).embed, point).embed,
               TypingConfig.constantQualifiedTypes
             )
           val constraints = FindConstraints.find(evolution).unsafeRight
@@ -48,7 +48,7 @@ class UnifyTypesSpec extends LanguageSpec {
 
       "point expressions" in {
         val untyped =
-          App.of(Identifier.const(Constant2.Point).embed, Identifier("a").embed, Identifier("b").embed).embed
+          App.of(Id.const(Constant2.Point).embed, Id("a").embed, Id("b").embed).embed
         val extraAssumptions = new Assumptions(
           Map(
             "a" -> Assumption("a", Qualified(Scheme(Type.Double)), false),
@@ -62,7 +62,7 @@ class UnifyTypesSpec extends LanguageSpec {
       }
 
       "app(x -> x, 2)" in {
-        val identity = Lambda("x", Identifier("x").embed).embed
+        val identity = Lambda("x", Id("x").embed).embed
         val untyped = App.of(identity, DoubleLiteral(2).embed).embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
         val substitution = unify(constraints).unsafeRight.substitution
@@ -70,13 +70,13 @@ class UnifyTypesSpec extends LanguageSpec {
       }
 
       "const(1)" in {
-        val untyped = App.of(Identifier.const(Constant1.Constant).embed, DoubleLiteral(1).embed).embed
+        val untyped = App.of(Id.const(Constant1.Constant).embed, DoubleLiteral(1).embed).embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
         val substitution = unify(constraints).unsafeRight.substitution
         val finalExpr = substitution.substitute(expr)
         finalExpr.annotation.value shouldBe Type.Evo(Type.Double)
 
-        val AnnotatedTree(_, App(AnnotatedTree(_, Identifier(_, isPrimitive)), _)) = finalExpr
+        val AnnotatedTree(_, App(AnnotatedTree(_, Id(_, isPrimitive)), _)) = finalExpr
         isPrimitive shouldBe true
       }
 
@@ -84,9 +84,9 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped =
           App
             .of(
-              Identifier.const(Constant2.LiftedPoint).embed,
-              App.of(Identifier.const(Constant1.Constant).embed, DoubleLiteral(1).embed).embed,
-              App.of(Identifier.const(Constant1.Constant).embed, DoubleLiteral(2).embed).embed
+              Id.const(Constant2.LiftedPoint).embed,
+              App.of(Id.const(Constant1.Constant).embed, DoubleLiteral(1).embed).embed,
+              App.of(Id.const(Constant1.Constant).embed, DoubleLiteral(2).embed).embed
             )
             .embed
         val (expr, constraints) = assignVarsAndFindConstraints(untyped).unsafeRight
@@ -98,9 +98,9 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped =
           App
             .of(
-              Identifier.const(Constant2.Solve1).embed,
-              App.of(Identifier.const(Constant1.Constant).embed, Lambda("x", Identifier("x").embed).embed).embed,
-              App.of(Identifier.const(Constant2.Point).embed, DoubleLiteral(1).embed, DoubleLiteral(2).embed).embed
+              Id.const(Constant2.Solve1).embed,
+              App.of(Id.const(Constant1.Constant).embed, Lambda("x", Id("x").embed).embed).embed,
+              App.of(Id.const(Constant2.Point).embed, DoubleLiteral(1).embed, DoubleLiteral(2).embed).embed
             )
             .embed
 
@@ -114,10 +114,10 @@ class UnifyTypesSpec extends LanguageSpec {
         val untyped =
           App
             .of(
-              Identifier.const(Constant1.UniformChoice).embed,
+              Id.const(Constant1.UniformChoice).embed,
               Lst(
                 List[Tree](
-                  App.of(Identifier.const(Constant2.Point).embed, IntLiteral(1).embed, IntLiteral(2).embed).embed
+                  App.of(Id.const(Constant2.Point).embed, IntLiteral(1).embed, IntLiteral(2).embed).embed
                 )
               ).embed
             )

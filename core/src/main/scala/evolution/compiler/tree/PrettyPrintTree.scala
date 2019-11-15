@@ -9,7 +9,7 @@ object PrettyPrintTree {
     case TreeF.App(g, args) => ppFunc("App", g :: args.toList)
     case Let(id, expr, in)  => ppFunc("Let", List(id, expr, in))
     case Lambda(id, expr)   => ppFunc("Lambda", List(id, expr))
-    case id: Identifier     => id.name
+    case id: Id             => id.name
     case DoubleLiteral(d)   => d.toString
     case Bool(b)            => b.toString
     case IntLiteral(n)      => n.toString

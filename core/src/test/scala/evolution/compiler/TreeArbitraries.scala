@@ -49,7 +49,7 @@ trait TreeArbitraries {
     for {
       id <- genIdentifier
       tpe <- genType
-    } yield (id.toLowerCase, Identifier(id).annotate(Qualified(tpe)))
+    } yield (id.toLowerCase, Id(id).annotate(Qualified(tpe)))
 
   def genTypedBool: Gen[TypedTree] = Gen.oneOf(true, false).map(Bool(_).annotate(Qualified(Type.Bool)))
 
@@ -58,7 +58,7 @@ trait TreeArbitraries {
   def genVar: Gen[Tree] =
     for {
       char <- Gen.alphaChar
-    } yield Identifier(char.toString).embed
+    } yield Id(char.toString).embed
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(List(" ", "\n", "\r", "\t"))).map(_.mkString(""))

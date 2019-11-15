@@ -29,36 +29,6 @@ class PredicatesSolverTyperTest extends LanguageSpec {
       println(typed.annotation)
       typed.annotation.value shouldBe x =>: y =>: z
     }
-
-    "f(a, b) = a + (-b) in f" in {
-      val addScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
-      val addPredicates = List(Predicate("Add", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
-
-      val invScheme = Scheme(List("A"), Type.Var("A") =>: Type.Var("A"))
-      val invPredicates = List(Predicate("Inv", List(Type.Var("A"))))
-
-      val assumptions = withAssumptions(
-        Assumption("add", Qualified(addPredicates, addScheme), true),
-        Assumption("inv", Qualified(invPredicates, invScheme), true)
-      )
-
-      val untyped =
-        Let(
-          "f",
-          Lambda(
-            "a",
-            Lambda("b", App.of(Id("add"), Id("a"), App.of(Id("inv"), Id("b"))))
-          ),
-          Id("f")
-        )
-
-      val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
-      val List(Predicate("Mult", List(x, y, z))) =
-        typed.annotation.predicates.distinct
-      println(typed)
-      println(typed.annotation)
-      typed.annotation.value shouldBe x =>: y =>: z
-    }
   }
 
   def withAssumptions(assumptions: Assumption*): Assumptions =

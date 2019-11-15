@@ -12,7 +12,7 @@ sealed trait TreeF[+T]
 
 object TreeF {
 
-  sealed abstract case class Identifier(name: String, primitive: Boolean = false) extends TreeF[Nothing]
+  sealed abstract case class Id(name: String, primitive: Boolean = false) extends TreeF[Nothing]
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
   final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
   final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
@@ -21,10 +21,10 @@ object TreeF {
   final case class Bool(b: Boolean) extends TreeF[Nothing]
   final case class Lst[T](ts: List[T]) extends TreeF[T]
 
-  object Identifier {
-    def apply(name: String, primitive: Boolean = false): Identifier = new Identifier(name.toLowerCase, primitive) {}
-    def const[T](constant: Constant): TreeF[T] = TreeF.Identifier(constant.entryName, primitive = false)
-    def primitiveConst[T](constant: Constant): TreeF[T] = TreeF.Identifier(constant.entryName, primitive = true)
+  object Id {
+    def apply(name: String, primitive: Boolean = false): Id = new Id(name.toLowerCase, primitive) {}
+    def const[T](constant: Constant): TreeF[T] = TreeF.Id(constant.entryName, primitive = false)
+    def primitiveConst[T](constant: Constant): TreeF[T] = TreeF.Id(constant.entryName, primitive = true)
   }
 
   object App {
@@ -46,14 +46,14 @@ object TreeF {
   implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match {
-        case TreeF.App(g, args)          => (f(g), args.traverse(f)).mapN(TreeF.App[B] _)
-        case Lambda(varName, expr)       => f(expr).map(Lambda(varName, _))
-        case Lst(ts)                     => ts.traverse(f).map(Lst[B])
-        case Let(varName, expr, in)      => (f(expr), f(in)).mapN(Let(varName, _, _))
-        case Identifier(name, primitive) => Identifier(name, primitive).pure[G].widen
-        case DoubleLiteral(n)            => DoubleLiteral(n).pure[G].widen
-        case Bool(b)                     => Bool(b).pure[G].widen
-        case IntLiteral(n)               => IntLiteral(n).pure[G].widen
+        case TreeF.App(g, args)     => (f(g), args.traverse(f)).mapN(TreeF.App[B] _)
+        case Lambda(varName, expr)  => f(expr).map(Lambda(varName, _))
+        case Lst(ts)                => ts.traverse(f).map(Lst[B])
+        case Let(varName, expr, in) => (f(expr), f(in)).mapN(Let(varName, _, _))
+        case Id(name, primitive)    => Id(name, primitive).pure[G].widen
+        case DoubleLiteral(n)       => DoubleLiteral(n).pure[G].widen
+        case Bool(b)                => Bool(b).pure[G].widen
+        case IntLiteral(n)          => IntLiteral(n).pure[G].widen
       }
 
     def foldLeft[A, B](fa: TreeF[A], z: B)(f: (B, A) => B): B =

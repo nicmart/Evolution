@@ -55,7 +55,7 @@ class DefaultCompilerSpec extends LanguageSpec {
 
       "ands" in forAll(genTypedBool, genTypedBool) { (a, b) =>
         unsafeCompile(
-          TreeF.App(TreeF.Identifier.primitiveConst(Constant2.And).withNoType, NonEmptyList.of(a, b)).withNoType
+          TreeF.App(TreeF.Id.primitiveConst(Constant2.And).withNoType, NonEmptyList.of(a, b)).withNoType
         ) shouldBe And(
           unsafeCompile(a),
           unsafeCompile(b)
@@ -64,7 +64,7 @@ class DefaultCompilerSpec extends LanguageSpec {
 
       "ors" in forAll(genTypedBool, genTypedBool) { (a, b) =>
         unsafeCompile(
-          TreeF.App(TreeF.Identifier.primitiveConst(Constant2.Or).withNoType, NonEmptyList.of(a, b)).withNoType
+          TreeF.App(TreeF.Id.primitiveConst(Constant2.Or).withNoType, NonEmptyList.of(a, b)).withNoType
         ) shouldBe Or(
           unsafeCompile(a),
           unsafeCompile(b)
@@ -73,7 +73,7 @@ class DefaultCompilerSpec extends LanguageSpec {
 
       "nots" in forAll(genTypedBool) { a =>
         unsafeCompile(
-          TreeF.App(TreeF.Identifier.primitiveConst(Constant1.Not).withNoType, NonEmptyList.of(a)).withNoType
+          TreeF.App(TreeF.Id.primitiveConst(Constant1.Not).withNoType, NonEmptyList.of(a)).withNoType
         ) shouldBe Not(
           unsafeCompile(a)
         )
@@ -87,7 +87,7 @@ class DefaultCompilerSpec extends LanguageSpec {
         val ast =
           TreeF
             .App(
-              TreeF.Identifier.primitiveConst(Constant2.Minus).withNoType,
+              TreeF.Id.primitiveConst(Constant2.Minus).withNoType,
               NonEmptyList.of(
                 TreeF.IntLiteral(a).annotate(intType),
                 TreeF.IntLiteral(b).annotate(intType)
@@ -103,10 +103,10 @@ class DefaultCompilerSpec extends LanguageSpec {
         val predicate = TreeF.Lambda("x", b).withNoType
         val evolution = TreeF
           .App(
-            TreeF.Identifier.primitiveConst(Constant2.Cons).withNoType,
+            TreeF.Id.primitiveConst(Constant2.Cons).withNoType,
             NonEmptyList.of(
               n,
-              TreeF.Identifier.primitiveConst(Constant0.Empty).withNoType
+              TreeF.Id.primitiveConst(Constant0.Empty).withNoType
             )
           )
           .withNoType
@@ -114,7 +114,7 @@ class DefaultCompilerSpec extends LanguageSpec {
 
         unsafeCompile(
           TreeF
-            .App(TreeF.Identifier.primitiveConst(Constant2.While).withNoType, NonEmptyList.of(evolution, predicate))
+            .App(TreeF.Id.primitiveConst(Constant2.While).withNoType, NonEmptyList.of(evolution, predicate))
             .withNoType
         ) shouldBe expected
       }
@@ -140,7 +140,7 @@ class DefaultCompilerSpec extends LanguageSpec {
           unsafeCompile(
             TreeF
               .App(
-                TreeF.Identifier.primitiveConst(Constant1.Constant).withNoType,
+                TreeF.Id.primitiveConst(Constant1.Constant).withNoType,
                 NonEmptyList.of(TreeF.DoubleLiteral(1).withNoType)
               )
               .withNoType
@@ -155,10 +155,10 @@ class DefaultCompilerSpec extends LanguageSpec {
           unsafeCompile(
             TreeF.App
               .of(
-                TreeF.Identifier.primitiveConst(Constant3.ZipWith).withNoType,
-                TreeF.Identifier("x").withNoType,
-                TreeF.Identifier("y").withNoType,
-                TreeF.Identifier("z").withNoType
+                TreeF.Id.primitiveConst(Constant3.ZipWith).withNoType,
+                TreeF.Id("x").withNoType,
+                TreeF.Id("y").withNoType,
+                TreeF.Id("z").withNoType
               )
               .withNoType
           ) shouldBe ZipWith(Var("x"), Var("y"), Var[Any => Any => Any]("z"))
@@ -169,10 +169,10 @@ class DefaultCompilerSpec extends LanguageSpec {
         val compiled = unsafeCompile(
           TreeF.App
             .of(
-              TreeF.Identifier.primitiveConst(Constant1.UniformChoice).withNoType,
+              TreeF.Id.primitiveConst(Constant1.UniformChoice).withNoType,
               TreeF
                 .Lst(
-                  List(TreeF.Identifier("x"), TreeF.Identifier("y"), TreeF.Identifier("z")).map(_.withNoType)
+                  List(TreeF.Id("x"), TreeF.Id("y"), TreeF.Id("z")).map(_.withNoType)
                 )
                 .withNoType
             )
@@ -185,16 +185,16 @@ class DefaultCompilerSpec extends LanguageSpec {
 
   def equalityOperators[T](eq: Equable[T]): Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.Identifier.primitiveConst(Constant2.Eq).withNoType -> (Equals.apply[T](_, _, eq)),
-      TreeF.Identifier.primitiveConst(Constant2.Neq).withNoType -> (Neq.apply[T](_, _, eq))
+      TreeF.Id.primitiveConst(Constant2.Eq).withNoType -> (Equals.apply[T](_, _, eq)),
+      TreeF.Id.primitiveConst(Constant2.Neq).withNoType -> (Neq.apply[T](_, _, eq))
     )
 
   def relationOperators[T](cmp: Comparable[T]): Gen[(TypedTree, (Expr[T], Expr[T]) => Expr[Boolean])] =
     Gen.oneOf(
-      TreeF.Identifier.primitiveConst(Constant2.GreaterThan).withNoType -> (GreaterThan[T](_, _, cmp)),
-      TreeF.Identifier.primitiveConst(Constant2.GreaterThanOrEqual).withNoType -> (GreaterThanOrEqual[T](_, _, cmp)),
-      TreeF.Identifier.primitiveConst(Constant2.LessThan).withNoType -> (LessThan[T](_, _, cmp)),
-      TreeF.Identifier.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, cmp))
+      TreeF.Id.primitiveConst(Constant2.GreaterThan).withNoType -> (GreaterThan[T](_, _, cmp)),
+      TreeF.Id.primitiveConst(Constant2.GreaterThanOrEqual).withNoType -> (GreaterThanOrEqual[T](_, _, cmp)),
+      TreeF.Id.primitiveConst(Constant2.LessThan).withNoType -> (LessThan[T](_, _, cmp)),
+      TreeF.Id.primitiveConst(Constant2.LessThanOrEqual).withNoType -> (LessThanOrEqual[T](_, _, cmp))
     )
 
   lazy val unknownType: Qualified[Type] = Qualified(Type.Var(""))

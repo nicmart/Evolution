@@ -20,7 +20,7 @@ object DefaultCompiler extends Compiler {
 
   private def compileSafe(typedTree: TypedTree): Either[String, Expr[Any]] =
     typedTree.tree match {
-      case Identifier(name, false) =>
+      case Id(name, false) =>
         Expr.Var(name).asRight
 
       case Lambda(varName, body) =>
@@ -43,31 +43,31 @@ object DefaultCompiler extends Compiler {
       case Bool(b) =>
         Expr.Bool(b).asRight
 
-      case Identifier(Constant0(c), true) =>
+      case Id(Constant0(c), true) =>
         c.compile(typedTree.annotation)
 
       // Arity 0 identifiers
-      case Identifier(id, _) =>
+      case Id(id, _) =>
         s"Constant $id is not supported as first class value".asLeft
 
       case Lst(ts) =>
         ts.traverse(compileSafe).map(Expr.Lst(_))
 
       // Arity 1 identifiers
-      case App(AnnotatedTree(_, Identifier(Constant1(c), true)), NonEmptyList(arg1, Nil)) =>
+      case App(AnnotatedTree(_, Id(Constant1(c), true)), NonEmptyList(arg1, Nil)) =>
         for {
           argExpr <- compileTyped(arg1)
           expr <- c.compile(argExpr, typedTree.annotation.value)
         } yield expr
 
-      case App(AnnotatedTree(_, Identifier(Constant2(c), true)), NonEmptyList(arg1, List(arg2))) =>
+      case App(AnnotatedTree(_, Id(Constant2(c), true)), NonEmptyList(arg1, List(arg2))) =>
         for {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)
           expr <- c.compile(arg1Expr, arg2Expr, typedTree.annotation.value)
         } yield expr
 
-      case App(AnnotatedTree(_, Identifier(Constant3(c), true)), NonEmptyList(arg1, List(arg2, arg3))) =>
+      case App(AnnotatedTree(_, Id(Constant3(c), true)), NonEmptyList(arg1, List(arg2, arg3))) =>
         for {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)

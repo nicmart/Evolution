@@ -22,10 +22,10 @@ private[typer] object AssignFreshTypeVars {
 
   private def assignS(tree: TreeF[S[TypedTree]]): S[TypedTree] =
     tree match {
-      case Identifier(name, _) =>
+      case Id(name, _) =>
         getAssumption(name).flatMap {
           case None =>
-            newTypeVar.map(qt => Identifier(name, false).annotate(qt))
+            newTypeVar.map(qt => Id(name, false).annotate(qt))
           case Some(assumption) =>
             identifier(assumption).widen
         }
@@ -101,6 +101,6 @@ private[typer] object AssignFreshTypeVars {
         substitution.substitute(assumption.qualifiedScheme.predicates),
         assumption.qualifiedScheme.value.instantiate(assignments.map(_.tpe))
       )
-    } yield Identifier(assumption.name, assumption.primitive).annotate(substitutedType)
+    } yield Id(assumption.name, assumption.primitive).annotate(substitutedType)
   }
 }
