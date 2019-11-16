@@ -11,6 +11,7 @@ import evolution.compiler.impl.evaluation.EvalMaterializer
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer._
+import evolution.compiler.phases.typer.predicates.UnifyPredicates
 
 class PortfolioSpec extends LanguageSpec {
   "Drawings in Portfolio" - {

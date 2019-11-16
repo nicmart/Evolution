@@ -15,6 +15,7 @@ private[parser] final case class PrecedenceGroup(operators: (String, BinaryOpera
       accParser | P(opString ~ &(allowedCharsAfterOp)).map(_ => ast)
   }
 
+  @scala.annotation.tailrec
   private def evalAssocBinaryOp(head: Tree, tail: List[(BinaryOperator, Tree)]): Tree =
     tail match {
       case Nil => head

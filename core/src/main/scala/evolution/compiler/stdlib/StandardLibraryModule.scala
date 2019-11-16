@@ -12,7 +12,7 @@ import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.types.Assumption
 import evolution.compiler.phases.typer.RecursiveTyper
 import evolution.compiler.phases.typer.PredicatesSolverTyper
-import evolution.compiler.phases.typer.UnifyPredicates
+import evolution.compiler.phases.typer.predicates.UnifyPredicates
 
 object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)

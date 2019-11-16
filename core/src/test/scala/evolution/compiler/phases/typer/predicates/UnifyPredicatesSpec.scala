@@ -1,4 +1,4 @@
-package evolution.compiler.phases.typer
+package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig

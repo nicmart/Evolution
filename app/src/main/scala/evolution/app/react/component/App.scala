@@ -18,8 +18,9 @@ import evolution.app.conf.Conf
 import evolution.app.model.CodeCompiler
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, UnifyPredicates}
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.logging.NoOpLogger
 
 object App {

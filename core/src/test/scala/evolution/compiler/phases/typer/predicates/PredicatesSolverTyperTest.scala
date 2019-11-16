@@ -1,6 +1,7 @@
-package evolution.compiler.phases.typer
+package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.tree.Tree._
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}

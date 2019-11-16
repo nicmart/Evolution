@@ -2,6 +2,7 @@ package evolution.compiler.phases.typer
 
 import evolution.compiler.phases.Typer
 import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.tree.{Tree, TypedTree}
 import evolution.compiler.types.{Assumptions, Type}
 
