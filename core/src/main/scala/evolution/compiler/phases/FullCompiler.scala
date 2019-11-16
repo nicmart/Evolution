@@ -3,7 +3,6 @@ package evolution.compiler.phases
 import cats.syntax.either._
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
-import evolution.compiler.phases.checkvars.CheckVars
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.geometry.Point
@@ -22,9 +21,7 @@ final class FullCompiler(parser: Parser, typer: Typer, compiler: Compiler, mater
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
       expression <- compiler.compile(typedTree, module)
-      _ <- CheckVars(expression, module.varContext)
       _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
-      // TODO here we do not need to know about the existence of a varcontext
     } yield materializer.materialize(expression.asInstanceOf[Expr[Evolution[Point]]])
 }

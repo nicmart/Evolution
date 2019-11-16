@@ -35,6 +35,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, log
     } yield Module(assumptions, loadModule)
 
   // 1. Find assumptions
+  @scala.annotation.tailrec
   private def extractAssumptions(typedTree: TypedTree, currentAssumptions: Assumptions): Assumptions =
     typedTree.tree match {
       case Let(varName, expr, in) =>
