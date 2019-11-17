@@ -2,7 +2,6 @@ package evolution.compiler.phases
 
 import cats.syntax.either._
 import evolution.compiler.expression.Expr
-import evolution.compiler.module.Module
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.geometry.Point

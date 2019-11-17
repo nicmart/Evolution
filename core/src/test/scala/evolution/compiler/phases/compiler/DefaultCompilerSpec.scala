@@ -14,8 +14,8 @@ import evolution.compiler.types.Type
 import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
 import evolution.compiler.expression.typeclass._
-import evolution.compiler.module.Module
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.Module
 
 class DefaultCompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny

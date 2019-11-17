@@ -1,11 +1,10 @@
 package evolution.app.model
 
 import evolution.geometry.Point
-import evolution.compiler.phases.FullCompiler
+import evolution.compiler.phases.{FullCompiler, Module}
 import evolution.compiler.types.Type
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.app.model.context.DrawingContext
-import evolution.compiler.module.Module
 import evolution.compiler.expression.Expr
 import evolution.compiler.stdlib.StandardLibraryModule
 

@@ -4,14 +4,14 @@ import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.tree._
 import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
-import evolution.compiler.phases.Compiler
+import evolution.compiler.phases.{Compiler, Module}
 import evolution.compiler.types.Typed
 import evolution.compiler.types.Type
 import evolution.materialization.Evolution
 import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
+
 import scala.collection.immutable.Nil
-import evolution.compiler.module.Module
 
 object DefaultCompiler extends Compiler {
   // TODO module here?

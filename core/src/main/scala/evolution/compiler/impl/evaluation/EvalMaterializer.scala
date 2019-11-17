@@ -1,12 +1,10 @@
 package evolution.compiler.impl.evaluation
 
 import evolution.materialization.Evolution
-import evolution.data.EvaluationContext._
 import evolution.compiler.expression.Expr
 import evolution.geometry.Point
 import evolution.compiler.impl.evaluation.model.Contextual
 import evolution.compiler.impl.evaluation.model.Contextual.WithContext
-import evolution.data.emptyCtx
 import evolution.compiler.phases.Materializer
 import evolution.compiler.expression.Expr.SlidingMap
 import evolution.compiler.expression.Expr.Iterate
@@ -14,6 +12,8 @@ import evolution.compiler.expression.Expr.Iterate2
 import evolution.compiler.expression.Expr.FromList
 import evolution.compiler.expression.Expr.Grouped
 import evolution.compiler.expression.Expr.Connect
+import evolution.compiler.impl.evaluation.context.emptyCtx
+import evolution.compiler.impl.evaluation.context.EvaluationContext._
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {

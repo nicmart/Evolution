@@ -1,6 +1,6 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.data.EvaluationContext._
+import evolution.compiler.impl.evaluation.context.EvaluationContext._
 import evolution.geometry.Point
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._

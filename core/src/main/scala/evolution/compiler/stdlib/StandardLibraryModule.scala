@@ -1,8 +1,7 @@
 package evolution.compiler.stdlib
 
-import evolution.compiler.phases.ModuleCompiler
+import evolution.compiler.phases.{Module, ModuleCompiler}
 import evolution.logging.NoOpLogger
-import evolution.compiler.module.Module
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme

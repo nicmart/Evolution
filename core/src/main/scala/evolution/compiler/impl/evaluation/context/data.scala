@@ -1,6 +1,6 @@
-package evolution
+package evolution.compiler.impl.evaluation
 
-package object data {
+package object context {
   final val EvaluationContext: EvaluationContextModule = EvaluationContextModuleImpl
   type Ctx = EvaluationContext.Ctx
   final val emptyCtx: Ctx = EvaluationContext.emptyCtx

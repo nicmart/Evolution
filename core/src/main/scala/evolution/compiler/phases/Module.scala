@@ -1,4 +1,5 @@
-package evolution.compiler.module
+package evolution.compiler.phases
+
 import evolution.compiler.expression.Expr
 import evolution.compiler.phases.typer.model.Assumptions
 

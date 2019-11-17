@@ -1,4 +1,10 @@
-package evolution.data
+package evolution.compiler.impl.evaluation.context
+
+case class Context(items: Map[String, () => Any]) {
+  def get[T](name: String): T = items.get(name).asInstanceOf[T]
+  def addLazy[T](name: String, value: () => T): Context = Context(items.updated(name, value))
+  def addStrict[T](name: String, value: T): Context = addLazy(name, () => value)
+}
 
 sealed trait EvaluationContextModule {
   type Ctx
@@ -19,7 +25,7 @@ object EvaluationContextModule {
   }
 }
 
-private[data] object EvaluationContextModuleImpl extends EvaluationContextModule {
+private[context] object EvaluationContextModuleImpl extends EvaluationContextModule {
   override type Ctx = Map[String, () => Any]
   @inline override def emptyCtx: Ctx = Map.empty
   @inline override def addLazy[T](name: String, value: () => T, ctx: Ctx): Ctx = ctx.updated(name, value)

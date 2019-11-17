@@ -1,6 +1,6 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.data.EvaluationContext._
+import evolution.compiler.impl.evaluation.context.EvaluationContext._
 import evolution.compiler.expression.Expr._
 import evolution.compiler.expression.Expr
 import org.scalatest.{FreeSpec, Matchers}

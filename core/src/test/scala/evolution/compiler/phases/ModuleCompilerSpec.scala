@@ -1,6 +1,5 @@
 package evolution.compiler
-import evolution.compiler.module.Module
-import evolution.compiler.phases.ModuleCompiler
+import evolution.compiler.phases.{Module, ModuleCompiler}
 import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.config.TypingConfig

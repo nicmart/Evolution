@@ -1,6 +1,6 @@
 package evolution.compiler.impl.evaluation.model
 
-import evolution.data.Ctx
+import evolution.compiler.impl.evaluation.context.Ctx
 
 private[evaluation] sealed trait Contextual[+T] { self =>
   def apply(ctx: Ctx): T
@@ -29,7 +29,7 @@ private[evaluation] object Contextual {
       Pure(ts.collect { case Pure(t) => t })
     } else
       new WithContext[List[T]] {
-        def apply(ctx: evolution.data.Ctx): List[T] = ts.map(_.apply(ctx))
+        def apply(ctx: Ctx): List[T] = ts.map(_.apply(ctx))
       }
 
   def map[A, B](a: Contextual[A], f: A => B): Contextual[B] = a match {

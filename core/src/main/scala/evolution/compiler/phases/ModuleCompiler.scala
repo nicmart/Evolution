@@ -4,7 +4,6 @@ import cats.syntax.either._
 import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
-import evolution.compiler.module.Module
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.tree._
