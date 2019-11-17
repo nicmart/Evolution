@@ -4,6 +4,8 @@ final class Assumptions(private val assumptions: Map[String, Assumption]) {
 
   def all: Map[String, Assumption] = assumptions
 
+  def allVars: Set[String] = assumptions.keySet
+
   def vars: List[String] = assumptions.map(_._1).toList
 
   def get(name: String): Option[Assumption] = assumptions.get(name)
