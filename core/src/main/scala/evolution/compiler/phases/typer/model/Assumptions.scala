@@ -1,8 +1,8 @@
-package evolution.compiler.types
+package evolution.compiler.phases.typer.model
 
 final class Assumptions(private val assumptions: Map[String, Assumption]) {
 
-  def all = assumptions
+  def all: Map[String, Assumption] = assumptions
 
   def vars: List[String] = assumptions.map(_._1).toList
 

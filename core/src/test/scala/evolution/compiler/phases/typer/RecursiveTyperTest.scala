@@ -1,11 +1,12 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.tree.Tree._
 import evolution.compiler.tree.{TypedTree => T}
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
-import evolution.compiler.types.{Assumption, Assumptions, Type}
+import evolution.compiler.types.Type
 
 class RecursiveTyperTest extends LanguageSpec {
 
@@ -43,7 +44,7 @@ class RecursiveTyperTest extends LanguageSpec {
 
         "schema type" in {
           val untyped = Id("x")
-          val assumptions = withAssumptions(Assumption("x", Qualified(Scheme(List("Y"), Type.Var("Y"))), false))
+          val assumptions = withAssumptions(model.Assumption("x", Qualified(Scheme(List("Y"), Type.Var("Y"))), false))
           val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
           val Type.Var(varname) = typed.annotation.value
           typed shouldBe T.Id("x").as(Qualified(Type.Var(varname)))
@@ -71,7 +72,7 @@ class RecursiveTyperTest extends LanguageSpec {
           val untyped = Lambda("x", Id("y"))
           val yPredicates = List(Predicate("MyPred", List(Type.Var("Y"))))
           val yQualifiedType = Qualified[Type](yPredicates, Type.Var("Y"))
-          val yAssumption = Assumption("y", yQualifiedType.map(Scheme.apply), false)
+          val yAssumption = model.Assumption("y", yQualifiedType.map(Scheme.apply), false)
           val typed = typer.typeTree(untyped, None, withAssumptions(yAssumption)).unsafeRight
           val Type.Arrow(Type.Var(varname), Type.Var("Y")) = typed.annotation.value
           val expectedType = Qualified[Type](yPredicates, Type.Var(varname) =>: Type.Var("Y"))
@@ -81,7 +82,7 @@ class RecursiveTyperTest extends LanguageSpec {
 
         "new assumption shadows existing one" in {
           val untyped = Lambda("x", Id("x"))
-          val assumptionThatWillBeShadowed = Assumption("x", Qualified(Scheme(Type.Double)), false)
+          val assumptionThatWillBeShadowed = model.Assumption("x", Qualified(Scheme(Type.Double)), false)
           val typed = typer.typeTree(untyped, None, withAssumptions(assumptionThatWillBeShadowed)).unsafeRight
           val Type.Arrow(Type.Var(var1), Type.Var(var2)) = typed.annotation.value
           var1 shouldBe var2
@@ -95,8 +96,8 @@ class RecursiveTyperTest extends LanguageSpec {
         "app(f: X -> Double, x: Bool): Double" in {
           val untyped = App.of(Id("f"), Id("x"))
           val assumptions = withAssumptions(
-            Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Double)), false),
-            Assumption("x", Qualified(Scheme(Type.Bool)), false)
+            model.Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Double)), false),
+            model.Assumption("x", Qualified(Scheme(Type.Bool)), false)
           )
           val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
           typed.annotation.value shouldBe Type.Double
@@ -111,9 +112,9 @@ class RecursiveTyperTest extends LanguageSpec {
             )
 
           val assumptions = withAssumptions(
-            Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Var("Y1") =>: Type.Double)), false),
-            Assumption("x", Qualified(Scheme(Type.Bool)), false),
-            Assumption("y", Qualified(Scheme(Type.Var("Y2"))), false)
+            model.Assumption("f", Qualified(Scheme(Type.Var("X") =>: Type.Var("Y1") =>: Type.Double)), false),
+            model.Assumption("x", Qualified(Scheme(Type.Bool)), false),
+            model.Assumption("y", Qualified(Scheme(Type.Var("Y2"))), false)
           )
           val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
           typed.annotation.value shouldBe Type.Double
@@ -134,8 +135,8 @@ class RecursiveTyperTest extends LanguageSpec {
         "list(a: Double, b: X): List[Double]" in {
           val untyped = Lst(List(Id("a"), Id("b")))
           val assumptions = withAssumptions(
-            Assumption("a", Qualified(Scheme(Type.Double)), false),
-            Assumption("b", Qualified(Scheme(Type.Var("X"))), false)
+            model.Assumption("a", Qualified(Scheme(Type.Double)), false),
+            model.Assumption("b", Qualified(Scheme(Type.Var("X"))), false)
           )
           val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
           typed.annotation.value shouldBe Type.Lst(Type.Double)
@@ -146,7 +147,7 @@ class RecursiveTyperTest extends LanguageSpec {
     "expected types" - {
       "successful check" in {
         val assumptions = withAssumptions(
-          Assumption("x", Qualified(List(Predicate("MyPred", List(Type.Var("X")))), Scheme(Type.Var("X"))), false)
+          model.Assumption("x", Qualified(List(Predicate("MyPred", List(Type.Var("X")))), Scheme(Type.Var("X"))), false)
         )
         val untyped = Id("x")
         val typed = typer.typeTree(untyped, Some(Type.Double), assumptions).unsafeRight
@@ -156,7 +157,7 @@ class RecursiveTyperTest extends LanguageSpec {
 
       "failing check" in {
         val assumptions = withAssumptions(
-          Assumption("x", Qualified(Scheme(Type.Double)), false)
+          model.Assumption("x", Qualified(Scheme(Type.Double)), false)
         )
         val untyped = Id("x")
         typer.typeTree(untyped, Some(Type.Integer), assumptions).unsafeLeft
@@ -167,7 +168,7 @@ class RecursiveTyperTest extends LanguageSpec {
       "1 + 1" in {
         val addScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
         val addPredicates = List(Predicate("Add", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
-        val assumptions = withAssumptions(Assumption("add", Qualified(addPredicates, addScheme), true))
+        val assumptions = withAssumptions(model.Assumption("add", Qualified(addPredicates, addScheme), true))
         val untyped = App.of(Id("add"), IntLiteral(1), IntLiteral(1))
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
         val List(Predicate("Add", List(x, y, z)), Predicate("Num", List(xx)), Predicate("Num", List(yy))) =
@@ -179,7 +180,7 @@ class RecursiveTyperTest extends LanguageSpec {
 
       "f(f(1.0)): Double where f: forall X. X => X" in {
         val assumptions = withAssumptions(
-          Assumption("f", Qualified(Scheme(List("X"), Type.Var("X") =>: Type.Var("X"))), true)
+          model.Assumption("f", Qualified(Scheme(List("X"), Type.Var("X") =>: Type.Var("X"))), true)
         )
         val untyped = App.of(Id("f"), App.of(Id("f"), DoubleLiteral(1)))
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
@@ -189,7 +190,7 @@ class RecursiveTyperTest extends LanguageSpec {
       "f(a, b) = a * b in f" in {
         val multScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
         val addPredicates = List(Predicate("Mult", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
-        val assumptions = withAssumptions(Assumption("mult", Qualified(addPredicates, multScheme), true))
+        val assumptions = withAssumptions(model.Assumption("mult", Qualified(addPredicates, multScheme), true))
         val untyped =
           Let("f", Lambda("a", Lambda("b", App.of(Id("mult"), Id("a"), Id("b")))), Id("f"))
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
@@ -205,8 +206,8 @@ class RecursiveTyperTest extends LanguageSpec {
         val invPredicates = List(Predicate("Inv", List(Type.Var("A"))))
 
         val assumptions = withAssumptions(
-          Assumption("add", Qualified(addPredicates, addScheme), true),
-          Assumption("inv", Qualified(invPredicates, invScheme), true)
+          model.Assumption("add", Qualified(addPredicates, addScheme), true),
+          model.Assumption("inv", Qualified(invPredicates, invScheme), true)
         )
 
         val untyped =
@@ -233,7 +234,7 @@ class RecursiveTyperTest extends LanguageSpec {
         val scheme = Scheme(List("A", "B"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("A"))
 
         val assumptions = withAssumptions(
-          Assumption("f", Qualified(scheme), true)
+          model.Assumption("f", Qualified(scheme), true)
         )
 
         val untyped =

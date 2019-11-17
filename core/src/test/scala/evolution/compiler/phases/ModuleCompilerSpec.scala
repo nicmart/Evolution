@@ -1,15 +1,14 @@
 package evolution.compiler
-import evolution.compiler.phases.ModuleCompiler
 import evolution.compiler.module.Module
-import evolution.compiler.types.Assumption
-import evolution.compiler.types.TypeClasses.Qualified
+import evolution.compiler.phases.ModuleCompiler
+import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.{RecursiveTyper, model}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
+import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.NoOpLogger
-import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.compiler.DefaultCompiler
-import evolution.compiler.phases.typer.RecursiveTyper
 
 class ModuleCompilerSpec extends LanguageSpec {
   "Module compiler" - {
@@ -21,7 +20,8 @@ class ModuleCompilerSpec extends LanguageSpec {
 
       val inferredAssumption = module.unsafeRight.assumptions.get("line")
 
-      val expectedAssumption = Assumption("line", Qualified(Scheme(Type.Double =>: Type.Double =>: Type.Point)), false)
+      val expectedAssumption =
+        model.Assumption("line", Qualified(Scheme(Type.Double =>: Type.Double =>: Type.Point)), false)
       inferredAssumption should contain(expectedAssumption)
     }
   }

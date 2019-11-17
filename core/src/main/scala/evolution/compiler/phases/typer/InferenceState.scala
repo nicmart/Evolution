@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer
 
-import evolution.compiler.phases.typer.model.Substitution
-import evolution.compiler.types.{Assumptions, Type}
+import evolution.compiler.phases.typer.model.{Assumptions, Substitution}
+import evolution.compiler.types.Type
 
 private[typer] final case class InferenceState(
     private val count: Int,

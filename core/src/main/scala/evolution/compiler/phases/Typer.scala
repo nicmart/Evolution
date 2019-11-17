@@ -1,5 +1,6 @@
 package evolution.compiler.phases
 
+import evolution.compiler.phases.typer.model.Assumptions
 import evolution.compiler.tree._
 import evolution.compiler.types._
 

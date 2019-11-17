@@ -4,8 +4,8 @@ import cats.Monad
 import cats.syntax.functor._
 import cats.syntax.flatMap._
 import cats.syntax.applicative._
-import evolution.compiler.phases.typer.model.Substitution
-import evolution.compiler.types.{Assumption, Assumptions, Type}
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions, Substitution}
+import evolution.compiler.types.Type
 
 private[typer] case class Inference[+T](run: InferenceState => Either[String, (InferenceState, T)]) {
   def runA(is: InferenceState): Either[String, T] = run(is).map(_._2)

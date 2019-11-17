@@ -5,7 +5,7 @@ import cats.implicits._
 import evolution.compiler.phases.Typer
 import evolution.compiler.phases.typer.Inference._
 import evolution.compiler.phases.typer.RecursiveTyper._
-import evolution.compiler.phases.typer.model.{Assignment, Substitution}
+import evolution.compiler.phases.typer.model.{Assignment, Assumption, Assumptions, Substitution}
 import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Id, IntLiteral, Lambda, Let, Lst}
 import evolution.compiler.tree.{Tree, _}
 import evolution.compiler.types.Type.Scheme
@@ -84,7 +84,7 @@ final class RecursiveTyper extends Typer {
       case Let(varName, expr, in) =>
         for {
           typedExpr <- typeTreeInf(expr)
-          assumption = Assumption(varName, typedExpr.annotation.map(Scheme.apply), false)
+          assumption = model.Assumption(varName, typedExpr.annotation.map(Scheme.apply), false)
           typedIn <- withLocalAssumption(assumption)(typeTreeInf(in))
           letPredicates = typedExpr.annotation.predicates ++ typedIn.annotation.predicates
           letType = qualified(letPredicates, typedIn.annotation.value)

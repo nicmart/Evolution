@@ -1,14 +1,11 @@
 package evolution.compiler.phases.typer.config
 
-import evolution.compiler.types.TypeClasses.Predicate
-import evolution.compiler.types.{Type, Assumption, Assumptions}
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types.TypeClassInstance._
+import evolution.compiler.expression.typeclass.Multiplicative.{LiftBoth, LiftLeft, LiftRight}
 import evolution.compiler.expression.typeclass._
-import evolution.compiler.expression.typeclass.Multiplicative.LiftRight
-import evolution.compiler.expression.typeclass.Multiplicative.LiftLeft
-import evolution.compiler.expression.typeclass.Multiplicative.LiftBoth
-import evolution.compiler.types.TypeClassInstance
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
+import evolution.compiler.types.{Type, TypeClassInstance}
+import evolution.compiler.types.TypeClassInstance._
+import evolution.compiler.types.TypeClasses.Predicate
 
 object TypingConfig {
   val constantQualifiedTypes: Assumptions =

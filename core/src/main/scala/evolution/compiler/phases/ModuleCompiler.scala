@@ -5,12 +5,12 @@ import evolution.logging.Logger
 import evolution.compiler.tree.PrettyPrintTypedTree
 import evolution.compiler.expression.Expr
 import evolution.compiler.module.Module
+import evolution.compiler.phases.typer.model
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.tree._
-import evolution.compiler.types.Assumptions
 import evolution.compiler.tree.TreeF.Let
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.Type.Scheme
-import evolution.compiler.types.Assumption
 import evolution.compiler.types.Type
 
 final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, logger: Logger) {
@@ -20,7 +20,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, log
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
-      exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X"))), false) // TODO think more about this
+      exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X"))), primitive = false) // TODO think more about this
       typedTree <- typer.typeTree(untypedTree, None, initialModule.assumptions.withAssumption(exportAssumption))
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
@@ -40,7 +40,10 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, log
     typedTree.tree match {
       case Let(varName, expr, in) =>
         val qualifiedScheme = Qualified(expr.annotation.predicates, Scheme(expr.annotation.value))
-        extractAssumptions(in, currentAssumptions.withAssumption(Assumption(varName, qualifiedScheme, false)))
+        extractAssumptions(
+          in,
+          currentAssumptions.withAssumption(model.Assumption(varName, qualifiedScheme, primitive = false))
+        )
       case _ => currentAssumptions
     }
 

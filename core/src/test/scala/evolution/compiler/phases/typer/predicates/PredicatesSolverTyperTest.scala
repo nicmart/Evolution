@@ -1,11 +1,12 @@
 package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.tree.Tree._
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
-import evolution.compiler.types.{Assumption, Assumptions, Type}
+import evolution.compiler.types.Type
 import evolution.logging.NoOpLogger
 
 class PredicatesSolverTyperTest extends LanguageSpec {

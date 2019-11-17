@@ -9,9 +9,8 @@ import evolution.compiler.types.Type.Scheme
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.compiler.DefaultCompiler
-import evolution.compiler.types.Assumption
-import evolution.compiler.phases.typer.RecursiveTyper
-import evolution.compiler.phases.typer.PredicatesSolverTyper
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
+import evolution.compiler.phases.typer.model.Assumption
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 
 object StandardLibraryModule {
@@ -19,10 +18,10 @@ object StandardLibraryModule {
 
   private lazy val initialModule = Module(
     TypingConfig.constantQualifiedTypes
-      .withAssumption(Assumption("top", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(Assumption("bottom", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(Assumption("left", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(Assumption("right", Qualified(Scheme(Type.Double)), false)),
+      .withAssumption(model.Assumption("top", Qualified(Scheme(Type.Double)), false))
+      .withAssumption(model.Assumption("bottom", Qualified(Scheme(Type.Double)), false))
+      .withAssumption(model.Assumption("left", Qualified(Scheme(Type.Double)), false))
+      .withAssumption(model.Assumption("right", Qualified(Scheme(Type.Double)), false)),
     identity
   )
 
