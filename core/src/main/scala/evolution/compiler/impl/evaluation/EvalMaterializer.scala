@@ -12,8 +12,7 @@ import evolution.compiler.expression.Expr.Iterate2
 import evolution.compiler.expression.Expr.FromList
 import evolution.compiler.expression.Expr.Grouped
 import evolution.compiler.expression.Expr.Connect
-import evolution.compiler.impl.evaluation.context.emptyCtx
-import evolution.compiler.impl.evaluation.context.EvaluationContext._
+import evolution.compiler.impl.evaluation.EvalCtx._
 
 // TODO this is an implementation
 object EvalMaterializer extends Materializer {
@@ -97,7 +96,7 @@ object EvalMaterializer extends Materializer {
 
       case Expr.Var(name) =>
         WithContext.instance[T] { ctx =>
-          get[Any](ctx, name).asInstanceOf[T]
+          ctx.get[Any](name).asInstanceOf[T]
         }
 
       case Expr.Let(name, value, e) =>
@@ -106,7 +105,7 @@ object EvalMaterializer extends Materializer {
       case lambda: Expr.Lambda[s, t] =>
         val interpretedBody = materializeExpr(lambda.expr)
         WithContext.instance[T] { ctx => (a: s) =>
-          interpretedBody(addStrict(lambda.variable, a, ctx))
+          interpretedBody(ctx.addStrict(lambda.variable, a))
         }
 
       case Expr.App(f, a) => interpret2(f, a)(_(_))
@@ -118,7 +117,7 @@ object EvalMaterializer extends Materializer {
         val interpretedBody = materializeExpr(lambdaBody)
         WithContext.instance[T] { ctx =>
           {
-            lazy val self: T = interpretedBody(addLazy(name, () => self, ctx))
+            lazy val self: T = interpretedBody(ctx.addLazy(name, () => self))
             self
           }
         }

@@ -1,6 +1,7 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.compiler.impl.evaluation.context.EvaluationContext._
+import evolution.compiler.impl.evaluation.EvalCtx
+import evolution.compiler.impl.evaluation.EvalCtx._
 import evolution.compiler.expression.Expr._
 import evolution.compiler.expression.Expr
 import org.scalatest.{FreeSpec, Matchers}
@@ -71,7 +72,7 @@ final class EvaluationSpec extends FreeSpec with Matchers {
   }
 
   def materializeConstant[T](t: Contextual[T]): T = materializeConstantWith(t, emptyCtx)
-  def materializeConstantWith[T](t: Contextual[T], ctx: Ctx): T = t(ctx)
+  def materializeConstantWith[T](t: Contextual[T], ctx: EvalCtx): T = t(ctx)
   def materializeIterator[T](seed: Long, expr: Expr[Evolution[T]]): Iterator[T] = {
     Evolution.setSeed(seed)
     materializeExpr(expr).apply(emptyCtx).run

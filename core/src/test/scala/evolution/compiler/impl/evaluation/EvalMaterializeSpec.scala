@@ -1,6 +1,5 @@
 package evolution.compiler.impl.evaluation
 
-import evolution.compiler.impl.evaluation.context.EvaluationContext._
 import evolution.geometry.Point
 import evolution.compiler.expression.Expr
 import evolution.compiler.expression.Expr._
@@ -11,8 +10,7 @@ import org.scalatest.{FreeSpec, Matchers}
 import EvalMaterializer.materializeExpr
 import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass._
-import evolution.compiler.impl.evaluation.MaterializeEquality
-import evolution.compiler.impl.evaluation.MaterializeComparison
+import evolution.compiler.impl.evaluation.EvalCtx._
 
 class EvalMaterializeSpec extends FreeSpec with GeneratorDrivenPropertyChecks with Matchers {
 
