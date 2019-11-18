@@ -21,8 +21,9 @@ object Type {
   }
 
   case class Scheme(vars: List[String], tpe: Type) {
-    override def toString: String = s"∀ ${vars.mkString} $tpe"
+    override def toString: String = if (vars.isEmpty) tpe.toString else s"∀ (${vars.mkString(", ")}) $tpe"
     def instantiate(types: List[Type]): Type = replaceVars(tpe, vars.zip(types))
+    def freeVars: Set[String] = tpe.typeVars.map(_.name).diff(vars.toSet)
   }
 
   object Scheme {

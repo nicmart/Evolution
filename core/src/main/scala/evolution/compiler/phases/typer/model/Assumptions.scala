@@ -4,7 +4,7 @@ final class Assumptions(private val assumptions: Map[String, Assumption]) {
 
   def all: Map[String, Assumption] = assumptions
 
-  def allVars: Set[String] = assumptions.keySet
+  def allFreeTypeVars: Set[String] = assumptions.values.flatMap(_.freeTypeVars).toSet
 
   def vars: List[String] = assumptions.map(_._1).toList
 

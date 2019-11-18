@@ -24,9 +24,14 @@ object TypeClasses {
 
   case class Predicate(id: String, types: List[Type]) {
     override def toString: String = s"$id(${types.mkString(", ")})"
+    def typeVars: Set[String] =
+      types.collect {
+        case Type.Var(varname) => varname
+      }.toSet
   }
   case class Qualified[+T](predicates: List[Predicate], value: T) {
     def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
+    def predicatesTypeVars: Set[String] = predicates.flatMap(_.typeVars).toSet
     override def toString: String =
       if (predicates.isEmpty) value.toString
       else

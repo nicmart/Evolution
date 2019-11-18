@@ -8,6 +8,8 @@ import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.types.Type
 
+import scala.collection.immutable.Set
+
 class RecursiveTyperTest extends LanguageSpec {
 
   "RecursiveTyperTest" - {
@@ -234,7 +236,7 @@ class RecursiveTyperTest extends LanguageSpec {
         val List(
           Predicate("Add", List(Type.Var(var1), Type.Var(var2), Type.Var(var3))),
           Predicate("Inv", List(Type.Var(var4)))
-        ) = typed.annotation.predicates
+        ) = typed.annotation.predicates.distinct
 
         var2 shouldBe var4
         typed.annotation.value shouldBe Type.Var(var1) =>: Type.Var(var2) =>: Type.Var(var3)
@@ -253,6 +255,30 @@ class RecursiveTyperTest extends LanguageSpec {
         val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
         typed.annotation.value shouldBe Type.Double
       }
+
+      "f = a in f" in {
+        val scheme = Scheme(List("A"), Type.Var("A"))
+        val predicates = List(Predicate("Num", List(Type.Var("A"))))
+        val assumptions = withAssumptions(Assumption("a", Qualified(predicates, scheme), true))
+        val untyped = Let("f", Id("a"), Id("f"))
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        println(PrettyPrintTypedTree(typed))
+        val List(Predicate("Num", List(x))) = typed.annotation.predicates.distinct
+        typed.annotation.value shouldBe x
+      }
+
+      "f(a) = neg(a) in f" in {
+        val scheme = Scheme(List("A", "B"), Type.Var("A") =>: Type.Var("B"))
+        val predicates = List(Predicate("Neg", List(Type.Var("A"), Type.Var("B"))))
+        val assumptions = withAssumptions(Assumption("neg", Qualified(predicates, scheme), true))
+        val untyped = Let("f", Lambda("a", App.of(Id("neg"), Id("a"))), Id("f"))
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        println(PrettyPrintTypedTree(typed))
+        val List(Predicate("Neg", List(x, y))) =
+          typed.annotation.predicates.distinct
+        typed.annotation.value shouldBe x =>: y
+      }
+
     }
   }
   def withAssumptions(assumptions: Assumption*): Assumptions =

@@ -85,10 +85,19 @@ final class RecursiveTyper extends Typer {
         for {
           currentAssumptions <- assumptions
           typedExpr <- typeTreeInf(expr)
-          assumption = Assumption(varName, quantify(typedExpr.annotation, currentAssumptions), false)
+          currentSubst <- substitution
+          assumption = Assumption(
+            varName,
+            // We need to apply the substitution before quantifying
+            // Otherwise we quantify things like Mult(T0, T1, T5) => T2 -> T3 -> T4
+            // when T0 -> T2, T1 -> T3, T5 -> T4
+            quantify(currentSubst.substitute(typedExpr.annotation), currentAssumptions),
+            false
+          )
           typedIn <- withLocalAssumption(assumption)(typeTreeInf(in))
           // typedExpr predicates maybe should not be included here
           letPredicates = typedExpr.annotation.predicates ++ typedIn.annotation.predicates
+          //letPredicates = typedIn.annotation.predicates
           letType = qualified(letPredicates, typedIn.annotation.value)
         } yield Let(varName, typedExpr, typedIn).annotate(letType)
     }
@@ -100,7 +109,7 @@ object RecursiveTyper {
     Qualified(predicates.distinct, tpe)
 
 //  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] = {
-//    val vars = qualified.value.typeVars.map(_.name).diff(assumptions.allVars)
+//    val vars = (qualified.value.typeVars.map(_.name) ++ qualified.predicatesTypeVars).diff(assumptions.allFreeTypeVars)
 //    Qualified(qualified.predicates, Scheme(vars.toList, qualified.value))
 //  }
 
