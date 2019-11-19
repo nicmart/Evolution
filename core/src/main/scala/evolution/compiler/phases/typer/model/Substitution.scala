@@ -2,9 +2,8 @@ package evolution.compiler.phases.typer.model
 
 import cats.implicits._
 import evolution.compiler.types.Type
-import evolution.compiler.types.Type
 
-private[typer] final case class Substitution(assignments: List[Assignment]) {
+private[phases] final case class Substitution(assignments: List[Assignment]) {
   def without(variable: String): Substitution = Substitution(assignments.filterNot(_.variable == variable))
   def lookup(variable: String): Option[Type] = assignments.find(_.variable == variable).map(_.tpe)
   def substitute[T](t: T)(implicit cbs: CanBeSubstituted[T]): T = cbs.substitute(this, t)
