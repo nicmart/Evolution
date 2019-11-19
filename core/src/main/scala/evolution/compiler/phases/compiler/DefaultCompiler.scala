@@ -12,59 +12,60 @@ import evolution.compiler.tree.TreeF._
 import cats.data.NonEmptyList
 
 import scala.collection.immutable.Nil
+import Compilation._
 
 object DefaultCompiler extends Compiler {
   // TODO module here?
-  def compile(tree: TypedTree, module: Module): Either[String, Expr[_]] =
-    compileSafe(tree).map(module.load)
+  def compile(tree: TypedTree, module: Module): Either[String, Expr[Any]] =
+    compileM(tree).map(module.load).run(CompilerState.empty)
 
-  private def compileSafe(typedTree: TypedTree): Either[String, Expr[Any]] =
+  private def compileM(typedTree: TypedTree): Compilation[Expr[Any]] =
     typedTree.tree match {
       case Id(name, false) =>
-        Expr.Var(name).asRight
+        Expr.Var(name).pure[Compilation]
 
       case Lambda(varName, body) =>
-        compileSafe(body).map(Expr.Lambda(varName, _))
+        compileM(body).map(Expr.Lambda(varName, _))
 
       case Let(varName, value, in) =>
-        (compileSafe(value), compileSafe(in)).mapN { (compiledValue, compiledIn) =>
+        (compileM(value), compileM(in)).mapN { (compiledValue, compiledIn) =>
           Expr.Let(varName, compiledValue, compiledIn)
         }
 
       case IntLiteral(n) =>
         typedTree.annotation.value match {
-          case Type.Double => Expr.Dbl(n.toDouble).asRight
-          case _           => Expr.Integer(n).asRight
+          case Type.Double => Expr.Dbl(n.toDouble).pure[Compilation]
+          case _           => Expr.Integer(n).pure[Compilation]
         }
 
       case DoubleLiteral(n) => // Default to Double for numeric literals
-        Expr.Dbl(n.toDouble).asRight
+        Expr.Dbl(n.toDouble).pure[Compilation]
 
       case Bool(b) =>
-        Expr.Bool(b).asRight
+        Expr.Bool(b).pure[Compilation]
 
       case Id(Constant0(c), true) =>
-        c.compile(typedTree.annotation)
+        fromEither(c.compile(typedTree.annotation))
 
       // Arity 0 identifiers
       case Id(id, _) =>
-        s"Constant $id is not supported as first class value".asLeft
+        error(s"Constant $id is not supported as first class value")
 
       case Lst(ts) =>
-        ts.traverse(compileSafe).map(Expr.Lst(_))
+        ts.traverse(compileM).map(Expr.Lst(_))
 
       // Arity 1 identifiers
       case App(AnnotatedTree(_, Id(Constant1(c), true)), NonEmptyList(arg1, Nil)) =>
         for {
           argExpr <- compileTyped(arg1)
-          expr <- c.compile(argExpr, typedTree.annotation.value)
+          expr <- fromEither(c.compile(argExpr, typedTree.annotation.value))
         } yield expr
 
       case App(AnnotatedTree(_, Id(Constant2(c), true)), NonEmptyList(arg1, List(arg2))) =>
         for {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)
-          expr <- c.compile(arg1Expr, arg2Expr, typedTree.annotation.value)
+          expr <- fromEither(c.compile(arg1Expr, arg2Expr, typedTree.annotation.value))
         } yield expr
 
       case App(AnnotatedTree(_, Id(Constant3(c), true)), NonEmptyList(arg1, List(arg2, arg3))) =>
@@ -72,17 +73,17 @@ object DefaultCompiler extends Compiler {
           arg1Expr <- compileTyped(arg1)
           arg2Expr <- compileTyped(arg2)
           arg3Expr <- compileTyped(arg3)
-          expr <- c.compile(arg1Expr, arg2Expr, arg3Expr, typedTree.annotation.value)
+          expr <- fromEither(c.compile(arg1Expr, arg2Expr, arg3Expr, typedTree.annotation.value))
         } yield expr
 
-      case App(f, args) => (compileSafe(f), args.traverse(compileSafe)).mapN(buildAppExpr)
+      case App(f, args) => (compileM(f), args.traverse(compileM)).mapN(buildAppExpr)
 
       case _ =>
-        s"Invalid AST for expression $typedTree".asLeft
+        error(s"Invalid AST for expression $typedTree")
     }
 
-  private def compileTyped(typedTree: TypedTree): Either[String, Typed[_]] =
-    compileSafe(typedTree).map(Typed(typedTree.annotation.value, _))
+  private def compileTyped(typedTree: TypedTree): Compilation[Typed[_]] =
+    compileM(typedTree).map(Typed(typedTree.annotation.value, _))
 
   private def buildAppExpr(f: Expr[Any], args: NonEmptyList[Expr[Any]]): Expr[Any] =
     args match {
@@ -93,6 +94,5 @@ object DefaultCompiler extends Compiler {
 
   private implicit class CastingOps(value: Any) {
     def asExpr[T]: Expr[T] = value.asInstanceOf[Expr[T]]
-    def asExprF[T]: Expr[Evolution[T]] = value.asInstanceOf[Expr[Evolution[T]]]
   }
 }

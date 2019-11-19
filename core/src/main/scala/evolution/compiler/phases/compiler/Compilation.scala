@@ -5,7 +5,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import evolution.compiler.tree.TypedTree
 
-private[compiler] final case class Compilation[+T](run: CompilerState => Either[String, T])
+private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T])
 
 private[compiler] object Compilation {
   def error(message: String): Compilation[Nothing] = Compilation(_ => Left(message))
@@ -15,6 +15,7 @@ private[compiler] object Compilation {
   def flatMap[A, B](fa: Compilation[A], f: A => Compilation[B]): Compilation[B] =
     Compilation(state => fa.run(state).flatMap(a => f(a).run(state)))
 
+  def fromEither[T](either: Either[String, T]): Compilation[T] = either.fold(error, pure)
   def withBinding[T](name: String, tree: TypedTree)(ft: Compilation[T]): Compilation[T] =
     for {
       currentState <- state
