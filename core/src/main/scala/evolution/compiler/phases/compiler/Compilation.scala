@@ -5,7 +5,9 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import evolution.compiler.tree.TypedTree
 
-private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T])
+private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T]) {
+  def attempt: Compilation[Either[String, T]] = Compilation(state => Right(run(state)))
+}
 
 private[compiler] object Compilation {
   def error(message: String): Compilation[Nothing] = Compilation(_ => Left(message))
@@ -22,7 +24,8 @@ private[compiler] object Compilation {
       t <- localState[T](currentState.withBinding(name, tree))(ft)
     } yield t
 
-  def binding(name: String): Compilation[Option[TypedTree]] = state.map(_.binding(name))
+  def binding(name: String): Compilation[TypedTree] =
+    state.map(_.binding(name)).map(_.toRight(s"Binding $name not found")).flatMap(fromEither)
 
   implicit val compilationIsMonad: Monad[Compilation] = CompilationMonad
 

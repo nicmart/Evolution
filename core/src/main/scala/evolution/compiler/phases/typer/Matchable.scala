@@ -1,9 +1,11 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.phases.typer.model.Substitution
+import evolution.compiler.tree.TypedTree
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
+// A subst that transform the SECOND arg to the FIRST
 trait Matchable[T] {
   def substitution(t1: T, t2: T): Option[Substitution]
 }
@@ -42,6 +44,11 @@ object Matchable {
     case (p1, p2) if p1.id == p2.id =>
       tryMatch(p1.types, p2.types)
     case _ => None
+  }
+
+  implicit val tree: Matchable[TypedTree] = {
+    case (tt1, tt2) =>
+      tryMatch(tt1.annotation, tt2.annotation)
   }
 
   implicit def qualified[T](implicit m: Matchable[T]): Matchable[Qualified[T]] =

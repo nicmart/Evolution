@@ -1,18 +1,16 @@
 package evolution.compiler.phases.compiler
 
+import cats.data.NonEmptyList
 import cats.implicits._
 import evolution.compiler.expression.Expr
-import evolution.compiler.tree._
+import evolution.compiler.phases.compiler.Compilation._
 import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
 import evolution.compiler.phases.{Compiler, Module}
-import evolution.compiler.types.Typed
-import evolution.compiler.types.Type
-import evolution.materialization.Evolution
 import evolution.compiler.tree.TreeF._
-import cats.data.NonEmptyList
+import evolution.compiler.tree._
+import evolution.compiler.types.{Type, Typed}
 
 import scala.collection.immutable.Nil
-import Compilation._
 
 object DefaultCompiler extends Compiler {
   // TODO module here?
