@@ -1,29 +1,33 @@
 package evolution.compiler.systemf
 
+import com.sun.tools.javac.code.Type.ForAll
+import evolution.compiler.systemf.QType.{Arrow, Forall, Qualified, Simple}
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
 
-sealed trait Term {
-  def tpe: QType
+sealed trait Term[T] {
+  def tpe: QType[T]
 }
 
 object Term {
-  case class Var(name: String, tpe: QType) extends Term
-  case class Integer(n: Int, tpe: QType) extends Term
+  case class Var[T](name: String, tpe: QType[T]) extends Term[T]
+  case class Integer(n: Int) extends Term[QType.Simple] {
+    def tpe = QType(Type.Integer)
+  }
 
-  case class Lambda(varName: String, term: Term, tpe: QType) extends Term
-  case class App(f: Term, x: Term, tpe: QType) extends Term
+  case class Lambda[A, B](varName: String, term: Term[B], tpe: QType[Arrow[A, B]]) extends Term[Arrow[A, B]]
+  case class App[A, B](f: Term[Arrow[A, B]], x: Term[A], tpe: QType[B]) extends Term[B]
 
-  case class TLambda(typeName: String, term: Term, tpe: QType) extends Term
-  case class TApp(f: Term, x: Type, tpe: QType) extends Term
+  case class TLambda[T](typeName: String, term: Term[T], tpe: QType[ForAll[T]]) extends Term[ForAll[T]]
+  case class TApp[T](f: Term[ForAll[T]], x: Type, tpe: QType[T]) extends Term[T]
 
-  case class PLambda(pVar: PVar, term: Term, tpe: QType) extends Term
-  case class PApp(f: Term, p: Predicate, tpe: QType) extends Term
+  case class PLambda[T](pVar: PVar, term: Term[T], tpe: QType[Qualified[T]]) extends Term[Qualified[T]]
+  case class PApp[T](f: Term[Qualified[T]], p: Predicate, tpe: QType[T]) extends Term[T]
 
-  case class Let(varName: String, term: Term, in: Term, tpe: QType) extends Term
+  case class Let[A, B](varName: String, term: Term[A], in: Term[B], tpe: QType[B]) extends Term[B]
 
   object Integer {
-    def apply(n: Int): Term = Integer(n, QType(Type.Integer))
+    def apply(n: Int): Term[Simple] = Integer(n, QType(Type.Integer))
   }
 
   object Lambda {
