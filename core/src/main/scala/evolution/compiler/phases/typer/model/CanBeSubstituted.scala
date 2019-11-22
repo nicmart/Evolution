@@ -5,11 +5,11 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.tree._
 
-private[typer] trait CanBeSubstituted[T] {
+trait CanBeSubstituted[T] {
   def substitute(s: Substitution, t: T): T
 }
 
-private[typer] object CanBeSubstituted {
+object CanBeSubstituted {
   implicit val `type`: CanBeSubstituted[Type] = new CanBeSubstituted[Type] {
     def substitute(s: Substitution, t: Type): Type =
       Type.replaceVars(t, s.assignments.map(a => a.variable -> a.tpe))

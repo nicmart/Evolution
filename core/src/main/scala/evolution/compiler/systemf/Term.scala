@@ -1,6 +1,7 @@
 package evolution.compiler.systemf
 
-import com.sun.tools.javac.code.Type.ForAll
+import evolution.compiler.phases.typer.Matchable
+import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.systemf.QType.{Arrow, Forall, Qualified, Simple}
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.Predicate
@@ -11,60 +12,38 @@ sealed trait Term[T] {
 
 object Term {
   case class Var[T](name: String, tpe: QType[T]) extends Term[T]
+
   case class Integer(n: Int) extends Term[QType.Simple] {
-    def tpe = QType(Type.Integer)
+    val tpe = QType(Type.Integer)
   }
 
-  case class Lambda[A, B](varName: String, term: Term[B], tpe: QType[Arrow[A, B]]) extends Term[Arrow[A, B]]
-  case class App[A, B](f: Term[Arrow[A, B]], x: Term[A], tpe: QType[B]) extends Term[B]
-
-  case class TLambda[T](typeName: String, term: Term[T], tpe: QType[ForAll[T]]) extends Term[ForAll[T]]
-  case class TApp[T](f: Term[ForAll[T]], x: Type, tpe: QType[T]) extends Term[T]
-
-  case class PLambda[T](pVar: PVar, term: Term[T], tpe: QType[Qualified[T]]) extends Term[Qualified[T]]
-  case class PApp[T](f: Term[Qualified[T]], p: Predicate, tpe: QType[T]) extends Term[T]
-
-  case class Let[A, B](varName: String, term: Term[A], in: Term[B], tpe: QType[B]) extends Term[B]
-
-  object Integer {
-    def apply(n: Int): Term[Simple] = Integer(n, QType(Type.Integer))
+  case class Let[A, B](varName: String, term: Term[A], in: Term[B]) extends Term[B] {
+    override def tpe: QType[B] = in.tpe
   }
 
-  object Lambda {
-    def apply(varName: String, varTpe: QType, term: Term): Term =
-      Lambda(varName, term, varTpe =>: term.tpe)
+  case class Lambda[A, B](varName: String, varType: QType[A], term: Term[B]) extends Term[Arrow[A, B]] {
+    val tpe: QType[Arrow[A, B]] = varType =>: term.tpe
   }
 
-  object App {
-    def apply(f: Term, x: Term): Term = ??? // Not sure here what to do
+  case class App[A, B](f: Term[Arrow[A, B]], x: Term[A]) extends Term[B] {
+    val tpe: QType[B] = f.tpe.as.to
   }
 
-  object TLambda {
-    def apply(typeName: String, term: Term): Term =
-      TLambda(typeName, term, QType.Forall(typeName, term.tpe))
+  case class TLambda[T](typeName: String, term: Term[T]) extends Term[Forall[T]] {
+    val tpe: QType[Forall[T]] = Forall(typeName, term.tpe)
   }
 
-  object TApp {
-    def apply(f: Term, x: Type): Term =
-      f.tpe match {
-        case QType.Forall(typeVar, tpe) => ??? // TODO replace typeVar with x in tpe
-        case _                          => f
-      }
+  case class TApp[T](f: Term[Forall[T]], x: Type) extends Term[T] {
+    val tpe: QType[T] = Substitution(f.tpe.as.typeVar -> x).substitute(f.tpe.as.tpe)
   }
 
-  implicit class TermOps(term: Term) {
-    def withType(newTpe: QType): Term = term match {
-      case Var(name, _)               => Var(name, newTpe)
-      case Integer(n, _)              => Integer(n, newTpe)
-      case Lambda(varName, term, _)   => Lambda(varName, term, newTpe)
-      case App(f, x, _)               => App(f, x, newTpe)
-      case TLambda(typeName, term, _) => TLambda(typeName, term, newTpe)
-      case TApp(f, x, _)              => TApp(f, x, newTpe)
-      case PLambda(pVar, term, _)     => PLambda(pVar, term, newTpe)
-      case PApp(f, p, _)              => PApp(f, p, newTpe)
-      case Let(varName, term, in, _)  => Let(varName, term, in, newTpe)
+  case class PLambda[T](pVar: Predicate, term: Term[T]) extends Term[Qualified[T]] {
+    override def tpe: QType[Qualified[T]] = Qualified(pVar, term.tpe)
+  }
+  case class PApp[T](f: Term[Qualified[T]], p: Predicate) extends Term[T] {
+    override def tpe: QType[T] = Matchable.tryMatch(f.tpe.as.predicate, p) match {
+      case Some(subst) => subst.substitute(f.tpe.as.tpe)
+      case None        => throw new Exception("Incompatible Predicate Application") // Can we avoid this?
     }
   }
-
-  case class PVar(id: String, typeVars: List[String])
 }
