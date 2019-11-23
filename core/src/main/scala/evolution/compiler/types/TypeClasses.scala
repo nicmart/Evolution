@@ -1,8 +1,11 @@
 package evolution.compiler.types
 import evolution.compiler.expression.typeclass._
+import evolution.compiler.types.TypeClasses.Predicate
 
 // Just a union types of typeclasses
-sealed abstract class TypeClassInstance(val id: String, val types: List[Type])
+sealed abstract class TypeClassInstance(val id: String, val types: List[Type]) {
+  def predicate: Predicate = Predicate(id, types)
+}
 
 object TypeClassInstance {
   case class AdditiveInst[A, B, C](add: Additive[A, B, C])
@@ -37,8 +40,13 @@ object TypeClasses {
       else
         s"${predicates.mkString(", ")} => $value"
   }
+
+  object Predicate {
+    def apply(id: String, typeVars: List[String]): Predicate =
+      Predicate(id, typeVars.map(Type.Var))
+  }
+
   object Qualified {
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
   }
-  case class Default(id: String, tpe: Type)
 }
