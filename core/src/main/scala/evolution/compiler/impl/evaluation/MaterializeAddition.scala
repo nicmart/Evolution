@@ -4,7 +4,7 @@ import evolution.compiler.expression.typeclass.Additive._
 import evolution.materialization.Evolution
 import evolution.geometry.Point
 
-private[evaluation] object MaterializeAddition {
+object MaterializeAddition {
   def apply[A, B, C](additive: Additive[A, B, C]): (A, B) => C =
     additive match {
       case DoubleIntDouble    => (a: Double, b: Int) => a + b

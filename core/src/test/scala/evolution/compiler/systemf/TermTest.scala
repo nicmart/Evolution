@@ -18,7 +18,7 @@ class TermTest extends FreeSpec {
     val double = TLambda(
       "X",
       PLambda(
-        Predicate("Add", List("X", "X", "X")),
+        Predicate.fromVars("Add", List("X", "X", "X")),
         App2(add, Var("x", TVar("X")), Var("x", TVar("X")))
       )
     )

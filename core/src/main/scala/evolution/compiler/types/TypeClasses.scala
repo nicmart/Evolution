@@ -42,7 +42,7 @@ object TypeClasses {
   }
 
   object Predicate {
-    def apply(id: String, typeVars: List[String]): Predicate =
+    def fromVars(id: String, typeVars: List[String]): Predicate =
       Predicate(id, typeVars.map(Type.Var))
   }
 
