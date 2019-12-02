@@ -1,8 +1,10 @@
 package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
+import evolution.compiler.tree.{PrettyPrintTree, PrettyPrintTypedTree}
 import evolution.compiler.tree.Tree._
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
@@ -28,6 +30,53 @@ class PredicatesSolverTyperTest extends LanguageSpec {
       val List(Predicate("Mult", List(x, y, z))) =
         typed.annotation.predicates.distinct
       typed.annotation.value shouldBe x =>: y =>: z
+    }
+
+    "xxx" in {
+      val untyped = App.of(Id("add"), App.of(Id("add"), IntLiteral(1), DoubleLiteral(1)), IntLiteral(1))
+      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+
+      println(PrettyPrintTypedTree(partiallyTyped))
+      println(PrettyPrintTypedTree(typed))
+    }
+
+    "xxxx" in {
+      val untyped =
+        Let(
+          "f",
+          Lambda("x", Lambda("y", App.of(Id("add"), App.of(Id("add"), Id("x"), Id("y")), Id("x")))),
+          App.of(Id("f"), IntLiteral(1), DoubleLiteral(2))
+        )
+      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+
+      println(PrettyPrintTree(untyped))
+      println(PrettyPrintTypedTree(partiallyTyped))
+      println(PrettyPrintTypedTree(typed))
+    }
+
+    "xxxxx" in {
+      val untyped = Let(
+        "f",
+        Lambda(
+          "x",
+          Lambda(
+            "y",
+            Lambda(
+              "z",
+              App.of(Id("and"), App.of(Id("greaterThan"), Id("z"), Id("x")), App.of(Id("lessThan"), Id("z"), Id("y")))
+            )
+          )
+        ),
+        Id("f")
+      )
+      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+
+      println(PrettyPrintTree(untyped))
+      println(PrettyPrintTypedTree(partiallyTyped))
+      println(PrettyPrintTypedTree(typed))
     }
   }
 

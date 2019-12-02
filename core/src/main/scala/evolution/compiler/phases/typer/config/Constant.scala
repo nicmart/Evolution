@@ -255,33 +255,51 @@ object Constant2 extends Enum[Constant2] {
     override def compilePlain(x: Expr[_], y: Expr[_]): Expr[_] = Expr.Or(x.asExpr, y.asExpr)
   }
 
-  case object Eq extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object Eq
+      extends Constant2(
+        Qualified(List(Predicate("Comp", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.equable(y.tpe).map(eq => Expr.Equals(x.value, y.value, eq))
 
   }
 
-  case object Neq extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object Neq
+      extends Constant2(
+        Qualified(List(Predicate("Eq", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.equable(y.tpe).map(eq => Expr.Neq(x.value, y.value, eq))
   }
 
-  case object GreaterThan extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object GreaterThan
+      extends Constant2(
+        Qualified(List(Predicate("Comp", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThan(x.value, y.value, order))
   }
 
-  case object GreaterThanOrEqual extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object GreaterThanOrEqual
+      extends Constant2(
+        Qualified(List(Predicate("Comp", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.GreaterThanOrEqual(x.value, y.value, order))
   }
 
-  case object LessThan extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object LessThan
+      extends Constant2(
+        Qualified(List(Predicate("Comp", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.LessThan(x.value, y.value, order))
   }
 
-  case object LessThanOrEqual extends Constant2(Qualified(Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))) {
+  case object LessThanOrEqual
+      extends Constant2(
+        Qualified(List(Predicate("Comp", List(Var("T")))), Scheme(List("T"), Var("T") =>: Var("T") =>: Bool))
+      ) {
     override def compile(x: Typed[_], y: Typed[_], out: Type): Either[String, Expr[_]] =
       TypingConfig.comparable(y.tpe).map(order => Expr.LessThanOrEqual(x.value, y.value, order))
   }

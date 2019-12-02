@@ -94,8 +94,8 @@ final class RecursiveTyper extends Typer {
             false
           )
           typedIn <- withLocalAssumption(assumption)(typeTreeInf(in))
-          //letPredicates = typedIn.annotation.predicates
-          letPredicates = typedIn.annotation.predicates ++ typedExpr.annotation.predicates
+          letPredicates = typedIn.annotation.predicates
+          //letPredicates = typedIn.annotation.predicates ++ typedExpr.annotation.predicates
           letType = qualified(letPredicates, typedIn.annotation.value)
         } yield Let(varName, typedExpr, typedIn).annotate(letType)
     }
@@ -106,13 +106,13 @@ object RecursiveTyper {
   private def qualified(predicates: List[Predicate], tpe: Type): Qualified[Type] =
     Qualified(predicates.distinct, tpe)
 
-//  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] = {
-//    val vars = (qualified.value.typeVars.map(_.name) ++ qualified.predicatesTypeVars).diff(assumptions.allFreeTypeVars)
-//    Qualified(qualified.predicates, Scheme(vars.toList, qualified.value))
-//  }
+  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] = {
+    val vars = (qualified.value.typeVars.map(_.name) ++ qualified.predicatesTypeVars).diff(assumptions.allFreeTypeVars)
+    Qualified(qualified.predicates, Scheme(vars.toList, qualified.value))
+  }
 
-  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] =
-    qualified.map(Scheme.apply)
+//  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] =
+//    qualified.map(Scheme.apply)
 
   private def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
     val assignments =

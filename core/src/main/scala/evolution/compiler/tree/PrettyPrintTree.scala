@@ -3,7 +3,9 @@ package evolution.compiler.tree
 import TreeF._
 
 object PrettyPrintTree {
+
   private val maxChildrenLegnth = 100
+
   def apply(tree: Tree): String = Tree.catamorphism(prettyPrintTreeF)(tree)(0)
 
   private[tree] def prettyPrintTreeF(treeF: TreeF[Int => String]): Int => String =
