@@ -31,6 +31,8 @@ object TypeClasses {
       types.collect {
         case Type.Var(varname) => varname
       }.toSet
+
+    def hasTypeVars: Boolean = typeVars.isEmpty
   }
   case class Qualified[+T](predicates: List[Predicate], value: T) {
     def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
