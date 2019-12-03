@@ -1,48 +1,45 @@
 package evolution.compiler.term
 
+import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.term.Compilation._
+import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
-import cats.implicits._
-import Term._
-import Term.Literal._
-import evolution.compiler.term.TreeToTermCompiler.Register
+import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
 class TreeToTermCompiler {
-  def compile(tree: TypedTree): Either[String, Term] = ???
+  def compile(tree: TypedTree): Either[String, Term] =
+    compileM(tree).run(CompilerState.empty)
 
-  def compileM(typedTree: TypedTree): Register => Either[String, Term] = {
+  private[term] def compileM(typedTree: TypedTree): Compilation[Term] = {
     val AnnotatedTree(Qualified(predicates, tpe), tree) = typedTree
 
-    register =>
-      tree match {
-        case TreeF.Id(name, primitive) =>
-          predicates
-            .filter(_.hasTypeVars)
-            .traverse(register.get)
-            .map(pApp(Id(name), _))
-        case TreeF.Lambda(varName, expr)  => ???
-        case TreeF.App(f, args)           => ???
-        case TreeF.Let(varName, expr, in) => ???
+    tree match {
+      case TreeF.Id(name, primitive) =>
+        predNames(predicates.filter(_.hasTypeVars)).map(pApp(Id(name), _))
+      case TreeF.Lambda(varName, expr)  => ???
+      case TreeF.App(f, args)           => ???
+      case TreeF.Let(varName, expr, in) => ???
 
-        case TreeF.DoubleLiteral(n) => Right(Lit(LitDouble(n)))
-        case TreeF.IntLiteral(n)    => Right(Lit(LitInt(n)))
-        case TreeF.Bool(b)          => Right(Lit(LitBool(b)))
-        case TreeF.Lst(ts)          => ts.traverse(compile).map(ts => Lit(LitList(ts)))
-      }
+      case TreeF.IntLiteral(n) =>
+        predicates match {
+          case List(predicate @ Predicate("Num", List(pTpe @ Type.Var(tvar)))) if tpe == pTpe =>
+            predName(predicate).map(predVarName => PApp(Lit(LitInt(n)), PArg.PVar(predVarName)))
+          case _ => error(s"Unexpected Type Error for Int Literal")
+        }
+
+      case TreeF.DoubleLiteral(n) => pure(Lit(LitDouble(n)))
+      case TreeF.Bool(b)          => pure(Lit(LitBool(b)))
+
+      case TreeF.Lst(ts) => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
+    }
   }
 
   private def pApp(term: Term, predicateNames: List[String]): Term =
-    predicateNames.foldLeft(term) { case (term, name) => PApp() }
+    predicateNames.foldLeft(term) { case (term, name) => PApp(term, PArg.PVar(name)) }
 }
 
 object TreeToTermCompiler {
   type PredName = String
-  case class Register(map: Map[Predicate, PredName]) {
-    def get(predicate: Predicate): Either[String, PredName] =
-      map.get(predicate).toRight(s"Unable to find predicate $predicate in register")
-  }
-
-  object Register {
-    val empty = Register(Map.empty)
-  }
 }

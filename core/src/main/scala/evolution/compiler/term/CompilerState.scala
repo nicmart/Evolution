@@ -10,3 +10,7 @@ private[term] case class CompilerState(count: Int, predicateNames: Map[Predicate
     if (predicateNames.isDefinedAt(predicate)) this
     else copy(predicateNames = predicateNames.updated(predicate, currentPredVarname)).withNewPredVar
 }
+
+private[term] object CompilerState {
+  val empty: CompilerState = CompilerState(0, Map.empty)
+}
