@@ -109,4 +109,15 @@ object TypingConfig {
         case inst @ ComparableInst(cmp) if List(tpe1) == inst.types => cmp
       }
       .toRight(s"No comparable instance found for $tpe1")
+
+  def instance(predicate: Predicate): Either[String, TypeClassInstance] =
+    predicate match {
+      case Predicate("Num", List(tpe))               => numeric(tpe).map(NumericInst.apply)
+      case Predicate("Add", List(tpe1, tpe2, tpe3))  => additive(tpe1, tpe2, tpe3).map(AdditiveInst.apply)
+      case Predicate("Mult", List(tpe1, tpe2, tpe3)) => multiplicative(tpe1, tpe2, tpe3).map(MultiplicativeInst.apply)
+      case Predicate("Invertible", List(tpe))        => invertible(tpe).map(InvertibleInst.apply)
+      case Predicate("Eq", List(tpe))                => equable(tpe).map(EquableInst.apply)
+      case Predicate("Comp", List(tpe))              => comparable(tpe).map(ComparableInst.apply)
+      case _                                         => Left(s"No instance found for predicate $predicate")
+    }
 }

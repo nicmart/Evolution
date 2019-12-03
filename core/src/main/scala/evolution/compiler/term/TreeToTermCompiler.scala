@@ -3,6 +3,7 @@ package evolution.compiler.term
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Compilation._
 import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.Type
@@ -25,12 +26,8 @@ class TreeToTermCompiler {
 
       case TreeF.IntLiteral(n) =>
         predicates match {
-          case List(predicate @ Predicate("Num", List(pTpe @ Type.Var(_)))) if tpe == pTpe =>
-            predName(predicate).map(predVarName => PApp(Lit(LitInt(n)), PArg.PVar(predVarName)))
-          case List(Predicate("Num", List(pTpe))) if tpe == pTpe =>
-            fromEither(TypingConfig.numeric(pTpe).map { numeric =>
-              PApp(Lit(LitInt(n)), PArg.PInst(NumericInst(numeric)))
-            })
+          case List(predicate @ Predicate("Num", List(pTpe))) if tpe == pTpe =>
+            argFromPred(predicate).map(pArg => PApp(Lit(LitInt(n)), pArg))
           case _ => error(s"Unexpected Type Error for Int Literal")
         }
 
@@ -41,8 +38,12 @@ class TreeToTermCompiler {
     }
   }
 
+  private def argFromPred(predicate: Predicate): Compilation[PArg] =
+    if (predicate.hasTypeVars) predName(predicate).map(PVar.apply)
+    else fromEither(TypingConfig.instance(predicate).map(PInst.apply))
+
   private def pApp(term: Term, predicateNames: List[String]): Term =
-    predicateNames.foldLeft(term) { case (term, name) => PApp(term, PArg.PVar(name)) }
+    predicateNames.foldLeft(term) { case (term, name) => PApp(term, PVar(name)) }
 }
 
 object TreeToTermCompiler {
