@@ -1,10 +1,12 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
+import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg
 import evolution.compiler.tree.TypedTree._
 import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
 class TreeToTermCompilerTest extends LanguageSpec {
@@ -38,6 +40,17 @@ class TreeToTermCompilerTest extends LanguageSpec {
             val term = compiler.compileM(tree).run(state).unsafeRight
 
             term shouldBe Term.PApp(Term.Lit(LitInt(0)), PArg.PVar(predVarName))
+          }
+
+          "monomorphic" in {
+            val predicate = Predicate("Num", List(Type.Double))
+            val qualifiedType = Qualified(List(predicate), Type.Double)
+            val tree = IntLiteral(0).as(qualifiedType)
+            val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
+
+            val term = compiler.compile(tree).unsafeRight
+
+            term shouldBe Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(instance))
           }
         }
       }

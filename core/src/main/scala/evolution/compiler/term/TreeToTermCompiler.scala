@@ -6,6 +6,7 @@ import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
 class TreeToTermCompiler {
@@ -24,8 +25,12 @@ class TreeToTermCompiler {
 
       case TreeF.IntLiteral(n) =>
         predicates match {
-          case List(predicate @ Predicate("Num", List(pTpe @ Type.Var(tvar)))) if tpe == pTpe =>
+          case List(predicate @ Predicate("Num", List(pTpe @ Type.Var(_)))) if tpe == pTpe =>
             predName(predicate).map(predVarName => PApp(Lit(LitInt(n)), PArg.PVar(predVarName)))
+          case List(Predicate("Num", List(pTpe))) if tpe == pTpe =>
+            fromEither(TypingConfig.numeric(pTpe).map { numeric =>
+              PApp(Lit(LitInt(n)), PArg.PInst(NumericInst(numeric)))
+            })
           case _ => error(s"Unexpected Type Error for Int Literal")
         }
 
