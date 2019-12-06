@@ -23,8 +23,9 @@ class TreeToTermCompiler {
       case TreeF.DoubleLiteral(n)    => appPredicates(Lit(LitDouble(n)), predicates)
       case TreeF.Bool(b)             => appPredicates(Lit(LitBool(b)), predicates)
 
-      case TreeF.Lambda(varName, expr) => ???
+      case TreeF.Lambda(varName, expr) => compileM(expr).map(Lambda(varName, _))
       case TreeF.App(f, args)          => ???
+
       case TreeF.Let(varName, expr, in) =>
         withLocalPredicates(expr.annotation.predicates) {
           for {

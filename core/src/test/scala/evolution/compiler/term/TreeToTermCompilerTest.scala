@@ -133,6 +133,15 @@ class TreeToTermCompilerTest extends LanguageSpec {
           term shouldBe expected
         }
       }
+
+      "lambdas" - {
+        "identity" in {
+          val tree = Lambda("x", Id("x").as(Type.Var("T"))).as(Type.Var("T") =>: Type.Var("T"))
+          val term = compiler.compile(tree).unsafeRight
+
+          term shouldBe Term.Lambda("x", Term.Id("x"))
+        }
+      }
     }
   }
 
