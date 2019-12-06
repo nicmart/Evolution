@@ -19,7 +19,7 @@ class TreeToTermCompiler {
 
     tree match {
       case TreeF.Id(name, primitive) =>
-        predNames(predicates.filter(_.hasTypeVars)).map(pApp(Id(name), _))
+        traverse(predicates)(argFromPred).map(pArgs => pApp(Id(name), pArgs))
       case TreeF.Lambda(varName, expr)  => ???
       case TreeF.App(f, args)           => ???
       case TreeF.Let(varName, expr, in) => ???
@@ -42,8 +42,8 @@ class TreeToTermCompiler {
     if (predicate.hasTypeVars) predName(predicate).map(PVar.apply)
     else fromEither(TypingConfig.instance(predicate).map(PInst.apply))
 
-  private def pApp(term: Term, predicateNames: List[String]): Term =
-    predicateNames.foldLeft(term) { case (term, name) => PApp(term, PVar(name)) }
+  private def pApp(term: Term, pArgs: List[PArg]): Term =
+    pArgs.foldLeft(term)(PApp)
 }
 
 object TreeToTermCompiler {
