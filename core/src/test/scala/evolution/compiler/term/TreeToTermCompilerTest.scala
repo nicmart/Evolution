@@ -8,7 +8,7 @@ import evolution.compiler.term.Term.{PApp, PArg}
 import evolution.compiler.tree.AnnotatedTree
 import evolution.compiler.tree.AnnotatedTree.AwaitingAnnotation
 import evolution.compiler.tree.TypedTree._
-import evolution.compiler.types.Type
+import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
@@ -36,7 +36,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
           "polymorphic" in {
             val predicate = Predicate("Num", List(Type.Var("X")))
             val tree = IntLiteral(0).as(Type.Var("X"), predicate)
-            val state = CompilerState.empty.withPred(predicate)
+            val state = CompilerState.empty.withPredicate(predicate)
             val predVarName = state.predName(predicate).get
 
             val term = compiler.compileM(tree).run(state).unsafeRight
@@ -67,7 +67,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
         "qualified with non-resolved predicates" in {
           val predicate = Predicate("MyPred", List(Type.Var("X"), Type.Double))
           val tree = Id("x").as(Type.Var("X"), predicate)
-          val state = CompilerState.empty.withPred(predicate)
+          val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
           term shouldBe PApp(Term.Id("x"), PVar(state.predName(predicate).get))
@@ -76,22 +76,22 @@ class TreeToTermCompilerTest extends LanguageSpec {
         "qualified with resolved predicate" in {
           val predicate = Predicate("Num", List(Type.Double))
           val tree = Id("x").as(Type.Double, predicate)
-          val state = CompilerState.empty.withPred(predicate)
+          val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe PApp(Term.Id("x"), PInst(TypingConfig.instance(predicate).unsafeRight))
+          term shouldBe PApp(Term.Id("x"), PInst(predicate.instance))
         }
 
         "qualified with mixed predicates" in {
           val predicate1 = Predicate("MyPred", List(Type.Var("X"), Type.Double))
           val predicate2 = Predicate("Num", List(Type.Double))
           val tree = Id("x").as(Type.Var("X"), predicate1, predicate2)
-          val state = CompilerState.empty.withPred(predicate1)
+          val state = CompilerState.empty.withPredicate(predicate1)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
           term shouldBe PApp(
             PApp(Term.Id("x"), PVar(state.predName(predicate1).get)),
-            PInst(TypingConfig.instance(predicate2).unsafeRight)
+            PInst(predicate2.instance)
           )
         }
       }
@@ -108,6 +108,30 @@ class TreeToTermCompilerTest extends LanguageSpec {
 
           term shouldBe Term.Let("x", Term.Lit(LitBool(true)), Term.Id("x"))
         }
+
+        "polymorphic: x = (2: Num(T) => T) in (x: Double)" in {
+          val predicate = Predicate("Num", List(Type.Var("T")))
+          val predicateInst = Predicate("Num", List(Type.Double))
+
+          val tree = Let(
+            "x",
+            IntLiteral(2).as(Type.Var("T"), predicate),
+            Id("x").as(Type.Double, predicateInst)
+          ).as(Type.Double)
+
+          val pVarName = CompilerState.empty.withPredicate(predicate).predName(predicate).get
+
+          val term = compiler.compile(tree).unsafeRight
+
+          val expected =
+            Term.Let(
+              "x",
+              Term.PLambda(pVarName, PApp(Term.Lit(LitInt(2)), PVar(pVarName))),
+              Term.PApp(Term.Id("x"), PInst(predicateInst.instance))
+            )
+
+          term shouldBe expected
+        }
       }
     }
   }
@@ -117,5 +141,9 @@ class TreeToTermCompilerTest extends LanguageSpec {
   private implicit class AwaitingAnnotationOps(awaitingAnnotation: AwaitingAnnotation[Qualified[Type]]) {
     def as(tpe: Type, predicates: Predicate*): AnnotatedTree[Qualified[Type]] =
       awaitingAnnotation.as(Qualified(predicates.toList, tpe))
+  }
+
+  private implicit class PredicateOps(predicate: Predicate) {
+    def instance: TypeClassInstance = TypingConfig.instance(predicate).unsafeRight
   }
 }

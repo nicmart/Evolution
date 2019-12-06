@@ -18,9 +18,9 @@ private[term] object Compilation {
   def traverse[A, B](ts: List[A])(f: A => Compilation[B]): Compilation[List[B]] =
     Compilation(state => ts.traverse(t => f(t).run(state)))
   def predName(predicate: Predicate): Compilation[String] =
-    Compilation(state => state.predName(predicate).toRight(s"Pred not found: $predicate"))
-  def predNames(predicates: List[Predicate]): Compilation[List[String]] =
-    traverse(predicates)(predName)
-  def withLocalPred[T](predicate: Predicate)(ft: Compilation[T]): Compilation[T] =
-    Compilation(state => ft.run(state.withPred(predicate)))
+    Compilation(state => state.predName(predicate).toRight(s"Predicate not found: $predicate"))
+  def withLocalPredicate[T](predicate: Predicate)(ft: Compilation[T]): Compilation[T] =
+    Compilation(state => ft.run(state.withPredicate(predicate)))
+  def withLocalPredicates[T](predicates: List[Predicate])(ft: Compilation[T]): Compilation[T] =
+    Compilation(state => ft.run(state.withPredicates(predicates)))
 }
