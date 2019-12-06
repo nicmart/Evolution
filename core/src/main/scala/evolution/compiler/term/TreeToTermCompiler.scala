@@ -8,7 +8,7 @@ import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
-class TreeToTermCompiler {
+final class TreeToTermCompiler {
   def compile(tree: TypedTree): Either[String, Term] =
     compileM(tree).run(CompilerState.empty)
 
@@ -68,8 +68,4 @@ class TreeToTermCompiler {
 
   private def app(term: Term, args: List[Term]): Term =
     args.foldLeft(term)(App)
-}
-
-object TreeToTermCompiler {
-  type PredName = String
 }
