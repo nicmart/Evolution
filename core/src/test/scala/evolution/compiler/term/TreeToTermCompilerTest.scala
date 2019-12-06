@@ -96,6 +96,19 @@ class TreeToTermCompilerTest extends LanguageSpec {
         }
       }
 
+      "lets" - {
+        "monomorphic: x = true in x" in {
+          val tree = Let(
+            "x",
+            Bool(true).as(Type.Bool),
+            Id("x").as(Type.Bool)
+          ).as(Type.Bool)
+
+          val term = compiler.compile(tree).unsafeRight
+
+          term shouldBe Term.Let("x", Term.Lit(LitBool(true)), Term.Id("x"))
+        }
+      }
     }
   }
 

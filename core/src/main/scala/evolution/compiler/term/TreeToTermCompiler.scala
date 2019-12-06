@@ -23,9 +23,13 @@ class TreeToTermCompiler {
       case TreeF.DoubleLiteral(n)    => appPredicates(Lit(LitDouble(n)), predicates)
       case TreeF.Bool(b)             => appPredicates(Lit(LitBool(b)), predicates)
 
-      case TreeF.Lambda(varName, expr)  => ???
-      case TreeF.App(f, args)           => ???
-      case TreeF.Let(varName, expr, in) => ???
+      case TreeF.Lambda(varName, expr) => ???
+      case TreeF.App(f, args)          => ???
+      case TreeF.Let(varName, expr, in) =>
+        for {
+          expr <- compileM(expr)
+          in <- compileM(in)
+        } yield Let(varName, expr, in)
 
       case TreeF.Lst(ts) => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
     }
