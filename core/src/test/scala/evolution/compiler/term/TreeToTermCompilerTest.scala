@@ -142,6 +142,22 @@ class TreeToTermCompilerTest extends LanguageSpec {
           term shouldBe Term.Lambda("x", Term.Id("x"))
         }
       }
+
+      "applications" - {
+        "of identifiers" in {
+          val tree =
+            App
+              .of(
+                Id("x").as(Type.Var("X") =>: Type.Var("X") =>: Type.Var("X")),
+                IntLiteral(1).as(Type.Var("X")),
+                IntLiteral(2).as(Type.Var("X"))
+              )
+              .as(Type.Var("X"))
+          val term = compiler.compile(tree).unsafeRight
+
+          term shouldBe Term.App(Term.App(Term.Id("x"), Term.Lit(LitInt(1))), Term.Lit(LitInt(2)))
+        }
+      }
     }
   }
 

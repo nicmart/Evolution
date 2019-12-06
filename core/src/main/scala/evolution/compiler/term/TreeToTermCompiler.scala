@@ -6,8 +6,6 @@ import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
-import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
 class TreeToTermCompiler {
@@ -15,16 +13,26 @@ class TreeToTermCompiler {
     compileM(tree).run(CompilerState.empty)
 
   private[term] def compileM(typedTree: TypedTree): Compilation[Term] = {
-    val AnnotatedTree(Qualified(predicates, tpe), tree) = typedTree
+    val AnnotatedTree(Qualified(predicates, _), tree) = typedTree
 
     tree match {
-      case TreeF.Id(name, primitive) => appPredicates(Id(name), predicates)
-      case TreeF.IntLiteral(n)       => appPredicates(Lit(LitInt(n)), predicates)
-      case TreeF.DoubleLiteral(n)    => appPredicates(Lit(LitDouble(n)), predicates)
-      case TreeF.Bool(b)             => appPredicates(Lit(LitBool(b)), predicates)
+      case TreeF.Id(name, _) => appPredicates(Id(name), predicates)
+
+      case TreeF.IntLiteral(n) => appPredicates(Lit(LitInt(n)), predicates)
+
+      case TreeF.DoubleLiteral(n) => appPredicates(Lit(LitDouble(n)), predicates)
+
+      case TreeF.Bool(b) => appPredicates(Lit(LitBool(b)), predicates)
+
+      case TreeF.Lst(ts) => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
 
       case TreeF.Lambda(varName, expr) => compileM(expr).map(Lambda(varName, _))
-      case TreeF.App(f, args)          => ???
+
+      case TreeF.App(f, args) =>
+        for {
+          f <- compileM(f)
+          args <- traverse(args.toList)(compileM)
+        } yield app(f, args)
 
       case TreeF.Let(varName, expr, in) =>
         withLocalPredicates(expr.annotation.predicates) {
@@ -34,8 +42,6 @@ class TreeToTermCompiler {
             in <- compileM(in)
           } yield Let(varName, exprTermWithPred, in)
         }
-
-      case TreeF.Lst(ts) => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
     }
   }
 
@@ -59,6 +65,9 @@ class TreeToTermCompiler {
 
   private def pApp(term: Term, pArgs: List[PArg]): Term =
     pArgs.foldLeft(term)(PApp)
+
+  private def app(term: Term, args: List[Term]): Term =
+    args.foldLeft(term)(App)
 }
 
 object TreeToTermCompiler {
