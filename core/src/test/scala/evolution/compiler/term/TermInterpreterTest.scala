@@ -1,13 +1,12 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import org.scalatest.FreeSpec
-import Term._
-import Term.Literal._
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.term.Term.PArg.PVar
+import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term.PArg.{PInst, PVar}
+import evolution.compiler.term.Term._
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClassInstance.NumericInst
+import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
 
 import scala.util.Try
 
@@ -85,24 +84,43 @@ class TermInterpreterTest extends LanguageSpec {
 
       interpreter.interpret(term) shouldBe 3
     }
+  }
+  "pApp" - {
+    "of monomorphic int literals" in {
+      val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
+      val term = Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(instance))
 
-    "pApp" - {
-      "of monomorphic int literals" in {
-        val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
-        val term = Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(instance))
+      interpreter.interpret(term) shouldBe a[Double]
+      interpreter.interpret(term) shouldBe 0
+    }
 
-        interpreter.interpret(term) shouldBe a[Double]
-        interpreter.interpret(term) shouldBe 0
+    "of polymorphic int literals" in {
+      val term = Term.PApp(Term.Lit(LitInt(0)), PVar("P0"))
+
+      val interpreter = RegisterBasedInterpreter.fresh
+      interpreter.bindInstance("P0", TypingConfig.numeric(Type.Double).unsafeRight)
+
+      interpreter.interpret(term) shouldBe a[Double]
+      interpreter.interpret(term) shouldBe 0
+    }
+
+    "of custom constants" - {
+      "add" in {
+        val instance = AdditiveInst(TypingConfig.additive(Type.Double, Type.Integer, Type.Double).unsafeRight)
+        val term = PApp(Id("add"), PInst(instance))
+
+        val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
+        f(3.5)(1) shouldBe 4.5
       }
 
-      "of polymorphic int literals" in {
-        val term = Term.PApp(Term.Lit(LitInt(0)), PVar("P0"))
+      "poly add" in {
+        val term = PApp(Id("add"), PVar("P0"))
 
         val interpreter = RegisterBasedInterpreter.fresh
-        interpreter.bindInstance("P0", TypingConfig.numeric(Type.Double).unsafeRight)
+        interpreter.bindInstance("P0", TypingConfig.additive(Type.Double, Type.Integer, Type.Double).unsafeRight)
 
-        interpreter.interpret(term) shouldBe a[Double]
-        interpreter.interpret(term) shouldBe 0
+        val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
+        f(3.5)(1) shouldBe 4.5
       }
     }
   }
