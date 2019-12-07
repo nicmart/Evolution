@@ -5,9 +5,11 @@ import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
+import evolution.compiler.tree.TreeF.DoubleLiteral
 import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
 import evolution.compiler.types.TypeClasses.Predicate
+import evolution.geometry.Point
 
 import scala.util.Try
 
@@ -135,6 +137,33 @@ class TermInterpreterTest extends LanguageSpec {
       val f = interpreter.interpret(term).asInstanceOf[Any => Any]
 
       f(numInstance) shouldBe 11
+    }
+  }
+
+  "let" - {
+    "of a literal" in {
+      val term = Let("x", Lit(LitDouble(1.1)), Id("x"))
+
+      interpreter.interpret(term) shouldBe 1.1
+    }
+
+    "of a polymorphic expression" in {
+      val term = Let("id", Lambda("x", Id("x")), Id("id"))
+      val f = interpreter.interpret(term).asInstanceOf[Any => Any]
+      f("abc") shouldBe "abc"
+      f(1) shouldBe 1
+    }
+
+    "of a qualified polymorphic expression" in {
+      val term =
+        Let(
+          "double",
+          PLambda("additive", Lambda("x", App(App(PApp(Id("add"), PVar("additive")), Id("x")), Id("x")))),
+          Id("double")
+        )
+      val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
+      f(instance("Add", Type.Double, Type.Double, Type.Double))(1.5) shouldBe 3
+      f(instance("Add", Type.Point, Type.Point, Type.Point))(Point(1, 2)) shouldBe Point(2, 4)
     }
   }
 

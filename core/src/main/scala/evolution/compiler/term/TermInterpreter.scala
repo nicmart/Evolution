@@ -20,11 +20,13 @@ class RegisterBasedInterpreter private (
     instancesRegister: mutable.Map[String, Any]
 ) {
   def interpret(term: Term): Any = term match {
-    case Lit(LitInt(n))        => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
-    case Lit(LitBool(b))       => b
-    case Lit(LitDouble(d))     => d
-    case Lit(LitList(terms))   => ???
-    case Let(name, expr, body) => ???
+    case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
+    case Lit(LitBool(b))     => b
+    case Lit(LitDouble(d))   => d
+    case Lit(LitList(terms)) => ???
+    case Let(name, expr, body) =>
+      bind(name, interpret(expr)) // TODO this is not local
+      interpret(body)
     case Lambda(name, body) =>
       (x: Any) => {
         bind(name, x) // TODO this is not local
