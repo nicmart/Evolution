@@ -4,6 +4,10 @@ import evolution.compiler.LanguageSpec
 import org.scalatest.FreeSpec
 import Term._
 import Term.Literal._
+import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.term.Term.PArg.PVar
+import evolution.compiler.types.Type
+import evolution.compiler.types.TypeClassInstance.NumericInst
 
 import scala.util.Try
 
@@ -80,6 +84,26 @@ class TermInterpreterTest extends LanguageSpec {
       interpreter.bind("f", (x: Double) => (y: Double) => x + y)
 
       interpreter.interpret(term) shouldBe 3
+    }
+
+    "pApp" - {
+      "of monomorphic int literals" in {
+        val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
+        val term = Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(instance))
+
+        interpreter.interpret(term) shouldBe a[Double]
+        interpreter.interpret(term) shouldBe 0
+      }
+
+      "of polymorphic int literals" in {
+        val term = Term.PApp(Term.Lit(LitInt(0)), PVar("P0"))
+
+        val interpreter = RegisterBasedInterpreter.fresh
+        interpreter.bindInstance("P0", TypingConfig.numeric(Type.Double).unsafeRight)
+
+        interpreter.interpret(term) shouldBe a[Double]
+        interpreter.interpret(term) shouldBe 0
+      }
     }
   }
 
