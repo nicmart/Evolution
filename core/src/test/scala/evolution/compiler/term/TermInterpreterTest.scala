@@ -65,5 +65,23 @@ class TermInterpreterTest extends LanguageSpec {
     }
   }
 
+  "apps" - {
+    "of single argument" in {
+      val term = App(Id("f"), Lit(LitDouble(1)))
+      val interpreter = RegisterBasedInterpreter.fresh
+      interpreter.bind("f", (x: Double) => x + 1)
+
+      interpreter.interpret(term) shouldBe 2
+    }
+
+    "of multiple arguments" in {
+      val term = App(App(Id("f"), Lit(LitDouble(1))), Lit(LitDouble(2)))
+      val interpreter = RegisterBasedInterpreter.fresh
+      interpreter.bind("f", (x: Double) => (y: Double) => x + y)
+
+      interpreter.interpret(term) shouldBe 3
+    }
+  }
+
   lazy val interpreter = new TermInterpreter
 }

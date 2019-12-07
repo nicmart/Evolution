@@ -22,7 +22,8 @@ class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
         bind(name, x)
         interpret(body)
       }
-    case App(f, x)            => ???
+    case App(f, x) =>
+      interpret(f).asInstanceOf[Any => Any](interpret(x))
     case PLambda(pName, body) => ???
     case PApp(term, arg)      => ???
   }
