@@ -45,5 +45,25 @@ class TermInterpreterTest extends LanguageSpec {
     }
   }
 
+  "lambdas" - {
+    "identity" in {
+      val term = Lambda("x", Id("x"))
+
+      val interpreted = interpreter.interpret(term).asInstanceOf[Any => Any]
+
+      interpreted("anything") shouldBe "anything"
+      interpreted(12345) shouldBe 12345
+    }
+
+    "with multiple vars" in {
+      val term = Lambda("x", Lambda("y", Id("x")))
+
+      val interpreted = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
+
+      interpreted("first")("second") shouldBe "first"
+      interpreted(1)(2) shouldBe 1
+    }
+  }
+
   lazy val interpreter = new TermInterpreter
 }

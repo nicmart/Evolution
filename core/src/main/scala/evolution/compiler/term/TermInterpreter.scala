@@ -17,10 +17,14 @@ class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
     case Lit(LitList(terms))   => ???
     case Id(name)              => register(name)
     case Let(name, expr, body) => ???
-    case Lambda(name, body)    => ???
-    case App(f, x)             => ???
-    case PLambda(pName, body)  => ???
-    case PApp(term, arg)       => ???
+    case Lambda(name, body) =>
+      (x: Any) => {
+        bind(name, x)
+        interpret(body)
+      }
+    case App(f, x)            => ???
+    case PLambda(pName, body) => ???
+    case PApp(term, arg)      => ???
   }
 
   def bind(name: String, value: Any): Unit = register.update(name, value)
