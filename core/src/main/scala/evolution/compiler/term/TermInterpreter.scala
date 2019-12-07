@@ -20,11 +20,10 @@ class RegisterBasedInterpreter private (
     instancesRegister: mutable.Map[String, Any]
 ) {
   def interpret(term: Term): Any = term match {
-    case Lit(LitInt(n))        => n
+    case Lit(LitInt(n))        => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))       => b
     case Lit(LitDouble(d))     => d
     case Lit(LitList(terms))   => ???
-    case Id(name)              => register(name)
     case Let(name, expr, body) => ???
     case Lambda(name, body) =>
       (x: Any) => {
@@ -36,19 +35,13 @@ class RegisterBasedInterpreter private (
 
     case PLambda(pName, body) => ???
 
-    case PApp(Lit(LitInt(n)), PInst(NumericInst(num))) =>
-      MaterializeNumeric(num)(n)
+    case Id(name) => register(name)
 
-    case PApp(Lit(LitInt(n)), PVar(name)) =>
-      MaterializeNumeric(instancesRegister(name).asInstanceOf[Numeric[Any]])(n)
+    case PApp(term, PInst(inst)) =>
+      interpret(term).asInstanceOf[Any => Any](inst)
 
-    case PApp(Id("add"), PInst(AdditiveInst(add))) =>
-      val f = MaterializeAddition(add) // TODO curry Materialization for PERFOMANCE!
-      (x: Any) => (y: Any) => f(x, y)
-
-    case PApp(Id("add"), PVar(name)) =>
-      val f = MaterializeAddition(instancesRegister(name).asInstanceOf[Additive[Any, Any, Any]]) // TODO curry Materialization for PERFOMANCE!
-      (x: Any) => (y: Any) => f(x, y)
+    case PApp(term, PVar(pName)) =>
+      interpret(term).asInstanceOf[Any => Any](instancesRegister(pName))
   }
 
   def bind(name: String, value: Any): Unit = register.update(name, value)
@@ -57,5 +50,11 @@ class RegisterBasedInterpreter private (
 
 object RegisterBasedInterpreter {
   def fresh: RegisterBasedInterpreter =
-    new RegisterBasedInterpreter(mutable.Map.empty, mutable.Map.empty)
+    new RegisterBasedInterpreter(mutable.Map.from(constants), mutable.Map.empty)
+
+  val constants: Map[String, Any] = Map(
+    "add" -> { (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) =>
+      MaterializeAddition(p.add)(x, y)
+    }
+  )
 }

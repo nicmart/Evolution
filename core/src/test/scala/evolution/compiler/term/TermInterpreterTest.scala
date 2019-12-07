@@ -5,8 +5,9 @@ import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
-import evolution.compiler.types.Type
+import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
+import evolution.compiler.types.TypeClasses.Predicate
 
 import scala.util.Try
 
@@ -14,8 +15,8 @@ class TermInterpreterTest extends LanguageSpec {
   "literals" - {
     "integers" in {
       val term = Lit(LitInt(123))
-      val result = interpreter.interpret(term)
-      result shouldBe 123
+      val result = interpreter.interpret(term).asInstanceOf[Any => Any]
+      result(instance("Num", Type.Integer)) shouldBe 123
     }
 
     "booleans" in {
@@ -85,10 +86,11 @@ class TermInterpreterTest extends LanguageSpec {
       interpreter.interpret(term) shouldBe 3
     }
   }
+
   "pApp" - {
     "of monomorphic int literals" in {
-      val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
-      val term = Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(instance))
+      val numInstance = instance("Num", Type.Double)
+      val term = Term.PApp(Term.Lit(LitInt(0)), PArg.PInst(numInstance))
 
       interpreter.interpret(term) shouldBe a[Double]
       interpreter.interpret(term) shouldBe 0
@@ -98,7 +100,7 @@ class TermInterpreterTest extends LanguageSpec {
       val term = Term.PApp(Term.Lit(LitInt(0)), PVar("P0"))
 
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bindInstance("P0", TypingConfig.numeric(Type.Double).unsafeRight)
+      interpreter.bindInstance("P0", instance("Num", Type.Double))
 
       interpreter.interpret(term) shouldBe a[Double]
       interpreter.interpret(term) shouldBe 0
@@ -106,8 +108,7 @@ class TermInterpreterTest extends LanguageSpec {
 
     "of custom constants" - {
       "add" in {
-        val instance = AdditiveInst(TypingConfig.additive(Type.Double, Type.Integer, Type.Double).unsafeRight)
-        val term = PApp(Id("add"), PInst(instance))
+        val term = PApp(Id("add"), PInst(instance("Add", Type.Double, Type.Integer, Type.Double)))
 
         val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5
@@ -117,13 +118,19 @@ class TermInterpreterTest extends LanguageSpec {
         val term = PApp(Id("add"), PVar("P0"))
 
         val interpreter = RegisterBasedInterpreter.fresh
-        interpreter.bindInstance("P0", TypingConfig.additive(Type.Double, Type.Integer, Type.Double).unsafeRight)
+        val addInstance = instance("Add", Type.Double, Type.Integer, Type.Double)
+        interpreter.bindInstance("P0", addInstance)
 
         val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5
       }
     }
   }
+
+  "pLambda" - {}
+
+  private def instance(id: String, types: Type*): TypeClassInstance =
+    TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
 
   lazy val interpreter = new TermInterpreter
 }
