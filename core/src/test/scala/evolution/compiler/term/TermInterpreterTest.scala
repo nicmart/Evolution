@@ -5,6 +5,8 @@ import org.scalatest.FreeSpec
 import Term._
 import Term.Literal._
 
+import scala.util.Try
+
 class TermInterpreterTest extends LanguageSpec {
   "literals" - {
     "integers" in {
@@ -23,6 +25,23 @@ class TermInterpreterTest extends LanguageSpec {
       val term = Lit(LitDouble(1.1))
       val result = interpreter.interpret(term)
       result shouldBe 1.1
+    }
+  }
+
+  "identifiers" - {
+    "in the register" in {
+      val term = Id("x")
+      val interpreter = RegisterBasedInterpreter.fresh
+      interpreter.bind("x", 12345)
+
+      interpreter.interpret(term) shouldBe 12345
+    }
+
+    "not in the register" in {
+      val term = Id("x")
+      val interpreter = RegisterBasedInterpreter.fresh
+
+      Try(interpreter.interpret(term)).isFailure shouldBe true
     }
   }
 
