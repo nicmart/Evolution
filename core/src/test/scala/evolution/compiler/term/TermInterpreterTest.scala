@@ -127,7 +127,16 @@ class TermInterpreterTest extends LanguageSpec {
     }
   }
 
-  "pLambda" - {}
+  "pLambda" - {
+    "of a PApp" in {
+      val term = PLambda("P0", PApp(Lit(LitInt(11)), PVar("P0")))
+      val numInstance = instance("Num", Type.Double)
+
+      val f = interpreter.interpret(term).asInstanceOf[Any => Any]
+
+      f(numInstance) shouldBe 11
+    }
+  }
 
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight

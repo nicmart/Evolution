@@ -33,7 +33,11 @@ class RegisterBasedInterpreter private (
     case App(f, x) =>
       interpret(f).asInstanceOf[Any => Any](interpret(x))
 
-    case PLambda(pName, body) => ???
+    case PLambda(pName, body) =>
+      (instance: Any) => {
+        bindInstance(pName, instance) // TODO this is not local
+        interpret(body)
+      }
 
     case Id(name) => register(name)
 
