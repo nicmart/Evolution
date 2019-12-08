@@ -32,6 +32,12 @@ class TermInterpreterTest extends LanguageSpec {
       val result = interpreter.interpret(term)
       result shouldBe 1.1
     }
+
+    "lists" in {
+      val term = Lit(LitList(List(Lit(LitBool(true)), Lit(LitDouble(1.1)))))
+      val result = interpreter.interpret(term)
+      result shouldBe List(true, 1.1)
+    }
   }
 
   "identifiers" - {

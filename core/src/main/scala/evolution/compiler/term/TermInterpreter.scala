@@ -23,13 +23,15 @@ class RegisterBasedInterpreter private (
     case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))     => b
     case Lit(LitDouble(d))   => d
-    case Lit(LitList(terms)) => ???
+    case Lit(LitList(terms)) => terms.map(interpret)
+
     case Let(name, expr, body) =>
-      bind(name, interpret(expr)) // TODO this is not local
+      bind(name, interpret(expr))
       interpret(body)
+
     case Lambda(name, body) =>
       (x: Any) => {
-        bind(name, x) // TODO this is not local
+        bind(name, x)
         interpret(body)
       }
     case App(f, x) =>
@@ -37,7 +39,7 @@ class RegisterBasedInterpreter private (
 
     case PLambda(pName, body) =>
       (instance: Any) => {
-        bindInstance(pName, instance) // TODO this is not local
+        bindInstance(pName, instance)
         interpret(body)
       }
 
