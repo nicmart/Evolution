@@ -13,10 +13,9 @@ import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
-import evolution.app.model.Drawing
+import evolution.app.model.{CodeCompiler, Drawing, ExprBasedCodeCompiler}
 import evolution.app.conf.Conf
-import evolution.app.model.CodeCompiler
-import evolution.compiler.phases.FullCompiler
+import evolution.compiler.phases.ExprBasedFullCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.phases.compiler.DefaultCompiler
@@ -114,10 +113,10 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private def codeCompiler(pageState: PageState) = {
+  private def codeCompiler(pageState: PageState): CodeCompiler = {
     println(s"materializer is ${pageState.materializer}")
-    new CodeCompiler(
-      new FullCompiler(
+    new ExprBasedCodeCompiler(
+      new ExprBasedFullCompiler(
         FastParseParser,
         new PredicatesSolverTyper(
           new RecursiveTyper,
