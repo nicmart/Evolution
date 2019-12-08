@@ -12,6 +12,7 @@ class UniqueIdRenamer {
     case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))
     case Lit(_)           => pure(term)
     case Id(_)            => pure(term)
+    case Inst(_)          => pure(term)
 
     case Let(name, expr, body) =>
       for {
@@ -28,20 +29,11 @@ class UniqueIdRenamer {
         renamedBody <- renameM(bodyWithNewName)
       } yield Lambda(newName, renamedBody)
 
-    case PLambda(pName, body) =>
-      for {
-        newName <- freshVar
-        bodyWithNewName = TermRenamer.rename(pName, newName)(body)
-        renamedBody <- renameM(bodyWithNewName)
-      } yield PLambda(newName, renamedBody)
-
     case App(f, x) =>
       for {
         f <- renameM(f)
         x <- renameM(x)
       } yield App(f, x)
-
-    case PApp(term, arg) => renameM(term).map(PApp(_, arg))
   }
 }
 

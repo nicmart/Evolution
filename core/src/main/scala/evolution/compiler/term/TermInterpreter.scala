@@ -2,7 +2,6 @@ package evolution.compiler.term
 
 import evolution.compiler.impl.evaluation.{MaterializeAddition, MaterializeNumeric}
 import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
 
@@ -32,19 +31,9 @@ class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
     case App(f, x) =>
       interpret(f).asInstanceOf[Any => Any](interpret(x))
 
-    case PLambda(pName, body) =>
-      (instance: Any) => {
-        bind(pName, instance)
-        interpret(body)
-      }
-
     case Id(name) => register(name)
 
-    case PApp(term, PInst(inst)) =>
-      interpret(term).asInstanceOf[Any => Any](inst)
-
-    case PApp(term, PVar(pName)) =>
-      interpret(term).asInstanceOf[Any => Any](register(pName))
+    case Inst(inst) => inst
   }
 
   def bind(name: String, value: Any): Unit = register.update(name, value)

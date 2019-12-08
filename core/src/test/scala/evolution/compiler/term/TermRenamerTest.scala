@@ -3,7 +3,6 @@ package evolution.compiler.term
 import evolution.compiler.LanguageSpec
 import Term._
 import evolution.compiler.term.Term.Literal.LitList
-import evolution.compiler.term.Term.PArg.PVar
 
 class TermRenamerTest extends LanguageSpec {
   "convert identifiers" in {
@@ -32,21 +31,6 @@ class TermRenamerTest extends LanguageSpec {
   "do not convert shadowed identifiers in lambda terms" in {
     val term = Lambda("x", Id("x"))
     convert("x", "y")(term) shouldBe term
-  }
-
-  "convert predicate vars" in {
-    val term = PApp(Id("hi"), PVar("x"))
-    convert("x", "y")(term) shouldBe PApp(Id("hi"), PVar("y"))
-  }
-
-  "convert predicate lambdas" in {
-    val term = PLambda("z", Id("x"))
-    convert("x", "y")(term) shouldBe PLambda("z", Id("y"))
-  }
-
-  "do not shadowed identifiers in predicate lambdas" in {
-    val term = PLambda("p", PApp(Id("x"), PVar("p")))
-    convert("p", "y")(term) shouldBe term
   }
 
   "convert lists" in {

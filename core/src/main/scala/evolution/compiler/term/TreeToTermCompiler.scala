@@ -3,7 +3,6 @@ package evolution.compiler.term
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Compilation._
 import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
@@ -46,25 +45,22 @@ final class TreeToTermCompiler {
   }
 
   private def lambdaFromPredicates(predicates: List[Predicate], term: Term): Compilation[Term] =
-    pVars(predicates).map(pLambda(_, term))
+    pVars(predicates).map(lambda(_, term))
 
   private def pVars(predicates: List[Predicate]): Compilation[List[String]] =
     traverse(predicates.filter(_.hasTypeVars))(predName)
 
   private def appPredicates(term: Term, predicates: List[Predicate]): Compilation[Term] =
-    traverse(predicates)(argFromPred).map(pArgs => pApp(term, pArgs))
+    traverse(predicates)(argFromPred).map(pArgs => app(term, pArgs))
 
-  private def argFromPred(predicate: Predicate): Compilation[PArg] =
-    if (predicate.hasTypeVars) predName(predicate).map(PVar.apply)
-    else fromEither(TypingConfig.instance(predicate).map(PInst.apply))
+  private def argFromPred(predicate: Predicate): Compilation[Term] =
+    if (predicate.hasTypeVars) predName(predicate).map(Id.apply)
+    else fromEither(TypingConfig.instance(predicate).map(Inst.apply))
 
-  private def pLambda(vars: List[String], term: Term): Term =
+  private def lambda(vars: List[String], term: Term): Term =
     vars.foldLeft(term) { (term, name) =>
-      PLambda(name, term)
+      Lambda(name, term)
     }
-
-  private def pApp(term: Term, pArgs: List[PArg]): Term =
-    pArgs.foldLeft(term)(PApp)
 
   private def app(term: Term, args: List[Term]): Term =
     args.foldLeft(term)(App)

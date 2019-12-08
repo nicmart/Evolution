@@ -10,10 +10,7 @@ object Term {
   case class Let(name: String, expr: Term, body: Term) extends Term
   case class Lambda(name: String, body: Term) extends Term
   case class App(f: Term, x: Term) extends Term
-
-  case class PLit(instance: TypeClassInstance)
-  case class PLambda(pName: String, body: Term) extends Term
-  case class PApp(term: Term, arg: PArg) extends Term
+  case class Inst(instance: TypeClassInstance) extends Term
 
   sealed abstract class Literal
   object Literal {
@@ -21,11 +18,5 @@ object Term {
     case class LitBool(b: Boolean) extends Literal
     case class LitDouble(d: Double) extends Literal
     case class LitList(ts: List[Term]) extends Literal
-  }
-
-  sealed abstract class PArg
-  object PArg {
-    case class PVar(name: String) extends PArg
-    case class PInst(instance: TypeClassInstance) extends PArg
   }
 }
