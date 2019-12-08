@@ -1,20 +1,20 @@
 package evolution.compiler.stdlib
 
-import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.compiler.phases.ModuleCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
-import evolution.compiler.phases.{ExprModule, ExprModuleCompiler}
+import evolution.compiler.term.{Module, TreeToTermCompiler}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.NoOpLogger
 
 object StandardLibraryModule {
-  val module: Either[String, ExprModule] = moduleCompiler.compile(code, initialModule)
+  val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
 
-  private lazy val initialModule = ExprModule(
+  private lazy val initialModule = Module(
     TypingConfig.constantQualifiedTypes
       .withAssumption(model.Assumption("top", Qualified(Scheme(Type.Double)), false))
       .withAssumption(model.Assumption("bottom", Qualified(Scheme(Type.Double)), false))
@@ -27,7 +27,7 @@ object StandardLibraryModule {
   private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
 
   private lazy val moduleCompiler =
-    new ExprModuleCompiler(FastParseParser, typer, DefaultCompiler, NoOpLogger)
+    new ModuleCompiler(FastParseParser, typer, new TreeToTermCompiler, NoOpLogger)
 
   private lazy val code = StdLib.code
 }
