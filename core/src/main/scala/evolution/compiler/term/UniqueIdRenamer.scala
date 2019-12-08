@@ -9,9 +9,9 @@ class UniqueIdRenamer {
   def rename(term: Term): Term = renameM(term).runA(0)
 
   private def renameM(term: Term): Renamed[Term] = term match {
-    case Lit(LitList(ts)) => ???
-    case Lit(lit)         => ???
-    case Id(name)         => pure(Id(name))
+    case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))
+    case Lit(_)           => pure(term)
+    case Id(_)            => pure(term)
     case Let(name, expr, body) =>
       for {
         renamedExpr <- renameM(expr)
@@ -25,9 +25,14 @@ class UniqueIdRenamer {
         bodyWithNewName = TermRenamer.rename(name, newName)(body)
         renamedBody <- renameM(bodyWithNewName)
       } yield Lambda(newName, renamedBody)
-    case App(f, x)            => ???
-    case PLambda(pName, body) => ???
-    case PApp(term, arg)      => renameM(term).map(PApp(_, arg))
+    case PLambda(pName, body) =>
+      for {
+        newName <- freshVar
+        bodyWithNewName = TermRenamer.rename(pName, newName)(body)
+        renamedBody <- renameM(bodyWithNewName)
+      } yield PLambda(newName, renamedBody)
+    case App(f, x)       => ???
+    case PApp(term, arg) => renameM(term).map(PApp(_, arg))
   }
 }
 
@@ -47,5 +52,9 @@ object UniqueIdRenamer {
   private object Renamed {
     def pure[T](t: T): Renamed[T] = Renamed(s => (s, t))
     def freshVar: Renamed[String] = Renamed(s => (s + 1, s"$$$s"))
+    def traverse[T, U](ts: List[T])(f: T => Renamed[U]): Renamed[List[U]] =
+      ts.foldRight[Renamed[List[U]]](pure(Nil)) { (t, renamed) =>
+        renamed.flatMap(tail => f(t).map(u => u :: tail))
+      }
   }
 }
