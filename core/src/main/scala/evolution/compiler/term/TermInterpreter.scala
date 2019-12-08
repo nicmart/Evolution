@@ -7,7 +7,6 @@ import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
 
 import scala.collection.mutable
 
-// F will be String for JsMaterialization, Register => Any for EvalMaterialization
 class TermInterpreter {
   def interpret(term: Term): Any = RegisterBasedInterpreter.fresh.interpret(term)
 }

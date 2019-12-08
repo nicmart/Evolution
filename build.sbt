@@ -59,11 +59,6 @@ lazy val options = Seq(
   "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
 )
 
-lazy val jvmScalatestSettings = Test / testOptions ++= Seq(
-  Tests.Argument(TestFrameworks.ScalaTest, "-oSD"),
-  Tests.Argument(TestFrameworks.ScalaTest, "-W", "1", "1")
-)
-
 lazy val commonSettings = List(
   organization := "nicmart",
   scalaVersion := "2.13.0",
@@ -112,20 +107,6 @@ lazy val jsAppSettings =
     )
   )
 
-// Creating this "clone" project was the only way I fould to be able to run
-// jsAppTest/test without the "ReferenceError" for core module exported classes
-lazy val jsAppTest = project
-  .in(file("app"))
-  .dependsOn(core % "test->test;compile->compile")
-  .enablePlugins(ScalaJSPlugin)
-  .settings(
-    inThisBuild(commonSettings),
-    jsAppSettings,
-    target := {
-      (ThisBuild / baseDirectory).value / "target" / thisProject.value.id
-    }
-  )
-
 lazy val jsApp = project
   .in(file("app"))
   .dependsOn(core % "test->test;compile->compile")
@@ -142,6 +123,20 @@ lazy val jsApp = project
     webpackBundlingMode := BundlingMode.LibraryAndApplication(),
     scalaJSUseMainModuleInitializer := true,
     scalaJSStage in Global := FastOptStage
+  )
+
+// Creating this "clone" project was the only way I fould to be able to run
+// jsAppTest/test without the "ReferenceError" for core module exported classes
+lazy val jsAppTest = project
+  .in(file("app"))
+  .dependsOn(core % "test->test;compile->compile")
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    inThisBuild(commonSettings),
+    jsAppSettings,
+    target := {
+      (ThisBuild / baseDirectory).value / "target" / thisProject.value.id
+    }
   )
 
 lazy val server = (project in file("server"))

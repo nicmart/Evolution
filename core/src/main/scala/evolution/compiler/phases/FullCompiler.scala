@@ -11,8 +11,7 @@ import evolution.materialization.Evolution
 final class FullCompiler(parser: Parser, typer: Typer, compiler: Compiler, materializer: Materializer, logger: Logger) {
   import logger.log
 
-  // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
-  def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Long => Iterator[Point]] =
+  def compile(serialisedExpr: String, expectedType: Type, module: ExprModule): Either[String, Any] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
       typedTree <- typer.typeTree(untypedTree, Some(expectedType), module.assumptions)

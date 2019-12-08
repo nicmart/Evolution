@@ -1,12 +1,12 @@
 package evolution.app.model
 
 import evolution.geometry.Point
-import evolution.compiler.phases.{FullCompiler, Module}
+import evolution.compiler.phases.{FullCompiler, ExprModule}
 import evolution.compiler.types.Type
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.app.model.context.DrawingContext
 import evolution.compiler.expression.Expr
-import evolution.compiler.stdlib.StandardLibraryModule
+import evolution.compiler.stdlib.StandardLibraryExprModule
 
 final class CodeCompiler(fullCompiler: FullCompiler) {
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
@@ -19,12 +19,12 @@ final class CodeCompiler(fullCompiler: FullCompiler) {
             mod
           )
           .map { evolution =>
-            evolution(seed)
+            evolution.asInstanceOf[Long => Iterator[Point]](seed)
           }
     )
 
-  private def module(ctx: DrawingContext): Either[String, Module] =
-    StandardLibraryModule.module.map(Module(TypingConfig.constantQualifiedTypes, loadVars(ctx)).compose)
+  private def module(ctx: DrawingContext): Either[String, ExprModule] =
+    StandardLibraryExprModule.module.map(ExprModule(TypingConfig.constantQualifiedTypes, loadVars(ctx)).compose)
 
   private def loadVars(ctx: DrawingContext)(expr: Expr[Any]): Expr[Any] = {
     val vars = List(

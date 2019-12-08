@@ -15,7 +15,7 @@ import evolution.compiler.tree.TreeF
 import evolution.compiler.tree._
 import evolution.compiler.expression.typeclass._
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.Module
+import evolution.compiler.phases.ExprModule
 
 class DefaultCompilerSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -199,7 +199,7 @@ class DefaultCompilerSpec extends LanguageSpec {
   lazy val intType: Qualified[Type] = Qualified(Type.Integer)
 
   private def unsafeCompile[T](expr: TypedTree): Expr[T] =
-    DefaultCompiler.compile(expr, Module.empty).unsafeRight.asInstanceOf[Expr[T]]
+    DefaultCompiler.compile(expr, ExprModule.empty).unsafeRight.asInstanceOf[Expr[T]]
 
   implicit class Ops(tree: TreeF[TypedTree]) {
     def withNoType = tree.annotate(unknownType)

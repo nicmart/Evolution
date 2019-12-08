@@ -7,10 +7,10 @@ sealed trait Term
 object Term {
   case class Lit(l: Literal) extends Term
   case class Id(name: String) extends Term
+  case class Inst(instance: TypeClassInstance) extends Term
   case class Let(name: String, expr: Term, body: Term) extends Term
   case class Lambda(name: String, body: Term) extends Term
   case class App(f: Term, x: Term) extends Term
-  case class Inst(instance: TypeClassInstance) extends Term
 
   sealed abstract class Literal
   object Literal {

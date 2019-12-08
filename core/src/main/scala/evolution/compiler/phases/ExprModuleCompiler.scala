@@ -1,21 +1,22 @@
 package evolution.compiler.phases
 
 import cats.syntax.either._
+import evolution.logging.Logger
+import evolution.compiler.tree.PrettyPrintTypedTree
+import evolution.compiler.expression.Expr
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.term.{Module, Term, TreeToTermCompiler}
+import evolution.compiler.tree._
 import evolution.compiler.tree.TreeF.Let
-import evolution.compiler.tree.{PrettyPrintTypedTree, _}
-import evolution.compiler.types.Type
-import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
-import evolution.logging.Logger
+import evolution.compiler.types.Type.Scheme
+import evolution.compiler.types.Type
 
-final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger) {
+final class ExprModuleCompiler(parser: Parser, typer: Typer, compiler: Compiler, logger: Logger) {
   import logger.log
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
-  def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
+  def compile(serialisedExpr: String, initialModule: ExprModule): Either[String, ExprModule] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
       exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X"))), primitive = false) // TODO think more about this
@@ -26,11 +27,11 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       assumptions = extractAssumptions(typedTree, initialModule.assumptions)
       _ = log(s"Assumptions extracted")
       _ = log(assumptions.all)
-      termWithoutModule <- compiler.compile(typedTree)
-      term = initialModule.load(termWithoutModule)
-      _ = log(s"Compiled to $term")
+      expression <- compiler.compile(typedTree, initialModule)
+      _ = log(s"Compiled to $expression")
       _ = log("Done: compilation")
-    } yield Module(assumptions, replaceVarInTerm("export", term))
+      loadModule = replaceVarExpr("export", expression) _
+    } yield ExprModule(assumptions, loadModule)
 
   // 1. Find assumptions
   @scala.annotation.tailrec
@@ -46,9 +47,9 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
     }
 
   // 2. Build load function
-  private def replaceVarInTerm(varName: String, term: Term)(replaceWith: Term): Term = term match {
-    case Term.Let(variable, value, body)  => Term.Let(variable, value, replaceVarInTerm(varName, body)(replaceWith))
-    case Term.Id(name) if name == varName => replaceWith
-    case _                                => term
+  private def replaceVarExpr(varName: String, expr: Expr[Any])(replaceWith: Expr[Any]): Expr[Any] = expr match {
+    case Expr.Let(variable, value, body)   => Expr.Let(variable, value, replaceVarExpr(varName, body)(replaceWith))
+    case Expr.Var(name) if name == varName => replaceWith
+    case _                                 => expr
   }
 }

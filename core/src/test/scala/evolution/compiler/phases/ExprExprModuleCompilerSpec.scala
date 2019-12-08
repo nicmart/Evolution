@@ -1,20 +1,19 @@
-package evolution.compiler.phases
-
-import evolution.compiler.LanguageSpec
+package evolution.compiler
+import evolution.compiler.phases.{ExprModule, ExprModuleCompiler}
+import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.{RecursiveTyper, model}
-import evolution.compiler.term.{Module, TreeToTermCompiler}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.NoOpLogger
 
-class ModuleCompilerSpec extends LanguageSpec {
+class ExprExprModuleCompilerSpec extends LanguageSpec {
   "Module compiler" - {
     "should extract assumptions" in {
       val typer = new RecursiveTyper
-      val compiler = new ModuleCompiler(FastParseParser, typer, new TreeToTermCompiler, NoOpLogger)
+      val compiler = new ExprModuleCompiler(FastParseParser, typer, DefaultCompiler, NoOpLogger)
       val code = "blah(x, y) = point(x, y) in line(x, y) = point(x, y) in export"
       val module = compiler.compile(code, initialModule)
 
@@ -26,7 +25,7 @@ class ModuleCompilerSpec extends LanguageSpec {
     }
   }
 
-  private lazy val initialModule = Module(
+  private lazy val initialModule = ExprModule(
     TypingConfig.constantQualifiedTypes,
     identity
   )

@@ -5,7 +5,7 @@ import cats.implicits._
 import evolution.compiler.expression.Expr
 import evolution.compiler.phases.compiler.Compilation._
 import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
-import evolution.compiler.phases.{Compiler, Module}
+import evolution.compiler.phases.{Compiler, ExprModule}
 import evolution.compiler.tree.TreeF._
 import evolution.compiler.tree._
 import evolution.compiler.types.{Type, Typed}
@@ -14,7 +14,7 @@ import scala.collection.immutable.Nil
 
 object DefaultCompiler extends Compiler {
   // TODO module here?
-  def compile(tree: TypedTree, module: Module): Either[String, Expr[Any]] =
+  def compile(tree: TypedTree, module: ExprModule): Either[String, Expr[Any]] =
     compileM(tree).map(module.load).run(CompilerState.empty)
 
   private def compileM(typedTree: TypedTree): Compilation[Expr[Any]] =
