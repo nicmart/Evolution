@@ -49,5 +49,19 @@ class UniqueIdRenamerTest extends LanguageSpec {
     id2 shouldBe x2
   }
 
+  "rename applications" in {
+    val renamed = rename(App(Lambda("x", Id("x")), Lambda("x", Id("x"))))
+    val App(Lambda(var1, Id(id1)), Lambda(var2, Id(id2))) = renamed
+    Set(var1, var2) should have size (2)
+    var1 shouldBe id1
+    var2 shouldBe id2
+  }
+
+  "rename predicate applications" in {
+    val renamed = rename(PApp(Lambda("x", Id("x")), PVar("x")))
+    val PApp(Lambda(var1, Id(id1)), PVar("x")) = renamed
+    var1 shouldBe id1
+  }
+
   def rename(term: Term): Term = (new UniqueIdRenamer).rename(term)
 }
