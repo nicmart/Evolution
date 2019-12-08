@@ -5,10 +5,8 @@ import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg.{PInst, PVar}
 import evolution.compiler.term.Term._
-import evolution.compiler.tree.TreeF.DoubleLiteral
-import evolution.compiler.types.{Type, TypeClassInstance}
-import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
 import evolution.compiler.types.TypeClasses.Predicate
+import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point
 
 import scala.util.Try
@@ -108,7 +106,7 @@ class TermInterpreterTest extends LanguageSpec {
       val term = Term.PApp(Term.Lit(LitInt(0)), PVar("P0"))
 
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bindInstance("P0", instance("Num", Type.Double))
+      interpreter.bind("P0", instance("Num", Type.Double))
 
       interpreter.interpret(term) shouldBe a[Double]
       interpreter.interpret(term) shouldBe 0
@@ -127,7 +125,7 @@ class TermInterpreterTest extends LanguageSpec {
 
         val interpreter = RegisterBasedInterpreter.fresh
         val addInstance = instance("Add", Type.Double, Type.Integer, Type.Double)
-        interpreter.bindInstance("P0", addInstance)
+        interpreter.bind("P0", addInstance)
 
         val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5

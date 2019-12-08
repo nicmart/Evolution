@@ -1,24 +1,19 @@
 package evolution.compiler.term
 
-import scala.collection.mutable
-import Term._
-import Literal._
-import evolution.compiler.expression.typeclass.{Additive, Numeric}
 import evolution.compiler.impl.evaluation.{MaterializeAddition, MaterializeNumeric}
+import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.PArg.{PInst, PVar}
-import evolution.compiler.tree.TreeF.IntLiteral
-import evolution.compiler.types.TypeClassInstance
+import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
+
+import scala.collection.mutable
 
 // F will be String for JsMaterialization, Register => Any for EvalMaterialization
 class TermInterpreter {
   def interpret(term: Term): Any = RegisterBasedInterpreter.fresh.interpret(term)
 }
 
-class RegisterBasedInterpreter private (
-    register: mutable.Map[String, Any],
-    instancesRegister: mutable.Map[String, Any]
-) {
+class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
   def interpret(term: Term): Any = term match {
     case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))     => b
@@ -39,7 +34,7 @@ class RegisterBasedInterpreter private (
 
     case PLambda(pName, body) =>
       (instance: Any) => {
-        bindInstance(pName, instance)
+        bind(pName, instance)
         interpret(body)
       }
 
@@ -49,16 +44,15 @@ class RegisterBasedInterpreter private (
       interpret(term).asInstanceOf[Any => Any](inst)
 
     case PApp(term, PVar(pName)) =>
-      interpret(term).asInstanceOf[Any => Any](instancesRegister(pName))
+      interpret(term).asInstanceOf[Any => Any](register(pName))
   }
 
   def bind(name: String, value: Any): Unit = register.update(name, value)
-  def bindInstance(name: String, instance: Any): Unit = instancesRegister.update(name, instance)
 }
 
 object RegisterBasedInterpreter {
   def fresh: RegisterBasedInterpreter =
-    new RegisterBasedInterpreter(mutable.Map.from(constants), mutable.Map.empty)
+    new RegisterBasedInterpreter(mutable.Map.from(constants))
 
   val constants: Map[String, Any] = Map(
     "add" -> { (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) =>
