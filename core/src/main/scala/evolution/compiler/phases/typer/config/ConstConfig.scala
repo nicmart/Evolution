@@ -75,26 +75,24 @@ object ConstConfig {
     Const("filter", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), func2(Evolution.filter[Any])),
     Const(
       "map",
-      Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Var("T2")) =>: Evo(Var("T2")), "T1", "T2")),
+      Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: "T2") =>: Evo("T2"), "T1", "T2")),
       curry2(Evolution.map)
     ),
     Const(
       "flatmap",
-      Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
+      Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo("T2")) =>: Evo("T2"), "T1", "T2")),
       curry2(Evolution.flatMap)
     ),
     Const(
       "withfirst",
-      Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
+      Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo("T2")) =>: Evo("T2"), "T1", "T2")),
       curry2(Evolution.withFirst1)
     ),
     Const("grouped", Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Lst("T")), "T")), curry2(Evolution.grouped)),
     Const("take", Qualified(Scheme(Evo("T") =>: Integer =>: Evo("T"), "T")), curry2(Evolution.take)),
     Const(
       "slidingmap",
-      Qualified(
-        Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: Var("T2")) =>: Evo(Var("T2")), "T1", "T2")
-      ),
+      Qualified(Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: "T2") =>: Evo("T2"), "T1", "T2")),
       ""
     ),
     Const("until", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), ""),
@@ -107,7 +105,7 @@ object ConstConfig {
     Const(
       "zipwith",
       Qualified(
-        Scheme(Evo("T1") =>: Evo(Var("T2")) =>: ("T1" =>: Var("T2") =>: Var("T3")) =>: Evo(Var("T3")), "T1", "T2", "T3")
+        Scheme(Evo("T1") =>: Evo("T2") =>: ("T1" =>: "T2" =>: "T3") =>: Evo("T3"), "T1", "T2", "T3")
       ),
       ""
     ),
