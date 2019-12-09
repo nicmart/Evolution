@@ -2,9 +2,7 @@ package evolution.compiler.types
 
 import cats.implicits._
 
-sealed trait Type {
-  final def =>:(from: Type): Type = Type.Arrow(from, this)
-}
+sealed trait Type
 
 object Type {
   case class Var(name: String) extends Type {
@@ -20,6 +18,14 @@ object Type {
     override def toString: String = s"$from -> $to"
   }
 
+  object Evo {
+    def apply(typeVarName: String): Type = Evo(Type.Var(typeVarName))
+  }
+
+  object Lst {
+    def apply(typeVarName: String): Type = Lst(Type.Var(typeVarName))
+  }
+
   case class Scheme(vars: List[String], tpe: Type) {
     override def toString: String = if (vars.isEmpty) tpe.toString else s"∀ (${vars.mkString(", ")}) $tpe"
     def instantiate(types: List[Type]): Type = replaceVars(tpe, vars.zip(types))
@@ -27,7 +33,7 @@ object Type {
   }
 
   object Scheme {
-    def apply(tpe: Type): Scheme = Scheme(Nil, tpe)
+    def apply(tpe: Type, vars: String*): Scheme = Scheme(vars.toList, tpe)
   }
 
   // TODO this is already done with substitutions
@@ -41,7 +47,15 @@ object Type {
     }
   }
 
+  implicit final class StringTypeOps(typeVarName: String) {
+    def =>:(from: Type): Type = Type.Arrow(from, Type.Var(typeVarName))
+    def =>:(from: String): Type = Type.Arrow(Type.Var(from), Type.Var(typeVarName))
+  }
+
   implicit final class TypeOps(val self: Type) extends AnyVal {
+    def =>:(from: Type): Type = Type.Arrow(from, self)
+    def =>:(from: String): Type = Type.Arrow(Type.Var(from), self)
+
     def children: List[Type] = self match {
       case Type.Evo(inner)      => List(inner)
       case Type.Lst(inner)      => List(inner)

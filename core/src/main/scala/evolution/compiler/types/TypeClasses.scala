@@ -44,11 +44,17 @@ object TypeClasses {
   }
 
   object Predicate {
+    def apply(id: String): Predicate = Predicate(id, Nil)
+    def apply(id: String, vars: String*): Predicate = Predicate(id, vars.toList.map(Type.Var))
     def fromVars(id: String, typeVars: List[String]): Predicate =
       Predicate(id, typeVars.map(Type.Var))
   }
 
   object Qualified {
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
+
+    implicit class QualifiedTOps[T](t: T) {
+      def ==>:(predicate: Predicate): Qualified[T] = Qualified(List(predicate), t)
+    }
   }
 }

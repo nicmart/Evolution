@@ -4,11 +4,9 @@ import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.tree.Tree._
 import evolution.compiler.tree.{PrettyPrintTypedTree, TypedTree => T}
+import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
-import evolution.compiler.types.Type
-
-import scala.collection.immutable.Set
 
 class RecursiveTyperTest extends LanguageSpec {
 
@@ -74,7 +72,7 @@ class RecursiveTyperTest extends LanguageSpec {
           val untyped = Lambda("x", Id("y"))
           val yPredicates = List(Predicate("MyPred", List(Type.Var("Y"))))
           val yQualifiedType = Qualified[Type](yPredicates, Type.Var("Y"))
-          val yAssumption = model.Assumption("y", yQualifiedType.map(Scheme.apply), false)
+          val yAssumption = model.Assumption("y", yQualifiedType.map(Scheme.apply(_)), false)
           val typed = typer.typeTree(untyped, None, withAssumptions(yAssumption)).unsafeRight
           val Type.Arrow(Type.Var(varname), Type.Var("Y")) = typed.annotation.value
           val expectedType = Qualified[Type](yPredicates, Type.Var(varname) =>: Type.Var("Y"))
