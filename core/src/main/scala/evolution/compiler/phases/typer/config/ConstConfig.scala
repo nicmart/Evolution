@@ -56,8 +56,12 @@ object ConstConfig {
     // Evolutions
     Const("empty", Qualified(Scheme(List("T"), Var("T"))), Evolution.empty),
     Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), (Evolution.concat _).curried),
-    Const("cons", Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")), ""),
-    Const("const", Qualified(Scheme("T" =>: Evo("T"), "T")), ""),
+    Const(
+      "cons",
+      Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
+      (x: Any) => (t: Evolution[Any]) => Evolution.cons(x, t)
+    ),
+    Const("const", Qualified(Scheme("T" =>: Evo("T"), "T")), (x: Any) => Evolution.constant(x)),
     Const("@polar", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const("@point", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const("filter", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), ""),

@@ -25,6 +25,8 @@ object Evolution {
     val run: Iterator[Nothing] = Iterator.empty
   }
 
+  def apply[T](ts: T*): Evolution[T] = fromIterable(ts)
+
   def fromIterable[T](ts: Iterable[T]): Evolution[T] = new Evolution[T] {
     def run: Iterator[T] = ts.iterator
   }

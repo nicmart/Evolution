@@ -99,9 +99,20 @@ class ConstantsInterpreterTest extends LanguageSpec {
     "concat" in {
       val const = interpret(Id("concat")).asFunc2
 
-      val concat =
-        const(Evolution.fromIterable(List("a")))(Evolution.fromIterable(List("b"))).asInstanceOf[Evolution[Any]]
+      val concat = const(Evolution("a"))(Evolution("b")).asEvo
       concat.run.toList shouldBe List("a", "b")
+    }
+
+    "cons" in {
+      val const = interpret(Id("cons")).asFunc2
+      val evo = const(1)(Evolution(2, 3)).asEvo
+      evo.run.toList shouldBe List(1, 2, 3)
+    }
+
+    "const" in {
+      val const = interpret(Id("const")).asFunc1
+      val evo = const(1).asEvo
+      evo.run.take(10).toList shouldBe List.fill(10)(1)
     }
   }
 
@@ -136,5 +147,6 @@ class ConstantsInterpreterTest extends LanguageSpec {
     def asFunc2: Any => Any => Any = any.asInstanceOf[Any => Any => Any]
     def asFunc3: Any => Any => Any => Any = any.asInstanceOf[Any => Any => Any => Any]
     def asFunc4: Any => Any => Any => Any => Any = any.asInstanceOf[Any => Any => Any => Any => Any]
+    def asEvo: Evolution[Any] = any.asInstanceOf[Evolution[Any]]
   }
 }
