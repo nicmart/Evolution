@@ -47,7 +47,7 @@ class TermInterpreterTest extends LanguageSpec {
     }
 
     "not in the register" in {
-      val term = Id("x")
+      val term = Id("z")
       val interpreter = RegisterBasedInterpreter.fresh
 
       Try(interpreter.interpret(term)).isFailure shouldBe true

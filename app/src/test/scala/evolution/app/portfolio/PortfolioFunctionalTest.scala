@@ -9,8 +9,11 @@ import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer._
+import evolution.compiler.phases.typer.config.{Const, TypingConfig}
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.term.{TermInterpreter, TreeToTermCompiler}
+import evolution.compiler.types.Type
+import pprint.{PPrinter, Tree}
 
 class PortfolioFunctionalTest extends LanguageSpec {
   "Drawings in Portfolio" - {
@@ -30,6 +33,21 @@ class PortfolioFunctionalTest extends LanguageSpec {
       }
     }
   }
+
+  /*  val constants = TypingConfig.constantQualifiedTypes.all.values
+    .map(assumption => Const(assumption.name, assumption.qualifiedScheme, ""))
+    .toList
+
+  lazy val printer: PPrinter = pprint.PPrinter.BlackWhite.copy(
+    additionalHandlers = {
+      case Type.Arrow(from @ Type.Arrow(a, b), to) =>
+        Tree.Infix(Tree.Apply("", List(printer.treeify(from)).toIterator), "=>:", printer.treeify(to))
+      case Type.Arrow(from, to) =>
+        Tree.Infix(printer.treeify(from), "=>:", printer.treeify(to))
+    }
+  )
+
+  printer.pprintln(constants, height = Int.MaxValue)*/
 
   lazy val parser = FastParseParser
   //lazy val typer = new UnificationTyper(Conf.logger)
