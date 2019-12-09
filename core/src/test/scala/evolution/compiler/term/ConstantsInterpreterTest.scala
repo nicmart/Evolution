@@ -6,6 +6,7 @@ import evolution.compiler.term.Term.Id
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point
+import evolution.materialization.Evolution
 
 class ConstantsInterpreterTest extends LanguageSpec {
   "comparisons" - {
@@ -85,6 +86,22 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
       const(true)("a")("b") shouldBe "a"
       const(false)("a")("b") shouldBe "b"
+    }
+  }
+
+  "evolutions" - {
+    "empty" in {
+      val const = interpret(Id("empty"))
+
+      const shouldBe Evolution.empty
+    }
+
+    "concat" in {
+      val const = interpret(Id("concat")).asFunc2
+
+      val concat =
+        const(Evolution.fromIterable(List("a")))(Evolution.fromIterable(List("b"))).asInstanceOf[Evolution[Any]]
+      concat.run.toList shouldBe List("a", "b")
     }
   }
 

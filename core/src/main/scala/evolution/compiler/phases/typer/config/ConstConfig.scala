@@ -1,11 +1,13 @@
 package evolution.compiler.phases.typer.config
 
 import evolution.compiler.impl.evaluation._
+import evolution.compiler.phases.typer.config.Constant0.Empty
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
 import evolution.compiler.types.Type.StringTypeOps
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst, EquableInst}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
+import evolution.materialization.Evolution
 
 // TODO optimizations: materialize as soon as possible
 object ConstConfig {
@@ -52,8 +54,8 @@ object ConstConfig {
     ),
     //
     // Evolutions
-    Const("empty", Qualified(Scheme(List("T"), Var("T"))), ""),
-    Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), ""),
+    Const("empty", Qualified(Scheme(List("T"), Var("T"))), Evolution.empty),
+    Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), (Evolution.concat _).curried),
     Const("cons", Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")), ""),
     Const("const", Qualified(Scheme("T" =>: Evo("T"), "T")), ""),
     Const("@polar", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
