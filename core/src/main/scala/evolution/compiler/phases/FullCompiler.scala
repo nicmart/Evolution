@@ -2,7 +2,7 @@ package evolution.compiler.phases
 
 import cats.syntax.either._
 import evolution.compiler.expression.Expr
-import evolution.compiler.term.{Module, TermInterpreter, TreeToTermCompiler}
+import evolution.compiler.term.{Module, TermInterpreter, TreeToTermCompiler, UniqueIdRenamer}
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.geometry.Point
@@ -27,7 +27,10 @@ final class FullCompiler(
       _ = log(PrettyPrintTypedTree(typedTree))
       term <- compiler.compile(typedTree)
       termWithModule = module.load(term)
+      termWithUniqueNames = renamer.rename(termWithModule)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
-    } yield interpreter.interpret(termWithModule)
+    } yield interpreter.interpret(termWithUniqueNames)
+
+  private val renamer = new UniqueIdRenamer
 }
