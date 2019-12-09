@@ -40,6 +40,18 @@ class ConstantsInterpreterTest extends LanguageSpec {
       const(instance("Comp", Type.Double))(1)(1) shouldBe true
       const(instance("Comp", Type.Double))(0)(1) shouldBe true
     }
+
+    "equality" in {
+      val const = interpret(Id("eq")).asFunc3
+      const(instance("Eq", Type.Double))(1.1)(1.1) shouldBe true
+      const(instance("Eq", Type.Double))(1.1)(1.2) shouldBe false
+    }
+
+    "non-equality" in {
+      val const = interpret(Id("neq")).asFunc3
+      const(instance("Eq", Type.Double))(1.1)(1.1) shouldBe false
+      const(instance("Eq", Type.Double))(1.1)(1.2) shouldBe true
+    }
   }
 
   "boolean operators" - {

@@ -3,7 +3,7 @@ package evolution.compiler.phases.typer.config
 import evolution.compiler.impl.evaluation._
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
 import evolution.compiler.types.Type.StringTypeOps
-import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst}
+import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst, EquableInst}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
 
@@ -31,8 +31,16 @@ object ConstConfig {
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
       (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).lteqv(x, y)
     ),
-    Const("eq", Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")), ""),
-    Const("neq", Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")), ""),
+    Const(
+      "eq",
+      Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
+      (p: EquableInst[Any]) => (x: Any) => (y: Any) => MaterializeEquality(p.eq).eqv(x, y)
+    ),
+    Const(
+      "neq",
+      Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
+      (p: EquableInst[Any]) => (x: Any) => (y: Any) => MaterializeEquality(p.eq).neqv(x, y)
+    ),
     // boolean ops
     Const("not", Qualified(Scheme(Bool =>: Bool)), ""),
     Const("or", Qualified(Scheme(Bool =>: Bool =>: Bool)), (a: Boolean) => (b: Boolean) => a || b),
