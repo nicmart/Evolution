@@ -72,6 +72,20 @@ class ConstantsInterpreterTest extends LanguageSpec {
       const(true)(true) shouldBe true
       const(false)(false) shouldBe false
     }
+
+    "not" in {
+      val const = interpret(Id("not")).asFunc1
+
+      const(true) shouldBe false
+      const(false) shouldBe true
+    }
+
+    "ifs" in {
+      val const = interpret(Id("if")).asFunc3
+
+      const(true)("a")("b") shouldBe "a"
+      const(false)("a")("b") shouldBe "b"
+    }
   }
 
   "math" - {

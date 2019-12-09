@@ -42,10 +42,14 @@ object ConstConfig {
       (p: EquableInst[Any]) => (x: Any) => (y: Any) => MaterializeEquality(p.eq).neqv(x, y)
     ),
     // boolean ops
-    Const("not", Qualified(Scheme(Bool =>: Bool)), ""),
+    Const("not", Qualified(Scheme(Bool =>: Bool)), (x: Boolean) => !x),
     Const("or", Qualified(Scheme(Bool =>: Bool =>: Bool)), (a: Boolean) => (b: Boolean) => a || b),
     Const("and", Qualified(Scheme(Bool =>: Bool =>: Bool)), (a: Boolean) => (b: Boolean) => a && b),
-    Const("if", Qualified(Scheme(Bool =>: "T" =>: "T" =>: "T", "T")), ""),
+    Const(
+      "if",
+      Qualified(Scheme(Bool =>: "T" =>: "T" =>: "T", "T")),
+      (p: Boolean) => (a: Any) => (b: Any) => if (p) a else b
+    ),
     //
     // Evolutions
     Const("empty", Qualified(Scheme(List("T"), Var("T"))), ""),
