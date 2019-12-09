@@ -1,6 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.impl.evaluation.{MaterializeAddition, MaterializeNumeric}
+import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
@@ -42,9 +43,5 @@ object RegisterBasedInterpreter {
   def fresh: RegisterBasedInterpreter =
     new RegisterBasedInterpreter(mutable.Map.from(constants))
 
-  val constants: Map[String, Any] = Map(
-    "add" -> { (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) =>
-      MaterializeAddition(p.add)(x, y)
-    }
-  )
+  val constants: Map[String, Any] = ConstConfig.constants.map(c => c.name -> c.value).toMap
 }
