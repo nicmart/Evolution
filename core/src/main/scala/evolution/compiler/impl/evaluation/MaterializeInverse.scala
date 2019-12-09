@@ -3,7 +3,7 @@ import evolution.materialization.Evolution
 import evolution.compiler.expression.typeclass.Invertible
 import evolution.geometry.Point
 
-private[evaluation] object MaterializeInverse {
+object MaterializeInverse {
   def apply[T](inv: Invertible[T]): T => T = inv match {
     case Invertible.Double => (t: Double) => -t
     case Invertible.Int    => (t: Int) => -t

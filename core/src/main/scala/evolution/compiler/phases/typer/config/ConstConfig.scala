@@ -1,10 +1,15 @@
 package evolution.compiler.phases.typer.config
 
-import evolution.compiler.impl.evaluation.MaterializeAddition
-import evolution.compiler.types.Type._
-import evolution.compiler.types.TypeClassInstance.AdditiveInst
+import evolution.compiler.expression.typeclass.Comparable
+import evolution.compiler.impl.evaluation
+import evolution.compiler.impl.evaluation._
+import evolution.compiler.types.Type.{Double, Integer, Bool, Evo, Lst, Arrow, Var, Scheme}
+import evolution.compiler.types.Type.{Point => TPoint}
+import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
+import evolution.geometry.Point
 
+// TODO optimizations: materialize as soon as possible
 object ConstConfig {
   val constants: List[Const] = List(
     Const(
@@ -13,9 +18,13 @@ object ConstConfig {
         List(Predicate("Comp", List(Var("T")))),
         Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
       ),
-      ""
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).gt(x, y)
     ),
-    Const("inrect", Qualified(List(), Scheme(List(), Point =>: Point =>: Point =>: Bool)), ""),
+    Const(
+      "inrect",
+      Qualified(List(), Scheme(List(), TPoint =>: TPoint =>: TPoint =>: Bool)),
+      (topLeft: Point) => (bottomRight: Point) => (p: Point) => p.inRectangle(topLeft, bottomRight)
+    ),
     Const("or", Qualified(List(), Scheme(List(), Bool =>: Bool =>: Bool)), ""),
     Const(
       "roll",
@@ -33,12 +42,12 @@ object ConstConfig {
       Qualified(List(), Scheme(List("T"), Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
       ""
     ),
-    Const("x", Qualified(List(), Scheme(List(), Point =>: Double)), ""),
+    Const("x", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
     Const("pi", Qualified(List(), Scheme(List(), Double)), ""),
-    Const("point", Qualified(List(), Scheme(List(), Double =>: Double =>: Point)), ""),
+    Const("TPoint", Qualified(List(), Scheme(List(), Double =>: Double =>: TPoint)), ""),
     Const(
       "octavenoise",
-      Qualified(List(), Scheme(List(), Evo(Integer =>: Double =>: Point =>: Double))),
+      Qualified(List(), Scheme(List(), Evo(Integer =>: Double =>: TPoint =>: Double))),
       ""
     ),
     Const(
@@ -64,7 +73,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("polar", Qualified(List(), Scheme(List(), Double =>: Double =>: Point)), ""),
+    Const("polar", Qualified(List(), Scheme(List(), Double =>: Double =>: TPoint)), ""),
     Const("mod", Qualified(List(), Scheme(List(), Double =>: Double =>: Double)), ""),
     Const(
       "connect",
@@ -82,8 +91,8 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("noise", Qualified(List(), Scheme(List(), Evo(Point =>: Double))), ""),
-    Const("y", Qualified(List(), Scheme(List(), Point =>: Double)), ""),
+    Const("noise", Qualified(List(), Scheme(List(), Evo(TPoint =>: Double))), ""),
+    Const("y", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
     Const("if", Qualified(List(), Scheme(List("T"), Bool =>: Var("T") =>: Var("T") =>: Var("T"))), ""),
     Const(
       "uniformdiscrete",
@@ -176,13 +185,13 @@ object ConstConfig {
       Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T"))))),
       ""
     ),
-    Const("@point", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(Point))), ""),
+    Const("@TPoint", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const(
       "take",
       Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Var("T")))),
       ""
     ),
-    Const("norm", Qualified(List(), Scheme(List(), Point =>: Double)), ""),
+    Const("norm", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
     Const("floor", Qualified(List(), Scheme(List(), Double =>: Integer)), ""),
     Const(
       "range",
@@ -258,7 +267,7 @@ object ConstConfig {
       ),
       (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) => MaterializeAddition(p.add)(x, y)
     ),
-    Const("@polar", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(Point))), ""),
+    Const("@polar", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const(
       "eq",
       Qualified(
@@ -285,7 +294,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("versor", Qualified(List(), Scheme(List(), Point =>: Point)), ""),
+    Const("versor", Qualified(List(), Scheme(List(), TPoint =>: TPoint)), ""),
     Const(
       "derive",
       Qualified(
