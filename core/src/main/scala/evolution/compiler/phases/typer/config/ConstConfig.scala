@@ -55,16 +55,24 @@ object ConstConfig {
     //
     // Evolutions
     Const("empty", Qualified(Scheme(List("T"), Var("T"))), Evolution.empty),
-    Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), (Evolution.concat _).curried),
+    Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), curry2(Evolution.concat)),
     Const(
       "cons",
       Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
       (x: Any) => (t: Evolution[Any]) => Evolution.cons(x, t)
     ),
-    Const("const", Qualified(Scheme("T" =>: Evo("T"), "T")), (x: Any) => Evolution.constant(x)),
-    Const("@polar", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
-    Const("@point", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
-    Const("filter", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), ""),
+    Const("const", Qualified(Scheme("T" =>: Evo("T"), "T")), func1(Evolution.constant[Any])),
+    Const(
+      "@polar",
+      Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))),
+      curry2(Evolution.zipWithUncurried(Point.polar))
+    ),
+    Const(
+      "@point",
+      Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))),
+      curry2(Evolution.zipWithUncurried(Point.apply))
+    ),
+    Const("filter", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), func2(Evolution.filter[Any])),
     Const(
       "map",
       Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Var("T2")) =>: Evo(Var("T2")), "T1", "T2")),
@@ -176,4 +184,11 @@ object ConstConfig {
       (topLeft: Point) => (bottomRight: Point) => (p: Point) => p.inRectangle(topLeft, bottomRight)
     )
   )
+
+  private def func1(f: Nothing => Any): Any = f
+  private def func2(f: Nothing => Nothing => Any): Any = f
+  private def func3(f: Nothing => Nothing => Nothing => Any): Any = f
+
+  private def curry2(f: (Nothing, Nothing) => Any): Any = f.curried
+  private def curry3(f: (Nothing, Nothing, Nothing) => Any): Any = f.curried
 }

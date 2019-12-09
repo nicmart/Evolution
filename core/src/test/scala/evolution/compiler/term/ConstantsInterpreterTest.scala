@@ -114,6 +114,24 @@ class ConstantsInterpreterTest extends LanguageSpec {
       val evo = const(1).asEvo
       evo.run.take(10).toList shouldBe List.fill(10)(1)
     }
+
+    "@polar" in {
+      val const = interpret(Id("@polar")).asFunc2
+      val evo = const(Evolution.constant(1))(Evolution.constant(2)).asEvo
+      evo.run.take(10).toList shouldBe List.fill(10)(Point.polar(1, 2))
+    }
+
+    "@point" in {
+      val const = interpret(Id("@point")).asFunc2
+      val evo = const(Evolution.constant(1))(Evolution.constant(2)).asEvo
+      evo.run.take(10).toList shouldBe List.fill(10)(Point(1, 2))
+    }
+
+    "filter" in {
+      val const = interpret(Id("filter")).asFunc2
+      val evo = const(Evolution(1, 2, 1))((n: Int) => n < 2).asEvo
+      evo.run.toList shouldBe List(1, 1)
+    }
   }
 
   "math" - {

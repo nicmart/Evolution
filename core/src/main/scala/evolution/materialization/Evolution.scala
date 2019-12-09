@@ -47,6 +47,11 @@ object Evolution {
       def run: Iterator[T] = it1.run ++ it2.run
     }
 
+  def filter[T](evo: Evolution[T])(p: T => Boolean): Evolution[T] =
+    new Evolution[T] {
+      override def run: Iterator[T] = evo.run.filter(p)
+    }
+
   def range(start: Double, end: Double, step: Double): Evolution[Double] =
     step match {
       case 0 => constant(start)
