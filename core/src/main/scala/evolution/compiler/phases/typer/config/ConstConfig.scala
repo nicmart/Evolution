@@ -85,11 +85,11 @@ object ConstConfig {
     ),
     Const(
       "withfirst",
-      Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
-      ""
+      Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
+      curry2(Evolution.withFirst1)
     ),
-    Const("grouped", Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Lst("T")), "T")), ""),
-    Const("take", Qualified(Scheme(Evo("T") =>: Integer =>: Evo("T"), "T")), ""),
+    Const("grouped", Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Lst("T")), "T")), curry2(Evolution.grouped)),
+    Const("take", Qualified(Scheme(Evo("T") =>: Integer =>: Evo("T"), "T")), curry2(Evolution.take)),
     Const(
       "slidingmap",
       Qualified(
