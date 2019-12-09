@@ -19,11 +19,11 @@ class ConstantsInterpreterTest extends LanguageSpec {
   }
 
   "greaterthan" in {
-    val gt = interpret(Id("greaterthan")).asFunc3
+    val const = interpret(Id("greaterthan")).asFunc3
 
-    gt(instance("Comp", Type.Double))(1)(0) shouldBe true
-    gt(instance("Comp", Type.Double))(1)(1) shouldBe false
-    gt(instance("Comp", Type.Double))(0)(1) shouldBe false
+    const(instance("Comp", Type.Double))(1)(0) shouldBe true
+    const(instance("Comp", Type.Double))(1)(1) shouldBe false
+    const(instance("Comp", Type.Double))(0)(1) shouldBe false
   }
 
   "inrect" in {
@@ -31,6 +31,24 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
     const(Point(-10, -10))(Point(10, 10))(Point.zero) shouldBe true
     const(Point(-10, -10))(Point(-5, -5))(Point.zero) shouldBe false
+  }
+
+  "or" in {
+    val const = interpret(Id("or")).asFunc3
+
+    const(true)(false) shouldBe true
+    const(false)(true) shouldBe true
+    const(true)(true) shouldBe true
+    const(false)(false) shouldBe false
+  }
+
+  "and" in {
+    val const = interpret(Id("and")).asFunc3
+
+    const(true)(false) shouldBe false
+    const(false)(true) shouldBe false
+    const(true)(true) shouldBe true
+    const(false)(false) shouldBe false
   }
 
   def interpret(term: Term): Any = (new TermInterpreter).interpret(term)

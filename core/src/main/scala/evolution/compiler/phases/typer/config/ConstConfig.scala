@@ -22,32 +22,33 @@ object ConstConfig {
     ),
     Const(
       "inrect",
-      Qualified(List(), Scheme(List(), TPoint =>: TPoint =>: TPoint =>: Bool)),
+      Qualified(Scheme(TPoint =>: TPoint =>: TPoint =>: Bool)),
       (topLeft: Point) => (bottomRight: Point) => (p: Point) => p.inRectangle(topLeft, bottomRight)
     ),
-    Const("or", Qualified(List(), Scheme(List(), Bool =>: Bool =>: Bool)), ""),
+    Const("or", Qualified(Scheme(Bool =>: Bool =>: Bool)), (a: Boolean) => (b: Boolean) => a || b),
+    Const("and", Qualified(Scheme(Bool =>: Bool =>: Bool)), (a: Boolean) => (b: Boolean) => a && b),
     Const(
       "roll",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
       ""
     ),
     Const(
       "iterate",
-      Qualified(List(), Scheme(List("T"), (Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), (Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
       ""
     ),
-    Const("flatten", Qualified(List(), Scheme(List("T"), Evo(Evo(Var("T"))) =>: Evo(Var("T")))), ""),
+    Const("flatten", Qualified(Scheme(List("T"), Evo(Evo(Var("T"))) =>: Evo(Var("T")))), ""),
     Const(
       "solve1",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T") =>: Var("T")) =>: Var("T") =>: Evo(Var("T")))),
       ""
     ),
-    Const("x", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
-    Const("pi", Qualified(List(), Scheme(List(), Double)), ""),
-    Const("TPoint", Qualified(List(), Scheme(List(), Double =>: Double =>: TPoint)), ""),
+    Const("x", Qualified(Scheme(TPoint =>: Double)), ""),
+    Const("pi", Qualified(Scheme(Double)), ""),
+    Const("TPoint", Qualified(Scheme(Double =>: Double =>: TPoint)), ""),
     Const(
       "octavenoise",
-      Qualified(List(), Scheme(List(), Evo(Integer =>: Double =>: TPoint =>: Double))),
+      Qualified(Scheme(Evo(Integer =>: Double =>: TPoint =>: Double))),
       ""
     ),
     Const(
@@ -61,7 +62,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("empty", Qualified(List(), Scheme(List("T"), Var("T"))), ""),
+    Const("empty", Qualified(Scheme(List("T"), Var("T"))), ""),
     Const(
       "minus",
       Qualified(
@@ -73,8 +74,8 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("polar", Qualified(List(), Scheme(List(), Double =>: Double =>: TPoint)), ""),
-    Const("mod", Qualified(List(), Scheme(List(), Double =>: Double =>: Double)), ""),
+    Const("polar", Qualified(Scheme(Double =>: Double =>: TPoint)), ""),
+    Const("mod", Qualified(Scheme(Double =>: Double =>: Double)), ""),
     Const(
       "connect",
       Qualified(
@@ -91,12 +92,12 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("noise", Qualified(List(), Scheme(List(), Evo(TPoint =>: Double))), ""),
-    Const("y", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
-    Const("if", Qualified(List(), Scheme(List("T"), Bool =>: Var("T") =>: Var("T") =>: Var("T"))), ""),
+    Const("noise", Qualified(Scheme(Evo(TPoint =>: Double))), ""),
+    Const("y", Qualified(Scheme(TPoint =>: Double)), ""),
+    Const("if", Qualified(Scheme(List("T"), Bool =>: Var("T") =>: Var("T") =>: Var("T"))), ""),
     Const(
       "uniformdiscrete",
-      Qualified(List(), Scheme(List(), Double =>: Double =>: Double =>: Evo(Double))),
+      Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))),
       ""
     ),
     Const(
@@ -107,20 +108,20 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("normal", Qualified(List(), Scheme(List(), Double =>: Double =>: Evo(Double))), ""),
-    Const("fix", Qualified(List(), Scheme(List("T"), (Var("T") =>: Var("T")) =>: Var("T"))), ""),
+    Const("normal", Qualified(Scheme(Double =>: Double =>: Evo(Double))), ""),
+    Const("fix", Qualified(Scheme(List("T"), (Var("T") =>: Var("T")) =>: Var("T"))), ""),
     Const(
       "concat",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: Evo(Var("T")) =>: Evo(Var("T")))),
       ""
     ),
     Const(
       "cons",
-      Qualified(List(), Scheme(List("T"), Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))),
       ""
     ),
-    Const("todbl", Qualified(List(), Scheme(List(), Integer =>: Double)), ""),
-    Const("div", Qualified(List(), Scheme(List(), Double =>: Double =>: Double)), ""),
+    Const("todbl", Qualified(Scheme(Integer =>: Double)), ""),
+    Const("div", Qualified(Scheme(Double =>: Double =>: Double)), ""),
     Const(
       "flatmap",
       Qualified(
@@ -129,7 +130,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("cos", Qualified(List(), Scheme(List(), Double =>: Double)), ""),
+    Const("cos", Qualified(Scheme(Double =>: Double)), ""),
     Const(
       "slidingmap",
       Qualified(
@@ -141,25 +142,25 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("exp", Qualified(List(), Scheme(List(), Double =>: Double =>: Double)), ""),
-    Const("inverse", Qualified(List(), Scheme(List("T"), Var("T") =>: Var("T"))), ""),
+    Const("exp", Qualified(Scheme(Double =>: Double =>: Double)), ""),
+    Const("inverse", Qualified(Scheme(List("T"), Var("T") =>: Var("T"))), ""),
     Const(
       "until",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
       ""
     ),
     Const(
       "smoothstep",
-      Qualified(List(), Scheme(List(), Double =>: Double =>: Double =>: Double)),
+      Qualified(Scheme(Double =>: Double =>: Double =>: Double)),
       ""
     ),
-    Const("uniform", Qualified(List(), Scheme(List(), Double =>: Double =>: Evo(Double))), ""),
+    Const("uniform", Qualified(Scheme(Double =>: Double =>: Evo(Double))), ""),
     Const(
       "filter",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
       ""
     ),
-    Const("sign", Qualified(List(), Scheme(List(), Double =>: Double)), ""),
+    Const("sign", Qualified(Scheme(Double =>: Double)), ""),
     Const(
       "mapwithderivative",
       Qualified(
@@ -174,36 +175,36 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("const", Qualified(List(), Scheme(List("T"), Var("T") =>: Evo(Var("T")))), ""),
+    Const("const", Qualified(Scheme(List("T"), Var("T") =>: Evo(Var("T")))), ""),
     Const(
       "integrate",
-      Qualified(List(), Scheme(List("T"), Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Var("T") =>: Evo(Var("T")) =>: Evo(Var("T")))),
       ""
     ),
     Const(
       "grouped",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T"))))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Lst(Var("T"))))),
       ""
     ),
-    Const("@TPoint", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
+    Const("@TPoint", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const(
       "take",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: Integer =>: Evo(Var("T")))),
       ""
     ),
-    Const("norm", Qualified(List(), Scheme(List(), TPoint =>: Double)), ""),
-    Const("floor", Qualified(List(), Scheme(List(), Double =>: Integer)), ""),
+    Const("norm", Qualified(Scheme(TPoint =>: Double)), ""),
+    Const("floor", Qualified(Scheme(Double =>: Integer)), ""),
     Const(
       "range",
-      Qualified(List(), Scheme(List(), Double =>: Double =>: Double =>: Evo(Double))),
+      Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))),
       ""
     ),
     Const(
       "while",
-      Qualified(List(), Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Evo(Var("T")) =>: (Var("T") =>: Bool) =>: Evo(Var("T")))),
       ""
     ),
-    Const("not", Qualified(List(), Scheme(List(), Bool =>: Bool)), ""),
+    Const("not", Qualified(Scheme(Bool =>: Bool)), ""),
     Const(
       "iterate2",
       Qualified(
@@ -223,7 +224,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("fromlist", Qualified(List(), Scheme(List("T"), Lst(Var("T")) =>: Evo(Var("T")))), ""),
+    Const("fromlist", Qualified(Scheme(List("T"), Lst(Var("T")) =>: Evo(Var("T")))), ""),
     Const(
       "lessthan",
       Qualified(
@@ -240,7 +241,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("abs", Qualified(List(), Scheme(List(), Double =>: Double)), ""),
+    Const("abs", Qualified(Scheme(Double =>: Double)), ""),
     Const(
       "solve2",
       Qualified(
@@ -252,11 +253,11 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("uniformchoice", Qualified(List(), Scheme(List("T"), Lst(Var("T")) =>: Evo(Var("T")))), ""),
-    Const("sin", Qualified(List(), Scheme(List(), Double =>: Double)), ""),
+    Const("uniformchoice", Qualified(Scheme(List("T"), Lst(Var("T")) =>: Evo(Var("T")))), ""),
+    Const("sin", Qualified(Scheme(Double =>: Double)), ""),
     Const(
       "uniformfrom",
-      Qualified(List(), Scheme(List("T"), Integer =>: Evo(Var("T")) =>: Evo(Var("T")))),
+      Qualified(Scheme(List("T"), Integer =>: Evo(Var("T")) =>: Evo(Var("T")))),
       ""
     ),
     Const(
@@ -267,7 +268,7 @@ object ConstConfig {
       ),
       (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) => MaterializeAddition(p.add)(x, y)
     ),
-    Const("@polar", Qualified(List(), Scheme(List(), Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
+    Const("@polar", Qualified(Scheme(Evo(Double) =>: Evo(Double) =>: Evo(TPoint))), ""),
     Const(
       "eq",
       Qualified(
@@ -284,8 +285,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("parallel", Qualified(List(), Scheme(List("T"), Evo(Evo(Var("T"))) =>: Evo(Var("T")))), ""),
-    Const("and", Qualified(List(), Scheme(List(), Bool =>: Bool =>: Bool)), ""),
+    Const("parallel", Qualified(Scheme(List("T"), Evo(Evo(Var("T"))) =>: Evo(Var("T")))), ""),
     Const(
       "greaterthanorequal",
       Qualified(
@@ -294,7 +294,7 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("versor", Qualified(List(), Scheme(List(), TPoint =>: TPoint)), ""),
+    Const("versor", Qualified(Scheme(TPoint =>: TPoint)), ""),
     Const(
       "derive",
       Qualified(
