@@ -26,6 +26,30 @@ class ConstantsInterpreterTest extends LanguageSpec {
     const(instance("Comp", Type.Double))(0)(1) shouldBe false
   }
 
+  "greaterthanorequal" in {
+    val const = interpret(Id("greaterthanorequal")).asFunc3
+
+    const(instance("Comp", Type.Double))(1)(0) shouldBe true
+    const(instance("Comp", Type.Double))(1)(1) shouldBe true
+    const(instance("Comp", Type.Double))(0)(1) shouldBe false
+  }
+
+  "lessthan" in {
+    val const = interpret(Id("lessthan")).asFunc3
+
+    const(instance("Comp", Type.Double))(1)(0) shouldBe false
+    const(instance("Comp", Type.Double))(1)(1) shouldBe false
+    const(instance("Comp", Type.Double))(0)(1) shouldBe true
+  }
+
+  "lessthanorequal" in {
+    val const = interpret(Id("lessthanorequal")).asFunc3
+
+    const(instance("Comp", Type.Double))(1)(0) shouldBe false
+    const(instance("Comp", Type.Double))(1)(1) shouldBe true
+    const(instance("Comp", Type.Double))(0)(1) shouldBe true
+  }
+
   "inrect" in {
     val const = interpret(Id("inrect")).asFunc3
 

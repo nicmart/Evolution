@@ -1,10 +1,7 @@
 package evolution.compiler.phases.typer.config
 
-import evolution.compiler.expression.typeclass.Comparable
-import evolution.compiler.impl.evaluation
 import evolution.compiler.impl.evaluation._
-import evolution.compiler.types.Type.{Double, Integer, Bool, Evo, Lst, Arrow, Var, Scheme}
-import evolution.compiler.types.Type.{Point => TPoint}
+import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
 import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
@@ -19,6 +16,30 @@ object ConstConfig {
         Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
       ),
       (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).gt(x, y)
+    ),
+    Const(
+      "greaterthanorequal",
+      Qualified(
+        List(Predicate("Comp", List(Var("T")))),
+        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
+      ),
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).gteqv(x, y)
+    ),
+    Const(
+      "lessthan",
+      Qualified(
+        List(Predicate("Comp", List(Var("T")))),
+        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
+      ),
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).lt(x, y)
+    ),
+    Const(
+      "lessthanorequal",
+      Qualified(
+        List(Predicate("Comp", List(Var("T")))),
+        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
+      ),
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).lteqv(x, y)
     ),
     Const(
       "inrect",
@@ -225,22 +246,6 @@ object ConstConfig {
       ""
     ),
     Const("fromlist", Qualified(Scheme(List("T"), Lst(Var("T")) =>: Evo(Var("T")))), ""),
-    Const(
-      "lessthan",
-      Qualified(
-        List(Predicate("Comp", List(Var("T")))),
-        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
-      ),
-      ""
-    ),
-    Const(
-      "lessthanorequal",
-      Qualified(
-        List(Predicate("Comp", List(Var("T")))),
-        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
-      ),
-      ""
-    ),
     Const("abs", Qualified(Scheme(Double =>: Double)), ""),
     Const(
       "solve2",
@@ -286,14 +291,6 @@ object ConstConfig {
       ""
     ),
     Const("parallel", Qualified(Scheme(List("T"), Evo(Evo(Var("T"))) =>: Evo(Var("T")))), ""),
-    Const(
-      "greaterthanorequal",
-      Qualified(
-        List(Predicate("Comp", List(Var("T")))),
-        Scheme(List("T"), Var("T") =>: Var("T") =>: Bool)
-      ),
-      ""
-    ),
     Const("versor", Qualified(Scheme(TPoint =>: TPoint)), ""),
     Const(
       "derive",
