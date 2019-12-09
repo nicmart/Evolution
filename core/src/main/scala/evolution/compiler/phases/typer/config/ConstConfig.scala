@@ -76,16 +76,16 @@ object ConstConfig {
     Const(
       "map",
       Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Var("T2")) =>: Evo(Var("T2")), "T1", "T2")),
-      ""
-    ),
-    Const(
-      "withfirst",
-      Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
-      ""
+      curry2(Evolution.map)
     ),
     Const(
       "flatmap",
       Qualified(Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
+      curry2(Evolution.flatMap)
+    ),
+    Const(
+      "withfirst",
+      Qualified(List(), Scheme(Evo("T1") =>: ("T1" =>: Evo(Var("T2"))) =>: Evo(Var("T2")), "T1", "T2")),
       ""
     ),
     Const("grouped", Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Lst("T")), "T")), ""),
