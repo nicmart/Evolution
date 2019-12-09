@@ -8,71 +8,79 @@ import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point
 
 class ConstantsInterpreterTest extends LanguageSpec {
-  "add" in {
-    val add = interpret(Id("add")).asFunc3
+  "comparisons" - {
+    "greaterthan" in {
+      val const = interpret(Id("greaterthan")).asFunc3
 
-    val doubleAdd = add(instance("Add", Type.Double, Type.Double, Type.Double))
-    val pointAdd = add(instance("Add", Type.Point, Type.Point, Type.Point))
+      const(instance("Comp", Type.Double))(1)(0) shouldBe true
+      const(instance("Comp", Type.Double))(1)(1) shouldBe false
+      const(instance("Comp", Type.Double))(0)(1) shouldBe false
+    }
 
-    doubleAdd(1)(2) shouldBe 3
-    pointAdd(Point(1, 2))(Point(2, 3)) shouldBe Point(3, 5)
+    "greaterthanorequal" in {
+      val const = interpret(Id("greaterthanorequal")).asFunc3
+
+      const(instance("Comp", Type.Double))(1)(0) shouldBe true
+      const(instance("Comp", Type.Double))(1)(1) shouldBe true
+      const(instance("Comp", Type.Double))(0)(1) shouldBe false
+    }
+
+    "lessthan" in {
+      val const = interpret(Id("lessthan")).asFunc3
+
+      const(instance("Comp", Type.Double))(1)(0) shouldBe false
+      const(instance("Comp", Type.Double))(1)(1) shouldBe false
+      const(instance("Comp", Type.Double))(0)(1) shouldBe true
+    }
+
+    "lessthanorequal" in {
+      val const = interpret(Id("lessthanorequal")).asFunc3
+
+      const(instance("Comp", Type.Double))(1)(0) shouldBe false
+      const(instance("Comp", Type.Double))(1)(1) shouldBe true
+      const(instance("Comp", Type.Double))(0)(1) shouldBe true
+    }
   }
 
-  "greaterthan" in {
-    val const = interpret(Id("greaterthan")).asFunc3
+  "boolean operators" - {
+    "or" in {
+      val const = interpret(Id("or")).asFunc3
 
-    const(instance("Comp", Type.Double))(1)(0) shouldBe true
-    const(instance("Comp", Type.Double))(1)(1) shouldBe false
-    const(instance("Comp", Type.Double))(0)(1) shouldBe false
+      const(true)(false) shouldBe true
+      const(false)(true) shouldBe true
+      const(true)(true) shouldBe true
+      const(false)(false) shouldBe false
+    }
+
+    "and" in {
+      val const = interpret(Id("and")).asFunc3
+
+      const(true)(false) shouldBe false
+      const(false)(true) shouldBe false
+      const(true)(true) shouldBe true
+      const(false)(false) shouldBe false
+    }
   }
 
-  "greaterthanorequal" in {
-    val const = interpret(Id("greaterthanorequal")).asFunc3
+  "math" - {
+    "add" in {
+      val add = interpret(Id("add")).asFunc3
 
-    const(instance("Comp", Type.Double))(1)(0) shouldBe true
-    const(instance("Comp", Type.Double))(1)(1) shouldBe true
-    const(instance("Comp", Type.Double))(0)(1) shouldBe false
+      val doubleAdd = add(instance("Add", Type.Double, Type.Double, Type.Double))
+      val pointAdd = add(instance("Add", Type.Point, Type.Point, Type.Point))
+
+      doubleAdd(1)(2) shouldBe 3
+      pointAdd(Point(1, 2))(Point(2, 3)) shouldBe Point(3, 5)
+    }
   }
 
-  "lessthan" in {
-    val const = interpret(Id("lessthan")).asFunc3
+  "geometry" - {
+    "inrect" in {
+      val const = interpret(Id("inrect")).asFunc3
 
-    const(instance("Comp", Type.Double))(1)(0) shouldBe false
-    const(instance("Comp", Type.Double))(1)(1) shouldBe false
-    const(instance("Comp", Type.Double))(0)(1) shouldBe true
-  }
-
-  "lessthanorequal" in {
-    val const = interpret(Id("lessthanorequal")).asFunc3
-
-    const(instance("Comp", Type.Double))(1)(0) shouldBe false
-    const(instance("Comp", Type.Double))(1)(1) shouldBe true
-    const(instance("Comp", Type.Double))(0)(1) shouldBe true
-  }
-
-  "inrect" in {
-    val const = interpret(Id("inrect")).asFunc3
-
-    const(Point(-10, -10))(Point(10, 10))(Point.zero) shouldBe true
-    const(Point(-10, -10))(Point(-5, -5))(Point.zero) shouldBe false
-  }
-
-  "or" in {
-    val const = interpret(Id("or")).asFunc3
-
-    const(true)(false) shouldBe true
-    const(false)(true) shouldBe true
-    const(true)(true) shouldBe true
-    const(false)(false) shouldBe false
-  }
-
-  "and" in {
-    val const = interpret(Id("and")).asFunc3
-
-    const(true)(false) shouldBe false
-    const(false)(true) shouldBe false
-    const(true)(true) shouldBe true
-    const(false)(false) shouldBe false
+      const(Point(-10, -10))(Point(10, 10))(Point.zero) shouldBe true
+      const(Point(-10, -10))(Point(-5, -5))(Point.zero) shouldBe false
+    }
   }
 
   def interpret(term: Term): Any = (new TermInterpreter).interpret(term)
