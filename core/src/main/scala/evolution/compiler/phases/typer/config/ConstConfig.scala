@@ -97,11 +97,16 @@ object ConstConfig {
     ),
     Const("while", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeWhile)),
     Const("until", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeUntil)),
-    Const("fromlist", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), ""),
-    Const("range", Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))), ""),
-    Const("iterate2", Qualified(Scheme(("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")), ""),
-    Const("parallel", Qualified(Scheme(List("T"), Evo(Evo("T")) =>: Evo("T"))), ""),
-    Const("connect", Qualified(List(), Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), ""),
+    Const("fromlist", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), func1(Evolution.fromIterable)),
+    Const("range", Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))), curry3(Evolution.range)),
+    Const("iterate", Qualified(Scheme(("T" =>: "T") =>: "T" =>: Evo("T"), "T")), curry2(Evolution.iterate[Any])),
+    Const(
+      "iterate2",
+      Qualified(Scheme(("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")),
+      curry3(Evolution.iterate2[Any])
+    ),
+    Const("parallel", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), func1(Evolution.parallel)),
+    Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), ""),
     Const(
       "zipwith",
       Qualified(
@@ -109,7 +114,6 @@ object ConstConfig {
       ),
       ""
     ),
-    Const("iterate", Qualified(Scheme(("T" =>: "T") =>: "T" =>: Evo("T"), "T")), ""),
     Const("roll", Qualified(Scheme(List("T"), Evo("T" =>: "T") =>: "T" =>: Evo("T"))), ""),
     Const("roll2", Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")), ""),
     Const("flatten", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), ""),
