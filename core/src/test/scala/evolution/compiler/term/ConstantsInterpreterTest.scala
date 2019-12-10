@@ -162,6 +162,24 @@ class ConstantsInterpreterTest extends LanguageSpec {
       val evo = const(Evolution(1, 2, 3, 4, 5))(2).asEvo
       evo.run.toList shouldBe List(1, 2)
     }
+
+    "sliding map" in {
+      val const = interpret(Id("slidingmap")).asFunc2
+      val evo = const(Evolution("a", "b", "c", "d"))((a: String) => (b: String) => a + b).asEvo
+      evo.run.toList shouldBe List("ab", "bc", "cd")
+    }
+
+    "while" in {
+      val const = interpret(Id("while")).asFunc2
+      val evo = const(Evolution(1, 2, 3, 4, 5))((a: Int) => a < 3).asEvo
+      evo.run.toList shouldBe List(1, 2)
+    }
+
+    "until" in {
+      val const = interpret(Id("until")).asFunc2
+      val evo = const(Evolution(1, 2, 3, 4, 5))((a: Int) => a > 2).asEvo
+      evo.run.toList shouldBe List(1, 2)
+    }
   }
 
   "math" - {

@@ -93,12 +93,12 @@ object ConstConfig {
     Const(
       "slidingmap",
       Qualified(Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: "T2") =>: Evo("T2"), "T1", "T2")),
-      ""
+      curry2(Evolution.slidingMap)
     ),
-    Const("until", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), ""),
+    Const("while", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeWhile)),
+    Const("until", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeUntil)),
     Const("fromlist", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), ""),
     Const("range", Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))), ""),
-    Const("while", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), ""),
     Const("iterate2", Qualified(Scheme(("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")), ""),
     Const("parallel", Qualified(Scheme(List("T"), Evo(Evo("T")) =>: Evo("T"))), ""),
     Const("connect", Qualified(List(), Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), ""),

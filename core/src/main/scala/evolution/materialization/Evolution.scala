@@ -126,6 +126,10 @@ object Evolution {
     def run: Iterator[A] = fa.run.takeWhile(predicate)
   }
 
+  def takeUntil[A](fa: Evolution[A], predicate: A => Boolean): Evolution[A] = new Evolution[A] {
+    def run: Iterator[A] = fa.run.takeWhile(x => !predicate(x))
+  }
+
   def map[A, B](fa: Evolution[A], f: A => B): Evolution[B] = new Evolution[B] {
     def run: Iterator[B] = fa.run.map(f)
   }
