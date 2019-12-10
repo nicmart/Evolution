@@ -328,6 +328,76 @@ class ConstantsInterpreterTest extends LanguageSpec {
   }
 
   "math" - {
+    "pi" in {
+      val const = interpret(Id("pi"))
+      const shouldBe Math.PI
+    }
+
+    "cos" in {
+      val const = interpret(Id("cos")).asFunc1
+      const(0) shouldBe 1
+      Math.abs(const(Math.PI / 2).asInstanceOf[Double]) should be < (.001)
+    }
+
+    "sin" in {
+      val const = interpret(Id("sin")).asFunc1
+      const(0) shouldBe 0
+      const(Math.PI / 2) shouldBe 1
+    }
+
+    "exp" in {
+      val const = interpret(Id("exp")).asFunc2
+      const(2)(0) shouldBe 1
+      const(2)(1) shouldBe 2
+      const(2)(3) shouldBe 8
+    }
+
+    "inverse" in {
+      val const = interpret(Id("inverse")).asFunc2
+      const(invIntInstance)(1) shouldBe -1
+    }
+
+    "sign" in {
+      val const = interpret(Id("sign")).asFunc1
+      const(2) shouldBe 1
+      const(-2) shouldBe -1
+      const(0) shouldBe 0
+    }
+
+    "floor" in {
+      val const = interpret(Id("floor")).asFunc1
+      const(1.1) shouldBe 1
+      const(-.5) shouldBe -1
+    }
+
+    "abs" in {
+      val const = interpret(Id("abs")).asFunc1
+      const(1) shouldBe 1
+      const(-123) shouldBe 123
+    }
+
+    "mod" in {
+      val const = interpret(Id("mod")).asFunc2
+      const(7)(5) shouldBe 2
+    }
+
+    "toDbl" in {
+      val const = interpret(Id("todbl")).asFunc1
+      const(1) shouldBe 1.0
+    }
+
+    "div" in {
+      val const = interpret(Id("div")).asFunc2
+      const(3)(2) shouldBe 3.0 / 2
+    }
+
+    "smoothstep" in {
+      val const = interpret(Id("smoothstep")).asFunc3
+      const(0)(10)(-1) shouldBe 0
+      const(0)(10)(11) shouldBe 1
+      const(0)(10)(5) shouldBe .5
+    }
+
     "add" in {
       val add = interpret(Id("add")).asFunc3
 
@@ -336,6 +406,19 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
       doubleAdd(1)(2) shouldBe 3
       pointAdd(Point(1, 2))(Point(2, 3)) shouldBe Point(3, 5)
+    }
+
+    "multiply" in {
+      val const = interpret(Id("multiply")).asFunc3
+
+      val doubleMult = const(instance("Mult", Type.Double, Type.Double, Type.Double))
+
+      doubleMult(2)(3) shouldBe 6
+    }
+
+    "minus" in {
+      val const = interpret(Id("minus")).asFunc4
+      const(addIntInstance)(invIntInstance)(7)(4) shouldBe 3
     }
   }
 

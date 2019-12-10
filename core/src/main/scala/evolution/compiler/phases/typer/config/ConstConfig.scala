@@ -4,7 +4,13 @@ import evolution.compiler.impl.evaluation._
 import evolution.compiler.phases.typer.config.Constant0.Empty
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
 import evolution.compiler.types.Type.StringTypeOps
-import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst, EquableInst, InvertibleInst}
+import evolution.compiler.types.TypeClassInstance.{
+  AdditiveInst,
+  ComparableInst,
+  EquableInst,
+  InvertibleInst,
+  MultiplicativeInst
+}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
@@ -190,22 +196,37 @@ object ConstConfig {
       Evolution.octaveNoiseEvolution
     ),
     // Math
-    Const("pi", Qualified(Scheme(Double)), ""),
-    Const("cos", Qualified(Scheme(Double =>: Double)), ""),
-    Const("exp", Qualified(Scheme(Double =>: Double =>: Double)), ""),
-    Const("inverse", Qualified(Scheme("T" =>: "T", "T")), ""),
-    Const("smoothstep", Qualified(Scheme(Double =>: Double =>: Double =>: Double)), ""),
-    Const("sign", Qualified(Scheme(Double =>: Double)), ""),
-    Const("floor", Qualified(Scheme(Double =>: Integer)), ""),
-    Const("abs", Qualified(Scheme(Double =>: Double)), ""),
-    Const("sin", Qualified(Scheme(Double =>: Double)), ""),
-    Const("mod", Qualified(Scheme(Double =>: Double =>: Double)), ""),
-    Const("todbl", Qualified(Scheme(Integer =>: Double)), ""),
-    Const("div", Qualified(Scheme(Double =>: Double =>: Double)), ""),
+    Const("pi", Qualified(Scheme(Double)), Math.PI),
+    Const("cos", Qualified(Scheme(Double =>: Double)), func1(Math.cos)),
+    Const("sin", Qualified(Scheme(Double =>: Double)), func1(Math.sin)),
+    Const("exp", Qualified(Scheme(Double =>: Double =>: Double)), curry2(Math.pow)),
+    Const(
+      "inverse",
+      Qualified(List(Predicate("Invertible", "T")), Scheme("T" =>: "T", "T")),
+      (inv: InvertibleInst[Any]) => (x: Any) => MaterializeInverse(inv.inv)(x)
+    ),
+    Const("sign", Qualified(Scheme(Double =>: Double)), func1(Math.signum)),
+    Const("floor", Qualified(Scheme(Double =>: Integer)), func1(Math.floor)),
+    Const("abs", Qualified(Scheme(Double =>: Double)), func1(Math.abs)),
+    Const("mod", Qualified(Scheme(Double =>: Double =>: Double)), (x: Double) => (y: Double) => x % y),
+    Const("todbl", Qualified(Scheme(Integer =>: Double)), (x: Int) => x.toDouble),
+    Const("div", Qualified(Scheme(Double =>: Double =>: Double)), (x: Double) => (y: Double) => x / y),
+    Const(
+      "smoothstep",
+      Qualified(Scheme(Double =>: Double =>: Double =>: Double)),
+      (from: Double) =>
+        (to: Double) =>
+          (position: Double) => {
+            val t = (position - from) / (to - from)
+            if (t <= 0) 0.0
+            else if (t >= 1) 1.0
+            else t * t * (3.0 - 2.0 * t)
+          }
+    ),
     Const(
       "multiply",
       Qualified(List(Predicate("Mult", "A", "B", "C")), Scheme("A" =>: "B" =>: "C", "A", "B", "C")),
-      ""
+      (p: MultiplicativeInst[Any, Any, Any]) => (x: Any) => (y: Any) => MaterializeMultiplication(p.mult)(x, y)
     ),
     Const(
       "add",
@@ -215,7 +236,9 @@ object ConstConfig {
     Const(
       "minus",
       Qualified(List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")), Scheme("T" =>: "T" =>: "T", "T")),
-      ""
+      (add: AdditiveInst[Any, Any, Any]) =>
+        (inv: InvertibleInst[Any]) =>
+          (x: Any) => (y: Any) => MaterializeAddition(add.add)(x, MaterializeInverse(inv.inv)(y))
     ),
     // geometry
     Const("norm", Qualified(Scheme(TPoint =>: Double)), ""),
