@@ -423,6 +423,37 @@ class ConstantsInterpreterTest extends LanguageSpec {
   }
 
   "geometry" - {
+    "norm" in {
+      val const = interpret(Id("norm")).asFunc1
+      const(Point(0, 0)) shouldBe 0
+      const(Point(1, 0)) shouldBe 1
+    }
+
+    "versor" in {
+      val const = interpret(Id("versor")).asFunc1
+      const(Point(10, 10)) shouldBe Point(10, 10).versor
+    }
+
+    "x" in {
+      val const = interpret(Id("x")).asFunc1
+      const(Point(10, 10)) shouldBe 10
+    }
+
+    "y" in {
+      val const = interpret(Id("y")).asFunc1
+      const(Point(10, 10)) shouldBe 10
+    }
+
+    "point" in {
+      val const = interpret(Id("point")).asFunc2
+      const(1)(2) shouldBe Point(1, 2)
+    }
+
+    "polar" in {
+      val const = interpret(Id("polar")).asFunc2
+      const(1)(2) shouldBe Point.polar(1, 2)
+    }
+
     "inrect" in {
       val const = interpret(Id("inrect")).asFunc3
 

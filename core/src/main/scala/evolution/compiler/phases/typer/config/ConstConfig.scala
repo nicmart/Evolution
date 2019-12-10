@@ -241,12 +241,12 @@ object ConstConfig {
           (x: Any) => (y: Any) => MaterializeAddition(add.add)(x, MaterializeInverse(inv.inv)(y))
     ),
     // geometry
-    Const("norm", Qualified(Scheme(TPoint =>: Double)), ""),
-    Const("versor", Qualified(Scheme(TPoint =>: TPoint)), ""),
-    Const("x", Qualified(Scheme(TPoint =>: Double)), ""),
-    Const("y", Qualified(Scheme(TPoint =>: Double)), ""),
-    Const("point", Qualified(Scheme(Double =>: Double =>: TPoint)), ""),
-    Const("polar", Qualified(Scheme(Double =>: Double =>: TPoint)), ""),
+    Const("norm", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.norm),
+    Const("versor", Qualified(Scheme(TPoint =>: TPoint)), (p: Point) => p.versor),
+    Const("x", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.x),
+    Const("y", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.y),
+    Const("point", Qualified(Scheme(Double =>: Double =>: TPoint)), curry2(Point.apply)),
+    Const("polar", Qualified(Scheme(Double =>: Double =>: TPoint)), curry2(Point.polar)),
     Const(
       "inrect",
       Qualified(Scheme(TPoint =>: TPoint =>: TPoint =>: Bool)),
