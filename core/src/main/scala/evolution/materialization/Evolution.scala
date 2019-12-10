@@ -279,7 +279,7 @@ object Evolution {
   def solve1[A](speed: Evolution[A => A], start: A, add: (A, A) => A): Evolution[A] =
     roll(Evolution.map[A => A, A => A](speed, vFunc => a => add(a, vFunc(a))), start)
 
-  def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, mult: (A, A) => A): Evolution[A] =
+  def solve2[A](acc: Evolution[A => A => A], a0: A, v0: A, add: (A, A) => A): Evolution[A] =
     new Evolution[A] {
       def run: Iterator[A] = new AbstractIterator[A] {
         private val accIterator = acc.run
@@ -292,8 +292,8 @@ object Evolution {
           val currentV = _nextV
           if (accIterator.hasNext) {
             _hasNext = true
-            _nextV = mult(currentV, accIterator.next()(currentA)(currentV))
-            _nextA = mult(currentA, _nextV)
+            _nextV = add(currentV, accIterator.next()(currentA)(currentV))
+            _nextA = add(currentA, _nextV)
           } else {
             _hasNext = false
           }

@@ -4,7 +4,7 @@ import evolution.compiler.impl.evaluation._
 import evolution.compiler.phases.typer.config.Constant0.Empty
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
 import evolution.compiler.types.Type.StringTypeOps
-import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst, EquableInst}
+import evolution.compiler.types.TypeClassInstance.{AdditiveInst, ComparableInst, EquableInst, InvertibleInst}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
@@ -106,36 +106,72 @@ object ConstConfig {
       curry3(Evolution.iterate2[Any])
     ),
     Const("parallel", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), func1(Evolution.parallel)),
-    Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), ""),
+    Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), curry2(Evolution.connect)),
     Const(
       "zipwith",
       Qualified(
         Scheme(Evo("T1") =>: Evo("T2") =>: ("T1" =>: "T2" =>: "T3") =>: Evo("T3"), "T1", "T2", "T3")
       ),
-      ""
+      curry3(Evolution.zipWith)
     ),
-    Const("roll", Qualified(Scheme(List("T"), Evo("T" =>: "T") =>: "T" =>: Evo("T"))), ""),
-    Const("roll2", Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")), ""),
-    Const("flatten", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), ""),
-    // Integrations and derivatives
-    Const("solve1", Qualified(Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")), ""),
-    Const("solve2", Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")), ""),
+    Const("roll", Qualified(Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")), curry2(Evolution.roll[Any])),
     Const(
-      "mapwithderivative",
-      Qualified(
-        List(Predicate("Add", "T1", "T1", "T1"), Predicate("Invertible", "T1")),
-        Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: "T2") =>: Evo("T2"), "T1", "T2")
-      ),
-      ""
+      "roll2",
+      Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")),
+      curry3(Evolution.roll2[Any])
     ),
-    Const("integrate", Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")), ""),
+    Const("flatten", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), func1(Evolution.flatten)),
+    // Integrations and derivatives
+    Const(
+      "integrate",
+      Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
+      (p: AdditiveInst[Any, Any, Any]) =>
+        (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, MaterializeAddition(p.add))
+    ),
+    Const(
+      "solve1",
+      Qualified(Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")),
+      (p: AdditiveInst[Any, Any, Any]) =>
+        (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, MaterializeAddition(p.add))
+    ),
+    Const(
+      "solve2",
+      Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")),
+      (p: AdditiveInst[Any, Any, Any]) =>
+        (evo: Evolution[Any => Any => Any]) =>
+          (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, MaterializeAddition(p.add))
+    ),
     Const(
       "derive",
       Qualified(
         List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")),
         Scheme(Evo("T") =>: Evo("T"), "T")
       ),
-      ""
+      (add: AdditiveInst[Any, Any, Any]) =>
+        (inv: InvertibleInst[Any]) =>
+          (evo: Evolution[Any]) =>
+            Evolution.derive(
+              evo,
+              MaterializeAddition(add.add),
+              MaterializeInverse(inv.inv)
+            )
+    ),
+    Const(
+      "mapwithderivative",
+      Qualified(
+        List(Predicate("Add", "T1", "T1", "T1"), Predicate("Invertible", "T1")),
+        Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: "T2") =>: Evo("T2"), "T1", "T2")
+      ),
+      (add: AdditiveInst[Any, Any, Any]) =>
+        (inv: InvertibleInst[Any]) =>
+          (evo: Evolution[Any]) =>
+            (f: Any => Any => Any) =>
+              Evolution.mapWithDerivative(
+                evo,
+                f,
+                MaterializeAddition(add.add),
+                MaterializeInverse(inv.inv)
+              )
     ),
     // Random Evolutions
     Const("uniform", Qualified(Scheme(Double =>: Double =>: Evo(Double))), ""),

@@ -210,6 +210,68 @@ class ConstantsInterpreterTest extends LanguageSpec {
       val evo = const(Evolution(Evolution(1, 2), Evolution(3, 4))).asEvo
       evo.run.toList shouldBe List(1, 3, 2, 4)
     }
+
+    "connect" in {
+      val const = interpret(Id("connect")).asFunc2
+      val evo = const(Evolution(1, 2))((n: Int) => Evolution(n + 1, n + 2)).asEvo
+      evo.run.toList shouldBe List(1, 2, 3, 4)
+    }
+
+    "zipWith" in {
+      val const = interpret(Id("zipwith")).asFunc3
+      val evo = const(Evolution(1, 2))(Evolution(3, 4, 5))((x: Any) => (y: Any) => (x, y)).asEvo
+      evo.run.toList shouldBe List((1, 3), (2, 4))
+    }
+
+    "roll" in {
+      val const = interpret(Id("roll")).asFunc3
+      val evo = const(Evolution((x: Int) => x + 1, (x: Int) => x + 2))(0).asEvo
+      evo.run.toList shouldBe List(0, 1, 3)
+    }
+
+    "roll2" in {
+      val const = interpret(Id("roll2")).asFunc3
+      val evo = const(Evolution(sum2(1), sum2(2)))(0)(1).asEvo
+      evo.run.toList shouldBe List(0, 1, 2, 5)
+    }
+
+    "flatten" in {
+      val const = interpret(Id("flatten")).asFunc1
+      val evo = const(Evolution(Evolution(1, 2, 3), Evolution(), Evolution(4, 5))).asEvo
+      evo.run.toList shouldBe List(1, 2, 3, 4, 5)
+    }
+  }
+
+  "integrations and derivatives" - {
+    "integrate" in {
+      val const = interpret(Id("integrate")).asFunc3
+      val evo = const(addIntInstance)(0)(Evolution(1, 1, 1, 1)).asEvo
+      evo.run.toList shouldBe List(0, 1, 2, 3, 4)
+    }
+
+    "solve1" in {
+      val const = interpret(Id("solve1")).asFunc3
+      val evo = const(addIntInstance)(Evolution(sum1(1), sum1(2)))(0).asEvo
+      evo.run.toList shouldBe List(0, 1, 4)
+    }
+
+    "solve2" in {
+      val const = interpret(Id("solve2")).asFunc4
+      val evo = const(addIntInstance)(Evolution(sum2(1), sum2(2)))(0)(0).asEvo
+      evo.run.toList shouldBe List(0, 1, 6)
+    }
+
+    "derive" in {
+      val const = interpret(Id("derive")).asFunc3
+      val evo = const(addIntInstance)(invIntInstance)(Evolution(1, 2, 3, 4)).asEvo
+      evo.run.toList shouldBe List(1, 1, 1)
+    }
+
+    "mapWithDerivative" in {
+      val const = interpret(Id("mapwithderivative")).asFunc4
+      val evo = const(addIntInstance)(invIntInstance)(Evolution(1, 2, 3, 4))((x: Int) => (v: Int) => (x, v)).asEvo
+      evo.run.toList shouldBe List((1, 1), (2, 1), (3, 1))
+    }
   }
 
   "math" - {
@@ -235,8 +297,15 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
   def interpret(term: Term): Any = (new TermInterpreter).interpret(term)
 
+  lazy val addIntInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val addDoubleInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val invIntInstance = instance("Invertible", Type.Integer)
+
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
+
+  def sum1(n: Int): Int => Int = x => x + n
+  def sum2(n: Int): Int => Int => Int = x => y => x + y + n
 
   private implicit class CastOps(any: Any) {
     def asFunc1: Any => Any = any.asInstanceOf[Any => Any]
