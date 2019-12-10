@@ -174,13 +174,21 @@ object ConstConfig {
               )
     ),
     // Random Evolutions
-    Const("uniform", Qualified(Scheme(Double =>: Double =>: Evo(Double))), ""),
-    Const("uniformdiscrete", Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))), ""),
-    Const("uniformchoice", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), ""),
-    Const("uniformfrom", Qualified(Scheme(Integer =>: Evo("T") =>: Evo("T"), "T")), ""),
-    Const("normal", Qualified(Scheme(Double =>: Double =>: Evo(Double))), ""),
-    Const("noise", Qualified(Scheme(Evo(TPoint =>: Double))), ""),
-    Const("octavenoise", Qualified(Scheme(Evo(Integer =>: Double =>: TPoint =>: Double))), ""),
+    Const("uniform", Qualified(Scheme(Double =>: Double =>: Evo(Double))), curry2(Evolution.uniform)),
+    Const(
+      "uniformdiscrete",
+      Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))),
+      curry3(Evolution.uniformDiscrete)
+    ),
+    Const("uniformchoice", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), func1(Evolution.uniformChoice)),
+    Const("uniformfrom", Qualified(Scheme(Integer =>: Evo("T") =>: Evo("T"), "T")), curry2(Evolution.uniformFrom)),
+    Const("normal", Qualified(Scheme(Double =>: Double =>: Evo(Double))), curry2(Evolution.normal)),
+    Const("noise", Qualified(Scheme(Evo(TPoint =>: Double))), Evolution.noiseEvolution),
+    Const(
+      "octavenoise",
+      Qualified(Scheme(Evo(Integer =>: Double =>: TPoint =>: Double))),
+      Evolution.octaveNoiseEvolution
+    ),
     // Math
     Const("pi", Qualified(Scheme(Double)), ""),
     Const("cos", Qualified(Scheme(Double =>: Double)), ""),

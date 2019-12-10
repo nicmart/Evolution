@@ -77,7 +77,7 @@ object Evolution {
   def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] =
     new Evolution[T] {
       def run: Iterator[T] = {
-        val materializedTs = ts.run.take(n).toVector
+        val materializedTs = ts.run.take(n).toList.toIndexedSeq
         if (materializedTs.nonEmpty) Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
         else Iterator.empty
       }

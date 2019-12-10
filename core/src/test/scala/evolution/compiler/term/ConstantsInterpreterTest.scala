@@ -274,6 +274,59 @@ class ConstantsInterpreterTest extends LanguageSpec {
     }
   }
 
+  "randomic evolutions" - {
+    "uniform" in {
+      val const = interpret(Id("uniform")).asFunc2
+      val evo = const(0)(10).asEvo
+      val results = evo.run.take(100).toList.asInstanceOf[List[Double]]
+      results.max should be <= (100.0)
+      results.min should be >= (0.0)
+    }
+
+    "uniformdiscrete" in {
+      val const = interpret(Id("uniformdiscrete")).asFunc3
+      val evo = const(0)(10)(5).asEvo
+      val results = evo.run.take(1000).toSet
+      results shouldBe Set(0, 5, 10)
+    }
+
+    "uniformchoice" in {
+      val const = interpret(Id("uniformchoice")).asFunc1
+      val evo = const(List(1, 2, 3, 4, 5)).asEvo
+      val results = evo.run.take(1000).toSet
+      results shouldBe Set(1, 2, 3, 4, 5)
+    }
+
+    "uniformFrom" in {
+      val const = interpret(Id("uniformfrom")).asFunc2
+      val evo = const(3)(Evolution(1, 2, 3, 4, 5)).asEvo
+      val results = evo.run.take(1000).toSet
+      results shouldBe Set(1, 2, 3)
+    }
+
+    "normal" in {
+      val const = interpret(Id("normal")).asFunc2
+      val evo = const(0)(1).asEvo
+      val results = evo.run.take(10000).toList.asInstanceOf[List[Double]]
+      Math.abs(results.sum / results.size) should be < .1
+      results.count(x => Math.abs(x) < 3).toDouble should be > (.99 * 10000)
+    }
+
+    "noise" in {
+      val const = interpret(Id("noise"))
+      val fs = const.asEvo.run.take(100).toVector.asInstanceOf[Vector[Point => Double]]
+      fs(0)(Point(0, 0)) shouldBe a[Double]
+      fs(1)(Point(100, 50)) shouldBe a[Double]
+    }
+
+    "octavenoise" in {
+      val const = interpret(Id("octavenoise"))
+      val fs = const.asEvo.run.take(100).toVector.asInstanceOf[Vector[Int => Double => Point => Double]]
+      fs(0)(1)(2)(Point(0, 0)) shouldBe a[Double]
+      fs(1)(1)(2)(Point(100, 50)) shouldBe a[Double]
+    }
+  }
+
   "math" - {
     "add" in {
       val add = interpret(Id("add")).asFunc3
