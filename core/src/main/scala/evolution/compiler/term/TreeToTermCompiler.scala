@@ -48,7 +48,8 @@ final class TreeToTermCompiler {
     pVars(predicates).map(lambda(_, term))
 
   private def pVars(predicates: List[Predicate]): Compilation[List[String]] =
-    traverse(predicates.filter(_.hasTypeVars))(predName)
+    //traverse(predicates.filter(_.hasTypeVars))(predName)
+    traverse(predicates.reverse)(predName)
 
   private def appPredicates(term: Term, predicates: List[Predicate]): Compilation[Term] =
     traverse(predicates)(argFromPred).map(pArgs => app(term, pArgs))

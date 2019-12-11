@@ -6,13 +6,9 @@ object PrettyPrintTree {
 
   private val maxChildrenLegnth = 100
 
-  def apply(tree: Tree): String = ""
-  //Tree.catamorphism(prettyPrintTreeF)(tree)(0)
+  def apply(tree: Tree): String = Tree.catamorphism(prettyPrintTreeF)(tree)(0)
 
-  // TODO The real implementation make the fastOpt optimization hang. Need investigation
-  private[tree] def prettyPrintTreeF(treeF: TreeF[Int => String]): Int => String = _ => ""
-
-  /*private[tree] def prettyPrintTreeF(treeF: TreeF[Int => String]): Int => String =
+  private[tree] def prettyPrintTreeF(treeF: TreeF[Int => String]): Int => String =
     n =>
       indent(n) + (treeF match {
         case TreeF.App(g, args) => ppFunc("App", g :: args.toList, n)
@@ -32,10 +28,13 @@ object PrettyPrintTree {
   }
 
   private def ppFunc(name: String, children: List[Int => String], n: Int): String = {
-    val childrenLength = children.map(_.apply(0)).mkString(", ").length
-    if (childrenLength < maxChildrenLegnth) children.map(_.apply(0)).mkString(s"$name(", ", ", ")")
-    else children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
+    // val childrenInOneLine = children.map(child => child(0)).mkString(", ").toString
+    // Getting the size of childrenInOneLine makes fastOpt hang
+//    if (childrenInOneLine.size < maxChildrenLegnth) childrenInOneLine
+//    else children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
+    children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
+    //children.map(child => child(0)).mkString(", ")
   }
 
-  private def indent(n: Int): String = "  " * n*/
+  private def indent(n: Int): String = "  " * n
 }

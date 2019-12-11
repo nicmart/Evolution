@@ -20,8 +20,8 @@ object TypingConfig {
     */
   val instances: List[TypeClassInstance] = List(
     // Numeric
-    NumericInst(Numeric.Int),
     NumericInst(Numeric.Double),
+    NumericInst(Numeric.Int),
     // Multiplicative
     MultiplicativeInst(Multiplicative.DoubleDoubleDouble),
     MultiplicativeInst(Multiplicative.DoublePointPoint),

@@ -2,7 +2,8 @@ package evolution.compiler.stdlib
 
 import evolution.compiler.phases.ModuleCompiler
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.{ConstConfig, TypingConfig}
+import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
 import evolution.compiler.term.{Module, TreeToTermCompiler}
@@ -15,7 +16,7 @@ object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
 
   private lazy val initialModule = Module(
-    TypingConfig.constantQualifiedTypes
+    Assumptions(ConstConfig.constants.map(const => Assumption(const.name, const.tpe, false)))
       .withAssumption(model.Assumption("top", Qualified(Scheme(Type.Double)), false))
       .withAssumption(model.Assumption("bottom", Qualified(Scheme(Type.Double)), false))
       .withAssumption(model.Assumption("left", Qualified(Scheme(Type.Double)), false))

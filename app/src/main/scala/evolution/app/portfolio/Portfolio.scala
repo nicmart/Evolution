@@ -13,6 +13,11 @@ object Portfolio {
       defaultRendererState
     ),
     Drawing(
+      Some("xxxx"),
+      DrawingState(0L, "integrate(point(0, 0), const(point(0, 0)))"),
+      defaultRendererState
+    ),
+    Drawing(
       Some("Simple Brownian"),
       DrawingState(0L, """
         r = uniform(-2, 2) in
@@ -71,7 +76,7 @@ object Portfolio {
           w = 0.01 in
           amplitude = 10 in
           
-          rndPoint =@point(uniform(left, right), uniform(bottom, top)) in
+          rndPoint = @point(uniform(left, right), uniform(bottom, top)) in
           
           trajectory = p -> @point(
             integrate(x(p), const(hSpeed)),
@@ -109,31 +114,13 @@ object Portfolio {
       DrawingState(
         0L,
         """
-          r = .03 in
-          noise = uniform(-r, r) in
-          a = .1 in
-          b = -.00001 in
-          c = -.01 in
-          
-          eq(r, x, v) = a * r + b * x + c * v in
-          
           speedMax = solve2(
-            map(noise, eq),
+            const(x -> v -> x),
             0,
             0
           ) in
           
-          speed = product(
-            R <- map(speedMax, s -> abs(s)),
-            r1 <- uniform(-R, R).take(1),
-            r2 <- uniform(-R, R).take(1)
-          ) in point(r1, r2)
-          in
-          
-          integrate(
-            point(0, 0),
-            speed
-          )
+          @point(speedMax, const(0))
           """.unindent
       ),
       defaultRendererState

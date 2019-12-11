@@ -130,19 +130,22 @@ object ConstConfig {
     // Integrations and derivatives
     Const(
       "integrate",
-      Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
+      Qualified(List(Predicate("Add", "T", "T", "T")), Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
       (p: AdditiveInst[Any, Any, Any]) =>
         (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, MaterializeAddition(p.add))
     ),
     Const(
       "solve1",
-      Qualified(Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")),
+      Qualified(List(Predicate("Add", "T", "T", "T")), Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")),
       (p: AdditiveInst[Any, Any, Any]) =>
         (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, MaterializeAddition(p.add))
     ),
     Const(
       "solve2",
-      Qualified(Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")),
+      Qualified(
+        List(Predicate("Add", "T", "T", "T")),
+        Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")
+      ),
       (p: AdditiveInst[Any, Any, Any]) =>
         (evo: Evolution[Any => Any => Any]) =>
           (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, MaterializeAddition(p.add))

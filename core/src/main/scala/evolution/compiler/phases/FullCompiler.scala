@@ -5,6 +5,7 @@ import evolution.compiler.term.{Module, TermInterpreter, TreeToTermCompiler, Uni
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.logging.Logger
+import pprint.PPrinter
 
 final class FullCompiler(
     parser: Parser,
@@ -22,7 +23,10 @@ final class FullCompiler(
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
+//      _ = println(PrettyPrintTree(untypedTree))
+//      _ = println(PrettyPrintTypedTree(typedTree))
       term <- compiler.compile(typedTree)
+//      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
       termWithModule = module.load(term)
       termWithUniqueNames = renamer.rename(termWithModule)
       _ = log(s"Compiled to $termWithModule")

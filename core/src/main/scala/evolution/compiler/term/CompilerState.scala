@@ -8,7 +8,8 @@ private[term] case class CompilerState(count: Int, predicateNames: Map[Predicate
   def predName(predicate: Predicate): Option[String] = predicateNames.get(predicate)
   def withPredicate(predicate: Predicate): CompilerState =
     if (predicateNames.isDefinedAt(predicate)) this
-    else copy(predicateNames = predicateNames.updated(predicate, currentPredVarname)).withNewPredVar
+    else
+      copy(predicateNames = predicateNames.updated(predicate, s"${predicate.id}$$$currentPredVarname")).withNewPredVar
   def withPredicates(predicates: List[Predicate]): CompilerState =
     predicates.foldLeft(this) { (compilerState, predicate) =>
       compilerState.withPredicate(predicate)
