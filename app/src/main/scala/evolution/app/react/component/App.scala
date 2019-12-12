@@ -13,13 +13,14 @@ import evolution.app.model.state.RendererState
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.app.react.pages._
 import japgolly.scalajs.react.extra.StateSnapshot
-import evolution.app.model.{CodeCompiler, Drawing, ExprBasedCodeCompiler}
+import evolution.app.model.{CodeCompiler, Drawing, ExprBasedCodeCompiler, TermBasedCodeCompiler}
 import evolution.app.conf.Conf
-import evolution.compiler.phases.ExprBasedFullCompiler
+import evolution.compiler.phases.{ExprBasedFullCompiler, FullCompiler}
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
+import evolution.compiler.term.{TermInterpreter, TreeToTermCompiler}
 import evolution.logging.NoOpLogger
 
 object App {
@@ -113,7 +114,7 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private def codeCompiler(pageState: PageState): CodeCompiler = {
+  private def codeCompilerOld(pageState: PageState): CodeCompiler = {
     println(s"materializer is ${pageState.materializer}")
     new ExprBasedCodeCompiler(
       new ExprBasedFullCompiler(
@@ -124,6 +125,22 @@ object App {
         ),
         DefaultCompiler,
         pageState.materializer.materializer,
+        Conf.logger
+      )
+    )
+  }
+
+  private def codeCompiler(pageState: PageState): CodeCompiler = {
+    println(s"materializer is ${pageState.materializer}")
+    new TermBasedCodeCompiler(
+      new FullCompiler(
+        FastParseParser,
+        new PredicatesSolverTyper(
+          new RecursiveTyper,
+          new UnifyPredicates(NoOpLogger)
+        ),
+        new TreeToTermCompiler,
+        new TermInterpreter,
         Conf.logger
       )
     )

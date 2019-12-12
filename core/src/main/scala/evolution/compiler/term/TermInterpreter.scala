@@ -1,10 +1,10 @@
 package evolution.compiler.term
 
-import evolution.compiler.impl.evaluation.{MaterializeAddition, MaterializeNumeric}
+import evolution.compiler.impl.evaluation.MaterializeNumeric
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
-import evolution.compiler.types.TypeClassInstance.{AdditiveInst, NumericInst}
+import evolution.compiler.types.TypeClassInstance.NumericInst
 
 import scala.collection.mutable
 
@@ -12,7 +12,7 @@ class TermInterpreter {
   def interpret(term: Term): Any = RegisterBasedInterpreter.fresh.interpret(term)
 }
 
-class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
+final class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
   def interpret(term: Term): Any = term match {
     case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))     => b
@@ -34,6 +34,8 @@ class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
     case Id(name) => register(name)
 
     case Inst(inst) => inst
+
+    case Value(value) => value
   }
 
   def bind(name: String, value: Any): Unit = register.update(name, value)

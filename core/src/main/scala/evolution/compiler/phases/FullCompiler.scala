@@ -26,7 +26,7 @@ final class FullCompiler(
 //      _ = println(PrettyPrintTree(untypedTree))
 //      _ = println(PrettyPrintTypedTree(typedTree))
       term <- compiler.compile(typedTree)
-//      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
+      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
       termWithModule = module.load(term)
       termWithUniqueNames = renamer.rename(termWithModule)
       _ = log(s"Compiled to $termWithModule")

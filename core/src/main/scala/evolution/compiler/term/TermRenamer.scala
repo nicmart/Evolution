@@ -18,6 +18,6 @@ object TermRenamer {
         Lit(LitList(ts.map(rename(oldName, newName))))
       case Lit(lit) =>
         Lit(lit)
-      case Inst(instance) => Inst(instance)
+      case _ => term
     }
 }

@@ -11,6 +11,7 @@ object Term {
   case class Let(name: String, expr: Term, body: Term) extends Term
   case class Lambda(name: String, body: Term) extends Term
   case class App(f: Term, x: Term) extends Term
+  case class Value(value: Any) extends Term
 
   sealed abstract class Literal
   object Literal {

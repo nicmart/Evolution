@@ -1,16 +1,15 @@
 package evolution.compiler.stdlib
 
+import evolution.compiler.phases.compiler.DefaultCompiler
+import evolution.compiler.phases.parser.FastParseParser
+import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.predicates.UnifyPredicates
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
 import evolution.compiler.phases.{ExprModule, ExprModuleCompiler}
-import evolution.logging.NoOpLogger
-import evolution.compiler.types.TypeClasses.Qualified
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
-import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.compiler.DefaultCompiler
-import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
-import evolution.compiler.phases.typer.model.Assumption
-import evolution.compiler.phases.typer.predicates.UnifyPredicates
+import evolution.compiler.types.TypeClasses.Qualified
+import evolution.logging.NoOpLogger
 
 object StandardLibraryExprModule {
   val module: Either[String, ExprModule] = moduleCompiler.compile(code, initialModule)

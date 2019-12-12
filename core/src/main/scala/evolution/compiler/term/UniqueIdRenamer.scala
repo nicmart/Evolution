@@ -10,9 +10,6 @@ class UniqueIdRenamer {
 
   private def renameM(term: Term): Renamed[Term] = term match {
     case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))
-    case Lit(_)           => pure(term)
-    case Id(_)            => pure(term)
-    case Inst(_)          => pure(term)
 
     case Let(name, expr, body) =>
       for {
@@ -34,6 +31,8 @@ class UniqueIdRenamer {
         f <- renameM(f)
         x <- renameM(x)
       } yield App(f, x)
+
+    case _ => pure(term)
   }
 }
 

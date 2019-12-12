@@ -2,7 +2,7 @@ package evolution.compiler.stdlib
 
 import evolution.compiler.phases.ModuleCompiler
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.config.{ConstConfig, TypingConfig}
+import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper, model}
