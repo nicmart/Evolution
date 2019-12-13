@@ -28,11 +28,34 @@ class TermOptimizerTest extends LanguageSpec {
       }
     }
 
+    "replace optimized terms in let bindings" - {
+      "x = 2 in x" in {
+        val term = Let("z", Lambda("pred", litInt(2)), App(Id("z"), Inst(addDouble)))
+        optimize(term) shouldBe Value(2)
+      }
+    }
+
+    // We have a problem with constants like x!
+
     "optimize children" - {
       "of lambdas" in {
         val term = Lambda("x", App(Lit(LitInt(2)), Inst(numDouble)))
-        optimize(term) shouldBe Lambda("x", Value(2))
+        val Value(f) = optimize(term)
+        f.asInstanceOf[Any => Any](12345) shouldBe 2
       }
+    }
+
+    "bug1" in {
+      // This does not fail, but it will refer to a "a" in another register!
+      val optimizedConstFunc = optimize(Lambda("b", Id("a")))
+      val term = Let("a", Value(123), App(optimizedConstFunc, Id("a")))
+      optimize(term) shouldBe Value(123)
+    }
+
+    "bug2" in {
+      val term = optimize(Let("a", Value(123), Lambda("b", Id("a"))))
+      val Value(f) = optimize(term)
+      f.asInstanceOf[Any => Any](456) shouldBe 123
     }
   }
 

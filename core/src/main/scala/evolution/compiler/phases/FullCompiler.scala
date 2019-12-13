@@ -26,14 +26,24 @@ final class FullCompiler(
       _ = log(PrettyPrintTypedTree(typedTree))
 //      _ = println(PrettyPrintTree(untypedTree))
 //      _ = println(PrettyPrintTypedTree(typedTree))
-      term <- compiler.compile(typedTree)
-      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
+      term <- printTime("treeToTerm", compiler.compile(typedTree))
+      //_ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
       termWithModule = module.load(term)
-      termWithUniqueNames = renamer.rename(termWithModule)
-      optimizedTerm = optimizer.optimize(termWithUniqueNames)
+      termWithUniqueNames = printTime("term renaming", renamer.rename(termWithModule))
+      //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
+      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
+      //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
-    } yield interpreter.interpret(optimizedTerm)
+    } yield printTime("interpretation", interpreter.interpret(optimizedTerm))
+
+  private def printTime[T](label: String, t: => T): T = {
+    val start = System.currentTimeMillis()
+    val result = t
+    val end = System.currentTimeMillis()
+    println(s"$label: ${end - start}ms")
+    result
+  }
 
   private val renamer = new UniqueIdRenamer
 }

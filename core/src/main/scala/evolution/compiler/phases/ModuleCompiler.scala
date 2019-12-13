@@ -3,7 +3,14 @@ package evolution.compiler.phases
 import cats.syntax.either._
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.term.{Module, Term, TreeToTermCompiler}
+import evolution.compiler.term.{
+  Module,
+  RegisterBasedInterpreter,
+  Term,
+  TermInterpreter,
+  TermOptimizer,
+  TreeToTermCompiler
+}
 import evolution.compiler.tree.TreeF.Let
 import evolution.compiler.tree.{PrettyPrintTypedTree, _}
 import evolution.compiler.types.Type
@@ -13,6 +20,8 @@ import evolution.logging.Logger
 
 final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger) {
   import logger.log
+
+  private val optimizer = new TermOptimizer(new TermInterpreter)
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
@@ -27,6 +36,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       _ = log(s"Assumptions extracted")
       _ = log(assumptions.all)
       termWithoutModule <- compiler.compile(typedTree)
+      //term = optimizer.optimize(initialModule.load(termWithoutModule))
       term = initialModule.load(termWithoutModule)
       _ = log(s"Compiled to $term")
       _ = log("Done: compilation")
