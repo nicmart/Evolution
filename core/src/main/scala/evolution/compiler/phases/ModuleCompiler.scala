@@ -21,8 +21,6 @@ import evolution.logging.Logger
 final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger) {
   import logger.log
 
-  private val optimizer = new TermOptimizer(new TermInterpreter)
-
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {

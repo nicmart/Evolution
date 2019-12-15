@@ -462,7 +462,7 @@ class ConstantsInterpreterTest extends LanguageSpec {
     }
   }
 
-  def interpret(term: Term): Any = (new TermInterpreter).interpret(term)
+  def interpret(term: Term): Any = (new RegisterBasedInterpreter).interpret(term)
 
   lazy val addIntInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
   lazy val addDoubleInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)

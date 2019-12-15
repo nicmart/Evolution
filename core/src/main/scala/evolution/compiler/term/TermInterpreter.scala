@@ -7,11 +7,11 @@ import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.NumericInst
 
-final class TermInterpreter {
-  def interpret(term: Term): Any = RegisterBasedInterpreter.fresh.interpret(term)
+trait TermInterpreter {
+  def interpret(term: Term): Any
 }
 
-final class RegisterBasedInterpreter {
+final class RegisterBasedInterpreter extends TermInterpreter {
   def interpret(term: Term): Any = interpretRec(constants)(term)
 
   def interpretRec(register: Map[String, Any])(term: Term): Any = term match {

@@ -1,7 +1,14 @@
 package evolution.compiler.phases
 
 import cats.syntax.either._
-import evolution.compiler.term.{Module, TermInterpreter, TermOptimizer, TreeToTermCompiler, UniqueIdRenamer}
+import evolution.compiler.term.{
+  Module,
+  MutableTermInterpreter,
+  TermInterpreter,
+  TermOptimizer,
+  TreeToTermCompiler,
+  UniqueIdRenamer
+}
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.logging.Logger
@@ -15,7 +22,7 @@ final class FullCompiler(
     logger: Logger
 ) {
   import logger.log
-  private val optimizer = new TermOptimizer(interpreter)
+  private val optimizer = new TermOptimizer(new MutableTermInterpreter())
 
   def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Any] =
     for {
@@ -31,7 +38,7 @@ final class FullCompiler(
       termWithUniqueNames = printTime("term renaming", renamer.rename(termWithModule))
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
-      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
+      //optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")

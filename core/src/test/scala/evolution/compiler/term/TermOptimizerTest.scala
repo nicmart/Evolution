@@ -1,12 +1,11 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.types.TypeClassInstance.NumericInst
-import Term._
-import Literal._
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.types.{Type, TypeClassInstance}
+import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClasses.Predicate
+import evolution.compiler.types.{Type, TypeClassInstance}
 
 class TermOptimizerTest extends LanguageSpec {
   "TermOptimizer should" - {
@@ -59,7 +58,7 @@ class TermOptimizerTest extends LanguageSpec {
     }
   }
 
-  lazy val optimizer = new TermOptimizer(new TermInterpreter)
+  lazy val optimizer = new TermOptimizer(new MutableTermInterpreter)
 
   def optimize(term: Term): Term = optimizer.optimize(term)
   def litInt(n: Int): Term = Apply(Lit(LitInt(n)), Inst(numDouble))

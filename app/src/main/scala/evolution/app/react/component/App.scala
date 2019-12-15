@@ -20,7 +20,7 @@ import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
-import evolution.compiler.term.{TermInterpreter, TreeToTermCompiler}
+import evolution.compiler.term.{RegisterBasedInterpreter, TermInterpreter, TreeToTermCompiler}
 import evolution.logging.NoOpLogger
 
 object App {
@@ -140,7 +140,7 @@ object App {
           new UnifyPredicates(NoOpLogger)
         ),
         new TreeToTermCompiler,
-        new TermInterpreter,
+        new RegisterBasedInterpreter,
         Conf.logger
       )
     )

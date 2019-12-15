@@ -176,5 +176,5 @@ class TermInterpreterTest extends LanguageSpec {
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
 
-  lazy val interpreter = new TermInterpreter
+  lazy val interpreter = new RegisterBasedInterpreter
 }
