@@ -18,7 +18,7 @@ class TermOptimizerTest extends LanguageSpec {
 
     "optimize sums of constants" - {
       "2 + 3" in {
-        val term = App(App(App(Id("add"), Inst(addDouble)), litInt(2)), litInt(3))
+        val term = Apply(Apply(Apply(Id("add"), Inst(addDouble)), litInt(2)), litInt(3))
         optimize(term) shouldBe Value(5)
       }
 
@@ -30,7 +30,7 @@ class TermOptimizerTest extends LanguageSpec {
 
     "replace optimized terms in let bindings" - {
       "x = 2 in x" in {
-        val term = Let("z", Lambda("pred", litInt(2)), App(Id("z"), Inst(addDouble)))
+        val term = Let("z", Lambda("pred", litInt(2)), Apply(Id("z"), Inst(addDouble)))
         optimize(term) shouldBe Value(2)
       }
     }
@@ -39,7 +39,7 @@ class TermOptimizerTest extends LanguageSpec {
 
     "optimize children" - {
       "of lambdas" in {
-        val term = Lambda("x", App(Lit(LitInt(2)), Inst(numDouble)))
+        val term = Lambda("x", Apply(Lit(LitInt(2)), Inst(numDouble)))
         val Value(f) = optimize(term)
         f.asInstanceOf[Any => Any](12345) shouldBe 2
       }
@@ -48,7 +48,7 @@ class TermOptimizerTest extends LanguageSpec {
     "bug1" in {
       // This does not fail, but it will refer to a "a" in another register!
       val optimizedConstFunc = optimize(Lambda("b", Id("a")))
-      val term = Let("a", Value(123), App(optimizedConstFunc, Id("a")))
+      val term = Let("a", Value(123), Apply(optimizedConstFunc, Id("a")))
       optimize(term) shouldBe Value(123)
     }
 
@@ -62,9 +62,9 @@ class TermOptimizerTest extends LanguageSpec {
   lazy val optimizer = new TermOptimizer(new TermInterpreter)
 
   def optimize(term: Term): Term = optimizer.optimize(term)
-  def litInt(n: Int): Term = App(Lit(LitInt(n)), Inst(numDouble))
+  def litInt(n: Int): Term = Apply(Lit(LitInt(n)), Inst(numDouble))
   def add(inst: TypeClassInstance, a: Term, b: Term): Term =
-    App(App(App(Id("add"), Inst(inst)), a), b)
+    Apply(Apply(Apply(Id("add"), Inst(inst)), a), b)
 
   lazy val numDouble: TypeClassInstance = TypingConfig.instance(Predicate("Num", List(Type.Double))).unsafeRight
   lazy val addDouble = TypingConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight

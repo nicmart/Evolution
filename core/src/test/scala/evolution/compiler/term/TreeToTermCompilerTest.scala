@@ -39,7 +39,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
 
             val term = compiler.compileM(tree).run(state).unsafeRight
 
-            term shouldBe Term.App(Term.Lit(LitInt(0)), Term.Id(predVarName))
+            term shouldBe Term.Apply(Term.Lit(LitInt(0)), Term.Id(predVarName))
           }
 
           "monomorphic" in {
@@ -49,7 +49,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
 
             val term = compiler.compile(tree).unsafeRight
 
-            term shouldBe Term.App(Term.Lit(LitInt(0)), Term.Inst(instance))
+            term shouldBe Term.Apply(Term.Lit(LitInt(0)), Term.Inst(instance))
           }
         }
       }
@@ -68,7 +68,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
           val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.App(Term.Id("x"), Term.Id(state.predName(predicate).get))
+          term shouldBe Term.Apply(Term.Id("x"), Term.Id(state.predName(predicate).get))
         }
 
         "qualified with resolved predicate" in {
@@ -77,7 +77,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
           val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.App(Term.Id("x"), Term.Inst(predicate.instance))
+          term shouldBe Term.Apply(Term.Id("x"), Term.Inst(predicate.instance))
         }
 
         "qualified with mixed predicates" in {
@@ -87,8 +87,8 @@ class TreeToTermCompilerTest extends LanguageSpec {
           val state = CompilerState.empty.withPredicate(predicate1)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.App(
-            Term.App(Term.Id("x"), Term.Id(state.predName(predicate1).get)),
+          term shouldBe Term.Apply(
+            Term.Apply(Term.Id("x"), Term.Id(state.predName(predicate1).get)),
             Term.Inst(predicate2.instance)
           )
         }
@@ -124,8 +124,8 @@ class TreeToTermCompilerTest extends LanguageSpec {
           val expected =
             Term.Let(
               "x",
-              Term.Lambda(pVarName, Term.App(Term.Lit(LitInt(2)), Term.Id(pVarName))),
-              Term.App(Term.Id("x"), Term.Inst(predicateInst.instance))
+              Term.Lambda(pVarName, Term.Apply(Term.Lit(LitInt(2)), Term.Id(pVarName))),
+              Term.Apply(Term.Id("x"), Term.Inst(predicateInst.instance))
             )
 
           term shouldBe expected
@@ -153,7 +153,7 @@ class TreeToTermCompilerTest extends LanguageSpec {
               .as(Type.Var("X"))
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.App(Term.App(Term.Id("x"), Term.Lit(LitInt(1))), Term.Lit(LitInt(2)))
+          term shouldBe Term.Apply(Term.Apply(Term.Id("x"), Term.Lit(LitInt(1))), Term.Lit(LitInt(2)))
         }
       }
     }

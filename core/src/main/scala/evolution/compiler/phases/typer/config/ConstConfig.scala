@@ -211,7 +211,11 @@ object ConstConfig {
     Const("sign", Qualified(Scheme(Double =>: Double)), func1(Math.signum)),
     Const("floor", Qualified(Scheme(Double =>: Integer)), func1(Math.floor)),
     Const("abs", Qualified(Scheme(Double =>: Double)), func1(Math.abs)),
-    Const("mod", Qualified(Scheme(Double =>: Double =>: Double)), (x: Double) => (y: Double) => x % y),
+    Const(
+      "mod",
+      Qualified(Scheme(Double =>: Double =>: Double)),
+      (x: Double) => (y: Double) => if (x >= 0) x % y else (x % y) + y
+    ),
     Const("todbl", Qualified(Scheme(Integer =>: Double)), (x: Int) => x.toDouble),
     Const("div", Qualified(Scheme(Double =>: Double =>: Double)), (x: Double) => (y: Double) => x / y),
     Const(

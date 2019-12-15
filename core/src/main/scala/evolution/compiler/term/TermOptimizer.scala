@@ -11,7 +11,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
     val termWithOptimizedChildren = term match {
       case Lit(LitList(ts))                    => Lit(LitList(ts.map(optimize)))
       case Lit(_) | Inst(_) | Value(_) | Id(_) => term
-      case App(f, x)                           => App(optimize(f), optimize(x))
+      case Apply(f, x)                         => Apply(optimize(f), optimize(x))
       case Let(name, body, in) =>
         optimize(body) match {
           case Value(body)   => optimize(replaceId(name, in, Value(body))) // inlining
@@ -38,7 +38,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
     case Inst(_)               => Set.empty
     case Let(name, expr, body) => freeVarsWithConsts(expr) ++ freeVarsWithConsts(body).diff(Set(name))
     case Lambda(name, body)    => freeVarsWithConsts(body).diff(Set(name))
-    case App(f, x)             => freeVarsWithConsts(f) ++ freeVarsWithConsts(x)
+    case Apply(f, x)           => freeVarsWithConsts(f) ++ freeVarsWithConsts(x)
     case Value(_)              => Set.empty
   }
 
@@ -49,7 +49,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
       case Let(id, expr, body) =>
         if (id == name) term else Let(id, replaceId(name, expr, replaceWith), replaceId(name, body, replaceWith))
       case Lambda(id, body) => if (id == name) term else Lambda(id, replaceId(name, body, replaceWith))
-      case App(f, x)        => App(replaceId(name, f, replaceWith), replaceId(name, x, replaceWith))
+      case Apply(f, x)      => Apply(replaceId(name, f, replaceWith), replaceId(name, x, replaceWith))
       case _                => term
     }
 }

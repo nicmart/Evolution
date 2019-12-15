@@ -64,5 +64,5 @@ final class TreeToTermCompiler {
     }
 
   private def app(term: Term, args: List[Term]): Term =
-    args.foldLeft(term)(App)
+    args.foldLeft(term)(Apply)
 }

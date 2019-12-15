@@ -2,34 +2,33 @@ package evolution.compiler.term
 
 import evolution.compiler.impl.evaluation.MaterializeNumeric
 import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.term.RegisterBasedInterpreter.constants
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.NumericInst
 
-import scala.collection.mutable
-
-class TermInterpreter {
+final class TermInterpreter {
   def interpret(term: Term): Any = RegisterBasedInterpreter.fresh.interpret(term)
 }
 
-final class RegisterBasedInterpreter private (register: mutable.Map[String, Any]) {
-  def interpret(term: Term): Any = term match {
+final class RegisterBasedInterpreter {
+  def interpret(term: Term): Any = interpretRec(constants)(term)
+
+  def interpretRec(register: Map[String, Any])(term: Term): Any = term match {
     case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))     => b
     case Lit(LitDouble(d))   => d
-    case Lit(LitList(terms)) => terms.map(interpret)
+    case Lit(LitList(terms)) => terms.map(interpretRec(register))
 
     case Let(name, expr, body) =>
-      bind(name, interpret(expr))
-      interpret(body)
+      val registerWithExpr = register.updated(name, interpretRec(register)(expr))
+      interpretRec(registerWithExpr)(body)
 
     case Lambda(name, body) =>
-      (x: Any) => {
-        bind(name, x)
-        interpret(body)
-      }
-    case App(f, x) =>
-      interpret(f).asInstanceOf[Any => Any](interpret(x))
+      (x: Any) => interpretRec(register.updated(name, x))(body)
+
+    case Apply(f, x) =>
+      interpretRec(register)(f).asInstanceOf[Any => Any](interpretRec(register)(x))
 
     case Id(name) => register(name)
 
@@ -37,13 +36,11 @@ final class RegisterBasedInterpreter private (register: mutable.Map[String, Any]
 
     case Value(value) => value
   }
-
-  def bind(name: String, value: Any): Unit = register.update(name, value)
 }
 
 object RegisterBasedInterpreter {
   def fresh: RegisterBasedInterpreter =
-    new RegisterBasedInterpreter(mutable.Map.from(constants))
+    new RegisterBasedInterpreter
 
   val constants: Map[String, Any] = ConstConfig.constants.map(c => c.name -> c.value).toMap
 }

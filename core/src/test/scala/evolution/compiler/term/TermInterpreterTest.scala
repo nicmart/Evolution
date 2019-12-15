@@ -41,9 +41,9 @@ class TermInterpreterTest extends LanguageSpec {
     "in the register" in {
       val term = Id("x")
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bind("x", 12345)
+      val register = Map("x" -> 12345)
 
-      interpreter.interpret(term) shouldBe 12345
+      interpreter.interpretRec(register)(term) shouldBe 12345
     }
 
     "not in the register" in {
@@ -76,47 +76,47 @@ class TermInterpreterTest extends LanguageSpec {
 
   "app" - {
     "of single argument" in {
-      val term = App(Id("f"), Lit(LitDouble(1)))
+      val term = Apply(Id("f"), Lit(LitDouble(1)))
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bind("f", (x: Double) => x + 1)
+      val register = Map("f" -> ((x: Double) => x + 1))
 
-      interpreter.interpret(term) shouldBe 2
+      interpreter.interpretRec(register)(term) shouldBe 2
     }
 
     "of multiple arguments" in {
-      val term = App(App(Id("f"), Lit(LitDouble(1))), Lit(LitDouble(2)))
+      val term = Apply(Apply(Id("f"), Lit(LitDouble(1))), Lit(LitDouble(2)))
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bind("f", (x: Double) => (y: Double) => x + y)
+      val register = Map("f" -> ((x: Double) => (y: Double) => x + y))
 
-      interpreter.interpret(term) shouldBe 3
+      interpreter.interpretRec(register)(term) shouldBe 3
     }
 
     "of polymorphic int literals" in {
-      val term = Term.App(Term.Lit(LitInt(0)), Id("P0"))
+      val term = Term.Apply(Term.Lit(LitInt(0)), Id("P0"))
 
       val interpreter = RegisterBasedInterpreter.fresh
-      interpreter.bind("P0", instance("Num", Type.Double))
+      val register = Map("P0" -> instance("Num", Type.Double))
 
-      interpreter.interpret(term) shouldBe a[Double]
-      interpreter.interpret(term) shouldBe 0
+      interpreter.interpretRec(register)(term) shouldBe a[Double]
+      interpreter.interpretRec(register)(term) shouldBe 0
     }
 
     "of custom constants" - {
       "add" in {
-        val term = App(Id("add"), Inst(instance("Add", Type.Double, Type.Integer, Type.Double)))
+        val term = Apply(Id("add"), Inst(instance("Add", Type.Double, Type.Integer, Type.Double)))
 
         val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5
       }
 
       "poly add" in {
-        val term = App(Id("add"), Id("P0"))
+        val term = Apply(Id("add"), Id("P0"))
 
         val interpreter = RegisterBasedInterpreter.fresh
         val addInstance = instance("Add", Type.Double, Type.Integer, Type.Double)
-        interpreter.bind("P0", addInstance)
+        val register = RegisterBasedInterpreter.constants + ("P0" -> addInstance)
 
-        val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
+        val f = interpreter.interpretRec(register)(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5
       }
     }
@@ -149,7 +149,7 @@ class TermInterpreterTest extends LanguageSpec {
       val term =
         Let(
           "double",
-          Lambda("additive", Lambda("x", App(App(App(Id("add"), Id("additive")), Id("x")), Id("x")))),
+          Lambda("additive", Lambda("x", Apply(Apply(Apply(Id("add"), Id("additive")), Id("x")), Id("x")))),
           Id("double")
         )
       val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
@@ -157,6 +157,21 @@ class TermInterpreterTest extends LanguageSpec {
       f(instance("Add", Type.Point, Type.Point, Type.Point))(Point(1, 2)) shouldBe Point(2, 4)
     }
   }
+
+  "bug" in {
+    val term = lets(
+      "f" -> Lambda("x", Lambda("y", Id("x"))),
+      "f1" -> Apply(Id("f"), Value(1)),
+      "f2" -> Apply(Id("f"), Value(2))
+    )(Apply(Id("f1"), Value(9987)))
+
+    val value = interpreter.interpret(term)
+
+    value shouldBe 1
+  }
+
+  private def lets(terms: (String, Term)*)(in: Term): Term =
+    terms.foldRight(in) { case ((name, definition), term) => Let(name, definition, term) }
 
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight

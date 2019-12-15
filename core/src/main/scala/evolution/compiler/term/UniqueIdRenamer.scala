@@ -26,11 +26,11 @@ class UniqueIdRenamer {
         renamedBody <- renameM(bodyWithNewName)
       } yield Lambda(newName, renamedBody)
 
-    case App(f, x) =>
+    case Apply(f, x) =>
       for {
         f <- renameM(f)
         x <- renameM(x)
-      } yield App(f, x)
+      } yield Apply(f, x)
 
     case _ => pure(term)
   }

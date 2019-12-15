@@ -40,8 +40,8 @@ class UniqueIdRenamerTest extends LanguageSpec {
   }
 
   "rename applications" in {
-    val renamed = rename(App(Lambda("x", Id("x")), Lambda("x", Id("x"))))
-    val App(Lambda(var1, Id(id1)), Lambda(var2, Id(id2))) = renamed
+    val renamed = rename(Apply(Lambda("x", Id("x")), Lambda("x", Id("x"))))
+    val Apply(Lambda(var1, Id(id1)), Lambda(var2, Id(id2))) = renamed
     Set(var1, var2) should have size (2)
     var1 shouldBe id1
     var2 shouldBe id2

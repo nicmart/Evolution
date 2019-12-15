@@ -12,8 +12,8 @@ object TermRenamer {
         Let(name, rename(oldName, newName)(expr), if (name == oldName) body else rename(oldName, newName)(body))
       case Lambda(name, body) =>
         Lambda(name, if (name == oldName) body else rename(oldName, newName)(body))
-      case App(f, x) =>
-        App(rename(oldName, newName)(f), rename(oldName, newName)(x))
+      case Apply(f, x) =>
+        Apply(rename(oldName, newName)(f), rename(oldName, newName)(x))
       case Lit(LitList(ts)) =>
         Lit(LitList(ts.map(rename(oldName, newName))))
       case Lit(lit) =>
