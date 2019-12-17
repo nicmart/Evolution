@@ -34,13 +34,11 @@ class TermOptimizerTest extends LanguageSpec {
       }
     }
 
-    // We have a problem with constants like x!
-
     "optimize children" - {
       "of lambdas" in {
         val term = Lambda("x", Apply(Lit(LitInt(2)), Inst(numDouble)))
-        val Value(f) = optimize(term)
-        f.asInstanceOf[Any => Any](12345) shouldBe 2
+        //val Value(f) = optimize(term)
+        optimize(term) shouldBe Lambda("x", Value(2))
       }
     }
 
@@ -52,13 +50,14 @@ class TermOptimizerTest extends LanguageSpec {
     }
 
     "bug2" in {
+      pending
       val term = optimize(Let("a", Value(123), Lambda("b", Id("a"))))
       val Value(f) = optimize(term)
       f.asInstanceOf[Any => Any](456) shouldBe 123
     }
   }
 
-  lazy val optimizer = new TermOptimizer(new MutableTermInterpreter)
+  lazy val optimizer = new TermOptimizer(new RegisterBasedInterpreter)
 
   def optimize(term: Term): Term = optimizer.optimize(term)
   def litInt(n: Int): Term = Apply(Lit(LitInt(n)), Inst(numDouble))

@@ -38,11 +38,11 @@ final class FullCompiler(
       termWithUniqueNames = printTime("term renaming", renamer.rename(termWithModule))
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
-      //optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
+      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
-    } yield printTime("interpretation", interpreter.interpret(termWithUniqueNames))
+    } yield printTime("interpretation", interpreter.interpret(optimizedTerm))
 
   private def printTime[T](label: String, t: => T): T = {
     val start = System.currentTimeMillis()

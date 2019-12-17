@@ -1,55 +1,115 @@
 package evolution.compiler.term
 
-import evolution.compiler.phases.typer.config.{ConstConfig, TypingConfig}
-import evolution.compiler.term.Term.Literal.LitList
-import evolution.compiler.term.Term._
-
-import scala.util.Try
+import cats.data.Reader
+import cats.implicits._
+import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term.{Id, _}
+import evolution.compiler.term.TermOptimizer._
 
 final class TermOptimizer(interpreter: TermInterpreter) {
-  def optimize(term: Term): Term = {
-    val termWithOptimizedChildren = term match {
-      case Lit(LitList(ts))                    => Lit(LitList(ts.map(optimize)))
-      case Lit(_) | Inst(_) | Value(_) | Id(_) => term
-      case Apply(f, x)                         => Apply(optimize(f), optimize(x))
-      case Let(name, body, in) =>
-        optimize(body) match {
-          case Value(body)   => optimize(replaceId(name, in, Value(body))) // inlining
-          case optimizedBody => Let(name, optimizedBody, optimize(in))
-        }
-      case Lambda(name, body) => Lambda(name, optimize(body))
-    }
+  def optimize(term: Term): Term =
+    optimizeM(term)
+      .run(Env.consts)
+      .term
 
-    val optimized =
-      if (freeVars(termWithOptimizedChildren).nonEmpty) termWithOptimizedChildren
-      else Value(interpreter.interpret(termWithOptimizedChildren))
-
-    if (optimized == term) optimized else optimize(optimized)
-  }
-
-  private val consts: Set[String] = ConstConfig.constants.map(_.name).toSet
-
-  private def freeVars(term: Term): Set[String] = freeVarsWithConsts(term).diff(consts)
-
-  private def freeVarsWithConsts(term: Term): Set[String] = term match {
-    case Lit(LitList(ts))      => ts.flatMap(freeVarsWithConsts).toSet
-    case Lit(_)                => Set.empty
-    case Id(name)              => Set(name)
-    case Inst(_)               => Set.empty
-    case Let(name, expr, body) => freeVarsWithConsts(expr) ++ freeVarsWithConsts(body).diff(Set(name))
-    case Lambda(name, body)    => freeVarsWithConsts(body).diff(Set(name))
-    case Apply(f, x)           => freeVarsWithConsts(f) ++ freeVarsWithConsts(x)
-    case Value(_)              => Set.empty
-  }
-
-  private def replaceId(name: String, term: Term, replaceWith: Term): Term =
+  private def optimizeM(term: Term): Optimized[OptimizedTerm] = {
     term match {
-      case Lit(LitList(ts)) => Lit(LitList(ts.map(replaceId(name, _, replaceWith))))
-      case Id(id)           => if (id == name) replaceWith else term
-      case Let(id, expr, body) =>
-        if (id == name) term else Let(id, replaceId(name, expr, replaceWith), replaceId(name, body, replaceWith))
-      case Lambda(id, body) => if (id == name) term else Lambda(id, replaceId(name, body, replaceWith))
-      case Apply(f, x)      => Apply(replaceId(name, f, replaceWith), replaceId(name, x, replaceWith))
-      case _                => term
+      case Lit(LitList(ts)) =>
+        for {
+          optimizedTs <- ts.traverse(optimizeM)
+          freeVars = optimizedTs.flatMap(_.freeVars).toSet
+          valueTerms = optimizedTs.map(_.term).collect { case Value(t) => t }
+          newTerm = if (valueTerms.length == ts.length) Value(valueTerms) else term
+        } yield OptimizedTerm(newTerm, freeVars)
+
+      case Lit(_) | Inst(_) | Value(_) =>
+        OptimizedTerm(Value(interpreter.interpret(term)), Set.empty).pure[Optimized]
+
+      case Id(name) =>
+        for {
+          maybeBoundTerm <- binding(name)
+          idTerm = maybeBoundTerm.getOrElse(term)
+        } yield OptimizedTerm(inline(name, idTerm), Set(name))
+
+      case Apply(f, x) =>
+        for {
+          f <- optimizeM(f)
+          x <- optimizeM(x)
+          optApply <- optimizeApplyLambda(Apply(f.term, x.term))
+          optValues <- optimizeApplyValues(optApply.term)
+        } yield OptimizedTerm(optValues.term, f.freeVars ++ x.freeVars)
+
+      case Let(name, body, in) =>
+        for {
+          body <- optimizeM(body)
+          in <- bindLocal(name, body.term)(optimizeM(in))
+          optLet = optimizeLet(Let(name, body.term, in.term))
+        } yield OptimizedTerm(optLet, body.freeVars ++ (in.freeVars - name))
+
+      case Lambda(name, body) =>
+        for {
+          body <- unbindLocal(name)(optimizeM(body))
+          freeVars = body.freeVars.diff(Set(name))
+        } yield OptimizedTerm(Lambda(name, body.term), freeVars)
     }
+  }
+
+  private def optimizeLet(term: Let): Term =
+    term.body match {
+      case Value(v) => Value(v)
+      case _        => term
+    }
+
+  private def optimizeApplyLambda(term: Term): Optimized[OptimizedTerm] =
+    term match {
+      case Apply(Lambda(name, body), x) =>
+        for {
+          x <- optimizeM(x)
+          body <- bindLocal(name, x.term)(optimizeM(body))
+        } yield body
+      case _ => OptimizedTerm(term, Set.empty).pure[Optimized]
+    }
+
+  private def optimizeApplyValues(term: Term): Optimized[OptimizedTerm] =
+    term match {
+      case Apply(Value(f), Value(x)) =>
+        OptimizedTerm(Value(f.asInstanceOf[Any => Any](x)), Set.empty).pure[Optimized]
+      case _ =>
+        OptimizedTerm(term, Set.empty).pure[Optimized]
+    }
+
+  private def inline(id: String, term: Term): Term =
+    term match {
+      case Value(_) => term
+      case _        => term
+    }
+}
+
+object TermOptimizer {
+  final case class Env(bindings: Map[String, Term]) {
+    def bind(name: String, term: Term): Env = Env(bindings.updated(name, term))
+    def unbind(name: String): Env = Env(bindings.removed(name))
+  }
+
+  object Env {
+    val consts = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)): _*))
+  }
+
+  final case class OptimizedTerm(term: Term, freeVars: Set[String], closingVars: Set[String] = Set.empty) {
+    def freeNonConstantVars: Set[String] = freeVars.diff(ConstConfig.constants.map(_.name).toSet)
+  }
+
+  def bindLocal[T](name: String, term: Term)(ft: => Optimized[T]): Optimized[T] =
+    Reader.local[T, Env](_.bind(name, term))(ft)
+
+  def unbindLocal[T](name: String)(ft: => Optimized[T]): Optimized[T] =
+    Reader.local[T, Env](_.unbind(name))(ft)
+
+  def binding(name: String): Optimized[Option[Term]] =
+    Reader(_.bindings.get(name))
+
+  val envVars: Optimized[Set[String]] = Reader(_.bindings.keySet)
+
+  type Optimized[T] = Reader[Env, T]
 }

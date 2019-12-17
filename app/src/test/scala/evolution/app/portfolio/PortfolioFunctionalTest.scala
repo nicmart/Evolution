@@ -11,7 +11,7 @@ import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer._
 import evolution.compiler.phases.typer.config.{Const, TypingConfig}
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
-import evolution.compiler.term.{TermInterpreter, TreeToTermCompiler}
+import evolution.compiler.term.{RegisterBasedInterpreter, TermInterpreter, TreeToTermCompiler}
 import evolution.compiler.types.Type
 import pprint.{PPrinter, Tree}
 
@@ -53,7 +53,7 @@ class PortfolioFunctionalTest extends LanguageSpec {
   //lazy val typer = new UnificationTyper(Conf.logger)
   lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(Conf.logger))
   lazy val compiler = new TreeToTermCompiler
-  lazy val interpreter = new TermInterpreter
+  lazy val interpreter = new RegisterBasedInterpreter
   //lazy val compiler = new CodeCompiler(new FullCompiler(typedTreeCompiler, JsCodeMaterializer, Conf.logger))
   lazy val codeCompiler = new TermBasedCodeCompiler(
     new FullCompiler(parser, typer, compiler, interpreter, Conf.logger)
