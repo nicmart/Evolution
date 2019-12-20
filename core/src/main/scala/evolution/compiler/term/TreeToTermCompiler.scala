@@ -15,7 +15,7 @@ final class TreeToTermCompiler {
     val AnnotatedTree(Qualified(predicates, _), tree) = typedTree
 
     tree match {
-      case TreeF.Id(name, _) => appPredicates(Id(name), predicates)
+      case TreeF.Id(name) => appPredicates(Id(name), predicates)
 
       case TreeF.IntLiteral(n) => appPredicates(Lit(LitInt(n)), predicates)
 

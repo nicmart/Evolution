@@ -9,7 +9,7 @@ import evolution.compiler.types.TypeClasses.Predicate
 
 object TypingConfig {
   val constantQualifiedTypes: Assumptions = new Assumptions(ConstConfig.constants.map { constant =>
-    constant.name -> Assumption(constant.name, constant.tpe, false)
+    constant.name -> Assumption(constant.name, constant.tpe)
   }.toMap)
 
   /**

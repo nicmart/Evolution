@@ -16,7 +16,7 @@ class PredicatesSolverTyperTest extends LanguageSpec {
     "f(a, b) = a * b in f" in {
       val multScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
       val addPredicates = List(Predicate("Mult", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
-      val assumptions = withAssumptions(Assumption("mult", Qualified(addPredicates, multScheme), true))
+      val assumptions = withAssumptions(Assumption("mult", Qualified(addPredicates, multScheme)))
       val untyped =
         Let(
           "f",

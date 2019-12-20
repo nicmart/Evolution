@@ -27,7 +27,7 @@ final class TermBasedCodeCompiler(fullCompiler: FullCompiler) extends CodeCompil
     )
 
   private val assumptions = Assumptions(
-    ConstConfig.constants.map(constant => Assumption(constant.name, constant.tpe, false))
+    ConstConfig.constants.map(constant => Assumption(constant.name, constant.tpe))
   )
 
   private def module(ctx: DrawingContext): Either[String, Module] =

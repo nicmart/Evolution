@@ -42,19 +42,19 @@ final class RecursiveTyper extends Typer {
           predicate = Predicate("Num", List(typeVar))
         } yield IntLiteral(n).typeWithSinglePredicate(predicate, typeVar)
 
-      case Id(name, _) =>
+      case Id(name) =>
         for {
           assumption <- getAssumption(name)
           qualifiedScheme = assumption.qualifiedScheme
           vars = qualifiedScheme.value.vars.map(Type.Var)
           freshTypeVars <- vars.traverse(_ => newTypeVar)
           newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
-        } yield Id(name, assumption.primitive).annotate(newQualifiedType)
+        } yield Id(name).annotate(newQualifiedType)
 
       case Lambda(varName, body) =>
         for {
           freshTypeVarname <- newTypeVarname
-          assumption = Assumption(varName, Qualified(Scheme(Type.Var(freshTypeVarname))), false)
+          assumption = Assumption(varName, Qualified(Scheme(Type.Var(freshTypeVarname))))
           typedBody <- withLocalAssumption(assumption)(typeTreeInf(body))
           lambdaType = Type.Var(freshTypeVarname) =>: typedBody.annotation.value
           lambdaPredicates = typedBody.annotation.predicates
@@ -90,8 +90,7 @@ final class RecursiveTyper extends Typer {
             // We need to apply the substitution before quantifying
             // Otherwise we quantify things like Mult(T0, T1, T5) => T2 -> T3 -> T4
             // when T0 -> T2, T1 -> T3, T5 -> T4
-            quantify(currentSubst.substitute(typedExpr.annotation), currentAssumptions),
-            false
+            quantify(currentSubst.substitute(typedExpr.annotation), currentAssumptions)
           )
           typedIn <- withLocalAssumption(assumption)(typeTreeInf(in))
           letPredicates = typedIn.annotation.predicates

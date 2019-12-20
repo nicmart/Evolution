@@ -1,17 +1,14 @@
 package evolution.compiler.tree
 
-import cats.{Applicative, Eval, Traverse}
-import cats.data.NonEmptyList
+import cats.data.{Const, NonEmptyList}
 import cats.implicits._
-
-import cats.data.Const
-import cats.Foldable
+import cats.{Applicative, Eval, Foldable, Traverse}
 
 sealed trait TreeF[+T]
 
 object TreeF {
 
-  sealed abstract case class Id(name: String, primitive: Boolean = false) extends TreeF[Nothing]
+  sealed abstract case class Id(name: String) extends TreeF[Nothing]
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
   final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
   final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
@@ -21,7 +18,7 @@ object TreeF {
   final case class Lst[T](ts: List[T]) extends TreeF[T]
 
   object Id {
-    def apply(name: String, primitive: Boolean = false): Id = new Id(name.toLowerCase, primitive) {}
+    def apply(name: String): Id = new Id(name.toLowerCase) {}
   }
 
   object App {
@@ -47,7 +44,7 @@ object TreeF {
         case Lambda(varName, expr)  => f(expr).map(Lambda(varName, _))
         case Lst(ts)                => ts.traverse(f).map(Lst[B])
         case Let(varName, expr, in) => (f(expr), f(in)).mapN(Let(varName, _, _))
-        case Id(name, primitive)    => Id(name, primitive).pure[G].widen
+        case Id(name)               => Id(name).pure[G].widen
         case DoubleLiteral(n)       => DoubleLiteral(n).pure[G].widen
         case Bool(b)                => Bool(b).pure[G].widen
         case IntLiteral(n)          => IntLiteral(n).pure[G].widen

@@ -16,11 +16,11 @@ object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
 
   private lazy val initialModule = Module(
-    Assumptions(ConstConfig.constants.map(const => Assumption(const.name, const.tpe, false)))
-      .withAssumption(model.Assumption("top", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(model.Assumption("bottom", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(model.Assumption("left", Qualified(Scheme(Type.Double)), false))
-      .withAssumption(model.Assumption("right", Qualified(Scheme(Type.Double)), false)),
+    Assumptions(ConstConfig.constants.map(const => Assumption(const.name, const.tpe)))
+      .withAssumption(model.Assumption("top", Qualified(Scheme(Type.Double))))
+      .withAssumption(model.Assumption("bottom", Qualified(Scheme(Type.Double))))
+      .withAssumption(model.Assumption("left", Qualified(Scheme(Type.Double))))
+      .withAssumption(model.Assumption("right", Qualified(Scheme(Type.Double)))),
     identity
   )
 

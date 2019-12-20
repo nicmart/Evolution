@@ -21,7 +21,7 @@ class ModuleCompilerSpec extends LanguageSpec {
       val inferredAssumption = module.unsafeRight.assumptions.get("line")
 
       val expectedAssumption =
-        model.Assumption("line", Qualified(Scheme(Type.Double =>: Type.Double =>: Type.Point)), false)
+        model.Assumption("line", Qualified(Scheme(Type.Double =>: Type.Double =>: Type.Point)))
       inferredAssumption should contain(expectedAssumption)
     }
   }

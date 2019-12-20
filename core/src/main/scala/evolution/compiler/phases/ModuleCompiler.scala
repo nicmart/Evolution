@@ -3,14 +3,7 @@ package evolution.compiler.phases
 import cats.syntax.either._
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.term.{
-  Module,
-  RegisterBasedInterpreter,
-  Term,
-  TermInterpreter,
-  TermOptimizer,
-  TreeToTermCompiler
-}
+import evolution.compiler.term.{Module, Term, TreeToTermCompiler}
 import evolution.compiler.tree.TreeF.Let
 import evolution.compiler.tree.{PrettyPrintTypedTree, _}
 import evolution.compiler.types.Type
@@ -25,7 +18,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
-      exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X"))), primitive = false) // TODO think more about this
+      exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X")))) // TODO think more about this
       typedTree <- typer.typeTree(untypedTree, None, initialModule.assumptions.withAssumption(exportAssumption))
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
@@ -48,7 +41,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
         val qualifiedScheme = Qualified(expr.annotation.predicates, Scheme(expr.annotation.value))
         extractAssumptions(
           in,
-          currentAssumptions.withAssumption(model.Assumption(varName, qualifiedScheme, primitive = false))
+          currentAssumptions.withAssumption(model.Assumption(varName, qualifiedScheme))
         )
       case _ => currentAssumptions
     }

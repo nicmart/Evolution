@@ -5,7 +5,7 @@ import cats.data.NonEmptyList
 abstract class TreeBuilder[T, F[_]] {
   def toF: TreeF[T] => F[T]
 
-  final def Id(name: String, primitive: Boolean = false): F[T] = toF(TreeF.Id(name, primitive))
+  final def Id(name: String, primitive: Boolean = false): F[T] = toF(TreeF.Id(name))
   final def Lambda(varName: String, expr: T): F[T] = toF(TreeF.Lambda(varName, expr))
   final def App(f: T, args: NonEmptyList[T]): F[T] = toF(TreeF.App(f, args))
   final def Let(varName: String, expr: T, in: T): F[T] = toF(TreeF.Let(varName, expr, in))
