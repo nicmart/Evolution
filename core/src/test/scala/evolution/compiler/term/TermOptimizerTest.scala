@@ -42,8 +42,13 @@ class TermOptimizerTest extends LanguageSpec {
       }
     }
 
+    "beta reduction" in {
+      val lambda = Lambda("x", Lambda("y", Lambda("z", Id("z"))))
+      val appliedLambda = Apply(Apply(Apply(lambda, Value("a")), Value("b")), Value("c"))
+      optimize(appliedLambda) shouldBe Value("c")
+    }
+
     "bug1" in {
-      // This does not fail, but it will refer to a "a" in another register!
       val optimizedConstFunc = optimize(Lambda("b", Id("a")))
       val term = Let("a", Value(123), Apply(optimizedConstFunc, Id("a")))
       optimize(term) shouldBe Value(123)

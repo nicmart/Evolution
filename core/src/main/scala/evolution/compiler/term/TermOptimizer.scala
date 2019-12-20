@@ -1,7 +1,10 @@
 package evolution.compiler.term
 
 import cats.data.Reader
-import cats.implicits._
+import cats.syntax.functor._
+import cats.syntax.applicative._
+import cats.syntax.traverse._
+import cats.instances.list._
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.{Id, _}
@@ -11,47 +14,44 @@ final class TermOptimizer(interpreter: TermInterpreter) {
   def optimize(term: Term): Term =
     optimizeM(term)
       .run(Env.consts)
-      .term
 
-  private def optimizeM(term: Term): Optimized[OptimizedTerm] = {
+  private def optimizeM(term: Term): Optimized[Term] = {
     term match {
       case Lit(LitList(ts)) =>
         for {
           optimizedTs <- ts.traverse(optimizeM)
-          freeVars = optimizedTs.flatMap(_.freeVars).toSet
-          valueTerms = optimizedTs.map(_.term).collect { case Value(t) => t }
+          valueTerms = optimizedTs.collect { case Value(t) => t }
           newTerm = if (valueTerms.length == ts.length) Value(valueTerms) else term
-        } yield OptimizedTerm(newTerm, freeVars)
+        } yield newTerm
 
       case Lit(_) | Inst(_) | Value(_) =>
-        OptimizedTerm(Value(interpreter.interpret(term)), Set.empty).pure[Optimized]
+        Value(interpreter.interpret(term)).pure[Optimized].widen
 
       case Id(name) =>
         for {
           maybeBoundTerm <- binding(name)
           idTerm = maybeBoundTerm.getOrElse(term)
-        } yield OptimizedTerm(inline(name, idTerm), Set(name))
+        } yield inline(name, idTerm)
 
       case Apply(f, x) =>
         for {
           f <- optimizeM(f)
           x <- optimizeM(x)
-          optApply <- optimizeApplyLambda(Apply(f.term, x.term))
-          optValues <- optimizeApplyValues(optApply.term)
-        } yield OptimizedTerm(optValues.term, f.freeVars ++ x.freeVars)
+          optApply <- optimizeApplyLambda(f, x)
+          optValues <- optimizeApplyValues(optApply)
+        } yield optValues
 
       case Let(name, body, in) =>
         for {
           body <- optimizeM(body)
-          in <- bindLocal(name, body.term)(optimizeM(in))
-          optLet = optimizeLet(Let(name, body.term, in.term))
-        } yield OptimizedTerm(optLet, body.freeVars ++ (in.freeVars - name))
+          in <- bindLocal(name, body)(optimizeM(in))
+          optLet = optimizeLet(Let(name, body, in))
+        } yield optLet
 
       case Lambda(name, body) =>
         for {
           body <- unbindLocal(name)(optimizeM(body))
-          freeVars = body.freeVars.diff(Set(name))
-        } yield OptimizedTerm(Lambda(name, body.term), freeVars)
+        } yield Lambda(name, body)
     }
   }
 
@@ -61,22 +61,21 @@ final class TermOptimizer(interpreter: TermInterpreter) {
       case _        => term
     }
 
-  private def optimizeApplyLambda(term: Term): Optimized[OptimizedTerm] =
-    term match {
-      case Apply(Lambda(name, body), x) =>
+  private def optimizeApplyLambda(f: Term, x: Term): Optimized[Term] =
+    f match {
+      case Lambda(name, body) =>
         for {
-          x <- optimizeM(x)
-          body <- bindLocal(name, x.term)(optimizeM(body))
+          body <- bindLocal(name, x)(optimizeM(body))
         } yield body
-      case _ => OptimizedTerm(term, Set.empty).pure[Optimized]
+      case _ => Apply(f, x).pure[Optimized].widen
     }
 
-  private def optimizeApplyValues(term: Term): Optimized[OptimizedTerm] =
+  private def optimizeApplyValues(term: Term): Optimized[Term] =
     term match {
       case Apply(Value(f), Value(x)) =>
-        OptimizedTerm(Value(f.asInstanceOf[Any => Any](x)), Set.empty).pure[Optimized]
+        Value(f.asInstanceOf[Any => Any](x)).pure[Optimized].widen
       case _ =>
-        OptimizedTerm(term, Set.empty).pure[Optimized]
+        term.pure[Optimized]
     }
 
   private def inline(id: String, term: Term): Term =
@@ -94,10 +93,6 @@ object TermOptimizer {
 
   object Env {
     val consts = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)): _*))
-  }
-
-  final case class OptimizedTerm(term: Term, freeVars: Set[String], closingVars: Set[String] = Set.empty) {
-    def freeNonConstantVars: Set[String] = freeVars.diff(ConstConfig.constants.map(_.name).toSet)
   }
 
   def bindLocal[T](name: String, term: Term)(ft: => Optimized[T]): Optimized[T] =

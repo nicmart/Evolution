@@ -4,6 +4,7 @@ import cats.syntax.either._
 import evolution.compiler.term.{
   Module,
   MutableTermInterpreter,
+  RegisterBasedInterpreter,
   TermInterpreter,
   TermOptimizer,
   TreeToTermCompiler,
@@ -22,7 +23,7 @@ final class FullCompiler(
     logger: Logger
 ) {
   import logger.log
-  private val optimizer = new TermOptimizer(new MutableTermInterpreter())
+  private val optimizer = new TermOptimizer(interpreter)
 
   def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Any] =
     for {
