@@ -3,7 +3,7 @@ package evolution.compiler.phases
 import cats.syntax.either._
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.term.{Module, Term, TreeToTermCompiler}
+import evolution.compiler.term.{Definition, Module, Term, TreeToTermCompiler}
 import evolution.compiler.tree.TreeF.Let
 import evolution.compiler.tree.{PrettyPrintTypedTree, _}
 import evolution.compiler.types.Type
@@ -29,9 +29,10 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       termWithoutModule <- compiler.compile(typedTree)
       //term = optimizer.optimize(initialModule.load(termWithoutModule))
       term = initialModule.load(termWithoutModule)
+      defs = extractDefs(assumptions, term, initialModule.definitions.toVector)
       _ = log(s"Compiled to $term")
       _ = log("Done: compilation")
-    } yield Module(assumptions, replaceVarInTerm("export", term))
+    } yield Module(defs.toList)
 
   // 1. Find assumptions
   @scala.annotation.tailrec
@@ -46,10 +47,22 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       case _ => currentAssumptions
     }
 
-  // 2. Build load function
-  private def replaceVarInTerm(varName: String, term: Term)(replaceWith: Term): Term = term match {
-    case Term.Let(variable, value, body)  => Term.Let(variable, value, replaceVarInTerm(varName, body)(replaceWith))
-    case Term.Id(name) if name == varName => replaceWith
-    case _                                => term
-  }
+  // Extract definitions
+  // TODO append to lists, super slow
+  @scala.annotation.tailrec
+  private def extractDefs(
+      assumptions: Assumptions,
+      term: Term,
+      currentDefinitions: Vector[Definition]
+  ): Vector[Definition] =
+    term match {
+      case Term.Let(varName, expr, in) =>
+        val definition = Definition(varName, expr, assumptions.get(varName).get.qualifiedScheme)
+        extractDefs(
+          assumptions,
+          in,
+          currentDefinitions.appended(definition)
+        )
+      case _ => currentDefinitions
+    }
 }

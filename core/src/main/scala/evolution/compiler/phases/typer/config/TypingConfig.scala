@@ -2,15 +2,18 @@ package evolution.compiler.phases.typer.config
 
 import evolution.compiler.expression.typeclass.Multiplicative.{LiftBoth, LiftLeft, LiftRight}
 import evolution.compiler.expression.typeclass._
-import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.types.{Type, TypeClassInstance}
+import evolution.compiler.phases.typer.model.Assumptions
+import evolution.compiler.term.{Definition, Module, Term}
 import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.types.TypeClasses.Predicate
+import evolution.compiler.types.{Type, TypeClassInstance}
 
 object TypingConfig {
-  val constantQualifiedTypes: Assumptions = new Assumptions(ConstConfig.constants.map { constant =>
-    constant.name -> Assumption(constant.name, constant.tpe)
-  }.toMap)
+  val constantsModule: Module = Module(ConstConfig.constants.map { const =>
+    Definition(const.name, Term.Value(const.value), const.tpe)
+  })
+
+  val constantQualifiedTypes: Assumptions = constantsModule.assumptions
 
   /**
     * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
