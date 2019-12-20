@@ -1,10 +1,8 @@
 package evolution.app.model
 
 import evolution.app.model.context.DrawingContext
-import evolution.compiler.impl.evaluation.EvalCtx.emptyCtx
-import evolution.compiler.impl.evaluation.EvalMaterializer.materializeExpr
 import evolution.compiler.phases.FullCompiler
-import evolution.compiler.phases.typer.config.{ConstConfig, TypingConfig}
+import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.stdlib.StandardLibraryModule
 import evolution.compiler.term.Term.Literal

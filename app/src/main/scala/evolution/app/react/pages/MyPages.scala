@@ -1,12 +1,10 @@
 package evolution.app.react.pages
 
 import evolution.app.codec.Codec
-import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.model.Drawing
-import evolution.compiler.phases.Materializer
-import evolution.compiler.impl.evaluation.EvalMaterializer
-import evolution.compiler.impl.jsmaterialization.JsCodeMaterializer
+import evolution.app.model.state.{DrawingState, RendererState}
 import evolution.app.react.routing.DrawingPageUrl
+import evolution.compiler.term.{OptimizedTermInterpreter, TermInterpreter}
 
 sealed trait MyPages
 
@@ -17,14 +15,14 @@ case object NotFound extends MyPages
 final case class PageState(
     drawingState: DrawingState,
     rendererState: RendererState,
-    materializer: MaterializationOption
+    materializer: InterpretationOption
 )
 
 object PageState {
 
   def codec(
       stateCodec: Codec[(DrawingState, RendererState), String],
-      materializationOptionCodec: Codec[MaterializationOption, String]
+      materializationOptionCodec: Codec[InterpretationOption, String]
   ): Codec[PageState, DrawingPageUrl] =
     new Codec[PageState, DrawingPageUrl] {
 
@@ -42,21 +40,20 @@ object PageState {
     }
 
   def fromDrawing(drawing: Drawing): PageState =
-    PageState(drawing.drawingState, drawing.rendererState, MaterializationOption.Eval)
+    PageState(drawing.drawingState, drawing.rendererState, InterpretationOption.Eval)
 }
 
-sealed abstract class MaterializationOption(val materializer: Materializer)
-object MaterializationOption {
-  case object Eval extends MaterializationOption(EvalMaterializer)
-  case object CodeGenerator extends MaterializationOption(JsCodeMaterializer)
+sealed abstract class InterpretationOption(val interpreter: TermInterpreter)
+object InterpretationOption {
+  case object Eval extends InterpretationOption(OptimizedTermInterpreter)
 
-  val codec = new Codec[MaterializationOption, String] {
-    def encode(t: MaterializationOption): String = t match {
-      case CodeGenerator => "js"
-      case Eval          => ""
+  val codec = new Codec[InterpretationOption, String] {
+    def encode(t: InterpretationOption): String = t match {
+      //case CodeGenerator => "js"
+      case Eval => ""
     }
-    def decode(r: String): Option[MaterializationOption] = r match {
-      case "js" => Some(CodeGenerator)
+    def decode(r: String): Option[InterpretationOption] = r match {
+      case "js" => None
       case _    => Some(Eval)
     }
   }

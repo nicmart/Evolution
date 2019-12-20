@@ -1,16 +1,8 @@
 package evolution.compiler.phases.typer.config
 
 import evolution.compiler.impl.evaluation._
-import evolution.compiler.phases.typer.config.Constant0.Empty
-import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, Var, Point => TPoint}
-import evolution.compiler.types.Type.StringTypeOps
-import evolution.compiler.types.TypeClassInstance.{
-  AdditiveInst,
-  ComparableInst,
-  EquableInst,
-  InvertibleInst,
-  MultiplicativeInst
-}
+import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, StringTypeOps, Var, Point => TPoint}
+import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
 import evolution.materialization.Evolution

@@ -8,12 +8,9 @@ import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.types.TypeClasses.Predicate
 
 object TypingConfig {
-  val constantQualifiedTypes: Assumptions =
-    new Assumptions(
-      Constant.values
-        .map(constant => constant.entryName -> Assumption(constant.entryName, constant.qualifiedScheme, true))
-        .toMap
-    )
+  val constantQualifiedTypes: Assumptions = new Assumptions(ConstConfig.constants.map { constant =>
+    constant.name -> Assumption(constant.name, constant.tpe, false)
+  }.toMap)
 
   /**
     * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module

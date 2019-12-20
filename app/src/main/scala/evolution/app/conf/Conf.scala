@@ -8,7 +8,7 @@ import evolution.app.model.state
 import evolution.app.model.state._
 import evolution.app.react.component.presentational.Page
 import evolution.app.react.component.{App, Canvas}
-import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState, MaterializationOption}
+import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState, InterpretationOption}
 import evolution.app.react.routing.Routing
 import evolution.app.{CanvasInitializer, ColorCanvasInitializer}
 import japgolly.scalajs.react.extra.router.Router
@@ -34,7 +34,7 @@ object Conf {
     pageDrawingCodec >> pageStateCodec
 
   lazy val pageStateCodec: Codec[PageState, DrawingPageUrl] =
-    PageState.codec(stateCodec, MaterializationOption.codec)
+    PageState.codec(stateCodec, InterpretationOption.codec)
 
   lazy val pageDrawingCodec: Codec[LoadDrawingPage, PageState] =
     Codec.instance[LoadDrawingPage, PageState](
@@ -63,7 +63,7 @@ object Conf {
       PageState(
         DrawingState(Random.nextLong(), "integrate(point(0, 0), @point(uniform(-2, 2), uniform(-2, 2)))"),
         defaultRendererState,
-        MaterializationOption.Eval
+        InterpretationOption.Eval
       )
     )
 

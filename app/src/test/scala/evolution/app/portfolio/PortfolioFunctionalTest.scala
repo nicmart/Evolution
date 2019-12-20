@@ -9,11 +9,8 @@ import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer._
-import evolution.compiler.phases.typer.config.{Const, TypingConfig}
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
-import evolution.compiler.term.{RegisterBasedInterpreter, TermInterpreter, TreeToTermCompiler}
-import evolution.compiler.types.Type
-import pprint.{PPrinter, Tree}
+import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}
 
 class PortfolioFunctionalTest extends LanguageSpec {
   "Drawings in Portfolio" - {

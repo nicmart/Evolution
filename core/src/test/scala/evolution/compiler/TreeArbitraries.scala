@@ -1,14 +1,13 @@
 package evolution.compiler
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.Gen
-import evolution.compiler.types.Type
+import evolution.compiler.phases.parser.FastParseParser
+import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
+import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.tree.TreeF._
+import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses._
-import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.config.Constant
-import evolution.compiler.tree._
-import evolution.compiler.tree.TreeF._
-import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
 
 trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =
@@ -25,7 +24,7 @@ trait TreeArbitraries {
     Gen.oneOf[(String, BinaryOperator)](FastParseParser.binaryOperators)
 
   def genVarUsage: Gen[String] =
-    genIdentifier.filter(id => !Constant.values.map(_.entryName).contains(id.toLowerCase))
+    genIdentifier.filter(id => !ConstConfig.constants.map(_.name).contains(id.toLowerCase))
 
   def genIdentifier: Gen[String] =
     for {

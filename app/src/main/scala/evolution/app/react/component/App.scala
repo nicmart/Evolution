@@ -1,27 +1,26 @@
 package evolution.app.react.component
 
+import evolution.app.conf.Conf
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.counter.RateCounter
-import evolution.app.react.component.presentational._
-import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
-import japgolly.scalajs.react.vdom.VdomElement
-import org.scalajs.dom
-import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
-import evolution.geometry.Point
 import evolution.app.model.state.RendererState
-import evolution.app.react.underware.SnapshotUnderware
+import evolution.app.model.{CodeCompiler, Drawing, TermBasedCodeCompiler}
+import evolution.app.react.component.presentational._
 import evolution.app.react.pages._
-import japgolly.scalajs.react.extra.StateSnapshot
-import evolution.app.model.{CodeCompiler, Drawing, ExprBasedCodeCompiler, TermBasedCodeCompiler}
-import evolution.app.conf.Conf
-import evolution.compiler.phases.{ExprBasedFullCompiler, FullCompiler}
+import evolution.app.react.underware.SnapshotUnderware
+import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
-import evolution.compiler.phases.compiler.DefaultCompiler
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
-import evolution.compiler.term.{RegisterBasedInterpreter, TermInterpreter, TreeToTermCompiler}
+import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
+import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}
+import evolution.geometry.Point
 import evolution.logging.NoOpLogger
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
+import japgolly.scalajs.react.extra.StateSnapshot
+import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
+import org.scalajs.dom
 
 object App {
 
@@ -113,22 +112,6 @@ object App {
   private def evolutionKey(props: PageState, state: State) =
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
-
-  private def codeCompilerOld(pageState: PageState): CodeCompiler = {
-    println(s"materializer is ${pageState.materializer}")
-    new ExprBasedCodeCompiler(
-      new ExprBasedFullCompiler(
-        FastParseParser,
-        new PredicatesSolverTyper(
-          new RecursiveTyper,
-          new UnifyPredicates(NoOpLogger)
-        ),
-        DefaultCompiler,
-        pageState.materializer.materializer,
-        Conf.logger
-      )
-    )
-  }
 
   private def codeCompiler(pageState: PageState): CodeCompiler = {
     println(s"materializer is ${pageState.materializer}")

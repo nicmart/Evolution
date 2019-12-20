@@ -1,12 +1,10 @@
 package evolution.compiler.phases.parser
 
+import evolution.compiler.LanguageSpec
+import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.{SpecialSyntax, Tree}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
-import evolution.compiler.tree.TreeF._
-import evolution.compiler.phases.parser.FastParseParser
-import evolution.compiler.phases.typer.config.{Constant0, Constant1, Constant2, Constant3}
-import evolution.compiler.tree.{SpecialSyntax, Tree}
-import evolution.compiler.LanguageSpec
 
 class FastParseParserSpec extends LanguageSpec {
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
@@ -15,21 +13,21 @@ class FastParseParserSpec extends LanguageSpec {
     "should parse" - {
       "int literals" in {
         forAll { n: Int =>
-          unsafeParse(n.toString) shouldEq IntLiteral(n).embed
+          unsafeParse(n.toString) shouldEq IntLiteral(n)
         }
       }
 
       "doubles literals that are not integers" in {
         forAll { d: Double =>
           whenever(d % 1 != 0) {
-            unsafeParse(d.toString) shouldEq DoubleLiteral(d).embed
+            unsafeParse(d.toString) shouldEq DoubleLiteral(d)
           }
         }
       }
 
       "variables" in {
         forAll(genIdentifier) { varName =>
-          unsafeParse(s"$varName") shouldEq Id(varName).embed
+          unsafeParse(s"$varName") shouldEq Id(varName)
         }
       }
 
@@ -57,16 +55,16 @@ class FastParseParserSpec extends LanguageSpec {
       "inverses" in {
         unsafeParse("-point(0, 0)") shouldEq App
           .of(
-            Id.const(Constant1.Inverse).embed,
-            App.of(Id.const(Constant2.Point).embed, IntLiteral(0).embed, IntLiteral(0).embed).embed
+            Id("inverse"),
+            App.of(Id("point"), IntLiteral(0), IntLiteral(0))
           )
-          .embed
+
       }
 
       "bindings" - {
         "a = 2 in $a" in {
           forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-            unsafeParse(s"$id = $expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Id(id).embed).embed
+            unsafeParse(s"$id = $expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Id(id))
           }
         }
 
@@ -75,15 +73,15 @@ class FastParseParserSpec extends LanguageSpec {
             unsafeParse(s"$id = $expr in 1 + 2") shouldEq Let(
               id.toLowerCase,
               unsafeParse(expr),
-              App.of(Id.const(Constant2.Add).embed, IntLiteral(1).embed, IntLiteral(2).embed).embed
-            ).embed
+              App.of(Id("add"), IntLiteral(1), IntLiteral(2))
+            )
           }
         }
 
         "a = aval in b = bval in body" in {
           forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
             unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldEq
-              Let(a.toLowerCase, unsafeParse(aVal), Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)).embed).embed
+              Let(a.toLowerCase, unsafeParse(aVal), Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)))
           }
         }
 
@@ -105,11 +103,11 @@ class FastParseParserSpec extends LanguageSpec {
           unsafeParse("a <- b in c") shouldEq
             App
               .of(
-                Id.const(Constant2.WithFirst).embed,
-                Id("b").embed,
-                Lambda("a", Id("c").embed).embed
+                Id("withfirst"),
+                Id("b"),
+                Lambda("a", Id("c"))
               )
-              .embed
+
         }
       }
 
@@ -117,11 +115,11 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a * $b + $c") shouldEq App
             .of(
-              Id.const(Constant2.Add).embed,
-              App.of(Id.const(Constant2.Multiply).embed, unsafeParse(a), unsafeParse(b)).embed,
+              Id("add"),
+              App.of(Id("multiply"), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
-            .embed
+
         }
       }
 
@@ -129,11 +127,11 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"$a + $b * $c") shouldEq App
             .of(
-              Id.const(Constant2.Add).embed,
+              Id("add"),
               unsafeParse(a),
-              App.of(Id.const(Constant2.Multiply).embed, unsafeParse(b), unsafeParse(c)).embed
+              App.of(Id("multiply"), unsafeParse(b), unsafeParse(c))
             )
-            .embed
+
         }
       }
 
@@ -141,17 +139,17 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
           unsafeParse(s"($a + $b) * $c") shouldEq App
             .of(
-              Id.const(Constant2.Multiply).embed,
-              App.of(Id.const(Constant2.Add).embed, unsafeParse(a), unsafeParse(b)).embed,
+              Id("multiply"),
+              App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
               unsafeParse(c)
             )
-            .embed
+
         }
       }
 
       "lambdas" in {
         forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
-          unsafeParse(s"$identifier -> $expr") shouldEq Lambda(identifier.toLowerCase, unsafeParse(expr)).embed
+          unsafeParse(s"$identifier -> $expr") shouldEq Lambda(identifier.toLowerCase, unsafeParse(expr))
         }
       }
 
@@ -159,14 +157,14 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
           unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldEq Lambda(
             identifier1.toLowerCase,
-            Lambda(identifier2.toLowerCase, unsafeParse(expr)).embed
-          ).embed
+            Lambda(identifier2.toLowerCase, unsafeParse(expr))
+          )
         }
       }
 
       "Let bindings" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-          unsafeParse(s"$id = $value in $in") shouldEq Let(id.toLowerCase, unsafeParse(value), unsafeParse(in)).embed
+          unsafeParse(s"$id = $value in $in") shouldEq Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
         }
       }
 
@@ -174,7 +172,7 @@ class FastParseParserSpec extends LanguageSpec {
         "a < b" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
             val parsed = unsafeParse(s"$a < $b")
-            val expected = App.of(Id.const(Constant2.LessThan).embed, unsafeParse(a), unsafeParse(b)).embed
+            val expected = App.of(Id("lessthan"), unsafeParse(a), unsafeParse(b))
             parsed shouldEq expected
           }
         }
@@ -184,8 +182,8 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
             identifier1.toLowerCase,
-            App.of(Id.const(Constant2.Add).embed, unsafeParse(expr1), unsafeParse(expr2)).embed
-          ).embed
+            App.of(Id("add"), unsafeParse(expr1), unsafeParse(expr2))
+          )
         }
       }
 
@@ -205,11 +203,11 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq App
             .of(
-              Id(identifier1).embed,
+              Id(identifier1),
               unsafeParse(expr1),
               unsafeParse(expr2)
             )
-            .embed
+
         }
       }
 
@@ -217,10 +215,10 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
           unsafeParse(s"$expr1 >> $identifier1") shouldEq App
             .of(
-              Id(identifier1).embed,
+              Id(identifier1),
               unsafeParse(expr1)
             )
-            .embed
+
         }
       }
 
@@ -228,10 +226,10 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genIdentifier) { (identifier1, expr1) =>
           unsafeParse(s"$expr1.$identifier1") shouldEq App
             .of(
-              Id(identifier1).embed,
+              Id(identifier1),
               unsafeParse(expr1)
             )
-            .embed
+
         }
       }
 
@@ -239,49 +237,48 @@ class FastParseParserSpec extends LanguageSpec {
         forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$expr1.$identifier1($expr2)") shouldEq App
             .of(
-              Id(identifier1).embed,
+              Id(identifier1),
               unsafeParse(expr1),
               unsafeParse(expr2)
             )
-            .embed
+
         }
       }
 
       "parse applications with dot syntax and multiple arguments" in {
         unsafeParse(s"a.method(b, c)") shouldEq App
           .of(
-            Id("method").embed,
-            Id("a").embed,
-            Id("b").embed,
-            Id("c").embed
+            Id("method"),
+            Id("a"),
+            Id("b"),
+            Id("c")
           )
-          .embed
+
       }
 
       "parse applications with dot syntax where receiver is an application" in {
         unsafeParse(s"a(b).method(c)") shouldEq App
           .of(
-            Id("method").embed,
-            App.of(Id("a").embed, Id("b").embed).embed,
-            Id("c").embed
+            Id("method"),
+            App.of(Id("a"), Id("b")),
+            Id("c")
           )
-          .embed
+
       }
 
       "parse chained dot selections" in {
         unsafeParse(s"a(b).method1(c).method2(d)") shouldEq App
           .of(
-            Id("method2").embed,
+            Id("method2"),
             App
               .of(
-                Id("method1").embed,
-                App.of(Id("a").embed, Id("b").embed).embed,
-                Id("c").embed
-              )
-              .embed,
-            Id("d").embed
+                Id("method1"),
+                App.of(Id("a"), Id("b")),
+                Id("c")
+              ),
+            Id("d")
           )
-          .embed
+
       }
 
       "parse applications of lambdas" in {
@@ -291,7 +288,7 @@ class FastParseParserSpec extends LanguageSpec {
               unsafeParse(lambda),
               unsafeParse(expr)
             )
-            .embed
+
         }
       }
 
@@ -299,31 +296,31 @@ class FastParseParserSpec extends LanguageSpec {
         "2^3 + 1" in {
           unsafeParse("2^3 + 1") shouldEq App
             .of(
-              Id.const(Constant2.Add).embed,
-              App.of(Id.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed,
-              IntLiteral(1).embed
+              Id("add"),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
+              IntLiteral(1)
             )
-            .embed
+
         }
 
         "2^3 * 2" in {
           unsafeParse("2^3 * 2") shouldEq App
             .of(
-              Id.const(Constant2.Multiply).embed,
-              App.of(Id.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed,
-              IntLiteral(2).embed
+              Id("multiply"),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
+              IntLiteral(2)
             )
-            .embed
+
         }
 
         "2 * 2^3" in {
           unsafeParse("2 * 2^3") shouldEq App
             .of(
-              Id.const(Constant2.Multiply).embed,
-              IntLiteral(2).embed,
-              App.of(Id.const(Constant2.Exp).embed, IntLiteral(2).embed, IntLiteral(3).embed).embed
+              Id("multiply"),
+              IntLiteral(2),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3))
             )
-            .embed
+
         }
       }
 
@@ -332,11 +329,11 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"$a / $b + $c") shouldEq App
               .of(
-                Id.const(Constant2.Add).embed,
-                App.of(Id.const(Constant2.Div).embed, unsafeParse(a), unsafeParse(b)).embed,
+                Id("add"),
+                App.of(Id("div"), unsafeParse(a), unsafeParse(b)),
                 unsafeParse(c)
               )
-              .embed
+
           }
         }
 
@@ -344,11 +341,11 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"$a + $b / $c") shouldEq App
               .of(
-                Id.const(Constant2.Add).embed,
+                Id("add"),
                 unsafeParse(a),
-                App.of(Id.const(Constant2.Div).embed, unsafeParse(b), unsafeParse(c)).embed
+                App.of(Id("div"), unsafeParse(b), unsafeParse(c))
               )
-              .embed
+
           }
         }
 
@@ -356,11 +353,11 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"($a + $b) / $c") shouldEq App
               .of(
-                Id.const(Constant2.Div).embed,
-                App.of(Id.const(Constant2.Add).embed, unsafeParse(a), unsafeParse(b)).embed,
+                Id("div"),
+                App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
                 unsafeParse(c)
               )
-              .embed
+
           }
         }
 
@@ -368,11 +365,11 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
             unsafeParse(s"@point($a, $b)") shouldEq App
               .of(
-                Id.const(Constant2.LiftedPoint).embed,
+                Id("@point"),
                 unsafeParse(a),
                 unsafeParse(b)
               )
-              .embed
+
           }
         }
 
@@ -380,17 +377,17 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
             unsafeParse(s"const($expr($a, $b))") shouldEq App
               .of(
-                Id.const(Constant1.Constant).embed,
-                App.of(unsafeParse(expr), unsafeParse(a), unsafeParse(b)).embed
+                Id("const"),
+                App.of(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
               )
-              .embed
+
           }
         }
 
         "const(n)" in {
           forAll(arbitrary[Double]) { d =>
             unsafeParse(s"const($d)") shouldEq
-              App.of(Id.const(Constant1.Constant).embed, unsafeParse(d.toString)).embed
+              App.of(Id("const"), unsafeParse(d.toString))
           }
         }
 
@@ -398,23 +395,21 @@ class FastParseParserSpec extends LanguageSpec {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
             unsafeParse(s"[$a, $b, $c]") shouldEq App
               .of(
-                Id.const(Constant2.Cons).embed,
+                Id("cons"),
                 unsafeParse(a),
                 App
                   .of(
-                    Id.const(Constant2.Cons).embed,
+                    Id("cons"),
                     unsafeParse(b),
                     App
                       .of(
-                        Id.const(Constant2.Cons).embed,
+                        Id("cons"),
                         unsafeParse(c),
-                        Id.const(Constant0.Empty).embed
+                        Id("empty")
                       )
-                      .embed
                   )
-                  .embed
               )
-              .embed
+
           }
         }
       }
@@ -425,25 +420,23 @@ class FastParseParserSpec extends LanguageSpec {
           val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
           val expected = App
             .of(
-              Id.const(Constant3.ZipWith).embed,
+              Id("zipwith"),
               App
                 .of(
-                  Id.const(Constant3.ZipWith).embed,
+                  Id("zipwith"),
                   unsafeParse(a),
                   unsafeParse(b),
                   unsafeParse(f)
-                )
-                .embed,
+                ),
               unsafeParse(c),
               Lambda(
                 "f",
                 Lambda(
                   "x",
-                  App.of(Id("f").embed, Id("x").embed).embed
-                ).embed
-              ).embed
+                  App.of(Id("f"), Id("x"))
+                )
+              )
             )
-            .embed
 
           parsed shouldEq expected
         }
@@ -452,28 +445,26 @@ class FastParseParserSpec extends LanguageSpec {
       "zip(a <- as, b <- bs, c <- cs) in d" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, d) =>
           val parsed = unsafeParse(s"zip(a <- $a, b <- $b, c <- $c) in $d")
-          val lambda = Lambda("a", Lambda("b", Lambda("c", unsafeParse(d)).embed).embed).embed
+          val lambda = Lambda("a", Lambda("b", Lambda("c", unsafeParse(d))))
           val expected = App
             .of(
-              Id.const(Constant3.ZipWith).embed,
+              Id("zipwith"),
               App
                 .of(
-                  Id.const(Constant3.ZipWith).embed,
+                  Id("zipwith"),
                   unsafeParse(a),
                   unsafeParse(b),
                   lambda
-                )
-                .embed,
+                ),
               unsafeParse(c),
               Lambda(
                 "f",
                 Lambda(
                   "x",
-                  App.of(Id("f").embed, Id("x").embed).embed
-                ).embed
-              ).embed
+                  App.of(Id("f"), Id("x"))
+                )
+              )
             )
-            .embed
 
           parsed shouldEq expected
         }
@@ -497,14 +488,14 @@ class FastParseParserSpec extends LanguageSpec {
       }
 
       "boolean literals" in {
-        unsafeParse("true") shouldEq Bool(true).embed
-        unsafeParse("false") shouldEq Bool(false).embed
+        unsafeParse("true") shouldEq Bool(true)
+        unsafeParse("false") shouldEq Bool(false)
       }
 
       "not" in {
         forAll(genLeafExpr) { a =>
           unsafeParse(s"!$a") shouldEq
-            App.of(Id.const(Constant1.Not).embed, unsafeParse(a)).embed
+            App.of(Id("not"), unsafeParse(a))
         }
       }
 
@@ -513,11 +504,11 @@ class FastParseParserSpec extends LanguageSpec {
           unsafeParse(s"$a || $b && $c") shouldEq
             App
               .of(
-                Id.const(Constant2.Or).embed,
+                Id("or"),
                 unsafeParse(a),
-                App.of(Id.const(Constant2.And).embed, unsafeParse(b), unsafeParse(c)).embed
+                App.of(Id("and"), unsafeParse(b), unsafeParse(c))
               )
-              .embed
+
         }
       }
     }

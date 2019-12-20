@@ -1,16 +1,13 @@
 package evolution.compiler.phases.parser
 
-import evolution.compiler.phases.parser
-import evolution.compiler.phases.parser.ParserConfig._
-import fastparse._
-import evolution.compiler.phases.parser.ParserConfig.whitespace
-import evolution.compiler.phases.typer.config.{Constant1, Constant2}
-import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree.{Tree, TreeF}
-import evolution.compiler.tree
 import cats.data.NonEmptyList
-import PrecedenceGroup.BinaryOperator
-import evolution.compiler.phases.Parser
+import evolution.compiler.phases.{Parser, parser}
+import evolution.compiler.phases.parser.ParserConfig.{whitespace, _}
+import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
+import evolution.compiler.tree
+import evolution.compiler.tree.Tree
+import evolution.compiler.tree.Tree._
+import fastparse._
 
 object FastParseParser extends Parser {
   def parse(astString: String): Either[ParserFailure, Tree] =
@@ -35,14 +32,14 @@ object FastParseParser extends Parser {
     }
 
     private def lambdaTail[_: P]: P[String => Tree] = P(whitespaces ~ "->" ~/ expression).map { expr =>
-      TreeF.Lambda(_, expr).embed
+      Lambda(_, expr)
     }
 
     // `a = 2 in` ... and `a == 2` share the same prefix, so the cut must be after the negative lookahead
     private def letTail[_: P]: P[String => Tree] =
       P(whitespaces ~ "=" ~ !"=" ~/ expression ~/ "in" ~/ expression).map {
         case (value, body) =>
-          TreeF.Let(_, value, body).embed
+          Let(_, value, body)
       }
 
     private def sampleTail[_: P]: P[String => Tree] =
@@ -61,40 +58,40 @@ object FastParseParser extends Parser {
 
   private val allPrecedenceGroups = List(
     PrecedenceGroup(
-      ">>" -> ((left, right) => TreeF.App.of(right, left).embed)
+      ">>" -> ((left, right) => App.of(right, left))
     ),
     PrecedenceGroup(
-      "||" -> constOp(Constant2.Or.entryName)
+      "||" -> constOp("or")
     ),
     PrecedenceGroup(
-      "&&" -> constOp(Constant2.And.entryName)
+      "&&" -> constOp("and")
     ),
     PrecedenceGroup(
-      ">=" -> constOp(Constant2.GreaterThanOrEqual.entryName),
-      ">" -> constOp(Constant2.GreaterThan.entryName),
-      "<=" -> constOp(Constant2.LessThanOrEqual.entryName),
-      "<" -> constOp(Constant2.LessThan.entryName)
+      ">=" -> constOp("greaterthanorequal"),
+      ">" -> constOp("greaterthan"),
+      "<=" -> constOp("lessthanorequal"),
+      "<" -> constOp("lessthan")
     ),
     PrecedenceGroup(
-      "==" -> constOp(Constant2.Eq.entryName),
-      "!=" -> constOp(Constant2.Neq.entryName)
+      "==" -> constOp("eq"),
+      "!=" -> constOp("neq")
     ),
     PrecedenceGroup(
-      "+" -> constOp(Constant2.Add.entryName),
-      "-" -> constOp(Constant2.Minus.entryName)
+      "+" -> constOp("add"),
+      "-" -> constOp("minus")
     ),
     PrecedenceGroup(
-      "*" -> constOp(Constant2.Multiply.entryName),
-      "/" -> constOp(Constant2.Div.entryName),
-      "%" -> constOp(Constant2.Mod.entryName)
+      "*" -> constOp("multiply"),
+      "/" -> constOp("div"),
+      "%" -> constOp("mod")
     ),
     PrecedenceGroup(
-      "^" -> constOp(Constant2.Exp.entryName)
+      "^" -> constOp("exp")
     )
   )
 
   private def constOp(name: String)(left: Tree, right: Tree): Tree =
-    TreeF.App.of(Id(name).embed, left, right).embed
+    App.of(Id(name), left, right)
 
   // Operator groups, order by ascending Precedence
   private def precedenceGroups[_: P]: PrecedenceGroups = parser.PrecedenceGroups(
@@ -107,7 +104,7 @@ object FastParseParser extends Parser {
 
     def app: P[Tree] = P(prefix ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).map {
       case (tree, None)         => tree
-      case (f, Some(arguments)) => App(f, arguments).embed
+      case (f, Some(arguments)) => App(f, arguments)
     }
 
     P(app ~/ ("." ~/ variable ~/ ("(" ~/ nonEmptyArgs ~/ ")").?).rep).map {
@@ -120,7 +117,7 @@ object FastParseParser extends Parser {
       case Nil => receiver
       case (firstMethod, maybeArgs) :: nextSelections =>
         dotSelection(
-          App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))).embed,
+          App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))),
           nextSelections
         )
     }
@@ -131,20 +128,20 @@ object FastParseParser extends Parser {
   private def list[_: P]: P[Tree] = P("[" ~/ args ~/ "]").map(tree.SpecialSyntax.cons)
 
   private def doubleLit[_: P]: P[Tree] =
-    numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt).embed else DoubleLiteral(d).embed)
+    numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt) else DoubleLiteral(d))
 
   private def boolean[_: P]: P[Tree] =
-    (P("true").map(_ => true) | P("false").map(_ => false)).map(Bool).map(_.embed)
+    (P("true").map(_ => true) | P("false").map(_ => false)).map(Bool)
 
   private def variable[_: P]: P[Tree] =
-    P(identifier).map(Id(_).embed) ~/ Pass
+    P(identifier).map(Id(_)) ~/ Pass
 
   private def unaryOps[_: P]: P[Tree] =
-    P("-").map(_ => Id(Constant1.Inverse.entryName).embed) |
-      P("!").map(_ => Id(Constant1.Not.entryName).embed)
+    P("-").map(_ => Id("inverse")) |
+      P("!").map(_ => Id("not"))
 
   private def unaryPrefixOp[_: P]: P[Tree] =
-    P(unaryOps ~/ atomicOperand).map { case (op, e) => App.of(op, e).embed }
+    P(unaryOps ~/ atomicOperand).map { case (op, e) => App.of(op, e) }
 
   private def args[_: P]: P[List[Tree]] = P(nonEmptyArgs.map(_.toList) | Pass.map(_ => Nil))
 
@@ -175,7 +172,7 @@ object FastParseParser extends Parser {
       }
 
     def uniformChoice[_: P]: P[Tree] =
-      P(IgnoreCase(Constant1.UniformChoice.entryName) ~ "(" ~/ nonEmptyArgs ~/ ")")
+      P(IgnoreCase("uniformchoice") ~ "(" ~/ nonEmptyArgs ~/ ")")
         .map(_.toList)
         .map(tree.SpecialSyntax.uniformChoice)
 

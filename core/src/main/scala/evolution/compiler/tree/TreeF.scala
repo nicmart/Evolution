@@ -3,7 +3,6 @@ package evolution.compiler.tree
 import cats.{Applicative, Eval, Traverse}
 import cats.data.NonEmptyList
 import cats.implicits._
-import evolution.compiler.phases.typer.config.Constant
 
 import cats.data.Const
 import cats.Foldable
@@ -23,8 +22,6 @@ object TreeF {
 
   object Id {
     def apply(name: String, primitive: Boolean = false): Id = new Id(name.toLowerCase, primitive) {}
-    def const[T](constant: Constant): TreeF[T] = TreeF.Id(constant.entryName, primitive = false)
-    def primitiveConst[T](constant: Constant): TreeF[T] = TreeF.Id(constant.entryName, primitive = true)
   }
 
   object App {
