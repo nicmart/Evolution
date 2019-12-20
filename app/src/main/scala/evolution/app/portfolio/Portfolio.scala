@@ -13,11 +13,6 @@ object Portfolio {
       defaultRendererState
     ),
     Drawing(
-      Some("xxxx"),
-      DrawingState(0L, "integrate(point(0, 0), const(point(0, 0)))"),
-      defaultRendererState
-    ),
-    Drawing(
       Some("Simple Brownian"),
       DrawingState(0L, """
         r = uniform(-2, 2) in

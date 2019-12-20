@@ -14,11 +14,12 @@ import evolution.logging.NoOpLogger
 object StandardLibraryModule {
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
 
+  // TODO: we need to find a solution to this, here we do not have the values yet
   private lazy val borderVarsModule = Module(
     List(
       Definition("top", Term.Value(100), Qualified(Scheme(Type.Double))),
-      Definition("bottom", Term.Value(100), Qualified(Scheme(Type.Double))),
-      Definition("left", Term.Value(100), Qualified(Scheme(Type.Double))),
+      Definition("bottom", Term.Value(-100), Qualified(Scheme(Type.Double))),
+      Definition("left", Term.Value(-100), Qualified(Scheme(Type.Double))),
       Definition("right", Term.Value(100), Qualified(Scheme(Type.Double)))
     )
   )
@@ -26,7 +27,6 @@ object StandardLibraryModule {
   private lazy val initialModule =
     TypingConfig.constantsModule.compose(borderVarsModule)
 
-  //private lazy val typer = new RecursiveTyper
   private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
 
   private lazy val moduleCompiler =
