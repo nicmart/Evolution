@@ -18,12 +18,12 @@ class TermOptimizerTest extends LanguageSpec {
     "optimize sums of constants" - {
       "2 + 3" in {
         val term = Apply(Apply(Apply(Id("add"), Inst(addDouble)), litInt(2)), litInt(3))
-        optimize(term) shouldBe Value(5)
+        optimize(term, Map("add" -> Value((inst: Any) => (x: Int) => (y: Int) => x + y))) shouldBe Value(5)
       }
 
       "2 + 3 + 4 + 5" in {
         val term = add(addDouble, add(addDouble, add(addDouble, litInt(2), litInt(3)), litInt(4)), litInt(5))
-        optimize(term) shouldBe Value(14)
+        optimize(term, Map("add" -> Value((inst: Any) => (x: Int) => (y: Int) => x + y))) shouldBe Value(14)
       }
     }
 
@@ -64,7 +64,7 @@ class TermOptimizerTest extends LanguageSpec {
 
   lazy val optimizer = new TermOptimizer(new RegisterBasedInterpreter)
 
-  def optimize(term: Term): Term = optimizer.optimize(term)
+  def optimize(term: Term, defs: Map[String, Term] = Map.empty): Term = optimizer.optimize(term, defs)
   def litInt(n: Int): Term = Apply(Lit(LitInt(n)), Inst(numDouble))
   def add(inst: TypeClassInstance, a: Term, b: Term): Term =
     Apply(Apply(Apply(Id("add"), Inst(inst)), a), b)

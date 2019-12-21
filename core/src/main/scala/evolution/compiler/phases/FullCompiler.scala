@@ -1,6 +1,8 @@
 package evolution.compiler.phases
 
 import cats.syntax.either._
+import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.phases.typer.config.ConstConfig.constantsTerms
 import evolution.compiler.term.{
   Module,
   MutableTermInterpreter,
@@ -39,7 +41,7 @@ final class FullCompiler(
       termWithUniqueNames = printTime("term renaming", renamer.rename(termWithModule))
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
-      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames))
+      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames, constantsTerms))
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")

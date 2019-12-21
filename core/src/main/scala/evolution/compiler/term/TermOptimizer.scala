@@ -11,9 +11,9 @@ import evolution.compiler.term.Term.{Id, _}
 import evolution.compiler.term.TermOptimizer._
 
 final class TermOptimizer(interpreter: TermInterpreter) {
-  def optimize(term: Term): Term =
+  def optimize(term: Term, definitions: Map[String, Term]): Term =
     optimizeM(term)
-      .run(Env.consts)
+      .run(Env(definitions))
 
   private def optimizeM(term: Term): Optimized[Term] = {
     term match {

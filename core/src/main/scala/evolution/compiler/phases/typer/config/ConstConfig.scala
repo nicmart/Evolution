@@ -1,6 +1,8 @@
 package evolution.compiler.phases.typer.config
 
 import evolution.compiler.impl.evaluation._
+import evolution.compiler.term.Term
+import evolution.compiler.term.Term.Value
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, StringTypeOps, Var, Point => TPoint}
 import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
@@ -253,9 +255,10 @@ object ConstConfig {
     )
   )
 
+  val constantsTerms: Map[String, Term] = Map(constants.map(c => c.name -> Value(c.value)): _*)
+
   private def func1(f: Nothing => Any): Any = f
   private def func2(f: Nothing => Nothing => Any): Any = f
-  private def func3(f: Nothing => Nothing => Nothing => Any): Any = f
 
   private def curry2(f: (Nothing, Nothing) => Any): Any = f.curried
   private def curry3(f: (Nothing, Nothing, Nothing) => Any): Any = f.curried
