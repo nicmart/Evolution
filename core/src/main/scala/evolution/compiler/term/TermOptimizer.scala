@@ -81,7 +81,8 @@ final class TermOptimizer(interpreter: TermInterpreter) {
   private def inline(id: String, term: Term): Term =
     term match {
       case Value(_) => term
-      case _        => term
+      // Without this inlining some drawings, like oscillator drawn on brownians are very slow
+      case _ => term
     }
 }
 

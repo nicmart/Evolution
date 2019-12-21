@@ -6,6 +6,9 @@ import evolution.compiler.phases.typer.model.Assumptions
 
 final case class Module(definitions: List[Definition]) {
   val assumptions: Assumptions = Assumptions(definitions.map(_.assumption))
+
+  val terms: Map[String, Term] = Map.from(definitions.map(d => d.name -> d.term))
+
   def compose(other: Module): Module =
     Module(definitions ++ other.definitions)
 

@@ -37,15 +37,14 @@ final class FullCompiler(
 //      _ = println(PrettyPrintTree(untypedTree))
 //      _ = println(PrettyPrintTypedTree(typedTree))
       term <- printTime("treeToTerm", compiler.compile(typedTree))
-      termWithModule = module.load(term)
-      termWithUniqueNames = printTime("term renaming", renamer.rename(termWithModule))
+      optimizedTerm = printTime("optimization", optimizer.optimize(term, module.terms))
+      termWithModule = module.load(optimizedTerm)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
-      optimizedTerm = printTime("optimization", optimizer.optimize(termWithUniqueNames, constantsTerms))
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
-    } yield printTime("interpretation", interpreter.interpret(optimizedTerm))
+    } yield printTime("interpretation", interpreter.interpret(termWithModule))
 
   private def printTime[T](label: String, t: => T): T = {
     val start = System.currentTimeMillis()
