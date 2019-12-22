@@ -60,7 +60,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
   ): Vector[Definition] =
     term match {
       case Term.Let(varName, expr, in) =>
-        val definition = Definition(varName, expr, assumptions.get(varName).get.qualifiedScheme)
+        val definition = Definition(varName, Some(expr), assumptions.get(varName).get.qualifiedScheme)
         extractDefs(
           assumptions,
           in,
@@ -79,8 +79,10 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
   ): Vector[Definition] =
     toOptimize.headOption match {
       case Some(definition) =>
-        val defMap: Map[String, Term] = Map.from(optimized.map(definition => definition.name -> definition.term))
-        val optimizedDef = Definition(definition.name, optimizer.optimize(definition.term, defMap), definition.tpe)
+        val defMap: Map[String, Term] =
+          Map.from(optimized.flatMap(definition => definition.term.map(term => definition.name -> term)))
+        val optimizedTerm = definition.term.map(optimizer.optimize(_, defMap))
+        val optimizedDef = Definition(definition.name, optimizedTerm, definition.tpe)
         optimizeDefinitionsRec(toOptimize.drop(1), optimized.appended(optimizedDef))
       case None => optimized
     }

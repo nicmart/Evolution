@@ -10,7 +10,7 @@ import evolution.compiler.types.{Type, TypeClassInstance}
 
 object TypingConfig {
   val constantsModule: Module = Module(ConstConfig.constants.map { const =>
-    Definition(const.name, Term.Value(const.value), const.tpe)
+    Definition(const.name, Some(Term.Value(const.value)), const.tpe)
   })
 
   val constantQualifiedTypes: Assumptions = constantsModule.assumptions

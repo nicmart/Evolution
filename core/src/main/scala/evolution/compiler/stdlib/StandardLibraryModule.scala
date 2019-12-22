@@ -17,10 +17,10 @@ object StandardLibraryModule {
   // TODO: we need to find a solution to this, here we do not have the values yet
   private lazy val borderVarsModule = Module(
     List(
-      Definition("top", Term.Value(600), Qualified(Scheme(Type.Double))),
-      Definition("bottom", Term.Value(-600), Qualified(Scheme(Type.Double))),
-      Definition("left", Term.Value(-600), Qualified(Scheme(Type.Double))),
-      Definition("right", Term.Value(600), Qualified(Scheme(Type.Double)))
+      Definition("top", None, Qualified(Scheme(Type.Double))),
+      Definition("bottom", None, Qualified(Scheme(Type.Double))),
+      Definition("left", None, Qualified(Scheme(Type.Double))),
+      Definition("right", None, Qualified(Scheme(Type.Double)))
     )
   )
 

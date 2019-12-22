@@ -10,10 +10,10 @@ object DrawingContextModule {
   def apply(ctx: DrawingContext): Module =
     Module(
       List(
-        Definition("top", Term.Value(ctx.top), Qualified(Scheme(Type.Double))),
-        Definition("bottom", Term.Value(ctx.bottom), Qualified(Scheme(Type.Double))),
-        Definition("left", Term.Value(ctx.left), Qualified(Scheme(Type.Double))),
-        Definition("right", Term.Value(ctx.right), Qualified(Scheme(Type.Double)))
+        Definition("top", Some(Term.Value(ctx.top)), Qualified(Scheme(Type.Double))),
+        Definition("bottom", Some(Term.Value(ctx.bottom)), Qualified(Scheme(Type.Double))),
+        Definition("left", Some(Term.Value(ctx.left)), Qualified(Scheme(Type.Double))),
+        Definition("right", Some(Term.Value(ctx.right)), Qualified(Scheme(Type.Double)))
       )
     )
 }
