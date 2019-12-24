@@ -34,6 +34,13 @@ class TermOptimizerTest extends LanguageSpec {
       }
     }
 
+    "lists are optimized even when not all elements are values" in {
+      val term = Lit(LitList(List(Id("f1"))))
+      val optimized = optimize(term, Map("f1" -> Lambda("z", Value(1))))
+
+      optimized shouldBe Lit(LitList(List(Lambda("z", Value(1)))))
+    }
+
     "optimize children" - {
       "of lambdas" in {
         val term = Lambda("x", Apply(Lit(LitInt(2)), Inst(numDouble)))

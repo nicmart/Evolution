@@ -21,7 +21,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
         for {
           optimizedTs <- ts.traverse(optimizeM)
           valueTerms = optimizedTs.collect { case Value(t) => t }
-          newTerm = if (valueTerms.length == ts.length) Value(valueTerms) else term
+          newTerm = if (valueTerms.length == ts.length) Value(valueTerms) else Lit(LitList(optimizedTs))
         } yield newTerm
 
       case Lit(_) | Inst(_) | Value(_) =>
