@@ -2,7 +2,7 @@ package evolution.logging
 import pprint.PPrinter.Color
 
 trait Logger {
-  def log(any: Any): Unit
+  def log(any: => Any): Unit
 }
 
 object ColorPPrinterLogger extends Logger {
@@ -10,9 +10,9 @@ object ColorPPrinterLogger extends Logger {
   //   case Assignment(from, to) => Tree.Infix(Color.treeify(from), "->", Color.treeify(to))
   // })
 
-  def log(any: Any): Unit = pprinter.pprintln(any, height = Int.MaxValue)
+  def log(any: => Any): Unit = pprinter.pprintln(any, height = Int.MaxValue)
 }
 
 object NoOpLogger extends Logger {
-  def log(any: Any): Unit = ()
+  def log(any: => Any): Unit = ()
 }

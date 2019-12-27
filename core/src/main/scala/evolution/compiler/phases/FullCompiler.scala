@@ -30,7 +30,7 @@ final class FullCompiler(
   def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Any] =
     for {
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
-      typedTree <- typer.typeTree(untypedTree, Some(expectedType), module.assumptions)
+      typedTree <- printTime("typing", typer.typeTree(untypedTree, Some(expectedType), module.assumptions))
       _ = log("Done: substitution")
       _ = log(s"Typed expression:")
       _ = log(PrettyPrintTypedTree(typedTree))
@@ -40,7 +40,7 @@ final class FullCompiler(
 //      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
       optimizedTerm = printTime("optimization", optimizer.optimize(term, module.terms))
 //      _ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue)
-      termWithModule = module.load(optimizedTerm)
+      termWithModule = printTime("module load", module.load(optimizedTerm))
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
       //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
