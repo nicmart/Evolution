@@ -170,9 +170,6 @@ class TermInterpreterTest extends LanguageSpec {
     value shouldBe 1
   }
 
-  private def lets(terms: (String, Term)*)(in: Term): Term =
-    terms.foldRight(in) { case ((name, definition), term) => Let(name, definition, term) }
-
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
 

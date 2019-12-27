@@ -5,6 +5,7 @@ import evolution.compiler.term._
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.logging.Logger
+import pprint.PPrinter
 
 final class FullCompiler(
     parser: Parser,
@@ -26,13 +27,12 @@ final class FullCompiler(
 //      _ = println(PrettyPrintTree(untypedTree))
 //      _ = println(PrettyPrintTypedTree(typedTree))
       term <- printTime("treeToTerm", compiler.compile(typedTree))
-//      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
+      _ = PPrinter.BlackWhite.pprintln(term, height = Int.MaxValue)
       optimizedTerm = printTime("optimization", optimizer.optimize(term, module.terms))
+//      optimizedTerm = term
 //      _ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue)
       termWithModule = printTime("module load", module.load(optimizedTerm))
-      //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue)
-      //_ = PPrinter.BlackWhite.pprintln(termWithUniqueNames, height = Int.MaxValue, indent = 0)
-      //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue, indent = 0)
+      _ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
     } yield printTime("interpretation", interpreter.interpret(termWithModule))

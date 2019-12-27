@@ -1,4 +1,6 @@
 package evolution.compiler
+import evolution.compiler.term.Term
+import evolution.compiler.term.Term.Let
 import org.scalatest.{FreeSpec, Matchers}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalactic.Prettifier
@@ -33,4 +35,7 @@ trait LanguageSpec
   implicit val pprinterPrettifier = new Prettifier {
     def apply(o: Any): String = PPrinter.BlackWhite.apply(o, height = Int.MaxValue).toString()
   }
+
+  def lets(terms: (String, Term)*)(in: Term): Term =
+    terms.foldRight(in) { case ((name, definition), term) => Let(name, definition, term) }
 }
