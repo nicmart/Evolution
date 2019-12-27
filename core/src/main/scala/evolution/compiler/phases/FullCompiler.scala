@@ -1,21 +1,10 @@
 package evolution.compiler.phases
 
 import cats.syntax.either._
-import evolution.compiler.phases.typer.config.ConstConfig
-import evolution.compiler.phases.typer.config.ConstConfig.constantsTerms
-import evolution.compiler.term.{
-  Module,
-  MutableTermInterpreter,
-  RegisterBasedInterpreter,
-  TermInterpreter,
-  TermOptimizer,
-  TreeToTermCompiler,
-  UniqueIdRenamer
-}
+import evolution.compiler.term._
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.logging.Logger
-import pprint.PPrinter
 
 final class FullCompiler(
     parser: Parser,
@@ -55,6 +44,4 @@ final class FullCompiler(
     println(s"$label: ${end - start}ms")
     result
   }
-
-  private val renamer = new UniqueIdRenamer
 }
