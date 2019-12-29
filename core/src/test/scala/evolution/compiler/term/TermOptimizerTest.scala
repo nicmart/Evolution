@@ -34,14 +34,27 @@ class TermOptimizerTest extends LanguageSpec {
       }
     }
 
-    "inlining rename variables when necessary" in {
-      val term = lets(
-        "f" -> Lambda("a", Lambda("b", Id("a"))),
-        "g" -> Lambda("b", Apply(Apply(Id("f"), Id("b")), Value(500)))
-      )(Apply(Id("g"), Value(0)))
-      val optimized = optimize(term)
+    "alpha conversions are performed when necessary" - {
 
-      optimized shouldBe Value(0)
+      "" in {
+        val term = Lambda("x", Lambda("x", Id("x")))
+
+        val optimized = optimize(term)
+
+        optimized shouldBe Lambda("x", Lambda("x'", Id("x'")))
+      }
+
+      "(b -> (a -> b -> a)(b)(1)) === (b -> b)" in {
+        val term =
+          Lambda(
+            "b",
+            Apply(Apply(Lambda("a", Lambda("b", Id("a"))), Id("b")), Value(1))
+          )
+
+        val optimized = optimize(term)
+
+        optimized shouldBe Lambda("b", Id("b"))
+      }
     }
 
     "lists are optimized even when not all elements are values" in {

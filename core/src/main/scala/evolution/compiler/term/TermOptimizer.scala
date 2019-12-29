@@ -9,6 +9,9 @@ import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.{Id, _}
 import evolution.compiler.term.TermOptimizer._
+import evolution.compiler.term.TermRenamer.alphaConversion
+
+import scala.annotation.tailrec
 
 final class TermOptimizer(interpreter: TermInterpreter) {
   def optimize(term: Term, definitions: Map[String, Term]): Term =
@@ -48,10 +51,13 @@ final class TermOptimizer(interpreter: TermInterpreter) {
           optLet = optimizeLet(Let(name, body, in))
         } yield optLet
 
-      case Lambda(name, body) =>
+      case lambda @ Lambda(name, _) =>
         for {
-          body <- unbindLocal(name)(optimizeM(body))
-        } yield Lambda(name, body)
+          isNameAlreadyBound <- hasBinding(name)
+          uniqueName <- freshName(name)
+          alphaConvertedLambda = if (isNameAlreadyBound) alphaConversion(lambda, uniqueName) else lambda
+          body <- bindLocal(uniqueName, Id(uniqueName))(optimizeM(alphaConvertedLambda.body))
+        } yield Lambda(uniqueName, body)
     }
   }
 
@@ -88,7 +94,14 @@ final class TermOptimizer(interpreter: TermInterpreter) {
 
 object TermOptimizer {
   final case class Env(bindings: Map[String, Term]) {
-    def bind(name: String, term: Term): Env = Env(bindings.updated(name, term))
+    def bind(name: String, term: Term): Env =
+      Env(bindings.updated(name, term))
+
+    @tailrec
+    def freshName(name: String): String =
+      if (bindings.isDefinedAt(name)) freshName(name + "'")
+      else name
+
     def unbind(name: String): Env = Env(bindings.removed(name))
   }
 
@@ -104,6 +117,12 @@ object TermOptimizer {
 
   def binding(name: String): Optimized[Option[Term]] =
     Reader(_.bindings.get(name))
+
+  def freshName(name: String): Optimized[String] =
+    Reader(_.freshName(name))
+
+  def hasBinding(name: String): Optimized[Boolean] =
+    Reader(_.bindings.isDefinedAt(name))
 
   val envVars: Optimized[Set[String]] = Reader(_.bindings.keySet)
 
