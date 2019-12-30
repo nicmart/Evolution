@@ -67,6 +67,11 @@ object Evolution {
       def run: Iterator[List[T]] = evo.run.grouped(n).map(_.toList)
     }
 
+  def ordered(evo: Evolution[Double], n: Int): Evolution[Double] = new Evolution[Double] {
+    override def run: Iterator[Double] =
+      evo.run.take(n).toList.sorted.iterator
+  }
+
   def uniform(from: Double, to: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(from + Random.nextDouble() * (to - from))
   }

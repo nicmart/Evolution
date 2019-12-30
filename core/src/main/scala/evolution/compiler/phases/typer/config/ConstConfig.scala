@@ -89,6 +89,7 @@ object ConstConfig {
       curry2(Evolution.withFirst1)
     ),
     Const("grouped", Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Lst("T")), "T")), curry2(Evolution.grouped)),
+    Const("ordered", Qualified(Scheme(Evo(Double) =>: Integer =>: Evo(Double))), curry2(Evolution.ordered)),
     Const("take", Qualified(Scheme(Evo("T") =>: Integer =>: Evo("T"), "T")), curry2(Evolution.take)),
     Const(
       "slidingmap",

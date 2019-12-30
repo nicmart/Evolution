@@ -240,6 +240,13 @@ class ConstantsInterpreterTest extends LanguageSpec {
       val evo = const(Evolution(Evolution(1, 2, 3), Evolution(), Evolution(4, 5))).asEvo
       evo.run.toList shouldBe List(1, 2, 3, 4, 5)
     }
+
+    "ordered" in {
+      val const = interpret(Id("ordered")).asFunc2
+      val evo = Evolution(3.0, 1, 2, 4, 5)
+      val ordered = const(evo)(3).asInstanceOf[Evolution[Double]]
+      ordered.run.toList shouldBe List(1.0, 2, 3)
+    }
   }
 
   "integrations and derivatives" - {
