@@ -199,6 +199,14 @@ bernoulli(p, r) = map(
   sample -> if (sample < p, r, 0)
 ) in
 
+orderedUniformDiscreteWithEndpoints(start, stop, d, n) =
+	[
+    [start],
+    ordered(uniformDiscrete(start, stop, d), n),
+    [stop]
+  ].flatten
+in
+
 export 
 
 

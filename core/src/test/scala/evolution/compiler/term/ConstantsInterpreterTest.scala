@@ -194,9 +194,14 @@ class ConstantsInterpreterTest extends LanguageSpec {
     }
 
     "iterate" in {
-      val const = interpret(Id("iterate")).asFunc3
+      val const = interpret(Id("iterate")).asFunc2
       val evo = const((n: Int) => n + 1)(0).asEvo
       evo.run.take(4).toList shouldBe List(0, 1, 2, 3)
+    }
+
+    "iterateFunc" in {
+      val const = interpret(Id("iteratefunc")).asFunc3
+      const((n: Int) => n + 1)(3)(0) shouldBe 3
     }
 
     "iterate2" in {

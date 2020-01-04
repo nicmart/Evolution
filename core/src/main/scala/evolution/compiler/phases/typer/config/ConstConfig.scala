@@ -253,6 +253,12 @@ object ConstConfig {
       "inrect",
       Qualified(Scheme(TPoint =>: TPoint =>: TPoint =>: Bool)),
       (topLeft: Point) => (bottomRight: Point) => (p: Point) => p.inRectangle(topLeft, bottomRight)
+    ),
+    //function combinators
+    Const(
+      "iteratefunc",
+      Qualified(Scheme(("T" =>: "T") =>: Integer =>: "T" =>: "T", "T")),
+      curry2(iterateFunc[Any])
     )
   )
 
@@ -263,4 +269,11 @@ object ConstConfig {
 
   private def curry2(f: (Nothing, Nothing) => Any): Any = f.curried
   private def curry3(f: (Nothing, Nothing, Nothing) => Any): Any = f.curried
+
+  private def iterateFunc[T](f: T => T, n: Int): T => T =
+    if (n <= 0) identity[T]
+    else {
+      val g = iterateFunc(f, n - 1)
+      t => f(g(t))
+    }
 }

@@ -569,6 +569,40 @@ object Portfolio {
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Rectangles"),
+      DrawingState(
+        0L,
+        """
+        d = 1 in
+
+        hrects(n, f, l, r, b, t) =
+          orderedUniformDiscreteWithEndpoints(l, r, d, n)
+            .slidingMap(x1 -> x2 -> f(x1, x2, b, t))
+            .flatten
+        in
+        
+        vrects(n, f, l, r, b, t) =
+          orderedUniformDiscreteWithEndpoints(b, t, d, n)
+            .slidingMap(y1 -> y2 -> f(l, r, y1, y2))
+            .flatten
+        in
+        
+        rect(x1, x2, y1, y2) = [
+            line(point(x1, y1), point(x1, y2), 1),
+            line(point(x1, y1), point(x2, y1), 1)
+        ].flatten in
+        
+        
+        g(s, f) = vrects(s, hrects(s, f)) in
+        
+        dd = iterateFunc(g(5), 3, rect) in
+        
+        dd(left, right, bottom, top)
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
