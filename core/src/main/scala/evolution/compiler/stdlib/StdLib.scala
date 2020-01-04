@@ -123,14 +123,13 @@ in
 
 randomWalk(r) = integrate(point(0, 0), uniformPoint(r)) in
 
-lineP(from, to, step, ts) =
-  v = step * versor(to - from) in
-  ts.map(t -> from + t * v)
+lineP(from, to, ts) =
+  ts.map(t -> (1 - t) * from + t * to)
 in
 
 line(from, to, step) =
-  total = floor(norm(to - from) / step) + 1 in
-  lineP(from, to, step, range(0, total, 1))
+  total = norm(to - from) / step in
+  lineP(from, to, range(0, 1, 1 / total))
 in
 
 arcP(r, ts) = 
