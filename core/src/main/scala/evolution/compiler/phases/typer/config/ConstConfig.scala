@@ -206,7 +206,7 @@ object ConstConfig {
     ),
     Const("sign", Qualified(Scheme(Double =>: Double)), func1(Math.signum)),
     Const("floor", Qualified(Scheme(Double =>: Integer)), func1(Math.floor)),
-    Const("abs", Qualified(Scheme(Double =>: Double)), func1(Math.abs)),
+    Const("abs", Qualified(Scheme(Double =>: Double)), (d: Double) => Math.abs(d)),
     Const(
       "mod",
       Qualified(Scheme(Double =>: Double =>: Double)),

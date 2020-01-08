@@ -332,14 +332,14 @@ class ConstantsInterpreterTest extends LanguageSpec {
     }
 
     "noise" in {
-      val const = interpret(Id("noise"))
+      val const = interpret(Id("noises"))
       val fs = const.asEvo.run.take(100).toVector.asInstanceOf[Vector[Point => Double]]
       fs(0)(Point(0, 0)) shouldBe a[Double]
       fs(1)(Point(100, 50)) shouldBe a[Double]
     }
 
     "octavenoise" in {
-      val const = interpret(Id("octavenoise"))
+      val const = interpret(Id("octavenoises"))
       val fs = const.asEvo.run.take(100).toVector.asInstanceOf[Vector[Int => Double => Point => Double]]
       fs(0)(1)(2)(Point(0, 0)) shouldBe a[Double]
       fs(1)(1)(2)(Point(100, 50)) shouldBe a[Double]
