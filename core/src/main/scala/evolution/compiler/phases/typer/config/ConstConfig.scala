@@ -188,9 +188,9 @@ object ConstConfig {
     Const("uniformchoice", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), func1(Evolution.uniformChoice)),
     Const("uniformfrom", Qualified(Scheme(Integer =>: Evo("T") =>: Evo("T"), "T")), curry2(Evolution.uniformFrom)),
     Const("normal", Qualified(Scheme(Double =>: Double =>: Evo(Double))), curry2(Evolution.normal)),
-    Const("noise", Qualified(Scheme(Evo(TPoint =>: Double))), Evolution.noiseEvolution),
+    Const("noises", Qualified(Scheme(Evo(TPoint =>: Double))), Evolution.noiseEvolution),
     Const(
-      "octavenoise",
+      "octavenoises",
       Qualified(Scheme(Evo(Integer =>: Double =>: TPoint =>: Double))),
       Evolution.octaveNoiseEvolution
     ),

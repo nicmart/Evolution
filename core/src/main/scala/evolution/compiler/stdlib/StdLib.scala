@@ -202,9 +202,30 @@ bernoulli(p, r) = map(
 orderedUniformDiscreteWithEndpoints(start, stop, d, n) =
 	[
     [start],
-    ordered(uniformDiscrete(start, stop, d), n),
+    distinct(ordered(uniformDiscrete(start, stop, d), n), n),
     [stop]
   ].flatten
+in
+
+perturbations1D(strength, scale) = 
+	noises.map(noise -> x -> x + strength * noise(point(scale * x, 0)))
+in
+
+octavePerturbations1D(strength, scale, octaves, r) = 
+	octaveNoises.map(noise -> x -> x + strength * noise(octaves, r, point(scale * x, 0)))
+in
+
+perturbations2D(strength, scale) = zip(
+  noisex <- noises,
+  noisey <- noises
+) in p -> p + strength * point(noisex(scale * p), noisey(scale * p))
+in
+
+octavePerturbations2D(strength, scale, octaves, r) = zip(
+  noisex <- octaveNoises,
+  noisey <- octaveNoises
+) in 
+	p -> p + strength * point(noisex(octaves, r, scale * p), noisey(octaves, r, scale * p))
 in
 
 export 

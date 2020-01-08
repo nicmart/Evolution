@@ -266,8 +266,8 @@ object Portfolio {
           depthStep = 3 in
           startY = s/2 in
           
-          on1 <- octaveNoise in
-          on2 <- octaveNoise in
+          on1 <- octaveNoises in
+          on2 <- octaveNoises in
           
           f(x, y) = -cameraZ + noiseStrength * on1(
                  octaves,
@@ -304,9 +304,9 @@ object Portfolio {
           noiseStrength = 3 in
           freq = 0.003 in
           
-          n <- noise in
+          noise <- noises in
           
-          vectorField(p) = polar(speed, noiseStrength * n(freq * p)) in
+          vectorField(p) = polar(speed, noiseStrength * noise(freq * p)) in
           
           segment = v -> p ->
             integrate(-.5 * length * v + p, const(v)).take(length)
@@ -375,7 +375,7 @@ object Portfolio {
       DrawingState(
         0L,
         """
-          noise1 <- noise in
+          noise <- noises in
           kr = .003 in
           sr = 5 in
           noiseStrength = 100 in
@@ -390,7 +390,7 @@ object Portfolio {
             smoothStep(endAngleC - smoothlength, endAngleC, 2*pi-alpha)
           in
           
-          n(r, alpha) = r + noiseStrength * smoothNoise(alpha) * noise1(polar(sr + kr * r, alpha)) in
+          n(r, alpha) = r + noiseStrength * smoothNoise(alpha) * noise(polar(sr + kr * r, alpha)) in
           
           circle(v, r) = map(
             integrate(0, const(v / r)).take(floor(2 * r * pi  / v)),
