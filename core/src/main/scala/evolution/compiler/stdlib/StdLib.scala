@@ -207,25 +207,41 @@ orderedUniformDiscreteWithEndpoints(start, stop, d, n) =
   ].flatten
 in
 
+noises1D(strength, scale) = 
+	noises.map(noise -> x -> strength * noise(point(scale * x, 0)))
+in
+
 perturbations1D(strength, scale) = 
-	noises.map(noise -> x -> x + strength * noise(point(scale * x, 0)))
+	noises1D(strength, scale).map(noise -> x -> x + noise(x))
+in
+
+octaveNoises1D(strength, scale, octaves, r) = 
+	octaveNoises.map(noise -> x -> strength * noise(octaves, r, point(scale * x, 0)))
 in
 
 octavePerturbations1D(strength, scale, octaves, r) = 
-	octaveNoises.map(noise -> x -> x + strength * noise(octaves, r, point(scale * x, 0)))
+	octaveNoises1D(strength, scale, octaves, r).map(noise -> x -> x + noise(x))
 in
 
-perturbations2D(strength, scale) = zip(
+noises2D(strength, scale) = zip(
   noisex <- noises,
   noisey <- noises
-) in p -> p + strength * point(noisex(scale * p), noisey(scale * p))
+) in p -> strength * point(noisex(scale * p), noisey(scale * p))
 in
 
-octavePerturbations2D(strength, scale, octaves, r) = zip(
+perturbations2D(strength, scale) = 
+  noises2D(strength, scale).map(noise -> p -> p + noise(p))
+in
+
+octaveNoises2D(strength, scale, octaves, r) = zip(
   noisex <- octaveNoises,
   noisey <- octaveNoises
 ) in 
-	p -> p + strength * point(noisex(octaves, r, scale * p), noisey(octaves, r, scale * p))
+	p -> strength * point(noisex(octaves, r, scale * p), noisey(octaves, r, scale * p))
+in
+
+octavePerturbations2D(strength, scale, octaves, r) =
+  octaveNoises2D(strength, scale, octaves, r).map(noise -> p -> p + noise(p))
 in
 
 export 
