@@ -13,8 +13,9 @@ import evolution.compiler.term.TermOptimizer._
 import scala.annotation.tailrec
 
 final class TermOptimizer(interpreter: TermInterpreter) {
+  private val renamer = new CaptureAvoidingRenamer
   def optimize(term: Term, definitions: Map[String, Term]): Term = {
-    val renamedTerm = (new CaptureAvoidingRenamer).rename(term)
+    val renamedTerm = renamer.rename(term) // Is this needed?
     optimizeM(renamedTerm).run(Env(definitions))
   }
 
@@ -51,12 +52,18 @@ final class TermOptimizer(interpreter: TermInterpreter) {
           optLet = optimizeLet(Let(name, body, in))
         } yield optLet
 
-      case Lambda(name, body) =>
+      case lambda @ Lambda(name, _) =>
         for {
-          body <- bindLocal(name, Id(name))(optimizeM(body))
-        } yield Lambda(name, body)
+          isNameAlreadyInUse <- hasBinding(name)
+          optimized <- if (isNameAlreadyInUse) optimizeM(renamer.rename(term, Set(name))) else optimizeLambda(lambda)
+        } yield optimized
     }
   }
+
+  private def optimizeLambda(lambda: Term.Lambda): Optimized[Term] =
+    for {
+      body <- bindLocal(lambda.name, Id(lambda.name))(optimizeM(lambda.body))
+    } yield Lambda(lambda.name, body)
 
   private def optimizeLet(term: Let): Term =
     term.body match {
@@ -66,7 +73,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
 
   private def optimizeApplyLambda(f: Term, x: Term): Optimized[Term] =
     f match {
-      case Lambda(name, body) =>
+      case Lambda(name, body) => // Do we need to do some renaming here as well?
         for {
           body <- bindLocal(name, x)(optimizeM(body))
         } yield body

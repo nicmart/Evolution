@@ -10,7 +10,7 @@ import evolution.compiler.term.CaptureAvoidingRenamer.Renamed
   */
 class CaptureAvoidingRenamer {
   import CaptureAvoidingRenamer._, CaptureAvoidingRenamer.Renamed._
-  def rename(term: Term): Term = renameM(term).run(Set.empty)
+  def rename(term: Term, vars: Set[String] = Set.empty): Term = renameM(term).run(vars)
 
   private def renameM(term: Term): Renamed[Term] = term match {
     case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))

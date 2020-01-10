@@ -75,6 +75,39 @@ class TermOptimizerTest extends LanguageSpec {
 
         optimized shouldBe Lambda("x", Lambda("x'", Lambda("x''", Id("x'"))))
       }
+
+      "g = y -> t -> y in t -> g(t)" in {
+        pending // not sure we need this
+        // expected = t -> t' -> t
+        val term =
+          Let(
+            "g",
+            Lambda("y", Lambda("t", Id("y"))),
+            Lambda("t", Apply(Id("g"), Id("t")))
+          )
+
+        val optimized = optimize(term)
+
+        optimized shouldBe 1
+      }
+
+      "(y -> t -> y)(t)" in {
+
+        // expected = t' -> t
+        val term = Apply(Lambda("y", Lambda("t", Id("y"))), Id("t"))
+
+        val optimized = optimize(term, Map("t" -> Id("t")))
+
+        optimized shouldBe Lambda("t'", Id("t"))
+      }
+
+      "t -> y where env(t = t, y = t)" in {
+        val term = Lambda("t", Id("y"))
+
+        val optimized = optimize(term, Map("t" -> Id("t"), "y" -> Id("t")))
+
+        optimized shouldBe Lambda("t'", Id("t"))
+      }
     }
 
     "lists are optimized even when not all elements are values" in {
