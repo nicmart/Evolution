@@ -1,22 +1,22 @@
 package evolution.compiler.term
 
 import cats.data.Reader
-import cats.syntax.functor._
-import cats.syntax.applicative._
-import cats.syntax.traverse._
 import cats.instances.list._
+import cats.syntax.applicative._
+import cats.syntax.functor._
+import cats.syntax.traverse._
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.{Id, _}
 import evolution.compiler.term.TermOptimizer._
-import evolution.compiler.term.TermRenamer.alphaConversion
 
 import scala.annotation.tailrec
 
 final class TermOptimizer(interpreter: TermInterpreter) {
-  def optimize(term: Term, definitions: Map[String, Term]): Term =
-    optimizeM(term)
-      .run(Env(definitions))
+  def optimize(term: Term, definitions: Map[String, Term]): Term = {
+    val renamedTerm = (new CaptureAvoidingRenamer).rename(term)
+    optimizeM(renamedTerm).run(Env(definitions))
+  }
 
   private def optimizeM(term: Term): Optimized[Term] = {
     term match {
@@ -51,13 +51,10 @@ final class TermOptimizer(interpreter: TermInterpreter) {
           optLet = optimizeLet(Let(name, body, in))
         } yield optLet
 
-      case lambda @ Lambda(name, _) =>
+      case Lambda(name, body) =>
         for {
-          isNameAlreadyBound <- hasBinding(name)
-          uniqueName <- freshName(name)
-          alphaConvertedLambda = if (isNameAlreadyBound) alphaConversion(lambda, uniqueName) else lambda
-          body <- bindLocal(uniqueName, Id(uniqueName))(optimizeM(alphaConvertedLambda.body))
-        } yield Lambda(uniqueName, body)
+          body <- bindLocal(name, Id(name))(optimizeM(body))
+        } yield Lambda(name, body)
     }
   }
 

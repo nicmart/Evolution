@@ -36,7 +36,7 @@ class TermOptimizerTest extends LanguageSpec {
 
     "alpha conversions are performed when necessary" - {
 
-      "" in {
+      "x -> x -> x" in {
         val term = Lambda("x", Lambda("x", Id("x")))
 
         val optimized = optimize(term)
@@ -67,6 +67,13 @@ class TermOptimizerTest extends LanguageSpec {
         val optimized = optimize(term)
 
         optimized shouldBe Value(1)
+      }
+
+      "x -> x -> x' -> x" in {
+        val term = Lambda("x", Lambda("x", Lambda("x'", Id("x"))))
+        val optimized = optimize(term)
+
+        optimized shouldBe Lambda("x", Lambda("x'", Lambda("x''", Id("x'"))))
       }
     }
 
