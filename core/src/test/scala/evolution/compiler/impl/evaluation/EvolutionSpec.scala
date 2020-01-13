@@ -124,5 +124,16 @@ class EvolutionSpec extends LanguageSpec {
         result shouldBe List.fill(10)(0) ++ List.fill(90)(1)
       }
     }
+
+    "parallel" - {
+      "should work fine even when hasNext is called twice" in {
+        val evolutions = Evolution(Evolution(1, 2, 3), Evolution(4, 5, 6), Evolution(7, 8))
+        val parallelEvolution = parallel(evolutions)
+        val iterator = parallelEvolution.run
+        iterator.hasNext
+        iterator.hasNext
+        iterator.toList shouldBe List(1, 4, 7, 2, 5, 8, 3, 6)
+      }
+    }
   }
 }

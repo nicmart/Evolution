@@ -159,26 +159,37 @@ object Evolution {
         private val iterators: ArrayBuffer[Iterator[A]] = ArrayBuffer.empty
         private var currentIndex = 0
         private var outerIterationEnded = false
-        override def hasNext: Boolean = {
-          if (outerIterationEnded) {
-            if (iterators(currentIndex).hasNext) true
-            else {
-              iterators.remove(currentIndex)
-              currentIndex = currentIndex % iterators.size
-              iterators.nonEmpty && hasNext
-            }
+        private var cachedHasNext = false
+        private var cachedHasNextValue = false
 
-          } else {
-            if (iteratorOfEvolutions.hasNext) {
-              iterators.append(iteratorOfEvolutions.next().run)
-              iterators.last.hasNext
+        override def hasNext: Boolean = {
+          if (cachedHasNext) cachedHasNextValue
+          else {
+            cachedHasNextValue = if (outerIterationEnded) {
+              if (iterators(currentIndex).hasNext) true
+              else {
+                iterators.remove(currentIndex)
+                currentIndex = currentIndex % iterators.size
+                iterators.nonEmpty && hasNext
+              }
+
             } else {
-              outerIterationEnded = true
-              iterators.head.hasNext
+              if (iteratorOfEvolutions.hasNext) {
+                iterators.append(iteratorOfEvolutions.next().run)
+                iterators.last.hasNext
+              } else {
+                outerIterationEnded = true
+                iterators.head.hasNext
+              }
+
             }
+            cachedHasNext = true
+            cachedHasNextValue
           }
         }
+
         override def next(): A = {
+          cachedHasNext = false
           if (outerIterationEnded) {
             val a = iterators(currentIndex).next()
             currentIndex = (currentIndex + 1) % iterators.size
