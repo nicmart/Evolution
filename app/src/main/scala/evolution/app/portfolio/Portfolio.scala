@@ -603,6 +603,146 @@ object Portfolio {
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Rectangles with gradients"),
+      DrawingState(
+        0L,
+        """
+          k = .3 in
+          
+          gradient(k, e, from, to) =
+            iterate(x -> x + k * x^e, 1)
+              .map(x -> x + from)
+              .while(x -> x < to)
+          in
+          
+          reversegradient(k, e, from, to) =
+            iterate(x -> x + k * x^e, 1)
+              .map(x -> to - x)
+              .while(x -> x > from)
+          in
+          
+          hline(p1, p2, u) = line(point(u, p1.y), point(u, p2.y), 1) in
+          vline(p1, p2, u) = line(point(p1.x, u), point(p2.x, u), 1) in
+          
+          lines(draw, p1, p2, us) =
+            product(u <- us, p <- draw(p1, p2, u)) in p
+          in
+          
+          hlines(p1, p2, g) = lines(hline, p1, p2, g(p1.x, p2.x)) in
+          vlines(p1, p2, g) = lines(vline, p1, p2, g(p1.y, p2.y)) in
+          
+          rect(x1, x2, y1, y2) = [
+              line(point(x1, y1), point(x1, y2), 1),
+              line(point(x1, y2), point(x2, y2), 1),
+              line(point(x2, y2), point(x2, y1), 1),
+              line(point(x2, y1), point(x1, y1), 1)
+          ].flatten in
+          
+          gradients = uniformChoice(
+            gradient(.4, .6),
+            gradient(.2, .6),
+            gradient(1, .6),
+            reversegradient(.2, .6),
+            reversegradient(.4, .6),
+            reversegradient(1, .6)
+          ) in
+          
+          randomFilling(x1, x2, y1, y2) =
+            zip(
+              lines <- uniformChoice(hlines, vlines),
+              g <- gradients
+            ) in lines(point(x1, y1), point(x2, y2), g)
+          in
+          
+          fill(x1, x2, y1, y2) =
+            randomFilling(x1, x2, y1, y2).take(1).flatMap(line ->
+              [rect(x1, x2, y1, y2), line].flatten          
+            )
+          in
+          
+          m = 6 in
+          
+          padded(f, x1, x2, y1, y2) =
+            f(x1 + m, x2 - m, y1 + m, y2 - m)
+          in
+          
+          rhrects(n, f, l, r, b, t) =
+            orderedUniformDiscreteWithEndpoints(l, r, 2 * m, n)
+              .slidingMap(x1 -> x2 -> f(x1, x2, b, t))
+              .flatten
+          in
+          
+          vrects(n, f, l, r, b, t) =
+            range(b, t, (t- b) / n)
+              .slidingMap(y1 -> y2 -> f(l, r, y1, y2))
+              .flatten
+          in
+          
+          vrects(20, rhrects(20, padded(fill)), left, right, bottom, top)
+          
+
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Waves"),
+      DrawingState(
+        0L,
+        """
+        hspeed = 3 in
+        vspeed = 1 in
+        strength = 500 in
+        scalex = 0 in
+        scaley = .002 in
+        
+        strength2 = 0 in
+        scale2 = 0.003 in
+        m = 3 in
+        
+        noises2Ds(strength, scalex, scaley) = zip(
+          noisex <- noises,
+          noisey <- noises
+        ) in p -> strength * point(noisex(scalex * p), noisey(scaley * p))
+        in
+        
+        perturbations2Ds(strength, scalex, scaley) = 
+          noises2Ds(strength, scalex, scaley).map(noise -> p -> p + noise(p))
+        in
+        
+        pert <- perturbations2Ds(strength, scalex, scaley) in
+        pertUp <- noises2D(strength2, scale2).map(n -> p -> p + point(n(p).x, m + abs(n(p).y))) in
+        pertDown <- noises2D(strength2, scale2).map(n -> p -> p + point(n(p).x, -m -abs(n(p).y))) in 
+        
+        perturbedLine(yy, offset1, offset2) =
+          width = left - right in
+          speed = hspeed * (offset1 + offset2 + width) / width in
+          line(point(left + offset1, yy), point(right - offset2, yy), speed)
+            .map(p -> point(p.x, pert(p).y))
+        in
+        
+        connect(points) = points.slidingMap(p1 -> p2 -> line(pertUp(p1), pertDown(p2), vspeed)).flatten in
+        
+        d = 15 in
+        n = floor(1.5 * (top - bottom) / d) + 1 in
+        r = 100 in
+        
+        lines = zip(
+          y <- range(1.5 * bottom, 1.5 * top, d).take(n),
+          offset1 <- uniform(-r, 0),
+          offset2 <- uniform(-r, 0)
+        ) in perturbedLine(y, offset1, offset2)
+        in
+        
+        lines
+          .parallel
+          .grouped(n)
+          .flatMap(lst -> connect(fromList(lst)))
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
