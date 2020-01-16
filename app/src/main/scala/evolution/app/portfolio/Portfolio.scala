@@ -610,19 +610,7 @@ object Portfolio {
         0L,
         """
           k = .3 in
-          
-          gradient(k, e, from, to) =
-            iterate(x -> x + k * x^e, 1)
-              .map(x -> x + from)
-              .while(x -> x < to)
-          in
-          
-          reversegradient(k, e, from, to) =
-            iterate(x -> x + k * x^e, 1)
-              .map(x -> to - x)
-              .while(x -> x > from)
-          in
-          
+
           hline(p1, p2, u) = line(point(u, p1.y), point(u, p2.y), 1) in
           vline(p1, p2, u) = line(point(p1.x, u), point(p2.x, u), 1) in
           
@@ -633,13 +621,6 @@ object Portfolio {
           hlines(p1, p2, g) = lines(hline, p1, p2, g(p1.x, p2.x)) in
           vlines(p1, p2, g) = lines(vline, p1, p2, g(p1.y, p2.y)) in
           
-          rect(x1, x2, y1, y2) = [
-              line(point(x1, y1), point(x1, y2), 1),
-              line(point(x1, y2), point(x2, y2), 1),
-              line(point(x2, y2), point(x2, y1), 1),
-              line(point(x2, y1), point(x1, y1), 1)
-          ].flatten in
-          
           gradients = uniformChoice(
             gradient(.4, .6),
             gradient(.2, .6),
@@ -649,40 +630,24 @@ object Portfolio {
             reversegradient(1, .6)
           ) in
           
-          randomFilling(x1, x2, y1, y2) =
-            zip(
-              lines <- uniformChoice(hlines, vlines),
-              g <- gradients
-            ) in lines(point(x1, y1), point(x2, y2), g)
+          randomFilling(p1, p2) =
+            lines <- uniformChoice(hlines, vlines) in
+            g <- gradients in
+            lines(p1, p2, g)
           in
           
-          fill(x1, x2, y1, y2) =
-            randomFilling(x1, x2, y1, y2).take(1).flatMap(line ->
-              [rect(x1, x2, y1, y2), line].flatten          
-            )
+          fill(p1, p2) =
+            [rect(1, p1, p2), randomFilling(p1, p2)].flatten          
           in
           
           m = 6 in
           
-          padded(f, x1, x2, y1, y2) =
-            f(x1 + m, x2 - m, y1 + m, y2 - m)
-          in
-          
-          rhrects(n, f, l, r, b, t) =
-            orderedUniformDiscreteWithEndpoints(l, r, 2 * m, n)
-              .slidingMap(x1 -> x2 -> f(x1, x2, b, t))
-              .flatten
-          in
-          
-          vrects(n, f, l, r, b, t) =
-            range(b, t, (t- b) / n)
-              .slidingMap(y1 -> y2 -> f(l, r, y1, y2))
-              .flatten
-          in
-          
-          vrects(20, rhrects(20, padded(fill)), left, right, bottom, top)
-          
-
+          splitHorizontally(
+            split(20),
+            splitVertically(randomSplit(20, 1), padded(fill, 6)),
+            bottomLeft,
+            topRight
+          )
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
@@ -740,6 +705,42 @@ object Portfolio {
           .parallel
           .grouped(n)
           .flatMap(lst -> connect(fromList(lst)))
+      """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Windows on the Universe"),
+      DrawingState(
+        0L,
+        """
+        dist = 20 in
+        noiseStrength = 60 in
+        noiseScale = .006 in
+        padding = 5 in
+
+        randomWalks(p1, p2) =
+          (randomWalk(6) + .5 * p1).take(50000).filter(inRect(p1, p2))
+        in
+
+        tile(p1, p2) =
+          [
+            randomWalks(p1, p2),
+            rect(1, p1, p2)
+          ].flatten
+        in
+
+        splitVertically(
+          split(30),
+          splitHorizontally(
+            randomSplit(5, 10),
+            padded(tile, padding)
+          ),
+          bottomLeft,
+          topRight
+        )
+
+
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas

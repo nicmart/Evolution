@@ -148,6 +148,10 @@ circle(r, w) = map(
   a -> polar(r, a)
 ) in
 
+padded(f, padding, p1, p2) =
+	f(p1 + point(padding, padding), p2 - point(padding, padding))
+in
+
 rectangleP(p1, p2, ts) =
   p12 = point(p2.x, p1.y) in
 	p21 = point(p1.x, p2.y) in
@@ -181,7 +185,18 @@ finiteRectangle(p1, p2, v) =
   rectangleP(p1, p2, range(0, 2 * (abs(p1.x - p2.x) + abs(p1.y - p2.y)), v)) in
 
 rectangle(p1, p2, v) =
-  rectangleP(p1, p2, iterate(x -> x + v, 0)) in
+  rectangleP(p1, p2, iterate(x -> x + v, 0))
+in
+
+// An alternative version of a rect, we need to take a decision on this
+rect(v, p1, p2) = 
+	[
+    line(p1, point(p2.x, p1.y), v),
+    line(point(p2.x, p1.y), point(p2.x, p2.y), v),
+    line(point(p2.x, p2.y), point(p1.x, p2.y), v),
+    line(point(p1.x, p2.y), p1, v)
+  ].flatten
+in
 
 finiteSquare(r, v) = finiteRectangle(point(-r, -r), point(r, r), v) in
 square(r, v) = rectangle(point(-r, -r), point(r, r), v) in
@@ -242,6 +257,36 @@ in
 
 octavePerturbations2D(strength, scale, octaves, r) =
   octaveNoises2D(strength, scale, octaves, r).map(noise -> p -> p + noise(p))
+in
+
+splitVertically(xs, f, p1, p2) =
+  xs(p1.x, p2.x)
+    .slidingMap(x1 -> x2 -> f(point(x1, p1.y), point(x2, p2.y)))
+    .flatten
+in
+
+splitHorizontally(ys, f, p1, p2) =
+  ys(p1.y, p2.y)
+    .slidingMap(y1 -> y2 -> f(point(p1.x, y1), point(p2.x, y2)))
+    .flatten
+in
+
+split(n, x1, x2) = range(x1, x2, (x2 - x1) / n) in
+
+randomSplit(n, d, x1, x2) = 
+	orderedUniformDiscreteWithEndpoints(x1, x2, d, n)
+in
+
+gradient(k, e, from, to) =
+  iterate(x -> x + k * x^e, 1)
+    .map(x -> x + from)
+    .while(x -> x < to)
+in
+
+reverseGradient(k, e, from, to) =
+  iterate(x -> x + k * x^e, 1)
+    .map(x -> to - x)
+    .while(x -> x > from)
 in
 
 export 
