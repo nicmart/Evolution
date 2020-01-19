@@ -358,6 +358,15 @@ object Evolution {
     }
   }
 
+  def parametrize[T](ts: Evolution[T], max: Int): Double => T = {
+    val materialized = ts.run.take(max).toIndexedSeq
+    val size = materialized.size
+    t => {
+      val mod = t % 1
+      materialized(((if (mod >= 0) mod else 1 + mod) * size).toInt)
+    }
+  }
+
   def shuffle[T](ts: List[T]): Evolution[List[T]] = new Evolution[List[T]] {
     def run: Iterator[List[T]] = Iterator.continually(Random.shuffle(ts))
   }

@@ -216,6 +216,13 @@ class ConstantsInterpreterTest extends LanguageSpec {
       evo.run.toList shouldBe List(1, 3, 2, 4)
     }
 
+    "parametrize" in {
+      val const = interpret(Id("parametrize")).asFunc3
+      val f = const(Evolution(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))(20)
+      f(0) shouldBe 1
+      f(.9) shouldBe 10
+    }
+
     "connect" in {
       val const = interpret(Id("connect")).asFunc2
       val evo = const(Evolution(1, 2))((n: Int) => Evolution(n + 1, n + 2)).asEvo

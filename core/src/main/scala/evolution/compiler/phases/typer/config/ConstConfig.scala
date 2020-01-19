@@ -108,6 +108,11 @@ object ConstConfig {
       curry3(Evolution.iterate2[Any])
     ),
     Const("parallel", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), func1(Evolution.parallel)),
+    Const(
+      "parametrize",
+      Qualified(Scheme(Evo("T") =>: Integer =>: Double =>: "T", "T")),
+      curry2(Evolution.parametrize[Any])
+    ),
     Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), curry2(Evolution.connect)),
     Const(
       "zipwith",
