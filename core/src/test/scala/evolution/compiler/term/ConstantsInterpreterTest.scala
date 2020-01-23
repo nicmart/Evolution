@@ -218,9 +218,14 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
     "parametrize" in {
       val const = interpret(Id("parametrize")).asFunc3
-      val f = const(Evolution(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))(20)
-      f(0) shouldBe 1
-      f(.9) shouldBe 10
+      val evoOfF = const(Evolution(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))(20).asEvo
+      val f = evoOfF.run.toList.head.asInstanceOf[Double => Double]
+      f(0) shouldBe 0
+      f(1) shouldBe 1
+      f(9) shouldBe 9
+      f(10) shouldBe 9
+      f(11) shouldBe 8
+      f(-1) shouldBe 0
     }
 
     "connect" in {

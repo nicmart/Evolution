@@ -358,13 +358,14 @@ object Evolution {
     }
   }
 
-  def parametrize[T](ts: Evolution[T], max: Int): Double => T = {
-    val materialized = ts.run.take(max).toIndexedSeq
-    val size = materialized.size
-    t => {
-      materialized((smoothModule(t, 1) * size).toInt)
+  def parametrize[T](ts: Evolution[T], max: Int): Evolution[Double => T] =
+    new Evolution[Double => T] {
+      override def run: Iterator[Double => T] = {
+        val materialized = ts.run.take(max).toIndexedSeq
+        val size = materialized.size
+        Iterator.single(t => materialized((smoothModule(t, size)).toInt))
+      }
     }
-  }
 
   private def positiveModule(n: Double, b: Int): Double = {
     if (n >= 0) n % b else (n % b) + b
@@ -372,9 +373,9 @@ object Evolution {
 
   private def smoothModule(n: Double, b: Int): Double = {
     if (n >= 0) {
-      if ((n / b).toInt % 2 == 0) positiveModule(n, b) else b - positiveModule(n, b)
+      if ((n / b).toInt % 2 == 0) positiveModule(n, b) else b - positiveModule(n, b) - 1
     } else {
-      if ((n / b).toInt % 2 == 1) positiveModule(n, b) else b - positiveModule(n, b)
+      if ((n / b).toInt % 2 == 1) positiveModule(n, b) else b - positiveModule(n, b) - 1
     }
   }
 
