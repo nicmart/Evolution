@@ -362,8 +362,19 @@ object Evolution {
     val materialized = ts.run.take(max).toIndexedSeq
     val size = materialized.size
     t => {
-      val mod = t % 1
-      materialized(((if (mod >= 0) mod else 1 + mod) * size).toInt)
+      materialized((smoothModule(t, 1) * size).toInt)
+    }
+  }
+
+  private def positiveModule(n: Double, b: Int): Double = {
+    if (n >= 0) n % b else (n % b) + b
+  }
+
+  private def smoothModule(n: Double, b: Int): Double = {
+    if (n >= 0) {
+      if ((n / b).toInt % 2 == 0) positiveModule(n, b) else b - positiveModule(n, b)
+    } else {
+      if ((n / b).toInt % 2 == 1) positiveModule(n, b) else b - positiveModule(n, b)
     }
   }
 
