@@ -358,12 +358,13 @@ object Evolution {
     }
   }
 
-  def parametrize[T](ts: Evolution[T], max: Int): Evolution[Double => T] =
+  def parameterizations[T](ts: Evolution[T], size: Int): Evolution[Double => T] =
     new Evolution[Double => T] {
       override def run: Iterator[Double => T] = {
-        val materialized = ts.run.take(max).toIndexedSeq
-        val size = materialized.size
-        Iterator.single(t => materialized((smoothModule(t, size)).toInt))
+        ts.run.grouped(size).map { materialized =>
+          val actualSize = materialized.size
+          t => materialized((smoothModule(t, actualSize)).toInt)
+        }
       }
     }
 

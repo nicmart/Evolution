@@ -109,9 +109,9 @@ object ConstConfig {
     ),
     Const("parallel", Qualified(Scheme(Evo(Evo("T")) =>: Evo("T"), "T")), func1(Evolution.parallel)),
     Const(
-      "parametrize",
+      "parametrizations",
       Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Double =>: "T"), "T")),
-      curry2(Evolution.parametrize[Any])
+      curry2(Evolution.parameterizations[Any])
     ),
     Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), curry2(Evolution.connect)),
     Const(

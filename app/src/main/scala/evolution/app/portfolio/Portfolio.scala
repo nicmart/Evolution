@@ -739,8 +739,6 @@ object Portfolio {
           bottomLeft,
           topRight
         )
-
-
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
@@ -755,7 +753,7 @@ object Portfolio {
         length = 100000 in
         
         webify(evo) =
-          f <- evo.parametrize(length) in
+          f <- evo.parametrizations(length) in
           integrate(0, uniform(-r, r)).slidingMap(
             t1 -> t2 -> line(f(t1), f(t2), 10)
           ).flatten
