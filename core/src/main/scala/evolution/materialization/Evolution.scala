@@ -358,7 +358,7 @@ object Evolution {
     }
   }
 
-  def parameterizations[T](ts: Evolution[T], size: Int): Evolution[Double => T] =
+  def parametrizations[T](ts: Evolution[T], size: Int): Evolution[Double => T] =
     new Evolution[Double => T] {
       override def run: Iterator[Double => T] = {
         ts.run.grouped(size).map { materialized =>

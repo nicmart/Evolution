@@ -111,7 +111,7 @@ object ConstConfig {
     Const(
       "parametrizations",
       Qualified(Scheme(Evo("T") =>: Integer =>: Evo(Double =>: "T"), "T")),
-      curry2(Evolution.parameterizations[Any])
+      curry2(Evolution.parametrizations[Any])
     ),
     Const("connect", Qualified(Scheme(Evo("T") =>: ("T" =>: Evo("T")) =>: Evo("T"), "T")), curry2(Evolution.connect)),
     Const(
