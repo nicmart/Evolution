@@ -744,6 +744,28 @@ object Portfolio {
       """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Webified Random Walk"),
+      DrawingState(
+        0L,
+        """
+        d = 10 in
+        r = 80 in
+        length = 100000 in
+        
+        webify(evo) =
+          f <- evo.parametrize(length) in
+          integrate(0, uniform(-r, r)).slidingMap(
+            t1 -> t2 -> line(f(t1), f(t2), 10)
+          ).flatten
+        in
+        
+        
+        integrate(point(0, 0), @point(uniform(-d, d), uniform(-d, d))).webify
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
     )
   )
 
