@@ -154,10 +154,8 @@ object Portfolio {
           
           equation(r, a, b) = map(uniform(-1, 1), rnd -> z -> v -> r * rnd + a * z + b * v) in
           
-          randomPoints = @point(uniform(left, right), uniform(bottom, top)) in
-          
           flatMap(
-            randomPoints,
+            randomPoint,
             p ->
               p + @point(
                 solve2(equation(rx, ax, bx), 0, 0),
@@ -169,7 +167,7 @@ object Portfolio {
       defaultRendererWithInfiniteCanvas
     ),
     Drawing(
-      Some("Circular doodle"),
+      Some("Smoke"),
       DrawingState(
         0L,
         """
@@ -178,20 +176,10 @@ object Portfolio {
           k = .6 in
           step = 2 in
           
-          rnd = @point(
-            uniform(-radius, radius),
-            uniform(-radius, radius)
-          ) in
-          
-          acceleration(r, x, v) = r -viscosity * v -k * x in
-          
-          v = solve2(
-            map(rnd, acceleration),
+          integrate(
             point(0, 0),
-            point(0, 0)
-          ) in
-          
-          integrate(point(0, 0), step * v)
+            step * dampedOscillator(-k, -viscosity, uniformPoint(radius))
+          )
           """.unindent
       ),
       defaultRendererState
