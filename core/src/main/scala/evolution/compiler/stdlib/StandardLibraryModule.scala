@@ -5,7 +5,7 @@ import evolution.compiler.phases.parser.FastParseParser
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
-import evolution.compiler.term.{Definition, Module, Term, TreeToTermCompiler}
+import evolution.compiler.term.{Definition, Module, TreeToTermCompiler}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified

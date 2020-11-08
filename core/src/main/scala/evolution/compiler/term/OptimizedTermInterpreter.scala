@@ -1,6 +1,5 @@
 package evolution.compiler.term
 
-import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.phases.typer.config.ConstConfig.constantsTerms
 
 object OptimizedTermInterpreter extends TermInterpreter {

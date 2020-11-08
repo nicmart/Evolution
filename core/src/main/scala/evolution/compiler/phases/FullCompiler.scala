@@ -5,7 +5,6 @@ import evolution.compiler.term._
 import evolution.compiler.tree._
 import evolution.compiler.types.Type
 import evolution.logging.Logger
-import pprint.PPrinter
 
 final class FullCompiler(
     parser: Parser,

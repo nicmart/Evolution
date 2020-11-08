@@ -1,7 +1,7 @@
 resolvers += Resolver.bintrayRepo("vmunier", "scalajs")
 resolvers += Resolver.sonatypeRepo("releases")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.31")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.32")
 
 // Use Scalajs 0.6 specific version
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.9-0.6")

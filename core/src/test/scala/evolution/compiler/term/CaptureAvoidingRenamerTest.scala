@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.term.Term.Literal.{LitBool, LitDouble, LitInt, LitList}
+import evolution.compiler.term.Term.Literal.{LitBool, LitDouble, LitInt}
 import evolution.compiler.term.Term.{Lambda, _}
 
 class CaptureAvoidingRenamerTest extends LanguageSpec {
