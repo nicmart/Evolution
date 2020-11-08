@@ -8,6 +8,7 @@ import org.scalatest.Inspectors
 import evolution.compiler.expression.typeclass._
 import evolution.compiler.impl.evaluation.MaterializeAddition
 import evolution.compiler.impl.evaluation.MaterializeInverse
+import Ordering.Double.TotalOrdering
 
 class EvolutionSpec extends LanguageSpec {
   "Evolutions" - {

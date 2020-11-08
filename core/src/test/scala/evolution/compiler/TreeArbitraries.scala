@@ -30,7 +30,7 @@ trait TreeArbitraries {
     for {
       head <- Gen.alphaChar
       tail <- Gen.alphaNumStr
-    } yield head + tail
+    } yield s"$head$tail"
 
   def genLambda: Gen[String] =
     for {

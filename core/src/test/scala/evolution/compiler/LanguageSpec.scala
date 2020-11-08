@@ -1,17 +1,15 @@
 package evolution.compiler
 import evolution.compiler.term.Term
 import evolution.compiler.term.Term.Let
+import org.scalactic.{Equality, Prettifier, TypeCheckedTripleEquals}
 import org.scalatest.{FreeSpec, Matchers}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalactic.Prettifier
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import pprint.PPrinter
-import org.scalactic.TypeCheckedTripleEquals
-import org.scalactic.Equality
 
 trait LanguageSpec
     extends FreeSpec
     with Matchers
-    with GeneratorDrivenPropertyChecks
+    with ScalaCheckDrivenPropertyChecks
     with TreeArbitraries
     with TypeCheckedTripleEquals {
   implicit class EitherOps[T](t: Either[String, T]) {

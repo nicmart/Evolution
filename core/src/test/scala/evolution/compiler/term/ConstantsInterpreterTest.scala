@@ -7,7 +7,7 @@ import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
-
+import Ordering.Double.TotalOrdering
 class ConstantsInterpreterTest extends LanguageSpec {
   "comparisons" - {
     "greaterthan" in {

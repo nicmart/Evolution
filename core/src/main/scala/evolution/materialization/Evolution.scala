@@ -69,7 +69,7 @@ object Evolution {
 
   def ordered(evo: Evolution[Double], n: Int): Evolution[Double] = new Evolution[Double] {
     override def run: Iterator[Double] =
-      evo.run.take(n).toList.sorted.iterator
+      evo.run.take(n).toList.sorted(Ordering.Double.TotalOrdering).iterator
   }
 
   def distinct[T](evo: Evolution[T], n: Int): Evolution[T] = new Evolution[T] {
