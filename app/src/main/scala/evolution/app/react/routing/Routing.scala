@@ -29,7 +29,7 @@ class Routing(
         | NotFoundPageRoute(dsl).rule).prefixPath(s"$urlDelimiter/")).notFound(redirectToPage(NotFound)(Redirect.Push))
   }
 
-  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
     import dsl._
 
     val rule: dsl.Rule =
@@ -42,7 +42,7 @@ class Routing(
       redirectToPage(defaultPage)(Redirect.Replace)
   }
 
-  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
     import dsl._
 
     val rule: dsl.Rule =
@@ -77,7 +77,7 @@ class Routing(
       }
   }
 
-  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages]) {
+  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
     import dsl._
 
     val rule: dsl.Rule =

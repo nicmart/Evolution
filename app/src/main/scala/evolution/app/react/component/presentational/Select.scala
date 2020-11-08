@@ -39,5 +39,5 @@ object Select {
     * outside, and then use it.
     */
   def component[T]: ReactComponent[T] =
-    react.ScalaComponent.builder[StateSnapshot[PointedSeq[Item[T]]]]("dropdown").renderBackend[Backend[T]].build
+    react.ScalaComponent.builder[StateSnapshot[PointedSeq[Item[T]]]].renderBackend[Backend[T]].build
 }

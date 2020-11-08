@@ -33,5 +33,5 @@ object Editor {
   }
 
   val component =
-    ScalaComponent.builder[Props]("Editor").stateless.renderBackend[Backend].build
+    ScalaComponent.builder[Props].stateless.renderBackend[Backend].build
 }

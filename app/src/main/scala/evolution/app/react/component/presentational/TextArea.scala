@@ -12,7 +12,7 @@ object TextArea {
         ^.className := "code-wrapper",
         <.textarea(
           ^.value := props.value,
-          ^.spellCheck := "false",
+          ^.spellCheck := false,
           ^.className := "code-area",
           ^.onChange ==> onChange(props),
           props.value
@@ -26,5 +26,5 @@ object TextArea {
   }
 
   val component =
-    ScalaComponent.builder[StateSnapshot[String]]("Single input").stateless.renderBackend[Backend].build
+    ScalaComponent.builder[StateSnapshot[String]].stateless.renderBackend[Backend].build
 }

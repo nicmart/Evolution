@@ -84,27 +84,26 @@ lazy val core = project
   .settings(
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
-      "org.typelevel" %%% "cats-core" % "2.0.0-RC2",
-      "org.scalacheck" %%% "scalacheck" % "1.14.0",
-      "com.lihaoyi" %%% "fastparse" % "2.1.3",
-      "com.lihaoyi" %%% "pprint" % "0.5.5",
-      "com.beachape" %%% "enumeratum" % "1.5.13",
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+      "org.scalatest" %%% "scalatest" % "3.2.2" % "test",
+      "org.typelevel" %%% "cats-core" % "2.2.0",
+      "org.scalacheck" %%% "scalacheck" % "1.15.1",
+      "com.lihaoyi" %%% "fastparse" % "2.2.4",
+      "com.lihaoyi" %%% "pprint" % "0.6.0",
+      "org.scala-js" %%% "scalajs-dom" % "1.1.0"
     )
   )
 
 lazy val jsAppSettings =
   Seq(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7",
-      "com.github.japgolly.scalajs-react" %%% "core" % "1.5.0-RC2",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.5.0-RC2",
-      "com.lihaoyi" %%% "scalatags" % "0.7.0",
-      "io.circe" %%% "circe-core" % "0.12.0-RC4",
-      "io.circe" %%% "circe-generic" % "0.12.0-RC4",
-      "io.circe" %%% "circe-parser" % "0.12.0-RC4",
-      "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
+      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+      "com.github.japgolly.scalajs-react" %%% "core" % "1.7.6",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
+      "com.lihaoyi" %%% "scalatags" % "0.9.2",
+      "io.circe" %%% "circe-core" % "0.13.0",
+      "io.circe" %%% "circe-generic" % "0.13.0",
+      "io.circe" %%% "circe-parser" % "0.13.0",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
     )
   )
 

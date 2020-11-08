@@ -33,5 +33,5 @@ object Navbar {
     }
   }
 
-  val component = ScalaComponent.builder[Unit]("navbar").renderBackendWithChildren[Backend].build
+  val component = ScalaComponent.builder[Unit].renderBackendWithChildren[Backend].build
 }
