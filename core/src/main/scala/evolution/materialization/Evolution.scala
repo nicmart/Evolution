@@ -169,8 +169,11 @@ object Evolution {
               if (iterators(currentIndex).hasNext) true
               else {
                 iterators.remove(currentIndex)
-                currentIndex = currentIndex % iterators.size
-                iterators.nonEmpty && hasNext
+                if (iterators.isEmpty) false
+                else {
+                  currentIndex = currentIndex % iterators.size
+                  hasNext
+                }
               }
 
             } else {

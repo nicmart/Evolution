@@ -84,8 +84,9 @@ lazy val core = project
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
       "org.scalatest" %%% "scalatest" % "3.2.2" % "test",
+      "org.scalatestplus" %%% "scalacheck-1-14" % "3.2.2.0" % "test",
       "org.typelevel" %%% "cats-core" % "2.2.0",
-      "org.scalacheck" %%% "scalacheck" % "1.15.1",
+      "org.scalacheck" %%% "scalacheck" % "1.14.3",
       "com.lihaoyi" %%% "fastparse" % "2.2.4",
       "com.lihaoyi" %%% "pprint" % "0.6.0",
       "org.scala-js" %%% "scalajs-dom" % "1.1.0"
