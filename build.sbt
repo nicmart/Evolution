@@ -8,7 +8,6 @@ Test / fork := true
 ThisBuild / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.ScalaLibrary
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-bloopExportJarClassifiers in Global := Some(Set("sources"))
 logBuffered in Test := false
 
 lazy val options = Seq(
