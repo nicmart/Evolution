@@ -1,0 +1,157 @@
+ 
+html {
+  background-color: Black;
+}
+
+#page-content {
+  position: relative;
+}
+
+#canvas-column {
+  overflow: hidden;
+  padding: 0;
+}
+
+#page-content .sidebar {
+  display: none;
+}
+
+#page-content .sidebar.expanded {
+  display: flex;
+  flex-direction: row;
+  padding-left: 0!important;
+  padding-top: 3em!important;
+}
+
+.sidebar label.label {
+  color: White;
+}
+
+#sidebar-handle {
+  width: 20px;
+  height: 100%;
+  margin-right: -10px;
+  margin-left: -10px;
+  text-align: center;
+  z-index: 1;
+  cursor: ew-resize;
+}
+
+#sidebar-handle > div {
+  background-color: White;
+  width: 1px;
+  display: inline-block;
+  height: 100%;
+}
+
+nav.navbar {
+  text-shadow: 0px 0px 1rem rgba(0, 0, 0, 1);
+}
+
+nav.navbar {
+  position: fixed;
+  z-index: 1;
+  background-color: transparent;
+}
+
+nav.navbar .navbar-item,
+nav.navbar .navbar-item .label,
+nav.navbar .navbar-item .title,
+nav.navbar .navbar-item a {
+  color: White;
+}
+
+nav .points-rate span {
+  display: inline-block;
+  width: 8rem;
+  text-align: center;
+}
+
+.button,
+.button:active,
+.button:hover,
+.button:focus{
+  border-color: White !important;
+}
+
+nav .dropdown-content {
+  background-color: transparent;
+}
+
+nav .dropdown-content .dropdown-item,
+nav .dropdown-content .dropdown-item:hover,
+nav .checkbox:hover {
+  color: inherit;
+}
+
+.inner-config {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.inner-config .inner-config {
+  position: relative;
+  padding: .7em .5em;
+  background-color: rgba(255, 255, 255, .2);
+  border: 1px solid Black;
+  border-radius: .5em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font-family: monospace;
+}
+
+.dsl-config {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.dsl-feedback {
+  display: none;
+}
+
+.dsl-feedback.dsl-error {
+  display: block;
+  padding: .5em 1em;
+  background-color: #ff0047;
+  color: white;
+  text-shadow: none;
+  font-size: .8em;
+}
+
+.dsl-feedback.dsl-error > span {
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+.code-wrapper {
+  flex: 2;
+  padding-left: 1em;
+}
+
+textarea.code-area {
+  font-family: monospace;
+  font-size: 0.8em;
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  background-color: Black;
+  color: White;
+  outline: none;
+  border: none;
+}
+
+html,
+body,
+#entrypoint,
+#entrypoint > div,
+.inner-config,
+.full-height {
+  min-height: 100%;
+  height: 100%;
+}
