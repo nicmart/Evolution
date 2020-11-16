@@ -99,7 +99,7 @@ object ConstConfig {
     ),
     Const("while", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeWhile)),
     Const("until", Qualified(Scheme(Evo("T") =>: ("T" =>: Bool) =>: Evo("T"), "T")), curry2(Evolution.takeUntil)),
-    Const("fromlist", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), func1(Evolution.fromIterable)),
+    Const("fromlist", Qualified(Scheme(Lst("T") =>: Evo("T"), "T")), func1(Evolution.fromSeq)),
     Const("range", Qualified(Scheme(Double =>: Double =>: Double =>: Evo(Double))), curry3(Evolution.range)),
     Const("iterate", Qualified(Scheme(("T" =>: "T") =>: "T" =>: Evo("T"), "T")), curry2(Evolution.iterate[Any])),
     Const(

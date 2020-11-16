@@ -119,7 +119,7 @@ class EvolutionSpec extends LanguageSpec {
 
       "should use the last element to generate the second evolution" in {
         val result =
-          connect[Int](Evolution.fromIterable(List.fill(10)(0)), last => Evolution.constant(last + 1)).run
+          connect[Int](Evolution.fromSeq(List.fill(10)(0)), last => Evolution.constant(last + 1)).run
             .take(100)
             .toList
         result shouldBe List.fill(10)(0) ++ List.fill(90)(1)
