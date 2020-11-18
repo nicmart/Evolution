@@ -3,7 +3,7 @@ package evolution
 import cats.effect.{ContextShift, IO}
 import evolution.geometry.Point
 import evolution.rng.PerlinNoise
-import fs2.{Pull, Stream}
+import fs2.{Chunk, Pull, Stream}
 
 import scala.util.Random
 
@@ -85,8 +85,8 @@ package object materialization {
       } yield t
 
     def uniform(from: Double, to: Double): Evolution[Double] = {
-      val io = IO(from + Random.nextDouble() * (to - from))
-      Stream.eval(io).repeat
+      val io = IO(Chunk.doubles(Array.fill(1000)(from + Random.nextDouble() * (to - from))))
+      Stream.evalUnChunk(io).repeat
     }
 
     def uniformChoice[T](choices: List[T]): Evolution[T] =
