@@ -10,7 +10,7 @@ import evolution.geometry.Point
 import evolution.materialization.Evolution
 
 final class TermBasedCodeCompiler(fullCompiler: FullCompiler) extends CodeCompiler {
-  def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
+  def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Evolution[Point]] =
     module(ctx).flatMap(
       mod =>
         fullCompiler

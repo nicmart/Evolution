@@ -19,6 +19,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 import evolution.app.model.Drawing
 import evolution.app.react.component.control.DrawingLoader
+import evolution.materialization.Evolution
 
 object Page {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
@@ -30,7 +31,7 @@ object Page {
       running: StateSnapshot[Boolean],
       layout: StateSnapshot[LayoutState],
       rendererState: StateSnapshot[RendererState],
-      compilationResult: Either[String, Iterator[Point]],
+      compilationResult: Either[String, Evolution[Point]],
       drawingState: StateSnapshot[DrawingState],
       selectedDrawing: StateSnapshot[Option[Drawing]],
       pointRate: Int,

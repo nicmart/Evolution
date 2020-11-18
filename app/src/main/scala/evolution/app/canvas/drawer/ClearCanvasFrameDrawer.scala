@@ -15,7 +15,7 @@ final class ClearCanvasFrameDrawer(
     color: RGBAColor
 ) extends FrameDrawer {
 
-  @inline override def drawFrame(context: CanvasRenderingContext2D, points: Iterator[Point]): Iterator[Point] = {
+  @inline override def drawFrame(context: CanvasRenderingContext2D, points: Iterator[Point]): Unit = {
     clearCanvas(context)
     drawer.drawFrame(context, points)
   }

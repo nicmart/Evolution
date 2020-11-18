@@ -3,7 +3,7 @@ package evolution
 import cats.effect.{ContextShift, IO}
 import evolution.geometry.Point
 import evolution.rng.PerlinNoise
-import fs2.Stream
+import fs2.{Pull, Stream}
 
 import scala.util.Random
 
@@ -15,15 +15,29 @@ package object materialization {
   object Evolution {
 
     implicit class EvolutionOps[T](evo: Evolution[T]) {
-      def run: Iterator[T] = evo.compile.to(Iterator).unsafeRunSync()
+      def run: Iterator[T] = toIteratorIO(evo)
       def toVector: Vector[T] = evo.compile.to(Vector).unsafeRunSync()
+
+      private def toIteratorIO[A](s: fs2.Stream[IO, A]): Iterator[A] = {
+        s.pull.uncons
+          .flatMap(Pull.output1)
+          .mapOutput {
+            case Some((head, tail)) => head.iterator ++ toIteratorIO(tail)
+            case None               => Iterator.empty
+          }
+          .stream
+          .compile
+          .last
+          .unsafeRunSync()
+          .get
+      }
     }
 
     private object Random extends Random
 
-    def runWithSeed[T](seed: Long, evolution: Evolution[T]): Iterator[T] = {
-      Evolution.setSeed(seed)
-      evolution.run
+    def runWithSeed[T](seed: Long, evolution: Evolution[T]): Evolution[T] = {
+      // TODO we need to set the seed as an effect on the first element
+      evolution
     }
 
     def setSeed(long: Long): Unit = Random.setSeed(long)

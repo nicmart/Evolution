@@ -16,6 +16,7 @@ import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}
 import evolution.geometry.Point
 import evolution.logging.NoOpLogger
+import evolution.materialization.Evolution
 import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
@@ -39,7 +40,7 @@ object App {
     def next: State = copy(id = id + 1)
   }
 
-  case class CompilationResult(key: Int, result: Either[String, Iterator[Point]])
+  case class CompilationResult(key: Int, result: Either[String, Evolution[Point]])
 
   case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean) {
     private val canvasWidth: Double = if (sidebarExpanded) windowSize.x - sidebarWidth else windowSize.x
