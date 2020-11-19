@@ -35,12 +35,8 @@ package object materialization {
 
     private object Random extends Random
 
-    def runWithSeed[T](seed: Long, evolution: Evolution[T]): Evolution[T] = {
-      // TODO we need to set the seed as an effect on the first element
-      evolution
-    }
-
-    def setSeed(long: Long): Unit = Random.setSeed(long)
+    def runWithSeed[T](seed: Long, evolution: Evolution[T]): Evolution[T] =
+      Stream.eval(IO(Random.setSeed(seed))).flatMap(_ => evolution)
 
     val empty: Evolution[Nothing] = Stream.empty
 
@@ -142,7 +138,10 @@ package object materialization {
       ffa.parJoinUnbounded
 
     def integrate[A](start: A, speed: Evolution[A], add: (A, A) => A): Evolution[A] =
-      speed.scan(start)(add)
+      speed.scanChunks(start) { (sum1, as) =>
+        val sums = as.scanLeft(sum1)(add)
+        (sums.last.get, sums)
+      }
 
     def slidingMap[A, B](as: Evolution[A], f: A => A => B): Evolution[B] =
       as.zipWithNext.collect {
