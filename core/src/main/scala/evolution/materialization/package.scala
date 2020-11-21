@@ -92,8 +92,10 @@ package object materialization {
       }
 
     // TODO optimise with chunks
-    def normal(mu: Double, gamma: Double): Evolution[Double] =
-      Stream.repeatEval(IO(Random.nextGaussian() * gamma + mu))
+    def normal(mu: Double, gamma: Double): Evolution[Double] = {
+      val io = IO(Chunk.doubles(Array.fill(1000)(Random.nextGaussian() * gamma + mu)))
+      Stream.evalUnChunk(io).repeat
+    }
 
     def zipWith[A, B, C](fa: Evolution[A], fb: Evolution[B], f: A => B => C): Evolution[C] =
       fa.zipWith(fb)((a, b) => f(a)(b))
