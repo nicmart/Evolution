@@ -6,7 +6,7 @@ import evolution.app.model.context.DrawingContext
 import evolution.app.model.state.RendererState
 import evolution.geometry.Point
 import fs2.Stream
-import japgolly.scalajs.react.component.Scala.Component
+import japgolly.scalajs.react.component.Scala.{BackendScope, Component}
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
@@ -32,18 +32,16 @@ object Canvas {
       running: Boolean
   )
 
-  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) {
+  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer)(scope: BackendScope[Props, Unit]) {
     println("Creating a CANVAS Backend instance")
-    private var running = false
+
     private var stopPending = false
 
-    private val refresh = 10.milliseconds
-
     private def toMeteredStream[T](t: IO[T]): Stream[IO, T] =
-      Stream.eval(t) ++ Stream.repeatEval(t).metered(refresh)
+      Stream.eval(t) ++ Stream.repeatEval(t).metered(10.milliseconds)
 
     private val runningStream: Stream[IO, Boolean] =
-      toMeteredStream(IO(running))
+      toMeteredStream(IO(scope.props.runNow().running))
 
     private val stopPendingStream: Stream[IO, Boolean] =
       toMeteredStream(IO(stopPending))
@@ -51,9 +49,6 @@ object Canvas {
     def scheduleStop(): Unit = {
       stopPending = true
     }
-
-    // TODO this should not exist and points should be injected from the props
-    var points: Stream[IO, Point] = Stream.empty
 
     def render(props: Props): VdomElement = {
       val size = props.context.canvasSize.point
@@ -69,7 +64,8 @@ object Canvas {
 
     // TODO chunk drawings and parametrise iterations
     private def drawStream(props: Props, ctx: dom.CanvasRenderingContext2D, drawer: FrameDrawer): Stream[IO, Unit] =
-      points
+      props.points
+        .getOrElse(Stream.empty)
         .chunkN(1000)
         .unchunk
         .pauseWhen(runningStream.map(!_))
@@ -85,16 +81,10 @@ object Canvas {
           }
       )
 
-    def toggleRunning(props: Props): Callback = Callback { running = props.running }
-
     def onMount(node: dom.Element, props: Props): Callback = Callback {
       stopPending = false
-      running = props.running
       props.canvasInitializer(canvas(node))
-      props.points.foreach { ps =>
-        points = ps
-        startDrawingStream(node, props)
-      }
+      startDrawingStream(node, props)
     }
 
     def startDrawingStream(node: dom.Element, props: Props): Unit = {
@@ -112,10 +102,9 @@ object Canvas {
   def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
     ScalaComponent
       .builder[Props]("Canvas")
-      .backend[Backend](s => new Backend(drawerFromState))
+      .backend[Backend](new Backend(drawerFromState) (_))
       .render(s => s.backend.render(s.props))
       .componentDidMount(s => s.backend.onMount(s.getDOMNode.asElement, s.props))
       .componentWillUnmount(s => Callback(s.backend.scheduleStop()))
-      .componentDidUpdate(s => s.backend.toggleRunning(s.currentProps))
       .build
 }
