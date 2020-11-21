@@ -15,22 +15,7 @@ package object materialization {
   object Evolution {
 
     implicit class EvolutionOps[T](evo: Evolution[T]) {
-      def run: Iterator[T] = toIteratorIO(evo)
-      def toVector: Vector[T] = evo.compile.to(Vector).unsafeRunSync()
-
-      private def toIteratorIO[A](s: fs2.Stream[IO, A]): Iterator[A] = {
-        s.pull.uncons
-          .flatMap(Pull.output1)
-          .mapOutput {
-            case Some((head, tail)) => head.iterator ++ toIteratorIO(tail)
-            case None               => Iterator.empty
-          }
-          .stream
-          .compile
-          .last
-          .unsafeRunSync()
-          .get
-      }
+      def sample(n: Int): List[T] = evo.take(n).compile.toList.unsafeRunSync()
     }
 
     private object Random extends Random
