@@ -90,7 +90,7 @@ lazy val core = project
       "org.scalacheck" %%% "scalacheck" % "1.14.3",
       "com.lihaoyi" %%% "fastparse" % "2.2.4",
       "com.lihaoyi" %%% "pprint" % "0.6.0",
-      //"org.typelevel" %%% "cats-parse" % "0.3.4",
+      "org.typelevel" %%% "cats-parse" % "0.3.4",
       "org.scala-js" %%% "scalajs-dom" % "1.1.0"
     )
   )
