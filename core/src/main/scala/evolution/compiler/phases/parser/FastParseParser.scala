@@ -7,15 +7,22 @@ import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree
 import evolution.compiler.tree.Tree
 import evolution.compiler.tree.Tree._
+import fastparse.Parsed.Extra
 import fastparse._
 
 object FastParseParser extends Parser {
   def parse(astString: String): Either[ParserFailure, Tree] =
     fastparse
       .parse(astString, program(_))
-      .fold((_, failIndex, extra) => Left(new ParserFailure(failIndex, extra)), (expr, _) => Right(expr))
+      .fold(
+        (_, failIndex, extra) => Left(new ParserFailure(failIndex, inputLinesFromExtra(extra))),
+        (expr, _) => Right(expr)
+      )
 
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
+
+  private def inputLinesFromExtra(extra: Extra): List[String] =
+    extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
 
   private def program[_: P]: P[Tree] =
     P(whitespaces ~ expression ~ whitespaces ~ End)

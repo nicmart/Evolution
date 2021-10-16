@@ -1,15 +1,11 @@
 package evolution.compiler.phases.parser
 
-import fastparse._
-import fastparse.Parsed._
-
 // TODO Too OOP 😂
-class ParserFailure(index: Int, val extra: Extra) extends Throwable {
-  val inputLines: List[String] = extra.input.asInstanceOf[IndexedParserInput].data.split("\n").toList
+class ParserFailure(index: Int, inputLines: List[String]) extends Throwable {
   private val lineAndColumn = findLineAndColumn(inputLines, index)
   val lineNumber: Int = Math.min(lineAndColumn._1, inputLines.length - 1)
-  val line: String = inputLines(lineNumber)
-  val columnNumber: Int = lineAndColumn._2
+  private val line: String = inputLines(lineNumber)
+  private val columnNumber: Int = lineAndColumn._2
 
   private val columnIndicator: String = (" " * (line.length + 1)).updated(columnNumber, '^')
 
