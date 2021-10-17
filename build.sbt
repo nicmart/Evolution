@@ -9,6 +9,7 @@ ThisBuild / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.ScalaLibr
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 logBuffered in Test := false
+bloopExportJarClassifiers in Global := Some(Set("sources"))
 
 lazy val options = Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
@@ -60,7 +61,7 @@ lazy val options = Seq(
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.13.0",
+  scalaVersion := "2.13.6",
   version := "0.1.0-SNAPSHOT",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -70,11 +71,7 @@ lazy val commonSettings = List(
   ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
-  libraryDependencies ++= Seq(
-    compilerPlugin("com.github.ghik" %%% "silencer-plugin" % "1.4.2"),
-    "com.github.ghik" %%% "silencer-lib" % "1.4.2" % Provided
-  )
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
 )
 
 lazy val core = project
@@ -83,8 +80,7 @@ lazy val core = project
   .settings(
     inThisBuild(commonSettings),
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.2.2" % "test",
-      "co.fs2" %%% "fs2-core" % "2.4.4",
+      "org.scalatest" %%% "scalatest" % "3.2.10" % "test",
       "org.scalatestplus" %%% "scalacheck-1-14" % "3.2.2.0" % "test",
       "org.typelevel" %%% "cats-core" % "2.2.0",
       "org.scalacheck" %%% "scalacheck" % "1.14.3",

@@ -30,7 +30,7 @@ object TreeF {
   }
 
   implicit class Ops[A](fa: TreeF[A]) {
-    def children: List[A] = fa.traverse[Const[List[A], ?], Nothing](a => Const(List(a))).getConst
+    def children: List[A] = fa.traverse[Const[List[A], *], Nothing](a => Const(List(a))).getConst
   }
 
   implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]) {

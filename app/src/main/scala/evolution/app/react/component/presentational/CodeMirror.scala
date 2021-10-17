@@ -2,8 +2,10 @@ package evolution.app.react.component.presentational
 
 import scalajs.js
 import japgolly.scalajs.react._
+
 import scala.scalajs.js.annotation.JSImport
-import com.github.ghik.silencer.silent
+
+import scala.annotation.nowarn
 
 object CodeMirror {
 
@@ -70,7 +72,7 @@ object CodeMirror {
   type OnChange = js.Function3[Editor, Data, String, Unit]
   type OnBeforeChange = js.Function3[Editor, Data, String, Unit]
   @js.native
-  @silent
+  @nowarn
   trait Props extends js.Object {
     var value: String = js.native
     var onChange: OnChange = js.native

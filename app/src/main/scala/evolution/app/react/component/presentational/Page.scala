@@ -20,6 +20,8 @@ import scala.scalajs.js.annotation.JSGlobal
 import evolution.app.model.Drawing
 import evolution.app.react.component.control.DrawingLoader
 
+import scala.annotation.nowarn
+
 object Page {
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
 
@@ -166,14 +168,14 @@ object Page {
 object Html {
   @js.native
   @JSGlobal("Canvas")
-  @silent
+  @nowarn
   class Canvas extends dom.html.Canvas {
     def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
   }
 
   @js.native
   @JSGlobal("Anchor")
-  @silent
+  @nowarn
   class Anchor extends dom.html.Anchor {
     var download: String = js.native
   }
