@@ -2,7 +2,7 @@ package evolution.compiler.phases.parser
 
 import cats.data.NonEmptyList
 import cats.implicits._
-import cats.parse.Parser.{With1, not}
+import cats.parse.Parser.{With1, not, string, void}
 import evolution.compiler.phases.parser.CatsParserConfig._
 import evolution.compiler.phases.parser.CatsPrecedenceGroup.BinaryOperator
 import evolution.compiler.phases.{Parser, parser}
@@ -18,7 +18,8 @@ object CatsParseParser extends Parser {
 
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
-  private val program: P[Tree] = whitespaces.with1 *> expression <* whitespaces
+  // WIP
+  private val program: P[Tree] = doubleLit.w | variable.w
 
   private def expression: P[Tree] =
     NonOperandExpressions.nonOperand | precedenceGroups.operand
@@ -155,17 +156,19 @@ object CatsParseParser extends Parser {
     nonEmptyCsv(expression)
 
   private def nonEmptyCsv[T](p: => P[T]): P[NonEmptyList[T]] =
-    (p ~ (P.char(',').void *> nonEmptyCsv(p)).?).map {
-      case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
-    }
+    p.map(NonEmptyList.of(_))
+//    P.recursive[NonEmptyList[T]](
+//      self =>
+//        (p ~ (P.char(',').void *> self).?).map {
+//          case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
+//        }
+//    )
+
+  private def alpha: P[Unit] = void(P.charWhere(_.toString.matches("[a-zA-Z_]"))).void
+  private def alphaNum: P[Unit] = P.charWhere(_.toString.matches("[a-zA-Z0-9_]")).void
 
   private def identifier: P[String] =
-    ((alpha | P.char('@')) ~ alphaNum.rep(1).?).map {
-      case (prefix, rest) => prefix + rest.toList.mkString("")
-    }
-
-  private def alpha: P[Char] = P.charWhere(_.toString.matches("[a-zA-Z_]"))
-  private def alphaNum: P[Char] = P.charWhere(_.toString.matches("[0-9_]"))
+    ((alpha | P.char('@')) ~ alphaNum.rep(1).?).string
 
   private def specialSyntax: P[Tree] = special.zip | special.product | special.uniformChoice
 
@@ -195,22 +198,23 @@ object CatsParseParser extends Parser {
   private object numbers {
 
     def digit: P[Unit] =
-      P.charInPattern("0-9").void
+      P.charIn('0' to '9').void
 
     def floatDigits: P[Unit] =
-      (digit.rep0.with1 ~ P.char('.') ~ digit.rep(1)).void
+      (digit.rep0.with1 ~ P.char('.') ~ digit.rep(1).void).void
 
     def intLiteral: P[Int] =
       (P.char('-').?.with1 ~ digit.rep).string.map(_.toInt)
 
     def doubleLiteral: P[Double] =
-      (P.char('-').?.with1 ~ (floatDigits | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
+      (P.char('-').?.with1 ~ (floatDigits.backtrack | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
 
-    def exp: P[Unit] = (P.charInPattern("Ee") ~ P.charInPattern("+\\-").? ~ digit.rep).void
+    def exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
   }
 
   implicit class Ops[A](p: P[A]) {
     def ~|[B](other: P0[B]): P[(A, B)] = (p ~ other).backtrack
+    def w: P[A] = whitespaces.void.?.with1.soft *> p <* whitespaces.void.?
   }
 
   implicit class POps[A](p: P.type) {
@@ -238,7 +242,7 @@ private[parser] final case class CatsPrecedenceGroups(last: () => P[Tree], group
 }
 
 private[parser] final case class CatsPrecedenceGroup(operators: (String, BinaryOperator)*) {
-  def parser(next: () => P[Tree]): P[Tree] = P.defer(next() ~ (opsParser ~ next()).rep).map {
+  def parser(next: () => P[Tree]): P[Tree] = P.defer(next() ~ (opsParser ~ P.defer(next())).rep).map {
     case (head, tail) => evalAssocBinaryOp(head, tail.toList)
   }
 
