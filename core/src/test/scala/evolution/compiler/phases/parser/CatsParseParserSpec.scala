@@ -32,13 +32,13 @@ class CatsParseParserSpec extends LanguageSpec {
           unsafeParse(s"$varName") shouldEq Id(varName)
         }
       }
-//
-//      "parse binary operators" in {
-//        forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
-//          case (a, (op, opFunc), b) =>
-//            unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
-//        }
-//      }
+
+      "parse binary operators" in {
+        forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
+          case (a, (op, opFunc), b) =>
+            unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
+        }
+      }
 //
 //      "associate left to right for ops with the same precedence" - {
 //        val expectations = List(
