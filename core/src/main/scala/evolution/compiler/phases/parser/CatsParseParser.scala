@@ -123,7 +123,7 @@ object CatsParseParser extends Parser {
 
     (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
       case (tree, selections) => dotSelection(tree, selections)
-    }.w
+    }.surroundedByWhitespaces
   }
 
   @tailrec
@@ -165,13 +165,12 @@ object CatsParseParser extends Parser {
     nonEmptyCsv(expression)
 
   private def nonEmptyCsv[T](p: => P[T]): P[NonEmptyList[T]] =
-    p.map(NonEmptyList.of(_))
-//    P.recursive[NonEmptyList[T]](
-//      self =>
-//        (p ~ (P.char(',').void *> self).?).map {
-//          case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
-//        }
-//    )
+    P.recursive[NonEmptyList[T]](
+      self =>
+        (p.w ~ (P.char(',').w.void *> self).?).map {
+          case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
+        }
+    )
 
   private def alpha: P[Unit] = void(P.charWhere(_.toString.matches("[a-zA-Z_]"))).void
   private def alphaNum: P[Unit] = P.charWhere(_.toString.matches("[a-zA-Z0-9_]")).void
@@ -215,8 +214,9 @@ object CatsParseParser extends Parser {
     def intLiteral: P[Int] =
       (P.char('-').?.with1 ~ digit.rep).string.map(_.toInt)
 
+    // It would be nice to avoid to backtrack on the "-".
     def doubleLiteral: P[Double] =
-      (P.char('-').?.with1 ~ (floatDigits.backtrack | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
+      (P.char('-').?.soft.with1 ~ (floatDigits.backtrack | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
 
     def exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
   }
@@ -224,7 +224,8 @@ object CatsParseParser extends Parser {
   implicit class Ops[A](p: P[A]) {
     def ~|[B](other: P0[B]): P[(A, B)] = (p ~ other).backtrack
     def ~~[B](other: P0[B]): P[(A, B)] = (p <* whitespaces.?) ~ other
-    def w: P[A] = whitespaces.?.with1.soft *> p <* whitespaces.?
+    def w: P[A] = (p <* whitespaces.?)
+    def surroundedByWhitespaces: P[A] = whitespaces.?.with1.soft *> p <* whitespaces.?
   }
 
   implicit class POps[A](p: P.type) {

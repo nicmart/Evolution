@@ -53,15 +53,15 @@ class CatsParseParserSpec extends LanguageSpec {
             }
         }
       }
-//
-//      "inverses" in {
-//        unsafeParse("-point(0, 0)") shouldEq App
-//          .of(
-//            Id("inverse"),
-//            App.of(Id("point"), IntLiteral(0), IntLiteral(0))
-//          )
-//
-//      }
+
+      "inverses" in {
+        unsafeParse("-point(0, 0)") shouldEq App
+          .of(
+            Id("inverse"),
+            App.of(Id("point"), IntLiteral(0), IntLiteral(0))
+          )
+
+      }
 //
 //      "bindings" - {
 //        "a = 2 in $a" in {
