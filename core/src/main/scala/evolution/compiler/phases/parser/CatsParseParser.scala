@@ -14,6 +14,8 @@ import CatsParseParser.Ops
 import CatsParseParser.POps
 import CatsParseParser.With1Ops
 
+import scala.annotation.tailrec
+
 object CatsParseParser extends Parser {
   def parse(astString: String): Either[ParserFailure, Tree] = {
     program.parseAll(astString).leftMap(error => new ParserFailure(error.failedAtOffset, astString.split("\n").toList))
@@ -110,6 +112,7 @@ object CatsParseParser extends Parser {
   )
 
   private def factor: P[Tree] = {
+    // TODO: *> and <* with whitespaces
     def prefix: P[Tree] =
       (P.char('(').void *> expression <* P.char(')').void) | doubleLit | boolean | unaryPrefixOp | variable | list
 
@@ -118,13 +121,12 @@ object CatsParseParser extends Parser {
       case (f, Some(arguments)) => App(f, arguments)
     }
 
-//    (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
-//      case (tree, selections) => dotSelection(tree, selections)
-//    }
-
-    prefix.w
+    (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
+      case (tree, selections) => dotSelection(tree, selections)
+    }.w
   }
 
+  @tailrec
   private def dotSelection(receiver: Tree, selections: List[(Tree, Option[NonEmptyList[Tree]])]): Tree =
     selections match {
       case Nil => receiver
