@@ -22,11 +22,11 @@ object CatsParseParser extends Parser {
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
   // WIP
-  private val program: P[Tree] = precedenceGroups.operand
-//  private val program: P[Tree] = expression
+  private val program: P[Tree] = expression
 
   private def expression: P[Tree] =
-    NonOperandExpressions.nonOperand | precedenceGroups.operand
+    P.defer(precedenceGroups.operand)
+//    NonOperandExpressions.nonOperand | precedenceGroups.operand
 
   private object NonOperandExpressions {
     def nonOperand: P[Tree] = {
@@ -105,8 +105,7 @@ object CatsParseParser extends Parser {
 
   // Operator groups, order by ascending Precedence
   private def precedenceGroups: CatsPrecedenceGroups = CatsPrecedenceGroups(
-    //() => atomicOperand,
-    doubleLit.w | variable.w,
+    atomicOperand,
     allPrecedenceGroups
   )
 
@@ -119,9 +118,11 @@ object CatsParseParser extends Parser {
       case (f, Some(arguments)) => App(f, arguments)
     }
 
-    (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
-      case (tree, selections) => dotSelection(tree, selections)
-    }
+//    (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
+//      case (tree, selections) => dotSelection(tree, selections)
+//    }
+
+    prefix.w
   }
 
   private def dotSelection(receiver: Tree, selections: List[(Tree, Option[NonEmptyList[Tree]])]): Tree =
@@ -135,7 +136,8 @@ object CatsParseParser extends Parser {
     }
 
   private def atomicOperand: P[Tree] =
-    specialSyntax | factor
+//    specialSyntax | factor
+    P.defer(factor)
 
   private def list: P[Tree] = (P.char('[').void *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
 
