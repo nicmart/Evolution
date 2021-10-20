@@ -112,42 +112,42 @@ class CatsParseParserSpec extends LanguageSpec {
 //
 //        }
 //      }
-//
-//      "a * b + c = (a * b) + c" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          unsafeParse(s"$a * $b + $c") shouldEq App
-//            .of(
-//              Id("add"),
-//              App.of(Id("multiply"), unsafeParse(a), unsafeParse(b)),
-//              unsafeParse(c)
-//            )
-//
-//        }
-//      }
-//
-//      "a + b * c = a + (b * c)" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          unsafeParse(s"$a + $b * $c") shouldEq App
-//            .of(
-//              Id("add"),
-//              unsafeParse(a),
-//              App.of(Id("multiply"), unsafeParse(b), unsafeParse(c))
-//            )
-//
-//        }
-//      }
-//
-//      "(a + b) * c" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          unsafeParse(s"($a + $b) * $c") shouldEq App
-//            .of(
-//              Id("multiply"),
-//              App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
-//              unsafeParse(c)
-//            )
-//
-//        }
-//      }
+
+      "a * b + c = (a * b) + c" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a * $b + $c") shouldEq App
+            .of(
+              Id("add"),
+              App.of(Id("multiply"), unsafeParse(a), unsafeParse(b)),
+              unsafeParse(c)
+            )
+
+        }
+      }
+
+      "a + b * c = a + (b * c)" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a + $b * $c") shouldEq App
+            .of(
+              Id("add"),
+              unsafeParse(a),
+              App.of(Id("multiply"), unsafeParse(b), unsafeParse(c))
+            )
+
+        }
+      }
+
+      "(a + b) * c" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"($a + $b) * $c") shouldEq App
+            .of(
+              Id("multiply"),
+              App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
+              unsafeParse(c)
+            )
+
+        }
+      }
 //
 //      "lambdas" in {
 //        forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
@@ -170,16 +170,16 @@ class CatsParseParserSpec extends LanguageSpec {
 //        }
 //      }
 //
-//      "comparisons" - {
-//        "a < b" in {
-//          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-//            val parsed = unsafeParse(s"$a < $b")
-//            val expected = App.of(Id("lessthan"), unsafeParse(a), unsafeParse(b))
-//            parsed shouldEq expected
-//          }
-//        }
-//      }
-//
+      "comparisons" - {
+        "a < b" in {
+          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+            val parsed = unsafeParse(s"$a < $b")
+            val expected = App.of(Id("lessthan"), unsafeParse(a), unsafeParse(b))
+            parsed shouldEq expected
+          }
+        }
+      }
+
 //      "a -> b + c = a -> (b + c)" in {
 //        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
 //          unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
@@ -189,11 +189,11 @@ class CatsParseParserSpec extends LanguageSpec {
 //        }
 //      }
 //
-//      "expressions with whitespaces at the beginning and at the end" in {
-//        forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
-//          unsafeParse(s"$wsStart$expr$wsEnd") shouldEq unsafeParse(expr)
-//        }
-//      }
+      "expressions with whitespaces at the beginning and at the end" in {
+        forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
+          unsafeParse(s"$wsStart$expr$wsEnd") shouldEq unsafeParse(expr)
+        }
+      }
 //
 //      "ignore comments" in {
 //        forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
@@ -268,20 +268,20 @@ class CatsParseParserSpec extends LanguageSpec {
 //
 //      }
 //
-//      "parse chained dot selections" in {
-//        unsafeParse(s"a(b).method1(c).method2(d)") shouldEq App
-//          .of(
-//            Id("method2"),
-//            App
-//              .of(
-//                Id("method1"),
-//                App.of(Id("a"), Id("b")),
-//                Id("c")
-//              ),
-//            Id("d")
-//          )
-//
-//      }
+      "parse chained dot selections" in {
+        unsafeParse(s"a(b).method1(c).method2(d)") shouldEq App
+          .of(
+            Id("method2"),
+            App
+              .of(
+                Id("method1"),
+                App.of(Id("a"), Id("b")),
+                Id("c")
+              ),
+            Id("d")
+          )
+
+      }
 //
 //      "parse applications of lambdas" in {
 //        forAll(genLambda, genLeafExpr) { (lambda, expr) =>
@@ -293,128 +293,128 @@ class CatsParseParserSpec extends LanguageSpec {
 //
 //        }
 //      }
+
+      "parse exponentials" - {
+        "2^3 + 1" in {
+          unsafeParse("2^3 + 1") shouldEq App
+            .of(
+              Id("add"),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
+              IntLiteral(1)
+            )
+
+        }
+
+        "2^3 * 2" in {
+          unsafeParse("2^3 * 2") shouldEq App
+            .of(
+              Id("multiply"),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
+              IntLiteral(2)
+            )
+
+        }
+
+        "2 * 2^3" in {
+          unsafeParse("2 * 2^3") shouldEq App
+            .of(
+              Id("multiply"),
+              IntLiteral(2),
+              App.of(Id("exp"), IntLiteral(2), IntLiteral(3))
+            )
+
+        }
+      }
 //
-//      "parse exponentials" - {
-//        "2^3 + 1" in {
-//          unsafeParse("2^3 + 1") shouldEq App
-//            .of(
-//              Id("add"),
-//              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
-//              IntLiteral(1)
-//            )
-//
-//        }
-//
-//        "2^3 * 2" in {
-//          unsafeParse("2^3 * 2") shouldEq App
-//            .of(
-//              Id("multiply"),
-//              App.of(Id("exp"), IntLiteral(2), IntLiteral(3)),
-//              IntLiteral(2)
-//            )
-//
-//        }
-//
-//        "2 * 2^3" in {
-//          unsafeParse("2 * 2^3") shouldEq App
-//            .of(
-//              Id("multiply"),
-//              IntLiteral(2),
-//              App.of(Id("exp"), IntLiteral(2), IntLiteral(3))
-//            )
-//
-//        }
-//      }
-//
-//      "divisions" - {
-//        "a / b + c = (a / b) + c" in {
-//          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//            unsafeParse(s"$a / $b + $c") shouldEq App
-//              .of(
-//                Id("add"),
-//                App.of(Id("div"), unsafeParse(a), unsafeParse(b)),
-//                unsafeParse(c)
-//              )
-//
-//          }
-//        }
-//
-//        "a + b / c = a + (b / c)" in {
-//          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//            unsafeParse(s"$a + $b / $c") shouldEq App
-//              .of(
-//                Id("add"),
-//                unsafeParse(a),
-//                App.of(Id("div"), unsafeParse(b), unsafeParse(c))
-//              )
-//
-//          }
-//        }
-//
-//        "(a + b) / c" in {
-//          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//            unsafeParse(s"($a + $b) / $c") shouldEq App
-//              .of(
-//                Id("div"),
-//                App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
-//                unsafeParse(c)
-//              )
-//
-//          }
-//        }
-//
-//        "@point(a, b)" in {
-//          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
-//            unsafeParse(s"@point($a, $b)") shouldEq App
-//              .of(
-//                Id("@point"),
-//                unsafeParse(a),
-//                unsafeParse(b)
-//              )
-//
-//          }
-//        }
-//
-//        "const(expr(a, b))" in {
-//          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
-//            unsafeParse(s"const($expr($a, $b))") shouldEq App
-//              .of(
-//                Id("const"),
-//                App.of(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
-//              )
-//
-//          }
-//        }
-//
-//        "const(n)" in {
-//          forAll(arbitrary[Double]) { d =>
-//            unsafeParse(s"const($d)") shouldEq
-//              App.of(Id("const"), unsafeParse(d.toString))
-//          }
-//        }
-//
-//        "[a, b, c]" in {
-//          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//            unsafeParse(s"[$a, $b, $c]") shouldEq App
-//              .of(
-//                Id("cons"),
-//                unsafeParse(a),
-//                App
-//                  .of(
-//                    Id("cons"),
-//                    unsafeParse(b),
-//                    App
-//                      .of(
-//                        Id("cons"),
-//                        unsafeParse(c),
-//                        Id("empty")
-//                      )
-//                  )
-//              )
-//
-//          }
-//        }
-//      }
+      "divisions" - {
+        "a / b + c = (a / b) + c" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"$a / $b + $c") shouldEq App
+              .of(
+                Id("add"),
+                App.of(Id("div"), unsafeParse(a), unsafeParse(b)),
+                unsafeParse(c)
+              )
+
+          }
+        }
+
+        "a + b / c = a + (b / c)" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"$a + $b / $c") shouldEq App
+              .of(
+                Id("add"),
+                unsafeParse(a),
+                App.of(Id("div"), unsafeParse(b), unsafeParse(c))
+              )
+
+          }
+        }
+
+        "(a + b) / c" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"($a + $b) / $c") shouldEq App
+              .of(
+                Id("div"),
+                App.of(Id("add"), unsafeParse(a), unsafeParse(b)),
+                unsafeParse(c)
+              )
+
+          }
+        }
+
+        "@point(a, b)" in {
+          forAll(genLeafExpr, genLeafExpr) { (a, b) =>
+            unsafeParse(s"@point($a, $b)") shouldEq App
+              .of(
+                Id("@point"),
+                unsafeParse(a),
+                unsafeParse(b)
+              )
+
+          }
+        }
+
+        "const(expr(a, b))" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (expr, a, b) =>
+            unsafeParse(s"const($expr($a, $b))") shouldEq App
+              .of(
+                Id("const"),
+                App.of(unsafeParse(expr), unsafeParse(a), unsafeParse(b))
+              )
+
+          }
+        }
+
+        "const(n)" in {
+          forAll(arbitrary[Double]) { d =>
+            unsafeParse(s"const($d)") shouldEq
+              App.of(Id("const"), unsafeParse(d.toString))
+          }
+        }
+
+        "[a, b, c]" in {
+          forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+            unsafeParse(s"[$a, $b, $c]") shouldEq App
+              .of(
+                Id("cons"),
+                unsafeParse(a),
+                App
+                  .of(
+                    Id("cons"),
+                    unsafeParse(b),
+                    App
+                      .of(
+                        Id("cons"),
+                        unsafeParse(c),
+                        Id("empty")
+                      )
+                  )
+              )
+
+          }
+        }
+      }
 //
 //      "variadic zipWith(a, b, c, f)" in {
 //        pending
