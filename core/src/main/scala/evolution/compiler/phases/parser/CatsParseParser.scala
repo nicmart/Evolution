@@ -18,53 +18,62 @@ import scala.annotation.tailrec
 
 object CatsParseParser extends Parser {
   def parse(astString: String): Either[ParserFailure, Tree] = {
-    program.parseAll(astString).leftMap(error => new ParserFailure(error.failedAtOffset, astString.split("\n").toList))
+    program
+      .parseAll(astString)
+      .leftMap(error => {
+        error.expected.toList.foreach(println(_))
+        new ParserFailure(error.failedAtOffset, astString.split("\n").toList)
+      })
   }
 
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
   // WIP
-  private val program: P[Tree] = expression
+  private val program: P[Tree] = expression.surroundedByWhitespaces
 
   private def expression: P[Tree] =
-    P.defer(precedenceGroups.operand)
-//    NonOperandExpressions.nonOperand | precedenceGroups.operand
+    P.defer(NonOperandExpressions.nonOperand | precedenceGroups.operand)
 
   private object NonOperandExpressions {
     def nonOperand: P[Tree] = {
       // Note: a previous solution based on flatMap caused undesired back-tracking
-      (identifier ~| (lambdaTail | letTail | sampleTail | argsTail)).map {
+      (identifier.w.soft ~ (lambdaTail | letTail | sampleTail | argsTail)).map {
         case (id, f) => f(id)
       }
     }
 
-    private def lambdaTail: P[String => Tree] = (whitespaces.with1 ~ P.string("->") *> expression).map { expr =>
+    private def lambdaTail: P[String => Tree] = (P.string("->").w *> expression).map { expr =>
       Lambda(_, expr)
     }
 
-    // `a = 2 in` ... and `a == 2` share the same prefix, so the cut must be after the negative lookahead
+    // `a = 2 in` ... and `a == 2` sha re the same prefix, so the cut must be after the negative lookahead
     private def letTail: P[String => Tree] =
-      (((whitespaces.with1 ~| P.char('=') ~| not(P.char('='))).soft *> expression) ~ (P.string("in") *> expression))
+      ((P.char('=').w ~ not(P.char('='))).backtrack *> expression.w ~ (P
+        .string("in")
+        .w *> expression.w))
         .map {
           case (value, body) =>
             Let(_, value, body)
         }
 
     private def sampleTail: P[String => Tree] =
-      (((whitespaces.with1 ~| P.string("<-").void).soft *> expression) ~| (P.string("in").void.soft *> expression))
+      (((P.string("<-").void).soft *> expression) ~| (P.string("in").void.soft *> expression))
         .map {
           case (sampling, body) =>
             variable => tree.SpecialSyntax.withFirst(variable -> sampling, body)
         }
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
+    // Parse "(a, b, c) = body in expr"
     private def argsTail: P[String => Tree] = {
+      val args = P.char('(').w *> nonEmptyCsv(identifier) <* P.char(')')
+      val equal = P.char('=').void ~ not(P.char('='))
+      val in = P.string("in").void
+      val p = (args.w <* equal.w).backtrack.soft ~ expression.w ~ (in.w *> expression.w)
 
-      ((whitespaces.with1 *> P.char('(') *> nonEmptyCsv(identifier)) ~ (P.char(')') *> (P.char('=') *> not(P.char('=')) *> expression)) ~
-        (P.string("in") *> expression))
-        .map {
-          case ((args, value), body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
-        }
+      p.map {
+        case ((args, value), body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
+      }
     }
   }
 
@@ -176,7 +185,7 @@ object CatsParseParser extends Parser {
   private def alphaNum: P[Unit] = P.charWhere(_.toString.matches("[a-zA-Z0-9_]")).void
 
   private def identifier: P[String] =
-    ((alpha | P.char('@')) ~ alphaNum.rep(1).?).string
+    ((alpha | P.char('@')) ~ alphaNum.rep(1).?).string.map(_.toLowerCase)
 
   private def specialSyntax: P[Tree] = special.zip | special.product | special.uniformChoice
 

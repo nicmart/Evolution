@@ -62,43 +62,43 @@ class CatsParseParserSpec extends LanguageSpec {
           )
 
       }
-//
-//      "bindings" - {
-//        "a = 2 in $a" in {
-//          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-//            unsafeParse(s"$id = $expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Id(id))
-//          }
-//        }
-//
-//        "a = b in\\n 1 + 2" in {
-//          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
-//            unsafeParse(s"$id = $expr in 1 + 2") shouldEq Let(
-//              id.toLowerCase,
-//              unsafeParse(expr),
-//              App.of(Id("add"), IntLiteral(1), IntLiteral(2))
-//            )
-//          }
-//        }
-//
-//        "a = aval in b = bval in body" in {
-//          forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
-//            unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldEq
-//              Let(a.toLowerCase, unsafeParse(aVal), Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)))
-//          }
-//        }
-//
-//        "f(x) = y in body" in {
-//          forAll(genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, body) =>
-//            unsafeParse(s"$f($x) = $y in $body") shouldEq unsafeParse(s"$f = $x -> $y in $body")
-//          }
-//        }
-//
-//        "f(x, y) = z in body" in {
-//          forAll(genIdentifier, genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, z, body) =>
-//            unsafeParse(s"$f($x, $y) = $z in $body") shouldEq unsafeParse(s"$f = $x -> $y -> $z in $body")
-//          }
-//        }
-//      }
+
+      "bindings" - {
+        "a = 2 in $a" in {
+          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
+            unsafeParse(s"$id = $expr in $id") shouldEq Let(id.toLowerCase, unsafeParse(expr), Id(id))
+          }
+        }
+
+        "a = b in\\n 1 + 2" in {
+          forAll(genIdentifier, genLeafExpr) { (id, expr) =>
+            unsafeParse(s"$id = $expr in 1 + 2") shouldEq Let(
+              id.toLowerCase,
+              unsafeParse(expr),
+              App.of(Id("add"), IntLiteral(1), IntLiteral(2))
+            )
+          }
+        }
+
+        "a = aval in b = bval in body" in {
+          forAll(genIdentifier, genLeafExpr, genIdentifier, genLeafExpr, genLeafExpr) { (a, aVal, b, bVal, body) =>
+            unsafeParse(s"$a = $aVal in $b = $bVal in $body") shouldEq
+              Let(a.toLowerCase, unsafeParse(aVal), Let(b.toLowerCase, unsafeParse(bVal), unsafeParse(body)))
+          }
+        }
+
+        "f(x) = y in body" in {
+          forAll(genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, body) =>
+            unsafeParse(s"$f($x) = $y in $body") shouldEq unsafeParse(s"$f = $x -> $y in $body")
+          }
+        }
+
+        "f(x, y) = z in body" in {
+          forAll(genIdentifier, genIdentifier, genIdentifier, genLeafExpr, genLeafExpr) { (f, x, y, z, body) =>
+            unsafeParse(s"$f($x, $y) = $z in $body") shouldEq unsafeParse(s"$f = $x -> $y -> $z in $body")
+          }
+        }
+      }
 //
 //      "sampling" - {
 //        "a <- b in a" in {
@@ -148,28 +148,28 @@ class CatsParseParserSpec extends LanguageSpec {
 
         }
       }
-//
-//      "lambdas" in {
-//        forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
-//          unsafeParse(s"$identifier -> $expr") shouldEq Lambda(identifier.toLowerCase, unsafeParse(expr))
-//        }
-//      }
-//
-//      "HO lambdas" in {
-//        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
-//          unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldEq Lambda(
-//            identifier1.toLowerCase,
-//            Lambda(identifier2.toLowerCase, unsafeParse(expr))
-//          )
-//        }
-//      }
-//
-//      "Let bindings" in {
-//        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
-//          unsafeParse(s"$id = $value in $in") shouldEq Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
-//        }
-//      }
-//
+
+      "lambdas" in {
+        forAll(genIdentifier, genLeafExpr) { (identifier, expr) =>
+          unsafeParse(s"$identifier -> $expr") shouldEq Lambda(identifier.toLowerCase, unsafeParse(expr))
+        }
+      }
+
+      "HO lambdas" in {
+        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, identifier2, expr) =>
+          unsafeParse(s"$identifier1 -> $identifier2 ->$expr") shouldEq Lambda(
+            identifier1.toLowerCase,
+            Lambda(identifier2.toLowerCase, unsafeParse(expr))
+          )
+        }
+      }
+
+      "Let bindings" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (id, value, in) =>
+          unsafeParse(s"$id = $value in $in") shouldEq Let(id.toLowerCase, unsafeParse(value), unsafeParse(in))
+        }
+      }
+
       "comparisons" - {
         "a < b" in {
           forAll(genLeafExpr, genLeafExpr) { (a, b) =>
@@ -180,15 +180,15 @@ class CatsParseParserSpec extends LanguageSpec {
         }
       }
 
-//      "a -> b + c = a -> (b + c)" in {
-//        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-//          unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
-//            identifier1.toLowerCase,
-//            App.of(Id("add"), unsafeParse(expr1), unsafeParse(expr2))
-//          )
-//        }
-//      }
-//
+      "a -> b + c = a -> (b + c)" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$identifier1 -> $expr1 + $expr2") shouldEq Lambda(
+            identifier1.toLowerCase,
+            App.of(Id("add"), unsafeParse(expr1), unsafeParse(expr2))
+          )
+        }
+      }
+
       "expressions with whitespaces at the beginning and at the end" in {
         forAll(genWhitespace, genLeafExpr, genWhitespace) { (wsStart, expr, wsEnd) =>
           unsafeParse(s"$wsStart$expr$wsEnd") shouldEq unsafeParse(expr)
