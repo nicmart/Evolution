@@ -23,6 +23,7 @@ object CatsParseParser extends Parser {
 
   // WIP
   private val program: P[Tree] = precedenceGroups.operand
+//  private val program: P[Tree] = expression
 
   private def expression: P[Tree] =
     NonOperandExpressions.nonOperand | precedenceGroups.operand
@@ -105,7 +106,7 @@ object CatsParseParser extends Parser {
   // Operator groups, order by ascending Precedence
   private def precedenceGroups: CatsPrecedenceGroups = CatsPrecedenceGroups(
     //() => atomicOperand,
-    () => doubleLit.w | variable.w,
+    doubleLit.w | variable.w,
     allPrecedenceGroups
   )
 
@@ -237,18 +238,16 @@ private[parser] object CatsParserConfig {
   val whitespaces: P0[Unit] = P.charsWhile(_.isWhitespace).void
 }
 
-private[parser] final case class CatsPrecedenceGroups(last: () => P[Tree], groups: List[CatsPrecedenceGroup]) {
-  def operand: P[Tree] = {
-    val lazyParser = groups.foldRight(last) { (group, accParser) => () =>
+private[parser] final case class CatsPrecedenceGroups(last: P[Tree], groups: List[CatsPrecedenceGroup]) {
+  def operand: P[Tree] =
+    groups.foldRight(last) { (group, accParser) =>
       group.parser(accParser)
     }
-    lazyParser()
-  }
 }
 
 private[parser] final case class CatsPrecedenceGroup(operators: (String, BinaryOperator)*) {
-  def parser(next: () => P[Tree]): P[Tree] = P.defer(next() ~~ (opsParser ~~ P.defer(next())).rep0).map {
-    case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+  def parser(next: P[Tree]): P[Tree] = (next ~~ (opsParser ~~ next).rep0).map {
+    case (head, tail) => evalAssocBinaryOp(head, tail)
   }
 
   private def opsParser: P[BinaryOperator] = operators.foldLeft[P[BinaryOperator]](P.fail) {

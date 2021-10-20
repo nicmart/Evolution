@@ -39,20 +39,20 @@ class CatsParseParserSpec extends LanguageSpec {
             unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
         }
       }
-//
-//      "associate left to right for ops with the same precedence" - {
-//        val expectations = List(
-//          "a - b + c" -> "(a - b) + c",
-//          "a + b - c" -> "(a + b) - c",
-//          "a - b - c - d" -> "((a - b) - c) - d"
-//        )
-//        expectations.foreach {
-//          case (left, right) =>
-//            s"$left = $right" in {
-//              unsafeParse(left) shouldEq unsafeParse(right)
-//            }
-//        }
-//      }
+
+      "associate left to right for ops with the same precedence" - {
+        val expectations = List(
+          "a - b + c" -> "(a - b) + c",
+          "a + b - c" -> "(a + b) - c",
+          "a - b - c - d" -> "((a - b) - c) - d"
+        )
+        expectations.foreach {
+          case (left, right) =>
+            s"$left = $right" in {
+              unsafeParse(left) shouldEq unsafeParse(right)
+            }
+        }
+      }
 //
 //      "inverses" in {
 //        unsafeParse("-point(0, 0)") shouldEq App
