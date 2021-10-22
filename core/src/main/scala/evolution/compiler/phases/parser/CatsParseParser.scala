@@ -249,8 +249,9 @@ object CatsParseParser extends Parser {
 }
 
 private[parser] object CatsParserConfig {
-  //import fastparse.NoWhitespace._
-  val whitespaces: P0[Unit] = P.charsWhile(_.isWhitespace).void
+  val comment: P[Unit] = (P.string("//") ~ P.charWhere(_ != '\n').rep0 ~ P.char('\n').?).void
+  val spaces: P[Unit] = P.charsWhile(_.isWhitespace).void
+  val whitespaces: P0[Unit] = (comment | spaces).rep0.void
 }
 
 private[parser] final case class CatsPrecedenceGroups(last: P[Tree], groups: List[CatsPrecedenceGroup]) {

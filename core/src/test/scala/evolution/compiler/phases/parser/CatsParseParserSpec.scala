@@ -194,13 +194,13 @@ class CatsParseParserSpec extends LanguageSpec {
           unsafeParse(s"$wsStart$expr$wsEnd") shouldEq unsafeParse(expr)
         }
       }
-//
-//      "ignore comments" in {
-//        forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
-//          unsafeParse(s"//x$comment1\n$expr\n//y$comment2") shouldEq unsafeParse(expr)
-//        }
-//      }
-//
+
+      "ignore comments" in {
+        forAll(genLeafExpr, Gen.alphaNumStr, Gen.alphaNumStr) { (expr, comment1, comment2) =>
+          unsafeParse(s"//x$comment1\n$expr\n//y$comment2") shouldEq unsafeParse(expr)
+        }
+      }
+
       "parse applications of vars" in {
         forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
           unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq App
