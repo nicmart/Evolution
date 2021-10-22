@@ -99,19 +99,19 @@ class CatsParseParserSpec extends LanguageSpec {
           }
         }
       }
-//
-//      "sampling" - {
-//        "a <- b in a" in {
-//          unsafeParse("a <- b in c") shouldEq
-//            App
-//              .of(
-//                Id("withfirst"),
-//                Id("b"),
-//                Lambda("a", Id("c"))
-//              )
-//
-//        }
-//      }
+
+      "sampling" - {
+        "a <- b in a" in {
+          unsafeParse("a <- b in c") shouldEq
+            App
+              .of(
+                Id("withfirst"),
+                Id("b"),
+                Lambda("a", Id("c"))
+              )
+
+        }
+      }
 
       "a * b + c = (a * b) + c" in {
         forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
@@ -201,17 +201,17 @@ class CatsParseParserSpec extends LanguageSpec {
 //        }
 //      }
 //
-//      "parse applications of vars" in {
-//        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
-//          unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq App
-//            .of(
-//              Id(identifier1),
-//              unsafeParse(expr1),
-//              unsafeParse(expr2)
-//            )
-//
-//        }
-//      }
+      "parse applications of vars" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$identifier1($expr1, $expr2)") shouldEq App
+            .of(
+              Id(identifier1),
+              unsafeParse(expr1),
+              unsafeParse(expr2)
+            )
+
+        }
+      }
 //
 //      "parse applications with pipe syntax" in {
 //        forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
