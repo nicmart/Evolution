@@ -28,7 +28,7 @@ object CatsParseParser extends Parser {
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
   // WIP
-  private val program: P[Tree] = expression.surroundedByWhitespaces
+  private lazy val program: P[Tree] = expression.surroundedByWhitespaces
 
   private lazy val expression: P[Tree] =
     P.defer(NonOperandExpressions.nonOperand | precedenceGroups.operand)
@@ -146,8 +146,7 @@ object CatsParseParser extends Parser {
     }
 
   private lazy val atomicOperand: P[Tree] =
-//    specialSyntax | factor
-    P.defer(factor)
+    P.defer(specialSyntax | factor)
 
   private lazy val list: P[Tree] = (P.char('[').void *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
 
@@ -191,42 +190,45 @@ object CatsParseParser extends Parser {
   private object special {
 
     lazy val zip: P[Tree] =
-      (P.string("zip") *> P.char('(') *> nonEmptyCsv(comprehensionBinding) ~ (P.char(')') *> P.string("in") *> expression))
+      (P.ignoreCase("zip").void.w *> P
+        .char('(')
+        .w *> nonEmptyCsv(comprehensionBinding).w ~ (P.char(')').w *> P.string("in").w *> expression))
         .map {
           case (bindings, body) => tree.SpecialSyntax.zip(bindings.toList, body)
         }
 
     lazy val product: P[Tree] =
-      (P.string("product") *> P.char('(') *> nonEmptyCsv(comprehensionBinding) ~ (P.char(')') *> P.string("in") *> expression))
+      (P.ignoreCase("product")
+        .w *> P.char('(').w *> nonEmptyCsv(comprehensionBinding).w ~ (P.char(')').w *> P.string("in").w *> expression))
         .map {
           case (bindings, body) => tree.SpecialSyntax.product(bindings.toList, body)
         }
 
     lazy val uniformChoice: P[Tree] =
-      (P.string("uniformchoice") *> P.char('(') *> nonEmptyArgs <* P.char(')'))
+      (P.ignoreCase("uniformchoice").w *> P.char('(').w *> nonEmptyArgs.w <* P.char(')'))
         .map(_.toList)
         .map(tree.SpecialSyntax.uniformChoice)
 
     private lazy val comprehensionBinding: P[(String, Tree)] =
-      identifier ~ (P.string("<-") *> expression)
+      identifier.w ~ (P.string("<-").w *> expression)
   }
 
   private object numbers {
 
-    def digit: P[Unit] =
+    lazy val digit: P[Unit] =
       P.charIn('0' to '9').void
 
-    def floatDigits: P[Unit] =
+    lazy val floatDigits: P[Unit] =
       (digit.rep0.with1 ~ P.char('.') ~ digit.rep(1).void).void
 
-    def intLiteral: P[Int] =
+    lazy val intLiteral: P[Int] =
       (P.char('-').?.with1 ~ digit.rep).string.map(_.toInt)
 
     // It would be nice to avoid to backtrack on the "-".
-    def doubleLiteral: P[Double] =
+    lazy val doubleLiteral: P[Double] =
       (P.char('-').?.soft.with1 ~ (floatDigits.backtrack | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
 
-    def exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
+    lazy val exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
   }
 
   implicit class Ops[A](p: P[A]) {

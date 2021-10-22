@@ -282,17 +282,17 @@ class CatsParseParserSpec extends LanguageSpec {
           )
 
       }
-//
-//      "parse applications of lambdas" in {
-//        forAll(genLambda, genLeafExpr) { (lambda, expr) =>
-//          unsafeParse(s"($lambda)($expr)") shouldEq App
-//            .of(
-//              unsafeParse(lambda),
-//              unsafeParse(expr)
-//            )
-//
-//        }
-//      }
+
+      "parse applications of lambdas" in {
+        forAll(genLambda, genLeafExpr) { (lambda, expr) =>
+          unsafeParse(s"($lambda)($expr)") shouldEq App
+            .of(
+              unsafeParse(lambda),
+              unsafeParse(expr)
+            )
+
+        }
+      }
 
       "parse exponentials" - {
         "2^3 + 1" in {
@@ -325,7 +325,7 @@ class CatsParseParserSpec extends LanguageSpec {
 
         }
       }
-//
+
       "divisions" - {
         "a / b + c = (a / b) + c" in {
           forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
@@ -415,118 +415,118 @@ class CatsParseParserSpec extends LanguageSpec {
           }
         }
       }
-//
-//      "variadic zipWith(a, b, c, f)" in {
-//        pending
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
-//          val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
-//          val expected = App
-//            .of(
-//              Id("zipwith"),
-//              App
-//                .of(
-//                  Id("zipwith"),
-//                  unsafeParse(a),
-//                  unsafeParse(b),
-//                  unsafeParse(f)
-//                ),
-//              unsafeParse(c),
-//              Lambda(
-//                "f",
-//                Lambda(
-//                  "x",
-//                  App.of(Id("f"), Id("x"))
-//                )
-//              )
-//            )
-//
-//          parsed shouldEq expected
-//        }
-//      }
-//
-//      "zip(a <- as, b <- bs, c <- cs) in d" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, d) =>
-//          val parsed = unsafeParse(s"zip(a <- $a, b <- $b, c <- $c) in $d")
-//          val lambda = Lambda("a", Lambda("b", Lambda("c", unsafeParse(d))))
-//          val expected = App
-//            .of(
-//              Id("zipwith"),
-//              App
-//                .of(
-//                  Id("zipwith"),
-//                  unsafeParse(a),
-//                  unsafeParse(b),
-//                  lambda
-//                ),
-//              unsafeParse(c),
-//              Lambda(
-//                "f",
-//                Lambda(
-//                  "x",
-//                  App.of(Id("f"), Id("x"))
-//                )
-//              )
-//            )
-//
-//          parsed shouldEq expected
-//        }
-//      }
-//
-//      "product(a <- as, b <- bs) in d" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          val parsed = unsafeParse(s"product(a <- $a, b <- $b) in $c")
-//          val expected = SpecialSyntax.product(List("a" -> unsafeParse(a), "b" -> unsafeParse(b)), unsafeParse(c))
-//
-//          parsed shouldEq expected
-//        }
-//      }
-//
-//      "uniformChoice(a, b, c)" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          val parsed = unsafeParse(s"uniformChoice($a, $b, $c)")
-//          val expected = SpecialSyntax.uniformChoice(List(unsafeParse(a), unsafeParse(b), unsafeParse(c)))
-//          parsed shouldEq expected
-//        }
-//      }
-//
-//      "boolean literals" in {
-//        unsafeParse("true") shouldEq Bool(true)
-//        unsafeParse("false") shouldEq Bool(false)
-//      }
-//
-//      "not" in {
-//        forAll(genLeafExpr) { a =>
-//          unsafeParse(s"!$a") shouldEq
-//            App.of(Id("not"), unsafeParse(a))
-//        }
-//      }
-//
-//      "logical operators with the right precedence" in {
-//        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
-//          unsafeParse(s"$a || $b && $c") shouldEq
-//            App
-//              .of(
-//                Id("or"),
-//                unsafeParse(a),
-//                App.of(Id("and"), unsafeParse(b), unsafeParse(c))
-//              )
-//
-//        }
-//      }
+
+      "variadic zipWith(a, b, c, f)" in {
+        pending
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
+          val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
+          val expected = App
+            .of(
+              Id("zipwith"),
+              App
+                .of(
+                  Id("zipwith"),
+                  unsafeParse(a),
+                  unsafeParse(b),
+                  unsafeParse(f)
+                ),
+              unsafeParse(c),
+              Lambda(
+                "f",
+                Lambda(
+                  "x",
+                  App.of(Id("f"), Id("x"))
+                )
+              )
+            )
+
+          parsed shouldEq expected
+        }
+      }
+
+      "zip(a <- as, b <- bs, c <- cs) in d" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, d) =>
+          val parsed = unsafeParse(s"zip(a <- $a, b <- $b, c <- $c) in $d")
+          val lambda = Lambda("a", Lambda("b", Lambda("c", unsafeParse(d))))
+          val expected = App
+            .of(
+              Id("zipwith"),
+              App
+                .of(
+                  Id("zipwith"),
+                  unsafeParse(a),
+                  unsafeParse(b),
+                  lambda
+                ),
+              unsafeParse(c),
+              Lambda(
+                "f",
+                Lambda(
+                  "x",
+                  App.of(Id("f"), Id("x"))
+                )
+              )
+            )
+
+          parsed shouldEq expected
+        }
+      }
+
+      "product(a <- as, b <- bs) in d" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          val parsed = unsafeParse(s"product(a <- $a, b <- $b) in $c")
+          val expected = SpecialSyntax.product(List("a" -> unsafeParse(a), "b" -> unsafeParse(b)), unsafeParse(c))
+
+          parsed shouldEq expected
+        }
+      }
+
+      "uniformChoice(a, b, c)" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          val parsed = unsafeParse(s"uniformChoice($a, $b, $c)")
+          val expected = SpecialSyntax.uniformChoice(List(unsafeParse(a), unsafeParse(b), unsafeParse(c)))
+          parsed shouldEq expected
+        }
+      }
+
+      "boolean literals" in {
+        unsafeParse("true") shouldEq Bool(true)
+        unsafeParse("false") shouldEq Bool(false)
+      }
+
+      "not" in {
+        forAll(genLeafExpr) { a =>
+          unsafeParse(s"!$a") shouldEq
+            App.of(Id("not"), unsafeParse(a))
+        }
+      }
+
+      "logical operators with the right precedence" in {
+        forAll(genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c) =>
+          unsafeParse(s"$a || $b && $c") shouldEq
+            App
+              .of(
+                Id("or"),
+                unsafeParse(a),
+                App.of(Id("and"), unsafeParse(b), unsafeParse(c))
+              )
+
+        }
+      }
     }
 
-//    "when it fails" - {
-//      "it should report the line number" in {
-//        val expr = """|a    = 10 in
-//                      |g(a a)
-//                   """.stripMargin
-//
-//        val failure = CatsParseParser.parse(expr)
-//        // The first line is 0
-//        val lineNumber = failure.left.map(_.lineNumber)
-//        lineNumber shouldEq Left(1)
-//      }
-//    }
+    "when it fails" - {
+      "it should report the line number" in {
+        val expr = """|a    = 10 in
+                      |g(a a)
+                   """.stripMargin
+
+        val failure = CatsParseParser.parse(expr)
+        // The first line is 0
+        val lineNumber = failure.left.map(_.lineNumber)
+        lineNumber shouldEq Left(1)
+      }
+    }
   }
 
   def unsafeParse(string: String): Tree = CatsParseParser.parse(string).toTry.get
