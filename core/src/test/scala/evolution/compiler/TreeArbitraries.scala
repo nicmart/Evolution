@@ -1,5 +1,5 @@
 package evolution.compiler
-import evolution.compiler.phases.parser.FastParseParser
+import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.tree.TreeF._
@@ -21,7 +21,7 @@ trait TreeArbitraries {
 
   // TODO move all operators here
   def genOperatorWithTree: Gen[(String, BinaryOperator)] =
-    Gen.oneOf[(String, BinaryOperator)](FastParseParser.binaryOperators)
+    Gen.oneOf[(String, BinaryOperator)](CatsParseParser.binaryOperators)
 
   def genVarUsage: Gen[String] =
     genIdentifier.filter(id => !ConstConfig.constants.map(_.name).contains(id.toLowerCase))

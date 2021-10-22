@@ -10,7 +10,8 @@ import evolution.compiler.tree
 import evolution.compiler.tree.Tree
 import evolution.compiler.tree.Tree._
 import cats.parse.{Numbers, Parser => P, Parser0 => P0}
-import CatsParseParser.Ops
+import CatsParseParser.P0Ops
+import CatsParseParser.PObjOps
 import CatsParseParser.POps
 
 import scala.annotation.tailrec
@@ -47,16 +48,14 @@ object CatsParseParser extends Parser {
 
     // `a = 2 in` ... and `a == 2` sha re the same prefix, so the cut must be after the negative lookahead
     private lazy val letTail: P[String => Tree] =
-      ((P.char('=').w ~ not(P.char('='))).backtrack *> expression.w ~ (P
-        .string("in")
-        .w *> expression.w))
+      ((P.char('=').w ~ not(P.char('='))).backtrack *> expression.w ~ (P.string("in").w *> expression))
         .map {
           case (value, body) =>
             Let(_, value, body)
         }
 
     private lazy val sampleTail: P[String => Tree] =
-      (((P.string("<-").void).soft *> expression) ~| (P.string("in").void.soft *> expression))
+      (((P.string("<-").void.w).soft *> expression) ~| (P.string("in").void.w.soft *> expression))
         .map {
           case (sampling, body) =>
             variable => tree.SpecialSyntax.withFirst(variable -> sampling, body)
@@ -122,16 +121,19 @@ object CatsParseParser extends Parser {
   private lazy val factor: P[Tree] = {
     // TODO: *> and <* with whitespaces
     lazy val prefix: P[Tree] =
-      (P.char('(').void *> expression <* P.char(')').void) | doubleLit | boolean | unaryPrefixOp | variable | list
+      (P.char('(').void.w *> expression.w <* P.char(')').void) | doubleLit | boolean | unaryPrefixOp | variable | list
 
-    lazy val app: P[Tree] = (prefix ~ (P.char('(') *> nonEmptyArgs <* P.char(')')).?).map {
+    lazy val app: P[Tree] = (prefix.w ~ (P.char('(').w *> nonEmptyArgs.w <* P.char(')')).?).map {
       case (tree, None)         => tree
       case (f, Some(arguments)) => App(f, arguments)
     }
 
-    (app ~ (P.char('.').void *> variable ~ (P.char('(').void *> nonEmptyArgs <* P.char(')').void).?).rep0).map {
+    (app.w ~ (P.char('.').w *> variable.w ~ (P.char('(').void.w *> nonEmptyArgs.w <* P
+      .char(')')
+      .w
+      .void).?).rep0).map {
       case (tree, selections) => dotSelection(tree, selections)
-    }.surroundedByWhitespaces
+    }
   }
 
   @tailrec
@@ -148,7 +150,7 @@ object CatsParseParser extends Parser {
   private lazy val atomicOperand: P[Tree] =
     P.defer(specialSyntax | factor)
 
-  private lazy val list: P[Tree] = (P.char('[').void *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
+  private lazy val list: P[Tree] = (P.char('[').void.w *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
 
   private lazy val doubleLit: P[Tree] =
     numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt) else DoubleLiteral(d))
@@ -231,14 +233,18 @@ object CatsParseParser extends Parser {
     lazy val exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
   }
 
-  implicit class Ops[A](p: P[A]) {
+  implicit class POps[A](p: P[A]) {
     def ~|[B](other: P0[B]): P[(A, B)] = (p ~ other).backtrack
     def ~~[B](other: P0[B]): P[(A, B)] = (p <* whitespaces.?) ~ other
-    def w: P[A] = (p <* whitespaces.?)
+    def w: P[A] = p <* whitespaces.?
     def surroundedByWhitespaces: P[A] = whitespaces.?.with1.soft *> p <* whitespaces.?
   }
 
-  implicit class POps[A](p: P.type) {
+  implicit class P0Ops[A](p: P0[A]) {
+    def w: P0[A] = p <* whitespaces.?
+  }
+
+  implicit class PObjOps[A](p: P.type) {
     def charInPattern(pattern: String): P[Char] =
       p.charWhere(_.toString.matches(s"[$pattern]"))
   }

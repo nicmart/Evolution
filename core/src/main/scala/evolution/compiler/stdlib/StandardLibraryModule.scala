@@ -1,7 +1,7 @@
 package evolution.compiler.stdlib
 
 import evolution.compiler.phases.ModuleCompiler
-import evolution.compiler.phases.parser.FastParseParser
+import evolution.compiler.phases.parser.{CatsParseParser, FastParseParser}
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
@@ -30,7 +30,7 @@ object StandardLibraryModule {
   private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
 
   private lazy val moduleCompiler =
-    new ModuleCompiler(FastParseParser, typer, new TreeToTermCompiler, NoOpLogger)
+    new ModuleCompiler(CatsParseParser, typer, new TreeToTermCompiler, NoOpLogger)
 
   private lazy val code = StdLib.code
 }

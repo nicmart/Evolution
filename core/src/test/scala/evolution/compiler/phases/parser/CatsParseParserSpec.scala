@@ -213,6 +213,12 @@ class CatsParseParserSpec extends LanguageSpec {
         }
       }
 
+      "parse applications of a lambda with some new lines in the mix" in {
+        forAll(genIdentifier, genLeafExpr, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$identifier1(\nx -> $expr1)")
+        }
+      }
+
       "parse applications with pipe syntax" in {
         forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
           unsafeParse(s"$expr1 >> $identifier1") shouldEq App
@@ -266,6 +272,16 @@ class CatsParseParserSpec extends LanguageSpec {
             Id("c")
           )
 
+      }
+
+      "parse applications with dot syntax where receiver in the middle is an application and the last in a new line" in {
+        val code =
+          """
+            |x.slidingMap(x)
+            |  .flatten
+            |""".stripMargin
+
+        unsafeParse(code)
       }
 
       "parse chained dot selections" in {
