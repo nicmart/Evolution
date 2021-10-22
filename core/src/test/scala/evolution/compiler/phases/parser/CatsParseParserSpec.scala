@@ -212,62 +212,62 @@ class CatsParseParserSpec extends LanguageSpec {
 
         }
       }
-//
-//      "parse applications with pipe syntax" in {
-//        forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
-//          unsafeParse(s"$expr1 >> $identifier1") shouldEq App
-//            .of(
-//              Id(identifier1),
-//              unsafeParse(expr1)
-//            )
-//
-//        }
-//      }
-//
-//      "parse applications with dot syntax and no arguments" in {
-//        forAll(genIdentifier, genIdentifier) { (identifier1, expr1) =>
-//          unsafeParse(s"$expr1.$identifier1") shouldEq App
-//            .of(
-//              Id(identifier1),
-//              unsafeParse(expr1)
-//            )
-//
-//        }
-//      }
-//
-//      "parse applications with dot syntax and single argument" in {
-//        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, expr1, expr2) =>
-//          unsafeParse(s"$expr1.$identifier1($expr2)") shouldEq App
-//            .of(
-//              Id(identifier1),
-//              unsafeParse(expr1),
-//              unsafeParse(expr2)
-//            )
-//
-//        }
-//      }
-//
-//      "parse applications with dot syntax and multiple arguments" in {
-//        unsafeParse(s"a.method(b, c)") shouldEq App
-//          .of(
-//            Id("method"),
-//            Id("a"),
-//            Id("b"),
-//            Id("c")
-//          )
-//
-//      }
-//
-//      "parse applications with dot syntax where receiver is an application" in {
-//        unsafeParse(s"a(b).method(c)") shouldEq App
-//          .of(
-//            Id("method"),
-//            App.of(Id("a"), Id("b")),
-//            Id("c")
-//          )
-//
-//      }
-//
+
+      "parse applications with pipe syntax" in {
+        forAll(genIdentifier, genLeafExpr) { (identifier1, expr1) =>
+          unsafeParse(s"$expr1 >> $identifier1") shouldEq App
+            .of(
+              Id(identifier1),
+              unsafeParse(expr1)
+            )
+
+        }
+      }
+
+      "parse applications with dot syntax and no arguments" in {
+        forAll(genIdentifier, genIdentifier) { (identifier1, expr1) =>
+          unsafeParse(s"$expr1.$identifier1") shouldEq App
+            .of(
+              Id(identifier1),
+              unsafeParse(expr1)
+            )
+
+        }
+      }
+
+      "parse applications with dot syntax and single argument" in {
+        forAll(genIdentifier, genIdentifier, genLeafExpr) { (identifier1, expr1, expr2) =>
+          unsafeParse(s"$expr1.$identifier1($expr2)") shouldEq App
+            .of(
+              Id(identifier1),
+              unsafeParse(expr1),
+              unsafeParse(expr2)
+            )
+
+        }
+      }
+
+      "parse applications with dot syntax and multiple arguments" in {
+        unsafeParse(s"a.method(b, c)") shouldEq App
+          .of(
+            Id("method"),
+            Id("a"),
+            Id("b"),
+            Id("c")
+          )
+
+      }
+
+      "parse applications with dot syntax where receiver is an application" in {
+        unsafeParse(s"a(b).method(c)") shouldEq App
+          .of(
+            Id("method"),
+            App.of(Id("a"), Id("b")),
+            Id("c")
+          )
+
+      }
+
       "parse chained dot selections" in {
         unsafeParse(s"a(b).method1(c).method2(d)") shouldEq App
           .of(
