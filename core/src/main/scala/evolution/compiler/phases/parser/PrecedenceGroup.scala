@@ -1,18 +1,21 @@
+/*
+ * Copyright 2017-2021 Lenses.io Ltd
+ */
 package evolution.compiler.phases.parser
 
-import evolution.compiler.phases.parser.ParserConfig._
-import fastparse._
+import cats.parse.{Parser => P}
+import evolution.compiler.phases.parser.Instances._
+import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree.Tree
-import PrecedenceGroup.BinaryOperator
 
 private[parser] final case class PrecedenceGroup(operators: (String, BinaryOperator)*) {
-  def parser[_: P](next: () => P[Tree]): P[Tree] = P(next() ~/ (opsParser ~/ next()).rep).map {
-    case (head, tail) => evalAssocBinaryOp(head, tail.toList)
+  def parser(next: P[Tree]): P[Tree] = (next ~~ (opsParser ~~ next).rep0).map {
+    case (head, tail) => evalAssocBinaryOp(head, tail)
   }
 
-  private def opsParser[_: P]: P[BinaryOperator] = operators.foldLeft[P[BinaryOperator]](Fail) {
+  private def opsParser: P[BinaryOperator] = operators.foldLeft[P[BinaryOperator]](P.fail) {
     case (accParser, (opString, ast)) =>
-      accParser | P(opString ~ &(allowedCharsAfterOp)).map(_ => ast)
+      accParser | (P.string(opString).soft ~ allowedCharsAfterOp.peek).as(ast)
   }
 
   @scala.annotation.tailrec
@@ -23,7 +26,7 @@ private[parser] final case class PrecedenceGroup(operators: (String, BinaryOpera
         evalAssocBinaryOp(op(head, tailHead), tailTail)
     }
 
-  private def allowedCharsAfterOp[_: P]: P[Unit] = CharIn("a-zA-Z0-9\\- \n\r()@._")
+  private def allowedCharsAfterOp: P[Unit] = P.charInPattern("[a-zA-Z0-9\\- \n\r()@._]").void
 }
 
 object PrecedenceGroup {

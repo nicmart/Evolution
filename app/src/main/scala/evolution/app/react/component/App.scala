@@ -10,7 +10,7 @@ import evolution.app.react.component.presentational._
 import evolution.app.react.pages._
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.compiler.phases.FullCompiler
-import evolution.compiler.phases.parser.{CatsParseParser, FastParseParser}
+import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}

@@ -2,17 +2,14 @@ package evolution.compiler.phases.parser
 
 import cats.data.NonEmptyList
 import cats.implicits._
-import cats.parse.Parser.{With1, not, string, void}
-import evolution.compiler.phases.parser.CatsParserConfig._
-import evolution.compiler.phases.parser.CatsPrecedenceGroup.BinaryOperator
-import evolution.compiler.phases.{Parser, parser}
+import cats.parse.Parser.{not, void}
+import cats.parse.{Parser => P, Parser0 => P0}
+import evolution.compiler.phases.Parser
+import evolution.compiler.phases.parser.Instances._
+import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree
 import evolution.compiler.tree.Tree
 import evolution.compiler.tree.Tree._
-import cats.parse.{Numbers, Parser => P, Parser0 => P0}
-import CatsParseParser.P0Ops
-import CatsParseParser.PObjOps
-import CatsParseParser.POps
 
 import scala.annotation.tailrec
 
@@ -76,35 +73,35 @@ object CatsParseParser extends Parser {
   }
 
   private lazy val allPrecedenceGroups = List(
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       ">>" -> ((left, right) => App.of(right, left))
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "||" -> constOp("or")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "&&" -> constOp("and")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       ">=" -> constOp("greaterthanorequal"),
       ">" -> constOp("greaterthan"),
       "<=" -> constOp("lessthanorequal"),
       "<" -> constOp("lessthan")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "==" -> constOp("eq"),
       "!=" -> constOp("neq")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "+" -> constOp("add"),
       "-" -> constOp("minus")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "*" -> constOp("multiply"),
       "/" -> constOp("div"),
       "%" -> constOp("mod")
     ),
-    CatsPrecedenceGroup(
+    PrecedenceGroup(
       "^" -> constOp("exp")
     )
   )
@@ -113,7 +110,7 @@ object CatsParseParser extends Parser {
     App.of(Id(name), left, right)
 
   // Operator groups, order by ascending Precedence
-  private lazy val precedenceGroups: CatsPrecedenceGroups = CatsPrecedenceGroups(
+  private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
     atomicOperand,
     allPrecedenceGroups
   )
@@ -232,62 +229,10 @@ object CatsParseParser extends Parser {
 
     lazy val exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
   }
-
-  implicit class POps[A](p: P[A]) {
-    def ~|[B](other: P0[B]): P[(A, B)] = (p ~ other).backtrack
-    def ~~[B](other: P0[B]): P[(A, B)] = (p <* whitespaces.?) ~ other
-    def w: P[A] = p <* whitespaces.?
-    def surroundedByWhitespaces: P[A] = whitespaces.?.with1.soft *> p <* whitespaces.?
-  }
-
-  implicit class P0Ops[A](p: P0[A]) {
-    def w: P0[A] = p <* whitespaces.?
-  }
-
-  implicit class PObjOps[A](p: P.type) {
-    def charInPattern(pattern: String): P[Char] =
-      p.charWhere(_.toString.matches(s"[$pattern]"))
-  }
-
-  implicit class With1Ops[A](p: With1[A]) {
-    def ~|[B](other: P[B]): P[(A, B)] = (p ~ other).backtrack
-  }
 }
 
 private[parser] object CatsParserConfig {
   val comment: P[Unit] = (P.string("//") ~ P.charWhere(_ != '\n').rep0 ~ P.char('\n').?).void
   val spaces: P[Unit] = P.charsWhile(_.isWhitespace).void
   val whitespaces: P0[Unit] = (comment | spaces).rep0.void
-}
-
-private[parser] final case class CatsPrecedenceGroups(last: P[Tree], groups: List[CatsPrecedenceGroup]) {
-  def operand: P[Tree] =
-    groups.foldRight(last) { (group, accParser) =>
-      group.parser(accParser)
-    }
-}
-
-private[parser] final case class CatsPrecedenceGroup(operators: (String, BinaryOperator)*) {
-  def parser(next: P[Tree]): P[Tree] = (next ~~ (opsParser ~~ next).rep0).map {
-    case (head, tail) => evalAssocBinaryOp(head, tail)
-  }
-
-  private def opsParser: P[BinaryOperator] = operators.foldLeft[P[BinaryOperator]](P.fail) {
-    case (accParser, (opString, ast)) =>
-      accParser | (P.string(opString).soft ~ allowedCharsAfterOp.peek).as(ast)
-  }
-
-  @scala.annotation.tailrec
-  private def evalAssocBinaryOp(head: Tree, tail: List[(BinaryOperator, Tree)]): Tree =
-    tail match {
-      case Nil => head
-      case (op, tailHead) :: tailTail =>
-        evalAssocBinaryOp(op(head, tailHead), tailTail)
-    }
-
-  private def allowedCharsAfterOp: P[Unit] = P.charInPattern("[a-zA-Z0-9\\- \n\r()@._]").void
-}
-
-object CatsPrecedenceGroup {
-  type BinaryOperator = (Tree, Tree) => Tree
 }

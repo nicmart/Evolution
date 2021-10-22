@@ -1,7 +1,7 @@
 package evolution.compiler.stdlib
 
 import evolution.compiler.phases.ModuleCompiler
-import evolution.compiler.phases.parser.{CatsParseParser, FastParseParser}
+import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}

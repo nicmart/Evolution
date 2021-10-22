@@ -1,7 +1,7 @@
 package evolution.compiler.phases
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.parser.{CatsParseParser, FastParseParser}
+import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.typer.RecursiveTyper
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term._
