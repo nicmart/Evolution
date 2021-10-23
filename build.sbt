@@ -96,7 +96,6 @@ lazy val jsAppSettings =
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.7.6",
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
-      "com.lihaoyi" %%% "scalatags" % "0.9.2",
       "io.circe" %%% "circe-core" % "0.13.0",
       "io.circe" %%% "circe-generic" % "0.13.0",
       "io.circe" %%% "circe-parser" % "0.13.0",
