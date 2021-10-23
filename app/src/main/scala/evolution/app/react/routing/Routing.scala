@@ -5,8 +5,9 @@ import evolution.app.react.component.App
 import evolution.app.react.pages._
 import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.extra.router.SetRouteVia.{HistoryPush, HistoryReplace}
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
-import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, RouterConfig, RouterConfigDsl}
+import japgolly.scalajs.react.extra.router.{BaseUrl, RouterConfig, RouterConfigDsl}
 import japgolly.scalajs.react.vdom.html_<^._
 
 class Routing(
@@ -26,7 +27,7 @@ class Routing(
       | HomePageRoute(dsl).rule
       | (emptyRule
         | LoadDrawingPageRoute(dsl).rule
-        | NotFoundPageRoute(dsl).rule).prefixPath(s"$urlDelimiter/")).notFound(redirectToPage(NotFound)(Redirect.Push))
+        | NotFoundPageRoute(dsl).rule).prefixPath(s"$urlDelimiter/")).notFound(redirectToPage(NotFound)(HistoryPush))
   }
 
   private case class HomePageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
@@ -39,7 +40,7 @@ class Routing(
       staticRoute(root, Home)
 
     private def renderPage =
-      redirectToPage(defaultPage)(Redirect.Replace)
+      redirectToPage(defaultPage)(HistoryReplace)
   }
 
   private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {

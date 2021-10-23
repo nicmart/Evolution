@@ -92,9 +92,9 @@ lazy val core = project
 lazy val jsAppSettings =
   Seq(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-      "com.github.japgolly.scalajs-react" %%% "core" % "1.7.6",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
+      "org.scala-js" %%% "scalajs-dom" % "2.0.0",
+      "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0-RC4",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0-RC4",
       "io.circe" %%% "circe-core" % "0.14.1",
       "io.circe" %%% "circe-generic" % "0.14.1",
       "io.circe" %%% "circe-parser" % "0.14.1",
