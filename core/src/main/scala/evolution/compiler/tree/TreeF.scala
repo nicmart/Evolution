@@ -7,7 +7,6 @@ import cats.{Applicative, Eval, Foldable, Traverse}
 sealed trait TreeF[+T]
 
 object TreeF {
-
   sealed abstract case class Id(name: String) extends TreeF[Nothing]
   final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
   final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
@@ -30,7 +29,9 @@ object TreeF {
   }
 
   implicit class Ops[A](fa: TreeF[A]) {
-    def children: List[A] = fa.traverse[Const[List[A], *], Nothing](a => Const(List(a))).getConst
+    // TODO scala3
+    type F[T] = Const[List[A], T]
+    def children: List[A] = fa.traverse[F, Nothing](a => Const(List(a))).getConst
   }
 
   implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]) {

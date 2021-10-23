@@ -29,10 +29,10 @@ trait LanguageSpec
   }
 
   implicit class ShouldEqOps[A: Equality](left: A) {
-    def shouldEq(right: A) = left shouldEqual right
+    def shouldEq(right: A): Assertion = left shouldEqual right
   }
 
-  implicit val pprinterPrettifier = new Prettifier {
+  implicit val pprinterPrettifier: Prettifier = new Prettifier {
     def apply(o: Any): String = PPrinter.BlackWhite.apply(o, height = Int.MaxValue).toString()
   }
 

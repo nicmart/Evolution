@@ -35,7 +35,7 @@ final class TermOptimizer(interpreter: TermInterpreter) {
         for {
           maybeBoundTerm <- binding(name)
           idTerm = maybeBoundTerm.getOrElse(term)
-        } yield inline(name, idTerm)
+        } yield this.inline(name, idTerm)
 
       case Apply(f, x) =>
         for {
@@ -110,7 +110,7 @@ object TermOptimizer {
   }
 
   object Env {
-    val consts = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)): _*))
+    val consts: Env = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)): _*))
   }
 
   def bindLocal[T](name: String, term: Term)(ft: => Optimized[T]): Optimized[T] =

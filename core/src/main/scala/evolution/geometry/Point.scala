@@ -6,19 +6,19 @@ import scala.scalajs.js.annotation.JSExportAll
 
 @JSExportTopLevel("Point") @JSExportAll
 final case class Point(x: Double, y: Double) {
-  def plus(other: Point) = Point(x + other.x, y + other.y)
+  def plus(other: Point): Point = Point(x + other.x, y + other.y)
   def +(other: Point) = plus(other)
 
-  def minus(other: Point) = Point(x - other.x, y - other.y)
+  def minus(other: Point): Point = Point(x - other.x, y - other.y)
   def -(other: Point) = minus(other)
 
   def opposite: Point = Point(-x, -y)
   def unary_-(): Point = opposite
 
-  def mult(d: Double) = Point(x * d, y * d)
+  def mult(d: Double): Point = Point(x * d, y * d)
   def *(d: Double) = mult(d)
 
-  def divide(d: Double) = Point(x / d, y / d)
+  def divide(d: Double): Point = Point(x / d, y / d)
   def /(d: Double) = divide(d)
 
   def rotate(angle: Double): Point = {
@@ -51,7 +51,7 @@ final case class Point(x: Double, y: Double) {
 }
 
 object Point {
-  val zero = Point(0, 0)
+  val zero: Point = Point(0, 0)
 
   @JSExportTopLevel("polar")
   def polar(radius: Double, angle: Double): Point = {

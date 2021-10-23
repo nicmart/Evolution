@@ -40,7 +40,7 @@ class PerlinNoise(permutation256: Array[Int]) {
 
   private val p = new Array[Int](512)
 
-  (0 to 255).foreach { i: Int =>
+  (0 to 255).foreach { (i: Int) =>
     p(i) = permutation256(i)
     p(256 + i) = permutation256(i)
   }

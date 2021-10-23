@@ -57,7 +57,7 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
   "boolean operators" - {
     "or" in {
-      val const = interpret(Id("or")).asFunc3
+      val const = interpret(Id("or")).asFunc2
 
       const(true)(false) shouldBe true
       const(false)(true) shouldBe true
@@ -66,7 +66,7 @@ class ConstantsInterpreterTest extends LanguageSpec {
     }
 
     "and" in {
-      val const = interpret(Id("and")).asFunc3
+      val const = interpret(Id("and")).asFunc2
 
       const(true)(false) shouldBe false
       const(false)(true) shouldBe false
@@ -495,9 +495,9 @@ class ConstantsInterpreterTest extends LanguageSpec {
 
   def interpret(term: Term): Any = (new RegisterBasedInterpreter).interpret(term)
 
-  lazy val addIntInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
-  lazy val addDoubleInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
-  lazy val invIntInstance = instance("Invertible", Type.Integer)
+  lazy val addIntInstance: TypeClassInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val addDoubleInstance: TypeClassInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val invIntInstance: TypeClassInstance = instance("Invertible", Type.Integer)
 
   private def instance(id: String, types: Type*): TypeClassInstance =
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight

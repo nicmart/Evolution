@@ -76,21 +76,6 @@ class TermOptimizerTest extends LanguageSpec {
         optimized shouldBe Lambda("x", Lambda("x'", Lambda("x''", Id("x'"))))
       }
 
-      "g = y -> t -> y in t -> g(t)" in {
-        pending // not sure we need this
-        // expected = t -> t' -> t
-        val term =
-          Let(
-            "g",
-            Lambda("y", Lambda("t", Id("y"))),
-            Lambda("t", Apply(Id("g"), Id("t")))
-          )
-
-        val optimized = optimize(term)
-
-        optimized shouldBe 1
-      }
-
       "(y -> t -> y)(t)" in {
 
         // expected = t' -> t
@@ -153,5 +138,6 @@ class TermOptimizerTest extends LanguageSpec {
     Apply(Apply(Apply(Id("add"), Inst(inst)), a), b)
 
   lazy val numDouble: TypeClassInstance = TypingConfig.instance(Predicate("Num", List(Type.Double))).unsafeRight
-  lazy val addDouble = TypingConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight
+  lazy val addDouble: TypeClassInstance =
+    TypingConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight
 }

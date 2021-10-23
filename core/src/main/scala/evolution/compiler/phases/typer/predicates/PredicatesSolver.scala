@@ -8,7 +8,7 @@ private[predicates] final case class PredicatesSolver(
     current: PredicateConditions,
     otherConditions: Vector[PredicateConditions]
 ) {
-  def total = 1 + otherConditions.size
+  def total: Int = 1 + otherConditions.size
   def allConditions: Seq[PredicateConditions] = current +: otherConditions
   lazy val isFinal: Boolean = current.isFinal && otherConditions.forall(_.isFinal)
 

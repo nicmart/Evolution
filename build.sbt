@@ -61,17 +61,12 @@ lazy val options = Seq(
 
 lazy val commonSettings = List(
   organization := "nicmart",
-  scalaVersion := "2.13.6",
+  scalaVersion := "3.1.0",
   version := "0.1.0-SNAPSHOT",
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-Xlint:unused",
-    "-Xlint:inaccessible",
-    "-Wdead-code"
-  ),
+  scalacOptions ++= Seq("-deprecation"),
+  //scalacOptions ++= (if (scalaVersion.value.startsWith("3")) Seq("-Ykind-projector") else Seq.empty),
   autoCompilerPlugins := true,
-  resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
+  resolvers += Resolver.sonatypeRepo("releases")
 )
 
 lazy val core = project

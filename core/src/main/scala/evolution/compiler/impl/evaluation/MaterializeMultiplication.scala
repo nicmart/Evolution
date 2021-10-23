@@ -16,14 +16,15 @@ object MaterializeMultiplication {
       case IntPointPoint      => (a: Int, b: Point) => b.mult(a)
       case PointIntPoint      => (a: Point, b: Int) => a.mult(b)
       case PointDoublePoint   => (a: Point, b: Double) => a.mult(b)
+        // TODO scala3
       case LiftLeft(m) =>
-        val f = MaterializeMultiplication(m)
-        (a, b) => Evolution.map(a, aa => f(aa, b))
+        val f = MaterializeMultiplication(m.asInstanceOf[Multiplicative[Any, Any, Any]])
+        (a, b) => Evolution.map[Any, Any](a, aa => f(aa, b)).asInstanceOf[C]
       case LiftRight(m) =>
-        val f = MaterializeMultiplication(m)
-        (a, b) => Evolution.map(b, bb => f(a, bb))
+        val f = MaterializeMultiplication(m.asInstanceOf[Multiplicative[Any, Any, Any]])
+        (a, b) => Evolution.map[Any, Any](b, bb => f(a, bb)).asInstanceOf[C]
       case LiftBoth(m) =>
-        val f = MaterializeMultiplication(m)
-        (a, b) => Evolution.zipWithUncurried(f)(a, b)
+        val f = MaterializeMultiplication(m.asInstanceOf[Multiplicative[Any, Any, Any]])
+        (a, b) => Evolution.zipWithUncurried[Any, Any, Any](f)(a, b).asInstanceOf[C]
     }
 }
