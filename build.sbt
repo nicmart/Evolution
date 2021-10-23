@@ -83,10 +83,9 @@ lazy val core = project
       "org.scalatest" %%% "scalatest" % "3.2.10" % "test",
       "org.scalatestplus" %%% "scalacheck-1-15" % "3.2.10.0" % "test",
       "org.scalacheck" %%% "scalacheck" % "1.15.4",
-      "org.typelevel" %%% "cats-core" % "2.2.0",
-      "com.lihaoyi" %%% "pprint" % "0.6.0",
-      "org.typelevel" %%% "cats-parse" % "0.3.4",
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0"
+      "org.typelevel" %%% "cats-core" % "2.6.1",
+      "com.lihaoyi" %%% "pprint" % "0.6.6",
+      "org.typelevel" %%% "cats-parse" % "0.3.4"
     )
   )
 
