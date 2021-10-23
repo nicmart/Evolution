@@ -95,10 +95,10 @@ lazy val jsAppSettings =
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
       "com.github.japgolly.scalajs-react" %%% "core" % "1.7.6",
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
-      "io.circe" %%% "circe-core" % "0.13.0",
-      "io.circe" %%% "circe-generic" % "0.13.0",
-      "io.circe" %%% "circe-parser" % "0.13.0",
-      "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
+      "io.circe" %%% "circe-core" % "0.14.1",
+      "io.circe" %%% "circe-generic" % "0.14.1",
+      "io.circe" %%% "circe-parser" % "0.14.1",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
     )
   )
 
@@ -139,8 +139,8 @@ lazy val server = (project in file("server"))
     scalaJSProjects := Seq(jsApp),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-dsl" % "0.21.0-M4",
-      "org.http4s" %% "http4s-blaze-server" % "0.21.0-M4",
+      "org.http4s" %% "http4s-dsl" % "1.0.0-M29",
+      "org.http4s" %% "http4s-blaze-server" % "1.0.0-M29",
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
