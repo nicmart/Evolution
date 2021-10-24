@@ -2,20 +2,23 @@ package evolution.compiler.types
 
 import cats.implicits._
 
-sealed trait Type
+enum Type:
+  case Var(name: String)
+  case Integer
+  case Double
+  case Point
+  case Bool
+  case Evo(inner: Type)
+  case Lst(inner: Type)
+  case Arrow(from: Type, to: Type)
+
+  override def toString: String = this match {
+    case Var(name)       => name
+    case Arrow(from, to) => s"$from -> $to"
+    case _               => super.toString
+  }
 
 object Type:
-  case class Var(name: String) extends Type:
-    override def toString: String = name
-  case object Integer extends Type
-  case object Double extends Type
-  case object Point extends Type
-  case object Bool extends Type
-  case class Evo(inner: Type) extends Type
-  case class Lst(inner: Type) extends Type
-  case class Arrow(from: Type, to: Type) extends Type:
-    override def toString: String = s"$from -> $to"
-
   object Evo:
     def apply(typeVarName: String): Type = Evo(Type.Var(typeVarName))
 
