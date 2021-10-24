@@ -15,9 +15,9 @@ final case class RendererState(
     offCanvasSettings: OffCanvasStrategy
 )
 
-object RendererState {
+object RendererState:
 
-  val jsonCodec: JsonCodec[RendererState] = {
+  val jsonCodec: JsonCodec[RendererState] =
     new JsonCodec[RendererState] {
 
       override def encode(state: RendererState): Json =
@@ -26,34 +26,28 @@ object RendererState {
       override def decode(json: Json): Option[RendererState] =
         json.as[RendererState].toOption
     }
-  }
-}
 
 final case class TrailSettings(
     active: Boolean,
     opacity: Double
-) {
-  def decorate(frameDrawer: FrameDrawer, ctx: DrawingContext): FrameDrawer = {
+):
+  def decorate(frameDrawer: FrameDrawer, ctx: DrawingContext): FrameDrawer =
     if (active) new ClearCanvasFrameDrawer(ctx, frameDrawer, RGBAColor(0, 0, 0, opacity))
     else frameDrawer
-  }
-}
 
-sealed abstract class OffCanvasStrategy {
-  def decorate(pointDrawer: PointDrawer, ctx: DrawingContext): PointDrawer = this match {
+sealed abstract class OffCanvasStrategy:
+  def decorate(pointDrawer: PointDrawer, ctx: DrawingContext): PointDrawer = this match
     case InfiniteCanvas      => pointDrawer
     case TorusCanvas         => TorusPlaneDrawer(pointDrawer, ctx)
     case RealProjectivePlane => RealProjectivePlaneDrawer(pointDrawer, ctx)
-  }
-}
 case object InfiniteCanvas extends OffCanvasStrategy
 case object TorusCanvas extends OffCanvasStrategy
 case object RealProjectivePlane extends OffCanvasStrategy
 
-object RendererStateToFrameDrawer {
+object RendererStateToFrameDrawer:
   def apply(
       f: (RendererState, DrawingContext) => PointDrawer
-  )(state: RendererState, drawingContext: DrawingContext): FrameDrawer = {
+  )(state: RendererState, drawingContext: DrawingContext): FrameDrawer =
     state.trail.decorate(
       BaseFrameDrawer(
         drawingContext,
@@ -62,14 +56,10 @@ object RendererStateToFrameDrawer {
       ),
       drawingContext
     )
-  }
-}
 
-object RendererStateToPointDrawer {
-  def apply(state: RendererState, ctx: DrawingContext): PointDrawer = {
+object RendererStateToPointDrawer:
+  def apply(state: RendererState, ctx: DrawingContext): PointDrawer =
     state.offCanvasSettings.decorate(
       FillRectPointDrawer(state.strokeSize),
       ctx
     )
-  }
-}

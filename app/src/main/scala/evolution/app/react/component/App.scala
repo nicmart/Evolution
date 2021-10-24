@@ -22,7 +22,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import org.scalajs.dom
 
-object App {
+object App:
 
   type ReactComponent = Component[StateSnapshot[PageState], State, Backend, CtorType.Props]
 
@@ -33,22 +33,20 @@ object App {
       compilationResult: Option[CompilationResult],
       selectedDrawing: Option[Drawing],
       id: Int
-  ) {
+  ):
     def drawingContext: DrawingContext = layout.drawingContext
     def withWindowSize(size: Point): State = copy(layout = layout.copy(windowSize = size))
     def next: State = copy(id = id + 1)
-  }
 
   case class CompilationResult(key: Int, result: Either[String, Iterator[Point]])
 
-  case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean) {
+  case class LayoutState(sidebarWidth: Double, windowSize: Point, sidebarExpanded: Boolean):
     private val canvasWidth: Double = if (sidebarExpanded) windowSize.x - sidebarWidth else windowSize.x
     val drawingContext: DrawingContext =
       DrawingContext(CanvasSize(canvasWidth.toInt, windowSize.y.toInt))
-  }
 
-  class Backend(pageComponent: Page.ReactComponent)(bs: BackendScope[StateSnapshot[PageState], State]) {
-    def render(pageStateSnapshot: StateSnapshot[PageState], state: State): VdomElement = {
+  class Backend(pageComponent: Page.ReactComponent)(bs: BackendScope[StateSnapshot[PageState], State]):
+    def render(pageStateSnapshot: StateSnapshot[PageState], state: State): VdomElement =
       val stateSnapshot = SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
       val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
         drawingState => pageState => pageState.copy(drawingState = drawingState)
@@ -81,7 +79,6 @@ object App {
           id = state.id
         )
       ).vdomElement
-    }
 
     private[App] def key(p: PageState, s: State): Int =
       (s.pointRateCounter.rate, p, s.running, s.layout, s.selectedDrawing, evolutionKey(p, s)).hashCode()
@@ -95,7 +92,6 @@ object App {
       windowSize.flatMap { windowSize =>
         bs.modState(s => s.withWindowSize(windowSize))
       }
-  }
 
   private def windowSize: CallbackTo[Point] = CallbackTo {
     val element = dom.window.document.documentElement
@@ -113,7 +109,7 @@ object App {
     (props.drawingState.code, props.drawingState.seed, state.layout.drawingContext, state.id, props.rendererState)
       .hashCode()
 
-  private def codeCompiler(pageState: PageState): CodeCompiler = {
+  private def codeCompiler(pageState: PageState): CodeCompiler =
     println(s"materializer is ${pageState.materializer}")
     new TermBasedCodeCompiler(
       new FullCompiler(
@@ -127,7 +123,6 @@ object App {
         Conf.logger
       )
     )
-  }
 
   private def compile(pageState: PageState, state: State): CompilationResult =
     CompilationResult(
@@ -181,4 +176,3 @@ object App {
           }
       )
       .build
-}

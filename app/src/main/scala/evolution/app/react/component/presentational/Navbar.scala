@@ -4,10 +4,10 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{PropsChildren, ScalaComponent}
 
-object Navbar {
+object Navbar:
 
-  class Backend {
-    def render(children: PropsChildren): VdomElement = {
+  class Backend:
+    def render(children: PropsChildren): VdomElement =
       <.nav(
         ^.className := "navbar is-transparent has-text-white",
         <.div(
@@ -30,8 +30,5 @@ object Navbar {
           )
         )
       )
-    }
-  }
 
   val component = ScalaComponent.builder[Unit].renderBackendWithChildren[Backend].build
-}

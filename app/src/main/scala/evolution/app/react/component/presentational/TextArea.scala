@@ -5,9 +5,9 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
-object TextArea {
-  class Backend {
-    def render(props: StateSnapshot[String]): VdomElement = {
+object TextArea:
+  class Backend:
+    def render(props: StateSnapshot[String]): VdomElement =
       <.div(
         ^.className := "code-wrapper",
         <.textarea(
@@ -18,13 +18,9 @@ object TextArea {
           props.value
         )
       )
-    }
 
-    def onChange(props: StateSnapshot[String])(e: ReactEventFromInput): Callback = {
+    def onChange(props: StateSnapshot[String])(e: ReactEventFromInput): Callback =
       props.setState(e.target.value)
-    }
-  }
 
   val component =
     ScalaComponent.builder[StateSnapshot[String]].stateless.renderBackend[Backend].build
-}

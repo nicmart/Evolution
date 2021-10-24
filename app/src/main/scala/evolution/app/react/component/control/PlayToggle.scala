@@ -5,7 +5,7 @@ import japgolly.scalajs.react
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 
-object PlayToggle {
+object PlayToggle:
   type IsPlaying = Boolean
 
   val component = react.ScalaComponent
@@ -21,4 +21,3 @@ object PlayToggle {
       }
     }
     .build
-}

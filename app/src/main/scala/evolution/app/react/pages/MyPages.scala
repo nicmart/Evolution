@@ -18,7 +18,7 @@ final case class PageState(
     materializer: InterpretationOption
 )
 
-object PageState {
+object PageState:
 
   def codec(
       stateCodec: Codec[(DrawingState, RendererState), String],
@@ -41,20 +41,16 @@ object PageState {
 
   def fromDrawing(drawing: Drawing): PageState =
     PageState(drawing.drawingState, drawing.rendererState, InterpretationOption.Eval)
-}
 
 sealed abstract class InterpretationOption(val interpreter: TermInterpreter)
-object InterpretationOption {
+object InterpretationOption:
   case object Eval extends InterpretationOption(OptimizedTermInterpreter)
 
   val codec = new Codec[InterpretationOption, String] {
-    def encode(t: InterpretationOption): String = t match {
+    def encode(t: InterpretationOption): String = t match
       //case CodeGenerator => "js"
       case Eval => ""
-    }
-    def decode(r: String): Option[InterpretationOption] = r match {
+    def decode(r: String): Option[InterpretationOption] = r match
       case "js" => None
       case _    => Some(Eval)
-    }
   }
-}

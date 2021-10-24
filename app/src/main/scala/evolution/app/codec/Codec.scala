@@ -1,14 +1,13 @@
 package evolution.app.codec
 
-trait Codec[T, R] {
+trait Codec[T, R]:
   def encode(t: T): R
   def decode(r: R): Option[T]
 
   def >>[R2](codec: Codec[R, R2]): Codec[T, R2] =
     Codec.compose(this, codec)
-}
 
-object Codec {
+object Codec:
   def instance[T, R](
       enc: T => R,
       dec: R => Option[T]
@@ -31,4 +30,3 @@ object Codec {
           t <- codec1.decode(r1)
         } yield t
     }
-}

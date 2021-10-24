@@ -9,11 +9,10 @@ import evolution.app.portfolio.Portfolio
 import evolution.app.react.component.presentational.Select.Item
 import evolution.app.data.PointedSeq
 
-object DrawingLoader {
-  case class Props(selected: StateSnapshot[Option[Drawing]]) {
+object DrawingLoader:
+  case class Props(selected: StateSnapshot[Option[Drawing]]):
     val itemsSnapshot: StateSnapshot[PointedSeq[Item[Drawing]]] =
       selected.zoomState(pointedSeq)(seq => _ => Some(seq.selected.value))
-  }
 
   private val portfolioComponent = Select.component[Drawing]
   private val portfolioItems = Portfolio.drawings.map(
@@ -34,4 +33,3 @@ object DrawingLoader {
       portfolioComponent(p.itemsSnapshot)
     }
     .build
-}

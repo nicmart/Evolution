@@ -6,7 +6,7 @@ import org.http4s.implicits._
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 
-object ServerBuilder {
+object ServerBuilder:
 
   def server: Resource[IO, Server] =
     for {
@@ -15,4 +15,3 @@ object ServerBuilder {
       loggedApp = Logger.httpApp(true, false)(httpApp)
       server <- BlazeServerBuilder[IO].bindLocal(8080).withHttpApp(loggedApp).resource
     } yield server
-}

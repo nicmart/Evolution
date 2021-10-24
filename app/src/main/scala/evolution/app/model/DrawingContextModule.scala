@@ -6,7 +6,7 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
 
-object DrawingContextModule {
+object DrawingContextModule:
   def apply(ctx: DrawingContext): Module =
     Module(
       List(
@@ -16,4 +16,3 @@ object DrawingContextModule {
         Definition("right", Some(Term.Value(ctx.right)), Qualified(Scheme(Type.Double)))
       )
     )
-}

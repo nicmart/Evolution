@@ -10,13 +10,13 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{ScalaComponent, _}
 
-object RenderingSettings {
+object RenderingSettings:
 
   val offCanvasSettingComponent =
     Select.component[OffCanvasStrategy]
 
-  class Backend {
-    def render(props: StateSnapshot[RendererState]): VdomElement = {
+  class Backend:
+    def render(props: StateSnapshot[RendererState]): VdomElement =
       <.div(
         ^.className := "dropdown is-hoverable",
         <.div(
@@ -69,7 +69,6 @@ object RenderingSettings {
           )
         )
       )
-    }
 
     private def iterations(s: StateSnapshot[RendererState]): StateSnapshot[Int] =
       s.zoomState(_.iterations)(n => state => state.copy(iterations = n))
@@ -94,11 +93,10 @@ object RenderingSettings {
 
     private def offCanvasStrategyItems(
         s: StateSnapshot[RendererState]
-    ): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] = {
+    ): StateSnapshot[PointedSeq[Item[OffCanvasStrategy]]] =
       def strategyToPointedSeq(strategy: OffCanvasStrategy): PointedSeq[Item[OffCanvasStrategy]] =
         PointedSeq(offCanvasStrategies, Item("", strategy.toString, strategy))
       offCanvasSettings(s).xmapState(strategyToPointedSeq)(_.selected.value)
-    }
 
     private val offCanvasStrategies: Seq[Item[OffCanvasStrategy]] =
       List(
@@ -106,7 +104,6 @@ object RenderingSettings {
         Item("Torus", TorusCanvas.toString, TorusCanvas),
         Item("Projective", RealProjectivePlane.toString, RealProjectivePlane)
       )
-  }
 
   val component = ScalaComponent
     .builder[StateSnapshot[RendererState]]("rendering settings")
@@ -114,4 +111,3 @@ object RenderingSettings {
     .backend[Backend](_ => new Backend)
     .render(scope => scope.backend.render(scope.props))
     .build
-}

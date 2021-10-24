@@ -5,7 +5,7 @@ import evolution.app.conf.Conf.defaultRendererState
 import evolution.app.model.state.InfiniteCanvas
 import evolution.app.model.state.TrailSettings
 
-object Portfolio {
+object Portfolio:
   val drawings = List(
     Drawing(
       Some("Constant Point"),
@@ -757,12 +757,9 @@ object Portfolio {
 
   private lazy val defaultRendererWithInfiniteCanvas = defaultRendererState.copy(offCanvasSettings = InfiniteCanvas)
 
-  private implicit class StringOps(string: String) {
-    def unindent: String = {
+  private implicit class StringOps(string: String):
+    def unindent: String =
       //val indent = string.
       val s = string.dropWhile(_ == '\n')
       val indent = s.takeWhile(_ == ' ')
       s.replaceAll(s"\n$indent", "\n").trim
-    }
-  }
-}

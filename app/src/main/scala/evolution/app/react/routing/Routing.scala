@@ -15,7 +15,7 @@ class Routing(
     appComponent: App.ReactComponent,
     defaultPage: MyPages,
     pageStateCodec: Codec[LoadDrawingPage, DrawingPageUrl]
-) {
+):
 
   val baseUrl: BaseUrl =
     BaseUrl.until(urlDelimiter)
@@ -30,7 +30,7 @@ class Routing(
         | NotFoundPageRoute(dsl).rule).prefixPath(s"$urlDelimiter/")).notFound(redirectToPage(NotFound)(HistoryPush))
   }
 
-  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
+  private case class HomePageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
     import dsl._
 
     val rule: dsl.Rule =
@@ -41,9 +41,8 @@ class Routing(
 
     private def renderPage =
       redirectToPage(defaultPage)(HistoryReplace)
-  }
 
-  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
+  private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
     import dsl._
 
     val rule: dsl.Rule =
@@ -76,9 +75,8 @@ class Routing(
           )
         )
       }
-  }
 
-  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages, Unit]) {
+  private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
     import dsl._
 
     val rule: dsl.Rule =
@@ -89,10 +87,8 @@ class Routing(
 
     private def render =
       dsl.render(<.div("NOT FOUND"))
-  }
 
   private def routeFromCodec[T, R](path: RouteB[R], codec: Codec[T, R]): RouteB[T] =
     path.pmap(codec.decode)(codec.encode)
-}
 
 final case class DrawingPageUrl(drawingSegment: String, materializerSegment: String)

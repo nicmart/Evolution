@@ -11,7 +11,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
 
-object Canvas {
+object Canvas:
 
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
   val canvasId = "drawing-canvas"
@@ -25,12 +25,12 @@ object Canvas {
       running: Boolean
   )
 
-  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) {
+  class Backend(drawerFromState: (RendererState, DrawingContext) => FrameDrawer):
     var running = false
     var stopPending = false
     var points: Iterator[Point] = Iterator.empty
 
-    def render(props: Props): VdomElement = {
+    def render(props: Props): VdomElement =
       val size = props.context.canvasSize.point
       val retinaSize = props.context.canvasSize.point * props.rendererState.resolutionFactor
       <.canvas(
@@ -40,18 +40,15 @@ object Canvas {
         VdomAttr("width") := retinaSize.x.toString,
         VdomAttr("height") := retinaSize.y.toString
       )
-    }
 
-    def tick(props: Props, ctx: dom.CanvasRenderingContext2D, drawer: FrameDrawer): Unit = {
-      if (runNext()) {
+    def tick(props: Props, ctx: dom.CanvasRenderingContext2D, drawer: FrameDrawer): Unit =
+      if (runNext())
         points = drawer.drawFrame(ctx, points)
         props.onFrameDidDraw.runNow()
         dom.window.requestAnimationFrame(_ => tick(props, ctx, drawer))
-      } else {
+      else
         running = false
         stopPending = false
-      }
-    }
 
     def toggleRunning(node: dom.Element, props: Props): Callback = Callback {
       if (props.running) start(node, props)
@@ -66,18 +63,15 @@ object Canvas {
       }
     }
 
-    def start(node: dom.Element, props: Props): Unit = {
+    def start(node: dom.Element, props: Props): Unit =
       val drawer = drawerFromState(props.rendererState, props.context * props.rendererState.resolutionFactor)
-      if (!running && props.running) {
+      if (!running && props.running)
         running = true
         stopPending = false
         dom.window.requestAnimationFrame(_ => tick(props, canvasContext(node), drawer))
-      }
-    }
 
-    def scheduleStop(): Unit = {
+    def scheduleStop(): Unit =
       stopPending = true
-    }
 
     def runNext(): Boolean =
       running && !stopPending
@@ -87,7 +81,6 @@ object Canvas {
 
     def canvasContext(node: dom.Element): dom.CanvasRenderingContext2D =
       canvas(node).getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  }
 
   def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
     ScalaComponent
@@ -95,7 +88,7 @@ object Canvas {
       .backend[Backend](_ => new Backend(drawerFromState))
       .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
-        s.backend.onMount(s.getDOMNode.asElement, s.props)
+        s.backend.onMount(s.getDOMNode.asElement(), s.props)
       }
       .componentWillUnmount(
         s =>
@@ -103,6 +96,5 @@ object Canvas {
             s.backend.scheduleStop()
           }
       )
-      .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode.asElement, s.nextProps))
+      .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode.asElement(), s.nextProps))
       .build
-}

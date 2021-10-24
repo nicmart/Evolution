@@ -7,7 +7,7 @@ import org.http4s.server.staticcontent._
 import cats.effect._
 import org.http4s._
 
-final class StaticAssetsRoute(indexPath: String) {
+final class StaticAssetsRoute(indexPath: String):
 
   private val dsl = new Http4sDsl[IO] {}
   import dsl._
@@ -21,4 +21,3 @@ final class StaticAssetsRoute(indexPath: String) {
   }
 
   private lazy val filesRoute = ResourceServiceBuilder[IO]("/public").toRoutes
-}

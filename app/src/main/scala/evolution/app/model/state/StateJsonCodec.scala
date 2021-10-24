@@ -5,7 +5,7 @@ import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-object StateJsonCodec extends JsonCodec[(DrawingState, RendererState)] {
+object StateJsonCodec extends JsonCodec[(DrawingState, RendererState)]:
   private val drawingStateField = "drawingState"
   private val rendererStateField = "rendererState"
 
@@ -19,4 +19,3 @@ object StateJsonCodec extends JsonCodec[(DrawingState, RendererState)] {
     drawingStateField -> t._1.asJson,
     rendererStateField -> t._2.asJson
   )
-}

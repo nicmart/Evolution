@@ -9,20 +9,18 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import org.scalajs.dom
 import org.scalajs.dom.raw.MouseEvent
 
-object Sidebar {
+object Sidebar:
   case class Props(expanded: Boolean, width: StateSnapshot[Double])
 
-  case class State(draggingState: Option[DraggingStart]) {
+  case class State(draggingState: Option[DraggingStart]):
     def isDragging: Boolean = draggingState.isDefined
-  }
 
   case class DraggingStart(startX: Double, oldWidth: Double)
 
-  object State {
+  object State:
     val empty: State = State(None)
-  }
-  class Backend(bs: BackendScope[Props, State]) {
-    def render(props: Props, children: PropsChildren): VdomElement = {
+  class Backend(bs: BackendScope[Props, State]):
+    def render(props: Props, children: PropsChildren): VdomElement =
       <.div(
         ^.classSet(
           "sidebar" -> true,
@@ -37,7 +35,6 @@ object Sidebar {
         ),
         children
       )
-    }
 
     def onMouseDrag(e: MouseEvent): Callback =
       for {
@@ -50,7 +47,6 @@ object Sidebar {
 
     private def onMouseDown(currentWidth: Double)(e: ReactMouseEvent): Callback =
       bs.setState(State(Some(DraggingStart(e.clientX, currentWidth))))
-  }
 
   val component =
     react.ScalaComponent
@@ -62,4 +58,3 @@ object Sidebar {
           Callback(dom.window.onmouseup = (_: MouseEvent) => s.setState(State.empty).runNow())
       }
       .build
-}

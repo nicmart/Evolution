@@ -1,6 +1,6 @@
 package evolution.app.data
 
-case class PointedSeq[+T](elements: Seq[T], selected: T) {
+case class PointedSeq[+T](elements: Seq[T], selected: T):
   def get(predicate: T => Boolean): T =
     elements.find(predicate).getOrElse(selected)
   def select[S >: T](element: S): PointedSeq[S] =
@@ -9,4 +9,3 @@ case class PointedSeq[+T](elements: Seq[T], selected: T) {
     select(get(predicate))
   def map[S](f: T => S): PointedSeq[S] =
     PointedSeq(elements.map(f), f(selected))
-}

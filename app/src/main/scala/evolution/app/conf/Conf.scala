@@ -18,7 +18,7 @@ import evolution.logging.Logger
 import evolution.logging.NoOpLogger
 import evolution.app.react.routing.DrawingPageUrl
 
-object Conf {
+object Conf:
   lazy val logger: Logger = NoOpLogger
 
   lazy val canvasInitializer: CanvasInitializer =
@@ -90,4 +90,3 @@ object Conf {
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)
-}

@@ -2,7 +2,7 @@ package evolution.app.codec
 
 import io.circe._
 
-object JsonCodec {
+object JsonCodec:
 
   implicit def fromCirce[T](implicit encoder: Encoder[T], decoder: Decoder[T]): JsonCodec[T] =
     evolution.app.codec.Codec.instance(
@@ -21,15 +21,13 @@ object JsonCodec {
         codec.decode(c.value).toRight(DecodingFailure("Undefined decoding error", Nil))
     }
 
-  object circeImplicits {
+  object circeImplicits:
     implicit def encoder[T](implicit codec: JsonCodec[T]): Encoder[T] =
       toCirceEncoder(codec)
     implicit def decoder[T](implicit codec: JsonCodec[T]): Decoder[T] =
       toCirceDecoder(codec)
-  }
 
   /**
     * Summoner method
     */
   def apply[T](implicit codec: JsonCodec[T]): JsonCodec[T] = codec
-}

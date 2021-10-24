@@ -21,7 +21,7 @@ import evolution.app.react.component.control.DrawingLoader
 
 import scala.annotation.nowarn
 
-object Page {
+object Page:
   type ReactComponent = Component[Props, Unit, Backend, CtorType.Props]
 
   def canvasInitializer: dom.html.Canvas => Unit =
@@ -39,7 +39,7 @@ object Page {
       onReload: Callback,
       onFrameDraw: Callback,
       id: Int
-  ) {
+  ):
     def canvasKey: String = (rendererState.value, drawingState.value, layout.value, id).hashCode().toString
     def code: StateSnapshot[String] =
       drawingState.zoomState(_.code)(code => state => state.copy(code = code))
@@ -47,11 +47,10 @@ object Page {
       layout.zoomState(_.sidebarWidth)(newWidth => layout => layout.copy(sidebarWidth = newWidth))
     def sidebarStatus: StateSnapshot[Boolean] =
       layout.zoomState(_.sidebarExpanded)(isExpanded => layout => layout.copy(sidebarExpanded = isExpanded))
-  }
 
-  class Backend(canvasComponent: Canvas.ReactComponent) {
+  class Backend(canvasComponent: Canvas.ReactComponent):
 
-    def render(props: Props): VdomElement = {
+    def render(props: Props): VdomElement =
       <.div(
         Navbar.component(
           <.div(
@@ -140,7 +139,6 @@ object Page {
           )
         )
       )
-    }
 
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
     val downloadImage: Callback = Callback {
@@ -154,7 +152,6 @@ object Page {
         dom.document.body.removeChild(a)
       })
     }
-  }
 
   def component(canvasComponent: Canvas.ReactComponent): Page.ReactComponent =
     ScalaComponent
@@ -162,20 +159,16 @@ object Page {
       .backend[Backend](_ => new Backend(canvasComponent))
       .render(scope => scope.backend.render(scope.props))
       .build
-}
 
-object Html {
+object Html:
   @js.native
   @JSGlobal("Canvas")
   @nowarn
-  class Canvas extends dom.html.Canvas {
+  class Canvas extends dom.html.Canvas:
     def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
-  }
 
   @js.native
   @JSGlobal("Anchor")
   @nowarn
-  class Anchor extends dom.html.Anchor {
+  class Anchor extends dom.html.Anchor:
     var download: String = js.native
-  }
-}

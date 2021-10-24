@@ -6,11 +6,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.Callback
 
-object Editor {
+object Editor:
   case class Props(code: StateSnapshot[String], error: Option[String])
 
-  class Backend {
-    def render(props: Props): VdomElement = {
+  class Backend:
+    def render(props: Props): VdomElement =
 
       <.div(
         ^.className := "dsl-config",
@@ -29,9 +29,6 @@ object Editor {
           <.span(props.error.getOrElse("").toString)
         )
       )
-    }
-  }
 
   val component =
     ScalaComponent.builder[Props].stateless.renderBackend[Backend].build
-}

@@ -12,7 +12,7 @@ import evolution.compiler.phases.typer._
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}
 
-class PortfolioFunctionalTest extends LanguageSpec {
+class PortfolioFunctionalTest extends LanguageSpec:
   "Drawings in Portfolio" - {
     "should compile" - {
       Portfolio.drawings.foreach { drawing =>
@@ -55,4 +55,3 @@ class PortfolioFunctionalTest extends LanguageSpec {
   lazy val codeCompiler = new TermBasedCodeCompiler(
     new FullCompiler(parser, typer, compiler, interpreter, Conf.logger)
   )
-}

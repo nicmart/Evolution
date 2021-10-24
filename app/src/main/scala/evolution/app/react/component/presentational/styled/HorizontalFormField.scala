@@ -8,7 +8,7 @@ case class HorizontalFormField(
     className: String
 )
 
-object HorizontalFormField {
+object HorizontalFormField:
 
   val component =
     ScalaComponent
@@ -36,4 +36,3 @@ object HorizontalFormField {
         )
       }
       .build
-}

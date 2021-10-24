@@ -9,7 +9,7 @@ import evolution.compiler.types.Type
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 
-final class TermBasedCodeCompiler(fullCompiler: FullCompiler) extends CodeCompiler {
+final class TermBasedCodeCompiler(fullCompiler: FullCompiler) extends CodeCompiler:
   def compile(code: String, seed: Long, ctx: DrawingContext): Either[String, Iterator[Point]] =
     module(ctx).flatMap(
       mod =>
@@ -24,12 +24,10 @@ final class TermBasedCodeCompiler(fullCompiler: FullCompiler) extends CodeCompil
           }
     )
 
-  private def module(ctx: DrawingContext): Either[String, Module] = {
+  private def module(ctx: DrawingContext): Either[String, Module] =
     val constantsModule = TypingConfig.constantsModule
     val drawingContextModule = DrawingContextModule(ctx)
 
     StandardLibraryModule.module.map { stdModule =>
       constantsModule.compose(drawingContextModule).compose(stdModule)
     }
-  }
-}
