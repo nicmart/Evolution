@@ -27,8 +27,7 @@ object TreeF:
 
   implicit class Ops[A](fa: TreeF[A]):
     // TODO scala3
-    type F[T] = Const[List[A], T]
-    def children: List[A] = fa.traverse[F, Nothing](a => Const(List(a))).getConst
+    def children: List[A] = fa.traverse[Const[List[A], _], Nothing](a => Const(List(a))).getConst
 
   implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]):
     def annotate(a: A): AnnotatedTree[A] = AnnotatedTree(a, tree)
