@@ -55,7 +55,11 @@ object ConstConfig {
     //
     // Evolutions
     Const("empty", Qualified(Scheme(List("T"), Var("T"))), Evolution.empty),
-    Const("concat", Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")), curry2(Evolution.concat)),
+    Const(
+      "concat",
+      Qualified(Scheme(Evo("T") =>: Evo("T") =>: Evo("T"), "T")),
+      curry2(Evolution.concat)
+    ),
     Const(
       "cons",
       Qualified(Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
@@ -270,11 +274,11 @@ object ConstConfig {
 
   val constantsTerms: Map[String, Term] = Map(constants.map(c => c.name -> Value(c.value)): _*)
 
-  private def func1(f: Nothing => Any): Any = f
-  private def func2(f: Nothing => Nothing => Any): Any = f
+  private def func1[A, B](f: A => B): Any = f
+  private def func2[A, B, C](f: A => B => C): Any = f
 
-  private def curry2(f: (Nothing, Nothing) => Any): Any = f.curried
-  private def curry3(f: (Nothing, Nothing, Nothing) => Any): Any = f.curried
+  private def curry2[A, B, C](f: (A, B) => C): Any = f.curried
+  private def curry3[A, B, C, D](f: (A, B, C) => D): Any = f.curried
 
   private def iterateFunc[T](f: T => T, n: Int): T => T =
     if (n <= 0) identity[T]

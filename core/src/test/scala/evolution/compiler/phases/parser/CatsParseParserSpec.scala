@@ -12,13 +12,13 @@ class CatsParseParserSpec extends LanguageSpec {
   "The expression parser" - {
     "should parse" - {
       "int literals" in {
-        forAll { n: Int =>
+        forAll { (n: Int) =>
           unsafeParse(s"   $n   ") shouldEq IntLiteral(n)
         }
       }
 
       "doubles literals that are not integers" in {
-        forAll { d: Double =>
+        forAll { (d: Double) =>
           whenever(d % 1 != 0) {
 
             unsafeParse("1.1") shouldEq DoubleLiteral(1.1)
