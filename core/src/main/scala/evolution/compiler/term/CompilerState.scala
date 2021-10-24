@@ -7,7 +7,7 @@ private[term] case class CompilerState(count: Int, predicateNames: Map[Predicate
   private def withNewPredVar: CompilerState = copy(count = count + 1)
   def predName(predicate: Predicate): Option[String] = predicateNames.get(predicate)
   def withPredicate(predicate: Predicate): CompilerState =
-    if (predicateNames.isDefinedAt(predicate)) this
+    if predicateNames.isDefinedAt(predicate) then this
     else
       copy(predicateNames = predicateNames.updated(predicate, s"${predicate.id}$$$currentPredVarname")).withNewPredVar
   def withPredicates(predicates: List[Predicate]): CompilerState =

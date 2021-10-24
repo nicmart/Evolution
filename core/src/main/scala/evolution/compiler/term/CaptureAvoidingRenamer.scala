@@ -16,25 +16,25 @@ class CaptureAvoidingRenamer {
     case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))
 
     case Let(name, expr, body) =>
-      for {
+      for
         newName <- freshVar(name)
         renamedExpr <- renameM(expr)
         b <- withVar(newName)(renameM(body))
         bodyWithName = TermRenamer.rename(name, newName)(b)
-      } yield Let(newName, renamedExpr, bodyWithName)
+      yield Let(newName, renamedExpr, bodyWithName)
 
     case Lambda(name, body) =>
-      for {
+      for
         newName <- freshVar(name)
         b <- withVar(newName)(renameM(body))
         bodyWithNewName = TermRenamer.rename(name, newName)(b)
-      } yield Lambda(newName, bodyWithNewName)
+      yield Lambda(newName, bodyWithNewName)
 
     case Apply(f, x) =>
-      for {
+      for
         f <- renameM(f)
         x <- renameM(x)
-      } yield Apply(f, x)
+      yield Apply(f, x)
 
     case _ => pure(term)
   }
@@ -57,7 +57,7 @@ object CaptureAvoidingRenamer {
 
     def freshVar(name: String): Renamed[String] =
       Renamed { vars =>
-        if (vars.contains(name)) freshVar(name + "'").run(vars)
+        if vars.contains(name) then freshVar(name + "'").run(vars)
         else name
       }
 

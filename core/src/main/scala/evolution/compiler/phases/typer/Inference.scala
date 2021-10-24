@@ -23,12 +23,12 @@ private[typer] object Inference {
   def newTypeVar: Inference[Type] = newTypeVarname.map(Type.Var)
 
   def withLocalAssumption[T](assumption: Assumption)(ft: Inference[T]): Inference[T] =
-    for {
+    for
       initialAssumptions <- assumptions
       _ <- setAssumptions(initialAssumptions.withAssumption(assumption))
       t <- ft
       _ <- setAssumptions(initialAssumptions)
-    } yield t
+    yield t
 
   def getAssumption(name: String): Inference[Assumption] =
     assumptions.map(_.get(name)).flatMap {
@@ -40,13 +40,13 @@ private[typer] object Inference {
     either.fold(error, InferenceMonad.pure)
 
   def unify(t1: Type, t2: Type): Inference[Unit] =
-    for {
+    for
       currentSubstitution <- substitution
       unifyingSubstitution <- fromEither(
         Unifier.mostGeneralUnifier(currentSubstitution.substitute(t1), currentSubstitution.substitute(t2))
       )
       _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
-    } yield ()
+    yield ()
 
   implicit lazy val inferenceIsMonad: Monad[Inference] = InferenceMonad
 

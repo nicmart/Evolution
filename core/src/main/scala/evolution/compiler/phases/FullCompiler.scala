@@ -17,7 +17,7 @@ final class FullCompiler(
   private val optimizer = new TermOptimizer(interpreter)
 
   def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Any] =
-    for {
+    for
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
       typedTree <- printTime("typing", typer.typeTree(untypedTree, Some(expectedType), module.assumptions))
       _ = log("Done: substitution")
@@ -34,7 +34,7 @@ final class FullCompiler(
       //_ = PPrinter.BlackWhite.pprintln(optimizedTerm, height = Int.MaxValue)
       _ = log(s"Compiled to $termWithModule")
       _ = log("Done: compilation")
-    } yield printTime("interpretation", interpreter.interpret(termWithModule))
+    yield printTime("interpretation", interpreter.interpret(termWithModule))
 
   private def printTime[T](label: String, t: => T): T = {
     val start = System.currentTimeMillis()

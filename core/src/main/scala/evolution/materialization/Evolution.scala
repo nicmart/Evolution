@@ -88,7 +88,7 @@ object Evolution {
     new Evolution[T] {
       def run: Iterator[T] = {
         val materializedTs = ts.run.take(n).toList.toIndexedSeq
-        if (materializedTs.nonEmpty) Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
+        if materializedTs.nonEmpty then Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
         else Iterator.empty
       }
     }
@@ -163,13 +163,13 @@ object Evolution {
         private var cachedHasNextValue = false
 
         override def hasNext: Boolean = {
-          if (cachedHasNext) cachedHasNextValue
+          if cachedHasNext then cachedHasNextValue
           else {
-            cachedHasNextValue = if (outerIterationEnded) {
-              if (iterators(currentIndex).hasNext) true
+            cachedHasNextValue = if outerIterationEnded then {
+              if iterators(currentIndex).hasNext then true
               else {
                 iterators.remove(currentIndex)
-                if (iterators.isEmpty) false
+                if iterators.isEmpty then false
                 else {
                   currentIndex = currentIndex % iterators.size
                   hasNext
@@ -177,7 +177,7 @@ object Evolution {
               }
 
             } else {
-              if (iteratorOfEvolutions.hasNext) {
+              if iteratorOfEvolutions.hasNext then {
                 iterators.append(iteratorOfEvolutions.next().run)
                 iterators.last.hasNext
               } else {
@@ -193,7 +193,7 @@ object Evolution {
 
         override def next(): A = {
           cachedHasNext = false
-          if (outerIterationEnded) {
+          if outerIterationEnded then {
             val a = iterators(currentIndex).next()
             currentIndex = (currentIndex + 1) % iterators.size
             a
@@ -214,7 +214,7 @@ object Evolution {
         def hasNext: Boolean = _hasNext
         def next(): A = {
           val current = _next
-          if (speedIterator.hasNext) {
+          if speedIterator.hasNext then {
             _hasNext = true
             _next = add(current, speedIterator.next())
           } else {
@@ -230,7 +230,7 @@ object Evolution {
     new Evolution[B] {
       override def run: Iterator[B] = {
         val derivingIterator: Iterator[A] = as.run
-        if (derivingIterator.hasNext) {
+        if derivingIterator.hasNext then {
           new AbstractIterator[B] {
             var previous: A = derivingIterator.next()
             override def hasNext: Boolean = derivingIterator.hasNext
@@ -314,7 +314,7 @@ object Evolution {
         def next(): A = {
           val currentA = _nextA
           val currentV = _nextV
-          if (accIterator.hasNext) {
+          if accIterator.hasNext then {
             _hasNext = true
             _nextV = add(currentV, accIterator.next()(currentA)(currentV))
             _nextA = add(currentA, _nextV)
@@ -350,8 +350,8 @@ object Evolution {
       }
 
       private def hasNextWhenCurrentIteratorIsEmpty(): Boolean = {
-        if (currentIteratorIsFirst) {
-          if (isLastDefined) {
+        if currentIteratorIsFirst then {
+          if isLastDefined then {
             currentIterator = f(last).run
             currentIteratorIsFirst = false
             currentIterator.hasNext
@@ -372,14 +372,14 @@ object Evolution {
     }
 
   private def positiveModule(n: Double, b: Int): Double = {
-    if (n >= 0) n % b else (n % b) + b
+    if n >= 0 then n % b else (n % b) + b
   }
 
   private def smoothModule(n: Double, b: Int): Double = {
-    if (n >= 0) {
-      if ((n / b).toInt % 2 == 0) positiveModule(n, b) else b - positiveModule(n, b) - 1
+    if n >= 0 then {
+      if ((n / b).toInt % 2 == 0) then positiveModule(n, b) else b - positiveModule(n, b) - 1
     } else {
-      if ((n / b).toInt % 2 == 1) positiveModule(n, b) else b - positiveModule(n, b) - 1
+      if ((n / b).toInt % 2 == 1) then positiveModule(n, b) else b - positiveModule(n, b) - 1
     }
   }
 

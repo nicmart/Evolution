@@ -13,8 +13,8 @@ final class PredicatesSolverTyper(typer: Typer, solver: UnifyPredicates) extends
       expectedType: Option[Type],
       assumptions: Assumptions
   ): Either[String, TypedTree] =
-    for {
+    for
       typedTree <- typer.typeTree(tree, expectedType, assumptions)
       predicatesSubstitution <- solver.unify(TypingConfig.instancesPredicates, typedTree.annotation.predicates)
-    } yield predicatesSubstitution.substitute(typedTree)
+    yield predicatesSubstitution.substitute(typedTree)
 }

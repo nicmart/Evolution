@@ -19,22 +19,22 @@ object Matchable {
     case (Type.Evo(t1), Type.Evo(t2)) => typesAreMatchable.substitution(t1, t2)
     case (Type.Lst(t1), Type.Lst(t2)) => typesAreMatchable.substitution(t1, t2)
     case (Type.Arrow(t11, t12), Type.Arrow(t21, t22)) =>
-      for {
+      for
         s1 <- typesAreMatchable.substitution(t11, t21)
         s2 <- typesAreMatchable.substitution(t12, t22)
         s <- s1.mergeOpt(s2)
-      } yield s
+      yield s
     case (t1, t2) if t1 == t2 => Some(Substitution.empty)
     case _                    => None
   }
 
   implicit def lst[T](implicit m: Matchable[T]): Matchable[List[T]] = {
     case (iHead :: iTail, pHead :: pTail) =>
-      for {
+      for
         tailSubst <- lst(m).substitution(iTail, pTail)
         headSubst <- tryMatch(iHead, pHead)
         subst <- headSubst.merge(tailSubst).toOption
-      } yield subst
+      yield subst
 
     case (Nil, Nil) => Some(Substitution.empty)
     case _          => None
@@ -53,9 +53,9 @@ object Matchable {
 
   implicit def qualified[T](implicit m: Matchable[T]): Matchable[Qualified[T]] =
     (q1, q2) =>
-      for {
+      for
         predSubst <- tryMatch(q1.predicates, q2.predicates)
         tSubst <- tryMatch(q1.value, q2.value)
         subst <- predSubst.merge(tSubst).toOption
-      } yield subst
+      yield subst
 }

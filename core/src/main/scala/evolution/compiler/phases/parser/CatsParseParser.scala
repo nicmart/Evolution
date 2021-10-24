@@ -150,7 +150,7 @@ object CatsParseParser extends Parser {
   private lazy val list: P[Tree] = (P.char('[').void.w *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
 
   private lazy val doubleLit: P[Tree] =
-    numbers.doubleLiteral.map(d => if (d % 1 == 0) IntLiteral(d.toInt) else DoubleLiteral(d))
+    numbers.doubleLiteral.map(d => if d % 1 == 0 then IntLiteral(d.toInt) else DoubleLiteral(d))
 
   private lazy val boolean: P[Tree] =
     (P.string("true").map(_ => true) | P.string("false").map(_ => false)).map(Bool)

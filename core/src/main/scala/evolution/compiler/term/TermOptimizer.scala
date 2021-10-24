@@ -22,48 +22,48 @@ final class TermOptimizer(interpreter: TermInterpreter) {
   private def optimizeM(term: Term): Optimized[Term] = {
     term match {
       case Lit(LitList(ts)) =>
-        for {
+        for
           optimizedTs <- ts.traverse(optimizeM)
           valueTerms = optimizedTs.collect { case Value(t) => t }
-          newTerm = if (valueTerms.length == ts.length) Value(valueTerms) else Lit(LitList(optimizedTs))
-        } yield newTerm
+          newTerm = if valueTerms.length == ts.length then Value(valueTerms) else Lit(LitList(optimizedTs))
+        yield newTerm
 
       case Lit(_) | Inst(_) | Value(_) =>
         Value(interpreter.interpret(term)).pure[Optimized].widen
 
       case Id(name) =>
-        for {
+        for
           maybeBoundTerm <- binding(name)
           idTerm = maybeBoundTerm.getOrElse(term)
-        } yield this.inline(name, idTerm)
+        yield this.inline(name, idTerm)
 
       case Apply(f, x) =>
-        for {
+        for
           f <- optimizeM(f)
           x <- optimizeM(x)
           optApply <- optimizeApplyLambda(f, x)
           optValues <- optimizeApplyValues(optApply)
-        } yield optValues
+        yield optValues
 
       case Let(name, body, in) =>
-        for {
+        for
           body <- optimizeM(body)
           in <- bindLocal(name, body)(optimizeM(in))
           optLet = optimizeLet(Let(name, body, in))
-        } yield optLet
+        yield optLet
 
       case lambda @ Lambda(name, _) =>
-        for {
+        for
           isNameAlreadyInUse <- hasBinding(name)
-          optimized <- if (isNameAlreadyInUse) optimizeM(renamer.rename(term, Set(name))) else optimizeLambda(lambda)
-        } yield optimized
+          optimized <- if isNameAlreadyInUse then optimizeM(renamer.rename(term, Set(name))) else optimizeLambda(lambda)
+        yield optimized
     }
   }
 
   private def optimizeLambda(lambda: Term.Lambda): Optimized[Term] =
-    for {
+    for
       body <- bindLocal(lambda.name, Id(lambda.name))(optimizeM(lambda.body))
-    } yield Lambda(lambda.name, body)
+    yield Lambda(lambda.name, body)
 
   private def optimizeLet(term: Let): Term =
     term.body match {
@@ -74,9 +74,9 @@ final class TermOptimizer(interpreter: TermInterpreter) {
   private def optimizeApplyLambda(f: Term, x: Term): Optimized[Term] =
     f match {
       case Lambda(name, body) => // Do we need to do some renaming here as well?
-        for {
+        for
           body <- bindLocal(name, x)(optimizeM(body))
-        } yield body
+        yield body
       case _ => Apply(f, x).pure[Optimized].widen
     }
 
@@ -103,7 +103,7 @@ object TermOptimizer {
 
     @tailrec
     def freshName(name: String): String =
-      if (bindings.isDefinedAt(name)) freshName(name + "'")
+      if bindings.isDefinedAt(name) then freshName(name + "'")
       else name
 
     def unbind(name: String): Env = Env(bindings.removed(name))

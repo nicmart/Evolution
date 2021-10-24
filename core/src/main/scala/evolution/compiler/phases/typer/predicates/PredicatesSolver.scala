@@ -19,15 +19,15 @@ private[predicates] final case class PredicatesSolver(
 
   def next: Either[String, PredicatesSolver] = {
     val requirements = current.requirements
-    for {
+    for
       otherConditionsReduced <- otherConditions.traverse(_.reduce(requirements))
       conditions = otherConditionsReduced :+ current
       nextSolver = PredicatesSolver(conditions.head, conditions.tail)
-    } yield nextSolver
+    yield nextSolver
   }
 
   def nextN(n: Int): Either[String, PredicatesSolver] =
-    if (n <= 0) this.asRight
+    if n <= 0 then this.asRight
     else next.flatMap(_.nextN(n - 1))
 
   def cycle: Either[String, PredicatesSolver] = nextN(total)

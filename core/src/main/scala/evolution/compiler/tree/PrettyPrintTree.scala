@@ -23,7 +23,7 @@ object PrettyPrintTree {
 
   private def ppLambda(id: String, expr: Int => String, n: Int): String = {
     val childrenLength = expr(0).length
-    if (childrenLength < maxChildrenLegnth) s"$id -> { ${expr(0)} }"
+    if childrenLength < maxChildrenLegnth then s"$id -> { ${expr(0)} }"
     else s"$id -> {\n${expr(n + 1)}\n${indent(n)}}"
   }
 

@@ -7,11 +7,11 @@ object TermRenamer {
   def rename(oldName: String, newName: String)(term: Term): Term =
     term match {
       case Id(name) =>
-        Id(if (name == oldName) newName else name)
+        Id(if name == oldName then newName else name)
       case Let(name, expr, body) =>
-        Let(name, rename(oldName, newName)(expr), if (name == oldName) body else rename(oldName, newName)(body))
+        Let(name, rename(oldName, newName)(expr), if name == oldName then body else rename(oldName, newName)(body))
       case Lambda(name, body) =>
-        Lambda(name, if (name == oldName) body else rename(oldName, newName)(body))
+        Lambda(name, if name == oldName then body else rename(oldName, newName)(body))
       case Apply(f, x) =>
         Apply(rename(oldName, newName)(f), rename(oldName, newName)(x))
       case Lit(LitList(ts)) =>

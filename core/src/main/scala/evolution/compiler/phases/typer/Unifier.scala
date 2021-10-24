@@ -6,10 +6,10 @@ import evolution.compiler.types.Type
 private[typer] object Unifier {
   def mostGeneralUnifier(a: Type, b: Type): Either[String, Substitution] = (a, b) match {
     case (Type.Arrow(a1, a2), Type.Arrow(b1, b2)) =>
-      for {
+      for
         s1 <- mostGeneralUnifier(a1, b1)
         s2 <- mostGeneralUnifier(s1.substitute(a2), s1.substitute(b2))
-      } yield s1.andThen(s2)
+      yield s1.andThen(s2)
     case (Type.Var(x), t)           => varBind(x, t)
     case (t, Type.Var(x))           => varBind(x, t)
     case (Type.Lst(a), Type.Lst(b)) => mostGeneralUnifier(a, b)
@@ -19,7 +19,7 @@ private[typer] object Unifier {
   }
 
   private def varBind(name: String, tpe: Type): Either[String, Substitution] =
-    if (tpe == Type.Var(name)) Right(Substitution.empty)
-    else if (tpe.typeVarUsages(name).isEmpty) Right(Substitution(name -> tpe))
+    if tpe == Type.Var(name) then Right(Substitution.empty)
+    else if tpe.typeVarUsages(name).isEmpty then Right(Substitution(name -> tpe))
     else Left(s"$name cannot be bound to $tpe")
 }

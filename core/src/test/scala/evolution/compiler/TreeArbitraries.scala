@@ -11,10 +11,10 @@ import org.scalacheck.Gen
 
 trait TreeArbitraries {
   def genFunctionArgs: Gen[List[String]] =
-    for {
+    for
       n <- Gen.choose(1, 6)
       args <- Gen.listOfN(n, genLeafExpr)
-    } yield args
+    yield args
 
   def genLeafExpr: Gen[String] =
     Gen.oneOf(genVarUsage, arbitrary[Double].map(_.toString))
@@ -27,16 +27,16 @@ trait TreeArbitraries {
     genIdentifier.filter(id => !ConstConfig.constants.map(_.name).contains(id.toLowerCase))
 
   def genIdentifier: Gen[String] =
-    for {
+    for
       head <- Gen.alphaChar
       tail <- Gen.alphaNumStr
-    } yield s"$head$tail"
+    yield s"$head$tail"
 
   def genLambda: Gen[String] =
-    for {
+    for
       id <- genIdentifier
       body <- genLeafExpr
-    } yield s"$id -> $body"
+    yield s"$id -> $body"
 
   def genNumber: Gen[Tree] = arbitrary[Double].map(d => DoubleLiteral(d).embed)
   def genIntNumber: Gen[Tree] = arbitrary[Int].map(n => IntLiteral(n).embed)
@@ -45,19 +45,19 @@ trait TreeArbitraries {
   def genTypedNumber: Gen[TypedTree] = arbitrary[Int].map(n => IntLiteral(n).annotate(Qualified(Type.Integer)))
 
   def genTypedVar: Gen[(String, TypedTree)] =
-    for {
+    for
       id <- genIdentifier
       tpe <- genType
-    } yield (id.toLowerCase, Id(id).annotate(Qualified(tpe)))
+    yield (id.toLowerCase, Id(id).annotate(Qualified(tpe)))
 
   def genTypedBool: Gen[TypedTree] = Gen.oneOf(true, false).map(Bool(_).annotate(Qualified(Type.Bool)))
 
   def genType: Gen[Type] = Gen.oneOf(Type.Double, Type.Bool, Type.Integer, Type.Point)
 
   def genVar: Gen[Tree] =
-    for {
+    for
       char <- Gen.alphaChar
-    } yield Id(char.toString).embed
+    yield Id(char.toString).embed
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(List(" ", "\n", "\r", "\t"))).map(_.mkString(""))

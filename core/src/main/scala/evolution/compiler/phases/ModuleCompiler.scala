@@ -19,7 +19,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
-    for {
+    for
       untypedTree <- parser.parse(serialisedExpr).leftMap(_.message)
       exportAssumption = Assumption("export", Qualified(Scheme(Type.Var("X")))) // TODO think more about this
       typedTree <- typer.typeTree(untypedTree, None, initialModule.assumptions.withAssumption(exportAssumption))
@@ -36,7 +36,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       optimizedDefs = optimizeDefinitions(defs)
       _ = log(s"Compiled to $term")
       _ = log("Done: compilation")
-    } yield Module(optimizedDefs.toList)
+    yield Module(optimizedDefs.toList)
 
   // 1. Find assumptions
   @tailrec

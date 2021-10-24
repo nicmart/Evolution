@@ -38,7 +38,7 @@ object TypeClasses {
     def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
     def predicatesTypeVars: Set[String] = predicates.flatMap(_.typeVars).toSet
     override def toString: String =
-      if (predicates.isEmpty) value.toString
+      if predicates.isEmpty then value.toString
       else
         s"${predicates.mkString(", ")} => $value"
   }

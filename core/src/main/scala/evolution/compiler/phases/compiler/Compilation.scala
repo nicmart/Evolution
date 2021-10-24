@@ -19,10 +19,10 @@ private[compiler] object Compilation {
 
   def fromEither[T](either: Either[String, T]): Compilation[T] = either.fold(error, pure)
   def withBinding[T](name: String, tree: TypedTree)(ft: Compilation[T]): Compilation[T] =
-    for {
+    for
       currentState <- state
       t <- localState[T](currentState.withBinding(name, tree))(ft)
-    } yield t
+    yield t
 
   def binding(name: String): Compilation[TypedTree] =
     state.map(_.binding(name)).map(_.toRight(s"Binding $name not found")).flatMap(fromEither)

@@ -40,7 +40,7 @@ final case class Point(x: Double, y: Double) {
 
   def versor: Point = {
     val normValue = norm
-    if (normValue > 0) this / normValue else Point.zero
+    if normValue > 0 then this / normValue else Point.zero
   }
 
   def inRectangle(topLeft: Point, bottomRight: Point): Boolean = {

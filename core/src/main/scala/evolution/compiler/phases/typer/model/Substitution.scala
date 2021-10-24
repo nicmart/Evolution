@@ -15,7 +15,7 @@ final case class Substitution(assignments: List[Assignment]) {
     val agree = commonVars.forall { variable =>
       substitute[Type](Type.Var(variable)) == s2.substitute[Type](Type.Var(variable))
     }
-    if (agree) Substitution(assignments ++ s2.assignments).asRight
+    if agree then Substitution(assignments ++ s2.assignments).asRight
     else "Merge has failed".asLeft
   }
 }

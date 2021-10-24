@@ -50,7 +50,7 @@ object ConstConfig {
     Const(
       "if",
       Qualified(Scheme(Bool =>: "T" =>: "T" =>: "T", "T")),
-      (p: Boolean) => (a: Any) => (b: Any) => if (p) a else b
+      (p: Boolean) => (a: Any) => (b: Any) => if p then a else b
     ),
     //
     // Evolutions
@@ -219,7 +219,7 @@ object ConstConfig {
     Const(
       "mod",
       Qualified(Scheme(Double =>: Double =>: Double)),
-      (x: Double) => (y: Double) => if (x >= 0) x % y else (x % y) + y
+      (x: Double) => (y: Double) => if x >= 0 then x % y else (x % y) + y
     ),
     Const("todbl", Qualified(Scheme(Integer =>: Double)), (x: Int) => x.toDouble),
     Const("div", Qualified(Scheme(Double =>: Double =>: Double)), (x: Double) => (y: Double) => x / y),
@@ -230,8 +230,8 @@ object ConstConfig {
         (to: Double) =>
           (position: Double) => {
             val t = (position - from) / (to - from)
-            if (t <= 0) 0.0
-            else if (t >= 1) 1.0
+            if t <= 0 then 0.0
+            else if t >= 1 then 1.0
             else t * t * (3.0 - 2.0 * t)
           }
     ),
@@ -281,7 +281,7 @@ object ConstConfig {
   private def curry3[A, B, C, D](f: (A, B, C) => D): Any = f.curried
 
   private def iterateFunc[T](f: T => T, n: Int): T => T =
-    if (n <= 0) identity[T]
+    if n <= 0 then identity[T]
     else {
       val g = iterateFunc(f, n - 1)
       t => f(g(t))

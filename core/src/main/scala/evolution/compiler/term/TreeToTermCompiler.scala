@@ -28,18 +28,18 @@ final class TreeToTermCompiler {
       case TreeF.Lambda(varName, expr) => compileM(expr).map(Lambda(varName, _))
 
       case TreeF.App(f, args) =>
-        for {
+        for
           f <- compileM(f)
           args <- traverse(args.toList)(compileM)
-        } yield app(f, args)
+        yield app(f, args)
 
       case TreeF.Let(varName, expr, in) =>
         withLocalPredicates(expr.annotation.predicates) {
-          for {
+          for
             exprTerm <- compileM(expr)
             exprTermWithPred <- lambdaFromPredicates(expr.annotation.predicates, exprTerm)
             in <- compileM(in)
-          } yield Let(varName, exprTermWithPred, in)
+          yield Let(varName, exprTermWithPred, in)
         }
     }
   }
@@ -55,7 +55,7 @@ final class TreeToTermCompiler {
     traverse(predicates)(argFromPred).map(pArgs => app(term, pArgs))
 
   private def argFromPred(predicate: Predicate): Compilation[Term] =
-    if (predicate.hasTypeVars) predName(predicate).map(Id.apply)
+    if predicate.hasTypeVars then predName(predicate).map(Id.apply)
     else fromEither(TypingConfig.instance(predicate).map(Inst.apply))
 
   private def lambda(vars: List[String], term: Term): Term =
