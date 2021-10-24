@@ -8,6 +8,4 @@ addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.2.0")
 addSbtPlugin("ch.epfl.scala" % "sbt-web-scalajs-bundler" % "0.20.0")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.0")
-
-addSbtPlugin("ch.epfl.scala" % "sbt-scala3-migrate" % "0.4.6")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3")

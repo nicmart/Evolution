@@ -1,14 +1,12 @@
 package evolution.compiler.term
 
 import cats.data.Reader
-import cats.instances.list._
-import cats.syntax.applicative._
-import cats.syntax.functor._
-import cats.syntax.traverse._
+import cats.implicits._
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term.{Id, _}
 import evolution.compiler.term.TermOptimizer._
+import cats.catsInstancesForId
 
 import scala.annotation.tailrec
 
@@ -58,8 +56,7 @@ final class TermOptimizer(interpreter: TermInterpreter):
         yield optimized
 
   private def optimizeLambda(lambda: Term.Lambda): Optimized[Term] =
-    for
-      body <- bindLocal(lambda.name, Id(lambda.name))(optimizeM(lambda.body))
+    for body <- bindLocal(lambda.name, Id(lambda.name))(optimizeM(lambda.body))
     yield Lambda(lambda.name, body)
 
   private def optimizeLet(term: Let): Term =
@@ -70,8 +67,7 @@ final class TermOptimizer(interpreter: TermInterpreter):
   private def optimizeApplyLambda(f: Term, x: Term): Optimized[Term] =
     f match
       case Lambda(name, body) => // Do we need to do some renaming here as well?
-        for
-          body <- bindLocal(name, x)(optimizeM(body))
+        for body <- bindLocal(name, x)(optimizeM(body))
         yield body
       case _ => Apply(f, x).pure[Optimized].widen
 
