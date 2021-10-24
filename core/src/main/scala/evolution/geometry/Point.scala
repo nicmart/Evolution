@@ -13,7 +13,7 @@ final case class Point(x: Double, y: Double):
   def -(other: Point) = minus(other)
 
   def opposite: Point = Point(-x, -y)
-  def unary_-(): Point = opposite
+  def unary_- : Point = opposite
 
   def mult(d: Double): Point = Point(x * d, y * d)
   def *(d: Double) = mult(d)

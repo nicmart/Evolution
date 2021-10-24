@@ -41,9 +41,9 @@ object TypeClasses:
 
   object Predicate:
     def apply(id: String): Predicate = Predicate(id, Nil)
-    def apply(id: String, vars: String*): Predicate = Predicate(id, vars.toList.map(Type.Var))
+    def apply(id: String, vars: String*): Predicate = Predicate(id, vars.toList.map(Type.Var.apply))
     def fromVars(id: String, typeVars: List[String]): Predicate =
-      Predicate(id, typeVars.map(Type.Var))
+      Predicate(id, typeVars.map(Type.Var.apply))
 
   object Qualified:
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)

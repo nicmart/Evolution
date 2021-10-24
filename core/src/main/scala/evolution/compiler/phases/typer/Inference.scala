@@ -19,7 +19,7 @@ private[typer] object Inference:
     Inference(is => Right((is.withAssumptions(assumptions), ())))
   def error(message: String): Inference[Nothing] = Inference(_ => Left(message))
 
-  def newTypeVar: Inference[Type] = newTypeVarname.map(Type.Var)
+  def newTypeVar: Inference[Type] = newTypeVarname.map(Type.Var.apply)
 
   def withLocalAssumption[T](assumption: Assumption)(ft: Inference[T]): Inference[T] =
     for

@@ -146,7 +146,7 @@ object Page:
       canvas.toBlob(blob => {
         val a = dom.document.createElement("a").asInstanceOf[Html.Anchor]
         a.download = "evolution.png"
-        a.href = URL.createObjectURL(blob)
+        a.href = dom.URL.createObjectURL(blob)
         dom.document.body.appendChild(a)
         a.click()
         dom.document.body.removeChild(a)

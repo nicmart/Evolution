@@ -46,7 +46,7 @@ final class RecursiveTyper extends Typer:
         for
           assumption <- getAssumption(name)
           qualifiedScheme = assumption.qualifiedScheme
-          vars = qualifiedScheme.value.vars.map(Type.Var)
+          vars = qualifiedScheme.value.vars.map(Type.Var.apply)
           freshTypeVars <- vars.traverse(_ => newTypeVar)
           newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
         yield Id(name).annotate(newQualifiedType)

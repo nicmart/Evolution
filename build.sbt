@@ -64,7 +64,7 @@ lazy val commonSettings = List(
   scalaVersion := "3.1.0",
   version := "0.1.0-SNAPSHOT",
 //  scalacOptions ++= Seq("-deprecation", "-rewrite", "-indent", "-source 3.0-migration"),
-  scalacOptions ++= Seq("-deprecation"),
+  scalacOptions ++= Seq("-deprecation", "-indent"),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases")
 )
@@ -125,6 +125,9 @@ lazy val jsApp = project
       "react-codemirror2" -> "6.0.0"
     ),
     webpackBundlingMode := BundlingMode.LibraryAndApplication(),
+    // source map generation was failing after scala3 migration
+    // see also https://github.com/scalacenter/scalajs-bundler/issues/385
+    webpackEmitSourceMaps := false,
     scalaJSUseMainModuleInitializer := true,
     scalaJSStage in Global := FastOptStage
   )
