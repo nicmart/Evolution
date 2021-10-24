@@ -3,9 +3,9 @@ package evolution.compiler.term
 import Term._
 import evolution.compiler.term.Term.Literal.LitList
 
-object TermRenamer {
+object TermRenamer:
   def rename(oldName: String, newName: String)(term: Term): Term =
-    term match {
+    term match
       case Id(name) =>
         Id(if name == oldName then newName else name)
       case Let(name, expr, body) =>
@@ -19,8 +19,6 @@ object TermRenamer {
       case Lit(lit) =>
         Lit(lit)
       case _ => term
-    }
 
   def alphaConversion(lambda: Lambda, newName: String): Lambda =
     Lambda(newName, rename(lambda.name, newName)(lambda.body))
-}

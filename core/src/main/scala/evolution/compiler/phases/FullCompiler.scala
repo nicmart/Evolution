@@ -12,7 +12,7 @@ final class FullCompiler(
     compiler: TreeToTermCompiler,
     interpreter: TermInterpreter,
     logger: Logger
-) {
+):
   import logger.log
   private val optimizer = new TermOptimizer(interpreter)
 
@@ -36,11 +36,9 @@ final class FullCompiler(
       _ = log("Done: compilation")
     yield printTime("interpretation", interpreter.interpret(termWithModule))
 
-  private def printTime[T](label: String, t: => T): T = {
+  private def printTime[T](label: String, t: => T): T =
     val start = System.currentTimeMillis()
     val result = t
     val end = System.currentTimeMillis()
     println(s"$label: ${end - start}ms")
     result
-  }
-}

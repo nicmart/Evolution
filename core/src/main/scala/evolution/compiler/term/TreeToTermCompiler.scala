@@ -7,14 +7,14 @@ import evolution.compiler.term.Term._
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
-final class TreeToTermCompiler {
+final class TreeToTermCompiler:
   def compile(tree: TypedTree): Either[String, Term] =
     compileM(tree).run(CompilerState.empty)
 
-  private[term] def compileM(typedTree: TypedTree): Compilation[Term] = {
+  private[term] def compileM(typedTree: TypedTree): Compilation[Term] =
     val AnnotatedTree(Qualified(predicates, _), tree) = typedTree
 
-    tree match {
+    tree match
       case TreeF.Id(name) => appPredicates(Id(name), predicates)
 
       case TreeF.IntLiteral(n) => appPredicates(Lit(LitInt(n)), predicates)
@@ -41,8 +41,6 @@ final class TreeToTermCompiler {
             in <- compileM(in)
           yield Let(varName, exprTermWithPred, in)
         }
-    }
-  }
 
   private def lambdaFromPredicates(predicates: List[Predicate], term: Term): Compilation[Term] =
     pVars(predicates).map(lambda(_, term))
@@ -65,4 +63,3 @@ final class TreeToTermCompiler {
 
   private def app(term: Term, args: List[Term]): Term =
     args.foldLeft(term)(Apply)
-}

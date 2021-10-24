@@ -10,7 +10,7 @@ import evolution.geometry.Point
 import evolution.materialization.Evolution
 
 // TODO optimizations: materialize as soon as possible
-object ConstConfig {
+object ConstConfig:
   val constants: List[Const] = List(
     // Comparison
     Const(
@@ -282,8 +282,6 @@ object ConstConfig {
 
   private def iterateFunc[T](f: T => T, n: Int): T => T =
     if n <= 0 then identity[T]
-    else {
+    else
       val g = iterateFunc(f, n - 1)
       t => f(g(t))
-    }
-}

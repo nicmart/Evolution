@@ -10,7 +10,7 @@ import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
-class TreeToTermCompilerTest extends LanguageSpec {
+class TreeToTermCompilerTest extends LanguageSpec:
 
   "TreeToTermCompiler" - {
     "should compile" - {
@@ -161,12 +161,9 @@ class TreeToTermCompilerTest extends LanguageSpec {
 
   lazy val compiler = new TreeToTermCompiler
 
-  private implicit class AwaitingAnnotationOps(awaitingAnnotation: AwaitingAnnotation[Qualified[Type]]) {
+  private implicit class AwaitingAnnotationOps(awaitingAnnotation: AwaitingAnnotation[Qualified[Type]]):
     def as(tpe: Type, predicates: Predicate*): AnnotatedTree[Qualified[Type]] =
       awaitingAnnotation.as(Qualified(predicates.toList, tpe))
-  }
 
-  private implicit class PredicateOps(predicate: Predicate) {
+  private implicit class PredicateOps(predicate: Predicate):
     def instance: TypeClassInstance = TypingConfig.instance(predicate).unsafeRight
-  }
-}

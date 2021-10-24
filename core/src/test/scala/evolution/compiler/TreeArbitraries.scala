@@ -9,7 +9,7 @@ import evolution.compiler.types.TypeClasses._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-trait TreeArbitraries {
+trait TreeArbitraries:
   def genFunctionArgs: Gen[List[String]] =
     for
       n <- Gen.choose(1, 6)
@@ -61,4 +61,3 @@ trait TreeArbitraries {
 
   def genWhitespace: Gen[String] =
     Gen.listOf(Gen.oneOf(List(" ", "\n", "\r", "\t"))).map(_.mkString(""))
-}

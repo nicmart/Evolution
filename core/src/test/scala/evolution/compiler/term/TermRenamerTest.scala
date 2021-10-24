@@ -4,7 +4,7 @@ import evolution.compiler.LanguageSpec
 import Term._
 import evolution.compiler.term.Term.Literal.LitList
 
-class TermRenamerTest extends LanguageSpec {
+class TermRenamerTest extends LanguageSpec:
   "convert identifiers" in {
     convert("x", "y")(Id("x")) shouldBe Id("y")
   }
@@ -39,4 +39,3 @@ class TermRenamerTest extends LanguageSpec {
   }
 
   lazy val convert: (String, String) => Term => Term = TermRenamer.rename
-}

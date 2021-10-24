@@ -10,7 +10,7 @@ import evolution.compiler.impl.evaluation.MaterializeAddition
 import evolution.compiler.impl.evaluation.MaterializeInverse
 import Ordering.Double.TotalOrdering
 
-class EvolutionSpec extends LanguageSpec {
+class EvolutionSpec extends LanguageSpec:
   "Evolutions" - {
     "derivatives" - {
       "derivative of a constant is 0" in {
@@ -137,4 +137,3 @@ class EvolutionSpec extends LanguageSpec {
       }
     }
   }
-}

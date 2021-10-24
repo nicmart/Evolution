@@ -1,6 +1,6 @@
 package evolution.compiler.stdlib
 
-object StdLib {
+object StdLib:
   val code = """
 
 origin = point(0, 0) in
@@ -293,4 +293,3 @@ export
 
 
 """
-}

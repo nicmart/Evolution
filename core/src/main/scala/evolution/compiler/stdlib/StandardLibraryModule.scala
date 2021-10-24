@@ -11,7 +11,7 @@ import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.NoOpLogger
 
-object StandardLibraryModule {
+object StandardLibraryModule:
   val module: Either[String, Module] = moduleCompiler.compile(code, initialModule)
 
   // TODO: we need to find a solution to this, here we do not have the values yet
@@ -33,4 +33,3 @@ object StandardLibraryModule {
     new ModuleCompiler(CatsParseParser, typer, new TreeToTermCompiler, NoOpLogger)
 
   private lazy val code = StdLib.code
-}

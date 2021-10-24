@@ -5,11 +5,10 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import evolution.compiler.tree.TypedTree
 
-private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T]) {
+private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T]):
   def attempt: Compilation[Either[String, T]] = Compilation(state => Right(run(state)))
-}
 
-private[compiler] object Compilation {
+private[compiler] object Compilation:
   def error(message: String): Compilation[Nothing] = Compilation(_ => Left(message))
   def state: Compilation[CompilerState] = Compilation(Right.apply)
   def localState[T](state: CompilerState)(ft: Compilation[T]): Compilation[T] = Compilation(_ => ft.run(state))
@@ -29,16 +28,13 @@ private[compiler] object Compilation {
 
   implicit val compilationIsMonad: Monad[Compilation] = CompilationMonad
 
-  object CompilationMonad extends Monad[Compilation] {
+  object CompilationMonad extends Monad[Compilation]:
     override def pure[A](x: A): Compilation[A] = Compilation.pure(x)
     override def flatMap[A, B](fa: Compilation[A])(f: A => Compilation[B]): Compilation[B] = Compilation.flatMap(fa, f)
     override def tailRecM[A, B](a: A)(f: A => Compilation[Either[A, B]]): Compilation[B] = Compilation { state =>
-      f(a).run(state) match {
+      f(a).run(state) match
         case Left(error)     => Left(error)
         case Right(Left(a))  => tailRecM(a)(f).run(state)
         case Right(Right(b)) => Right(b)
-      }
     }
-  }
 
-}

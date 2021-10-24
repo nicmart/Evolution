@@ -11,7 +11,7 @@ import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses._
 import evolution.compiler.types._
 
-final class RecursiveTyper extends Typer {
+final class RecursiveTyper extends Typer:
 
   def typeTree(tree: Tree, expectedType: Option[Type], assumptions: Assumptions): Either[String, TypedTree] =
     typeTreeAndSubstitute(tree, expectedType, assumptions).runA(InferenceState.empty)
@@ -29,8 +29,8 @@ final class RecursiveTyper extends Typer {
       finalSubstitution <- substitution
     yield finalSubstitution.substitute(typed)
 
-  private def typeTreeInf(tree: Tree): Inference[TypedTree] = {
-    tree.value match {
+  private def typeTreeInf(tree: Tree): Inference[TypedTree] =
+    tree.value match
       case Bool(b) => Bool(b).typeWithNoPredicates(Type.Bool).pure[Inference]
 
       case DoubleLiteral(n) =>
@@ -97,23 +97,19 @@ final class RecursiveTyper extends Typer {
           //letPredicates = typedIn.annotation.predicates ++ typedExpr.annotation.predicates
           letType = qualified(letPredicates, typedIn.annotation.value)
         yield Let(varName, typedExpr, typedIn).annotate(letType)
-    }
-  }
-}
 
-object RecursiveTyper {
+object RecursiveTyper:
   private def qualified(predicates: List[Predicate], tpe: Type): Qualified[Type] =
     Qualified(predicates.distinct, tpe)
 
-  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] = {
+  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] =
     val vars = (qualified.value.typeVars.map(_.name) ++ qualified.predicatesTypeVars).diff(assumptions.allFreeTypeVars)
     Qualified(qualified.predicates, Scheme(vars.toList, qualified.value))
-  }
 
 //  private def quantify(qualified: Qualified[Type], assumptions: Assumptions): Qualified[Scheme] =
 //    qualified.map(Scheme.apply)
 
-  private def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] = {
+  private def instantiate(qs: Qualified[Scheme], types: List[Type]): Qualified[Type] =
     val assignments =
       qs.value.vars.zip(types).map { case (from, to) => Assignment(from, to) }
     val substitution = Substitution(assignments)
@@ -121,16 +117,13 @@ object RecursiveTyper {
       substitution.substitute(qs.predicates),
       qs.value.instantiate(types)
     )
-  }
 
   def arrowType(inputs: List[Type], result: Type): Type =
     inputs.foldRight(result)(_ =>: _)
 
-  implicit class LeafOps(tree: TreeF[Nothing]) {
+  implicit class LeafOps(tree: TreeF[Nothing]):
     def typed: TreeF[TypedTree] = tree
     def typeWithNoPredicates(tpe: Type): TypedTree =
       typed.annotate(Qualified(tpe))
     def typeWithSinglePredicate(predicate: Predicate, tpe: Type): TypedTree =
       typed.annotate(Qualified(List(predicate), tpe))
-  }
-}

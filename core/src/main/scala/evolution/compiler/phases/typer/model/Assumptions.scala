@@ -1,6 +1,6 @@
 package evolution.compiler.phases.typer.model
 
-final class Assumptions(private val assumptions: Map[String, Assumption]) {
+final class Assumptions(private val assumptions: Map[String, Assumption]):
 
   def all: Map[String, Assumption] = assumptions
 
@@ -15,10 +15,8 @@ final class Assumptions(private val assumptions: Map[String, Assumption]) {
 
   def withAssumption(assumption: Assumption): Assumptions =
     new Assumptions(assumptions.updated(assumption.name, assumption))
-}
 
-object Assumptions {
+object Assumptions:
   val empty: Assumptions = new Assumptions(Map.empty)
   def apply(assumptions: List[Assumption]): Assumptions =
     new Assumptions(assumptions.map(ass => ass.name -> ass).toMap)
-}

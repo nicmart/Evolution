@@ -8,7 +8,7 @@ import evolution.compiler.types.TypeClassInstance._
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 
-object TypingConfig {
+object TypingConfig:
   val constantsModule: Module = Module(ConstConfig.constants.map { const =>
     Definition(const.name, Some(Term.Value(const.value)), const.tpe)
   })
@@ -115,7 +115,7 @@ object TypingConfig {
       .toRight(s"No comparable instance found for $tpe1")
 
   def instance(predicate: Predicate): Either[String, TypeClassInstance] =
-    predicate match {
+    predicate match
       case Predicate("Num", List(tpe))               => numeric(tpe).map(NumericInst.apply)
       case Predicate("Add", List(tpe1, tpe2, tpe3))  => additive(tpe1, tpe2, tpe3).map(AdditiveInst.apply)
       case Predicate("Mult", List(tpe1, tpe2, tpe3)) => multiplicative(tpe1, tpe2, tpe3).map(MultiplicativeInst.apply)
@@ -123,5 +123,3 @@ object TypingConfig {
       case Predicate("Eq", List(tpe))                => equable(tpe).map(EquableInst.apply)
       case Predicate("Comp", List(tpe))              => comparable(tpe).map(ComparableInst.apply)
       case _                                         => Left(s"No instance found for predicate $predicate")
-    }
-}

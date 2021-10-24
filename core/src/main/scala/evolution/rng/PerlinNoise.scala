@@ -1,7 +1,7 @@
 package evolution.rng
 
-class PerlinNoise(permutation256: Array[Int]) {
-  def noise(x: Double, y: Double): Double = {
+class PerlinNoise(permutation256: Array[Int]):
+  def noise(x: Double, y: Double): Double =
     val xi = Math.floor(x).toInt & 255
     val yi = Math.floor(y).toInt & 255
     val g1 = p(p(xi) + yi)
@@ -20,10 +20,9 @@ class PerlinNoise(permutation256: Array[Int]) {
     val x2Inter = lerp(u, d3, d4)
     val yInter = lerp(v, x1Inter, x2Inter)
     yInter
-  }
 
   // See https://flafla2.github.io/2014/08/09/perlinnoise.html
-  def octaveNoise(octaves: Int, persistence: Double, x: Double, y: Double): Double = {
+  def octaveNoise(octaves: Int, persistence: Double, x: Double, y: Double): Double =
     var total: Double = 0
     var frequency = 1
     var amplitude: Double = 1
@@ -36,7 +35,6 @@ class PerlinNoise(permutation256: Array[Int]) {
     }
 
     total / maxValue
-  }
 
   private val p = new Array[Int](512)
 
@@ -52,4 +50,3 @@ class PerlinNoise(permutation256: Array[Int]) {
 
   private def grad(hash: Int, x: Double, y: Double): Double =
     x * Math.cos(2 * Math.PI * hash / 256) + y * Math.sin(2 * Math.PI * hash / 256)
-}

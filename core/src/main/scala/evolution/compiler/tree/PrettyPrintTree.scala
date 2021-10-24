@@ -2,7 +2,7 @@ package evolution.compiler.tree
 
 import TreeF._
 
-object PrettyPrintTree {
+object PrettyPrintTree:
 
   private val maxChildrenLegnth = 100
 
@@ -21,20 +21,17 @@ object PrettyPrintTree {
         case Lst(ts)            => ppFunc("Lst", ts, n)
       })
 
-  private def ppLambda(id: String, expr: Int => String, n: Int): String = {
+  private def ppLambda(id: String, expr: Int => String, n: Int): String =
     val childrenLength = expr(0).length
     if childrenLength < maxChildrenLegnth then s"$id -> { ${expr(0)} }"
     else s"$id -> {\n${expr(n + 1)}\n${indent(n)}}"
-  }
 
-  private def ppFunc(name: String, children: List[Int => String], n: Int): String = {
+  private def ppFunc(name: String, children: List[Int => String], n: Int): String =
     // val childrenInOneLine = children.map(child => child(0)).mkString(", ").toString
     // Getting the size of childrenInOneLine makes fastOpt hang
 //    if (childrenInOneLine.size < maxChildrenLegnth) childrenInOneLine
 //    else children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
     children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
     //children.map(child => child(0)).mkString(", ")
-  }
 
   private def indent(n: Int): String = "  " * n
-}

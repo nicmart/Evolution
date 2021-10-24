@@ -8,11 +8,11 @@ import evolution.compiler.term.CaptureAvoidingRenamer.Renamed
   * Transform a term in order to avoid capture-related problems in substitutions.
   * See for example https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
   */
-class CaptureAvoidingRenamer {
+class CaptureAvoidingRenamer:
   import CaptureAvoidingRenamer._, CaptureAvoidingRenamer.Renamed._
   def rename(term: Term, vars: Set[String] = Set.empty): Term = renameM(term).run(vars)
 
-  private def renameM(term: Term): Renamed[Term] = term match {
+  private def renameM(term: Term): Renamed[Term] = term match
     case Lit(LitList(ts)) => traverse(ts)(renameM).map(ts => Lit(LitList(ts)))
 
     case Let(name, expr, body) =>
@@ -37,22 +37,19 @@ class CaptureAvoidingRenamer {
       yield Apply(f, x)
 
     case _ => pure(term)
-  }
-}
 
-object CaptureAvoidingRenamer {
+object CaptureAvoidingRenamer:
   type VarCounter = Int
 
-  private case class Renamed[T](run: Set[String] => T) {
+  private case class Renamed[T](run: Set[String] => T):
     def flatMap[U](f: T => Renamed[U]): Renamed[U] =
       Renamed { vars =>
         f(run(vars)).run(vars)
       }
 
     def map[U](f: T => U): Renamed[U] = flatMap(f andThen Renamed.pure)
-  }
 
-  private object Renamed {
+  private object Renamed:
     def pure[T](t: T): Renamed[T] = Renamed(_ => t)
 
     def freshVar(name: String): Renamed[String] =
@@ -70,5 +67,3 @@ object CaptureAvoidingRenamer {
       ts.foldRight[Renamed[List[U]]](pure(Nil)) { (t, renamed) =>
         renamed.flatMap(tail => f(t).map(u => u :: tail))
       }
-  }
-}

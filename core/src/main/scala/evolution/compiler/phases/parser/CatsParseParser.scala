@@ -13,15 +13,14 @@ import evolution.compiler.tree.Tree._
 
 import scala.annotation.tailrec
 
-object CatsParseParser extends Parser {
-  def parse(astString: String): Either[ParserFailure, Tree] = {
+object CatsParseParser extends Parser:
+  def parse(astString: String): Either[ParserFailure, Tree] =
     program
       .parseAll(astString)
       .leftMap(error => {
         error.expected.toList.foreach(println(_))
         new ParserFailure(error.failedAtOffset, astString.split("\n").toList)
       })
-  }
 
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
 
@@ -31,13 +30,12 @@ object CatsParseParser extends Parser {
   private lazy val expression: P[Tree] =
     P.defer(NonOperandExpressions.nonOperand | precedenceGroups.operand)
 
-  private object NonOperandExpressions {
-    val nonOperand: P[Tree] = {
+  private object NonOperandExpressions:
+    val nonOperand: P[Tree] =
       // Note: a previous solution based on flatMap caused undesired back-tracking
       (identifier.w.soft ~ (lambdaTail | letTail | sampleTail | argsTail)).map {
         case (id, f) => f(id)
       }
-    }
 
     private lazy val lambdaTail: P[String => Tree] = (P.string("->").w *> expression).map { expr =>
       Lambda(_, expr)
@@ -60,7 +58,7 @@ object CatsParseParser extends Parser {
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
     // Parse "(a, b, c) = body in expr"
-    private lazy val argsTail: P[String => Tree] = {
+    private lazy val argsTail: P[String => Tree] =
       val args = P.char('(').w *> nonEmptyCsv(identifier) <* P.char(')')
       val equal = P.char('=').void ~ not(P.char('='))
       val in = P.string("in").void
@@ -69,8 +67,6 @@ object CatsParseParser extends Parser {
       p.map {
         case ((args, value), body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
       }
-    }
-  }
 
   private lazy val allPrecedenceGroups = List(
     PrecedenceGroup(
@@ -115,7 +111,7 @@ object CatsParseParser extends Parser {
     allPrecedenceGroups
   )
 
-  private lazy val factor: P[Tree] = {
+  private lazy val factor: P[Tree] =
     // TODO: *> and <* with whitespaces
     lazy val prefix: P[Tree] =
       (P.char('(').void.w *> expression.w <* P.char(')').void) | doubleLit | boolean | unaryPrefixOp | variable | list
@@ -131,18 +127,16 @@ object CatsParseParser extends Parser {
       .void).?).rep0).map {
       case (tree, selections) => dotSelection(tree, selections)
     }
-  }
 
   @tailrec
   private def dotSelection(receiver: Tree, selections: List[(Tree, Option[NonEmptyList[Tree]])]): Tree =
-    selections match {
+    selections match
       case Nil => receiver
       case (firstMethod, maybeArgs) :: nextSelections =>
         dotSelection(
           App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))),
           nextSelections
         )
-    }
 
   private lazy val atomicOperand: P[Tree] =
     P.defer(specialSyntax | factor)
@@ -186,7 +180,7 @@ object CatsParseParser extends Parser {
 
   private lazy val specialSyntax: P[Tree] = special.zip | special.product | special.uniformChoice
 
-  private object special {
+  private object special:
 
     lazy val zip: P[Tree] =
       (P.ignoreCase("zip").void.w *> P
@@ -210,9 +204,8 @@ object CatsParseParser extends Parser {
 
     private lazy val comprehensionBinding: P[(String, Tree)] =
       identifier.w ~ (P.string("<-").w *> expression)
-  }
 
-  private object numbers {
+  private object numbers:
 
     lazy val digit: P[Unit] =
       P.charIn('0' to '9').void
@@ -228,11 +221,8 @@ object CatsParseParser extends Parser {
       (P.char('-').?.soft.with1 ~ (floatDigits.backtrack | digit.rep(1)) ~ exp.?).string.map(_.toDouble)
 
     lazy val exp: P[Unit] = (P.charIn('E', 'e') ~ P.charIn('+', '-').? ~ digit.rep).void
-  }
-}
 
-private[parser] object CatsParserConfig {
+private[parser] object CatsParserConfig:
   val comment: P[Unit] = (P.string("//") ~ P.charWhere(_ != '\n').rep0 ~ P.char('\n').?).void
   val spaces: P[Unit] = P.charsWhile(_.isWhitespace).void
   val whitespaces: P0[Unit] = (comment | spaces).rep0.void
-}

@@ -12,15 +12,14 @@ import evolution.compiler.term.TermOptimizer._
 
 import scala.annotation.tailrec
 
-final class TermOptimizer(interpreter: TermInterpreter) {
+final class TermOptimizer(interpreter: TermInterpreter):
   private val renamer = new CaptureAvoidingRenamer
-  def optimize(term: Term, definitions: Map[String, Term]): Term = {
+  def optimize(term: Term, definitions: Map[String, Term]): Term =
     val renamedTerm = renamer.rename(term) // Is this needed?
     optimizeM(renamedTerm).run(Env(definitions))
-  }
 
-  private def optimizeM(term: Term): Optimized[Term] = {
-    term match {
+  private def optimizeM(term: Term): Optimized[Term] =
+    term match
       case Lit(LitList(ts)) =>
         for
           optimizedTs <- ts.traverse(optimizeM)
@@ -57,8 +56,6 @@ final class TermOptimizer(interpreter: TermInterpreter) {
           isNameAlreadyInUse <- hasBinding(name)
           optimized <- if isNameAlreadyInUse then optimizeM(renamer.rename(term, Set(name))) else optimizeLambda(lambda)
         yield optimized
-    }
-  }
 
   private def optimizeLambda(lambda: Term.Lambda): Optimized[Term] =
     for
@@ -66,38 +63,33 @@ final class TermOptimizer(interpreter: TermInterpreter) {
     yield Lambda(lambda.name, body)
 
   private def optimizeLet(term: Let): Term =
-    term.body match {
+    term.body match
       case Value(v) => Value(v)
       case _        => term
-    }
 
   private def optimizeApplyLambda(f: Term, x: Term): Optimized[Term] =
-    f match {
+    f match
       case Lambda(name, body) => // Do we need to do some renaming here as well?
         for
           body <- bindLocal(name, x)(optimizeM(body))
         yield body
       case _ => Apply(f, x).pure[Optimized].widen
-    }
 
   private def optimizeApplyValues(term: Term): Optimized[Term] =
-    term match {
+    term match
       case Apply(Value(f), Value(x)) =>
         Value(f.asInstanceOf[Any => Any](x)).pure[Optimized].widen
       case _ =>
         term.pure[Optimized]
-    }
 
   private def inline(id: String, term: Term): Term =
-    term match {
+    term match
       case Value(_) => term
       // Without this inlining some drawings, like oscillator drawn on brownians are very slow
       case _ => term
-    }
-}
 
-object TermOptimizer {
-  final case class Env(bindings: Map[String, Term]) {
+object TermOptimizer:
+  final case class Env(bindings: Map[String, Term]):
     def bind(name: String, term: Term): Env =
       Env(bindings.updated(name, term))
 
@@ -107,11 +99,9 @@ object TermOptimizer {
       else name
 
     def unbind(name: String): Env = Env(bindings.removed(name))
-  }
 
-  object Env {
+  object Env:
     val consts: Env = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)): _*))
-  }
 
   def bindLocal[T](name: String, term: Term)(ft: => Optimized[T]): Optimized[T] =
     Reader.local[T, Env](_.bind(name, term))(ft)
@@ -131,4 +121,3 @@ object TermOptimizer {
   val envVars: Optimized[Set[String]] = Reader(_.bindings.keySet)
 
   type Optimized[T] = Reader[Env, T]
-}

@@ -2,7 +2,7 @@ package evolution.compiler.tree
 
 import cats.data.NonEmptyList
 
-abstract class TreeBuilder[T, F[_]] {
+abstract class TreeBuilder[T, F[_]]:
   def toF: TreeF[T] => F[T]
 
   final def Id(name: String, primitive: Boolean = false): F[T] = toF(TreeF.Id(name))
@@ -16,7 +16,5 @@ abstract class TreeBuilder[T, F[_]] {
 
   private def App2(f: T, args: NonEmptyList[T]): F[T] = App(f, args)
 
-  object App {
+  object App:
     def of(f: T, a: T, others: T*): F[T] = App2(f, NonEmptyList(a, others.toList))
-  }
-}

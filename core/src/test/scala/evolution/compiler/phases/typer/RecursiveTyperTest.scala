@@ -8,7 +8,7 @@ import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
-class RecursiveTyperTest extends LanguageSpec {
+class RecursiveTyperTest extends LanguageSpec:
 
   "RecursiveTyperTest" - {
     "expressions" - {
@@ -285,4 +285,3 @@ class RecursiveTyperTest extends LanguageSpec {
     }
 
   lazy val typer = new RecursiveTyper
-}

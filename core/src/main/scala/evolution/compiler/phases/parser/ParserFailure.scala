@@ -1,7 +1,7 @@
 package evolution.compiler.phases.parser
 
 // TODO Too OOP 😂
-class ParserFailure(index: Int, inputLines: List[String]) extends Throwable {
+class ParserFailure(index: Int, inputLines: List[String]) extends Throwable:
   private val lineAndColumn = findLineAndColumn(inputLines, index)
   val lineNumber: Int = Math.min(lineAndColumn._1, inputLines.length - 1)
   private val line: String = inputLines(lineNumber)
@@ -17,11 +17,9 @@ class ParserFailure(index: Int, inputLines: List[String]) extends Throwable {
   override def getMessage: String = message
 
   private def findLineAndColumn(lines: List[String], index: Int): (Int, Int) =
-    lines match {
+    lines match
       case head :: _ if index <= head.length => (0, index)
       case head :: tail =>
         val (l, c) = findLineAndColumn(tail, index - head.length - 1)
         (l + 1, c)
       case _ => (0, 0)
-    }
-}

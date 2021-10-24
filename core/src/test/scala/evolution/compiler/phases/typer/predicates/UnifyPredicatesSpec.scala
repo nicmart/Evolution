@@ -9,7 +9,7 @@ import evolution.logging.NoOpLogger
 
 import scala.util.Random
 
-class UnifyPredicatesSpec extends LanguageSpec {
+class UnifyPredicatesSpec extends LanguageSpec:
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
@@ -143,4 +143,3 @@ class UnifyPredicatesSpec extends LanguageSpec {
   }
 
   lazy val predicatesUnifier = new UnifyPredicates(NoOpLogger)
-}

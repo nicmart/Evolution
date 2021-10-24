@@ -10,7 +10,7 @@ import evolution.geometry.Point
 
 import scala.util.Try
 
-class TermInterpreterTest extends LanguageSpec {
+class TermInterpreterTest extends LanguageSpec:
   "literals" - {
     "integers" in {
       val term = Lit(LitInt(123))
@@ -174,4 +174,3 @@ class TermInterpreterTest extends LanguageSpec {
     TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
 
   lazy val interpreter = OptimizedTermInterpreter
-}

@@ -6,7 +6,7 @@ import evolution.compiler.tree.{SpecialSyntax, Tree}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 
-class CatsParseParserSpec extends LanguageSpec {
+class CatsParseParserSpec extends LanguageSpec:
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {
@@ -546,4 +546,3 @@ class CatsParseParserSpec extends LanguageSpec {
   }
 
   def unsafeParse(string: String): Tree = CatsParseParser.parse(string).toTry.get
-}

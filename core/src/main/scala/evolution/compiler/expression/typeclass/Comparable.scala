@@ -3,7 +3,6 @@ import evolution.compiler.types.Type
 
 sealed abstract class Comparable[T](val t: Type)
 
-object Comparable {
+object Comparable:
   case object Int extends Comparable[Int](Type.Integer)
   case object Double extends Comparable[Double](Type.Double)
-}

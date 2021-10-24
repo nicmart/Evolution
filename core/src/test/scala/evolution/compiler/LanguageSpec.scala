@@ -13,8 +13,8 @@ trait LanguageSpec
     with Matchers
     with ScalaCheckDrivenPropertyChecks
     with TreeArbitraries
-    with TypeCheckedTripleEquals {
-  implicit class EitherOps[T](t: Either[String, T]) {
+    with TypeCheckedTripleEquals:
+  implicit class EitherOps[T](t: Either[String, T]):
     def unsafeRight: T =
       t.fold(
         s => throw new Exception(s),
@@ -26,11 +26,9 @@ trait LanguageSpec
         identity,
         s => throw new Exception(s"Getting a Left on a Right($s)")
       )
-  }
 
-  implicit class ShouldEqOps[A: Equality](left: A) {
+  implicit class ShouldEqOps[A: Equality](left: A):
     def shouldEq(right: A): Assertion = left shouldEqual right
-  }
 
   implicit val pprinterPrettifier: Prettifier = new Prettifier {
     def apply(o: Any): String = PPrinter.BlackWhite.apply(o, height = Int.MaxValue).toString()
@@ -38,4 +36,3 @@ trait LanguageSpec
 
   def lets(terms: (String, Term)*)(in: Term): Term =
     terms.foldRight(in) { case ((name, definition), term) => Let(name, definition, term) }
-}

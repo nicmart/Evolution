@@ -7,7 +7,7 @@ import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 
-class TermOptimizerTest extends LanguageSpec {
+class TermOptimizerTest extends LanguageSpec:
   "TermOptimizer should" - {
     "optimize application of literals" - {
       "integers" in {
@@ -140,4 +140,3 @@ class TermOptimizerTest extends LanguageSpec {
   lazy val numDouble: TypeClassInstance = TypingConfig.instance(Predicate("Num", List(Type.Double))).unsafeRight
   lazy val addDouble: TypeClassInstance =
     TypingConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight
-}

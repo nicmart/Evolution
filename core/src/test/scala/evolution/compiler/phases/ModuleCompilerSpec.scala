@@ -11,7 +11,7 @@ import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.NoOpLogger
 
-class ModuleCompilerSpec extends LanguageSpec {
+class ModuleCompilerSpec extends LanguageSpec:
   "Module compiler" - {
     "should extract definitions" in {
       val typer = new RecursiveTyper
@@ -27,4 +27,3 @@ class ModuleCompilerSpec extends LanguageSpec {
   }
 
   private lazy val initialModule = TypingConfig.constantsModule
-}

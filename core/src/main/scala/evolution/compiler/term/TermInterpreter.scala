@@ -7,14 +7,13 @@ import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
 import evolution.compiler.types.TypeClassInstance.NumericInst
 
-trait TermInterpreter {
+trait TermInterpreter:
   def interpret(term: Term): Any
-}
 
-final class RegisterBasedInterpreter extends TermInterpreter {
+final class RegisterBasedInterpreter extends TermInterpreter:
   def interpret(term: Term): Any = interpretRec(constants)(term)
 
-  def interpretRec(register: Map[String, Any])(term: Term): Any = term match {
+  def interpretRec(register: Map[String, Any])(term: Term): Any = term match
     case Lit(LitInt(n))      => (num: NumericInst[Any]) => MaterializeNumeric(num.num)(n)
     case Lit(LitBool(b))     => b
     case Lit(LitDouble(d))   => d
@@ -35,12 +34,9 @@ final class RegisterBasedInterpreter extends TermInterpreter {
     case Inst(inst) => inst
 
     case Value(value) => value
-  }
-}
 
-object RegisterBasedInterpreter {
+object RegisterBasedInterpreter:
   def fresh: RegisterBasedInterpreter =
     new RegisterBasedInterpreter
 
   val constants: Map[String, Any] = ConstConfig.constants.map(c => c.name -> c.value).toMap
-}

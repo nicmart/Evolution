@@ -5,9 +5,9 @@ import evolution.compiler.expression.typeclass.Multiplicative
 import evolution.compiler.expression.typeclass.Multiplicative._
 import evolution.geometry.Point
 
-object MaterializeMultiplication {
+object MaterializeMultiplication:
   def apply[A, B, C](multiplicative: Multiplicative[A, B, C]): (A, B) => C =
-    multiplicative match {
+    multiplicative match
       case IntIntInt          => (a: Int, b: Int) => a * b
       case DoubleDoubleDouble => (a: Double, b: Double) => a * b
       case DoublePointPoint   => (a: Double, b: Point) => b.mult(a)
@@ -26,5 +26,3 @@ object MaterializeMultiplication {
       case LiftBoth(m) =>
         val f = MaterializeMultiplication(m.asInstanceOf[Multiplicative[Any, Any, Any]])
         (a, b) => Evolution.zipWithUncurried[Any, Any, Any](f)(a, b).asInstanceOf[C]
-    }
-}

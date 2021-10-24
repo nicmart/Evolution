@@ -12,7 +12,7 @@ import evolution.compiler.types.TypeClasses.Qualified
 import evolution.logging.Logger
 import scala.annotation.tailrec
 
-final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger) {
+final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger):
   import logger.log
 
   private val optimizer: TermOptimizer = new TermOptimizer(new RegisterBasedInterpreter)
@@ -41,7 +41,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
   // 1. Find assumptions
   @tailrec
   private def extractAssumptions(typedTree: TypedTree, currentAssumptions: Assumptions): Assumptions =
-    typedTree.tree match {
+    typedTree.tree match
       case Let(varName, expr, in) =>
         val qualifiedScheme = Qualified(expr.annotation.predicates, Scheme(expr.annotation.value))
         extractAssumptions(
@@ -49,7 +49,6 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
           currentAssumptions.withAssumption(model.Assumption(varName, qualifiedScheme))
         )
       case _ => currentAssumptions
-    }
 
   // 2. Extract definitions
   @tailrec
@@ -58,7 +57,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       term: Term,
       currentDefinitions: Vector[Definition]
   ): Vector[Definition] =
-    term match {
+    term match
       case Term.Let(varName, expr, in) =>
         val definition = Definition(varName, Some(expr), assumptions.get(varName).get.qualifiedScheme)
         extractDefs(
@@ -67,7 +66,6 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
           currentDefinitions.appended(definition)
         )
       case _ => currentDefinitions
-    }
 
   private def optimizeDefinitions(definitions: Vector[Definition]): Vector[Definition] =
     optimizeDefinitionsRec(definitions, Vector.empty)
@@ -77,7 +75,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
       toOptimize: Vector[Definition],
       optimized: Vector[Definition]
   ): Vector[Definition] =
-    toOptimize.headOption match {
+    toOptimize.headOption match
       case Some(definition) =>
         val defMap: Map[String, Term] =
           Map.from(optimized.flatMap(definition => definition.term.map(term => definition.name -> term)))
@@ -85,6 +83,4 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
         val optimizedDef = Definition(definition.name, optimizedTerm, definition.tpe)
         optimizeDefinitionsRec(toOptimize.drop(1), optimized.appended(optimizedDef))
       case None => optimized
-    }
 
-}

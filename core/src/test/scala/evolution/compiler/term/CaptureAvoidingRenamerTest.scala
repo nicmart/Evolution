@@ -4,7 +4,7 @@ import evolution.compiler.LanguageSpec
 import evolution.compiler.term.Term.Literal.{LitBool, LitDouble, LitInt}
 import evolution.compiler.term.Term.{Lambda, _}
 
-class CaptureAvoidingRenamerTest extends LanguageSpec {
+class CaptureAvoidingRenamerTest extends LanguageSpec:
   "leave simple literals unaltered" in {
     rename(Lit(LitInt(1))) shouldBe Lit(LitInt(1))
     rename(Lit(LitDouble(1))) shouldBe Lit(LitDouble(1))
@@ -51,4 +51,3 @@ class CaptureAvoidingRenamerTest extends LanguageSpec {
   }
 
   def rename(term: Term): Term = (new CaptureAvoidingRenamer).rename(term)
-}

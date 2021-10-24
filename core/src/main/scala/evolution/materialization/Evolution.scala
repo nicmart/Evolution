@@ -6,18 +6,16 @@ import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-sealed trait Evolution[+T] {
+sealed trait Evolution[+T]:
   def run: Iterator[T]
-}
 
-object Evolution {
+object Evolution:
 
   private object Random extends Random
 
-  def runWithSeed[T](seed: Long, evolution: Evolution[T]): Iterator[T] = {
+  def runWithSeed[T](seed: Long, evolution: Evolution[T]): Iterator[T] =
     Evolution.setSeed(seed)
     evolution.run
-  }
 
   def setSeed(long: Long): Unit = Random.setSeed(long)
 
@@ -53,14 +51,13 @@ object Evolution {
     }
 
   def range(start: Double, end: Double, step: Double): Evolution[Double] =
-    step match {
+    step match
       case 0 => constant(start)
       case _ =>
         val length = (1 + (end - start) / step).toInt
         new Evolution[Double] {
           def run: Iterator[Double] = Iterator.tabulate(length)(n => start + n * step)
         }
-    }
 
   def grouped[T](evo: Evolution[T], n: Int): Evolution[List[T]] =
     new Evolution[List[T]] {
@@ -86,15 +83,14 @@ object Evolution {
 
   def uniformFrom[T](n: Int, ts: Evolution[T]): Evolution[T] =
     new Evolution[T] {
-      def run: Iterator[T] = {
+      def run: Iterator[T] =
         val materializedTs = ts.run.take(n).toList.toIndexedSeq
         if materializedTs.nonEmpty then Iterator.continually(materializedTs(Random.nextInt(materializedTs.size)))
         else Iterator.empty
-      }
     }
 
   def uniformDiscrete(from: Double, to: Double, step: Double): Evolution[Double] =
-    Math.signum(step * (to - from)) match {
+    Math.signum(step * (to - from)) match
       case 0  => constant(from)
       case -1 => empty
       case 1 =>
@@ -102,7 +98,6 @@ object Evolution {
           private val size = (Math.abs((to - from) / step) + 1).toInt
           def run: Iterator[Double] = Iterator.continually(from + Random.nextInt(size) * step)
         }
-    }
 
   def normal(mu: Double, gamma: Double): Evolution[Double] = new Evolution[Double] {
     def run: Iterator[Double] = Iterator.continually(Random.nextGaussian() * gamma + mu)
@@ -162,45 +157,37 @@ object Evolution {
         private var cachedHasNext = false
         private var cachedHasNextValue = false
 
-        override def hasNext: Boolean = {
+        override def hasNext: Boolean =
           if cachedHasNext then cachedHasNextValue
-          else {
-            cachedHasNextValue = if outerIterationEnded then {
+          else
+            cachedHasNextValue = if outerIterationEnded then
               if iterators(currentIndex).hasNext then true
-              else {
+              else
                 iterators.remove(currentIndex)
                 if iterators.isEmpty then false
-                else {
+                else
                   currentIndex = currentIndex % iterators.size
                   hasNext
-                }
-              }
 
-            } else {
-              if iteratorOfEvolutions.hasNext then {
+            else
+              if iteratorOfEvolutions.hasNext then
                 iterators.append(iteratorOfEvolutions.next().run)
                 iterators.last.hasNext
-              } else {
+              else
                 outerIterationEnded = true
                 iterators.head.hasNext
-              }
 
-            }
             cachedHasNext = true
             cachedHasNextValue
-          }
-        }
 
-        override def next(): A = {
+        override def next(): A =
           cachedHasNext = false
-          if outerIterationEnded then {
+          if outerIterationEnded then
             val a = iterators(currentIndex).next()
             currentIndex = (currentIndex + 1) % iterators.size
             a
-          } else {
+          else
             iterators.last.next()
-          }
-        }
       }
 
   }
@@ -212,37 +199,33 @@ object Evolution {
         private var _hasNext = true
         private var _next = start
         def hasNext: Boolean = _hasNext
-        def next(): A = {
+        def next(): A =
           val current = _next
-          if speedIterator.hasNext then {
+          if speedIterator.hasNext then
             _hasNext = true
             _next = add(current, speedIterator.next())
-          } else {
+          else
             _hasNext = false
-          }
 
           current
-        }
       }
     }
 
   def slidingMap[A, B](as: Evolution[A], f: A => A => B): Evolution[B] =
     new Evolution[B] {
-      override def run: Iterator[B] = {
+      override def run: Iterator[B] =
         val derivingIterator: Iterator[A] = as.run
-        if derivingIterator.hasNext then {
+        if derivingIterator.hasNext then
           new AbstractIterator[B] {
             var previous: A = derivingIterator.next()
             override def hasNext: Boolean = derivingIterator.hasNext
-            override def next(): B = {
+            override def next(): B =
               val current = derivingIterator.next()
               val b = f(previous)(current)
               previous = current
               b
-            }
           }
-        } else Iterator.empty
-      }
+        else Iterator.empty
     }
 
   def iterate[A](f: A => A, start: A): Evolution[A] =
@@ -256,12 +239,11 @@ object Evolution {
         private var _prev = a0
         private var _current = a1
         def hasNext: Boolean = true
-        def next(): A = {
+        def next(): A =
           val current = f(_prev)(_current)
           _prev = _current
           _current = current
           current
-        }
       }
     }
 
@@ -277,10 +259,9 @@ object Evolution {
         private val fIterator = f.run
         private var current = start
         def hasNext: Boolean = fIterator.hasNext
-        def next(): A = {
+        def next(): A =
           current = fIterator.next()(current)
           current
-        }
       }
     }
 
@@ -291,12 +272,11 @@ object Evolution {
         private var currentA0 = a0
         private var currentA1 = a1
         def hasNext: Boolean = fIterator.hasNext
-        def next(): A = {
+        def next(): A =
           val current = fIterator.next()(currentA0)(currentA1)
           currentA0 = currentA1
           currentA1 = current
           current
-        }
       }
     }
 
@@ -311,28 +291,25 @@ object Evolution {
         private var _nextA = a0
         private var _nextV = v0
         def hasNext: Boolean = _hasNext
-        def next(): A = {
+        def next(): A =
           val currentA = _nextA
           val currentV = _nextV
-          if accIterator.hasNext then {
+          if accIterator.hasNext then
             _hasNext = true
             _nextV = add(currentV, accIterator.next()(currentA)(currentV))
             _nextA = add(currentA, _nextV)
-          } else {
+          else
             _hasNext = false
-          }
 
           currentA
-        }
       }
     }
 
   def withFirst1[A, B](ts: Evolution[A], f: A => Evolution[B]): Evolution[B] = new Evolution[B] {
     override def run: Iterator[B] =
-      ts.run.take(1).toList match {
+      ts.run.take(1).toList match
         case a1 :: Nil => f(a1).run
         case _         => Iterator.empty
-      }
   }
 
   def connect[A](first: Evolution[A], f: A => Evolution[A]): Evolution[A] = new Evolution[A] {
@@ -343,45 +320,39 @@ object Evolution {
       var last: A = _
       var currentIterator = firstIterator
       def hasNext: Boolean = currentIterator.hasNext || hasNextWhenCurrentIteratorIsEmpty()
-      def next(): A = {
+      def next(): A =
         last = currentIterator.next()
         isLastDefined = true
         last
-      }
 
-      private def hasNextWhenCurrentIteratorIsEmpty(): Boolean = {
-        if currentIteratorIsFirst then {
-          if isLastDefined then {
+      private def hasNextWhenCurrentIteratorIsEmpty(): Boolean =
+        if currentIteratorIsFirst then
+          if isLastDefined then
             currentIterator = f(last).run
             currentIteratorIsFirst = false
             currentIterator.hasNext
-          } else false
-        } else false
-      }
+          else false
+        else false
     }
   }
 
   def parametrizations[T](ts: Evolution[T], size: Int): Evolution[Double => T] =
     new Evolution[Double => T] {
-      override def run: Iterator[Double => T] = {
+      override def run: Iterator[Double => T] =
         ts.run.grouped(size).map { materialized =>
           val actualSize = materialized.size
           t => materialized((smoothModule(t, actualSize)).toInt)
         }
-      }
     }
 
-  private def positiveModule(n: Double, b: Int): Double = {
+  private def positiveModule(n: Double, b: Int): Double =
     if n >= 0 then n % b else (n % b) + b
-  }
 
-  private def smoothModule(n: Double, b: Int): Double = {
-    if n >= 0 then {
+  private def smoothModule(n: Double, b: Int): Double =
+    if n >= 0 then
       if ((n / b).toInt % 2 == 0) then positiveModule(n, b) else b - positiveModule(n, b) - 1
-    } else {
+    else
       if ((n / b).toInt % 2 == 1) then positiveModule(n, b) else b - positiveModule(n, b) - 1
-    }
-  }
 
   def shuffle[T](ts: List[T]): Evolution[List[T]] = new Evolution[List[T]] {
     def run: Iterator[List[T]] = Iterator.continually(Random.shuffle(ts))
@@ -406,4 +377,3 @@ object Evolution {
         octaves => presistence => point => perlinNoise.octaveNoise(octaves, presistence, point.x, point.y)
       }
     )
-}

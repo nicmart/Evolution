@@ -8,7 +8,7 @@ import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
 import Ordering.Double.TotalOrdering
-class ConstantsInterpreterTest extends LanguageSpec {
+class ConstantsInterpreterTest extends LanguageSpec:
   "comparisons" - {
     "greaterthan" in {
       val const = interpret(Id("greaterthan")).asFunc3
@@ -505,11 +505,9 @@ class ConstantsInterpreterTest extends LanguageSpec {
   def sum1(n: Int): Int => Int = x => x + n
   def sum2(n: Int): Int => Int => Int = x => y => x + y + n
 
-  private implicit class CastOps(any: Any) {
+  private implicit class CastOps(any: Any):
     def asFunc1: Any => Any = any.asInstanceOf[Any => Any]
     def asFunc2: Any => Any => Any = any.asInstanceOf[Any => Any => Any]
     def asFunc3: Any => Any => Any => Any = any.asInstanceOf[Any => Any => Any => Any]
     def asFunc4: Any => Any => Any => Any => Any = any.asInstanceOf[Any => Any => Any => Any => Any]
     def asEvo: Evolution[Any] = any.asInstanceOf[Evolution[Any]]
-  }
-}

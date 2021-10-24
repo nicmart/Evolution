@@ -3,11 +3,10 @@ import evolution.compiler.expression.typeclass._
 import evolution.compiler.types.TypeClasses.Predicate
 
 // Just a union types of typeclasses
-sealed abstract class TypeClassInstance(val id: String, val types: List[Type]) {
+sealed abstract class TypeClassInstance(val id: String, val types: List[Type]):
   def predicate: Predicate = Predicate(id, types)
-}
 
-object TypeClassInstance {
+object TypeClassInstance:
   case class AdditiveInst[A, B, C](add: Additive[A, B, C])
       extends TypeClassInstance("Add", List(add.t1, add.t2, add.t3))
 
@@ -21,11 +20,10 @@ object TypeClassInstance {
   case class EquableInst[A](eq: Equable[A]) extends TypeClassInstance("Eq", List(eq.t))
 
   case class ComparableInst[A](cmp: Comparable[A]) extends TypeClassInstance("Comp", List(cmp.t))
-}
 
-object TypeClasses {
+object TypeClasses:
 
-  case class Predicate(id: String, types: List[Type]) {
+  case class Predicate(id: String, types: List[Type]):
     override def toString: String = s"$id(${types.mkString(", ")})"
     def typeVars: Set[String] =
       types.collect {
@@ -33,28 +31,22 @@ object TypeClasses {
       }.toSet
 
     def hasTypeVars: Boolean = typeVars.nonEmpty
-  }
-  case class Qualified[+T](predicates: List[Predicate], value: T) {
+  case class Qualified[+T](predicates: List[Predicate], value: T):
     def map[S](f: T => S): Qualified[S] = Qualified(predicates, f(value))
     def predicatesTypeVars: Set[String] = predicates.flatMap(_.typeVars).toSet
     override def toString: String =
       if predicates.isEmpty then value.toString
       else
         s"${predicates.mkString(", ")} => $value"
-  }
 
-  object Predicate {
+  object Predicate:
     def apply(id: String): Predicate = Predicate(id, Nil)
     def apply(id: String, vars: String*): Predicate = Predicate(id, vars.toList.map(Type.Var))
     def fromVars(id: String, typeVars: List[String]): Predicate =
       Predicate(id, typeVars.map(Type.Var))
-  }
 
-  object Qualified {
+  object Qualified:
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
 
-    implicit class QualifiedTOps[T](t: T) {
+    implicit class QualifiedTOps[T](t: T):
       def ==>:(predicate: Predicate): Qualified[T] = Qualified(List(predicate), t)
-    }
-  }
-}

@@ -7,7 +7,7 @@ import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.tree.{Tree, TypedTree}
 import evolution.compiler.types.Type
 
-final class PredicatesSolverTyper(typer: Typer, solver: UnifyPredicates) extends Typer {
+final class PredicatesSolverTyper(typer: Typer, solver: UnifyPredicates) extends Typer:
   override def typeTree(
       tree: Tree,
       expectedType: Option[Type],
@@ -17,4 +17,3 @@ final class PredicatesSolverTyper(typer: Typer, solver: UnifyPredicates) extends
       typedTree <- typer.typeTree(tree, expectedType, assumptions)
       predicatesSubstitution <- solver.unify(TypingConfig.instancesPredicates, typedTree.annotation.predicates)
     yield predicatesSubstitution.substitute(typedTree)
-}

@@ -7,11 +7,10 @@ import cats.syntax.applicative._
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions, Substitution}
 import evolution.compiler.types.Type
 
-private[typer] case class Inference[+T](run: InferenceState => Either[String, (InferenceState, T)]) {
+private[typer] case class Inference[+T](run: InferenceState => Either[String, (InferenceState, T)]):
   def runA(is: InferenceState): Either[String, T] = run(is).map(_._2)
-}
 
-private[typer] object Inference {
+private[typer] object Inference:
   def newTypeVarname: Inference[String] = Inference(is => Right((is.withNewTypeVar, is.currentTypeVarname)))
   def substitution: Inference[Substitution] = Inference(is => Right((is, is.substitution)))
   def assumptions: Inference[Assumptions] = Inference(is => Right((is, is.assumptions)))
@@ -50,7 +49,7 @@ private[typer] object Inference {
 
   implicit lazy val inferenceIsMonad: Monad[Inference] = InferenceMonad
 
-  object InferenceMonad extends Monad[Inference] {
+  object InferenceMonad extends Monad[Inference]:
     override def pure[A](x: A): Inference[A] = Inference(is => Right((is, x)))
     override def flatMap[A, B](fa: Inference[A])(f: A => Inference[B]): Inference[B] = Inference(
       is =>
@@ -71,5 +70,3 @@ private[typer] object Inference {
               }
           }
       )
-  }
-}

@@ -11,7 +11,7 @@ import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.types.Type
 import evolution.logging.NoOpLogger
 
-class PredicatesSolverTyperTest extends LanguageSpec {
+class PredicatesSolverTyperTest extends LanguageSpec:
   "PredicatesSolverTyper" - {
     "f(a, b) = a * b in f" in {
       val multScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
@@ -87,4 +87,3 @@ class PredicatesSolverTyperTest extends LanguageSpec {
 
   //lazy val typer = new RecursiveTyper
   lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
-}

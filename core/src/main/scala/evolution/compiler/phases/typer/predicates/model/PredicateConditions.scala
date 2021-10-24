@@ -4,7 +4,7 @@ import cats.implicits._
 import evolution.compiler.phases.typer.model.{Assignment, Substitution}
 import evolution.compiler.types.TypeClasses.Predicate
 
-private[predicates] case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]) {
+private[predicates] case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]):
   lazy val requirements: Map[String, Alternatives] =
     substitutions.flatMap(_.assignments).groupBy(_.variable).map {
       case (variable, assignments) => variable -> Alternatives(variable, assignments.map(_.tpe))
@@ -21,4 +21,3 @@ private[predicates] case class PredicateConditions(predicate: Predicate, substit
       substitutions.filter(subst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(subst)))
     ).asRight.filterOrElse(_.nonEmpty, s"Predicate $predicate is incompatible with requirements $otherRequirements")
 
-}
