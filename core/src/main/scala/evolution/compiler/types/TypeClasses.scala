@@ -3,23 +3,21 @@ import evolution.compiler.expression.typeclass._
 import evolution.compiler.types.TypeClasses.Predicate
 
 // Just a union types of typeclasses
-sealed abstract class TypeClassInstance(val id: String, val types: List[Type]):
+enum TypeClassInstance(val id: String, val types: List[Type]):
   def predicate: Predicate = Predicate(id, types)
 
-object TypeClassInstance:
-  case class AdditiveInst[A, B, C](add: Additive[A, B, C])
-      extends TypeClassInstance("Add", List(add.t1, add.t2, add.t3))
+  case AdditiveInst[A, B, C](add: Additive[A, B, C]) extends TypeClassInstance("Add", List(add.t1, add.t2, add.t3))
 
-  case class MultiplicativeInst[A, B, C](mult: Multiplicative[A, B, C])
+  case MultiplicativeInst[A, B, C](mult: Multiplicative[A, B, C])
       extends TypeClassInstance("Mult", List(mult.t1, mult.t2, mult.t3))
 
-  case class InvertibleInst[A](inv: Invertible[A]) extends TypeClassInstance("Invertible", List(inv.t))
+  case InvertibleInst[A](inv: Invertible[A]) extends TypeClassInstance("Invertible", List(inv.t))
 
-  case class NumericInst[A](num: Numeric[A]) extends TypeClassInstance("Num", List(num.t))
+  case NumericInst[A](num: Numeric[A]) extends TypeClassInstance("Num", List(num.t))
 
-  case class EquableInst[A](eq: Equable[A]) extends TypeClassInstance("Eq", List(eq.t))
+  case EquableInst[A](eq: Equable[A]) extends TypeClassInstance("Eq", List(eq.t))
 
-  case class ComparableInst[A](cmp: Comparable[A]) extends TypeClassInstance("Comp", List(cmp.t))
+  case ComparableInst[A](cmp: Comparable[A]) extends TypeClassInstance("Comp", List(cmp.t))
 
 object TypeClasses:
 
