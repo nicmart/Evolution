@@ -25,7 +25,7 @@ final class RecursiveTyper extends Typer:
       currentAssumptions <- assumptions
       _ <- setAssumptions(currentAssumptions.merge(initialAssumptions))
       typed <- typeTreeInf(tree)
-      _ <- expectedType.fold(InferenceMonad.pure(()))(expected => unify(expected, typed.annotation.value))
+      _ <- expectedType.fold(().pure[Inference])(expected => unify(expected, typed.annotation.value))
       finalSubstitution <- substitution
     yield finalSubstitution.substitute(typed)
 

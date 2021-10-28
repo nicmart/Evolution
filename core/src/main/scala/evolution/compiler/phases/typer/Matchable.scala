@@ -14,7 +14,7 @@ object Matchable:
   def tryMatch[T](t1: T, t2: T)(using m: Matchable[T]): Option[Substitution] =
     t1.substitute(t2)
 
-  given typesAreMatchable: Matchable[Type] =
+  given Matchable[Type] =
     case (t1, Type.Var(name))         => Some(Substitution(name -> t1))
     case (Type.Evo(t1), Type.Evo(t2)) => t1.substitute(t2)
     case (Type.Lst(t1), Type.Lst(t2)) => t1.substitute(t2)

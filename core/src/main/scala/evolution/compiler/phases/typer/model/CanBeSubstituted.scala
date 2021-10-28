@@ -28,7 +28,8 @@ object CanBeSubstituted:
       AnnotatedTree.catamorphism[TypedTree, Qualified[Type]]((qt, treeF) => treeF.annotate(s.substitute(qt)))(typedTree)
 
   given [T](using CanBeSubstituted[T]): CanBeSubstituted[List[T]] with
-    def substitute(s1: Substitution, ts: List[T]): List[T] = ts.map(s1.substitute[T])
+    def substitute(s1: Substitution, ts: List[T]): List[T] =
+      ts.map(s1.substitute[T])
 
   given [T](using CanBeSubstituted[T]): CanBeSubstituted[Qualified[T]] with
     def substitute(s: Substitution, qt: Qualified[T]): Qualified[T] =

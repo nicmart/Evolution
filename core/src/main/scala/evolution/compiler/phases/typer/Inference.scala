@@ -18,7 +18,6 @@ private[typer] object Inference:
   def setAssumptions(assumptions: Assumptions): Inference[Unit] =
     Inference(is => Right((is.withAssumptions(assumptions), ())))
   def error(message: String): Inference[Nothing] = Inference(_ => Left(message))
-
   def newTypeVar: Inference[Type] = newTypeVarname.map(Type.Var.apply)
 
   def withLocalAssumption[T](assumption: Assumption)(ft: Inference[T]): Inference[T] =
@@ -36,7 +35,7 @@ private[typer] object Inference:
     }
 
   def fromEither[T](either: Either[String, T]): Inference[T] =
-    either.fold(error, InferenceMonad.pure)
+    either.fold(error, Monad[Inference].pure)
 
   def unify(t1: Type, t2: Type): Inference[Unit] =
     for
@@ -47,26 +46,22 @@ private[typer] object Inference:
       _ <- setSubstitution(currentSubstitution.andThen(unifyingSubstitution))
     yield ()
 
-  implicit lazy val inferenceIsMonad: Monad[Inference] = InferenceMonad
-
-  object InferenceMonad extends Monad[Inference]:
+  given Monad[Inference] with
     override def pure[A](x: A): Inference[A] = Inference(is => Right((is, x)))
-    override def flatMap[A, B](fa: Inference[A])(f: A => Inference[B]): Inference[B] = Inference(
-      is =>
-        fa.run(is) match {
-          case Left(value)    => Left(value)
-          case Right((is, a)) => f(a).run(is)
-        }
+    override def flatMap[A, B](fa: Inference[A])(f: A => Inference[B]): Inference[B] = Inference(is =>
+      fa.run(is) match {
+        case Left(value)    => Left(value)
+        case Right((is, a)) => f(a).run(is)
+      }
     )
     override def tailRecM[A, B](a: A)(f: A => Inference[Either[A, B]]): Inference[B] =
-      Inference(
-        is =>
-          f(a).run(is) match {
-            case Left(value) => Left(value)
-            case Right((is2, aOrb)) =>
-              aOrb match {
-                case Left(a)  => tailRecM(a)(f).run(is2)
-                case Right(b) => Right((is2, b))
-              }
-          }
+      Inference(is =>
+        f(a).run(is) match {
+          case Left(value) => Left(value)
+          case Right((is2, aOrb)) =>
+            aOrb match {
+              case Left(a)  => tailRecM(a)(f).run(is2)
+              case Right(b) => Right((is2, b))
+            }
+        }
       )

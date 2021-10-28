@@ -26,9 +26,7 @@ private[compiler] object Compilation:
   def binding(name: String): Compilation[TypedTree] =
     state.map(_.binding(name)).map(_.toRight(s"Binding $name not found")).flatMap(fromEither)
 
-  implicit val compilationIsMonad: Monad[Compilation] = CompilationMonad
-
-  object CompilationMonad extends Monad[Compilation]:
+  given Monad[Compilation] with
     override def pure[A](x: A): Compilation[A] = Compilation.pure(x)
     override def flatMap[A, B](fa: Compilation[A])(f: A => Compilation[B]): Compilation[B] = Compilation.flatMap(fa, f)
     override def tailRecM[A, B](a: A)(f: A => Compilation[Either[A, B]]): Compilation[B] = Compilation { state =>
@@ -37,4 +35,3 @@ private[compiler] object Compilation:
         case Right(Left(a))  => tailRecM(a)(f).run(state)
         case Right(Right(b)) => Right(b)
     }
-

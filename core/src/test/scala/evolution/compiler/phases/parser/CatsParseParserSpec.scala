@@ -7,7 +7,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 
 class CatsParseParserSpec extends LanguageSpec:
-  implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
+  given [T]: Shrink[T] = Shrink.shrinkAny
 
   "The expression parser" - {
     "should parse" - {
@@ -34,9 +34,8 @@ class CatsParseParserSpec extends LanguageSpec:
       }
 
       "parse binary operators" in {
-        forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) {
-          case (a, (op, opFunc), b) =>
-            unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
+        forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) { case (a, (op, opFunc), b) =>
+          unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
         }
       }
 
@@ -46,11 +45,10 @@ class CatsParseParserSpec extends LanguageSpec:
           "a + b - c" -> "(a + b) - c",
           "a - b - c - d" -> "((a - b) - c) - d"
         )
-        expectations.foreach {
-          case (left, right) =>
-            s"$left = $right" in {
-              unsafeParse(left) shouldEq unsafeParse(right)
-            }
+        expectations.foreach { case (left, right) =>
+          s"$left = $right" in {
+            unsafeParse(left) shouldEq unsafeParse(right)
+          }
         }
       }
 
