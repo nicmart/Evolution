@@ -1,5 +1,4 @@
 package evolution.compiler.term
-
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.term.Term.Literal._
@@ -11,7 +10,6 @@ import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 
 class TreeToTermCompilerTest extends LanguageSpec:
-
   "TreeToTermCompiler" - {
     "should compile" - {
       "literals" - {
@@ -19,7 +17,6 @@ class TreeToTermCompilerTest extends LanguageSpec:
         "bools" in {
           val tree = Bool(true).as(Type.Bool)
           val term = compiler.compile(tree).unsafeRight
-
           term shouldBe Term.Lit(LitBool(true))
         }
 
@@ -161,9 +158,8 @@ class TreeToTermCompilerTest extends LanguageSpec:
 
   lazy val compiler = new TreeToTermCompiler
 
-  private implicit class AwaitingAnnotationOps(awaitingAnnotation: AwaitingAnnotation[Qualified[Type]]):
+  extension (awaitingAnnotation: AwaitingAnnotation[Qualified[Type]])
     def as(tpe: Type, predicates: Predicate*): AnnotatedTree[Qualified[Type]] =
       awaitingAnnotation.as(Qualified(predicates.toList, tpe))
 
-  private implicit class PredicateOps(predicate: Predicate):
-    def instance: TypeClassInstance = TypingConfig.instance(predicate).unsafeRight
+  extension (predicate: Predicate) def instance: TypeClassInstance = TypingConfig.instance(predicate).unsafeRight

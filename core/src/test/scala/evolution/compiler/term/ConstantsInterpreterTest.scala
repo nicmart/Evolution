@@ -505,7 +505,7 @@ class ConstantsInterpreterTest extends LanguageSpec:
   def sum1(n: Int): Int => Int = x => x + n
   def sum2(n: Int): Int => Int => Int = x => y => x + y + n
 
-  private implicit class CastOps(any: Any):
+  extension (any: Any)
     def asFunc1: Any => Any = any.asInstanceOf[Any => Any]
     def asFunc2: Any => Any => Any = any.asInstanceOf[Any => Any => Any]
     def asFunc3: Any => Any => Any => Any = any.asInstanceOf[Any => Any => Any => Any]

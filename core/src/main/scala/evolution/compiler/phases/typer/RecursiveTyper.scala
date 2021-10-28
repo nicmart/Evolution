@@ -44,7 +44,7 @@ final class RecursiveTyper extends Typer:
 
       case Id(name) =>
         for
-          assumption <- getAssumption(name)
+          assumption <- getAssumption(name.string)
           qualifiedScheme = assumption.qualifiedScheme
           vars = qualifiedScheme.value.vars.map(Type.Var.apply)
           freshTypeVars <- vars.traverse(_ => newTypeVar)
@@ -121,7 +121,7 @@ object RecursiveTyper:
   def arrowType(inputs: List[Type], result: Type): Type =
     inputs.foldRight(result)(_ =>: _)
 
-  implicit class LeafOps(tree: TreeF[Nothing]):
+  extension (tree: TreeF[Nothing])
     def typed: TreeF[TypedTree] = tree
     def typeWithNoPredicates(tpe: Type): TypedTree =
       typed.annotate(Qualified(tpe))

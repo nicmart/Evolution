@@ -26,8 +26,8 @@ object TypeClasses:
   case class Predicate(id: String, types: List[Type]):
     override def toString: String = s"$id(${types.mkString(", ")})"
     def typeVars: Set[String] =
-      types.collect {
-        case Type.Var(varname) => varname
+      types.collect { case Type.Var(varname) =>
+        varname
       }.toSet
 
     def hasTypeVars: Boolean = typeVars.nonEmpty
@@ -36,8 +36,7 @@ object TypeClasses:
     def predicatesTypeVars: Set[String] = predicates.flatMap(_.typeVars).toSet
     override def toString: String =
       if predicates.isEmpty then value.toString
-      else
-        s"${predicates.mkString(", ")} => $value"
+      else s"${predicates.mkString(", ")} => $value"
 
   object Predicate:
     def apply(id: String): Predicate = Predicate(id, Nil)
@@ -48,5 +47,4 @@ object TypeClasses:
   object Qualified:
     def apply[T](t: T): Qualified[T] = Qualified(Nil, t)
 
-    implicit class QualifiedTOps[T](t: T):
-      def ==>:(predicate: Predicate): Qualified[T] = Qualified(List(predicate), t)
+    extension [T](t: T) def ==>:(predicate: Predicate): Qualified[T] = Qualified(List(predicate), t)

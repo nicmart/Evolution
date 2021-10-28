@@ -14,10 +14,13 @@ object Portfolio:
     ),
     Drawing(
       Some("Simple Brownian"),
-      DrawingState(0L, """
+      DrawingState(
+        0L,
+        """
         r = uniform(-2, 2) in
         integrate(point(0, 0), @point(r, r))
-      """.unindent),
+      """.unindent
+      ),
       defaultRendererState
     ),
     Drawing(
@@ -757,9 +760,8 @@ object Portfolio:
 
   private lazy val defaultRendererWithInfiniteCanvas = defaultRendererState.copy(offCanvasSettings = InfiniteCanvas)
 
-  private implicit class StringOps(string: String):
+  extension (string: String)
     def unindent: String =
-      //val indent = string.
       val s = string.dropWhile(_ == '\n')
       val indent = s.takeWhile(_ == ' ')
       s.replaceAll(s"\n$indent", "\n").trim

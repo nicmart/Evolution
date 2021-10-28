@@ -1,38 +1,38 @@
 package evolution.compiler.tree
 
 import cats.data.{Const, NonEmptyList}
-import cats.implicits._
+import cats.implicits.*
 import cats.{Applicative, Eval, Foldable, Traverse}
+import evolution.compiler.tree.TreeF.CaseInsensitiveName
 
-sealed trait TreeF[+T]
+enum TreeF[+T]:
+  case Id(name: CaseInsensitiveName) extends TreeF[Nothing]
+  case DoubleLiteral(n: Double) extends TreeF[Nothing]
+  case IntLiteral(n: Int) extends TreeF[Nothing]
+  case Bool(b: Boolean) extends TreeF[Nothing]
+  case Lambda(varName: String, expr: T)
+  case App(f: T, args: NonEmptyList[T])
+  case Let(varName: String, expr: T, in: T)
+  case Lst(ts: List[T])
 
 object TreeF:
-  sealed abstract case class Id(name: String) extends TreeF[Nothing]
-  final case class Lambda[T](varName: String, expr: T) extends TreeF[T]
-  final case class App[T](f: T, args: NonEmptyList[T]) extends TreeF[T]
-  final case class Let[T](varName: String, expr: T, in: T) extends TreeF[T]
-  final case class DoubleLiteral(n: Double) extends TreeF[Nothing]
-  final case class IntLiteral(n: Int) extends TreeF[Nothing]
-  final case class Bool(b: Boolean) extends TreeF[Nothing]
-  final case class Lst[T](ts: List[T]) extends TreeF[T]
+  opaque type CaseInsensitiveName = String
 
-  object Id:
-    def apply(name: String): Id = new Id(name.toLowerCase) {}
+  object CaseInsensitiveName:
+    def apply(name: String): CaseInsensitiveName = name.toLowerCase
+    extension (name: CaseInsensitiveName) def string: String = name
 
   object App:
     def of[T](f: T, arg1: T, args: T*): TreeF[T] = App(f, NonEmptyList(arg1, args.toList))
 
-  implicit class TreeOps(tree: TreeF[Tree]):
-    def embed: Tree = Tree(tree)
+  extension (tree: TreeF[Tree]) def embed: Tree = Tree(tree)
 
-  implicit class Ops[A](fa: TreeF[A]):
-    // TODO scala3
+  extension [A](fa: TreeF[A])
     def children: List[A] = fa.traverse[Const[List[A], _], Nothing](a => Const(List(a))).getConst
 
-  implicit class AnnotatedOps[A](tree: TreeF[AnnotatedTree[A]]):
-    def annotate(a: A): AnnotatedTree[A] = AnnotatedTree(a, tree)
+  extension [A](tree: TreeF[AnnotatedTree[A]]) def annotate(a: A): AnnotatedTree[A] = AnnotatedTree(a, tree)
 
-  implicit val traverseForTreeF: Traverse[TreeF] = new Traverse[TreeF] {
+  given Traverse[TreeF] with
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match
         case TreeF.App(g, args)     => (f(g), args.traverse(f)).mapN(TreeF.App[B] _)
@@ -49,4 +49,3 @@ object TreeF:
 
     def foldRight[A, B](fa: TreeF[A], z: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       Foldable[List].foldRight(fa.children, z)(f)
-  }

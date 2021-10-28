@@ -165,7 +165,7 @@ object Html:
   @JSGlobal("Canvas")
   @nowarn
   class Canvas extends dom.html.Canvas:
-    def toBlob(callback: js.Function1[Blob, _], args: js.Any*): Blob = js.native
+    def toBlob(callback: js.Function1[Blob, ?], args: js.Any*): Blob = js.native
 
   @js.native
   @JSGlobal("Anchor")
