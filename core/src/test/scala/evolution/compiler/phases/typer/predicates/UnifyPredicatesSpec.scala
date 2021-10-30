@@ -57,9 +57,8 @@ class UnifyPredicatesSpec extends LanguageSpec:
     }
 
     // This is mostly to test perfomance of predicates unification
-    "should uniffy predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
+    "should unify predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
       val predicates = List(
-        Predicate("Num", List(Type.Double)),
         Predicate("Mult", List(Type.Var("T1"), Type.Var("T7"), Type.Double)),
         Predicate("Num", List(Type.Var("T1"))),
         Predicate("Mult", List(Type.Var("T2"), Type.Var("T6"), Type.Var("T7"))),
@@ -79,7 +78,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
 
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
 
-      subst.substitute[Type](Type.Var("T4")) shouldBe Type.Double
+      subst.substitute[Type](Type.Var("T4")) shouldBe Type.Integer
     }
 
     "should unify predicates of a = 1 in x = a * a * a * a  *  point(0, 0) in x" in {
@@ -92,7 +91,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
 
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeRight
 
-      subst.substitute[Type](Type.Var("T0")) shouldBe Type.Double
+      subst.substitute[Type](Type.Var("T0")) shouldBe Type.Integer
     }
 
     "should not do stupid things" in {

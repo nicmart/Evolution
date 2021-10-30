@@ -12,11 +12,11 @@ enum Type:
   case Lst(inner: Type)
   case Arrow(from: Type, to: Type)
 
-  override def toString: String = this match {
-    case Var(name)       => name
-    case Arrow(from, to) => s"$from -> $to"
-    case _               => super.toString
-  }
+//  override def toString: String = this match {
+//    case Var(name)       => name
+//    case Arrow(from, to) => s"$from -> $to"
+//    case _               => super.toString
+//  }
 
 object Type:
   object Evo:

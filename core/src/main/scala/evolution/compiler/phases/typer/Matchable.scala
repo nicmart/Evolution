@@ -11,8 +11,7 @@ trait Matchable[T]:
   extension (t1: T) final def substitute(t2: T): Option[Substitution] = substitution(t1, t2)
 
 object Matchable:
-  def tryMatch[T](t1: T, t2: T)(using m: Matchable[T]): Option[Substitution] =
-    t1.substitute(t2)
+  def tryMatch[T: Matchable](t1: T, t2: T): Option[Substitution] = t1.substitute(t2)
 
   given Matchable[Type] =
     case (t1, Type.Var(name))         => Some(Substitution(name -> t1))
@@ -27,7 +26,7 @@ object Matchable:
     case (t1, t2) if t1 == t2 => Some(Substitution.empty)
     case _                    => None
 
-  given [T](using Matchable[T]): Matchable[List[T]] =
+  given [T: Matchable]: Matchable[List[T]] =
     case (iHead :: iTail, pHead :: pTail) =>
       for
         tailSubst <- iTail.substitute(pTail)
@@ -47,7 +46,7 @@ object Matchable:
     case (tt1, tt2) =>
       tryMatch(tt1.annotation, tt2.annotation)
 
-  given [T](using Matchable[T]): Matchable[Qualified[T]] =
+  given [T: Matchable]: Matchable[Qualified[T]] =
     (q1, q2) =>
       for
         predSubst <- tryMatch(q1.predicates, q2.predicates)

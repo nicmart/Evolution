@@ -15,8 +15,7 @@ object TypingConfig:
 
   val constantQualifiedTypes: Assumptions = constantsModule.assumptions
 
-  /**
-    * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
+  /** TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
     */
   val instances: List[TypeClassInstance] = List(
     // Numeric

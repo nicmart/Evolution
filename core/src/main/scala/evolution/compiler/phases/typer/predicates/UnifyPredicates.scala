@@ -6,7 +6,7 @@ import evolution.compiler.phases.typer.predicates.model.PredicateConditions
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.logging.Logger
 
-final class UnifyPredicates(logger: Logger):
+class UnifyPredicates(logger: Logger):
 
   import logger.log
 
