@@ -16,22 +16,22 @@ object ConstConfig:
     Const(
       "greaterthan",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).gt(x, y)
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.gt(x, y)
     ),
     Const(
       "greaterthanorequal",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).gteqv(x, y)
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.gteqv(x, y)
     ),
     Const(
       "lessthan",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).lt(x, y)
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.lt(x, y)
     ),
     Const(
       "lessthanorequal",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => MaterializeComparison(p.cmp).lteqv(x, y)
+      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.lteqv(x, y)
     ),
     Const(
       "eq",
