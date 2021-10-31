@@ -156,7 +156,7 @@ object Page:
   def component(canvasComponent: Canvas.ReactComponent): Page.ReactComponent =
     ScalaComponent
       .builder[Props]("Page")
-      .backend[Backend](_ => new Backend(canvasComponent))
+      .backend[Backend](_ => Backend(canvasComponent))
       .render(scope => scope.backend.render(scope.props))
       .build
 

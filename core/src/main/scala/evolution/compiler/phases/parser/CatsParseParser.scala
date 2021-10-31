@@ -19,7 +19,7 @@ object CatsParseParser extends Parser:
       .parseAll(astString)
       .leftMap(error => {
         error.expected.toList.foreach(println(_))
-        new ParserFailure(error.failedAtOffset, astString.split("\n").toList)
+        ParserFailure(error.failedAtOffset, astString.split("\n").toList)
       })
 
   def binaryOperators: List[(String, BinaryOperator)] = allPrecedenceGroups.flatMap(group => group.operators)
@@ -33,8 +33,8 @@ object CatsParseParser extends Parser:
   private object NonOperandExpressions:
     val nonOperand: P[Tree] =
       // Note: a previous solution based on flatMap caused undesired back-tracking
-      (identifier.w.soft ~ (lambdaTail | letTail | sampleTail | argsTail)).map {
-        case (id, f) => f(id)
+      (identifier.w.soft ~ (lambdaTail | letTail | sampleTail | argsTail)).map { case (id, f) =>
+        f(id)
       }
 
     private lazy val lambdaTail: P[String => Tree] = (P.string("->").w *> expression).map { expr =>
@@ -44,16 +44,14 @@ object CatsParseParser extends Parser:
     // `a = 2 in` ... and `a == 2` sha re the same prefix, so the cut must be after the negative lookahead
     private lazy val letTail: P[String => Tree] =
       ((P.char('=').w ~ not(P.char('='))).backtrack *> expression.w ~ (P.string("in").w *> expression))
-        .map {
-          case (value, body) =>
-            Let(_, value, body)
+        .map { case (value, body) =>
+          Let(_, value, body)
         }
 
     private lazy val sampleTail: P[String => Tree] =
       (((P.string("<-").void.w).soft *> expression) ~| (P.string("in").void.w.soft *> expression))
-        .map {
-          case (sampling, body) =>
-            variable => tree.SpecialSyntax.withFirst(variable -> sampling, body)
+        .map { case (sampling, body) =>
+          variable => tree.SpecialSyntax.withFirst(variable -> sampling, body)
         }
 
     // We need to allow backtracking, since f(x, y) can be a function application in addition to a binding
@@ -64,8 +62,8 @@ object CatsParseParser extends Parser:
       val in = P.string("in").void
       val p = (args.w <* equal.w).backtrack.soft ~ expression.w ~ (in.w *> expression.w)
 
-      p.map {
-        case ((args, value), body) => name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
+      p.map { case ((args, value), body) =>
+        name => tree.SpecialSyntax.functionBinding(name, args.toList, value, body)
       }
 
   private lazy val allPrecedenceGroups = List(
@@ -124,8 +122,8 @@ object CatsParseParser extends Parser:
     (app.w ~ (P.char('.').w *> variable.w ~ (P.char('(').void.w *> nonEmptyArgs.w <* P
       .char(')')
       .w
-      .void).?).rep0).map {
-      case (tree, selections) => dotSelection(tree, selections)
+      .void).?).rep0).map { case (tree, selections) =>
+      dotSelection(tree, selections)
     }
 
   @tailrec
@@ -165,11 +163,10 @@ object CatsParseParser extends Parser:
     nonEmptyCsv(expression)
 
   private def nonEmptyCsv[T](p: P[T]): P[NonEmptyList[T]] =
-    P.recursive[NonEmptyList[T]](
-      self =>
-        (p.w ~ (P.char(',').w.void *> self).?).map {
-          case (head, tail) => NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
-        }
+    P.recursive[NonEmptyList[T]](self =>
+      (p.w ~ (P.char(',').w.void *> self).?).map { case (head, tail) =>
+        NonEmptyList(head, tail.map(_.toList).getOrElse(Nil))
+      }
     )
 
   private lazy val alpha: P[Unit] = void(P.charWhere(_.toString.matches("[a-zA-Z_]"))).void
@@ -181,24 +178,26 @@ object CatsParseParser extends Parser:
   private lazy val specialSyntax: P[Tree] = special.zip | special.product | special.uniformChoice
 
   private object special:
-
+    // We backtrack after the ( because otherwise identifiers starting with one of these will not be parsed
+    private def funcStart(name: String): P[Unit] =
+      (P.ignoreCase(name).void.w *> P.char('(')).backtrack.w
     lazy val zip: P[Tree] =
-      (P.ignoreCase("zip").void.w *> P
-        .char('(')
-        .w *> nonEmptyCsv(comprehensionBinding).w ~ (P.char(')').w *> P.string("in").w *> expression))
-        .map {
-          case (bindings, body) => tree.SpecialSyntax.zip(bindings.toList, body)
+      // We backtrack because otherwise zipWith will fail to parse
+      (funcStart("zip") *> nonEmptyCsv(comprehensionBinding).w ~ (P
+        .char(')')
+        .w *> P.string("in").w *> expression))
+        .map { case (bindings, body) =>
+          tree.SpecialSyntax.zip(bindings.toList, body)
         }
 
     lazy val product: P[Tree] =
-      (P.ignoreCase("product")
-        .w *> P.char('(').w *> nonEmptyCsv(comprehensionBinding).w ~ (P.char(')').w *> P.string("in").w *> expression))
-        .map {
-          case (bindings, body) => tree.SpecialSyntax.product(bindings.toList, body)
+      (funcStart("product") *> nonEmptyCsv(comprehensionBinding).w ~ (P.char(')').w *> P.string("in").w *> expression))
+        .map { case (bindings, body) =>
+          tree.SpecialSyntax.product(bindings.toList, body)
         }
 
     lazy val uniformChoice: P[Tree] =
-      (P.ignoreCase("uniformchoice").w *> P.char('(').w *> nonEmptyArgs.w <* P.char(')'))
+      (funcStart("uniformchoice") *> nonEmptyArgs.w <* P.char(')'))
         .map(_.toList)
         .map(tree.SpecialSyntax.uniformChoice)
 

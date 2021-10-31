@@ -24,8 +24,7 @@ object PageState:
       stateCodec: Codec[(DrawingState, RendererState), String],
       materializationOptionCodec: Codec[InterpretationOption, String]
   ): Codec[PageState, DrawingPageUrl] =
-    new Codec[PageState, DrawingPageUrl] {
-
+    new Codec[PageState, DrawingPageUrl]:
       def decode(r: DrawingPageUrl): Option[PageState] =
         for {
           state <- stateCodec.decode(r.drawingSegment)
@@ -37,7 +36,6 @@ object PageState:
         drawingSegment = stateCodec.encode((t.drawingState, t.rendererState)),
         materializerSegment = materializationOptionCodec.encode(t.materializer)
       )
-    }
 
   def fromDrawing(drawing: Drawing): PageState =
     PageState(drawing.drawingState, drawing.rendererState, InterpretationOption.Eval)
@@ -46,11 +44,10 @@ sealed abstract class InterpretationOption(val interpreter: TermInterpreter)
 object InterpretationOption:
   case object Eval extends InterpretationOption(OptimizedTermInterpreter)
 
-  val codec = new Codec[InterpretationOption, String] {
+  val codec = new Codec[InterpretationOption, String]:
     def encode(t: InterpretationOption): String = t match
       //case CodeGenerator => "js"
       case Eval => ""
     def decode(r: String): Option[InterpretationOption] = r match
       case "js" => None
       case _    => Some(Eval)
-  }

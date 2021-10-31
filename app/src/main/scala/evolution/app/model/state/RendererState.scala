@@ -18,21 +18,18 @@ final case class RendererState(
 object RendererState:
 
   val jsonCodec: JsonCodec[RendererState] =
-    new JsonCodec[RendererState] {
-
+    new JsonCodec[RendererState]:
       override def encode(state: RendererState): Json =
         state.asJson
-
       override def decode(json: Json): Option[RendererState] =
         json.as[RendererState].toOption
-    }
 
 final case class TrailSettings(
     active: Boolean,
     opacity: Double
 ):
   def decorate(frameDrawer: FrameDrawer, ctx: DrawingContext): FrameDrawer =
-    if (active) new ClearCanvasFrameDrawer(ctx, frameDrawer, RGBAColor(0, 0, 0, opacity))
+    if (active) ClearCanvasFrameDrawer(ctx, frameDrawer, RGBAColor(0, 0, 0, opacity))
     else frameDrawer
 
 sealed abstract class OffCanvasStrategy:

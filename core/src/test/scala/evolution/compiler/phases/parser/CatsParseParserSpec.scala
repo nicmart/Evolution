@@ -430,32 +430,10 @@ class CatsParseParserSpec extends LanguageSpec:
         }
       }
 
-      "variadic zipWith(a, b, c, f)" in {
-        pending
-        forAll(genLeafExpr, genLeafExpr, genLeafExpr, genLeafExpr) { (a, b, c, f) =>
-          val parsed = unsafeParse(s"zipWith($a, $b, $c, $f)")
-          val expected = App
-            .of(
-              Id("zipwith"),
-              App
-                .of(
-                  Id("zipwith"),
-                  unsafeParse(a),
-                  unsafeParse(b),
-                  unsafeParse(f)
-                ),
-              unsafeParse(c),
-              Lambda(
-                "f",
-                Lambda(
-                  "x",
-                  App.of(Id("f"), Id("x"))
-                )
-              )
-            )
+      "zipwith does not fail" in {
+        val code = "zipWith(a, b, c)"
 
-          parsed shouldEq expected
-        }
+        unsafeParse(code)
       }
 
       "zip(a <- as, b <- bs, c <- cs) in d" in {

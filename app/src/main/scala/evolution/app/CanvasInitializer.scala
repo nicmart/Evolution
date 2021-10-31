@@ -6,11 +6,10 @@ trait CanvasInitializer extends (dom.html.Canvas => Unit):
   self =>
   def apply(canvas: dom.html.Canvas): Unit
 
-  def andThen(next: CanvasInitializer): CanvasInitializer = new CanvasInitializer {
+  def andThen(next: CanvasInitializer): CanvasInitializer = new CanvasInitializer:
     override def apply(canvas: dom.html.Canvas): Unit =
       self.apply(canvas)
       next.apply(canvas)
-  }
 
 case class ColorCanvasInitializer(backgroundColor: String, color: String) extends CanvasInitializer:
   override def apply(canvas: dom.html.Canvas): Unit =

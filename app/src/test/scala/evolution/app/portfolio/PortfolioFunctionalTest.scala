@@ -48,10 +48,10 @@ class PortfolioFunctionalTest extends LanguageSpec:
 
   lazy val parser = CatsParseParser
   //lazy val typer = new UnificationTyper(Conf.logger)
-  lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(Conf.logger))
-  lazy val compiler = new TreeToTermCompiler
-  lazy val interpreter = new RegisterBasedInterpreter
-  //lazy val compiler = new CodeCompiler(new FullCompiler(typedTreeCompiler, JsCodeMaterializer, Conf.logger))
-  lazy val codeCompiler = new TermBasedCodeCompiler(
-    new FullCompiler(parser, typer, compiler, interpreter, Conf.logger)
+  lazy val typer = PredicatesSolverTyper(RecursiveTyper(), UnifyPredicates(Conf.logger))
+  lazy val compiler = TreeToTermCompiler()
+  lazy val interpreter = RegisterBasedInterpreter()
+  //lazy val compiler = CodeCompiler(FullCompiler(typedTreeCompiler, JsCodeMaterializer, Conf.logger))
+  lazy val codeCompiler = TermBasedCodeCompiler(
+    FullCompiler(parser, typer, compiler, interpreter, Conf.logger)
   )

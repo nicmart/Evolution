@@ -14,8 +14,8 @@ import evolution.logging.NoOpLogger
 class ModuleCompilerSpec extends LanguageSpec:
   "Module compiler" - {
     "should extract definitions" in {
-      val typer = new RecursiveTyper
-      val compiler = new ModuleCompiler(CatsParseParser, typer, new TreeToTermCompiler, NoOpLogger)
+      val typer = RecursiveTyper()
+      val compiler = ModuleCompiler(CatsParseParser, typer, TreeToTermCompiler(), NoOpLogger)
       val code = "blah(x, y) = point(x, y) in line(x, y) = point(x, y) in export"
       val module = compiler.compile(code, initialModule)
 

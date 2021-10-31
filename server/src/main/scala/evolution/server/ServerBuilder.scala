@@ -10,7 +10,7 @@ object ServerBuilder:
 
   def server: Resource[IO, Server] =
     for {
-      staticAssetsRoutes <- Resource.pure[IO, StaticAssetsRoute](new StaticAssetsRoute("/public/index-dev.html"))
+      staticAssetsRoutes <- Resource.pure[IO, StaticAssetsRoute](StaticAssetsRoute("/public/index-dev.html"))
       httpApp = staticAssetsRoutes.routes.orNotFound
       loggedApp = Logger.httpApp(true, false)(httpApp)
       server <- BlazeServerBuilder[IO].bindLocal(8080).withHttpApp(loggedApp).resource

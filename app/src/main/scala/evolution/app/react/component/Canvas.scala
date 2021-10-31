@@ -85,16 +85,15 @@ object Canvas:
   def component(drawerFromState: (RendererState, DrawingContext) => FrameDrawer) =
     ScalaComponent
       .builder[Props]("Canvas")
-      .backend[Backend](_ => new Backend(drawerFromState))
+      .backend[Backend](_ => Backend(drawerFromState))
       .render(s => s.backend.render(s.props))
       .componentDidMount { s =>
         s.backend.onMount(s.getDOMNode.asElement(), s.props)
       }
-      .componentWillUnmount(
-        s =>
-          Callback {
-            s.backend.scheduleStop()
-          }
+      .componentWillUnmount(s =>
+        Callback {
+          s.backend.scheduleStop()
+        }
       )
       .componentWillReceiveProps(s => s.backend.toggleRunning(s.getDOMNode.asElement(), s.nextProps))
       .build

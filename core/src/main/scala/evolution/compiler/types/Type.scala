@@ -3,20 +3,14 @@ package evolution.compiler.types
 import cats.implicits._
 
 enum Type:
-  case Var(name: String)
   case Integer
   case Double
   case Point
   case Bool
   case Evo(inner: Type)
   case Lst(inner: Type)
+  case Var(name: String)
   case Arrow(from: Type, to: Type)
-
-//  override def toString: String = this match {
-//    case Var(name)       => name
-//    case Arrow(from, to) => s"$from -> $to"
-//    case _               => super.toString
-//  }
 
 object Type:
   object Evo:

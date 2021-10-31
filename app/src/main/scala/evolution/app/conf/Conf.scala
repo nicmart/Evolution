@@ -86,7 +86,7 @@ object Conf:
     App.component(initialRateCounter, pageComponent)
 
   lazy val routingConfig: Routing =
-    new Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageCodec)
+    Routing(urlDelimiter, appComponent, initialPage, loadDrawingPageCodec)
 
   lazy val router =
     Router(routingConfig.baseUrl, routingConfig.config)

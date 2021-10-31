@@ -50,4 +50,4 @@ class CaptureAvoidingRenamerTest extends LanguageSpec:
     renamed shouldBe Lambda("x", Lambda("x'", Lambda("x''", Id("x''"))))
   }
 
-  def rename(term: Term): Term = (new CaptureAvoidingRenamer).rename(term)
+  def rename(term: Term): Term = CaptureAvoidingRenamer().rename(term)

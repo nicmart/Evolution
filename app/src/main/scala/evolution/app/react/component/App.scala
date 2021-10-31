@@ -48,13 +48,13 @@ object App:
   class Backend(pageComponent: Page.ReactComponent)(bs: BackendScope[StateSnapshot[PageState], State]):
     def render(pageStateSnapshot: StateSnapshot[PageState], state: State): VdomElement =
       val stateSnapshot = SnapshotUnderware.simpleSnapshot(state)(s => bs.setState(s))
-      val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(
-        drawingState => pageState => pageState.copy(drawingState = drawingState)
+      val drawingStateSnapshot = pageStateSnapshot.zoomState(_.drawingState)(drawingState =>
+        pageState => pageState.copy(drawingState = drawingState)
       )
       val layoutSnapshot =
         SnapshotUnderware.simpleSnapshot(state.layout)(layout => bs.modState(_.copy(layout = layout)))
-      val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(
-        renderingState => pageState => pageState.copy(rendererState = renderingState)
+      val renderingStateSnapshot = pageStateSnapshot.zoomState(_.rendererState)(renderingState =>
+        pageState => pageState.copy(rendererState = renderingState)
       )
       val selectedDrawingSnapshot =
         SnapshotUnderware.simpleSnapshot(state.selectedDrawing) { s =>
@@ -111,15 +111,15 @@ object App:
 
   private def codeCompiler(pageState: PageState): CodeCompiler =
     println(s"materializer is ${pageState.materializer}")
-    new TermBasedCodeCompiler(
-      new FullCompiler(
+    TermBasedCodeCompiler(
+      FullCompiler(
         CatsParseParser,
-        new PredicatesSolverTyper(
-          new RecursiveTyper,
-          new UnifyPredicates(NoOpLogger)
+        PredicatesSolverTyper(
+          RecursiveTyper(),
+          UnifyPredicates(NoOpLogger)
         ),
-        new TreeToTermCompiler,
-        new RegisterBasedInterpreter,
+        TreeToTermCompiler(),
+        RegisterBasedInterpreter(),
         Conf.logger
       )
     )
@@ -152,7 +152,7 @@ object App:
       .initialStateCallback(
         initialLayout.map(layout => State(rateCounter, running = true, layout, None, None, 1))
       )
-      .backend[Backend](scope => new Backend(pageComponent) (scope))
+      .backend[Backend](scope => new Backend(pageComponent)(scope))
       .render(scope => scope.backend.render(scope.props, scope.state))
       .shouldComponentUpdate { s =>
         CallbackTo.pure {
@@ -164,15 +164,13 @@ object App:
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
       // TODO can we remove this?
-      .componentDidUpdate(
-        s =>
-          if (s.prevState.layout != s.currentState.layout) s.backend.updateLayout
-          else Callback.empty
+      .componentDidUpdate(s =>
+        if (s.prevState.layout != s.currentState.layout) s.backend.updateLayout
+        else Callback.empty
       )
-      .componentDidMount(
-        s =>
-          Callback {
-            dom.window.addEventListener("resize", (_: Any) => s.backend.updateLayout.runNow())
-          }
+      .componentDidMount(s =>
+        Callback {
+          dom.window.addEventListener("resize", (_: Any) => s.backend.updateLayout.runNow())
+        }
       )
       .build

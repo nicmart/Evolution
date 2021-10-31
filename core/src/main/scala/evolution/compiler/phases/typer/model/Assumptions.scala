@@ -17,6 +17,6 @@ final class Assumptions(private val assumptions: Map[String, Assumption]):
     new Assumptions(assumptions.updated(assumption.name, assumption))
 
 object Assumptions:
-  val empty: Assumptions = new Assumptions(Map.empty)
+  val empty: Assumptions = Assumptions(Nil)
   def apply(assumptions: List[Assumption]): Assumptions =
     new Assumptions(assumptions.map(ass => ass.name -> ass).toMap)

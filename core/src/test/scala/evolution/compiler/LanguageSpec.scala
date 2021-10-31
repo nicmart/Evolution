@@ -17,13 +17,13 @@ trait LanguageSpec
   extension [T](t: Either[String, T])
     def unsafeRight: T =
       t.fold(
-        s => throw new Exception(s),
+        s => throw Exception(s),
         identity
       )
     def unsafeLeft: String =
       t.fold(
         identity,
-        s => throw new Exception(s"Getting a Left on a Right($s)")
+        s => throw Exception(s"Getting a Left on a Right($s)")
       )
 
   extension [A: Equality](left: A) def shouldEq(right: A): Assertion = left shouldEqual right

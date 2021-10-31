@@ -34,7 +34,7 @@ class PredicatesSolverTyperTest extends LanguageSpec:
 
     "xxx" in {
       val untyped = App.of(Id("add"), App.of(Id("add"), IntLiteral(1), DoubleLiteral(1)), IntLiteral(1))
-      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
       val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTypedTree(partiallyTyped))
@@ -48,7 +48,7 @@ class PredicatesSolverTyperTest extends LanguageSpec:
           Lambda("x", Lambda("y", App.of(Id("add"), App.of(Id("add"), Id("x"), Id("y")), Id("x")))),
           App.of(Id("f"), IntLiteral(1), DoubleLiteral(2))
         )
-      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
       val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTree(untyped))
@@ -71,7 +71,7 @@ class PredicatesSolverTyperTest extends LanguageSpec:
         ),
         Id("f")
       )
-      val partiallyTyped = (new RecursiveTyper).typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
       val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTree(untyped))
@@ -81,9 +81,9 @@ class PredicatesSolverTyperTest extends LanguageSpec:
   }
 
   def withAssumptions(assumptions: Assumption*): Assumptions =
-    assumptions.foldLeft(Assumptions.empty) {
-      case (ass, a) => ass.withAssumption(a)
+    assumptions.foldLeft(Assumptions.empty) { case (ass, a) =>
+      ass.withAssumption(a)
     }
 
   //lazy val typer = new RecursiveTyper
-  lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
+  lazy val typer = PredicatesSolverTyper(RecursiveTyper(), UnifyPredicates(NoOpLogger))

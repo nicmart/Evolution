@@ -141,4 +141,4 @@ class UnifyPredicatesSpec extends LanguageSpec:
     }
   }
 
-  lazy val predicatesUnifier = new UnifyPredicates(NoOpLogger)
+  lazy val predicatesUnifier = UnifyPredicates(NoOpLogger)

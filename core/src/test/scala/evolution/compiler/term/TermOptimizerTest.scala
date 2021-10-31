@@ -130,7 +130,7 @@ class TermOptimizerTest extends LanguageSpec:
     }
   }
 
-  lazy val optimizer = new TermOptimizer(new RegisterBasedInterpreter)
+  lazy val optimizer = TermOptimizer(RegisterBasedInterpreter())
 
   def optimize(term: Term, defs: Map[String, Term] = Map.empty): Term = optimizer.optimize(term, defs)
   def litInt(n: Int): Term = Apply(Lit(LitInt(n)), Inst(numDouble))

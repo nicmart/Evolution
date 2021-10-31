@@ -31,7 +31,7 @@ object SingleInput:
     ScalaComponent
       .builder[StateSnapshot[T]]("Single input")
       .initialStateFromProps[Option[String]](_ => None)
-      .backend(s => new Backend(parser) (s))
+      .backend(s => Backend(parser)(s))
       .render(s => s.backend.render(s.props, s.state))
       .build
 

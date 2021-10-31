@@ -11,7 +11,7 @@ import cats.catsInstancesForId
 import scala.annotation.tailrec
 
 final class TermOptimizer(interpreter: TermInterpreter):
-  private val renamer = new CaptureAvoidingRenamer
+  private val renamer = CaptureAvoidingRenamer()
   def optimize(term: Term, definitions: Map[String, Term]): Term =
     val renamedTerm = renamer.rename(term) // Is this needed?
     optimizeM(renamedTerm).run(Env(definitions))

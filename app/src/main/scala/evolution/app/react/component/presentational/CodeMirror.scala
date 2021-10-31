@@ -56,7 +56,7 @@ object CodeMirror:
         matchBrackets: Boolean,
         keyMap: String
     ): Options =
-      val options = (new js.Object).asInstanceOf[Options]
+      val options = (js.Object()).asInstanceOf[Options]
       options.theme = theme
       options.mode = mode
       options.tabSize = tabSize

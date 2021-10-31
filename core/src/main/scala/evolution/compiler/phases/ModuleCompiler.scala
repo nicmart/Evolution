@@ -15,7 +15,7 @@ import scala.annotation.tailrec
 final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCompiler, logger: Logger):
   import logger.log
 
-  private val optimizer: TermOptimizer = new TermOptimizer(new RegisterBasedInterpreter)
+  private val optimizer: TermOptimizer = TermOptimizer(RegisterBasedInterpreter())
 
   // TODO here we are assuming the the expected type can be anything, but that the output is Evolution[Point]???
   def compile(serialisedExpr: String, initialModule: Module): Either[String, Module] =
@@ -83,4 +83,3 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
         val optimizedDef = Definition(definition.name, optimizedTerm, definition.tpe)
         optimizeDefinitionsRec(toOptimize.drop(1), optimized.appended(optimizedDef))
       case None => optimized
-

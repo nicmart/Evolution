@@ -156,7 +156,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
     }
   }
 
-  lazy val compiler = new TreeToTermCompiler
+  lazy val compiler = TreeToTermCompiler()
 
   extension (awaitingAnnotation: AwaitingAnnotation[Qualified[Type]])
     def as(tpe: Type, predicates: Predicate*): AnnotatedTree[Qualified[Type]] =

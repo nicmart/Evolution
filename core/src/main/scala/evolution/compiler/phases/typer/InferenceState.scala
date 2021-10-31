@@ -19,5 +19,4 @@ private[typer] final case class InferenceState(
     copy(assumptions = assumptions)
 
 private[typer] object InferenceState:
-  def empty: InferenceState =
-    new InferenceState(0, Substitution.empty, Assumptions.empty)
+  def empty: InferenceState = InferenceState(0, Substitution.empty, Assumptions.empty)

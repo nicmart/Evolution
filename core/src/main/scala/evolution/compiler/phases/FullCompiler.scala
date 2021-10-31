@@ -14,7 +14,7 @@ final class FullCompiler(
     logger: Logger
 ):
   import logger.log
-  private val optimizer = new TermOptimizer(interpreter)
+  private val optimizer = TermOptimizer(interpreter)
 
   def compile(serialisedExpr: String, expectedType: Type, module: Module): Either[String, Any] =
     for

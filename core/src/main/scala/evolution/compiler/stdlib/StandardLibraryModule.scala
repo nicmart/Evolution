@@ -27,9 +27,9 @@ object StandardLibraryModule:
   private lazy val initialModule =
     TypingConfig.constantsModule.compose(borderVarsModule)
 
-  private lazy val typer = new PredicatesSolverTyper(new RecursiveTyper, new UnifyPredicates(NoOpLogger))
+  private lazy val typer = PredicatesSolverTyper(RecursiveTyper(), UnifyPredicates(NoOpLogger))
 
   private lazy val moduleCompiler =
-    new ModuleCompiler(CatsParseParser, typer, new TreeToTermCompiler, NoOpLogger)
+    ModuleCompiler(CatsParseParser, typer, TreeToTermCompiler(), NoOpLogger)
 
   private lazy val code = StdLib.code

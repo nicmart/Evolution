@@ -36,7 +36,6 @@ final class RegisterBasedInterpreter extends TermInterpreter:
     case Value(value) => value
 
 object RegisterBasedInterpreter:
-  def fresh: RegisterBasedInterpreter =
-    new RegisterBasedInterpreter
+  def fresh: RegisterBasedInterpreter = RegisterBasedInterpreter()
 
   val constants: Map[String, Any] = ConstConfig.constants.map(c => c.name -> c.value).toMap

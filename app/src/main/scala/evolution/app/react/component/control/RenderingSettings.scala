@@ -38,18 +38,30 @@ object RenderingSettings:
           ^.role := "menu",
           <.div(
             ^.className := "dropdown-content",
-            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Off-canvas strategy")) {
-              offCanvasSettingComponent(offCanvasStrategyItems(props))
-            }),
-            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Stroke size")) {
-              IntInputComponent.component(strokeSize(props))
-            }),
-            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Resolution Factor")) {
-              IntInputComponent.component(resolutionFactor(props))
-            }),
-            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Points per frame")) {
-              IntInputComponent.component(iterations(props))
-            }),
+            <.div(
+              ^.className := "dropdown-item",
+              FormField.component(FormField.Props("Off-canvas strategy")) {
+                offCanvasSettingComponent(offCanvasStrategyItems(props))
+              }
+            ),
+            <.div(
+              ^.className := "dropdown-item",
+              FormField.component(FormField.Props("Stroke size")) {
+                IntInputComponent.component(strokeSize(props))
+              }
+            ),
+            <.div(
+              ^.className := "dropdown-item",
+              FormField.component(FormField.Props("Resolution Factor")) {
+                IntInputComponent.component(resolutionFactor(props))
+              }
+            ),
+            <.div(
+              ^.className := "dropdown-item",
+              FormField.component(FormField.Props("Points per frame")) {
+                IntInputComponent.component(iterations(props))
+              }
+            ),
             <.div(
               ^.className := "dropdown-item",
               <.label(
@@ -63,9 +75,12 @@ object RenderingSettings:
                 "Persist drawing on canvas"
               )
             ),
-            <.div(^.className := "dropdown-item", FormField.component(FormField.Props("Trail opacity")) {
-              DoubleInputComponent.component(trailOpacity(props))
-            })
+            <.div(
+              ^.className := "dropdown-item",
+              FormField.component(FormField.Props("Trail opacity")) {
+                DoubleInputComponent.component(trailOpacity(props))
+              }
+            )
           )
         )
       )
@@ -108,6 +123,6 @@ object RenderingSettings:
   val component = ScalaComponent
     .builder[StateSnapshot[RendererState]]("rendering settings")
     .stateless
-    .backend[Backend](_ => new Backend)
+    .backend[Backend](_ => Backend())
     .render(scope => scope.backend.render(scope.props))
     .build

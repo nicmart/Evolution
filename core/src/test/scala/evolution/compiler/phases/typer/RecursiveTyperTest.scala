@@ -280,8 +280,8 @@ class RecursiveTyperTest extends LanguageSpec:
     }
   }
   def withAssumptions(assumptions: Assumption*): Assumptions =
-    assumptions.foldLeft(Assumptions.empty) {
-      case (ass, a) => ass.withAssumption(a)
+    assumptions.foldLeft(Assumptions.empty) { case (ass, a) =>
+      ass.withAssumption(a)
     }
 
-  lazy val typer = new RecursiveTyper
+  lazy val typer = RecursiveTyper()
