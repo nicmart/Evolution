@@ -1,6 +1,5 @@
 package evolution.compiler.phases.typer.config
 
-import evolution.compiler.impl.evaluation._
 import evolution.compiler.term.Term
 import evolution.compiler.term.Term.Value
 import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, StringTypeOps, Var, Point => TPoint}
@@ -36,12 +35,12 @@ object ConstConfig:
     Const(
       "eq",
       Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: EquableInst[Any]) => (x: Any) => (y: Any) => MaterializeEquality(p.eq).eqv(x, y)
+      (p: EquableInst[Any]) => (x: Any) => (y: Any) => p.eq.eq.eqv(x, y)
     ),
     Const(
       "neq",
       Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: EquableInst[Any]) => (x: Any) => (y: Any) => MaterializeEquality(p.eq).neqv(x, y)
+      (p: EquableInst[Any]) => (x: Any) => (y: Any) => p.eq.eq.neqv(x, y)
     ),
     // boolean ops
     Const("not", Qualified(Scheme(Bool =>: Bool)), (x: Boolean) => !x),
@@ -166,7 +165,7 @@ object ConstConfig:
             Evolution.derive(
               evo,
               add.add.add,
-              MaterializeInverse(inv.inv)
+              inv.inv.invert
             )
     ),
     Const(
@@ -183,7 +182,7 @@ object ConstConfig:
                 evo,
                 f,
                 add.add.add,
-                MaterializeInverse(inv.inv)
+                inv.inv.invert
               )
     ),
     // Random Evolutions
@@ -210,7 +209,7 @@ object ConstConfig:
     Const(
       "inverse",
       Qualified(List(Predicate("Invertible", "T")), Scheme("T" =>: "T", "T")),
-      (inv: InvertibleInst[Any]) => (x: Any) => MaterializeInverse(inv.inv)(x)
+      (inv: InvertibleInst[Any]) => (x: Any) => inv.inv.invert(x)
     ),
     Const("sign", Qualified(Scheme(Double =>: Double)), func1(Math.signum)),
     Const("floor", Qualified(Scheme(Double =>: Integer)), func1(Math.floor)),
@@ -248,7 +247,7 @@ object ConstConfig:
       "minus",
       Qualified(List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")), Scheme("T" =>: "T" =>: "T", "T")),
       (add: AdditiveInst[Any, Any, Any]) =>
-        (inv: InvertibleInst[Any]) => (x: Any) => (y: Any) => add.add.add(x, MaterializeInverse(inv.inv)(y))
+        (inv: InvertibleInst[Any]) => (x: Any) => (y: Any) => add.add.add(x, inv.inv.invert(y))
     ),
     // geometry
     Const("norm", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.norm),
