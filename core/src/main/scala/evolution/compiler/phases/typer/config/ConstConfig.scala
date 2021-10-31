@@ -237,7 +237,7 @@ object ConstConfig:
     Const(
       "multiply",
       Qualified(List(Predicate("Mult", "A", "B", "C")), Scheme("A" =>: "B" =>: "C", "A", "B", "C")),
-      (p: MultiplicativeInst[Any, Any, Any]) => (x: Any) => (y: Any) => MaterializeMultiplication(p.mult)(x, y)
+      (p: MultiplicativeInst[Any, Any, Any]) => (x: Any) => (y: Any) => p.mult.mult(x, y)
     ),
     Const(
       "add",
