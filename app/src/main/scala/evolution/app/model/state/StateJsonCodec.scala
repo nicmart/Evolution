@@ -10,10 +10,10 @@ object StateJsonCodec extends JsonCodec[(DrawingState, RendererState)]:
   private val rendererStateField = "rendererState"
 
   def decode(r: Json): Option[(DrawingState, RendererState)] =
-    for {
+    for
       drawingState <- r.hcursor.get[DrawingState](drawingStateField).toOption
       rendererState <- r.hcursor.get[RendererState](rendererStateField).toOption
-    } yield (drawingState, rendererState)
+    yield (drawingState, rendererState)
 
   def encode(t: (DrawingState, RendererState)): Json = Json.obj(
     drawingStateField -> t._1.asJson,

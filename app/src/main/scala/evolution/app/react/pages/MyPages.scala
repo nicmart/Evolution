@@ -26,11 +26,11 @@ object PageState:
   ): Codec[PageState, DrawingPageUrl] =
     new Codec[PageState, DrawingPageUrl]:
       def decode(r: DrawingPageUrl): Option[PageState] =
-        for {
+        for
           state <- stateCodec.decode(r.drawingSegment)
           (drawingState, rendererState) = state
           materialization <- materializationOptionCodec.decode(r.materializerSegment)
-        } yield PageState(drawingState, rendererState, materialization)
+        yield PageState(drawingState, rendererState, materialization)
 
       def encode(t: PageState): DrawingPageUrl = DrawingPageUrl(
         drawingSegment = stateCodec.encode((t.drawingState, t.rendererState)),

@@ -24,7 +24,7 @@ object Codec:
       override def encode(t: T): R2 =
         codec2.encode(codec1.encode(t))
       override def decode(r: R2): Option[T] =
-        for {
+        for
           r1 <- codec2.decode(r)
           t <- codec1.decode(r1)
-        } yield t
+        yield t
