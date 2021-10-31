@@ -137,13 +137,13 @@ object ConstConfig:
       "integrate",
       Qualified(List(Predicate("Add", "T", "T", "T")), Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
       (p: AdditiveInst[Any, Any, Any]) =>
-        (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, MaterializeAddition(p.add))
+        (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, p.add.add)
     ),
     Const(
       "solve1",
       Qualified(List(Predicate("Add", "T", "T", "T")), Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")),
       (p: AdditiveInst[Any, Any, Any]) =>
-        (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, MaterializeAddition(p.add))
+        (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, p.add.add)
     ),
     Const(
       "solve2",
@@ -152,8 +152,7 @@ object ConstConfig:
         Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")
       ),
       (p: AdditiveInst[Any, Any, Any]) =>
-        (evo: Evolution[Any => Any => Any]) =>
-          (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, MaterializeAddition(p.add))
+        (evo: Evolution[Any => Any => Any]) => (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, p.add.add)
     ),
     Const(
       "derive",
@@ -166,7 +165,7 @@ object ConstConfig:
           (evo: Evolution[Any]) =>
             Evolution.derive(
               evo,
-              MaterializeAddition(add.add),
+              add.add.add,
               MaterializeInverse(inv.inv)
             )
     ),
@@ -183,7 +182,7 @@ object ConstConfig:
               Evolution.mapWithDerivative(
                 evo,
                 f,
-                MaterializeAddition(add.add),
+                add.add.add,
                 MaterializeInverse(inv.inv)
               )
     ),
@@ -243,14 +242,13 @@ object ConstConfig:
     Const(
       "add",
       Qualified(List(Predicate("Add", "A", "B", "C")), Scheme("A" =>: "B" =>: "C", "A", "B", "C")),
-      (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) => MaterializeAddition(p.add)(x, y)
+      (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) => p.add.add(x, y)
     ),
     Const(
       "minus",
       Qualified(List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")), Scheme("T" =>: "T" =>: "T", "T")),
       (add: AdditiveInst[Any, Any, Any]) =>
-        (inv: InvertibleInst[Any]) =>
-          (x: Any) => (y: Any) => MaterializeAddition(add.add)(x, MaterializeInverse(inv.inv)(y))
+        (inv: InvertibleInst[Any]) => (x: Any) => (y: Any) => add.add.add(x, MaterializeInverse(inv.inv)(y))
     ),
     // geometry
     Const("norm", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.norm),
