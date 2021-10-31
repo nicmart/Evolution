@@ -1,9 +1,7 @@
 package evolution.app.portfolio
 import evolution.app.model.Drawing
-import evolution.app.model.state.DrawingState
+import evolution.app.model.state.{DrawingState, OffCanvasStrategy, TrailSettings}
 import evolution.app.conf.Conf.defaultRendererState
-import evolution.app.model.state.InfiniteCanvas
-import evolution.app.model.state.TrailSettings
 
 object Portfolio:
   val drawings = List(
@@ -758,7 +756,8 @@ object Portfolio:
     )
   )
 
-  private lazy val defaultRendererWithInfiniteCanvas = defaultRendererState.copy(offCanvasSettings = InfiniteCanvas)
+  private lazy val defaultRendererWithInfiniteCanvas =
+    defaultRendererState.copy(offCanvasSettings = OffCanvasStrategy.Infinite)
 
   extension (string: String)
     def unindent: String =

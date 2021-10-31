@@ -16,7 +16,6 @@ final case class RendererState(
 )
 
 object RendererState:
-
   val jsonCodec: JsonCodec[RendererState] =
     new JsonCodec[RendererState]:
       override def encode(state: RendererState): Json =
@@ -32,14 +31,15 @@ final case class TrailSettings(
     if (active) ClearCanvasFrameDrawer(ctx, frameDrawer, RGBAColor(0, 0, 0, opacity))
     else frameDrawer
 
-sealed abstract class OffCanvasStrategy:
+enum OffCanvasStrategy:
+  case Infinite
+  case Torus
+  case Projective
+
   def decorate(pointDrawer: PointDrawer, ctx: DrawingContext): PointDrawer = this match
-    case InfiniteCanvas      => pointDrawer
-    case TorusCanvas         => TorusPlaneDrawer(pointDrawer, ctx)
-    case RealProjectivePlane => RealProjectivePlaneDrawer(pointDrawer, ctx)
-case object InfiniteCanvas extends OffCanvasStrategy
-case object TorusCanvas extends OffCanvasStrategy
-case object RealProjectivePlane extends OffCanvasStrategy
+    case Infinite   => pointDrawer
+    case Torus      => TorusPlaneDrawer(pointDrawer, ctx)
+    case Projective => RealProjectivePlaneDrawer(pointDrawer, ctx)
 
 object RendererStateToFrameDrawer:
   def apply(

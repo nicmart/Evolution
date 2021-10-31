@@ -115,9 +115,9 @@ object RenderingSettings:
 
     private val offCanvasStrategies: Seq[Item[OffCanvasStrategy]] =
       List(
-        Item("Infinite", InfiniteCanvas.toString, InfiniteCanvas),
-        Item("Torus", TorusCanvas.toString, TorusCanvas),
-        Item("Projective", RealProjectivePlane.toString, RealProjectivePlane)
+        Item("Infinite", OffCanvasStrategy.Infinite.toString, OffCanvasStrategy.Infinite),
+        Item("Torus", OffCanvasStrategy.Torus.toString, OffCanvasStrategy.Torus),
+        Item("Projective", OffCanvasStrategy.Projective.toString, OffCanvasStrategy.Projective)
       )
 
   val component = ScalaComponent
