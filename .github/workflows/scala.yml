@@ -19,7 +19,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Build and test ⚒️
-      run: sbt core/test jsAppTest/test server/webStage 
+      run: sbt server/webStage
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.5
       with:
