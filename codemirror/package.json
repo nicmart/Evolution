@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/codemirror/-/codemirror-5.48.4.tgz",
   "_shasum": "4210fbe92be79a88f0eea348fab3ae78da85ce47",
   "_spec": "codemirror@5.48.4",
-  "_where": "/home/travis/build/nicmart/Evolution/app/target/scala-2.13/scalajs-bundler/main",
+  "_where": "/home/runner/work/Evolution/Evolution/app/target/scala-3.1.0/scalajs-bundler/main",
   "author": {
     "name": "Marijn Haverbeke",
     "email": "marijnh@gmail.com",
