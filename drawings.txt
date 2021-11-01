@@ -1,31 +1,5 @@
 
-// Clifford
-scale = 500 in
-
-scaleInv = .002 in
-
-a = -1.4 * scaleInv  in
-
-b = 1.6 * scaleInv in
-
-c = 1.1 in
-
-d = 0.7  in
-
-rnd = @point(uniform(left, right), uniform(bottom, top)) in
-trajectory = p -> 
-
-solve1(
-  const(p -> -p + scale * point(
-    sin(a * y(p)) + c * cos(a * x(p)),
-    sin(b * x(p)) + d * cos(b * y(p))
-  )),
-  p 
-) in
-   
-trajectory(point(0, 0))
-
-// Another Clifford
+// Another Clifford - reviewed
 
 scale = 500 in
 
@@ -52,64 +26,7 @@ solve1(
    
 trajectory(point(0, 0))
 
-// Double-speed brownian (use torus canvas please)
-
-rnd = r -> n -> take(n, @point(uniform(-r, r), uniform(-r, r))) in
-v1 = rnd(2, 1000) in
-v2 = rnd(10, 100) in
-
-integrate(point(0, 0), flatten(uniformFrom(2, [v1, v2]))) 
-
-
-// serpinski? fix is broken
-"sliding = fix(self ->
-    ts -> f -> mapCons(ts,
-      t1 -> tail1 -> mapCons(tail1,
-        t2 -> tail2 -> cons(f(t1, t2), self(tail1, f))
-      )
-    )
-) in
-
-noConsec = points -> flatMap(
-  sliding(points, x1 -> x2 -> if(eq(x1, x2),  empty, cons(x1, empty))),
-  x -> x
-) in
-
-xs = uniformChoice(point(0, 0), point(100, 200), point(-100, -100)) in
-
-noConsec(xs)"
-
-// fix is broken
-"let(
-  sliding,
-  fix(self ->
-    ts -> f -> mapCons(ts,
-      t1 -> tail1 -> mapCons(tail1,
-        t2 -> tail2 -> cons(f(t1, t2), self(tail1, f))
-      )
-    )
-  ),
-
-let(noConsec, points -> flatMap(sliding(points, x1 -> x2 -> if(eq(x1, x2),  empty, cons(x1, empty))), x -> x),
-
-let(p1, point(left, top),
-let(p2, point(left, bottom),
-let(p3, point(right, top),
-let(p4, point(right, bottom),
-
-let(vertexes, noConsec(uniformChoice(p1, p2, p3, p4)),
-k = .06 in
- 
-let(f, v -> p -> -p + k * v + (-k + 1) * p,
-solve1(
-  map(vertexes, v -> p -> -p + f(v, p)),
-  point(0, 0)
-)
- 
-))))))))"
-
-
-// Grid of brownians
+// Grid of brownians - reviewed
 "r = 2 in
 l = 100 in
 gridSize = 100 in
@@ -120,7 +37,7 @@ brownian = p -> take(l,integrate(p, @point(uniform(-r, r), uniform(-r, r)))) in
 flatMap(rndPoint, brownian)"
 
 
-// Grid of symmetric brownians
+// Grid of symmetric brownians - reviewed
 "r = 3 in
 l = 100 in
 gridSize = 100 in
@@ -151,49 +68,6 @@ symm = e -> flatMap(e, p ->
 brownian = symm(integrate(point(0, 0), @point(uniform(-r, r), uniform(-r, r)))) in
 
 flatMap(brownian, p -> map(points, q -> p + q))
-
-// Grid of squared brownians
-gridSize = 100 in
-
-symm = e -> flatMap(e, p -> 
-  [p, -p, point(-x(p), y(p)), point(x(p), -y(p))]
-) in
-
-translatedSymm = p -> e -> map(symm(map(e, x -> -p + x)), x -> p + x) in
-
-rndPoint = @point(uniformDiscrete(left, right, gridSize), uniformDiscrete(bottom, top, gridSize)) in
-  
-l = 100 in
-step = 10 in
-ps = uniformFrom(4, [point(1, 0), point(0, 1), point(-1, 0), point(0, -1)]) in
-vs = flatMap(ps, p -> take(step, const(p))) in
-evo = p ->  take(l, integrate(p, vs)) in 
-     
-flatMap(rndPoint, p -> translatedSymm(p, evo(p)))
-
-// Concentric circles
-
-r1 = 300 in
-w1 = .001 in
-r2 = 100 in
-w2 = .002 in
-r3 = 100 in
-w3 = 1 in
-r4 = 10 in
-w4 = .008 in
-r5 = 100 in
-w5 = .008 in
-
-circle = r -> w -> @polar(const(r), integrate(0, const(w))) in
-
-
-
-circle(r1, w1) +
-circle(r2, w2) +
-circle(r3, w3) +
-circle(r4, w4) +
-circle(r5, w5)
-
 
 // Grid of squared and rounded brownians
 
@@ -226,42 +100,6 @@ evo = p -> take(floor(1 + l / v), integrate(p, flatMap(vs, x -> x))) in
 
 flatMap(rndPoint, p -> translatedSymm(p, evo(p)))
 
-// Vortex
-
-a = -.000001 in
-k = 0.01 in
-rnd = @point(uniform(left, right), uniform(bottom, top)) in
-
-trajectory = p -> 
-
-solve1(
-  const(q -> k * point(
-     -y(q) + a * x(q) * norm(q)^2,
-     x(q) + a * y(q) * norm(q)^2
-  )),
-  p
-) in
-
-
-flatMap(rnd, p -> take(100, trajectory(p)))
-
-// Grid of concentric circles
-r = .03 in
-s = 100 in
-g = 100 in
-
-mid = point(g/2, g/2) in
-vectorField = p -> r * (-mid +point(y(p) % g, (-x(p)) % g)) in
-points = @point(uniform(left, right), uniform(bottom, top)) in
-
-line = p -> solve1(
-  const(vectorField),
-  p
-) in
-
-flatMap(points, p -> take(s, line(p)))
-
- 
 Grid of rombuses
 
 r = .01 in
@@ -296,7 +134,7 @@ line = p -> solve1(
 
 flatMap(points, p -> take(s, line(p)))
 
-// Rotational-symmetric brownian
+// Rotational-symmetric brownian - reviewed
 n = 8 in
 r = 3 in
 

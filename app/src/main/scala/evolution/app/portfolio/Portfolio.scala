@@ -22,6 +22,25 @@ object Portfolio:
       defaultRendererState
     ),
     Drawing(
+      Some("Grid of concentric circles"),
+      DrawingState(
+        0L,
+        """
+        r = .03 in
+        s = 100 in
+        g = 100 in
+        
+        mid = point(g/2, g/2) in
+        vectorField = p -> r * (-mid +point(y(p) % g, (-x(p)) % g)) in
+        
+        line(p) = solve1(const(vectorField), p) in
+        
+        flatMap(randomPoint, p -> line(p).take(s))
+      """.unindent
+      ),
+      defaultRendererState
+    ),
+    Drawing(
       Some("Symmetric Brownian"),
       DrawingState(
         0L,
@@ -753,6 +772,118 @@ object Portfolio:
         """.unindent
       ),
       defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Clifford"),
+      DrawingState(
+        0L,
+        """
+        scale = 500 in
+        scaleInv = .002 in
+        a = -1.4 * scaleInv  in
+        b = 1.6 * scaleInv in
+        c = 1.1 in
+        d = 0.7  in
+        
+        rnd = @point(uniform(left, right), uniform(bottom, top)) in
+        trajectory(p) = 
+          solve1(
+            const(p -> -p + scale * point(
+              sin(a * y(p)) + c * cos(a * x(p)),
+              sin(b * x(p)) + d * cos(b * y(p))
+            )),
+            p 
+          )
+        in
+           
+        trajectory(point(0, 0))
+        """.unindent
+      ),
+      defaultRendererWithInfiniteCanvas
+    ),
+    Drawing(
+      Some("Double speed random walk"),
+      DrawingState(
+        0L,
+        """
+        rnd(r, n) =
+            total <- uniform(1, n) in
+            @point(uniform(-r, r), uniform(-r, r)).take(total.floor)
+        in
+        v1 = rnd(2, 3000) in
+        v2 = rnd(10, 300) in
+        
+        integrate(point(0, 0), uniformFrom(2, [v1, v2]).flatten) 
+        """.unindent
+      ),
+      defaultRendererState.copy(offCanvasSettings = OffCanvasStrategy.Torus)
+    ),
+    Drawing(
+      Some("Squared random walks on a grid"),
+      DrawingState(
+        0L,
+        """
+        gridSize = 100 in
+        l = 100 in
+        step = 10 in
+        directions = uniformFrom(4, [point(1, 0), point(0, 1), point(-1, 0), point(0, -1)]) in
+        vs = directions.flatMap(p -> const(p).take(step)) in
+        evo = integrate(origin, vs).take(l) in 
+             
+        randomPointInGrid(gridSize).flatMap(p -> evo.symmetric(4) + p) 
+        """.unindent
+      ),
+      defaultRendererState
+    ),
+    Drawing(
+      Some("Sum of circles"),
+      DrawingState(
+        0L,
+        """
+        // r-vars denote the radius of the circle
+        // w-vars the angular speed
+        r1 = 300 in
+        w1 = .001 in
+        r2 = 100 in
+        w2 = .002 in
+        r3 = 100 in
+        w3 = 1 in
+        r4 = 10 in
+        w4 = .008 in
+        r5 = 100 in
+        w5 = .008 in
+        
+        circle(r1, w1) +
+        circle(r2, w2) +
+        circle(r3, w3) +
+        circle(r4, w4) +
+        circle(r5, w5)
+        """.unindent
+      ),
+      defaultRendererState
+    ),
+    Drawing(
+      Some("Vortex"),
+      DrawingState(
+        0L,
+        """
+        a = -.000001 in
+        k = 0.01 in
+        
+        trajectory(p) =
+          solve1(
+            const(q -> k * point(
+               -y(q) + a * x(q) * norm(q)^2,
+               x(q) + a * y(q) * norm(q)^2
+            )),
+            p
+          )
+        in
+        
+        randomPoint.flatMap(p -> trajectory(p).take(100))
+        """.unindent
+      ),
+      defaultRendererState
     )
   )
 
