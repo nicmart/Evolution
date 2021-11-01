@@ -8,8 +8,8 @@ Test / fork := true
 ThisBuild / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.ScalaLibrary
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-logBuffered in Test := false
-bloopExportJarClassifiers in Global := Some(Set("sources"))
+Test / logBuffered := false
+Global / bloopExportJarClassifiers := Some(Set("sources"))
 
 lazy val commonSettings = List(
   organization := "nicmart",
@@ -70,7 +70,7 @@ lazy val jsApp = project
   .settings(
     inThisBuild(commonSettings),
     jsAppSettings,
-    npmDependencies in Compile ++= Seq(
+    Compile / npmDependencies ++= Seq(
       "react" -> "16.7.0",
       "react-dom" -> "16.7.0",
       "codemirror" -> "5.48.4",
@@ -81,20 +81,21 @@ lazy val jsApp = project
     // see also https://github.com/scalacenter/scalajs-bundler/issues/385
     webpackEmitSourceMaps := false,
     scalaJSUseMainModuleInitializer := true,
-    scalaJSStage in Global := FullLi
+    Global / scalaJSStage := FullOptStage,
+    Test / scalaJSStage := FastOptStage
   )
 
 lazy val server = (project in file("server"))
   .settings(
     scalaJSProjects := Seq(jsApp),
-    pipelineStages in Assets := Seq(scalaJSPipeline),
+    Assets / pipelineStages := Seq(scalaJSPipeline),
     libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-dsl" % "1.0.0-M29",
       "org.http4s" %% "http4s-blaze-server" % "1.0.0-M29",
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     ),
-    (managedClasspath in Runtime) += (packageBin in Assets).value,
-    packagePrefix in Assets := "public/",
+    (Runtime / managedClasspath) += (packageBin in Assets).value,
+    Assets / packagePrefix := "public/",
     npmAssets ++= NpmAssets
       .ofProject(jsApp) { nodeModules =>
         (nodeModules / "codemirror").allPaths // sbt 1.0.0+
