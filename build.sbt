@@ -81,7 +81,7 @@ lazy val jsApp = project
     // see also https://github.com/scalacenter/scalajs-bundler/issues/385
     webpackEmitSourceMaps := false,
     scalaJSUseMainModuleInitializer := true,
-    scalaJSStage in Global := FullOptStage
+    scalaJSStage in Global := FullLi
   )
 
 lazy val server = (project in file("server"))
