@@ -15,7 +15,7 @@ class TermInterpreterTest extends LanguageSpec:
     "integers" in {
       val term = Lit(LitInt(123))
       val result = interpreter.interpret(term).asInstanceOf[Any => Any]
-      result(instance("Num", Type.Integer)) shouldBe 123
+      result(instance("Num", Type.Integer).value) shouldBe 123
     }
 
     "booleans" in {
@@ -95,7 +95,7 @@ class TermInterpreterTest extends LanguageSpec:
       val term = Term.Apply(Term.Lit(LitInt(0)), Id("P0"))
 
       val interpreter = RegisterBasedInterpreter.fresh
-      val register = Map("P0" -> instance("Num", Type.Double))
+      val register = Map("P0" -> instance("Num", Type.Double).value)
 
       interpreter.interpretRec(register)(term) shouldBe a[Double]
       interpreter.interpretRec(register)(term) shouldBe 0
