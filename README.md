@@ -1,9 +1,5 @@
-# Evolution [![Build Status](https://travis-ci.org/nicmart/Evolution.svg?branch=master)](https://travis-ci.org/nicmart/Evolution)
-[Evolution](https://evolution.martini.io) is a language and an app to define and draw generative artworks in your browser.
-
-
-
-Documentation is coming...
+# Evolution [![Scala CI](https://github.com/nicmart/Evolution/actions/workflows/scala.yml/badge.svg)](https://github.com/nicmart/Evolution/actions/workflows/scala.yml)
+[Evolution](https://evolution.martini.io) is a language and an app to define and draw generative artworks in your browser, written in Scala 3.
 
 ## Examples
 [Random Walk](http://evolution.martini.io/#/eyJkcmF3aW5nU3RhdGUiOnsic2VlZCI6Nzc1MTMzODM5ODA1MDM2NTQ0OCwiY29kZSI6InJhbmRvbVdhbGsoMikifSwicmVuZGVyZXJTdGF0ZSI6eyJpdGVyYXRpb25zIjoxMDAwLCJzdHJva2VTaXplIjoxLCJyZXNvbHV0aW9uRmFjdG9yIjoyLCJ0cmFpbCI6eyJhY3RpdmUiOmZhbHNlLCJvcGFjaXR5IjowLjEyfSwib2ZmQ2FudmFzU2V0dGluZ3MiOnsiVG9ydXNDYW52YXMiOnt9fX19)
