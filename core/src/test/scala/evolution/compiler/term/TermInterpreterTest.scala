@@ -114,7 +114,7 @@ class TermInterpreterTest extends LanguageSpec:
 
         val interpreter = RegisterBasedInterpreter.fresh
         val addInstance = instance("Add", Type.Double, Type.Integer, Type.Double)
-        val register = RegisterBasedInterpreter.constants + ("P0" -> addInstance)
+        val register = RegisterBasedInterpreter.constants + ("P0" -> addInstance.value)
 
         val f = interpreter.interpretRec(register)(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) shouldBe 4.5
@@ -127,7 +127,7 @@ class TermInterpreterTest extends LanguageSpec:
       val numInstance = instance("Num", Type.Double)
       val term = Inst(numInstance)
 
-      interpreter.interpret(term) shouldBe numInstance
+      interpreter.interpret(term) shouldBe numInstance.value
     }
   }
 
@@ -153,8 +153,8 @@ class TermInterpreterTest extends LanguageSpec:
           Id("double")
         )
       val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
-      f(instance("Add", Type.Double, Type.Double, Type.Double))(1.5) shouldBe 3
-      f(instance("Add", Type.Point, Type.Point, Type.Point))(Point(1, 2)) shouldBe Point(2, 4)
+      f(instance("Add", Type.Double, Type.Double, Type.Double).value)(1.5) shouldBe 3
+      f(instance("Add", Type.Point, Type.Point, Type.Point).value)(Point(1, 2)) shouldBe Point(2, 4)
     }
   }
 

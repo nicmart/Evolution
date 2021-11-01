@@ -49,20 +49,6 @@ lazy val jsAppSettings =
     )
   )
 
-// Creating this "clone" project was the only way I found to be able to run
-// jsAppTest/test without the "ReferenceError" for core module exported classes
-lazy val jsAppTest = project
-  .in(file("app"))
-  .dependsOn(core % "test->test;compile->compile")
-  .enablePlugins(ScalaJSPlugin)
-  .settings(
-    inThisBuild(commonSettings),
-    jsAppSettings,
-    target := {
-      (ThisBuild / baseDirectory).value / "target" / thisProject.value.id
-    }
-  )
-
 lazy val jsApp = project
   .in(file("app"))
   .dependsOn(core % "test->test;compile->compile")

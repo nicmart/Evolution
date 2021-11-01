@@ -2,11 +2,15 @@ package evolution.compiler.phases.typer.config
 
 import evolution.compiler.term.Term
 import evolution.compiler.term.Term.Value
-import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, StringTypeOps, Var, Point => TPoint}
-import evolution.compiler.types.TypeClassInstance._
+import evolution.compiler.types.Type.{Bool, Double, Evo, Integer, Lst, Scheme, StringTypeOps, Var, Point as TPoint}
+import evolution.compiler.types.TypeClassInstance.*
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.geometry.Point
 import evolution.materialization.Evolution
+import evolution.compiler.expression.typeclass.Multiplicative
+import evolution.compiler.expression.typeclass.Invertible
+import cats.kernel.Order
+import cats.kernel.Eq
 
 // TODO optimizations: materialize as soon as possible
 object ConstConfig:
@@ -15,32 +19,32 @@ object ConstConfig:
     Const(
       "greaterthan",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.gt(x, y)
+      (p: Order[Any]) => (x: Any) => (y: Any) => p.gt(x, y)
     ),
     Const(
       "greaterthanorequal",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.gteqv(x, y)
+      (p: Order[Any]) => (x: Any) => (y: Any) => p.gteqv(x, y)
     ),
     Const(
       "lessthan",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.lt(x, y)
+      (p: Order[Any]) => (x: Any) => (y: Any) => p.lt(x, y)
     ),
     Const(
       "lessthanorequal",
       Qualified(List(Predicate("Comp", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: ComparableInst[Any]) => (x: Any) => (y: Any) => p.cmp.order.lteqv(x, y)
+      (p: Order[Any]) => (x: Any) => (y: Any) => p.lteqv(x, y)
     ),
     Const(
       "eq",
       Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: EquableInst[Any]) => (x: Any) => (y: Any) => p.eq.eq.eqv(x, y)
+      (p: Eq[Any]) => (x: Any) => (y: Any) => p.eqv(x, y)
     ),
     Const(
       "neq",
       Qualified(List(Predicate("Eq", "T")), Scheme("T" =>: "T" =>: Bool, "T")),
-      (p: EquableInst[Any]) => (x: Any) => (y: Any) => p.eq.eq.neqv(x, y)
+      (p: Eq[Any]) => (x: Any) => (y: Any) => p.neqv(x, y)
     ),
     // boolean ops
     Const("not", Qualified(Scheme(Bool =>: Bool)), (x: Boolean) => !x),
@@ -135,14 +139,14 @@ object ConstConfig:
     Const(
       "integrate",
       Qualified(List(Predicate("Add", "T", "T", "T")), Scheme("T" =>: Evo("T") =>: Evo("T"), "T")),
-      (p: AdditiveInst[Any, Any, Any]) =>
-        (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, p.add.add)
+      (p: Function2[Any, Any, Any]) =>
+        (start: Any) => (evo: Evolution[Any]) => Evolution.integrate(start, evo, p)
     ),
     Const(
       "solve1",
       Qualified(List(Predicate("Add", "T", "T", "T")), Scheme(Evo("T" =>: "T") =>: "T" =>: Evo("T"), "T")),
-      (p: AdditiveInst[Any, Any, Any]) =>
-        (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, p.add.add)
+      (p: Function2[Any, Any, Any]) =>
+        (evo: Evolution[Any => Any]) => (start: Any) => Evolution.solve1(evo, start, p)
     ),
     Const(
       "solve2",
@@ -150,8 +154,8 @@ object ConstConfig:
         List(Predicate("Add", "T", "T", "T")),
         Scheme(Evo("T" =>: "T" =>: "T") =>: "T" =>: "T" =>: Evo("T"), "T")
       ),
-      (p: AdditiveInst[Any, Any, Any]) =>
-        (evo: Evolution[Any => Any => Any]) => (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, p.add.add)
+      (p: Function2[Any, Any, Any]) =>
+        (evo: Evolution[Any => Any => Any]) => (x0: Any) => (v0: Any) => Evolution.solve2(evo, x0, v0, p)
     ),
     Const(
       "derive",
@@ -159,13 +163,13 @@ object ConstConfig:
         List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")),
         Scheme(Evo("T") =>: Evo("T"), "T")
       ),
-      (add: AdditiveInst[Any, Any, Any]) =>
-        (inv: InvertibleInst[Any]) =>
+      (add: Function2[Any, Any, Any]) =>
+        (inv: Function1[Any, Any]) =>
           (evo: Evolution[Any]) =>
             Evolution.derive(
               evo,
-              add.add.add,
-              inv.inv.invert
+              add,
+              inv
             )
     ),
     Const(
@@ -174,15 +178,15 @@ object ConstConfig:
         List(Predicate("Add", "T1", "T1", "T1"), Predicate("Invertible", "T1")),
         Scheme(Evo("T1") =>: ("T1" =>: "T1" =>: "T2") =>: Evo("T2"), "T1", "T2")
       ),
-      (add: AdditiveInst[Any, Any, Any]) =>
-        (inv: InvertibleInst[Any]) =>
+      (add: Function2[Any, Any, Any]) =>
+        (inv: Function1[Any, Any]) =>
           (evo: Evolution[Any]) =>
             (f: Any => Any => Any) =>
               Evolution.mapWithDerivative(
                 evo,
                 f,
-                add.add.add,
-                inv.inv.invert
+                add,
+                inv
               )
     ),
     // Random Evolutions
@@ -209,7 +213,7 @@ object ConstConfig:
     Const(
       "inverse",
       Qualified(List(Predicate("Invertible", "T")), Scheme("T" =>: "T", "T")),
-      (inv: InvertibleInst[Any]) => (x: Any) => inv.inv.invert(x)
+      (inv: Function1[Any, Any]) => (x: Any) => inv(x)
     ),
     Const("sign", Qualified(Scheme(Double =>: Double)), func1(Math.signum)),
     Const("floor", Qualified(Scheme(Double =>: Integer)), func1(Math.floor)),
@@ -236,18 +240,18 @@ object ConstConfig:
     Const(
       "multiply",
       Qualified(List(Predicate("Mult", "A", "B", "C")), Scheme("A" =>: "B" =>: "C", "A", "B", "C")),
-      (p: MultiplicativeInst[Any, Any, Any]) => (x: Any) => (y: Any) => p.mult.mult(x, y)
+      (p: Function2[Any, Any, Any]) => (x: Any) => (y: Any) => p(x, y)
     ),
     Const(
       "add",
       Qualified(List(Predicate("Add", "A", "B", "C")), Scheme("A" =>: "B" =>: "C", "A", "B", "C")),
-      (p: AdditiveInst[Any, Any, Any]) => (x: Any) => (y: Any) => p.add.add(x, y)
+      (p: Function2[Any, Any, Any]) => (x: Any) => (y: Any) => p(x, y)
     ),
     Const(
       "minus",
       Qualified(List(Predicate("Add", "T", "T", "T"), Predicate("Invertible", "T")), Scheme("T" =>: "T" =>: "T", "T")),
-      (add: AdditiveInst[Any, Any, Any]) =>
-        (inv: InvertibleInst[Any]) => (x: Any) => (y: Any) => add.add.add(x, inv.inv.invert(y))
+      (add: Function2[Any, Any, Any]) =>
+        (inv: Function1[Any, Any]) => (x: Any) => (y: Any) => add(x, inv(y))
     ),
     // geometry
     Const("norm", Qualified(Scheme(TPoint =>: Double)), (p: Point) => p.norm),

@@ -5,7 +5,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import evolution.compiler.tree.TypedTree
 
-private[compiler] final case class Compilation[+T] private (run: CompilerState => Either[String, T]):
+private[compiler] case class Compilation[+T] private (run: CompilerState => Either[String, T]):
   def attempt: Compilation[Either[String, T]] = Compilation(state => Right(run(state)))
 
 private[compiler] object Compilation:

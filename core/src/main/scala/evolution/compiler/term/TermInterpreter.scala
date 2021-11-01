@@ -9,11 +9,11 @@ import evolution.compiler.types.TypeClassInstance.NumericInst
 trait TermInterpreter:
   def interpret(term: Term): Any
 
-final class RegisterBasedInterpreter extends TermInterpreter:
+class RegisterBasedInterpreter extends TermInterpreter:
   def interpret(term: Term): Any = interpretRec(constants)(term)
 
   def interpretRec(register: Map[String, Any])(term: Term): Any = term match
-    case Lit(LitInt(n))      => (num: NumericInst[Any]) => num.num.liftInt(n)
+    case Lit(LitInt(n))      => (num: Function1[Int, Any]) => num(n)
     case Lit(LitBool(b))     => b
     case Lit(LitDouble(d))   => d
     case Lit(LitList(terms)) => terms.map(interpretRec(register))
@@ -29,9 +29,7 @@ final class RegisterBasedInterpreter extends TermInterpreter:
       interpretRec(register)(f).asInstanceOf[Any => Any](interpretRec(register)(x))
 
     case Id(name) => register(name)
-
-    case Inst(inst) => inst
-
+    case Inst(inst) => inst.value
     case Value(value) => value
 
 object RegisterBasedInterpreter:

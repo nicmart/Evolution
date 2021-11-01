@@ -1,8 +1,7 @@
 target
 dist/*
 target/
-lib_managed/
-src_managed/
+out/
 project/boot/
 project/plugins/project/
 .history
@@ -12,6 +11,7 @@ cache/*
 !cache/.gitkeep
 node_modules
 package-lock.json
+**/metals.sbt
 .metals
 .bloop
 .vscode

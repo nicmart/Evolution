@@ -14,7 +14,7 @@ class EvolutionSpec extends LanguageSpec:
       "derivative of a constant is 0" in {
         val deriving = constant[Double](1)
         val derivative =
-          derive(deriving, Additive.DoubleDoubleDouble.add, Invertible.Double.invert)
+          derive(deriving, Additive.DoubleDoubleDouble.materialized, Invertible.Double.materialized)
         derivative.run.take(10).toList shouldBe List.fill(10)(0)
       }
 
@@ -23,8 +23,8 @@ class EvolutionSpec extends LanguageSpec:
         val derivative =
           derive(
             deriving,
-            Additive.PointPointPoint.add,
-            Invertible.Point.invert
+            Additive.PointPointPoint.materialized,
+            Invertible.Point.materialized
           )
         derivative.run.take(10).toList shouldBe List.fill(10)(Point.zero)
       }
@@ -32,7 +32,7 @@ class EvolutionSpec extends LanguageSpec:
       "derivative gives the differences" in {
         val deriving = cons[Double](1.0, cons(2, cons(3, cons(4, cons(5, Evolution.empty)))))
         val derivative =
-          derive(deriving, Additive.DoubleDoubleDouble.add, Invertible.Double.invert)
+          derive(deriving, Additive.DoubleDoubleDouble.materialized, Invertible.Double.materialized)
         derivative.run.toList shouldBe List.fill(4)(1.0)
       }
     }

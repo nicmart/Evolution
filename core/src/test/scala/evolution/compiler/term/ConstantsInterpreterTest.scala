@@ -495,12 +495,12 @@ class ConstantsInterpreterTest extends LanguageSpec:
 
   def interpret(term: Term): Any = RegisterBasedInterpreter().interpret(term)
 
-  lazy val addIntInstance: TypeClassInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
-  lazy val addDoubleInstance: TypeClassInstance = instance("Add", Type.Integer, Type.Integer, Type.Integer)
-  lazy val invIntInstance: TypeClassInstance = instance("Invertible", Type.Integer)
+  lazy val addIntInstance: Any = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val addDoubleInstance: Any = instance("Add", Type.Integer, Type.Integer, Type.Integer)
+  lazy val invIntInstance: Any = instance("Invertible", Type.Integer)
 
-  private def instance(id: String, types: Type*): TypeClassInstance =
-    TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
+  private def instance(id: String, types: Type*): Any =
+    TypingConfig.instance(Predicate(id, types.toList)).unsafeRight.value
 
   def sum1(n: Int): Int => Int = x => x + n
   def sum2(n: Int): Int => Int => Int = x => y => x + y + n
