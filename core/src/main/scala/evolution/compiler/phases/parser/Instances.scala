@@ -18,7 +18,6 @@ object Instances:
       f(p, Pos(start, end))
     }
     def addPos: P[(A, Pos)] = mapWithPos((a, pos) => (a, pos))
-    //def withPos: P[(A, Pos)] = mapWithPos((a, pos) => (a, pos))
     def onlyPos: P[Pos] = mapWithPos((a, pos) => pos)
     def surroundedByWhitespaces: P[A] = whitespaces.?.with1.soft *> p <* whitespaces.?
 

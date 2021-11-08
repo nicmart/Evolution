@@ -108,10 +108,7 @@ object CatsParseParser extends Parser:
     App.of(Id(name, false, opPos), left, right).withPos(Pos(left.start, right.end))
 
   // Operator groups, order by ascending Precedence
-  private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
-    atomicOperand,
-    allPrecedenceGroups
-  )
+  private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(atomicOperand, allPrecedenceGroups)
 
   private lazy val factor: P[Tree] =
     // TODO: *> and <* with whitespaces
@@ -156,8 +153,8 @@ object CatsParseParser extends Parser:
     identifier.mapWithPos((id, pos) => Id(id, false, pos)) <* P.pure(())
 
   private lazy val unaryOps: P[Tree] =
-    P.char('-').void.mapWithPos((_, pos) => Id("inverse", false, pos)) |
-      P.char('!').void.mapWithPos((_, pos) => Id("not", false, pos))
+    P.char('-').onlyPos.map(pos => Id("inverse", false, pos)) |
+      P.char('!').onlyPos.map(pos => Id("not", false, pos))
 
   private lazy val unaryPrefixOp: P[Tree] =
     (unaryOps ~ atomicOperand).mapWithPos { case ((op, e), pos) => App.of(op, e) }
