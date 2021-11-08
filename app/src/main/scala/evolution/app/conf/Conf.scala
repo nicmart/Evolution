@@ -1,11 +1,11 @@
 package evolution.app.conf
 
-import evolution.app.canvas.drawer._
-import evolution.app.codec._
+import evolution.app.canvas.drawer.*
+import evolution.app.codec.*
 import evolution.app.model.context.DrawingContext
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state
-import evolution.app.model.state._
+import evolution.app.model.state.*
 import evolution.app.react.component.presentational.Page
 import evolution.app.react.component.{App, Canvas}
 import evolution.app.react.pages.{LoadDrawingPage, MyPages, PageState, InterpretationOption}

@@ -1,7 +1,7 @@
 package evolution.app.react.component.presentational.styled
 
 import japgolly.scalajs.react.ScalaComponent
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 
 object FormField:
 

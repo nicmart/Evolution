@@ -1,6 +1,6 @@
 package evolution.compiler.tree
 
-import cats.implicits._
+import cats.implicits.*
 
 final case class Tree(value: TreeF[Tree]) {
   export value.pos.*

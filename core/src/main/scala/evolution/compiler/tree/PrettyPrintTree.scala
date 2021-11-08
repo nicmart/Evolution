@@ -1,6 +1,6 @@
 package evolution.compiler.tree
 
-import TreeF._
+import TreeF.*
 
 object PrettyPrintTree:
 
@@ -14,7 +14,7 @@ object PrettyPrintTree:
         case TreeF.App(g, args, _) => ppFunc("App", g :: args.toList, n)
         case Let(id, expr, in, _)  => ppFunc("Let", List(n => s"${"  " * n}$id", expr, in), n)
         case Lambda(id, expr, _)   => ppLambda(id, expr, n)
-        case id: Id             => id.name
+        case id: Id                => id.name
         case DoubleLiteral(d, _)   => d.toString
         case Bool(b, _)            => b.toString
         case IntLiteral(n, _)      => n.toString
@@ -32,6 +32,6 @@ object PrettyPrintTree:
 //    if (childrenInOneLine.size < maxChildrenLegnth) childrenInOneLine
 //    else children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
     children.map(_.apply(n + 1)).mkString(s"$name(\n", ",\n", s"\n${indent(n)})")
-    //children.map(child => child(0)).mkString(", ")
+  //children.map(child => child(0)).mkString(", ")
 
   private def indent(n: Int): String = "  " * n

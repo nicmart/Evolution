@@ -1,6 +1,6 @@
 package evolution.compiler.phases.typer.predicates
 
-import evolution.compiler.phases.typer.Matchable._
+import evolution.compiler.phases.typer.Matchable.*
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.phases.typer.predicates.model.PredicateConditions
 import evolution.compiler.types.TypeClasses.Predicate

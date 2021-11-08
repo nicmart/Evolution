@@ -1,7 +1,7 @@
 package evolution.compiler.phases.parser
 
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.implicits.*
 import cats.parse.Parser.{not, void}
 import cats.parse.{Parser => P, Parser0 => P0}
 import evolution.compiler.phases.Parser

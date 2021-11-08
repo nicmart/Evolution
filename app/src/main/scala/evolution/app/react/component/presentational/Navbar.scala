@@ -1,7 +1,7 @@
 package evolution.app.react.component.presentational
 
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{PropsChildren, ScalaComponent}
 
 object Navbar:

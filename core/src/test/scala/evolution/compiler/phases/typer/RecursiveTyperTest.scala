@@ -2,7 +2,7 @@ package evolution.compiler.phases.typer
 
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
-import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.Tree.*
 import evolution.compiler.tree.{PrettyPrintTypedTree, TypedTree => T}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme

@@ -1,9 +1,9 @@
 package evolution.app.model.state
 
-import evolution.app.codec._
+import evolution.app.codec.*
 import io.circe.Json
-import io.circe.generic.auto._
-import io.circe.syntax._
+import io.circe.generic.auto.*
+import io.circe.syntax.*
 
 import scala.util.Random
 

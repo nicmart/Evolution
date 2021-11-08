@@ -1,6 +1,6 @@
 package evolution.compiler.term
 
-import Term._
+import Term.*
 
 import evolution.compiler.phases.typer.model.Assumptions
 

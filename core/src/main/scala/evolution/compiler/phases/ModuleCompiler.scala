@@ -1,6 +1,6 @@
 package evolution.compiler.phases
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.term.{Definition, Module, RegisterBasedInterpreter, Term, TermOptimizer, TreeToTermCompiler}

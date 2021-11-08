@@ -1,8 +1,8 @@
 package evolution.server
 
-import cats.effect._
+import cats.effect.*
 import org.http4s.server.Server
-import org.http4s.implicits._
+import org.http4s.implicits.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 

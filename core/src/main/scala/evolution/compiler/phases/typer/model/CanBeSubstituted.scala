@@ -3,7 +3,7 @@ package evolution.compiler.phases.typer.model
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
-import evolution.compiler.tree._
+import evolution.compiler.tree.*
 
 trait CanBeSubstituted[T]:
   def substitute(s: Substitution, t: T): T

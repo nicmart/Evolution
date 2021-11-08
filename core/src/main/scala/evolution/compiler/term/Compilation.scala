@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.types.TypeClasses.Predicate
-import cats.implicits._
+import cats.implicits.*
 
 private[term] case class Compilation[+T](run: CompilerState => Either[String, T]):
   def flatMap[U](f: T => Compilation[U]): Compilation[U] =

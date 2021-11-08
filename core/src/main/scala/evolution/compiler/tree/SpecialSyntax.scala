@@ -1,7 +1,7 @@
 package evolution.compiler.tree
 
 import scala.collection.immutable.Nil
-import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.Tree.*
 
 object SpecialSyntax:
   def zip(bindings: List[(String, Tree)], body: Tree): Tree = bindings match

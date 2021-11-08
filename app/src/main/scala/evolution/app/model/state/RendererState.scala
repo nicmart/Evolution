@@ -1,10 +1,10 @@
 package evolution.app.model.state
 
-import evolution.app.canvas.drawer._
+import evolution.app.canvas.drawer.*
 import evolution.app.model.context.DrawingContext
-import io.circe._
-import io.circe.generic.auto._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.syntax.*
 import evolution.app.codec.JsonCodec
 
 final case class RendererState(

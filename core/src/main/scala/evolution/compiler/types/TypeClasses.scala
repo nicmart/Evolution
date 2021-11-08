@@ -1,5 +1,5 @@
 package evolution.compiler.types
-import evolution.compiler.expression.typeclass._
+import evolution.compiler.expression.typeclass.*
 import evolution.compiler.types.TypeClasses.Predicate
 
 // Just a union types of typeclasses

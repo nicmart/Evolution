@@ -1,15 +1,14 @@
 package evolution.compiler.term
 
-import Term._
+import Term.*
 import evolution.compiler.term.Term.Literal.LitList
 import evolution.compiler.term.CaptureAvoidingRenamer.Renamed
 
-/**
-  * Transform a term in order to avoid capture-related problems in substitutions.
-  * See for example https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
+/** Transform a term in order to avoid capture-related problems in substitutions. See for example
+  * https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
   */
 class CaptureAvoidingRenamer:
-  import CaptureAvoidingRenamer._, CaptureAvoidingRenamer.Renamed._
+  import CaptureAvoidingRenamer.*, CaptureAvoidingRenamer.Renamed.*
   def rename(term: Term, vars: Set[String] = Set.empty): Term = renameM(term).run(vars)
 
   private def renameM(term: Term): Renamed[Term] = term match

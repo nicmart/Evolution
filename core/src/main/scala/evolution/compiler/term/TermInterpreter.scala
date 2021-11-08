@@ -2,8 +2,8 @@ package evolution.compiler.term
 
 import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.RegisterBasedInterpreter.constants
-import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term._
+import evolution.compiler.term.Term.Literal.*
+import evolution.compiler.term.Term.*
 
 trait TermInterpreter:
   def interpret(term: Term): Any
@@ -27,8 +27,8 @@ class RegisterBasedInterpreter extends TermInterpreter:
     case Apply(f, x) =>
       interpretRec(register)(f).asInstanceOf[Any => Any](interpretRec(register)(x))
 
-    case Id(name) => register(name)
-    case Inst(inst) => inst.value
+    case Id(name)     => register(name)
+    case Inst(inst)   => inst.value
     case Value(value) => value
 
 object RegisterBasedInterpreter:

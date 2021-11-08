@@ -2,7 +2,7 @@ package evolution.app.react.component.presentational
 
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.Callback
 
@@ -11,7 +11,6 @@ object Editor:
 
   class Backend:
     def render(props: Props): VdomElement =
-
       <.div(
         ^.className := "dsl-config",
         CodeMirror.component(

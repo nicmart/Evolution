@@ -1,6 +1,6 @@
 package evolution.compiler.types
 
-import cats.implicits._
+import cats.implicits.*
 
 enum Type:
   case Integer

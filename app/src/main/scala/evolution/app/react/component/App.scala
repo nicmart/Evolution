@@ -6,8 +6,8 @@ import evolution.app.model.context.DrawingContext.CanvasSize
 import evolution.app.model.counter.RateCounter
 import evolution.app.model.state.RendererState
 import evolution.app.model.{CodeCompiler, Drawing, TermBasedCodeCompiler}
-import evolution.app.react.component.presentational._
-import evolution.app.react.pages._
+import evolution.app.react.component.presentational.*
+import evolution.app.react.pages.*
 import evolution.app.react.underware.SnapshotUnderware
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.CatsParseParser

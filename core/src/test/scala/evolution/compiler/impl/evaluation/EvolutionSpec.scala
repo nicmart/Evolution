@@ -2,10 +2,10 @@ package evolution.compiler.impl.evaluation
 
 import evolution.compiler.LanguageSpec
 import evolution.materialization.Evolution
-import evolution.materialization.Evolution._
+import evolution.materialization.Evolution.*
 import evolution.geometry.Point
 import org.scalatest.Inspectors
-import evolution.compiler.expression.typeclass._
+import evolution.compiler.expression.typeclass.*
 import Ordering.Double.TotalOrdering
 
 class EvolutionSpec extends LanguageSpec:

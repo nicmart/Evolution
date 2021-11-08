@@ -9,7 +9,7 @@ import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
 import org.scalajs.dom.raw.{Blob, URL}

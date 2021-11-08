@@ -1,5 +1,5 @@
 package evolution.compiler.tree
-import cats.implicits._
+import cats.implicits.*
 
 final case class AnnotatedTree[+A](annotation: A, tree: TreeF[AnnotatedTree[A]])
 

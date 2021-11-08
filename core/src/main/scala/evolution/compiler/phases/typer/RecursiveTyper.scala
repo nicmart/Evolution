@@ -1,15 +1,15 @@
 package evolution.compiler.phases.typer
 
-import cats.implicits._
+import cats.implicits.*
 import evolution.compiler.phases.Typer
-import evolution.compiler.phases.typer.Inference._
-import evolution.compiler.phases.typer.RecursiveTyper._
+import evolution.compiler.phases.typer.Inference.*
+import evolution.compiler.phases.typer.RecursiveTyper.*
 import evolution.compiler.phases.typer.model.{Assignment, Assumption, Assumptions, Substitution}
 import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Id, IntLiteral, Lambda, Let, Lst}
 import evolution.compiler.tree.{Tree, _}
 import evolution.compiler.types.Type.Scheme
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types._
+import evolution.compiler.types.TypeClasses.*
+import evolution.compiler.types.*
 
 final class RecursiveTyper extends Typer:
 

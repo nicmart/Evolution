@@ -5,7 +5,7 @@ import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.tree.{PrettyPrintTree, PrettyPrintTypedTree}
-import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.Tree.*
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.types.Type

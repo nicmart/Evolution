@@ -1,11 +1,11 @@
 package evolution.compiler.term
 
 import cats.data.Reader
-import cats.implicits._
+import cats.implicits.*
 import evolution.compiler.phases.typer.config.ConstConfig
-import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term.{Id, _}
-import evolution.compiler.term.TermOptimizer._
+import evolution.compiler.term.Term.Literal.*
+import evolution.compiler.term.Term.{Id, *}
+import evolution.compiler.term.TermOptimizer.*
 import cats.catsInstancesForId
 
 import scala.annotation.tailrec

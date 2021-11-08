@@ -1,13 +1,13 @@
 package evolution.compiler.phases.typer.predicates.model
 
-import cats.implicits._
+import cats.implicits.*
 import evolution.compiler.phases.typer.model.{Assignment, Substitution}
 import evolution.compiler.types.TypeClasses.Predicate
 
 private[predicates] case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]):
   lazy val requirements: Map[String, Alternatives] =
-    substitutions.flatMap(_.assignments).groupBy(_.variable).map {
-      case (variable, assignments) => variable -> Alternatives(variable, assignments.map(_.tpe))
+    substitutions.flatMap(_.assignments).groupBy(_.variable).map { case (variable, assignments) =>
+      variable -> Alternatives(variable, assignments.map(_.tpe))
     }
   lazy val isFinal: Boolean = requirements.values.forall(_.isFinal)
   def nonEmpty: Boolean = substitutions.nonEmpty
@@ -20,4 +20,3 @@ private[predicates] case class PredicateConditions(predicate: Predicate, substit
       predicate,
       substitutions.filter(subst => otherRequirements.values.forall(_.isCompatibleWithSubstitution(subst)))
     ).asRight.filterOrElse(_.nonEmpty, s"Predicate $predicate is incompatible with requirements $otherRequirements")
-

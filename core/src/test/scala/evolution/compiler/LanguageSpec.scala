@@ -2,7 +2,7 @@ package evolution.compiler
 import evolution.compiler.term.Term
 import evolution.compiler.term.Term.Let
 import org.scalactic.{Equality, Prettifier, TypeCheckedTripleEquals}
-import org.scalatest._
+import org.scalatest.*
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

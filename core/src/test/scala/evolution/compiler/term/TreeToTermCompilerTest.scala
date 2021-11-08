@@ -1,10 +1,10 @@
 package evolution.compiler.term
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.term.Term.Literal._
+import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.tree.AnnotatedTree
 import evolution.compiler.tree.AnnotatedTree.AwaitingAnnotation
-import evolution.compiler.tree.TypedTree._
+import evolution.compiler.tree.TypedTree.*
 import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 import evolution.compiler.types.TypeClasses

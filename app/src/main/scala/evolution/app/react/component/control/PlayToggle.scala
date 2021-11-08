@@ -3,7 +3,7 @@ package evolution.app.react.component.control
 import evolution.app.react.component.presentational.Button
 import japgolly.scalajs.react
 import japgolly.scalajs.react.extra.StateSnapshot
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 
 object PlayToggle:
   type IsPlaying = Boolean

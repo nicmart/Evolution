@@ -1,6 +1,6 @@
 package evolution.app.codec
 
-import io.circe._
+import io.circe.*
 
 object JsonCodec:
   given [T](using encoder: Encoder[T], decoder: Decoder[T]): JsonCodec[T] =

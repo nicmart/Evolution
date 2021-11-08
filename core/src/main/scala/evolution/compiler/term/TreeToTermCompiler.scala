@@ -1,9 +1,9 @@
 package evolution.compiler.term
 
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.term.Compilation._
-import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term._
+import evolution.compiler.term.Compilation.*
+import evolution.compiler.term.Term.Literal.*
+import evolution.compiler.term.Term.*
 import evolution.compiler.tree.{AnnotatedTree, TreeF, TypedTree}
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
 

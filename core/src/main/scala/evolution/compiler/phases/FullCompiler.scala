@@ -1,8 +1,8 @@
 package evolution.compiler.phases
 
-import cats.syntax.either._
-import evolution.compiler.term._
-import evolution.compiler.tree._
+import cats.syntax.either.*
+import evolution.compiler.term.*
+import evolution.compiler.tree.*
 import evolution.compiler.types.Type
 import evolution.logging.Logger
 

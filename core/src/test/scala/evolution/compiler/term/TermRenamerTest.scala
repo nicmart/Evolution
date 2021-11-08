@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import Term._
+import Term.*
 import evolution.compiler.term.Term.Literal.LitList
 
 class TermRenamerTest extends LanguageSpec:

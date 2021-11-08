@@ -1,7 +1,7 @@
 package evolution.app.react.component.presentational
 
 import scalajs.js
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 
 import scala.scalajs.js.annotation.JSImport
 

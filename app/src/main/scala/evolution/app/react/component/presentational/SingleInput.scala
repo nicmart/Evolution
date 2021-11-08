@@ -3,7 +3,7 @@ package evolution.app.react.component.presentational
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, ReactEventFromInput, ScalaComponent}
 
 import scala.util.Try

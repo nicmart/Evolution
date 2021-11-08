@@ -1,10 +1,10 @@
 package evolution.compiler.phases.typer.config
 
 import evolution.compiler.expression.typeclass.Multiplicative.{LiftBoth, LiftLeft, LiftRight}
-import evolution.compiler.expression.typeclass._
+import evolution.compiler.expression.typeclass.*
 import evolution.compiler.phases.typer.model.Assumptions
 import evolution.compiler.term.{Definition, Module, Term}
-import evolution.compiler.types.TypeClassInstance._
+import evolution.compiler.types.TypeClassInstance.*
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 
@@ -75,7 +75,11 @@ object TypingConfig:
   val instancesPredicates: List[Predicate] = instances.map(instance => Predicate(instance.id, instance.types))
 
   def instance(typeClassId: TypeClassId, types: Type*): Either[String, TypeClassInstance] =
-      instances.find(instance => instance.id == typeClassId.toString && instance.types == types.toList).toRight(s"No $typeClassId instance found for $types")
+    instances
+      .find(instance => instance.id == typeClassId.toString && instance.types == types.toList)
+      .toRight(s"No $typeClassId instance found for $types")
 
   def instance(predicate: Predicate): Either[String, TypeClassInstance] =
-    instance(TypeClassId.valueOf(predicate.id), predicate.types: _*).left.map(_ => s"No instance found for predicate $predicate")
+    instance(TypeClassId.valueOf(predicate.id), predicate.types: _*).left.map(_ =>
+      s"No instance found for predicate $predicate"
+    )

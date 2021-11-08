@@ -2,10 +2,10 @@ package evolution.compiler
 import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.phases.typer.config.ConstConfig
-import evolution.compiler.tree.TreeF._
-import evolution.compiler.tree._
+import evolution.compiler.tree.TreeF.*
+import evolution.compiler.tree.*
 import evolution.compiler.types.Type
-import evolution.compiler.types.TypeClasses._
+import evolution.compiler.types.TypeClasses.*
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 

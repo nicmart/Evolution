@@ -2,8 +2,8 @@ package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig
-import evolution.compiler.term.Term.Literal._
-import evolution.compiler.term.Term._
+import evolution.compiler.term.Term.Literal.*
+import evolution.compiler.term.Term.*
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 import evolution.geometry.Point

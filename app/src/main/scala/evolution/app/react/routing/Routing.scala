@@ -2,13 +2,13 @@ package evolution.app.react.routing
 
 import evolution.app.codec.Codec
 import evolution.app.react.component.App
-import evolution.app.react.pages._
+import evolution.app.react.pages.*
 import evolution.app.react.underware.SnapshotUnderware
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia.{HistoryPush, HistoryReplace}
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
 import japgolly.scalajs.react.extra.router.{BaseUrl, RouterConfig, RouterConfigDsl}
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 
 class Routing(
     urlDelimiter: String,
@@ -21,7 +21,7 @@ class Routing(
     BaseUrl.until(urlDelimiter)
 
   val config: RouterConfig[MyPages] = RouterConfigDsl[MyPages].buildConfig { dsl =>
-    import dsl._
+    import dsl.*
 
     (emptyRule
       | HomePageRoute(dsl).rule
@@ -31,7 +31,7 @@ class Routing(
   }
 
   private case class HomePageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
-    import dsl._
+    import dsl.*
 
     val rule: dsl.Rule =
       route ~> renderPage
@@ -43,21 +43,18 @@ class Routing(
       redirectToPage(defaultPage)(HistoryReplace)
 
   private case class LoadDrawingPageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
-    import dsl._
+    import dsl.*
 
     val rule: dsl.Rule =
       route ~> renderPage
 
     private def url: RouteB[DrawingPageUrl] =
-      (("js/").option ~ remainingPath).pmap {
-        case (optJsSegment, drawingSegment) =>
-          println(s"In Router: optJsSegment: $optJsSegment, drawing segments: $drawingSegment")
-          Some(
-            DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
-          )
-      }(
-        url => (url.materializerSegment.headOption.map(_ => ()), url.drawingSegment)
-      )
+      (("js/").option ~ remainingPath).pmap { case (optJsSegment, drawingSegment) =>
+        println(s"In Router: optJsSegment: $optJsSegment, drawing segments: $drawingSegment")
+        Some(
+          DrawingPageUrl(drawingSegment, optJsSegment.fold("")(_ => "js"))
+        )
+      }(url => (url.materializerSegment.headOption.map(_ => ()), url.drawingSegment))
 
     private def route =
       dynamicRouteCT[LoadDrawingPage](
@@ -67,17 +64,16 @@ class Routing(
     private def renderPage: LoadDrawingPage => dsl.Renderer =
       dsl.dynRenderR { (loadDrawingPage, router) =>
         appComponent(
-          SnapshotUnderware.simpleSnapshot[PageState](loadDrawingPage.state)(
-            pageState =>
-              Callback(println(s"PageStateSnapshot Callback called with state $pageState")) >> router.set(
-                LoadDrawingPage(pageState)
-              )
+          SnapshotUnderware.simpleSnapshot[PageState](loadDrawingPage.state)(pageState =>
+            Callback(println(s"PageStateSnapshot Callback called with state $pageState")) >> router.set(
+              LoadDrawingPage(pageState)
+            )
           )
         )
       }
 
   private case class NotFoundPageRoute(dsl: RouterConfigDsl[MyPages, Unit]):
-    import dsl._
+    import dsl.*
 
     val rule: dsl.Rule =
       route ~> render

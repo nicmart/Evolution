@@ -1,13 +1,13 @@
 package evolution.app.react.component.control
 
 import evolution.app.data.PointedSeq
-import evolution.app.model.state._
+import evolution.app.model.state.*
 import evolution.app.react.component.presentational.Select.Item
 import evolution.app.react.component.presentational.styled.FormField
 import evolution.app.react.component.presentational.{DoubleInputComponent, IntInputComponent, Select}
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{ScalaComponent, _}
 
 object RenderingSettings:

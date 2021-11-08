@@ -1,9 +1,9 @@
 package evolution.compiler.phases.typer
 
 import cats.Monad
-import cats.syntax.functor._
-import cats.syntax.flatMap._
-import cats.syntax.applicative._
+import cats.syntax.functor.*
+import cats.syntax.flatMap.*
+import cats.syntax.applicative.*
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions, Substitution}
 import evolution.compiler.types.Type
 

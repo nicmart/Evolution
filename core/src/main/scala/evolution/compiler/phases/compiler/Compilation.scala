@@ -1,8 +1,8 @@
 package evolution.compiler.phases.compiler
 
 import cats.Monad
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import evolution.compiler.tree.TypedTree
 
 private[compiler] case class Compilation[+T] private (run: CompilerState => Either[String, T]):

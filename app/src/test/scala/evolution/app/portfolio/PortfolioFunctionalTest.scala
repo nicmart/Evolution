@@ -8,7 +8,7 @@ import evolution.app.portfolio.Portfolio
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.FullCompiler
 import evolution.compiler.phases.parser.CatsParseParser
-import evolution.compiler.phases.typer._
+import evolution.compiler.phases.typer.*
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.term.{RegisterBasedInterpreter, TreeToTermCompiler}
 

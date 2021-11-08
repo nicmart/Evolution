@@ -1,6 +1,6 @@
 package evolution.compiler.phases.typer.predicates
 
-import cats.implicits._
+import cats.implicits.*
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.phases.typer.predicates.model.PredicateConditions
 

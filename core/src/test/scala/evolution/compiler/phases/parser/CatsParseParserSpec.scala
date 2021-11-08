@@ -1,7 +1,7 @@
 package evolution.compiler.phases.parser
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.Tree.*
 import evolution.compiler.tree.NoPos
 import evolution.compiler.tree.{SpecialSyntax, Tree}
 import org.scalacheck.Arbitrary.arbitrary

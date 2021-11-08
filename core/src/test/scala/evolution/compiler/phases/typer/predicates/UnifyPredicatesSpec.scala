@@ -3,8 +3,8 @@ package evolution.compiler.phases.typer.predicates
 import evolution.compiler.LanguageSpec
 import evolution.compiler.phases.typer.config.TypingConfig
 import evolution.compiler.phases.typer.model.Substitution
-import evolution.compiler.types.TypeClasses._
-import evolution.compiler.types._
+import evolution.compiler.types.TypeClasses.*
+import evolution.compiler.types.*
 import evolution.logging.NoOpLogger
 
 import scala.util.Random

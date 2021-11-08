@@ -1,6 +1,6 @@
 package evolution.compiler.phases.typer.model
 
-import cats.implicits._
+import cats.implicits.*
 import evolution.compiler.types.Type
 
 final case class Substitution(assignments: List[Assignment]):

@@ -4,14 +4,14 @@
 package evolution.compiler.phases.parser
 
 import cats.parse.{Parser => P}
-import evolution.compiler.phases.parser.Instances._
+import evolution.compiler.phases.parser.Instances.*
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree.Tree
 import evolution.compiler.tree.Pos
 
 private[parser] final case class PrecedenceGroup(operators: (String, BinaryOperator)*):
-  def parser(next: P[Tree]): P[Tree] = (next ~~ (opsParser ~~ next).rep0).map {
-    case (head, tail) => evalAssocBinaryOp(head, tail)
+  def parser(next: P[Tree]): P[Tree] = (next ~~ (opsParser ~~ next).rep0).map { case (head, tail) =>
+    evalAssocBinaryOp(head, tail)
   }
 
   private def opsParser: P[(Tree, Tree) => Tree] = operators.foldLeft[P[(Tree, Tree) => Tree]](P.fail) {

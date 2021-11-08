@@ -6,8 +6,8 @@ import evolution.app.model.state.RendererState
 import evolution.geometry.Point
 import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.VdomElement
-import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^.*
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.{Callback, CtorType, ScalaComponent}
 import org.scalajs.dom
 
