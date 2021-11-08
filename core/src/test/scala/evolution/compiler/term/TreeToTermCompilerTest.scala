@@ -6,8 +6,8 @@ import evolution.compiler.tree.AnnotatedTree
 import evolution.compiler.tree.AnnotatedTree.AwaitingAnnotation
 import evolution.compiler.tree.TypedTree._
 import evolution.compiler.types.{Type, TypeClassInstance}
-import evolution.compiler.types.TypeClassInstance.NumericInst
 import evolution.compiler.types.TypeClasses.{Predicate, Qualified}
+import evolution.compiler.types.TypeClasses
 
 class TreeToTermCompilerTest extends LanguageSpec:
   "TreeToTermCompiler" - {
@@ -42,8 +42,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           "monomorphic" in {
             val predicate = Predicate("Num", List(Type.Double))
             val tree = IntLiteral(0).as(Type.Double, predicate)
-            val instance = NumericInst(TypingConfig.numeric(Type.Double).unsafeRight)
-
+            val instance = TypingConfig.instance(TypingConfig.TypeClassId.Num, Type.Double).unsafeRight
             val term = compiler.compile(tree).unsafeRight
 
             term shouldBe Term.Apply(Term.Lit(LitInt(0)), Term.Inst(instance))

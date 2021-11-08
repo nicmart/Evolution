@@ -31,27 +31,27 @@ final class RecursiveTyper extends Typer:
 
   private def typeTreeInf(tree: Tree): Inference[TypedTree] =
     tree.value match
-      case Bool(b) => Bool(b).typeWithNoPredicates(Type.Bool).pure[Inference]
+      case Bool(b, pos) => Bool(b, pos).typeWithNoPredicates(Type.Bool).pure[Inference]
 
-      case DoubleLiteral(n) =>
-        DoubleLiteral(n).typeWithNoPredicates(Type.Double).pure[Inference]
+      case DoubleLiteral(n, pos) =>
+        DoubleLiteral(n, pos).typeWithNoPredicates(Type.Double).pure[Inference]
 
-      case IntLiteral(n) =>
+      case IntLiteral(n, pos) =>
         for
           typeVar <- newTypeVar
           predicate = Predicate("Num", List(typeVar))
-        yield IntLiteral(n).typeWithSinglePredicate(predicate, typeVar)
+        yield IntLiteral(n, pos).typeWithSinglePredicate(predicate, typeVar)
 
-      case Id(name) =>
+      case Id(name, pos) =>
         for
           assumption <- getAssumption(name.string)
           qualifiedScheme = assumption.qualifiedScheme
           vars = qualifiedScheme.value.vars.map(Type.Var.apply)
           freshTypeVars <- vars.traverse(_ => newTypeVar)
           newQualifiedType = instantiate(qualifiedScheme, freshTypeVars)
-        yield Id(name).annotate(newQualifiedType)
+        yield Id(name, pos).annotate(newQualifiedType)
 
-      case Lambda(varName, body) =>
+      case Lambda(varName, body, pos) =>
         for
           freshTypeVarname <- newTypeVarname
           assumption = Assumption(varName, Qualified(Scheme(Type.Var(freshTypeVarname))))
@@ -59,9 +59,9 @@ final class RecursiveTyper extends Typer:
           lambdaType = Type.Var(freshTypeVarname) =>: typedBody.annotation.value
           lambdaPredicates = typedBody.annotation.predicates
           lambdaQualifiedType = qualified(lambdaPredicates, lambdaType)
-        yield Lambda(varName, typedBody).annotate(lambdaQualifiedType)
+        yield Lambda(varName, typedBody, pos).annotate(lambdaQualifiedType)
 
-      case TreeF.App(f, inputs) =>
+      case TreeF.App(f, inputs, pos) =>
         for
           typedF <- typeTreeInf(f)
           typedInputs <- inputs.traverse(tree => typeTreeInf(tree))
@@ -70,17 +70,17 @@ final class RecursiveTyper extends Typer:
           returnType <- newTypeVar
           _ <- unify(typedF.annotation.value, arrowType(inputTypes, returnType))
           qualifiedType = qualified(typedF.annotation.predicates ++ inputPredicates, returnType)
-        yield TreeF.App(typedF, typedInputs).annotate(qualifiedType)
+        yield TreeF.App(typedF, typedInputs, pos).annotate(qualifiedType)
 
-      case Lst(ts) =>
+      case Lst(ts, pos) =>
         for
           typedTs <- ts.traverse(tree => typeTreeInf(tree))
           freshTypeVar <- newTypeVar
           _ <- typedTs.traverse(typedTree => unify(freshTypeVar, typedTree.annotation.value))
           qualifiedType = qualified(typedTs.flatMap(_.annotation.predicates), Type.Lst(freshTypeVar))
-        yield Lst(typedTs).annotate(qualifiedType)
+        yield Lst(typedTs, pos).annotate(qualifiedType)
 
-      case Let(varName, expr, in) =>
+      case Let(varName, expr, in, pos) =>
         for
           currentAssumptions <- assumptions
           typedExpr <- typeTreeInf(expr)
@@ -96,7 +96,7 @@ final class RecursiveTyper extends Typer:
           letPredicates = typedIn.annotation.predicates
           //letPredicates = typedIn.annotation.predicates ++ typedExpr.annotation.predicates
           letType = qualified(letPredicates, typedIn.annotation.value)
-        yield Let(varName, typedExpr, typedIn).annotate(letType)
+        yield Let(varName, typedExpr, typedIn, pos).annotate(letType)
 
 object RecursiveTyper:
   private def qualified(predicates: List[Predicate], tpe: Type): Qualified[Type] =

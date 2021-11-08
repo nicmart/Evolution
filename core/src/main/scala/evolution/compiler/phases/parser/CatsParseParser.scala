@@ -5,11 +5,13 @@ import cats.implicits._
 import cats.parse.Parser.{not, void}
 import cats.parse.{Parser => P, Parser0 => P0}
 import evolution.compiler.phases.Parser
-import evolution.compiler.phases.parser.Instances._
+import evolution.compiler.phases.parser.Instances.given
+import evolution.compiler.phases.parser.Instances.*
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree
+import evolution.compiler.tree.Pos
 import evolution.compiler.tree.Tree
-import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.Tree.*
 
 import scala.annotation.tailrec
 
@@ -28,7 +30,9 @@ object CatsParseParser extends Parser:
   private lazy val program: P[Tree] = expression.surroundedByWhitespaces
 
   private lazy val expression: P[Tree] =
-    P.defer(NonOperandExpressions.nonOperand | precedenceGroups.operand)
+    (P.defer(NonOperandExpressions.nonOperand | precedenceGroups.operand)
+      .mapWithPos((tree, pos) => tree))
+      .mapWithPos((tree, pos) => tree.withPos(pos))
 
   private object NonOperandExpressions:
     val nonOperand: P[Tree] =
@@ -68,7 +72,7 @@ object CatsParseParser extends Parser:
 
   private lazy val allPrecedenceGroups = List(
     PrecedenceGroup(
-      ">>" -> ((left, right) => App.of(right, left))
+      ">>" -> ((left, _, right) => App.of(right, left).withPos(Pos(left.start, right.end)))
     ),
     PrecedenceGroup(
       "||" -> constOp("or")
@@ -100,8 +104,8 @@ object CatsParseParser extends Parser:
     )
   )
 
-  private def constOp(name: String)(left: Tree, right: Tree): Tree =
-    App.of(Id(name), left, right)
+  private def constOp(name: String)(left: Tree, opPos: Pos, right: Tree): Tree =
+    App.of(Id(name, false, opPos), left, right).withPos(Pos(left.start, right.end))
 
   // Operator groups, order by ascending Precedence
   private lazy val precedenceGroups: PrecedenceGroups = PrecedenceGroups(
@@ -114,27 +118,28 @@ object CatsParseParser extends Parser:
     lazy val prefix: P[Tree] =
       (P.char('(').void.w *> expression.w <* P.char(')').void) | doubleLit | boolean | unaryPrefixOp | variable | list
 
-    lazy val app: P[Tree] = (prefix.w ~ (P.char('(').w *> nonEmptyArgs.w <* P.char(')')).?).map {
-      case (tree, None)         => tree
-      case (f, Some(arguments)) => App(f, arguments)
+    lazy val app: P[Tree] = (prefix.w ~ (P.char('(').w *> nonEmptyArgs.w <* P.char(')')).?).mapWithPos {
+      case ((tree, None), pos)         => tree.withPos(pos)
+      case ((f, Some(arguments)), pos) => App(f, arguments, pos)
     }
 
-    (app.w ~ (P.char('.').w *> variable.w ~ (P.char('(').void.w *> nonEmptyArgs.w <* P
-      .char(')')
-      .w
-      .void).?).rep0).map { case (tree, selections) =>
-      dotSelection(tree, selections)
-    }
+    lazy val selection = P.char('.').w *> variable.w ~ argsInBraces.addPos.w.?
+    lazy val argsInBraces: P[NonEmptyList[Tree]] = P.char('(').w *> nonEmptyArgs.w <* P.char(')')
+
+    (app.w ~ selection.rep0).map(dotSelection)
 
   @tailrec
-  private def dotSelection(receiver: Tree, selections: List[(Tree, Option[NonEmptyList[Tree]])]): Tree =
+  private def dotSelection(receiver: Tree, selections: List[(Tree, Option[(NonEmptyList[Tree], Pos)])]): Tree =
     selections match
       case Nil => receiver
-      case (firstMethod, maybeArgs) :: nextSelections =>
-        dotSelection(
-          App(firstMethod, NonEmptyList(receiver, maybeArgs.fold(List.empty[Tree])(_.toList))),
-          nextSelections
-        )
+      case (firstMethod, None) :: nextSelections =>
+        val first =
+          App(firstMethod, NonEmptyList.of(receiver)).withPos(Pos(receiver.start, firstMethod.end))
+        dotSelection(first, nextSelections)
+      case (firstMethod, Some(args, pos)) :: nextSelections =>
+        val first =
+          App(firstMethod, NonEmptyList(receiver, args.toList)).withPos(Pos(receiver.start, pos.end))
+        dotSelection(first, nextSelections)
 
   private lazy val atomicOperand: P[Tree] =
     P.defer(specialSyntax | factor)
@@ -142,20 +147,20 @@ object CatsParseParser extends Parser:
   private lazy val list: P[Tree] = (P.char('[').void.w *> args <* P.char(']').void).map(tree.SpecialSyntax.cons)
 
   private lazy val doubleLit: P[Tree] =
-    numbers.doubleLiteral.map(d => if d % 1 == 0 then IntLiteral(d.toInt) else DoubleLiteral(d))
+    numbers.doubleLiteral.mapWithPos((d, pos) => if d % 1 == 0 then IntLiteral(d.toInt, pos) else DoubleLiteral(d, pos))
 
   private lazy val boolean: P[Tree] =
-    (P.string("true").map(_ => true) | P.string("false").map(_ => false)).map(Bool)
+    (P.string("true").map(_ => true) | P.string("false").map(_ => false)).mapWithPos(Bool)
 
   private lazy val variable: P[Tree] =
-    identifier.map(Id(_)) <* P.pure(())
+    identifier.mapWithPos((id, pos) => Id(id, false, pos)) <* P.pure(())
 
   private lazy val unaryOps: P[Tree] =
-    P.char('-').void.map(_ => Id("inverse")) |
-      P.char('!').void.map(_ => Id("not"))
+    P.char('-').void.mapWithPos((_, pos) => Id("inverse", false, pos)) |
+      P.char('!').void.mapWithPos((_, pos) => Id("not", false, pos))
 
   private lazy val unaryPrefixOp: P[Tree] =
-    (unaryOps ~ atomicOperand).map { case (op, e) => App.of(op, e) }
+    (unaryOps ~ atomicOperand).mapWithPos { case ((op, e), pos) => App.of(op, e) }
 
   private lazy val args: P0[List[Tree]] = nonEmptyArgs.map(_.toList) | P.pure(Nil)
 

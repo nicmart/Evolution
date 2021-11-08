@@ -9,6 +9,14 @@ import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 
 object TypingConfig:
+  enum TypeClassId:
+    case Num
+    case Comp
+    case Eq
+    case Invertible
+    case Mult
+    case Add
+
   val constantsModule: Module = Module(ConstConfig.constants.map { const =>
     Definition(const.name, Some(Term.Value(const.value)), const.tpe)
   })
@@ -19,106 +27,55 @@ object TypingConfig:
     */
   val instances: List[TypeClassInstance] = List(
     // Numeric
-    NumericInst(Numeric.Double),
-    NumericInst(Numeric.Int),
+    Numeric.Double.instance,
+    Numeric.Int.instance,
     // Multiplicative
-    MultiplicativeInst(Multiplicative.DoubleDoubleDouble),
-    MultiplicativeInst(Multiplicative.DoublePointPoint),
-    MultiplicativeInst(Multiplicative.PointDoublePoint),
-    MultiplicativeInst(Multiplicative.IntIntInt),
-    MultiplicativeInst(Multiplicative.IntDoubleDouble),
-    MultiplicativeInst(Multiplicative.DoubleIntDouble),
-    MultiplicativeInst(Multiplicative.IntPointPoint),
-    MultiplicativeInst(LiftRight(Multiplicative.DoubleDoubleDouble)),
-    MultiplicativeInst(LiftLeft(Multiplicative.DoubleDoubleDouble)),
-    MultiplicativeInst(LiftRight(Multiplicative.DoublePointPoint)),
-    MultiplicativeInst(LiftLeft(Multiplicative.PointDoublePoint)),
-    MultiplicativeInst(LiftBoth(Multiplicative.DoubleDoubleDouble)),
-    MultiplicativeInst(LiftBoth(Multiplicative.PointDoublePoint)),
-    MultiplicativeInst(LiftBoth(Multiplicative.DoublePointPoint)),
+    Multiplicative.DoubleDoubleDouble.instance,
+    Multiplicative.DoublePointPoint.instance,
+    Multiplicative.PointDoublePoint.instance,
+    Multiplicative.IntIntInt.instance,
+    Multiplicative.IntDoubleDouble.instance,
+    Multiplicative.DoubleIntDouble.instance,
+    Multiplicative.IntPointPoint.instance,
+    LiftRight(Multiplicative.DoubleDoubleDouble).instance,
+    LiftLeft(Multiplicative.DoubleDoubleDouble).instance,
+    LiftRight(Multiplicative.DoublePointPoint).instance,
+    LiftLeft(Multiplicative.PointDoublePoint).instance,
+    LiftBoth(Multiplicative.DoubleDoubleDouble).instance,
+    LiftBoth(Multiplicative.PointDoublePoint).instance,
+    LiftBoth(Multiplicative.DoublePointPoint).instance,
     // Additive
-    AdditiveInst(Additive.IntIntInt),
-    AdditiveInst(Additive.DoubleIntDouble),
-    AdditiveInst(Additive.DoubleDoubleDouble),
-    AdditiveInst(Additive.IntDoubleDouble),
-    AdditiveInst(Additive.PointPointPoint),
-    AdditiveInst(Additive.LiftBoth(Additive.DoubleDoubleDouble)),
-    AdditiveInst(Additive.LiftBoth(Additive.PointPointPoint)),
-    AdditiveInst(Additive.LiftRight(Additive.DoubleDoubleDouble)),
-    AdditiveInst(Additive.LiftLeft(Additive.DoubleDoubleDouble)),
-    AdditiveInst(Additive.LiftRight(Additive.PointPointPoint)),
-    AdditiveInst(Additive.LiftLeft(Additive.PointPointPoint)),
+    Additive.IntIntInt.instance,
+    Additive.DoubleIntDouble.instance,
+    Additive.DoubleDoubleDouble.instance,
+    Additive.IntDoubleDouble.instance,
+    Additive.PointPointPoint.instance,
+    Additive.LiftBoth(Additive.DoubleDoubleDouble).instance,
+    Additive.LiftBoth(Additive.PointPointPoint).instance,
+    Additive.LiftRight(Additive.DoubleDoubleDouble).instance,
+    Additive.LiftLeft(Additive.DoubleDoubleDouble).instance,
+    Additive.LiftRight(Additive.PointPointPoint).instance,
+    Additive.LiftLeft(Additive.PointPointPoint).instance,
     // Invertible
-    InvertibleInst(Invertible.Int),
-    InvertibleInst(Invertible.Double),
-    InvertibleInst(Invertible.Point),
-    InvertibleInst(Invertible.Lift(Invertible.Double)),
-    InvertibleInst(Invertible.Lift(Invertible.Point)),
+    Invertible.Int.instance,
+    Invertible.Double.instance,
+    Invertible.Point.instance,
+    Invertible.Lift(Invertible.Double).instance,
+    Invertible.Lift(Invertible.Point).instance,
     // Equable
-    EquableInst(Equable.Boolean),
-    EquableInst(Equable.Double),
-    EquableInst(Equable.Point),
-    EquableInst(Equable.Int),
+    Equable.Boolean.instance,
+    Equable.Double.instance,
+    Equable.Point.instance,
+    Equable.Int.instance,
     // Comparable
-    ComparableInst(Comparable.Int),
-    ComparableInst(Comparable.Double)
+    Comparable.Int.instance,
+    Comparable.Double.instance
   )
 
   val instancesPredicates: List[Predicate] = instances.map(instance => Predicate(instance.id, instance.types))
 
-  // TODO it would be nice to returned typed typeclasses
-  def numeric(tpe: Type): Either[String, Numeric[Any]] =
-    instances
-      .collectFirst {
-        // TODO scala3
-        case inst @ NumericInst(num) if List(tpe) == inst.types => num.asInstanceOf[Numeric[Any]]
-      }
-      .toRight(s"No Numeric instance found for $tpe")
-
-  def additive(tpe1: Type, tpe2: Type, tpe3: Type): Either[String, Additive[Any, Any, Any]] =
-    instances
-      .collectFirst {
-        // TODO scala3
-        case inst @ AdditiveInst(num) if List(tpe1, tpe2, tpe3) == inst.types =>
-          num.asInstanceOf[Additive[Any, Any, Any]]
-      }
-      .toRight(s"No Additive instance found for $tpe1, $tpe2, $tpe3")
-
-  def multiplicative(tpe1: Type, tpe2: Type, tpe3: Type): Either[String, Multiplicative[Any, Any, Any]] =
-    instances
-      .collectFirst {
-        case inst @ MultiplicativeInst(num) if List(tpe1, tpe2, tpe3) == inst.types =>
-          num.asInstanceOf[Multiplicative[Any, Any, Any]]
-      }
-      .toRight(s"No Multiplicative instance found for $tpe1, $tpe2, $tpe3")
-
-  def invertible(tpe1: Type): Either[String, Invertible[Any]] =
-    instances
-      .collectFirst {
-        case inst @ InvertibleInst(num) if List(tpe1) == inst.types => num.asInstanceOf[Invertible[Any]]
-      }
-      .toRight(s"No invertible instance found for $tpe1")
-
-  def equable(tpe1: Type): Either[String, Equable[Any]] =
-    instances
-      .collectFirst {
-        case inst @ EquableInst(eq) if List(tpe1) == inst.types => eq.asInstanceOf[Equable[Any]]
-      }
-      .toRight(s"No equable instance found for $tpe1")
-
-  def comparable(tpe1: Type): Either[String, Comparable[Any]] =
-    instances
-      .collectFirst {
-        case inst @ ComparableInst(cmp) if List(tpe1) == inst.types => cmp.asInstanceOf[Comparable[Any]]
-      }
-      .toRight(s"No comparable instance found for $tpe1")
+  def instance(typeClassId: TypeClassId, types: Type*): Either[String, TypeClassInstance] =
+      instances.find(instance => instance.id == typeClassId.toString && instance.types == types.toList).toRight(s"No $typeClassId instance found for $types")
 
   def instance(predicate: Predicate): Either[String, TypeClassInstance] =
-    predicate match
-      case Predicate("Num", List(tpe))               => numeric(tpe).map(NumericInst.apply)
-      case Predicate("Add", List(tpe1, tpe2, tpe3))  => additive(tpe1, tpe2, tpe3).map(AdditiveInst.apply)
-      case Predicate("Mult", List(tpe1, tpe2, tpe3)) => multiplicative(tpe1, tpe2, tpe3).map(MultiplicativeInst.apply)
-      case Predicate("Invertible", List(tpe))        => invertible(tpe).map(InvertibleInst.apply)
-      case Predicate("Eq", List(tpe))                => equable(tpe).map(EquableInst.apply)
-      case Predicate("Comp", List(tpe))              => comparable(tpe).map(ComparableInst.apply)
-      case _                                         => Left(s"No instance found for predicate $predicate")
+    instance(TypeClassId.valueOf(predicate.id), predicate.types: _*).left.map(_ => s"No instance found for predicate $predicate")

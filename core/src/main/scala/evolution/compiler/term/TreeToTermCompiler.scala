@@ -15,20 +15,20 @@ final class TreeToTermCompiler:
     val AnnotatedTree(Qualified(predicates, _), tree) = typedTree
 
     tree match
-      case TreeF.Id(name)              => appPredicates(Id(name.string), predicates)
-      case TreeF.IntLiteral(n)         => appPredicates(Lit(LitInt(n)), predicates)
-      case TreeF.DoubleLiteral(n)      => appPredicates(Lit(LitDouble(n)), predicates)
-      case TreeF.Bool(b)               => appPredicates(Lit(LitBool(b)), predicates)
-      case TreeF.Lst(ts)               => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
-      case TreeF.Lambda(varName, expr) => compileM(expr).map(Lambda(varName, _))
+      case TreeF.Id(name, _)              => appPredicates(Id(name.string), predicates)
+      case TreeF.IntLiteral(n, _)         => appPredicates(Lit(LitInt(n)), predicates)
+      case TreeF.DoubleLiteral(n, _)      => appPredicates(Lit(LitDouble(n)), predicates)
+      case TreeF.Bool(b, _)               => appPredicates(Lit(LitBool(b)), predicates)
+      case TreeF.Lst(ts, _)               => traverse(ts)(compileM).map(ts => Lit(LitList(ts)))
+      case TreeF.Lambda(varName, expr, _) => compileM(expr).map(Lambda(varName, _))
 
-      case TreeF.App(f, args) =>
+      case TreeF.App(f, args, _) =>
         for
           f <- compileM(f)
           args <- traverse(args.toList)(compileM)
         yield app(f, args)
 
-      case TreeF.Let(varName, expr, in) =>
+      case TreeF.Let(varName, expr, in, _) =>
         withLocalPredicates(expr.annotation.predicates) {
           for
             exprTerm <- compileM(expr)

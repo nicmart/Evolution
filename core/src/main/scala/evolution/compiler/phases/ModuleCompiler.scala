@@ -42,7 +42,7 @@ final class ModuleCompiler(parser: Parser, typer: Typer, compiler: TreeToTermCom
   @tailrec
   private def extractAssumptions(typedTree: TypedTree, currentAssumptions: Assumptions): Assumptions =
     typedTree.tree match
-      case Let(varName, expr, in) =>
+      case Let(varName, expr, in, _) =>
         val qualifiedScheme = Qualified(expr.annotation.predicates, Scheme(expr.annotation.value))
         extractAssumptions(
           in,

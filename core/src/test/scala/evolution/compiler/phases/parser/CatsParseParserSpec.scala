@@ -2,6 +2,7 @@ package evolution.compiler.phases.parser
 
 import evolution.compiler.LanguageSpec
 import evolution.compiler.tree.Tree._
+import evolution.compiler.tree.NoPos
 import evolution.compiler.tree.{SpecialSyntax, Tree}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
@@ -35,7 +36,7 @@ class CatsParseParserSpec extends LanguageSpec:
 
       "parse binary operators" in {
         forAll(genLeafExpr, genOperatorWithTree, genLeafExpr) { case (a, (op, opFunc), b) =>
-          unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), unsafeParse(b))
+          unsafeParse(s"$a $op $b") shouldEq opFunc(unsafeParse(a), NoPos, unsafeParse(b))
         }
       }
 

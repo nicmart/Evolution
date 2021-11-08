@@ -4,7 +4,6 @@ import evolution.compiler.phases.typer.config.ConstConfig
 import evolution.compiler.term.RegisterBasedInterpreter.constants
 import evolution.compiler.term.Term.Literal._
 import evolution.compiler.term.Term._
-import evolution.compiler.types.TypeClassInstance.NumericInst
 
 trait TermInterpreter:
   def interpret(term: Term): Any

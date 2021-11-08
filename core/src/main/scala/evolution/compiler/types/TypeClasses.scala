@@ -3,24 +3,10 @@ import evolution.compiler.expression.typeclass._
 import evolution.compiler.types.TypeClasses.Predicate
 
 // Just a union types of typeclasses
-enum TypeClassInstance(val id: String, val types: List[Type], val value: Any):
+case class TypeClassInstance(id: String, types: List[Type], value: Any):
   def predicate: Predicate = Predicate(id, types)
 
-  case AdditiveInst[A, B, C](add: Additive[A, B, C]) extends TypeClassInstance("Add", List(add.t1, add.t2, add.t3), add.materialized)
-
-  case MultiplicativeInst[A, B, C](mult: Multiplicative[A, B, C])
-      extends TypeClassInstance("Mult", List(mult.t1, mult.t2, mult.t3), mult.materialized)
-
-  case InvertibleInst[A](inv: Invertible[A]) extends TypeClassInstance("Invertible", List(inv.t), inv.materialized)
-
-  case NumericInst[A](num: Numeric[A]) extends TypeClassInstance("Num", List(num.t), num.materialized)
-
-  case EquableInst[A](eq: Equable[A]) extends TypeClassInstance("Eq", List(eq.t), eq.materialized)
-
-  case ComparableInst[A](cmp: Comparable[A]) extends TypeClassInstance("Comp", List(cmp.t), cmp.materialized)
-
 object TypeClasses:
-
   case class Predicate(id: String, types: List[Type]):
     override def toString: String = s"$id(${types.mkString(", ")})"
     def typeVars: Set[String] =

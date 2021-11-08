@@ -11,14 +11,14 @@ object PrettyPrintTree:
   private[tree] def prettyPrintTreeF(treeF: TreeF[Int => String]): Int => String =
     n =>
       indent(n) + (treeF match {
-        case TreeF.App(g, args) => ppFunc("App", g :: args.toList, n)
-        case Let(id, expr, in)  => ppFunc("Let", List(n => s"${"  " * n}$id", expr, in), n)
-        case Lambda(id, expr)   => ppLambda(id, expr, n)
+        case TreeF.App(g, args, _) => ppFunc("App", g :: args.toList, n)
+        case Let(id, expr, in, _)  => ppFunc("Let", List(n => s"${"  " * n}$id", expr, in), n)
+        case Lambda(id, expr, _)   => ppLambda(id, expr, n)
         case id: Id             => id.name
-        case DoubleLiteral(d)   => d.toString
-        case Bool(b)            => b.toString
-        case IntLiteral(n)      => n.toString
-        case Lst(ts)            => ppFunc("Lst", ts, n)
+        case DoubleLiteral(d, _)   => d.toString
+        case Bool(b, _)            => b.toString
+        case IntLiteral(n, _)      => n.toString
+        case Lst(ts, _)            => ppFunc("Lst", ts, n)
       })
 
   private def ppLambda(id: String, expr: Int => String, n: Int): String =

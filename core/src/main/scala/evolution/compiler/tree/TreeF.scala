@@ -5,17 +5,27 @@ import cats.implicits.*
 import cats.{Applicative, Eval, Foldable, Traverse}
 import evolution.compiler.tree.TreeF.CaseInsensitiveName
 
-enum TreeF[+T]:
-  case Id(name: CaseInsensitiveName) extends TreeF[Nothing]
-  case DoubleLiteral(n: Double) extends TreeF[Nothing]
-  case IntLiteral(n: Int) extends TreeF[Nothing]
-  case Bool(b: Boolean) extends TreeF[Nothing]
-  case Lambda(varName: String, expr: T)
-  case App(f: T, args: NonEmptyList[T])
-  case Let(varName: String, expr: T, in: T)
-  case Lst(ts: List[T])
+enum TreeF[+T](val pos: Pos):
+  case Id(name: CaseInsensitiveName, override val pos: Pos = NoPos) extends TreeF[Nothing](pos)
+  case DoubleLiteral(n: Double, override val pos: Pos = NoPos) extends TreeF[Nothing](pos)
+  case IntLiteral(n: Int, override val pos: Pos = NoPos) extends TreeF[Nothing](pos)
+  case Bool(b: Boolean, override val pos: Pos = NoPos) extends TreeF[Nothing](pos)
+  case Lambda(varName: String, expr: T, override val pos: Pos = NoPos) extends TreeF[T](pos)
+  case App(f: T, args: NonEmptyList[T], override val pos: Pos = NoPos) extends TreeF[T](pos)
+  case Let(varName: String, expr: T, in: T, override val pos: Pos = NoPos) extends TreeF[T](pos)
+  case Lst(ts: List[T], override val pos: Pos = NoPos) extends TreeF[T](pos)
 
 object TreeF:
+  extension [T](tree: TreeF[T])
+    def withPos(pos: Pos): TreeF[T] = tree match
+      case tree: Id => tree.copy(pos = pos)
+      case tree: DoubleLiteral => tree.copy(pos = pos)
+      case tree: IntLiteral => tree.copy(pos = pos)
+      case tree: Bool => tree.copy(pos = pos)
+      case tree: Lambda[T] => tree.copy(pos = pos)
+      case tree: App[T] => tree.copy(pos = pos)
+      case tree: Let[T] => tree.copy(pos = pos)
+      case tree: Lst[T] => tree.copy(pos = pos)
   opaque type CaseInsensitiveName = String
 
   object CaseInsensitiveName:
@@ -23,7 +33,7 @@ object TreeF:
     extension (name: CaseInsensitiveName) def string: String = name
 
   object App:
-    def of[T](f: T, arg1: T, args: T*): TreeF[T] = App(f, NonEmptyList(arg1, args.toList))
+    def of[T](f: T, arg1: T, args: T*): TreeF[T] = App(f, NonEmptyList(arg1, args.toList), NoPos)
 
   extension (tree: TreeF[Tree]) def embed: Tree = Tree(tree)
 
@@ -35,14 +45,14 @@ object TreeF:
   given Traverse[TreeF] with
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match
-        case TreeF.App(g, args)     => (f(g), args.traverse(f)).mapN(TreeF.App[B] _)
-        case Lambda(varName, expr)  => f(expr).map(Lambda(varName, _))
-        case Lst(ts)                => ts.traverse(f).map(Lst[B])
-        case Let(varName, expr, in) => (f(expr), f(in)).mapN(Let(varName, _, _))
-        case Id(name)               => Id(name).pure[G].widen
-        case DoubleLiteral(n)       => DoubleLiteral(n).pure[G].widen
-        case Bool(b)                => Bool(b).pure[G].widen
-        case IntLiteral(n)          => IntLiteral(n).pure[G].widen
+        case TreeF.App(g, args, pos)     => (f(g), args.traverse(f), pos.pure[G]).mapN(TreeF.App[B] _)
+        case Lambda(varName, expr, pos)  => f(expr).map(Lambda(varName, _, pos))
+        case Lst(ts, pos)                => ts.traverse(f).map(ts => Lst[B](ts, pos))
+        case Let(varName, expr, in, pos) => (f(expr), f(in)).mapN(Let(varName, _, _, pos))
+        case Id(name, pos)               => Id(name).pure[G].widen
+        case DoubleLiteral(n, pos)       => DoubleLiteral(n, pos).pure[G].widen
+        case Bool(b, pos)                => Bool(b, pos).pure[G].widen
+        case IntLiteral(n, pos)          => IntLiteral(n, pos).pure[G].widen
 
     def foldLeft[A, B](fa: TreeF[A], z: B)(f: (B, A) => B): B =
       Foldable[List].foldLeft(fa.children, z)(f)
