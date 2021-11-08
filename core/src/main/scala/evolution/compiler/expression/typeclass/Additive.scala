@@ -2,8 +2,11 @@ package evolution.compiler.expression.typeclass
 import evolution.compiler.types.Type
 import evolution.geometry.Point
 import evolution.materialization.Evolution
+import evolution.compiler.types.TypeClassInstance
 
 enum Additive[A, B, C](val t1: Type, val t2: Type, val t3: Type, val materialized: (A, B) => C):
+  def instance: TypeClassInstance = TypeClassInstance("Add", List(t1, t2, t3), materialized)
+  
   case DoubleDoubleDouble extends Additive[Double, Double, Double](Type.Double, Type.Double, Type.Double, _ + _)
   case IntIntInt extends Additive[Int, Int, Int](Type.Integer, Type.Integer, Type.Integer, _ + _)
   case IntDoubleDouble extends Additive[Int, Double, Double](Type.Integer, Type.Double, Type.Double, _ + _)
@@ -30,3 +33,5 @@ enum Additive[A, B, C](val t1: Type, val t2: Type, val t3: Type, val materialize
         Type.Evo(inner.t3),
         (a, b) => Evolution.zipWithUncurried(inner.materialized)(a, b)
       )
+
+

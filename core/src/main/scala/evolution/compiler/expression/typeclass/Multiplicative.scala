@@ -2,8 +2,10 @@ package evolution.compiler.expression.typeclass
 import evolution.compiler.types.Type
 import evolution.geometry.Point
 import evolution.materialization.Evolution
+import evolution.compiler.types.TypeClassInstance
 
 enum Multiplicative[A, B, C](val t1: Type, val t2: Type, val t3: Type, val materialized: (A, B) => C):
+  def instance: TypeClassInstance = TypeClassInstance("Mult", List(t1, t2, t3), materialized)
   case DoubleDoubleDouble extends Multiplicative[Double, Double, Double](Type.Double, Type.Double, Type.Double, _ * _)
   case DoublePointPoint
       extends Multiplicative[Double, Point, Point](Type.Double, Type.Point, Type.Point, (a, b) => b.mult(a))
