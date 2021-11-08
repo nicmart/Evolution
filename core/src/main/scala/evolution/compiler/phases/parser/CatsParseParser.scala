@@ -3,7 +3,7 @@ package evolution.compiler.phases.parser
 import cats.data.NonEmptyList
 import cats.implicits.*
 import cats.parse.Parser.{not, void}
-import cats.parse.{Parser => P, Parser0 => P0}
+import cats.parse.{Parser as P, Parser0 as P0}
 import evolution.compiler.phases.Parser
 import evolution.compiler.phases.parser.Instances.given
 import evolution.compiler.phases.parser.Instances.*

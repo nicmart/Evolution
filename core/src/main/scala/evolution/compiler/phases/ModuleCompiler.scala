@@ -5,7 +5,7 @@ import evolution.compiler.phases.typer.model
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.term.{Definition, Module, RegisterBasedInterpreter, Term, TermOptimizer, TreeToTermCompiler}
 import evolution.compiler.tree.TreeF.Let
-import evolution.compiler.tree.{PrettyPrintTypedTree, _}
+import evolution.compiler.tree.{PrettyPrintTypedTree, *}
 import evolution.compiler.types.Type
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.Qualified

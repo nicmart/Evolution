@@ -8,7 +8,7 @@ import evolution.app.react.component.presentational.{DoubleInputComponent, IntIn
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
-import japgolly.scalajs.react.{ScalaComponent, _}
+import japgolly.scalajs.react.{ScalaComponent, *}
 
 object RenderingSettings:
 

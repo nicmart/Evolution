@@ -7,7 +7,7 @@ import cats.parse.Parser.With1
 import evolution.compiler.phases.parser.CatsParserConfig.whitespaces
 import evolution.compiler.tree.Pos
 
-import cats.parse.{Parser => P, Parser0 => P0}
+import cats.parse.{Parser as P, Parser0 as P0}
 
 object Instances:
   extension [A](p: P[A])

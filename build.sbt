@@ -1,4 +1,4 @@
-import WebKeys.*
+import WebKeys._
 import sbt.Keys.resolvers
 
 Test / fork := true
@@ -16,7 +16,12 @@ lazy val commonSettings = List(
   scalaVersion := "3.1.0",
   version := "0.1.0-SNAPSHOT",
 //  scalacOptions ++= Seq("-deprecation", "-rewrite", "-indent", "-source 3.0-migration"),
-  scalacOptions ++= Seq("-deprecation", "-indent", "-Ykind-projector:underscores", "-source future", "-source rewrite"),
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-indent",
+    "-Ykind-projector:underscores",
+    "-source:future"
+  ),
   autoCompilerPlugins := true,
   resolvers += Resolver.sonatypeRepo("releases")
 )

@@ -24,8 +24,8 @@ class PortfolioFunctionalTest extends LanguageSpec:
               DrawingContext(CanvasSize(200, 200))
             )
 
-          result.unsafeRight shouldBe a[Iterator[?]]
-          result.unsafeRight.take(100).toList should have length (100)
+          result.unsafeRight `shouldBe` a[Iterator[?]]
+          result.unsafeRight.take(100).toList `should` have `length` (100)
         }
       }
     }

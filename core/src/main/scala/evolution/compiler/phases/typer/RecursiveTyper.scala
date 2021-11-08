@@ -6,7 +6,7 @@ import evolution.compiler.phases.typer.Inference.*
 import evolution.compiler.phases.typer.RecursiveTyper.*
 import evolution.compiler.phases.typer.model.{Assignment, Assumption, Assumptions, Substitution}
 import evolution.compiler.tree.TreeF.{Bool, DoubleLiteral, Id, IntLiteral, Lambda, Let, Lst}
-import evolution.compiler.tree.{Tree, _}
+import evolution.compiler.tree.{Tree, *}
 import evolution.compiler.types.Type.Scheme
 import evolution.compiler.types.TypeClasses.*
 import evolution.compiler.types.*

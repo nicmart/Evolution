@@ -273,7 +273,7 @@ object ConstConfig:
     )
   )
 
-  val constantsTerms: Map[String, Term] = Map(constants.map(c => c.name -> Value(c.value)): _*)
+  val constantsTerms: Map[String, Term] = Map(constants.map(c => c.name -> Value(c.value)) *)
 
   private def func1[A, B](f: A => B): Any = f
   private def func2[A, B, C](f: A => B => C): Any = f

@@ -3,7 +3,7 @@
  */
 package evolution.compiler.phases.parser
 
-import cats.parse.{Parser => P}
+import cats.parse.{Parser as P}
 import evolution.compiler.phases.parser.Instances.*
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
 import evolution.compiler.tree.Tree

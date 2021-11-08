@@ -15,25 +15,25 @@ class TermInterpreterTest extends LanguageSpec:
     "integers" in {
       val term = Lit(LitInt(123))
       val result = interpreter.interpret(term).asInstanceOf[Any => Any]
-      result(instance("Num", Type.Integer).value) shouldBe 123
+      result(instance("Num", Type.Integer).value) `shouldBe` 123
     }
 
     "booleans" in {
       val term = Lit(LitBool(true))
       val result = interpreter.interpret(term)
-      result shouldBe true
+      result `shouldBe` true
     }
 
     "doubles" in {
       val term = Lit(LitDouble(1.1))
       val result = interpreter.interpret(term)
-      result shouldBe 1.1
+      result `shouldBe` 1.1
     }
 
     "lists" in {
       val term = Lit(LitList(List(Lit(LitBool(true)), Lit(LitDouble(1.1)))))
       val result = interpreter.interpret(term)
-      result shouldBe List(true, 1.1)
+      result `shouldBe` List(true, 1.1)
     }
   }
 
@@ -43,14 +43,14 @@ class TermInterpreterTest extends LanguageSpec:
       val interpreter = RegisterBasedInterpreter.fresh
       val register = Map("x" -> 12345)
 
-      interpreter.interpretRec(register)(term) shouldBe 12345
+      interpreter.interpretRec(register)(term) `shouldBe` 12345
     }
 
     "not in the register" in {
       val term = Id("z")
       val interpreter = RegisterBasedInterpreter.fresh
 
-      Try(interpreter.interpret(term)).isFailure shouldBe true
+      Try(interpreter.interpret(term)).isFailure `shouldBe` true
     }
   }
 
@@ -60,8 +60,8 @@ class TermInterpreterTest extends LanguageSpec:
 
       val interpreted = interpreter.interpret(term).asInstanceOf[Any => Any]
 
-      interpreted("anything") shouldBe "anything"
-      interpreted(12345) shouldBe 12345
+      interpreted("anything") `shouldBe` "anything"
+      interpreted(12345) `shouldBe` 12345
     }
 
     "with multiple vars" in {
@@ -69,8 +69,8 @@ class TermInterpreterTest extends LanguageSpec:
 
       val interpreted = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
 
-      interpreted("first")("second") shouldBe "first"
-      interpreted(1)(2) shouldBe 1
+      interpreted("first")("second") `shouldBe` "first"
+      interpreted(1)(2) `shouldBe` 1
     }
   }
 
@@ -80,7 +80,7 @@ class TermInterpreterTest extends LanguageSpec:
       val interpreter = RegisterBasedInterpreter.fresh
       val register = Map("f" -> ((x: Double) => x + 1))
 
-      interpreter.interpretRec(register)(term) shouldBe 2
+      interpreter.interpretRec(register)(term) `shouldBe` 2
     }
 
     "of multiple arguments" in {
@@ -88,7 +88,7 @@ class TermInterpreterTest extends LanguageSpec:
       val interpreter = RegisterBasedInterpreter.fresh
       val register = Map("f" -> ((x: Double) => (y: Double) => x + y))
 
-      interpreter.interpretRec(register)(term) shouldBe 3
+      interpreter.interpretRec(register)(term) `shouldBe` 3
     }
 
     "of polymorphic int literals" in {
@@ -97,8 +97,8 @@ class TermInterpreterTest extends LanguageSpec:
       val interpreter = RegisterBasedInterpreter.fresh
       val register = Map("P0" -> instance("Num", Type.Double).value)
 
-      interpreter.interpretRec(register)(term) shouldBe a[Double]
-      interpreter.interpretRec(register)(term) shouldBe 0
+      interpreter.interpretRec(register)(term) `shouldBe` a[Double]
+      interpreter.interpretRec(register)(term) `shouldBe` 0
     }
 
     "of custom constants" - {
@@ -106,7 +106,7 @@ class TermInterpreterTest extends LanguageSpec:
         val term = Apply(Id("add"), Inst(instance("Add", Type.Double, Type.Integer, Type.Double)))
 
         val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
-        f(3.5)(1) shouldBe 4.5
+        f(3.5)(1) `shouldBe` 4.5
       }
 
       "poly add" in {
@@ -117,7 +117,7 @@ class TermInterpreterTest extends LanguageSpec:
         val register = RegisterBasedInterpreter.constants + ("P0" -> addInstance.value)
 
         val f = interpreter.interpretRec(register)(term).asInstanceOf[Any => Any => Any]
-        f(3.5)(1) shouldBe 4.5
+        f(3.5)(1) `shouldBe` 4.5
       }
     }
   }
@@ -127,7 +127,7 @@ class TermInterpreterTest extends LanguageSpec:
       val numInstance = instance("Num", Type.Double)
       val term = Inst(numInstance)
 
-      interpreter.interpret(term) shouldBe numInstance.value
+      interpreter.interpret(term) `shouldBe` numInstance.value
     }
   }
 
@@ -135,14 +135,14 @@ class TermInterpreterTest extends LanguageSpec:
     "of a literal" in {
       val term = Let("x", Lit(LitDouble(1.1)), Id("x"))
 
-      interpreter.interpret(term) shouldBe 1.1
+      interpreter.interpret(term) `shouldBe` 1.1
     }
 
     "of a polymorphic expression" in {
       val term = Let("id", Lambda("x", Id("x")), Id("id"))
       val f = interpreter.interpret(term).asInstanceOf[Any => Any]
-      f("abc") shouldBe "abc"
-      f(1) shouldBe 1
+      f("abc") `shouldBe` "abc"
+      f(1) `shouldBe` 1
     }
 
     "of a qualified polymorphic expression" in {
@@ -153,8 +153,8 @@ class TermInterpreterTest extends LanguageSpec:
           Id("double")
         )
       val f = interpreter.interpret(term).asInstanceOf[Any => Any => Any]
-      f(instance("Add", Type.Double, Type.Double, Type.Double).value)(1.5) shouldBe 3
-      f(instance("Add", Type.Point, Type.Point, Type.Point).value)(Point(1, 2)) shouldBe Point(2, 4)
+      f(instance("Add", Type.Double, Type.Double, Type.Double).value)(1.5) `shouldBe` 3
+      f(instance("Add", Type.Point, Type.Point, Type.Point).value)(Point(1, 2)) `shouldBe` Point(2, 4)
     }
   }
 
@@ -167,7 +167,7 @@ class TermInterpreterTest extends LanguageSpec:
 
     val value = interpreter.interpret(term)
 
-    value shouldBe 1
+    value `shouldBe` 1
   }
 
   private def instance(id: String, types: Type*): TypeClassInstance =

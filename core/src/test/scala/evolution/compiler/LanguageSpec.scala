@@ -26,7 +26,7 @@ trait LanguageSpec
         s => throw Exception(s"Getting a Left on a Right($s)")
       )
 
-  extension [A: Equality](left: A) def shouldEq(right: A): Assertion = left shouldEqual right
+  extension [A: Equality](left: A) def shouldEq(right: A): Assertion = left `shouldEqual` right
 
   given Prettifier with
     def apply(o: Any): String = PPrinter.BlackWhite.apply(o, height = Int.MaxValue).toString()

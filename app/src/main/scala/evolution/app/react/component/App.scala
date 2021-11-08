@@ -160,7 +160,7 @@ object App:
         }
       }
       // TODO we try to compile only when it is necessary. I did not find a cleaner way to do this
-      .getDerivedStateFromPropsOption(recompile _)
+      .getDerivedStateFromPropsOption(recompile)
       // The drawing context can be updated only after the sidebar has been resized
       // That's why we have to update the drawing context after the the dom has been updated and rendered
       // TODO can we remove this?

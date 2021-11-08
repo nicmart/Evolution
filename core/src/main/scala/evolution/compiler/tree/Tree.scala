@@ -2,9 +2,8 @@ package evolution.compiler.tree
 
 import cats.implicits.*
 
-final case class Tree(value: TreeF[Tree]) {
+final case class Tree(value: TreeF[Tree]):
   export value.pos.*
-}
 
 object Tree extends TreeBuilder[Tree, [T] =>> T]:
   override def toF: TreeF[Tree] => Tree = Tree.apply

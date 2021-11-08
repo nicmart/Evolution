@@ -45,7 +45,7 @@ object TreeF:
   given Traverse[TreeF] with
     def traverse[G[_]: Applicative, A, B](fa: TreeF[A])(f: A => G[B]): G[TreeF[B]] =
       fa match
-        case TreeF.App(g, args, pos)     => (f(g), args.traverse(f), pos.pure[G]).mapN(TreeF.App[B] _)
+        case TreeF.App(g, args, pos)     => (f(g), args.traverse(f), pos.pure[G]).mapN(TreeF.App[B])
         case Lambda(varName, expr, pos)  => f(expr).map(Lambda(varName, _, pos))
         case Lst(ts, pos)                => ts.traverse(f).map(ts => Lst[B](ts, pos))
         case Let(varName, expr, in, pos) => (f(expr), f(in)).mapN(Let(varName, _, _, pos))

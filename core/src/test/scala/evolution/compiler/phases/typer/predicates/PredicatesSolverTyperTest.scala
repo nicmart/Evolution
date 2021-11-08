@@ -28,8 +28,8 @@ class PredicatesSolverTyperTest extends LanguageSpec:
         )
       val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
       val List(Predicate("Mult", List(x, y, z))) =
-        typed.annotation.predicates.distinct
-      typed.annotation.value shouldBe x =>: y =>: z
+        typed.annotation.predicates.distinct: @unchecked
+      typed.annotation.value `shouldBe` x =>: y =>: z
     }
 
     "xxx" in {

@@ -80,6 +80,6 @@ object TypingConfig:
       .toRight(s"No $typeClassId instance found for $types")
 
   def instance(predicate: Predicate): Either[String, TypeClassInstance] =
-    instance(TypeClassId.valueOf(predicate.id), predicate.types: _*).left.map(_ =>
+    instance(TypeClassId.valueOf(predicate.id), predicate.types *).left.map(_ =>
       s"No instance found for predicate $predicate"
     )

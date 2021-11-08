@@ -14,12 +14,12 @@ class UnifyPredicatesSpec extends LanguageSpec:
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Nil)
-      subst shouldBe Right(Substitution.empty)
+      subst `shouldBe` Right(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, TypingConfig.instancesPredicates.take(1))
-      subst shouldBe Right(Substitution.empty)
+      subst `shouldBe` Right(Substitution.empty)
     }
 
     "should succeed with a simple substitution if there is a single predicate with vars and a matching instance" in {
@@ -27,7 +27,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
       val instances = List(Predicate("Num", List(Type.Double)))
       val subst = predicatesUnifier.unify(instances, predicates)
 
-      subst shouldBe Right(Substitution("X" -> Type.Double))
+      subst `shouldBe` Right(Substitution("X" -> Type.Double))
     }
 
     "should succeed with higher-horder types in predicates" in {
@@ -35,7 +35,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
       val instances = List(Predicate("Num", List(Type.Evo(Type.Double))))
       val subst = predicatesUnifier.unify(instances, predicates)
 
-      subst shouldBe Right(Substitution("X" -> Type.Double))
+      subst `shouldBe` Right(Substitution("X" -> Type.Double))
     }
 
     "should do more complex unifications" in {
@@ -52,8 +52,8 @@ class UnifyPredicatesSpec extends LanguageSpec:
       )
       val subst = predicatesUnifier.unify(instances, predicates).unsafeRight
 
-      subst.substitute[Type](Type.Var("X")) shouldBe Type.Integer
-      subst.substitute[Type](Type.Var("Y")) shouldBe Type.Integer
+      subst.substitute[Type](Type.Var("X")) `shouldBe` Type.Integer
+      subst.substitute[Type](Type.Var("Y")) `shouldBe` Type.Integer
     }
 
     // This is mostly to test perfomance of predicates unification
@@ -78,7 +78,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
 
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
 
-      subst.substitute[Type](Type.Var("T4")) shouldBe Type.Integer
+      subst.substitute[Type](Type.Var("T4")) `shouldBe` Type.Integer
     }
 
     "should unify predicates of a = 1 in x = a * a * a * a  *  point(0, 0) in x" in {
@@ -91,7 +91,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
 
       val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeRight
 
-      subst.substitute[Type](Type.Var("T0")) shouldBe Type.Integer
+      subst.substitute[Type](Type.Var("T0")) `shouldBe` Type.Integer
     }
 
     "should not do stupid things" in {
@@ -106,14 +106,14 @@ class UnifyPredicatesSpec extends LanguageSpec:
       )
 
       val subst = predicatesUnifier.unify(instances, predicates).unsafeRight
-      subst.substitute(predicates) shouldBe predicates
+      subst.substitute(predicates) `shouldBe` predicates
     }
 
     "should fail if there are no instances and there is at least one predicate" in {
       val predicates = List(Predicate("Num", List(Type.Var("X"))))
       val result = predicatesUnifier.unify(Nil, predicates)
 
-      result.isLeft shouldBe true
+      result.isLeft `shouldBe` true
     }
 
     "should fail if the only instance does not match the typeclass of the only predicate" in {
@@ -121,7 +121,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
       val predicates = List(Predicate("Whatever", List(Type.Integer)))
       val result = predicatesUnifier.unify(instances, predicates)
 
-      result.isLeft shouldBe true
+      result.isLeft `shouldBe` true
     }
 
     "should fail if the only instance does not match the types of the only predicate" in {
@@ -129,7 +129,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
       val predicates = List(Predicate("Num", List(Type.Double)))
       val result = predicatesUnifier.unify(instances, predicates)
 
-      result.isLeft shouldBe true
+      result.isLeft `shouldBe` true
     }
 
     "should fail if the the matching instance leads to incompatible assignments" in {
@@ -137,7 +137,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
       val predicates = List(Predicate("Bi", List(Type.Var("x"), Type.Var("x"))))
       val result = predicatesUnifier.unify(instances, predicates)
 
-      result.isLeft shouldBe true
+      result.isLeft `shouldBe` true
     }
   }
 

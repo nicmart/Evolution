@@ -5,6 +5,7 @@ import evolution.rng.PerlinNoise
 import scala.collection.AbstractIterator
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import scala.compiletime.uninitialized
 
 sealed trait Evolution[+T]:
   def run: Iterator[T]
@@ -272,7 +273,7 @@ object Evolution:
       val firstIterator = first.run
       var currentIteratorIsFirst = true
       var isLastDefined = false
-      var last: A = _
+      var last: A = uninitialized
       var currentIterator = firstIterator
       def hasNext: Boolean = currentIterator.hasNext || hasNextWhenCurrentIteratorIsEmpty()
       def next(): A =

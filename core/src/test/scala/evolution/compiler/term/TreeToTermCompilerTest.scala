@@ -17,14 +17,14 @@ class TreeToTermCompilerTest extends LanguageSpec:
         "bools" in {
           val tree = Bool(true).as(Type.Bool)
           val term = compiler.compile(tree).unsafeRight
-          term shouldBe Term.Lit(LitBool(true))
+          term `shouldBe` Term.Lit(LitBool(true))
         }
 
         "doubles" in {
           val tree = DoubleLiteral(0).as(Type.Double)
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.Lit(LitDouble(0))
+          term `shouldBe` Term.Lit(LitDouble(0))
         }
 
         "integers" - {
@@ -36,7 +36,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
 
             val term = compiler.compileM(tree).run(state).unsafeRight
 
-            term shouldBe Term.Apply(Term.Lit(LitInt(0)), Term.Id(predVarName))
+            term `shouldBe` Term.Apply(Term.Lit(LitInt(0)), Term.Id(predVarName))
           }
 
           "monomorphic" in {
@@ -45,7 +45,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
             val instance = TypingConfig.instance(TypingConfig.TypeClassId.Num, Type.Double).unsafeRight
             val term = compiler.compile(tree).unsafeRight
 
-            term shouldBe Term.Apply(Term.Lit(LitInt(0)), Term.Inst(instance))
+            term `shouldBe` Term.Apply(Term.Lit(LitInt(0)), Term.Inst(instance))
           }
         }
       }
@@ -55,7 +55,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           val tree = Id("x").as(Type.Double)
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.Id("x")
+          term `shouldBe` Term.Id("x")
         }
 
         "qualified with non-resolved predicates" in {
@@ -64,7 +64,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.Apply(Term.Id("x"), Term.Id(state.predName(predicate).get))
+          term `shouldBe` Term.Apply(Term.Id("x"), Term.Id(state.predName(predicate).get))
         }
 
         "qualified with resolved predicate" in {
@@ -73,7 +73,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           val state = CompilerState.empty.withPredicate(predicate)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.Apply(Term.Id("x"), Term.Inst(predicate.instance))
+          term `shouldBe` Term.Apply(Term.Id("x"), Term.Inst(predicate.instance))
         }
 
         "qualified with mixed predicates" in {
@@ -83,7 +83,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           val state = CompilerState.empty.withPredicate(predicate1)
           val term = compiler.compileM(tree).run(state).unsafeRight
 
-          term shouldBe Term.Apply(
+          term `shouldBe` Term.Apply(
             Term.Apply(Term.Id("x"), Term.Id(state.predName(predicate1).get)),
             Term.Inst(predicate2.instance)
           )
@@ -100,7 +100,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
 
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.Let("x", Term.Lit(LitBool(true)), Term.Id("x"))
+          term `shouldBe` Term.Let("x", Term.Lit(LitBool(true)), Term.Id("x"))
         }
 
         "polymorphic: x = (2: Num(T) => T) in (x: Double)" in {
@@ -124,7 +124,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
               Term.Apply(Term.Id("x"), Term.Inst(predicateInst.instance))
             )
 
-          term shouldBe expected
+          term `shouldBe` expected
         }
       }
 
@@ -133,7 +133,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           val tree = Lambda("x", Id("x").as(Type.Var("T"))).as(Type.Var("T") =>: Type.Var("T"))
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.Lambda("x", Term.Id("x"))
+          term `shouldBe` Term.Lambda("x", Term.Id("x"))
         }
       }
 
@@ -149,7 +149,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
               .as(Type.Var("X"))
           val term = compiler.compile(tree).unsafeRight
 
-          term shouldBe Term.Apply(Term.Apply(Term.Id("x"), Term.Lit(LitInt(1))), Term.Lit(LitInt(2)))
+          term `shouldBe` Term.Apply(Term.Apply(Term.Id("x"), Term.Lit(LitInt(1))), Term.Lit(LitInt(2)))
         }
       }
     }
