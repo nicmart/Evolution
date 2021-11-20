@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.phases.typer.model.{Assumption, Assumptions}
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.tree.{PrettyPrintTree, PrettyPrintTypedTree}
@@ -34,8 +34,8 @@ class PredicatesSolverTyperTest extends LanguageSpec:
 
     "xxx" in {
       val untyped = App.of(Id("add"), App.of(Id("add"), IntLiteral(1), DoubleLiteral(1)), IntLiteral(1))
-      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
-      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTypedTree(partiallyTyped))
       println(PrettyPrintTypedTree(typed))
@@ -48,8 +48,8 @@ class PredicatesSolverTyperTest extends LanguageSpec:
           Lambda("x", Lambda("y", App.of(Id("add"), App.of(Id("add"), Id("x"), Id("y")), Id("x")))),
           App.of(Id("f"), IntLiteral(1), DoubleLiteral(2))
         )
-      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
-      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTree(untyped))
       println(PrettyPrintTypedTree(partiallyTyped))
@@ -71,8 +71,8 @@ class PredicatesSolverTyperTest extends LanguageSpec:
         ),
         Id("f")
       )
-      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
-      val typed = typer.typeTree(untyped, None, TypingConfig.constantQualifiedTypes).unsafeRight
+      val partiallyTyped = RecursiveTyper().typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
+      val typed = typer.typeTree(untyped, None, TypeclassConfig.constantQualifiedTypes).unsafeRight
 
       println(PrettyPrintTree(untyped))
       println(PrettyPrintTypedTree(partiallyTyped))

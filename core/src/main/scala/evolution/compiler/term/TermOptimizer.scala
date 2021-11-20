@@ -2,7 +2,7 @@ package evolution.compiler.term
 
 import cats.data.Reader
 import cats.implicits.*
-import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.phases.typer.config.NativeSymbolsConfig
 import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.term.Term.{Id, *}
 import evolution.compiler.term.TermOptimizer.*
@@ -97,7 +97,7 @@ object TermOptimizer:
     def unbind(name: String): Env = Env(bindings.removed(name))
 
   object Env:
-    val consts: Env = Env(Map(ConstConfig.constants.map(c => c.name -> Value(c.value)) *))
+    val consts: Env = Env(Map(NativeSymbolsConfig.symbols.map(c => c.symbol -> Value(c.value))*))
 
   def bindLocal[T](name: String, term: Term)(ft: => Optimized[T]): Optimized[T] =
     Reader.local[T, Env](_.bind(name, term))(ft)

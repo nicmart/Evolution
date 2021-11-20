@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer
 
 import evolution.compiler.phases.Typer
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.phases.typer.model.Assumptions
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.tree.{Tree, TypedTree}
@@ -15,5 +15,5 @@ final class PredicatesSolverTyper(typer: Typer, solver: UnifyPredicates) extends
   ): Either[String, TypedTree] =
     for
       typedTree <- typer.typeTree(tree, expectedType, assumptions)
-      predicatesSubstitution <- solver.unify(TypingConfig.instancesPredicates, typedTree.annotation.predicates)
+      predicatesSubstitution <- solver.unify(TypeclassConfig.instancesPredicates, typedTree.annotation.predicates)
     yield predicatesSubstitution.substitute(typedTree)

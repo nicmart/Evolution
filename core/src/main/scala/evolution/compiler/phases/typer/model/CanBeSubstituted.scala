@@ -11,7 +11,7 @@ trait CanBeSubstituted[T]:
 object CanBeSubstituted:
   given CanBeSubstituted[Type] with
     def substitute(s: Substitution, t: Type): Type =
-      Type.replaceVars(t, s.assignments.map(a => a.variable -> a.tpe))
+      Type.replaceVars(t, s.assignments.map(a => a.typeVariable -> a.tpe))
 
   given CanBeSubstituted[Assignment] with
     def substitute(s: Substitution, a: Assignment): Assignment = a.copy(tpe = s.substitute[Type](a.tpe))

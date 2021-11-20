@@ -8,7 +8,7 @@ import evolution.compiler.types.TypeClassInstance.*
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
 
-object TypingConfig:
+object TypeclassConfig:
   enum TypeClassId:
     case Num
     case Comp
@@ -17,14 +17,15 @@ object TypingConfig:
     case Mult
     case Add
 
-  val constantsModule: Module = Module(ConstConfig.constants.map { const =>
-    Definition(const.name, Some(Term.Value(const.value)), const.tpe)
+  val constantsModule: Module = Module(NativeSymbolsConfig.symbols.map { const =>
+    Definition(const.symbol, Some(Term.Value(const.value)), const.tpe)
   })
 
   val constantQualifiedTypes: Assumptions = constantsModule.assumptions
 
-  /** TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
-    */
+  /**
+   * TODO A lot of coupling between this, All the instances, and Typeclass extraction in Types Module
+   */
   val instances: List[TypeClassInstance] = List(
     // Numeric
     Numeric.Double.instance,
@@ -80,6 +81,6 @@ object TypingConfig:
       .toRight(s"No $typeClassId instance found for $types")
 
   def instance(predicate: Predicate): Either[String, TypeClassInstance] =
-    instance(TypeClassId.valueOf(predicate.id), predicate.types *).left.map(_ =>
+    instance(TypeClassId.valueOf(predicate.id), predicate.types*).left.map(_ =>
       s"No instance found for predicate $predicate"
     )

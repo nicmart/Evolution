@@ -2,6 +2,9 @@ package evolution.compiler.types
 
 import cats.implicits.*
 
+/**
+ * Evolution Type System
+ */
 enum Type:
   case Integer
   case Double

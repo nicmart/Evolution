@@ -178,6 +178,26 @@ class RecursiveTyperTest extends LanguageSpec:
         z `shouldBe` typed.annotation.value
       }
 
+      "1 + 2 + 3" in {
+        val addScheme = Scheme(List("A", "B", "C"), Type.Var("A") =>: Type.Var("B") =>: Type.Var("C"))
+        val addPredicates = List(Predicate("Add", List(Type.Var("A"), Type.Var("B"), Type.Var("C"))))
+        val assumptions = withAssumptions(model.Assumption("add", Qualified(addPredicates, addScheme)))
+        val untyped = App.of(Id("add"), App.of(Id("add"), IntLiteral(1), IntLiteral(2)), IntLiteral(3))
+        val typed = typer.typeTree(untyped, None, assumptions).unsafeRight
+        val List(
+          Predicate("Add", List(sumt1t2_, t3, t4)),
+          Predicate("Add", List(t1, t2, sumt1t2)),
+          Predicate("Num", List(t1_)),
+          Predicate("Num", List(t2_)),
+          Predicate("Num", List(t3_))
+        ) = typed.annotation.predicates: @unchecked
+        t1 `shouldBe` t1_
+        t2 `shouldBe` t2_
+        t3 `shouldBe` t3_
+        sumt1t2 `shouldBe` sumt1t2_
+        t4 `shouldBe` typed.annotation.value
+      }
+
       "x = f in x" in {
         val scheme = Scheme(List("A"), Type.Var("A"))
         val predicates = List(Predicate("Hei", List(Type.Var("A"))))

@@ -2,7 +2,7 @@ package evolution.compiler.stdlib
 
 import evolution.compiler.phases.ModuleCompiler
 import evolution.compiler.phases.parser.CatsParseParser
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.phases.typer.predicates.UnifyPredicates
 import evolution.compiler.phases.typer.{PredicatesSolverTyper, RecursiveTyper}
 import evolution.compiler.term.{Definition, Module, TreeToTermCompiler}
@@ -25,7 +25,7 @@ object StandardLibraryModule:
   )
 
   private lazy val initialModule =
-    TypingConfig.constantsModule.compose(borderVarsModule)
+    TypeclassConfig.constantsModule.compose(borderVarsModule)
 
   private lazy val typer = PredicatesSolverTyper(RecursiveTyper(), UnifyPredicates(NoOpLogger))
 

@@ -1,7 +1,7 @@
 package evolution.compiler.phases.typer.predicates
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.phases.typer.model.Substitution
 import evolution.compiler.types.TypeClasses.*
 import evolution.compiler.types.*
@@ -13,12 +13,13 @@ class UnifyPredicatesSpec extends LanguageSpec:
 
   "predicates unification" - {
     "should succeed with an empty substitution if there are no predicates" in {
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Nil)
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Nil)
       subst `shouldBe` Right(Substitution.empty)
     }
 
     "should succeed with an empty substitution if there is a single predicate that is the same as an instance" in {
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, TypingConfig.instancesPredicates.take(1))
+      val subst =
+        predicatesUnifier.unify(TypeclassConfig.instancesPredicates, TypeclassConfig.instancesPredicates.take(1))
       subst `shouldBe` Right(Substitution.empty)
     }
 
@@ -56,6 +57,20 @@ class UnifyPredicatesSpec extends LanguageSpec:
       subst.substitute[Type](Type.Var("Y")) `shouldBe` Type.Integer
     }
 
+    "should unify predicates of 1 + 2 + 3" in {
+      val predicates = List(
+        Predicate("Add", List(Type.Var("SUM"), Type.Var("T3"), Type.Var("RESULT"))),
+        Predicate("Add", List(Type.Var("T1"), Type.Var("T2"), Type.Var("SUM"))),
+        Predicate("Num", List(Type.Var("T1"))),
+        Predicate("Num", List(Type.Var("T2"))),
+        Predicate("Num", List(Type.Var("T3")))
+      )
+
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
+
+      subst.substitute[Type](Type.Var("RESULT")) `shouldBe` Type.Integer
+    }
+
     // This is mostly to test perfomance of predicates unification
     "should unify predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
       val predicates = List(
@@ -76,7 +91,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
         Predicate("Num", List(Type.Var("T14")))
       )
 
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
 
       subst.substitute[Type](Type.Var("T4")) `shouldBe` Type.Integer
     }
@@ -89,7 +104,7 @@ class UnifyPredicatesSpec extends LanguageSpec:
         Predicate("Mult", List(Type.Var("T0"), Type.Point, Type.Var("T1")))
       ) ++ (1 to 40).map(predicate)
 
-      val subst = predicatesUnifier.unify(TypingConfig.instancesPredicates, predicates).unsafeRight
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, predicates).unsafeRight
 
       subst.substitute[Type](Type.Var("T0")) `shouldBe` Type.Integer
     }

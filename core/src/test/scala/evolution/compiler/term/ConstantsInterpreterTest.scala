@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.term.Term.Id
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.compiler.types.{Type, TypeClassInstance}
@@ -500,7 +500,7 @@ class ConstantsInterpreterTest extends LanguageSpec:
   lazy val invIntInstance: Any = instance("Invertible", Type.Integer)
 
   private def instance(id: String, types: Type*): Any =
-    TypingConfig.instance(Predicate(id, types.toList)).unsafeRight.value
+    TypeclassConfig.instance(Predicate(id, types.toList)).unsafeRight.value
 
   def sum1(n: Int): Int => Int = x => x + n
   def sum2(n: Int): Int => Int => Int = x => y => x + y + n

@@ -1,7 +1,7 @@
 package evolution.compiler
 import evolution.compiler.phases.parser.CatsParseParser
 import evolution.compiler.phases.parser.PrecedenceGroup.BinaryOperator
-import evolution.compiler.phases.typer.config.ConstConfig
+import evolution.compiler.phases.typer.config.NativeSymbolsConfig
 import evolution.compiler.tree.TreeF.*
 import evolution.compiler.tree.*
 import evolution.compiler.types.Type
@@ -24,7 +24,7 @@ trait TreeArbitraries:
     Gen.oneOf[(String, BinaryOperator)](CatsParseParser.binaryOperators)
 
   def genVarUsage: Gen[String] =
-    genIdentifier.filter(id => !ConstConfig.constants.map(_.name).contains(id.toLowerCase))
+    genIdentifier.filter(id => !NativeSymbolsConfig.symbols.map(_.symbol).contains(id.toLowerCase))
 
   def genIdentifier: Gen[String] =
     for

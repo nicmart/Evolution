@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.term.Term.*
 import evolution.compiler.types.TypeClasses.Predicate
@@ -137,6 +137,6 @@ class TermOptimizerTest extends LanguageSpec:
   def add(inst: TypeClassInstance, a: Term, b: Term): Term =
     Apply(Apply(Apply(Id("add"), Inst(inst)), a), b)
 
-  lazy val numDouble: TypeClassInstance = TypingConfig.instance(Predicate("Num", List(Type.Double))).unsafeRight
+  lazy val numDouble: TypeClassInstance = TypeclassConfig.instance(Predicate("Num", List(Type.Double))).unsafeRight
   lazy val addDouble: TypeClassInstance =
-    TypingConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight
+    TypeclassConfig.instance(Predicate("Add", List(Type.Double, Type.Double, Type.Double))).unsafeRight

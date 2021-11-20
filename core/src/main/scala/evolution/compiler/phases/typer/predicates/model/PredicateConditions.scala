@@ -6,7 +6,7 @@ import evolution.compiler.types.TypeClasses.Predicate
 
 private[predicates] case class PredicateConditions(predicate: Predicate, substitutions: Set[Substitution]):
   lazy val requirements: Map[String, Alternatives] =
-    substitutions.flatMap(_.assignments).groupBy(_.variable).map { case (variable, assignments) =>
+    substitutions.flatMap(_.assignments).groupBy(_.typeVariable).map { case (variable, assignments) =>
       variable -> Alternatives(variable, assignments.map(_.tpe))
     }
   lazy val isFinal: Boolean = requirements.values.forall(_.isFinal)

@@ -1,6 +1,6 @@
 package evolution.compiler.term
 
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.term.Compilation.*
 import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.term.Term.*
@@ -49,7 +49,7 @@ final class TreeToTermCompiler:
 
   private def argFromPred(predicate: Predicate): Compilation[Term] =
     if predicate.hasTypeVars then predName(predicate).map(Id.apply)
-    else fromEither(TypingConfig.instance(predicate).map(Inst.apply))
+    else fromEither(TypeclassConfig.instance(predicate).map(Inst.apply))
 
   private def lambda(vars: List[String], term: Term): Term =
     vars.foldLeft(term) { (term, name) =>

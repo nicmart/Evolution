@@ -1,6 +1,6 @@
 package evolution.compiler.term
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.tree.AnnotatedTree
 import evolution.compiler.tree.AnnotatedTree.AwaitingAnnotation
@@ -42,7 +42,7 @@ class TreeToTermCompilerTest extends LanguageSpec:
           "monomorphic" in {
             val predicate = Predicate("Num", List(Type.Double))
             val tree = IntLiteral(0).as(Type.Double, predicate)
-            val instance = TypingConfig.instance(TypingConfig.TypeClassId.Num, Type.Double).unsafeRight
+            val instance = TypeclassConfig.instance(TypeclassConfig.TypeClassId.Num, Type.Double).unsafeRight
             val term = compiler.compile(tree).unsafeRight
 
             term `shouldBe` Term.Apply(Term.Lit(LitInt(0)), Term.Inst(instance))
@@ -161,4 +161,4 @@ class TreeToTermCompilerTest extends LanguageSpec:
     def as(tpe: Type, predicates: Predicate*): AnnotatedTree[Qualified[Type]] =
       awaitingAnnotation.as(Qualified(predicates.toList, tpe))
 
-  extension (predicate: Predicate) def instance: TypeClassInstance = TypingConfig.instance(predicate).unsafeRight
+  extension (predicate: Predicate) def instance: TypeClassInstance = TypeclassConfig.instance(predicate).unsafeRight

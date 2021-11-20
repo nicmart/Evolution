@@ -1,7 +1,7 @@
 package evolution.compiler.term
 
 import evolution.compiler.LanguageSpec
-import evolution.compiler.phases.typer.config.TypingConfig
+import evolution.compiler.phases.typer.config.TypeclassConfig
 import evolution.compiler.term.Term.Literal.*
 import evolution.compiler.term.Term.*
 import evolution.compiler.types.TypeClasses.Predicate
@@ -114,7 +114,7 @@ class TermInterpreterTest extends LanguageSpec:
 
         val interpreter = RegisterBasedInterpreter.fresh
         val addInstance = instance("Add", Type.Double, Type.Integer, Type.Double)
-        val register = RegisterBasedInterpreter.constants + ("P0" -> addInstance.value)
+        val register = RegisterBasedInterpreter.nativeSymbols + ("P0" -> addInstance.value)
 
         val f = interpreter.interpretRec(register)(term).asInstanceOf[Any => Any => Any]
         f(3.5)(1) `shouldBe` 4.5
@@ -171,6 +171,6 @@ class TermInterpreterTest extends LanguageSpec:
   }
 
   private def instance(id: String, types: Type*): TypeClassInstance =
-    TypingConfig.instance(Predicate(id, types.toList)).unsafeRight
+    TypeclassConfig.instance(Predicate(id, types.toList)).unsafeRight
 
   lazy val interpreter = OptimizedTermInterpreter
