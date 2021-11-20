@@ -4,6 +4,9 @@ import Term.*
 
 import evolution.compiler.phases.typer.model.Assumptions
 
+/**
+ * A list of definitions.
+ */
 case class Module(definitions: List[Definition]):
   val assumptions: Assumptions = Assumptions(definitions.map(_.assumption))
 
