@@ -6,6 +6,8 @@ import evolution.compiler.phases.typer.predicates.model.PredicateConditions
 import evolution.compiler.types.TypeClasses.Predicate
 import evolution.logging.Logger
 
+import scala.collection.immutable.ListSet
+
 class UnifyPredicates(logger: Logger):
 
   import logger.log
@@ -19,7 +21,7 @@ class UnifyPredicates(logger: Logger):
         predicates.distinct.map { predicate =>
           PredicateConditions(
             predicate,
-            instances.flatMap(instance => tryMatch(instance, predicate)).toSet
+            ListSet.from(instances.flatMap(instance => tryMatch(instance, predicate)))
           )
         }
       }
