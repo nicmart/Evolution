@@ -71,6 +71,45 @@ class UnifyPredicatesSpec extends LanguageSpec:
       subst.substitute[Type](Type.Var("RESULT")) `shouldBe` Type.Integer
     }
 
+    "should unify predicates of 1.0 + 2 + 3" in {
+      val predicates = List(
+        Predicate("Add", List(Type.Var("SUM"), Type.Var("T3"), Type.Var("RESULT"))),
+        Predicate("Add", List(Type.Double, Type.Var("T2"), Type.Var("SUM"))),
+        Predicate("Num", List(Type.Var("T2"))),
+        Predicate("Num", List(Type.Var("T3")))
+      )
+
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
+
+      subst.substitute[Type](Type.Var("RESULT")) `shouldBe` Type.Double
+    }
+
+    "should unify predicates of 1 + 2.0 + 3" in {
+      val predicates = List(
+        Predicate("Add", List(Type.Var("SUM"), Type.Var("T3"), Type.Var("RESULT"))),
+        Predicate("Add", List(Type.Var("T1"), Type.Double, Type.Var("SUM"))),
+        Predicate("Num", List(Type.Var("T1"))),
+        Predicate("Num", List(Type.Var("T3")))
+      )
+
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
+
+      subst.substitute[Type](Type.Var("RESULT")) `shouldBe` Type.Double
+    }
+
+    "should unify predicates of 1 + 2 + 3.0" in {
+      val predicates = List(
+        Predicate("Add", List(Type.Var("SUM"), Type.Double, Type.Var("RESULT"))),
+        Predicate("Add", List(Type.Var("T1"), Type.Var("T2"), Type.Var("SUM"))),
+        Predicate("Num", List(Type.Var("T1"))),
+        Predicate("Num", List(Type.Var("T2")))
+      )
+
+      val subst = predicatesUnifier.unify(TypeclassConfig.instancesPredicates, Random.shuffle(predicates)).unsafeRight
+
+      subst.substitute[Type](Type.Var("RESULT")) `shouldBe` Type.Double
+    }
+
     // This is mostly to test perfomance of predicates unification
     "should unify predicates of @(point(0, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8))" in {
       val predicates = List(

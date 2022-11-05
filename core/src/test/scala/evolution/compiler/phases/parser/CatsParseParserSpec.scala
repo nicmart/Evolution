@@ -522,4 +522,7 @@ class CatsParseParserSpec extends LanguageSpec:
     }
   }
 
-  def unsafeParse(string: String): Tree = CatsParseParser.parse(string).toTry.get
+  def unsafeParse(string: String): Tree = {
+    val result = CatsParseParser.parse(string).toTry.get
+    Tree.catamorphism[Tree](treeF => Tree(treeF.withPos(NoPos)))(result)
+  }

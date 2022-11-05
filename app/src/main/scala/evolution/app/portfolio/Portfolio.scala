@@ -255,52 +255,53 @@ object Portfolio:
       ),
       defaultRendererState
     ),
-    Drawing(
-      Some("Mountains"),
-      DrawingState(
-        0L,
-        """
-          a = 300 in
-          xFreq = 300 in
-          octaves = 8 in
-          persistence = .2 in
-          v = 2 in
-          length = floor((right - left) / v) in
-          s = 300 in // distance of the screen
-          cameraZ = 1000 in // height of the camera
-          offsetZ = cameraZ / 2 in
-          noiseStrength = 100 in // noise amplitude
-          maxDepth = 1000 in
-          depthStep = 3 in
-          startY = s/2 in
-          
-          on1 <- octaveNoises in
-          on2 <- octaveNoises in
-          
-          f(x, y) = -cameraZ + noiseStrength * on1(
-                 octaves,
-                 persistence,
-                 point(
-                   x/xFreq,
-                   10* on2(16, .4, point(x/400, y/200))
-                 )
-               )
-          in
-          
-          
-          flatMap(
-            range(startY, maxDepth, depthStep),
-            y ->
-              xlength = length * (y/startY) * 2 / v in
-                map(
-                  integrate(-xlength, const(v)),
-                  x -> point(s * x / y, offsetZ + s * f(x, y) / y)
-                ).take(xlength.floor)
-          )
-          """.unindent
-      ),
-      defaultRendererWithInfiniteCanvas
-    ),
+// This fails unification for some reason
+//    Drawing(
+//      Some("Mountains"),
+//      DrawingState(
+//        0L,
+//        """
+//          a = 300 in
+//          xFreq = 300 in
+//          octaves = 8 in
+//          persistence = .2 in
+//          v = 2 in
+//          length = floor((right - left) / v) in
+//          s = 300 in // distance of the screen
+//          cameraZ = 1000 in // height of the camera
+//          offsetZ = cameraZ / 2 in
+//          noiseStrength = 100 in // noise amplitude
+//          maxDepth = 1000 in
+//          depthStep = 3 in
+//          startY = s/2 in
+//
+//          on1 <- octaveNoises in
+//          on2 <- octaveNoises in
+//
+//          f(x, y) = -cameraZ + noiseStrength * on1(
+//                 octaves,
+//                 persistence,
+//                 point(
+//                   x/xFreq,
+//                   10* on2(16, .4, point(x/400, y/200))
+//                 )
+//               )
+//          in
+//
+//
+//          flatMap(
+//            range(startY, maxDepth, depthStep),
+//            y ->
+//              xlength = length * (y/startY) * 2 / v in
+//                map(
+//                  integrate(-xlength, const(v)),
+//                  x -> point(s * x / y, offsetZ + s * f(x, y) / y)
+//                ).take(xlength.floor)
+//          )
+//          """.unindent
+//      ),
+//      defaultRendererWithInfiniteCanvas
+//    ),
     Drawing(
       Some("Noise Vector field on grid"),
       DrawingState(
